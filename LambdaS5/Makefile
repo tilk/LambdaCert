@@ -25,16 +25,22 @@ copy: coq caml/ copy_ljs
 	cp coq/*.ml coq/*.mli build/
 	cp caml/*.ml build/
 
-native: copy
+ocamlbuild/eval.native: copy
 	cd build/; ocamlbuild eval.native
 
-byte:copy
+native: ocamlbuild/eval.native
+
+ocamlbuild/eval.byte: copy
 	cd build/; ocamlbuild eval.byte -tag debug
+
+byte: ocamlbuild/eval.byte
 
 interpreter: native
 
-snapshot: native
+tests/es5.dump: envs/es5.env build/eval.native
 	./build/eval.native envs/es5.env -save tests/es5.dump
+
+snapshot: tests/es5.dump
 
 tests: snapshot
 	tests/run_tests.py tests/es5.dump
