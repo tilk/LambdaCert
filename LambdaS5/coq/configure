@@ -4,4 +4,7 @@ TLC="-I $BASE_PATH/../jscert/tlc/"
 FLOCQ="-R $BASE_PATH/../jscert/flocq/src/ Flocq"
 JSCERT="-I $BASE_PATH/../jscert/coq/"
 
-coq_makefile $TLC $FLOCQ $JSCERT *.v > Makefile
+echo $TLC $FLOCQ $JSCERT > _CoqProject
+ls -1 *.v >> _CoqProject
+
+coq_makefile -f _CoqProject > Makefile
