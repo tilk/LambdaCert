@@ -1,6 +1,3 @@
-Add LoadPath "../../jscert/coq/".
-Add LoadPath "../../jscert/tlc/".
-Add Rec LoadPath "../../jscert/flocq/src/" as Flocq.
 Require Import String.
 Require Import Store.
 Require Import Values.
