@@ -2,18 +2,24 @@
 *.v.d
 *.vo
 *.glob
-LambdaS5/coq/Makefile
+/LambdaS5/coq/Makefile
 
 # Extraction
-LambdaS5/coq/*.ml
-LambdaS5/coq/*.mli
+/LambdaS5/coq/*.ml
+/LambdaS5/coq/*.mli
 *.byte
-build/
 
 # Tests
-LambdaS5/tests/es5.dump
+/LambdaS5/tests/es5.dump
 
 # Vim
 .*.swp
 .*.swo
 *~
+
+# Profiling
+gmon.out
+
+# Builds
+_build
+/LambdaS5/build/**
