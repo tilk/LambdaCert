@@ -1,3 +1,6 @@
+
+open Batteries
+
 let parse_es5 cin name =
   let lexbuf = Lexing.from_channel cin in
     try 
@@ -40,8 +43,3 @@ let print_result (store, result) =
   );
   print_string "\n"
 
-let get_channel filename =
-  if (filename = "stdin") then
-    stdin
-  else
-    open_in filename

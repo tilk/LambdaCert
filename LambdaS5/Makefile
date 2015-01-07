@@ -1,3 +1,4 @@
+
 all: configure coq interpreter
 
 configure: coq/configure coq/*.v
@@ -26,19 +27,19 @@ copy: coq caml/ copy_ljs
 	cp caml/*.ml build/
 
 ocamlbuild/eval.native: copy
-	cd build/; ocamlbuild eval.native
+	cd build/; ocamlbuild -use-ocamlfind eval.native
 
 native: ocamlbuild/eval.native
 
 ocamlbuild/eval.byte: copy
-	cd build/; ocamlbuild eval.byte -tag debug
+	cd build/; ocamlbuild -use-ocamlfind eval.byte -tag debug
 
 byte: ocamlbuild/eval.byte
 
 interpreter: native
 
 tests/es5.dump: envs/es5.env build/eval.native
-	./build/eval.native envs/es5.env -save tests/es5.dump
+	./build/eval.native -env envs/es5.env -save tests/es5.dump
 
 snapshot: tests/es5.dump
 
