@@ -1,4 +1,5 @@
 
+(* TODO: replace with String.to_list and String.of_list from Batteries *)
 
 let implode l =
   let res = String.create (List.length l) in

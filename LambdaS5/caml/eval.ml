@@ -20,7 +20,7 @@ let handle_parameter filename =
             let ch = get_channel filename in
             let ret = Run.parse_es5 ch filename in
             close_in ch; ret in
-    Run.print_result (Run.eval_ast (get_store ()) ast)
+    Run.print_result (Run.eval_ast (get_store ()) (Translate.translate_expr ast))
 
 let load_store filename = 
     File.with_file_in filename (fun ch -> store := Some (Marshal.from_channel (open_in filename)))
@@ -30,7 +30,7 @@ let save_store filename =
 
 let load_env filename = 
     let ch = get_channel filename in 
-    let (st, _res) = Run.eval_ast (get_store ()) (Run.parse_es5_env ch filename (Syntax.String (CoqUtils.explode "dumped"))) in
+    let (st, _res) = Run.eval_ast (get_store ()) (Translate.translate_expr (Run.parse_es5_env ch filename (Ljs_syntax.String (Ljs_syntax.Pos.dummy, "dumped")))) in
     store := Some st;
     close_in ch
 

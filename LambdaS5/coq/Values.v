@@ -99,6 +99,6 @@ Inductive value : Type :=
 | True
 | False
 | Object : object_ptr -> value
-| Closure : closure_id -> loc_heap_type -> list id -> Syntax.expression -> value (* closure_id is for making closures comparable with stx= *)
+| Closure : closure_id -> loc_heap_type -> list id -> Syntax.expr -> value (* closure_id is for making closures comparable with stx= *)
 .
 

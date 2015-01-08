@@ -23,7 +23,7 @@ Definition runner_type (runner_arg : Type) (runner_ret : Type) :=
 .
 Record runs_type : Type := runs_type_intro {
     runs_type_nat_fuel : nat;
-    runs_type_eval : runner_type Syntax.expression Values.value_loc;
+    runs_type_eval : runner_type Syntax.expr Values.value_loc;
     runs_type_get_closure : runner_type Values.value_loc Values.value_loc;
     runs_type_get_property : runner_type (Values.value_loc * Values.prop_name) (option Values.attributes)
 }.

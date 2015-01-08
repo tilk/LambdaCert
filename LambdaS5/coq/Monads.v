@@ -16,13 +16,13 @@ Implicit Type store : Store.store.
 
 (* Evaluate an expression, and calls the continuation with
 * the new store and the Context.result of the evaluation. *)
-Definition eval_cont {value_type : Type} runs store (e : Syntax.expression) (cont : Store.store -> (Context.result Values.value_loc) -> (Store.store * (Context.result value_type))) : (Store.store * (Context.result value_type)) :=
+Definition eval_cont {value_type : Type} runs store (e : Syntax.expr) (cont : Store.store -> (Context.result Values.value_loc) -> (Store.store * (Context.result value_type))) : (Store.store * (Context.result value_type)) :=
   match ((Context.runs_type_eval runs) store e) with (store, res) =>
     cont store res
   end
 .
 (* Alias for calling eval_cont with an empty continuation *)
-Definition eval_cont_terminate runs store (e : Syntax.expression) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_cont_terminate runs store (e : Syntax.expr) : (Store.store * Context.result Values.value_loc) :=
   eval_cont runs store e (fun store res => (store, res))
 .
 
@@ -41,7 +41,7 @@ Definition if_return {value_type : Type} {return_type : Type} store (var : Conte
 (* Evaluates an expression, and calls the continuation if
 * the evaluation returned a value.
 * Returns the store and the variable verbatim otherwise. *)
-Definition if_eval_return {value_type : Type} runs store (e : Syntax.expression) (cont : Store.store -> Values.value_loc -> (Store.store * (Context.result value_type))) : (Store.store * (Context.result value_type)) :=
+Definition if_eval_return {value_type : Type} runs store (e : Syntax.expr) (cont : Store.store -> Values.value_loc -> (Store.store * (Context.result value_type))) : (Store.store * (Context.result value_type)) :=
   eval_cont runs store e (fun store res =>
     if_return store res (cont store)
   )
@@ -50,7 +50,7 @@ Definition if_eval_return {value_type : Type} runs store (e : Syntax.expression)
 (* Evaluates an expression with if it is Some, and calls the continuation
 * if the evaluation returned value. Calls the continuation with the default
 * value if the expression is None. *)
-Definition if_some_eval_else_default {value_type : Type} runs store (oe : option Syntax.expression) (default : Values.value_loc) (cont : Store.store -> Values.value_loc -> (Store.store * (Context.result value_type))) : (Store.store * (Context.result value_type)) :=
+Definition if_some_eval_else_default {value_type : Type} runs store (oe : option Syntax.expr) (default : Values.value_loc) (cont : Store.store -> Values.value_loc -> (Store.store * (Context.result value_type))) : (Store.store * (Context.result value_type)) :=
   match oe with
   | Some e => if_eval_return runs store e cont
   | None => cont store default
@@ -59,7 +59,7 @@ Definition if_some_eval_else_default {value_type : Type} runs store (oe : option
 
 (* Same as if_some_and_eval_value, but returns an option as the Context.result, and
 * None is used as the default value passed to the continuation. *)
-Definition if_some_eval_return_else_none {value_type : Type} runs store (oe : option Syntax.expression) (cont : Store.store -> option Values.value_loc -> (Store.store * (Context.result value_type))) : (Store.store * (Context.result value_type)) :=
+Definition if_some_eval_return_else_none {value_type : Type} runs store (oe : option Syntax.expr) (cont : Store.store -> option Values.value_loc -> (Store.store * (Context.result value_type))) : (Store.store * (Context.result value_type)) :=
   match oe with
   | Some e => if_eval_return runs store e (fun ctx res => cont ctx (Some res))
   | None => cont store None

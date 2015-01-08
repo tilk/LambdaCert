@@ -1,7 +1,6 @@
 {
-(* open Prelude *)
 open Lexing
-open Interpreter
+open Ljs_syntax
 open Ljs_parser
 
 module S = String
@@ -67,8 +66,8 @@ rule token = parse
    | "/*:" { comment_start_p := lexeme_start_p lexbuf;
              hint lexbuf }
 
-   | '"' (double_quoted_string_char* as x) '"' { STRING (CoqUtils.explode x) }
-   | ''' (single_quoted_string_char* as x) ''' { STRING (CoqUtils.explode x) }
+   | '"' (double_quoted_string_char* as x) '"' { STRING x }
+   | ''' (single_quoted_string_char* as x) ''' { STRING x }
   
    | num_lit as x { parse_num_lit x }
    | "NaN" { NUM nan }
@@ -127,7 +126,7 @@ rule token = parse
    | "#class" { CLASS }
    | "get-own-field-names" { GETFIELDS }    
 
-   | ident as x { ID (CoqUtils.explode x) }
+   | ident as x { ID x }
  
    | eof { EOF }
 
@@ -139,7 +138,7 @@ and block_comment = parse
 
 and hint = parse
   | "*/" { let str = Buffer.contents block_comment_buf in
-             Buffer.clear block_comment_buf; HINT (CoqUtils.explode str) }
+             Buffer.clear block_comment_buf; HINT str }
   | '*' { Buffer.add_char block_comment_buf '*'; hint lexbuf }
   | "\r\n" { new_line lexbuf; Buffer.add_char block_comment_buf '\n'; 
              hint lexbuf }

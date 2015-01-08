@@ -2659,7 +2659,7 @@ Qed.
 Lemma not_implemented_preserves_all_locs_exist :
   forall st0 st2 res,
   all_locs_exist st0 ->
-  (st0, Fail value_loc "GetAttr not implemented.") = (st2, res) ->
+  (st0, Fail value_loc "expr_get_attr not implemented.") = (st2, res) ->
   superstore st0 st2 /\ all_locs_exist st2 /\ result_value_loc_exists ok_loc st2 res
 .
 Proof.
@@ -2679,7 +2679,7 @@ Qed.
 
 Theorem eval_preserves_all_locs_exist :
   forall runs (st st2 : Store.store) res,
-  forall (e : Syntax.expression),
+  forall (e : Syntax.expr),
   runs_type_eval_preserves_all_locs_exist runs ->
   all_locs_exist st ->
   Interpreter.eval runs st e = (st2, res) ->
@@ -2695,19 +2695,19 @@ Proof.
     (* Id *)
     applys* eval_id_preserves_all_locs_exist.
 
-    (* ObjectDecl *)
+    (* expr_object *)
     applys* eval_objectdecl_preserves_all_locs_exist.
 
-    (* GetAttr *)
+    (* expr_get_attr *)
     admit.
 
-    (* SetAttr *)
+    (* expr_set_attr *)
     applys* eval_setattr_preserves_all_locs_exist.
 Admitted.
 
 Theorem runs_eval_preserves_all_locs_exist :
   forall max_steps (st : Store.store),
-  forall (e : Syntax.expression) st2 res,
+  forall (e : Syntax.expr) st2 res,
   all_locs_exist st ->
   Interpreter.runs_eval max_steps st e = (st2, res) ->
   superstore st st2 /\ all_locs_exist st2 /\ result_value_loc_exists ok_loc st2 res
