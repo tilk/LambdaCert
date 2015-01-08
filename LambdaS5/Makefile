@@ -24,7 +24,7 @@ edit_ljs:
 copy: coq caml/ copy_ljs
 	mkdir -p build/
 	cp coq/*.ml coq/*.mli build/
-	cp caml/*.ml caml/_tags build/
+	cp caml/*.ml caml/*.mli caml/_tags build/
 
 ocamlbuild/eval.p.native: copy
 	cd build/; ocamlbuild -use-ocamlfind eval.p.native
