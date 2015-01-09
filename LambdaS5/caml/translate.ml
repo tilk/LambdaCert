@@ -19,6 +19,66 @@ let translate_pattr p = match p with
     | Ljs.Writable -> Cs.Coq_pattr_writable
     | Ljs.Enum -> Cs.Coq_pattr_enum
 
+let translate_unary_op s = match s with
+    | "typeof" -> Cs.Coq_unary_op_typeof
+    | "closure?" -> Cs.Coq_unary_op_is_closure
+    | "primitive?" -> Cs.Coq_unary_op_is_primitive
+    | "prim->str" -> Cs.Coq_unary_op_prim_to_str
+    | "prim->num" -> Cs.Coq_unary_op_prim_to_num
+    | "prim->bool" -> Cs.Coq_unary_op_prim_to_bool
+    | "print" -> Cs.Coq_unary_op_print
+    | "pretty" -> Cs.Coq_unary_op_pretty
+    | "object-to-string" -> Cs.Coq_unary_op_object_to_string
+    | "strlen" -> Cs.Coq_unary_op_strlen
+    | "is-array" -> Cs.Coq_unary_op_is_array
+    | "to-int32" -> Cs.Coq_unary_op_to_int32
+    | "!" -> Cs.Coq_unary_op_not
+    | "void" -> Cs.Coq_unary_op_void
+    | "floor" -> Cs.Coq_unary_op_floor
+    | "ceil" -> Cs.Coq_unary_op_ceil
+    | "abs" -> Cs.Coq_unary_op_abs
+    | "log" -> Cs.Coq_unary_op_log
+    | "ascii_ntoc" -> Cs.Coq_unary_op_ascii_ntoc
+    | "ascii_cton" -> Cs.Coq_unary_op_ascii_cton
+    | "to-lower" -> Cs.Coq_unary_op_to_lower
+    | "to-upper" -> Cs.Coq_unary_op_to_upper
+    | "~" -> Cs.Coq_unary_op_bnot
+    | "sin" -> Cs.Coq_unary_op_sin
+    | "numstr->num" -> Cs.Coq_unary_op_numstr_to_num
+    | "current-utc-millis" -> Cs.Coq_unary_op_current_utc_millis
+    | _ -> failwith "operator not implemented"
+
+let translate_binary_op s = match s with
+    | "+" -> Cs.Coq_binary_op_add
+    | "-" -> Cs.Coq_binary_op_sub
+    | "/" -> Cs.Coq_binary_op_div
+    | "*" -> Cs.Coq_binary_op_mul
+    | "%" -> Cs.Coq_binary_op_mod
+    | "&" -> Cs.Coq_binary_op_band
+    | "|" -> Cs.Coq_binary_op_bor
+    | "^" -> Cs.Coq_binary_op_bxor
+    | "<<" -> Cs.Coq_binary_op_shiftl
+    | ">>" -> Cs.Coq_binary_op_shiftr
+    | ">>>" -> Cs.Coq_binary_op_zfshiftr
+    | "<" -> Cs.Coq_binary_op_lt
+    | "<=" -> Cs.Coq_binary_op_le
+    | ">" -> Cs.Coq_binary_op_gt
+    | ">=" -> Cs.Coq_binary_op_ge
+    | "stx=" -> Cs.Coq_binary_op_stx_eq
+    | "abs=" -> Cs.Coq_binary_op_abs_eq
+    | "sameValue" -> Cs.Coq_binary_op_same_value
+    | "hasProperty" -> Cs.Coq_binary_op_has_property
+    | "hasOwnProperty" -> Cs.Coq_binary_op_has_own_property
+    | "string+" -> Cs.Coq_binary_op_string_plus
+    | "string<" -> Cs.Coq_binary_op_string_lt
+    | "base" -> Cs.Coq_binary_op_base
+    | "char-at" -> Cs.Coq_binary_op_char_at
+    | "locale-compare" -> Cs.Coq_binary_op_locale_compare
+    | "pow" -> Cs.Coq_binary_op_pow
+    | "to-fixed" -> Cs.Coq_binary_op_to_fixed
+    | "isAccessor" -> Cs.Coq_binary_op_is_accessor
+    | _ -> failwith "operator not implemented"
+
 let rec translate_expr e = match e with
     | Ljs.Null _ -> Cs.Coq_expr_null
     | Ljs.Undefined _ -> Cs.Coq_expr_undefined
@@ -37,8 +97,8 @@ let rec translate_expr e = match e with
     | Ljs.DeleteField (_, e, e1) -> Cs.Coq_expr_delete_field (translate_expr e, translate_expr e1)
     | Ljs.OwnFieldNames (_, e) -> Cs.Coq_expr_own_field_names (translate_expr e)
     | Ljs.SetBang (_, i, e) -> Cs.Coq_expr_set_bang (String.to_list i, translate_expr e)
-    | Ljs.Op1 (_, i, e) -> Cs.Coq_expr_op1 (String.to_list i, translate_expr e)
-    | Ljs.Op2 (_, i, e1, e2) -> Cs.Coq_expr_op2 (String.to_list i, translate_expr e1, translate_expr e2)
+    | Ljs.Op1 (_, i, e) -> Cs.Coq_expr_op1 (translate_unary_op i, translate_expr e)
+    | Ljs.Op2 (_, i, e1, e2) -> Cs.Coq_expr_op2 (translate_binary_op i, translate_expr e1, translate_expr e2)
     | Ljs.If (_, e, e1, e2) -> Cs.Coq_expr_if (translate_expr e, translate_expr e1, translate_expr e2)
     | Ljs.App (_, e, es) -> Cs.Coq_expr_app (translate_expr e, List.map translate_expr es)
     | Ljs.Seq (_, e1, e2) -> Cs.Coq_expr_seq (translate_expr e1, translate_expr e2)

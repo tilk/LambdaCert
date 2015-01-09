@@ -155,23 +155,23 @@ Definition unary_arith store (op : number -> number) (v : Values.value) : (Store
   end
 .
 
-Definition unary (op : string) runs store v_loc : (Store.store * (@Context.result Values.value_loc)) :=
+Definition unary (op : Syntax.unary_op) runs store v_loc : (Store.store * (@Context.result Values.value_loc)) :=
   assert_deref store v_loc (fun v =>
     match op with
-    | "print" => print store v
-    | "pretty" => pretty runs store v
-    | "strlen" => strlen store v
-    | "typeof" => typeof store v
-    | "primitive?" => is_primitive store v
-    | "abs" => unary_arith store JsNumber.absolute v
-    | "void" => void store v
-    | "floor" => unary_arith store JsNumber.floor v
-    | "prim->str" => prim_to_str store v
-    | "prim->num" => prim_to_num store v
-    | "prim->bool" => prim_to_bool store v
-    | "!" => nnot store v
-    | "numstr->num" => numstr_to_num store v
-    | _ => (store, Context.Fail Values.value_loc ("Unary operator " ++ op ++ " not implemented."))
+    | Syntax.unary_op_print => print store v
+    | Syntax.unary_op_pretty => pretty runs store v
+    | Syntax.unary_op_strlen => strlen store v
+    | Syntax.unary_op_typeof => typeof store v
+    | Syntax.unary_op_is_primitive => is_primitive store v
+    | Syntax.unary_op_abs => unary_arith store JsNumber.absolute v
+    | Syntax.unary_op_void => void store v
+    | Syntax.unary_op_floor => unary_arith store JsNumber.floor v
+    | Syntax.unary_op_prim_to_str => prim_to_str store v
+    | Syntax.unary_op_prim_to_num => prim_to_num store v
+    | Syntax.unary_op_prim_to_bool => prim_to_bool store v
+    | Syntax.unary_op_not => nnot store v
+    | Syntax.unary_op_numstr_to_num => numstr_to_num store v
+    | _ => (store, Context.Fail Values.value_loc ("Unary operator " ++ " not implemented."))
     end
   )
 .
@@ -324,28 +324,28 @@ Parameter gt_bool : number -> number -> bool.
 Parameter ge_bool : number -> number -> bool.
 
 
-Definition binary (op : string) runs store v1_loc v2_loc : (Store.store * (Context.result Values.value_loc)) :=
+Definition binary (op : Syntax.binary_op) runs store v1_loc v2_loc : (Store.store * (Context.result Values.value_loc)) :=
   assert_deref store v1_loc (fun v1 =>
     assert_deref store v2_loc (fun v2 =>
       match op with
-      | "+" => arith store JsNumber.add v1 v2
-      | "-" => arith store JsNumber.sub v1 v2
-      | "*" => arith store JsNumber.mult v1 v2
-      | "/" => arith store JsNumber.div v1 v2
-      | "%" => arith store JsNumber.fmod v1 v2
-      | "<" => cmp store True False False JsNumber.lt_bool v1 v2
-      | "<=" => cmp store True True False le_bool v1 v2
-      | ">" => cmp store False False True gt_bool v1 v2
-      | ">=" => cmp store False True True ge_bool v1 v2
-      | "stx=" => stx_eq store v1 v2
-      | "sameValue" => same_value store v1 v2
-      | "hasProperty" => has_property runs store v1_loc v2
-      | "hasOwnProperty" => has_own_property store v1 v2
-      | "string+" => string_plus store v1 v2
-      | "char-at" => char_at store v1 v2
-      | "isAccessor" => is_accessor runs store v1_loc v2
-      | "__prop->obj" => prop_to_obj store v1 v2 (* For debugging purposes *)
-      | _ => (store, Context.Fail Values.value_loc ("Binary operator " ++ op ++ " not implemented."))
+      | Syntax.binary_op_add => arith store JsNumber.add v1 v2
+      | Syntax.binary_op_sub => arith store JsNumber.sub v1 v2
+      | Syntax.binary_op_mul => arith store JsNumber.mult v1 v2
+      | Syntax.binary_op_div => arith store JsNumber.div v1 v2
+      | Syntax.binary_op_mod => arith store JsNumber.fmod v1 v2
+      | Syntax.binary_op_lt => cmp store True False False JsNumber.lt_bool v1 v2
+      | Syntax.binary_op_le => cmp store True True False le_bool v1 v2
+      | Syntax.binary_op_gt => cmp store False False True gt_bool v1 v2
+      | Syntax.binary_op_ge => cmp store False True True ge_bool v1 v2
+      | Syntax.binary_op_stx_eq => stx_eq store v1 v2
+      | Syntax.binary_op_same_value => same_value store v1 v2
+      | Syntax.binary_op_has_property => has_property runs store v1_loc v2
+      | Syntax.binary_op_has_own_property => has_own_property store v1 v2
+      | Syntax.binary_op_string_plus => string_plus store v1 v2
+      | Syntax.binary_op_char_at => char_at store v1 v2
+      | Syntax.binary_op_is_accessor => is_accessor runs store v1_loc v2
+      | Syntax.binary_op_prop_to_obj => prop_to_obj store v1 v2 (* For debugging purposes *)
+      | _ => (store, Context.Fail Values.value_loc ("Binary operator " ++ " not implemented."))
       end
   ))
 .
