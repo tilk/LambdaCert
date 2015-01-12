@@ -16,7 +16,7 @@ Open Scope string_scope.
 * There are tree sections in this file:
 * * Closures handling, for calling objects and closures.
 * * The evaluators, which actually define the semantics of LambdaJS.
-*   There is one evaluator per node constructor (defined in coq/Syntax.v),
+*   There is one evaluator per node constructor,
 *   with eventually helper functions.
 * * The “looping” functions, which call the evaluators. The “runs”
 *   function calls eval at every iteration, with a reference to itself
@@ -25,22 +25,22 @@ Open Scope string_scope.
 *)
 
 
-Implicit Type runs : Context.runs_type.
+Implicit Type runs : runs_type.
 Implicit Type store : Store.store.
 
 
 (****** Closures handling ******)
 
 (* Evaluates all arguments, passing the store from one to the next. *)
-Definition eval_arg_list_aux runs (cont : Store.store -> list Values.value_loc -> result) (arg_expr : Syntax.expr) store (l : list Values.value_loc) : result :=
+Definition eval_arg_list_aux runs (cont : Store.store -> list value_loc -> result) (arg_expr : expr) store (l : list value_loc) : result :=
   if_eval_return runs store arg_expr (fun store arg_loc => cont store (arg_loc::l))
 .
 
-Definition eval_arg_list runs store (args_expr : list Syntax.expr) (cont : Store.store -> list Values.value_loc -> result) : result :=
+Definition eval_arg_list runs store (args_expr : list expr) (cont : Store.store -> list value_loc -> result) : result :=
   List.fold_left (eval_arg_list_aux runs) args_expr cont store nil
 .
 
-Definition make_app_loc_heap (closure_env : Values.loc_heap_type) (args_name : list Values.id) (args : list Values.value_loc) : option Values.loc_heap_type :=
+Definition make_app_loc_heap (closure_env : loc_heap_type) (args_name : list id) (args : list value_loc) : option loc_heap_type :=
   match (Utils.zip_left args_name args) with
   | Some args_heap =>
     Some (Utils.concat_list_heap
@@ -51,7 +51,7 @@ Definition make_app_loc_heap (closure_env : Values.loc_heap_type) (args_name : l
   end
 .
 
-Definition make_app_store runs store (closure_env : Values.loc_heap_type) (args_name : list Values.id) (args : list Values.value_loc) : result :=
+Definition make_app_store runs store (closure_env : loc_heap_type) (args_name : list id) (args : list value_loc) : result :=
   match (make_app_loc_heap closure_env args_name args) with
   | Some new_loc_heap =>
     result_value (Store.replace_loc_heap store new_loc_heap) 0 (* We have to return something... *)
@@ -59,12 +59,12 @@ Definition make_app_store runs store (closure_env : Values.loc_heap_type) (args_
   end
 .
 
-Definition apply runs store (f_loc : Values.value_loc) (args : list Values.value_loc) : result :=
-  let res := ((Context.runs_type_get_closure runs) store f_loc) in
+Definition apply runs store (f_loc : value_loc) (args : list value_loc) : result :=
+  let res := ((runs_type_get_closure runs) store f_loc) in
   if_value res (fun st f_loc =>
     assert_deref st f_loc (fun f =>
       match f with
-      | Values.Closure id env args_names body =>
+      | Closure id env args_names body =>
         let res := make_app_store runs store env args_names args in
         if_value res (fun inner_store _ =>
           eval_cont runs inner_store body (fun res =>
@@ -92,10 +92,10 @@ Definition eval_id runs store (name : string) : result :=
 (* if e_cond e_true else e_false.
 * Evaluate the condition and get the associated value, then evaluate
 * e_true or e_false depending on the value. *)
-Definition eval_if runs store (e_cond e_true e_false : Syntax.expr) : result :=
+Definition eval_if runs store (e_cond e_true e_false : expr) : result :=
   if_eval_return runs store e_cond (fun store v =>
     match (Store.get_value store v) with
-    | Some Values.True => eval_cont_terminate runs store e_true
+    | Some True => eval_cont_terminate runs store e_true
     | Some _ => eval_cont_terminate runs store e_false
     | None => result_impossible "Location of non-existing value."
     end
@@ -104,42 +104,42 @@ Definition eval_if runs store (e_cond e_true e_false : Syntax.expr) : result :=
 
 (* e1 ; e2.
 * Evaluate e1, then e2, and return the value location returned by e2. *)
-Definition eval_seq runs store (e1 e2 : Syntax.expr) : result :=
+Definition eval_seq runs store (e1 e2 : expr) : result :=
   if_eval_return runs store e1 (fun store v => eval_cont_terminate runs store e2 )
 .
 
 
 (* A tail-recursive helper for eval_object_properties, that constructs
 * the list of properties. *)
-Fixpoint eval_object_properties_aux runs store (l : list (string * Syntax.property)) (acc : Values.object_properties) (cont : Store.store -> Values.object_properties -> result) : result :=
+Fixpoint eval_object_properties_aux runs store (l : list (string * property)) (acc : object_properties) (cont : Store.store -> object_properties -> result) : result :=
   match l with
   | nil => cont store acc
-  | (name, Syntax.property_data (Syntax.data_intro value_expr writable) enumerable configurable) :: tail =>
+  | (name, property_data (data_intro value_expr writable) enumerable configurable) :: tail =>
     (* The order of the evaluation follows the original implementation. *)
     if_eval_return runs store value_expr (fun store value_loc =>
       eval_object_properties_aux runs store tail (Heap.write acc name (
-        Values.attributes_data_of {|
-            Values.attributes_data_value := value_loc;
-            Values.attributes_data_writable := writable;
-            Values.attributes_data_enumerable := enumerable;
-            Values.attributes_data_configurable := configurable |}
+        attributes_data_of {|
+            attributes_data_value := value_loc;
+            attributes_data_writable := writable;
+            attributes_data_enumerable := enumerable;
+            attributes_data_configurable := configurable |}
       )) cont) 
-  | (name, Syntax.property_accessor (Syntax.accessor_intro getter_expr setter_expr) enumerable configurable) :: tail =>
+  | (name, property_accessor (accessor_intro getter_expr setter_expr) enumerable configurable) :: tail =>
     (* The order of the evaluation follows the original implementation. *)
     if_eval_return runs store getter_expr (fun store getter_loc =>
       if_eval_return runs store setter_expr (fun store setter_loc =>
         eval_object_properties_aux runs store tail (Heap.write acc name (
-           Values.attributes_accessor_of {|
-              Values.attributes_accessor_get := getter_loc;
-              Values.attributes_accessor_set := setter_loc;
-              Values.attributes_accessor_enumerable := enumerable;
-              Values.attributes_accessor_configurable := configurable |}
+           attributes_accessor_of {|
+              attributes_accessor_get := getter_loc;
+              attributes_accessor_set := setter_loc;
+              attributes_accessor_enumerable := enumerable;
+              attributes_accessor_configurable := configurable |}
     )) cont))
   end
 .
 (* Reads a list of syntax trees of properties and converts it to a heap
 * bindable to an object. *)
-Definition eval_object_properties runs store (l : list (string * Syntax.property)) (cont : Store.store -> Values.object_properties -> result) : result :=
+Definition eval_object_properties runs store (l : list (string * property)) (cont : Store.store -> object_properties -> result) : result :=
   eval_object_properties_aux runs store l Heap.empty cont
 .
 
@@ -147,23 +147,23 @@ Definition eval_object_properties runs store (l : list (string * Syntax.property
 * Evaluate the primval attribute (if any), then the proto attribute (defaults
 * to Undefined), then properties. Finally, allocate a new object with the
 * computed values. *)
-Definition eval_object_decl runs store (attrs : Syntax.objattrs) (l : list (string * Syntax.property)) : result :=
+Definition eval_object_decl runs store (attrs : objattrs) (l : list (string * property)) : result :=
 
   match attrs with
-  | Syntax.objattrs_intro primval_expr code_expr prototype_expr class extensible =>
+  | objattrs_intro primval_expr code_expr prototype_expr class extensible =>
     (* Following the order in the original implementation: *)
     if_some_eval_return_else_none runs store primval_expr (fun store primval_loc =>
-      let (store, proto_default) := Store.add_value store Values.Undefined in
+      let (store, proto_default) := Store.add_value store Undefined in
       if_some_eval_else_default runs store prototype_expr proto_default (fun store prototype_loc =>
         if_some_eval_return_else_none runs store code_expr (fun store code =>
           eval_object_properties runs store l (fun store props =>
             let (store, loc) := Store.add_object store {|
-                Values.object_proto := prototype_loc;
-                Values.object_class := class;
-                Values.object_extensible := extensible;
-                Values.object_prim_value := primval_loc;
-                Values.object_properties_ := props;
-                Values.object_code := code |}
+                object_proto := prototype_loc;
+                object_class := class;
+                object_extensible := extensible;
+                object_prim_value := primval_loc;
+                object_properties_ := props;
+                object_code := code |}
             in result_value store loc
           ))))
   end
@@ -177,20 +177,20 @@ Definition eval_object_decl runs store (attrs : Syntax.objattrs) (l : list (stri
 * the getter with the arguments.
 * Note the arguments are evaluated even if they are not passed to any
 * function. *)
-Definition eval_get_field runs store (left_expr right_expr arg_expr : Syntax.expr) : result :=
+Definition eval_get_field runs store (left_expr right_expr arg_expr : expr) : result :=
   if_eval_return runs store left_expr (fun store left_loc =>
     if_eval_return runs store right_expr (fun store right_loc =>
       if_eval_return runs store arg_expr (fun store arg_loc =>
         assert_get_object store left_loc (fun object =>
           assert_get_string store right_loc (fun name =>
-            let res := Context.runs_type_get_property runs store (left_loc, name) in
+            let res := runs_type_get_property runs store (left_loc, name) in
             if_result_some res (fun ret =>
               match ret with
-              | Some (attributes_data_of data) => result_value store (Values.attributes_data_value data)
+              | Some (attributes_data_of data) => result_value store (attributes_data_value data)
               | Some (attributes_accessor_of (attributes_accessor_intro getter _ _ _)) =>
                   apply runs store getter (left_loc :: (arg_loc :: nil))
               | None =>
-                  Context.add_value_return store Values.Undefined
+                  add_value_return store Undefined
               end
   ))))))
 .
@@ -204,7 +204,7 @@ Definition eval_get_field runs store (left_expr right_expr arg_expr : Syntax.exp
 * with the `new_val` prepended to the list.
 * Note the arguments are evaluated even if they are not passed to any
 * function. *)
-Definition eval_set_field runs store (left_expr right_expr new_val_expr arg_expr : Syntax.expr) : result :=
+Definition eval_set_field runs store (left_expr right_expr new_val_expr arg_expr : expr) : result :=
   if_eval_return runs store left_expr (fun store left_loc =>
     if_eval_return runs store right_expr (fun store right_loc =>
       if_eval_return runs store new_val_expr (fun store new_val =>
@@ -212,24 +212,24 @@ Definition eval_set_field runs store (left_expr right_expr new_val_expr arg_expr
           assert_get_object_ptr store left_loc (fun left_ptr =>
             assert_get_object_from_ptr store left_ptr (fun object =>
               assert_get_string store right_loc (fun name =>
-                match (Values.get_object_property object name) with
-                | Some (attributes_data_of (Values.attributes_data_intro _ w e c)) =>
-                  Context.update_object_property store left_ptr name (fun prop =>
-                    let attrs := Values.attributes_data_of (attributes_data_intro new_val w e c) in
+                match (get_object_property object name) with
+                | Some (attributes_data_of (attributes_data_intro _ w e c)) =>
+                  update_object_property store left_ptr name (fun prop =>
+                    let attrs := attributes_data_of (attributes_data_intro new_val w e c) in
                     (store, Some attrs, new_val)
                   )
                 | Some (attributes_accessor_of (attributes_accessor_intro _ setter _ _)) =>
                     (* Note: pattr_setters don't get the new value. See https://github.com/brownplt/LambdaS5/issues/45 *)
                     apply runs store setter (left_loc :: (arg_loc :: nil))
                 | None => 
-                  Context.update_object_property store left_ptr name (fun prop =>
-                    let attrs := Values.attributes_data_of (attributes_data_intro new_val true true true) in
+                  update_object_property store left_ptr name (fun prop =>
+                    let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
                     (store, Some attrs, new_val)
                   )
                 end)))))))
 .
 
-Definition eval_deletefield runs store (left_expr right_expr : Syntax.expr) : result :=
+Definition eval_deletefield runs store (left_expr right_expr : expr) : result :=
   if_eval_return runs store left_expr (fun store left_loc =>
     if_eval_return runs store right_expr (fun store right_loc =>
       assert_get_object_ptr store left_loc (fun left_ptr =>
@@ -247,7 +247,7 @@ Definition eval_deletefield runs store (left_expr right_expr : Syntax.expr) : re
 * Evaluate expr, set it to a fresh location in the store, and bind this
 * location to the name `id` in the store.
 * Evaluate the body in the new store. *)
-Definition eval_let runs store (id : string) (value_expr body_expr : Syntax.expr) : result :=
+Definition eval_let runs store (id : string) (value_expr body_expr : expr) : result :=
   if_eval_return runs store value_expr (fun store value_loc =>
     assert_deref store value_loc (fun value =>
       let (store, loc) := Store.add_named_value store id value in
@@ -259,8 +259,8 @@ Definition eval_let runs store (id : string) (value_expr body_expr : Syntax.expr
 * Evaluate expr with a reference to itself, set it to a fresh location in the store,
 * and bind this location to the name `id` in the store.
 * Evaluate the body in the new store. *)
-Definition eval_rec runs store (id : string) (value_expr body_expr : Syntax.expr) : result :=
-  let (store, self_loc) := Store.add_named_value store id Values.Undefined in
+Definition eval_rec runs store (id : string) (value_expr body_expr : expr) : result :=
+  let (store, self_loc) := Store.add_named_value store id Undefined in
   if_eval_return runs store value_expr (fun store value_loc =>
     assert_deref store value_loc (fun value =>
       let store := Store.add_value_at_location store self_loc value in
@@ -271,19 +271,19 @@ Definition eval_rec runs store (id : string) (value_expr body_expr : Syntax.expr
 (* name := expr
 * Evaluate expr, and set it at the location bound to `name`. Fail if `name`
 * is not associated with a location in the store. *)
-Definition eval_setbang runs store (name : string) (expr : Syntax.expr) : result :=
+Definition eval_setbang runs store (name : string) (expr : expr) : result :=
   if_eval_return runs store expr (fun store loc =>
     assert_deref store loc (fun value =>
       match (Store.get_loc store name) with
       | Some loc => result_value (Store.add_value_at_location store loc value) loc
-      | None => Context.raise_exception store "ReferenceError"
+      | None => raise_exception store "ReferenceError"
       end
   ))
 .
 
 (* func (args) { body }
 * Capture the environment's name-to-location heap and return a closure. *)
-Definition eval_lambda runs store (args : list id) (body : Syntax.expr) : result :=
+Definition eval_lambda runs store (args : list id) (body : expr) : result :=
   let env := Store.loc_heap store in
   let (store, loc) := (Store.add_closure store env args body) in
   result_value store loc
@@ -301,28 +301,28 @@ Definition eval_lambda runs store (args : list id) (body : Syntax.expr) : result
 *   it still maps to this location; and if it did not map to anything,
 *   it still does not map to anything). *)
 (* TODO: fix context handling so variables are actually local. *)
-Definition eval_app runs store (f : Syntax.expr) (args_expr : list Syntax.expr) : result :=
+Definition eval_app runs store (f : expr) (args_expr : list expr) : result :=
   if_eval_return runs store f (fun store f_loc =>
     eval_arg_list runs store args_expr (fun store args =>
       apply runs store f_loc args
   ))
 .
 
-Definition get_property_attribute store (oprop : option Values.attributes) (attr : Syntax.pattr) : result :=
+Definition get_property_attribute store (oprop : option attributes) (attr : pattr) : result :=
   match oprop with
-  | None => Context.add_value_return store Values.Undefined
+  | None => add_value_return store Undefined
   | Some prop =>
     match (attr, prop) with
     | (pattr_config,     attributes_data_of (attributes_data_intro      _ _ _ config))
     | (pattr_config, attributes_accessor_of (attributes_accessor_intro _ _ _ config)) =>
-      Context.return_bool store config
+      return_bool store config
 
     | (pattr_enum,     attributes_data_of (attributes_data_intro     _ _ enum _))
     | (pattr_enum, attributes_accessor_of (attributes_accessor_intro _ _ enum _)) =>
-      Context.return_bool store enum
+      return_bool store enum
 
     | (pattr_writable, attributes_data_of (attributes_data_intro _ writable _ _)) =>
-      Context.return_bool store writable
+      return_bool store writable
     | (pattr_writable, attributes_accessor_of _) =>
       result_fail "Access #writable of accessor."
 
@@ -354,26 +354,26 @@ Definition eval_getattr runs store left_expr right_expr attr :=
   ))))
 .
 
-Definition set_property_attribute store (oprop : option Values.attributes) (attr : Syntax.pattr) (new_val : Values.value_loc) (cont : Store.store -> option Values.attributes -> Values.value_loc -> result) : result :=
-  let (store, undef) := Store.add_value store Values.Undefined in
-  let (store, true_ret) := Store.add_value store Values.True in
+Definition set_property_attribute store (oprop : option attributes) (attr : pattr) (new_val : value_loc) (cont : Store.store -> option attributes -> value_loc -> result) : result :=
+  let (store, undef) := Store.add_value store Undefined in
+  let (store, true_ret) := Store.add_value store True in
   (* Some abbreviations: *)
-  let aai := Values.attributes_accessor_intro in
-  let adi := Values.attributes_data_intro in
-  let aao := Values.attributes_accessor_of in
-  let ado := Values.attributes_data_of in
+  let aai := attributes_accessor_intro in
+  let adi := attributes_data_intro in
+  let aao := attributes_accessor_of in
+  let ado := attributes_data_of in
   let raao := fun x => cont store (Some (aao x)) true_ret in
   let rado := fun x => cont store (Some (ado x)) true_ret in
   let getbool := assert_get_bool store new_val in
   match oprop with
   | None =>
     match attr with
-    | Syntax.pattr_getter => raao (aai new_val undef false false)
-    | Syntax.pattr_setter => raao (aai undef new_val false false)
-    | Syntax.pattr_value => rado (adi new_val false false false)
-    | Syntax.pattr_writable => getbool (fun b => rado (adi undef b false false))
-    | Syntax.pattr_enum => getbool (fun b => rado (adi undef false b true))
-    | Syntax.pattr_config => getbool (fun b => rado (adi undef false true b))
+    | pattr_getter => raao (aai new_val undef false false)
+    | pattr_setter => raao (aai undef new_val false false)
+    | pattr_value => rado (adi new_val false false false)
+    | pattr_writable => getbool (fun b => rado (adi undef b false false))
+    | pattr_enum => getbool (fun b => rado (adi undef false b true))
+    | pattr_config => getbool (fun b => rado (adi undef false true b))
     end
   | Some prop =>
     match (attr, prop) with
@@ -438,7 +438,7 @@ Definition eval_setattr runs store left_expr right_expr attr new_val_expr :=
       if_eval_return runs store new_val_expr (fun store new_val =>
         assert_get_object_ptr store left_ (fun obj_ptr =>
           assert_get_string store right_ (fun fieldname =>
-            Context.update_object_property_cont store obj_ptr fieldname (fun oprop =>
+            update_object_property_cont store obj_ptr fieldname (fun oprop =>
               set_property_attribute store oprop attr new_val
   ))))))
 .
@@ -447,63 +447,63 @@ Definition eval_getobjattr runs store obj_expr oattr :=
   if_eval_return runs store obj_expr (fun store obj_loc =>
     assert_get_object store obj_loc (fun obj =>
       match oattr with
-      | Syntax.oattr_proto => result_value store (Values.object_proto obj)
-      | Syntax.oattr_extensible => Context.return_bool store (Values.object_extensible obj)
-      | Syntax.oattr_code =>
-        match (Values.object_code obj) with
+      | oattr_proto => result_value store (object_proto obj)
+      | oattr_extensible => return_bool store (object_extensible obj)
+      | oattr_code =>
+        match (object_code obj) with
         | Some code => result_value store code
-        | None => Context.add_value_return store Values.Null
+        | None => add_value_return store Null
         end
-      | Syntax.oattr_primval =>
-        match (Values.object_prim_value obj) with
+      | oattr_primval =>
+        match (object_prim_value obj) with
         | Some v => result_value store v
         | None => result_fail "primval attribute is None."
         end
-      | Syntax.oattr_class => Context.add_value_return store (Values.String (Values.object_class obj))
+      | oattr_class => add_value_return store (String (object_class obj))
       end
   ))
 .
 
-Definition make_prop_list_aux (left : nat * Store.store * object_properties) (val : Values.value) : nat * Store.store * object_properties :=
+Definition make_prop_list_aux (left : nat * Store.store * object_properties) (val : value) : nat * Store.store * object_properties :=
   match left with
   | (nb_entries, store, attrs) =>
     let (store, val_loc) := Store.add_value store val in
-    let attr := Values.attributes_data_of (attributes_data_intro val_loc false false false) in
+    let attr := attributes_data_of (attributes_data_intro val_loc false false false) in
     (S nb_entries, store, Heap.write attrs (Utils.string_of_nat nb_entries) attr)
   end
 .
-Definition make_prop_heap runs store (vals : list Values.value) : Store.store * Values.object_properties :=
+Definition make_prop_heap runs store (vals : list value) : Store.store * object_properties :=
   match List.fold_left make_prop_list_aux vals (0, store, Heap.empty) with
   | (nb_entries, store, attrs) =>
-    let (store, length_loc) := Store.add_value store (Values.Number (Utils.make_number nb_entries)) in
+    let (store, length_loc) := Store.add_value store (Number (Utils.make_number nb_entries)) in
     let length_attr := attributes_data_of (attributes_data_intro length_loc false false false) in
     (store, Heap.write attrs "length" length_attr)
   end
 .
-Definition left_to_string {X : Type} (x : (string * X)) : Values.value :=
-  let (k, v) := x in Values.String k
+Definition left_to_string {X : Type} (x : (string * X)) : value :=
+  let (k, v) := x in String k
 .
 Definition eval_ownfieldnames runs store obj_expr : result :=
   if_eval_return runs store obj_expr (fun store obj_loc =>
     assert_get_object store obj_loc (fun obj =>
-      let props := (Heap.to_list (Values.object_properties_ obj)) in
+      let props := (Heap.to_list (object_properties_ obj)) in
       let props := (List.map left_to_string props) in
       match (make_prop_heap runs store props) with
       | (store, props) =>
-        match (Syntax.default_objattrs) with
-        | Syntax.objattrs_intro primval_expr code_expr prototype_expr class extensible =>
+        match default_objattrs with
+        | objattrs_intro primval_expr code_expr prototype_expr class extensible =>
           (* Following the order in the original implementation: *)
           if_some_eval_return_else_none runs store primval_expr (fun store primval_loc =>
-            let (store, proto_default) := Store.add_value store Values.Undefined in
+            let (store, proto_default) := Store.add_value store Undefined in
             if_some_eval_else_default runs store prototype_expr proto_default (fun store prototype_loc =>
               if_some_eval_return_else_none runs store code_expr (fun store code =>
                 let (store, loc) := Store.add_object store {|
-                    Values.object_proto := prototype_loc;
-                    Values.object_class := class;
-                    Values.object_extensible := extensible;
-                    Values.object_prim_value := primval_loc;
-                    Values.object_properties_ := props;
-                    Values.object_code := code |}
+                    object_proto := prototype_loc;
+                    object_class := class;
+                    object_extensible := extensible;
+                    object_prim_value := primval_loc;
+                    object_properties_ := props;
+                    object_code := code |}
                 in result_value store loc
                 )))
         end
@@ -566,62 +566,62 @@ Definition eval_tryfinally runs store body fin : result :=
 (******** Closing the loop *******)
 
 (* Main evaluator *)
-Definition eval runs store (e : Syntax.expr) : result :=
-  let return_value := Context.add_value_return store in
+Definition eval runs store (e : expr) : result :=
+  let return_value := add_value_return store in
   match e with
-  | Syntax.expr_undefined => return_value Values.Undefined
-  | Syntax.expr_null => return_value Values.Null
-  | Syntax.expr_string s => return_value (Values.String s)
-  | Syntax.expr_number n => return_value (Values.Number n)
-  | Syntax.expr_true => return_value Values.True
-  | Syntax.expr_false => return_value Values.False
-  | Syntax.expr_id s => eval_id runs store s
-  | Syntax.expr_if e_cond e_true e_false => eval_if runs store e_cond e_true e_false
-  | Syntax.expr_seq e1 e2 => eval_seq runs store e1 e2
-  | Syntax.expr_object attrs l => eval_object_decl runs store attrs l
-  | Syntax.expr_get_field left_ right_ attributes => eval_get_field runs store left_ right_ attributes
-  | Syntax.expr_set_field left_ right_ new_val attributes => eval_set_field runs store left_ right_ new_val attributes
-  | Syntax.expr_delete_field left_ right_ => eval_deletefield runs store left_ right_
-  | Syntax.expr_let id value body => eval_let runs store id value body
-  | Syntax.expr_recc id value body => eval_rec runs store id value body
-  | Syntax.expr_set_bang id expr => eval_setbang runs store id expr
-  | Syntax.expr_lambda args body => eval_lambda runs store args body
-  | Syntax.expr_app f args => eval_app runs store f args
-  | Syntax.expr_get_attr attr left_ right_ => eval_getattr runs store left_ right_ attr
-  | Syntax.expr_set_attr attr left_ right_ newval => eval_setattr runs store left_ right_ attr newval
-  | Syntax.expr_get_obj_attr oattr obj => eval_getobjattr runs store obj oattr
-  | Syntax.expr_set_obj_attr oattr obj attr => result_fail "expr_set_obj_attr not implemented."
-  | Syntax.expr_own_field_names e => eval_ownfieldnames runs store e
-  | Syntax.expr_op1 op e =>
+  | expr_undefined => return_value Undefined
+  | expr_null => return_value Null
+  | expr_string s => return_value (String s)
+  | expr_number n => return_value (Number n)
+  | expr_true => return_value True
+  | expr_false => return_value False
+  | expr_id s => eval_id runs store s
+  | expr_if e_cond e_true e_false => eval_if runs store e_cond e_true e_false
+  | expr_seq e1 e2 => eval_seq runs store e1 e2
+  | expr_object attrs l => eval_object_decl runs store attrs l
+  | expr_get_field left_ right_ attributes => eval_get_field runs store left_ right_ attributes
+  | expr_set_field left_ right_ new_val attributes => eval_set_field runs store left_ right_ new_val attributes
+  | expr_delete_field left_ right_ => eval_deletefield runs store left_ right_
+  | expr_let id value body => eval_let runs store id value body
+  | expr_recc id value body => eval_rec runs store id value body
+  | expr_set_bang id expr => eval_setbang runs store id expr
+  | expr_lambda args body => eval_lambda runs store args body
+  | expr_app f args => eval_app runs store f args
+  | expr_get_attr attr left_ right_ => eval_getattr runs store left_ right_ attr
+  | expr_set_attr attr left_ right_ newval => eval_setattr runs store left_ right_ attr newval
+  | expr_get_obj_attr oattr obj => eval_getobjattr runs store obj oattr
+  | expr_set_obj_attr oattr obj attr => result_fail "expr_set_obj_attr not implemented."
+  | expr_own_field_names e => eval_ownfieldnames runs store e
+  | expr_op1 op e =>
     if_eval_return runs store e (fun store v_loc =>
       Operators.unary op runs store v_loc
     )
-  | Syntax.expr_op2 op e1 e2 =>
+  | expr_op2 op e1 e2 =>
     if_eval_return runs store e1 (fun store v1_loc =>
       if_eval_return runs store e2 (fun store v2_loc =>
         Operators.binary op runs store v1_loc v2_loc
     ))
-  | Syntax.expr_label l e => eval_label runs store l e
-  | Syntax.expr_break l e => eval_break runs store l e
-  | Syntax.expr_try_catch body catch => eval_trycatch runs store body catch
-  | Syntax.expr_try_finally body fin => eval_tryfinally runs store body fin
-  | Syntax.expr_throw e => eval_throw runs store e
-  | Syntax.expr_eval e bindings => result_fail "Eval not implemented."
-  | Syntax.expr_hint _ e => eval_cont_terminate runs store e
+  | expr_label l e => eval_label runs store l e
+  | expr_break l e => eval_break runs store l e
+  | expr_try_catch body catch => eval_trycatch runs store body catch
+  | expr_try_finally body fin => eval_tryfinally runs store body fin
+  | expr_throw e => eval_throw runs store e
+  | expr_eval e bindings => result_fail "Eval not implemented."
+  | expr_hint _ e => eval_cont_terminate runs store e
   end
 .
 
 (* Calls a value (hopefully a function or a callable object) *)
-Definition get_closure runs store (loc : Values.value_loc) : result :=
+Definition get_closure runs store (loc : value_loc) : result :=
   assert_get store loc (fun v =>
     match v with
-    | Values.Closure _ _ _ _ => result_value store loc
-    | Values.Object ptr =>
+    | Closure _ _ _ _ => result_value store loc
+    | Object ptr =>
       assert_get_object_from_ptr store ptr (fun obj =>
-        match (Values.object_code obj) with
+        match (object_code obj) with
         | None => result_fail "Applied an object a code attribute"
         | Some loc =>
-          (Context.runs_type_get_closure runs) store loc
+          (runs_type_get_closure runs) store loc
         end
       )
     | _ => result_fail "Applied non-function."
@@ -630,15 +630,15 @@ Definition get_closure runs store (loc : Values.value_loc) : result :=
 .
 
 (* Gets a property recursivey. *)
-Definition get_property runs store (arg : Values.value_loc * Values.prop_name) : resultof (option Values.attributes) :=
+Definition get_property runs store (arg : value_loc * prop_name) : resultof (option attributes) :=
   let (loc, name) := arg in
   assert_get store loc (fun val =>
     match val with
     | Object ptr =>
       assert_get_object_from_ptr store ptr (fun obj =>
-        match (Values.get_object_property obj name, Values.object_proto obj) with
+        match (get_object_property obj name, object_proto obj) with
         | (Some prop, _) => result_some (Some prop)
-        | (None, proto) => (Context.runs_type_get_property runs) store (proto, name)
+        | (None, proto) => (runs_type_get_property runs) store (proto, name)
         end
       )
     | _ => result_some None
@@ -646,23 +646,23 @@ Definition get_property runs store (arg : Values.value_loc * Values.prop_name) :
   )
 .
 
-Fixpoint runs max_step : Context.runs_type :=
+Fixpoint runs max_step : runs_type :=
   match max_step with
   | 0 => {|
-      Context.runs_type_eval := fun store _ => result_fail "Coq is not Turing-complete";
-      Context.runs_type_get_closure := fun store _ => result_fail "Coq is not Turing-complete";
-      Context.runs_type_get_property := fun store _ => result_fail "Coq is not Turing-complete"
+      runs_type_eval := fun store _ => result_fail "Coq is not Turing-complete";
+      runs_type_get_closure := fun store _ => result_fail "Coq is not Turing-complete";
+      runs_type_get_property := fun store _ => result_fail "Coq is not Turing-complete"
     |}
   | S max_step' =>
-    let wrap {A : Type} (f : Context.runs_type -> Store.store -> A) S : A :=
+    let wrap {A : Type} (f : runs_type -> Store.store -> A) S : A :=
       let runs' := runs max_step' in f runs' S
     in {|
-      Context.runs_type_eval := wrap eval;
-      Context.runs_type_get_closure := wrap get_closure;
-      Context.runs_type_get_property := wrap get_property
+      runs_type_eval := wrap eval;
+      runs_type_get_closure := wrap get_closure;
+      runs_type_get_property := wrap get_property
     |}
   end.
 
-Definition runs_eval n := Context.runs_type_eval (runs n).
-Definition runs_get_closure n := Context.runs_type_get_closure (runs n).
-Definition runs_get_property n := Context.runs_type_get_property (runs n).
+Definition runs_eval n := runs_type_eval (runs n).
+Definition runs_get_closure n := runs_type_get_closure (runs n).
+Definition runs_get_property n := runs_type_get_property (runs n).
