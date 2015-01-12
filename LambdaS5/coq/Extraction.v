@@ -213,6 +213,7 @@ Set Extraction AccessOpaque.
 
 
 
+Extract Constant Utils.string_of_nat => "fun n -> Batteries.String.to_list (string_of_int n)".
 
 Extract Constant Operators._nat_of_float => "int_of_float".
 
@@ -228,7 +229,7 @@ end)".
 Extract Constant Operators._number_eq_bool => "(=)".
 
 Extract Constant Operators._print_string => "fun x -> print_string (CoqUtils.implode x); print_char '\n'".
-Extract Constant Operators._pretty => "fun fuel store value -> print_string (PrettyPrint.string_of_value fuel store value); print_char '\n'".
+Extract Constant Operators._pretty => "fun store value -> print_string (PrettyPrint.string_of_value 100 store value); print_char '\n'".
 
 
 (* That would be more optimized than char lists...

@@ -477,25 +477,20 @@ Definition eval_getobjattr runs store obj_expr oattr :=
   ))
 .
 
-Definition make_prop_list_aux (fuel : nat) (left : option (nat * Store.store * object_properties)) (val : Values.value) : option (nat * Store.store * object_properties) :=
+Definition make_prop_list_aux (left : nat * Store.store * object_properties) (val : Values.value) : nat * Store.store * object_properties :=
   match left with
-  | Some (nb_entries, store, attrs) =>
+  | (nb_entries, store, attrs) =>
     let (store, val_loc) := Store.add_value store val in
     let attr := Values.attributes_data_of (attributes_data_intro val_loc false false false) in
-    match (Utils.string_of_nat fuel nb_entries) with
-    | Some str_nb => Some (S nb_entries, store, Heap.write attrs str_nb attr)
-    | None => None
-    end
-  | None => None
+    (S nb_entries, store, Heap.write attrs (Utils.string_of_nat nb_entries) attr)
   end
 .
-Definition make_prop_heap runs store (vals : list Values.value) : option (Store.store * Values.object_properties) :=
-  match (List.fold_left (make_prop_list_aux (Context.runs_type_nat_fuel runs)) vals (Some (0, store, Heap.empty))) with
-  | Some (nb_entries, store, attrs) =>
+Definition make_prop_heap runs store (vals : list Values.value) : Store.store * Values.object_properties :=
+  match List.fold_left make_prop_list_aux vals (0, store, Heap.empty) with
+  | (nb_entries, store, attrs) =>
     let (store, length_loc) := Store.add_value store (Values.Number (Utils.make_number nb_entries)) in
     let length_attr := attributes_data_of (attributes_data_intro length_loc false false false) in
-    Some (store, Heap.write attrs "length" length_attr)
-  | None => None
+    (store, Heap.write attrs "length" length_attr)
   end
 .
 Definition left_to_string {X : Type} (x : (string * X)) : Values.value :=
@@ -507,7 +502,7 @@ Definition eval_ownfieldnames runs store obj_expr : result :=
       let props := (Heap.to_list (Values.object_properties_ obj)) in
       let props := (List.map left_to_string props) in
       match (make_prop_heap runs store props) with
-      | Some (store, props) =>
+      | (store, props) =>
         match (Syntax.default_objattrs) with
         | Syntax.objattrs_intro primval_expr code_expr prototype_expr class extensible =>
           (* Following the order in the original implementation: *)
@@ -525,7 +520,6 @@ Definition eval_ownfieldnames runs store obj_expr : result :=
                 in result_value store loc
                 )))
         end
-      | None => result_fail "Could not convert nat to string (Coq is not Turing-complete)."
       end
 
   ))
@@ -668,7 +662,6 @@ Definition get_property runs store (arg : Values.value_loc * Values.prop_name) :
 Fixpoint runs max_step : Context.runs_type :=
   match max_step with
   | 0 => {|
-      Context.runs_type_nat_fuel := 0;
       Context.runs_type_eval := fun store _ => result_fail "Coq is not Turing-complete";
       Context.runs_type_get_closure := fun store _ => result_fail "Coq is not Turing-complete";
       Context.runs_type_get_property := fun store _ => result_fail "Coq is not Turing-complete"
@@ -677,7 +670,6 @@ Fixpoint runs max_step : Context.runs_type :=
     let wrap {A : Type} (f : Context.runs_type -> Store.store -> A) S : A :=
       let runs' := runs max_step' in f runs' S
     in {|
-      Context.runs_type_nat_fuel := max_step';
       Context.runs_type_eval := wrap eval;
       Context.runs_type_get_closure := wrap get_closure;
       Context.runs_type_get_property := wrap get_property

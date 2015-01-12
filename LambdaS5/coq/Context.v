@@ -39,7 +39,6 @@ Implicit Arguments result_bottom [[T]].
 Definition result := resultof out.
 
 Record runs_type : Type := runs_type_intro {
-    runs_type_nat_fuel : nat;
     runs_type_eval : Store.store -> Syntax.expr -> result;
     runs_type_get_closure : Store.store -> Values.value_loc -> result;
     runs_type_get_property : Store.store -> (Values.value_loc * Values.prop_name) -> resultof (option Values.attributes)

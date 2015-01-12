@@ -114,7 +114,7 @@ Definition nnot store (v : Values.value) :=
 .
 
 Parameter _print_string : string -> unit.
-Parameter _pretty : nat -> store -> value -> unit.
+Parameter _pretty : store -> value -> unit.
 Definition _seq {X Y : Type} (x : X) (y : Y) : Y :=
   y
 .
@@ -129,7 +129,7 @@ Definition print store (v : Values.value) :=
 
 Definition pretty runs store v :=
   _seq
-  (_pretty (Context.runs_type_nat_fuel runs) store v)
+  (_pretty store v)
   (Context.add_value_return store Undefined)
 .
 

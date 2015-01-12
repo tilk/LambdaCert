@@ -47,20 +47,7 @@ Definition ascii_of_nat (a : nat) : ascii :=
   end
 .
 
-(* TODO fix this!!! fuel not needed *)
-Fixpoint string_of_nat_aux (fuel n : nat) (acc : string) : option string :=
-  match (fuel, n) with
-  | (_, 0) => Some acc
-  | (0, _) => None
-  | (S fuel', _) => string_of_nat_aux fuel' (n / 10) (String.String (ascii_of_nat n) acc)
-  end
-.
-Definition string_of_nat (fuel n : nat) : option string :=
-  match n with
-  | 0 => string_of_nat_aux fuel 0 "0"
-  | _ => string_of_nat_aux fuel n ""
-  end
-.
+Parameter string_of_nat : nat -> string.
 
 Definition make_number (n : nat) : JsNumber.number :=
   Fappli_IEEE.binary_normalize 53 1024 eq_refl eq_refl Fappli_IEEE.mode_NE n 0 false.
