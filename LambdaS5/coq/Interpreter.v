@@ -32,19 +32,6 @@ Implicit Type store : Store.store.
 (****** Closures handling ******)
 
 (* Evaluates all arguments, passing the store from one to the next. *)
-(* TODO!
-Definition eval_arg_list_aux runs (left : result) (arg_expr : Syntax.expr) : (Store.store * @Context.result (list Values.value_loc)) :=
-  let (store, res) := left in
-  if_return store res (fun left_args =>
-    if_eval_return runs store arg_expr (fun store arg_loc =>
-      (store, Return (list Values.value_loc) (arg_loc :: left_args))))
-.
-
-
-Definition eval_reversed_arg_list runs store (args_expr : list Syntax.expr) : (Store.store * Context.result (list Values.value_loc)) :=
-  List.fold_left (eval_arg_list_aux runs) args_expr (store, Return (list Values.value_loc) nil)
-.
-*)
 Definition eval_arg_list_aux runs (cont : Store.store -> list Values.value_loc -> result) (arg_expr : Syntax.expr) store (l : list Values.value_loc) : result :=
   if_eval_return runs store arg_expr (fun store arg_loc => cont store (arg_loc::l))
 .
