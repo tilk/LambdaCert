@@ -32,7 +32,8 @@ Implicit Type store : Store.store.
 (****** Closures handling ******)
 
 (* Evaluates all arguments, passing the store from one to the next. *)
-Definition eval_arg_list_aux runs (left : (Store.store * @Context.result (list Values.value_loc))) (arg_expr : Syntax.expr) : (Store.store * @Context.result (list Values.value_loc)) :=
+(* TODO!
+Definition eval_arg_list_aux runs (left : result) (arg_expr : Syntax.expr) : (Store.store * @Context.result (list Values.value_loc)) :=
   let (store, res) := left in
   if_return store res (fun left_args =>
     if_eval_return runs store arg_expr (fun store arg_loc =>
@@ -42,6 +43,14 @@ Definition eval_arg_list_aux runs (left : (Store.store * @Context.result (list V
 
 Definition eval_reversed_arg_list runs store (args_expr : list Syntax.expr) : (Store.store * Context.result (list Values.value_loc)) :=
   List.fold_left (eval_arg_list_aux runs) args_expr (store, Return (list Values.value_loc) nil)
+.
+*)
+Definition eval_arg_list_aux runs (cont : Store.store -> list Values.value_loc -> result) (arg_expr : Syntax.expr) store (l : list Values.value_loc) : result :=
+  if_eval_return runs store arg_expr (fun store arg_loc => cont store (arg_loc::l))
+.
+
+Definition eval_arg_list runs store (args_expr : list Syntax.expr) (cont : Store.store -> list Values.value_loc -> result) : result :=
+  List.fold_left (eval_arg_list_aux runs) args_expr cont store nil
 .
 
 Definition make_app_loc_heap (closure_env : Values.loc_heap_type) (args_name : list Values.id) (args : list Values.value_loc) : option Values.loc_heap_type :=
@@ -55,26 +64,27 @@ Definition make_app_loc_heap (closure_env : Values.loc_heap_type) (args_name : l
   end
 .
 
-Definition make_app_store runs store (closure_env : Values.loc_heap_type) (args_name : list Values.id) (args : list Values.value_loc) : (Store.store * Context.result Values.value_loc) :=
+Definition make_app_store runs store (closure_env : Values.loc_heap_type) (args_name : list Values.id) (args : list Values.value_loc) : result :=
   match (make_app_loc_heap closure_env args_name args) with
   | Some new_loc_heap =>
-    (Store.replace_loc_heap store new_loc_heap, Context.Return nat 0) (* We have to return something... *)
-  | None => (store, Fail Values.value_loc "Arity mismatch")
+    result_value (Store.replace_loc_heap store new_loc_heap) 0 (* We have to return something... *)
+  | None => result_fail "Arity mismatch"
   end
 .
 
-Definition apply runs store (f_loc : Values.value_loc) (args : list Values.value_loc) : (Store.store * Context.result Values.value_loc) :=
-  let (store, res) := ((Context.runs_type_get_closure runs) store f_loc) in
-  if_return store res (fun f_loc =>
-    assert_deref store f_loc (fun f =>
+Definition apply runs store (f_loc : Values.value_loc) (args : list Values.value_loc) : result :=
+  let res := ((Context.runs_type_get_closure runs) store f_loc) in
+  if_value res (fun st f_loc =>
+    assert_deref st f_loc (fun f =>
       match f with
       | Values.Closure id env args_names body =>
-        let (inner_store, res) := make_app_store runs store env args_names args in
-        if_return inner_store res (fun _ =>
-          eval_cont runs inner_store body (fun inner_store res =>
-            (Store.replace_loc_heap inner_store (Store.loc_heap store), res)
-        ))
-      | _ => (store, Fail Values.value_loc "Expected Closure but did not get one.")
+        let res := make_app_store runs store env args_names args in
+        if_value res (fun inner_store _ =>
+          eval_cont runs inner_store body (fun res =>
+            if_out_ter res (fun inner_store res =>
+              result_some (out_ter (Store.replace_loc_heap inner_store (Store.loc_heap store)) res)
+        )))
+      | _ => result_fail "Expected Closure but did not get one."
       end
   ))
 .
@@ -84,10 +94,10 @@ Definition apply runs store (f_loc : Values.value_loc) (args : list Values.value
 
 (* a lonely identifier.
 * Fetch the associated value location and return it. *)
-Definition eval_id runs store (name : string) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_id runs store (name : string) : result :=
   match (Store.get_loc store name) with
-  | Some v => (store, Return Values.value_loc v)
-  | None => (store, Fail Values.value_loc "ReferenceError")
+  | Some v => result_value store v
+  | None => result_fail "ReferenceError"
   end
 .
 
@@ -95,28 +105,28 @@ Definition eval_id runs store (name : string) : (Store.store * Context.result Va
 (* if e_cond e_true else e_false.
 * Evaluate the condition and get the associated value, then evaluate
 * e_true or e_false depending on the value. *)
-Definition eval_if runs store (e_cond e_true e_false : Syntax.expr) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_if runs store (e_cond e_true e_false : Syntax.expr) : result :=
   if_eval_return runs store e_cond (fun store v =>
     match (Store.get_value store v) with
     | Some Values.True => eval_cont_terminate runs store e_true
     | Some _ => eval_cont_terminate runs store e_false
-    | None => (store, Impossible Values.value_loc "Location of non-existing value.")
+    | None => result_impossible "Location of non-existing value."
     end
   )
 .
 
 (* e1 ; e2.
 * Evaluate e1, then e2, and return the value location returned by e2. *)
-Definition eval_seq runs store (e1 e2 : Syntax.expr) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_seq runs store (e1 e2 : Syntax.expr) : result :=
   if_eval_return runs store e1 (fun store v => eval_cont_terminate runs store e2 )
 .
 
 
 (* A tail-recursive helper for eval_object_properties, that constructs
 * the list of properties. *)
-Fixpoint eval_object_properties_aux runs store (l : list (string * Syntax.property)) (acc : Values.object_properties) : (Store.store * (@Context.result Values.object_properties)) :=
+Fixpoint eval_object_properties_aux runs store (l : list (string * Syntax.property)) (acc : Values.object_properties) (cont : Store.store -> Values.object_properties -> result) : result :=
   match l with
-  | nil => (store, Return Values.object_properties acc)
+  | nil => cont store acc
   | (name, Syntax.property_data (Syntax.data_intro value_expr writable) enumerable configurable) :: tail =>
     (* The order of the evaluation follows the original implementation. *)
     if_eval_return runs store value_expr (fun store value_loc =>
@@ -126,7 +136,7 @@ Fixpoint eval_object_properties_aux runs store (l : list (string * Syntax.proper
             Values.attributes_data_writable := writable;
             Values.attributes_data_enumerable := enumerable;
             Values.attributes_data_configurable := configurable |}
-      )))
+      )) cont) 
   | (name, Syntax.property_accessor (Syntax.accessor_intro getter_expr setter_expr) enumerable configurable) :: tail =>
     (* The order of the evaluation follows the original implementation. *)
     if_eval_return runs store getter_expr (fun store getter_loc =>
@@ -137,20 +147,20 @@ Fixpoint eval_object_properties_aux runs store (l : list (string * Syntax.proper
               Values.attributes_accessor_set := setter_loc;
               Values.attributes_accessor_enumerable := enumerable;
               Values.attributes_accessor_configurable := configurable |}
-    ))))
+    )) cont))
   end
 .
 (* Reads a list of syntax trees of properties and converts it to a heap
 * bindable to an object. *)
-Definition eval_object_properties runs store (l : list (string * Syntax.property)) : (Store.store * (@Context.result Values.object_properties)) :=
-  eval_object_properties_aux runs store l Heap.empty
+Definition eval_object_properties runs store (l : list (string * Syntax.property)) (cont : Store.store -> Values.object_properties -> result) : result :=
+  eval_object_properties_aux runs store l Heap.empty cont
 .
 
 (* { [ attrs ] props }
 * Evaluate the primval attribute (if any), then the proto attribute (defaults
 * to Undefined), then properties. Finally, allocate a new object with the
 * computed values. *)
-Definition eval_object_decl runs store (attrs : Syntax.objattrs) (l : list (string * Syntax.property)) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_object_decl runs store (attrs : Syntax.objattrs) (l : list (string * Syntax.property)) : result :=
 
   match attrs with
   | Syntax.objattrs_intro primval_expr code_expr prototype_expr class extensible =>
@@ -159,8 +169,7 @@ Definition eval_object_decl runs store (attrs : Syntax.objattrs) (l : list (stri
       let (store, proto_default) := Store.add_value store Values.Undefined in
       if_some_eval_else_default runs store prototype_expr proto_default (fun store prototype_loc =>
         if_some_eval_return_else_none runs store code_expr (fun store code =>
-          let (store, props) := (eval_object_properties runs store l)
-          in if_return store props (fun props =>
+          eval_object_properties runs store l (fun store props =>
             let (store, loc) := Store.add_object store {|
                 Values.object_proto := prototype_loc;
                 Values.object_class := class;
@@ -168,7 +177,7 @@ Definition eval_object_decl runs store (attrs : Syntax.objattrs) (l : list (stri
                 Values.object_prim_value := primval_loc;
                 Values.object_properties_ := props;
                 Values.object_code := code |}
-            in (store, Context.Return Values.value_loc loc)
+            in result_value store loc
           ))))
   end
 .
@@ -181,16 +190,16 @@ Definition eval_object_decl runs store (attrs : Syntax.objattrs) (l : list (stri
 * the getter with the arguments.
 * Note the arguments are evaluated even if they are not passed to any
 * function. *)
-Definition eval_get_field runs store (left_expr right_expr arg_expr : Syntax.expr) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_get_field runs store (left_expr right_expr arg_expr : Syntax.expr) : result :=
   if_eval_return runs store left_expr (fun store left_loc =>
     if_eval_return runs store right_expr (fun store right_loc =>
       if_eval_return runs store arg_expr (fun store arg_loc =>
         assert_get_object store left_loc (fun object =>
           assert_get_string store right_loc (fun name =>
-            let (store, res) := Context.runs_type_get_property runs store (left_loc, name) in
-            if_return store res (fun ret =>
+            let res := Context.runs_type_get_property runs store (left_loc, name) in
+            if_result_some res (fun ret =>
               match ret with
-              | Some (attributes_data_of data) => (store, Return Values.value_loc (Values.attributes_data_value data))
+              | Some (attributes_data_of data) => result_value store (Values.attributes_data_value data)
               | Some (attributes_accessor_of (attributes_accessor_intro getter _ _ _)) =>
                   apply runs store getter (left_loc :: (arg_loc :: nil))
               | None =>
@@ -208,7 +217,7 @@ Definition eval_get_field runs store (left_expr right_expr arg_expr : Syntax.exp
 * with the `new_val` prepended to the list.
 * Note the arguments are evaluated even if they are not passed to any
 * function. *)
-Definition eval_set_field runs store (left_expr right_expr new_val_expr arg_expr : Syntax.expr) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_set_field runs store (left_expr right_expr new_val_expr arg_expr : Syntax.expr) : result :=
   if_eval_return runs store left_expr (fun store left_loc =>
     if_eval_return runs store right_expr (fun store right_loc =>
       if_eval_return runs store new_val_expr (fun store new_val =>
@@ -220,7 +229,7 @@ Definition eval_set_field runs store (left_expr right_expr new_val_expr arg_expr
                 | Some (attributes_data_of (Values.attributes_data_intro _ w e c)) =>
                   Context.update_object_property store left_ptr name (fun prop =>
                     let attrs := Values.attributes_data_of (attributes_data_intro new_val w e c) in
-                    (store, Some attrs, Context.Return Values.value_loc new_val)
+                    (store, Some attrs, new_val)
                   )
                 | Some (attributes_accessor_of (attributes_accessor_intro _ setter _ _)) =>
                     (* Note: pattr_setters don't get the new value. See https://github.com/brownplt/LambdaS5/issues/45 *)
@@ -228,12 +237,12 @@ Definition eval_set_field runs store (left_expr right_expr new_val_expr arg_expr
                 | None => 
                   Context.update_object_property store left_ptr name (fun prop =>
                     let attrs := Values.attributes_data_of (attributes_data_intro new_val true true true) in
-                    (store, Some attrs, Context.Return Values.value_loc new_val)
+                    (store, Some attrs, new_val)
                   )
                 end)))))))
 .
 
-Definition eval_deletefield runs store (left_expr right_expr : Syntax.expr) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_deletefield runs store (left_expr right_expr : Syntax.expr) : result :=
   if_eval_return runs store left_expr (fun store left_loc =>
     if_eval_return runs store right_expr (fun store right_loc =>
       assert_get_object_ptr store left_loc (fun left_ptr =>
@@ -242,7 +251,7 @@ Definition eval_deletefield runs store (left_expr right_expr : Syntax.expr) : (S
             match obj with
             | object_intro v c e p props code =>
               let (store, true_loc) := Store.add_value store True in
-              (store, object_intro v c e p (Heap.rem props name) code, Return Values.value_loc true_loc)
+              (store, object_intro v c e p (Heap.rem props name) code, true_loc)
             end
   )))))
 .
@@ -251,7 +260,7 @@ Definition eval_deletefield runs store (left_expr right_expr : Syntax.expr) : (S
 * Evaluate expr, set it to a fresh location in the store, and bind this
 * location to the name `id` in the store.
 * Evaluate the body in the new store. *)
-Definition eval_let runs store (id : string) (value_expr body_expr : Syntax.expr) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_let runs store (id : string) (value_expr body_expr : Syntax.expr) : result :=
   if_eval_return runs store value_expr (fun store value_loc =>
     assert_deref store value_loc (fun value =>
       let (store, loc) := Store.add_named_value store id value in
@@ -263,7 +272,7 @@ Definition eval_let runs store (id : string) (value_expr body_expr : Syntax.expr
 * Evaluate expr with a reference to itself, set it to a fresh location in the store,
 * and bind this location to the name `id` in the store.
 * Evaluate the body in the new store. *)
-Definition eval_rec runs store (id : string) (value_expr body_expr : Syntax.expr) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_rec runs store (id : string) (value_expr body_expr : Syntax.expr) : result :=
   let (store, self_loc) := Store.add_named_value store id Values.Undefined in
   if_eval_return runs store value_expr (fun store value_loc =>
     assert_deref store value_loc (fun value =>
@@ -275,11 +284,11 @@ Definition eval_rec runs store (id : string) (value_expr body_expr : Syntax.expr
 (* name := expr
 * Evaluate expr, and set it at the location bound to `name`. Fail if `name`
 * is not associated with a location in the store. *)
-Definition eval_setbang runs store (name : string) (expr : Syntax.expr) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_setbang runs store (name : string) (expr : Syntax.expr) : result :=
   if_eval_return runs store expr (fun store loc =>
     assert_deref store loc (fun value =>
       match (Store.get_loc store name) with
-      | Some loc => (Store.add_value_at_location store loc value, Context.Return Values.value_loc loc)
+      | Some loc => result_value (Store.add_value_at_location store loc value) loc
       | None => Context.raise_exception store "ReferenceError"
       end
   ))
@@ -287,10 +296,10 @@ Definition eval_setbang runs store (name : string) (expr : Syntax.expr) : (Store
 
 (* func (args) { body }
 * Capture the environment's name-to-location heap and return a closure. *)
-Definition eval_lambda runs store (args : list id) (body : Syntax.expr) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_lambda runs store (args : list id) (body : Syntax.expr) : result :=
   let env := Store.loc_heap store in
   let (store, loc) := (Store.add_closure store env args body) in
-  (store, Context.Return Values.value_loc loc)
+  result_value store loc
 .
 
 (* f (args)
@@ -305,14 +314,14 @@ Definition eval_lambda runs store (args : list id) (body : Syntax.expr) : (Store
 *   it still maps to this location; and if it did not map to anything,
 *   it still does not map to anything). *)
 (* TODO: fix context handling so variables are actually local. *)
-Definition eval_app runs store (f : Syntax.expr) (args_expr : list Syntax.expr) : (Store.store * Context.result Values.value_loc) :=
+Definition eval_app runs store (f : Syntax.expr) (args_expr : list Syntax.expr) : result :=
   if_eval_return runs store f (fun store f_loc =>
-    let (store, res) := eval_reversed_arg_list runs store (List.rev args_expr) in
-    if_return store res (fun args =>
+    eval_arg_list runs store args_expr (fun store args =>
       apply runs store f_loc args
   ))
 .
-Definition get_property_attribute store (oprop : option Values.attributes) (attr : Syntax.pattr) : (Store.store * Context.result Values.value_loc) :=
+
+Definition get_property_attribute store (oprop : option Values.attributes) (attr : Syntax.pattr) : result :=
   match oprop with
   | None => Context.add_value_return store Values.Undefined
   | Some prop =>
@@ -328,22 +337,22 @@ Definition get_property_attribute store (oprop : option Values.attributes) (attr
     | (pattr_writable, attributes_data_of (attributes_data_intro _ writable _ _)) =>
       Context.return_bool store writable
     | (pattr_writable, attributes_accessor_of _) =>
-      (store, Fail Values.value_loc "Access #writable of accessor.")
+      result_fail "Access #writable of accessor."
 
     | (pattr_value, attributes_data_of (attributes_data_intro value _ _ _)) =>
-      (store, Return value_loc value)
+      result_value store value
     | (pattr_value, attributes_accessor_of _) =>
-      (store, Fail Values.value_loc "Access #value of accessor.")
+      result_fail "Access #value of accessor."
 
     | (pattr_getter, attributes_accessor_of (attributes_accessor_intro getter _ _ _)) =>
-      (store, Return value_loc getter)
+      result_value store getter
     | (pattr_getter, attributes_data_of _) =>
-      (store, Fail Values.value_loc "Access #getter of data.")
+      result_fail "Access #getter of data."
 
     | (pattr_setter, attributes_accessor_of (attributes_accessor_intro _ setter _ _)) =>
-      (store, Return value_loc setter)
+      result_value store setter
     | (pattr_setter, attributes_data_of _) =>
-      (store, Fail Values.value_loc "Access #setter of data.")
+      result_fail "Access #setter of data."
     end
   end
 .
@@ -358,18 +367,17 @@ Definition eval_getattr runs store left_expr right_expr attr :=
   ))))
 .
 
-
-Definition set_property_attribute store (oprop : option Values.attributes) (attr : Syntax.pattr) (new_val : Values.value_loc) : (Store.store * (option Values.attributes) * Context.result Values.value_loc) :=
+Definition set_property_attribute store (oprop : option Values.attributes) (attr : Syntax.pattr) (new_val : Values.value_loc) (cont : Store.store -> option Values.attributes -> Values.value_loc -> result) : result :=
   let (store, undef) := Store.add_value store Values.Undefined in
-  let (store, true_ret) := Context.add_value_return store Values.True in
+  let (store, true_ret) := Store.add_value store Values.True in
   (* Some abbreviations: *)
   let aai := Values.attributes_accessor_intro in
   let adi := Values.attributes_data_intro in
   let aao := Values.attributes_accessor_of in
   let ado := Values.attributes_data_of in
-  let raao := (fun x => (store, Some (aao x), true_ret)) in
-  let rado := (fun x => (store, Some (ado x), true_ret)) in
-  let getbool := assert_get_bool_3 store new_val oprop in
+  let raao := fun x => cont store (Some (aao x)) true_ret in
+  let rado := fun x => cont store (Some (ado x)) true_ret in
+  let getbool := assert_get_bool store new_val in
   match oprop with
   | None =>
     match attr with
@@ -421,17 +429,17 @@ Definition set_property_attribute store (oprop : option Values.attributes) (attr
     | (pattr_config,     attributes_data_of (attributes_data_intro     _ _ _ false))
     | (pattr_config, attributes_accessor_of (attributes_accessor_intro _ _ _ false)) =>
       getbool (fun b =>
-        if b then (store, oprop, Fail Values.value_loc "Set #configurable to true while #configurable is false")
-        else (store, oprop, true_ret) (* unchanged *)
+        if b then result_fail "Set #configurable to true while #configurable is false"
+        else cont store oprop true_ret (* unchanged *)
       )
-    | (pattr_value, _) => (store, oprop, Fail Values.value_loc "Invalid #value set.")
-    | (pattr_writable, _) => (store, oprop, Fail Values.value_loc "Invalid #writable set.")
-    | (pattr_getter, _) => (store, oprop, Fail Values.value_loc "Invalid #getter set.")
-    | (pattr_setter, _) => (store, oprop, Fail Values.value_loc "Invalid #setter set.")
+    | (pattr_value, _) => result_fail "Invalid #value set."
+    | (pattr_writable, _) => result_fail "Invalid #writable set."
+    | (pattr_getter, _) => result_fail "Invalid #getter set."
+    | (pattr_setter, _) => result_fail "Invalid #setter set."
     | (pattr_enum,     attributes_data_of (attributes_data_intro     _ _ _ false)) =>
-        (store, oprop, Fail Values.value_loc "Invalid #enum set for data property.")
+        result_fail "Invalid #enum set for data property."
     | (pattr_enum, attributes_accessor_of (attributes_accessor_intro _ _ _ false)) =>
-        (store, oprop, Fail Values.value_loc "Invalid #enum set for accessor property.")
+        result_fail "Invalid #enum set for accessor property."
     end
   end
 .
@@ -443,7 +451,7 @@ Definition eval_setattr runs store left_expr right_expr attr new_val_expr :=
       if_eval_return runs store new_val_expr (fun store new_val =>
         assert_get_object_ptr store left_ (fun obj_ptr =>
           assert_get_string store right_ (fun fieldname =>
-            Context.update_object_property store obj_ptr fieldname (fun oprop =>
+            Context.update_object_property_cont store obj_ptr fieldname (fun oprop =>
               set_property_attribute store oprop attr new_val
   ))))))
 .
@@ -452,17 +460,17 @@ Definition eval_getobjattr runs store obj_expr oattr :=
   if_eval_return runs store obj_expr (fun store obj_loc =>
     assert_get_object store obj_loc (fun obj =>
       match oattr with
-      | Syntax.oattr_proto => (store, Return Values.value_loc (Values.object_proto obj))
+      | Syntax.oattr_proto => result_value store (Values.object_proto obj)
       | Syntax.oattr_extensible => Context.return_bool store (Values.object_extensible obj)
       | Syntax.oattr_code =>
         match (Values.object_code obj) with
-        | Some code => (store, Return Values.value_loc code)
+        | Some code => result_value store code
         | None => Context.add_value_return store Values.Null
         end
       | Syntax.oattr_primval =>
         match (Values.object_prim_value obj) with
-        | Some v => (store, Return Values.value_loc v)
-        | None => (store, Fail Values.value_loc "primval attribute is None.")
+        | Some v => result_value store v
+        | None => result_fail "primval attribute is None."
         end
       | Syntax.oattr_class => Context.add_value_return store (Values.String (Values.object_class obj))
       end
@@ -493,7 +501,7 @@ Definition make_prop_heap runs store (vals : list Values.value) : option (Store.
 Definition left_to_string {X : Type} (x : (string * X)) : Values.value :=
   let (k, v) := x in Values.String k
 .
-Definition eval_ownfieldnames runs store obj_expr : (Store.store * Context.result Values.value_loc) :=
+Definition eval_ownfieldnames runs store obj_expr : result :=
   if_eval_return runs store obj_expr (fun store obj_loc =>
     assert_get_object store obj_loc (fun obj =>
       let props := (Heap.to_list (Values.object_properties_ obj)) in
@@ -514,69 +522,62 @@ Definition eval_ownfieldnames runs store obj_expr : (Store.store * Context.resul
                     Values.object_prim_value := primval_loc;
                     Values.object_properties_ := props;
                     Values.object_code := code |}
-                in (store, Context.Return Values.value_loc loc)
+                in result_value store loc
                 )))
         end
-      | None => (store, Fail Values.value_loc "Could not convert nat to string (Coq is not Turing-complete).")
+      | None => result_fail "Could not convert nat to string (Coq is not Turing-complete)."
       end
 
   ))
 .
 
-Definition eval_label runs store (label : string) body : (Store.store * (@Context.result Values.value_loc)) :=
-  eval_cont runs store body (fun store res =>
+Definition eval_label runs store (label : string) body : result :=
+  if_eval_ter runs store body (fun store res =>
     match res with
-    | Return ret => (store, Return Values.value_loc ret)
-    | Exception exc => (store, Exception Values.value_loc exc)
-    | Break b v =>
+    | res_value ret => result_value store ret
+    | res_exception exc => result_value store exc
+    | res_break b v =>
       if (decide(b = label)) then
-        (store, Return Values.value_loc v)
+        result_value store v
       else
-        (store, Break Values.value_loc b v)
-    | Fail f => (store, Fail Values.value_loc f)
-    | Impossible f => (store, Impossible Values.value_loc f)
+        result_break store b v
     end
   )
 .
-Definition eval_break runs store (label : string) body : (Store.store * (@Context.result Values.value_loc)) :=
+Definition eval_break runs store (label : string) body : result :=
   if_eval_return runs store body (fun store ret =>
-    (store, Break Values.value_loc label ret)
+    result_break store label ret
   )
 .
         
-
-Definition eval_throw runs store expr : (Store.store * (@Context.result Values.value_loc)) :=
+Definition eval_throw runs store expr : result :=
   if_eval_return runs store expr (fun store loc =>
-    (store, Context.Exception Values.value_loc loc)
+    result_exception store loc
   )
 .
 
-Definition eval_trycatch runs store body catch : (Store.store * (@Context.result Values.value_loc)) :=
-  eval_cont runs store body (fun store res =>
+Definition eval_trycatch runs store body catch : result :=
+  if_eval_ter runs store body (fun store res =>
     match res with
-    | Return x => (store, Return Values.value_loc x)
-    | Exception exc =>
+    | res_value x => result_value store x
+    | res_exception exc =>
       if_eval_return runs store catch (fun store catch =>
         apply runs store catch (exc :: nil)
       )
-    | Break b v => (store, Break Values.value_loc b v)
-    | Fail f => (store, Fail Values.value_loc f)
-    | Impossible f => (store, Impossible Values.value_loc f)
+    | res_break b v => result_break store b v
     end
   )
 .
 
-Definition eval_tryfinally runs store body fin : (Store.store * (@Context.result Values.value_loc)) :=
-  eval_cont runs store body (fun store res =>
+Definition eval_tryfinally runs store body fin : result :=
+  if_eval_ter runs store body (fun store res =>
     match res with
-    | Return x => eval_cont_terminate runs store fin
-    | Exception exc =>
+    | res_value x => eval_cont_terminate runs store fin
+    | res_exception exc =>
       if_eval_return runs store fin (fun store catch =>
-        (store, Exception Values.value_loc exc)
+        result_exception store exc
       )
-    | Break b v => (store, Break Values.value_loc b v)
-    | Fail f => (store, Fail Values.value_loc f)
-    | Impossible f => (store, Impossible Values.value_loc f)
+    | res_break b v => result_break store b v
     end
   )
 .
@@ -584,7 +585,7 @@ Definition eval_tryfinally runs store body fin : (Store.store * (@Context.result
 (******** Closing the loop *******)
 
 (* Main evaluator *)
-Definition eval runs store (e : Syntax.expr) : (Store.store * (@Context.result Values.value_loc)) :=
+Definition eval runs store (e : Syntax.expr) : result :=
   let return_value := Context.add_value_return store in
   match e with
   | Syntax.expr_undefined => return_value Values.Undefined
@@ -608,7 +609,7 @@ Definition eval runs store (e : Syntax.expr) : (Store.store * (@Context.result V
   | Syntax.expr_get_attr attr left_ right_ => eval_getattr runs store left_ right_ attr
   | Syntax.expr_set_attr attr left_ right_ newval => eval_setattr runs store left_ right_ attr newval
   | Syntax.expr_get_obj_attr oattr obj => eval_getobjattr runs store obj oattr
-  | Syntax.expr_set_obj_attr oattr obj attr => (store, Fail Values.value_loc "expr_set_obj_attr not implemented.")
+  | Syntax.expr_set_obj_attr oattr obj attr => result_fail "expr_set_obj_attr not implemented."
   | Syntax.expr_own_field_names e => eval_ownfieldnames runs store e
   | Syntax.expr_op1 op e =>
     if_eval_return runs store e (fun store v_loc =>
@@ -624,61 +625,65 @@ Definition eval runs store (e : Syntax.expr) : (Store.store * (@Context.result V
   | Syntax.expr_try_catch body catch => eval_trycatch runs store body catch
   | Syntax.expr_try_finally body fin => eval_tryfinally runs store body fin
   | Syntax.expr_throw e => eval_throw runs store e
-  | Syntax.expr_eval e bindings => (store, Fail Values.value_loc "Eval not implemented.")
+  | Syntax.expr_eval e bindings => result_fail "Eval not implemented."
   | Syntax.expr_hint _ e => eval_cont_terminate runs store e
   end
 .
 
 (* Calls a value (hopefully a function or a callable object) *)
-Definition get_closure runs store (loc : Values.value_loc) : (Store.store * (@Context.result Values.value_loc)) :=
+Definition get_closure runs store (loc : Values.value_loc) : result :=
   assert_get store loc (fun v =>
     match v with
-    | Values.Closure _ _ _ _ => (store, Context.Return Values.value_loc loc)
+    | Values.Closure _ _ _ _ => result_value store loc
     | Values.Object ptr =>
       assert_get_object_from_ptr store ptr (fun obj =>
         match (Values.object_code obj) with
-        | None => (store, Fail Values.value_loc "Applied an object without a code attribute")
+        | None => result_fail "Applied an object a code attribute"
         | Some loc =>
           (Context.runs_type_get_closure runs) store loc
         end
       )
-    | _ => (store, Fail Values.value_loc "Applied non-function.")
+    | _ => result_fail "Applied non-function."
     end
   )
 .
 
-(* Gets a property recursively. *)
-Definition get_property runs store (arg : Values.value_loc * Values.prop_name) : (Store.store * (@Context.result (option Values.attributes))) :=
+(* Gets a property recursivey. *)
+Definition get_property runs store (arg : Values.value_loc * Values.prop_name) : resultof (option Values.attributes) :=
   let (loc, name) := arg in
   assert_get store loc (fun val =>
     match val with
     | Object ptr =>
       assert_get_object_from_ptr store ptr (fun obj =>
         match (Values.get_object_property obj name, Values.object_proto obj) with
-        | (Some prop, _) => (store, Return (option Values.attributes) (Some prop))
+        | (Some prop, _) => result_some (Some prop)
         | (None, proto) => (Context.runs_type_get_property runs) store (proto, name)
         end
       )
-    | _ => (store, Return (option Values.attributes) None)
+    | _ => result_some None
     end
   )
 .
 
+Fixpoint runs max_step : Context.runs_type :=
+  match max_step with
+  | 0 => {|
+      Context.runs_type_nat_fuel := 0;
+      Context.runs_type_eval := fun store _ => result_fail "Coq is not Turing-complete";
+      Context.runs_type_get_closure := fun store _ => result_fail "Coq is not Turing-complete";
+      Context.runs_type_get_property := fun store _ => result_fail "Coq is not Turing-complete"
+    |}
+  | S max_step' =>
+    let wrap {A : Type} (f : Context.runs_type -> Store.store -> A) S : A :=
+      let runs' := runs max_step' in f runs' S
+    in {|
+      Context.runs_type_nat_fuel := max_step';
+      Context.runs_type_eval := wrap eval;
+      Context.runs_type_get_closure := wrap get_closure;
+      Context.runs_type_get_property := wrap get_property
+    |}
+  end.
 
-Fixpoint runs {X Y : Type} (runner : Context.runs_type -> Context.runner_type X Y) (max_steps : nat) (store : Store.store) (e : X) : (Store.store * (@Context.result Y)) :=
-  match (max_steps) with
-  | 0 => (store, Fail Y "Coq is not Turing-complete")
-  | S max_steps' =>
-    let runners := {|
-        Context.runs_type_nat_fuel := max_steps';
-        Context.runs_type_eval := runs eval max_steps';
-        Context.runs_type_get_closure := runs get_closure max_steps';
-        Context.runs_type_get_property := runs get_property max_steps'
-        |} in
-    runner runners store e
-  end
-.
-
-Definition runs_eval := runs eval.
-Definition runs_get_closure := runs get_closure.
-Definition runs_get_property := runs get_property.
+Definition runs_eval n := Context.runs_type_eval (runs n).
+Definition runs_get_closure n := Context.runs_type_get_closure (runs n).
+Definition runs_get_property n := Context.runs_type_get_property (runs n).

@@ -1,3 +1,4 @@
+Set Implicit Arguments.
 Require Import Utils.
 Require Import String.
 Require Import Values.
@@ -5,75 +6,101 @@ Require Import Store.
 
 (* Utilities for the Interpreter. *)
 
+Inductive res := 
+| res_value : value_loc -> res
+| res_exception : value_loc -> res
+| res_break : string -> value_loc -> res
+.
+
+Inductive out :=
+| out_div : out
+| out_ter : store -> res -> out.
+
+Inductive pout :=
+| pout_div : pout
+| pout_ter : attributes -> pout.
+
 (* Used for passing data through continuations/return values.
 * It is mostly used for returning a Javascript value, either as
 * Return or Exception, but sometimes we want to return another kind
 * of result, which is the reason why this type is parametered by
 * value_type. *)
-Inductive result (value_type : Type) : Type :=
-  | Return : value_type -> result value_type (* value *)
-  | Exception : Values.value_loc -> result value_type (* exception message *)
-  | Break : string -> Values.value_loc -> result value_type (* label, expression *)
-  | Fail : string -> result value_type (* reason *)
-  | Impossible : string -> result value_type
+Inductive resultof (T : Type) : Type :=
+| result_some : T -> resultof T
+| result_fail : string -> resultof T
+| result_impossible : string -> resultof T
+| result_bottom : store -> resultof T
 .
+Implicit Arguments result_some [[T]].
+Implicit Arguments result_fail [[T]].
+Implicit Arguments result_impossible [[T]].
+Implicit Arguments result_bottom [[T]].
 
-Definition runner_type (runner_arg : Type) (runner_ret : Type) :=
-  Store.store -> runner_arg -> (Store.store * (@result runner_ret))
-.
+Definition result := resultof out.
+
 Record runs_type : Type := runs_type_intro {
     runs_type_nat_fuel : nat;
-    runs_type_eval : runner_type Syntax.expr Values.value_loc;
-    runs_type_get_closure : runner_type Values.value_loc Values.value_loc;
-    runs_type_get_property : runner_type (Values.value_loc * Values.prop_name) (option Values.attributes)
+    runs_type_eval : Store.store -> Syntax.expr -> result;
+    runs_type_get_closure : Store.store -> Values.value_loc -> result;
+    runs_type_get_property : Store.store -> (Values.value_loc * Values.prop_name) -> resultof (option Values.attributes)
 }.
 
+Definition result_value st (loc : value_loc) : result := result_some (out_ter st (res_value loc)).
+Definition result_exception st (loc : value_loc) : result := result_some (out_ter st (res_exception loc)).
+Definition result_break st (l : string) (loc : value_loc) : result := result_some (out_ter st (res_break l loc)).
+
 (* Shortcut for instanciating and throwing an exception of the given name. *)
-Definition raise_exception store (name : string) : (Store.store * (Context.result Values.value_loc)) :=
+Definition raise_exception store (name : string) : result :=
   let (store, proto_loc) := (Store.add_value store Values.Undefined) in
   match (Store.add_object store (Values.object_intro proto_loc name true None Heap.empty None)) with
-  | (new_st, loc) => (new_st, Exception Values.value_loc loc)
+  | (new_st, loc) => result_exception new_st loc
   end
 .
 
 (* Unpacks a store to get an object, calls the predicate with this
 * object, and updates the object to the returned value. *)
-Definition update_object {return_type : Type} store (ptr : Values.object_ptr) (pred : Values.object -> (Store.store * Values.object * (@result return_type))) : (Store.store * (@result return_type)) :=
-  match (Store.get_object store ptr) with
+Definition update_object_cont (st : store) (ptr : Values.object_ptr) (cont : Values.object -> (store -> object -> value_loc -> result) -> result) : result :=
+  match (Store.get_object st ptr) with
   | Some obj =>
-      match (pred obj) with (store, new_obj, ret) =>
-        (Store.update_object store ptr new_obj, ret)
-      end
-  | None => (store, Impossible return_type "Pointer to a non-existing object.")
+      cont obj (fun st new_obj ret =>
+        result_some (out_ter (Store.update_object st ptr new_obj) (res_value ret))
+      )
+  | None => result_impossible "Pointer to a non-existing object."
   end
 .
 
+Definition update_object (st : store) (ptr : Values.object_ptr) (pred : Values.object -> (store * object * value_loc)) : result :=
+  update_object_cont st ptr (fun obj cont => match pred obj with (st, new_obj, ret) => cont st new_obj ret end)
+.
 
 (* Fetches the object pointed by the ptr, gets the property associated
 * with the name and passes it to the predicate (as an option).
 * If the predicate returns None as the now property, the property is
 * destroyed; otherwise it is updated/created with the one returned by
 * the predicate. *)
-Definition update_object_property {return_type : Type} store (ptr : Values.object_ptr) (name : Values.prop_name) (pred : option Values.attributes -> (Store.store * option Values.attributes * (@result return_type))) : (Store.store * (@result return_type)) :=
-  update_object store ptr (fun obj =>
+Definition update_object_property_cont st (ptr : Values.object_ptr) (name : Values.prop_name) (cont : option Values.attributes -> (store -> option attributes -> value_loc -> result) -> result) : result :=
+  update_object_cont st ptr (fun obj cont1 =>
     match obj with (Values.object_intro prot cl ext prim props code) =>
-      match (pred (Values.get_object_property obj name)) with
-      | (store, Some prop, res) =>
+      cont (Values.get_object_property obj name) (fun st oprop res => match oprop with
+        | Some prop =>
           let new_props := (Heap.write props name prop) in
-          (store, Values.object_intro prot cl ext prim new_props code, res)
-      | (store, None, res) =>
+          cont1 st (Values.object_intro prot cl ext prim new_props code) res
+        | None =>
           let new_props := props in
           (* TODO: Remove property *)
-          (store, Values.object_intro prot cl ext prim new_props code, res)
-      end
+          cont1 st (Values.object_intro prot cl ext prim new_props code) res
+      end)
     end
   )
 .
 
+Definition update_object_property st (ptr : Values.object_ptr) (name : Values.prop_name) (pred : option Values.attributes -> (store * option attributes * value_loc)) : result :=
+  update_object_property_cont st ptr name (fun attrs cont => match pred attrs with (st, oattrs, ret) => cont st oattrs ret end)
+.
 
-Definition add_value_return store v :=
-  let (store, loc) := Store.add_value store v in
-  (store, Return Values.value_loc loc)
+Definition add_value_return st v :=
+  let (st, loc) := Store.add_value st v in
+  result_some (out_ter st (res_value loc))
 .
 
 Definition return_bool store (b : bool) :=

@@ -46,6 +46,8 @@ Definition ascii_of_nat (a : nat) : ascii :=
   | _=>"A"
   end
 .
+
+(* TODO fix this!!! fuel not needed *)
 Fixpoint string_of_nat_aux (fuel n : nat) (acc : string) : option string :=
   match (fuel, n) with
   | (_, 0) => Some acc

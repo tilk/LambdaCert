@@ -10,6 +10,8 @@ Require Import LibTactics.
 Module Heap := Values.Heap.
 
 
+(* TODO fix after the interpreter definition stabilizes! 
+
 (******** Definitions ********)
 
 Definition ok_loc st loc :=
@@ -2938,3 +2940,5 @@ Proof.
       apply IHmax_steps.
       apply st0_cstt.
 Qed.
+
+*)
