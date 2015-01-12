@@ -53,7 +53,7 @@ Definition if_pout_ter {A : Type} (var : resultof pout) (cont : attributes -> re
     end)
 .
 
-Definition if_value  (var : result) (cont : store -> value_loc -> result) : result :=
+Definition if_value  (var : result) (cont : store -> value -> result) : result :=
   if_out_ter var (fun st r =>
     match r with
     | res_value v => cont st v
@@ -71,14 +71,14 @@ Definition if_eval_ter {A : Type} runs st e (cont : store -> res -> resultof A) 
 (* Evaluates an expression, and calls the continuation if
 * the evaluation returned a value.
 * Returns the store and the variable verbatim otherwise. *)
-Definition if_eval_return runs st e (cont : store -> value_loc -> result) : result :=
+Definition if_eval_return runs st e (cont : store -> value -> result) : result :=
   eval_cont runs st e (fun res => if_value res cont)
 .
 
 (* Evaluates an expression with if it is Some, and calls the continuation
 * if the evaluation returned value. Calls the continuation with the default
 * value if the expression is None. *)
-Definition if_some_eval_else_default runs st (oe : option Syntax.expr) (default : value_loc) (cont : store -> value_loc -> result) : result :=
+Definition if_some_eval_else_default runs st (oe : option Syntax.expr) (default : value) (cont : store -> value -> result) : result :=
   match oe with
   | Some e => if_eval_return runs st e cont
   | None => cont st default
@@ -87,7 +87,7 @@ Definition if_some_eval_else_default runs st (oe : option Syntax.expr) (default 
 
 (* Same as if_some_and_eval_value, but returns an option as the Context.result, and
 * None is used as the default value passed to the continuation. *)
-Definition if_some_eval_return_else_none runs st (oe : option Syntax.expr) (cont : store -> option value_loc -> result) : result :=
+Definition if_some_eval_return_else_none runs st (oe : option Syntax.expr) (cont : store -> option value -> result) : result :=
   match oe with
   | Some e => if_eval_return runs st e (fun ctx res => cont ctx (Some res))
   | None => cont st None
@@ -111,11 +111,10 @@ Definition assert_get {A : Type} st (loc : value_loc) (cont : value -> resultof 
 
 (* Calls the continuation if the value is an object pointer, and passes the pointer to the continuation.
 * Fails otherwise. *)
-Definition assert_get_object_ptr {A : Type} store (loc : value_loc) (cont : object_ptr -> resultof A) : resultof A :=
-  match (Store.get_value store loc) with
-  | Some (Values.Object ptr) => cont ptr
-  | Some _ => result_fail "Expected an object pointer."
-  | None => result_impossible "Location of non-existing value."
+Definition assert_get_object_ptr {A : Type} (loc : value) (cont : object_ptr -> resultof A) : resultof A :=
+  match loc with
+  | Values.Object ptr => cont ptr
+  | _ => result_fail "Expected an object pointer."
   end
 .
 
@@ -127,29 +126,27 @@ Definition assert_get_object_from_ptr {A : Type} store (ptr : object_ptr) (cont 
 .
 
 (* Calls the continuation if the value is an object pointer, and passes the object to the continuation *)
-Definition assert_get_object {A : Type} store (loc : Values.value_loc) (cont : object -> resultof A) : resultof A :=
-  assert_get_object_ptr store loc (fun ptr =>
+Definition assert_get_object {A : Type} store (loc : Values.value) (cont : object -> resultof A) : resultof A :=
+  assert_get_object_ptr loc (fun ptr =>
     assert_get_object_from_ptr store ptr cont
   )
 .
 
 (* Calls the continuation if the value is a string.
 * Fails otherwise. *)
-Definition assert_get_string {A : Type} store (loc : value_loc) (cont : string -> resultof A) : resultof A :=
-  match (Store.get_value store loc) with
-  | Some (Values.String s) => cont s
-  | Some _ => result_fail "Expected String but did not get one."
-  | None => result_impossible "Location of non-existing value."
+Definition assert_get_string {A : Type} (loc : value) (cont : string -> resultof A) : resultof A :=
+  match loc with
+  | Values.String s => cont s
+  | _ => result_fail "Expected String but did not get one."
   end
 .
 
 (* Calls the continuation if the value is a boolean.
 * Fails otherwise. *)
-Definition assert_get_bool {A : Type} store (loc : value_loc) (cont : bool -> resultof A) : resultof A :=
-  match (Store.get_value store loc) with
-  | Some Values.True => cont true
-  | Some Values.False => cont false
-  | Some _ => result_fail "Expected True or False but got none of them."
-  | None => result_fail "Location of non-existing value."
+Definition assert_get_bool {A : Type} (loc : value) (cont : bool -> resultof A) : resultof A :=
+  match loc with
+  | Values.True => cont true
+  | Values.False => cont false
+  | _ => result_fail "Expected True or False but got none of them."
   end
 .

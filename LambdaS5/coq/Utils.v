@@ -20,7 +20,6 @@ Definition concat_heaps {X Y : Type} (front back : Heap.heap X Y) :=
   concat_list_heap (Heap.to_list front) back
 .
 
-
 Fixpoint zip_aux {X Y : Type} (lx : list X) (ly : list Y) (acc : list (X * Y)) : option (list (X * Y)) :=
   match lx with
   | nil =>

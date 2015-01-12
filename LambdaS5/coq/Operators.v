@@ -12,69 +12,69 @@ Implicit Type store : Store.store.
 
 (****** Unary operators ******)
 
-Definition typeof store (v : Values.value) :=
+Definition typeof store (v : value) :=
   match v with
-  | Values.Undefined => Context.add_value_return store (String "undefined")
-  | Values.Null => Context.add_value_return store (String  "null")
-  | Values.String _ => Context.add_value_return store (String  "string")
-  | Values.Number _ => Context.add_value_return store (String  "number")
-  | Values.True | Values.False => Context.add_value_return store (String  "boolean")
-  | Values.Object ptr =>
+  | Undefined => result_value store (String "undefined")
+  | Null => result_value store (String  "null")
+  | String _ => result_value store (String  "string")
+  | Number _ => result_value store (String  "number")
+  | True | False => result_value store (String  "boolean")
+  | Object ptr =>
     assert_get_object_from_ptr store ptr (fun obj =>
-      match (Values.object_code obj) with
-      | Some  _ => Context.add_value_return store (String "function")
-      | None => Context.add_value_return store (String  "object")
+      match (object_code obj) with
+      | Some  _ => result_value store (String "function")
+      | None => result_value store (String  "object")
       end
     )
-  | Values.Closure _ _ _ _ => result_fail "typeof got lambda"
+  | Closure _ _ _ _ => result_fail "typeof got lambda"
   end
 .
 
 Definition is_primitive store v :=
   match v with
   | Undefined | Null | String _ | Number _ | True | False =>
-    Context.add_value_return store True
+    result_value store True
   | _ =>
-    Context.add_value_return store False
+    result_value store False
   end
 .
 
-Definition void store (v : Values.value) :=
-  Context.add_value_return store Undefined
+Definition void store (v : value) :=
+  result_value store Undefined
 .
 
-Definition prim_to_str store (v : Values.value) :=
+Definition prim_to_str store (v : value) :=
   match v with
-  | Undefined => Context.add_value_return store (String "undefined")
-  | Null => Context.add_value_return store (String "null")
-  | String s => Context.add_value_return store (String s)
-  | Number n => Context.add_value_return store (String (JsNumber.to_string n))
-  | True => Context.add_value_return store (String "true")
-  | False => Context.add_value_return store (String "false")
+  | Undefined => result_value store (String "undefined")
+  | Null => result_value store (String "null")
+  | String s => result_value store (String s)
+  | Number n => result_value store (String (JsNumber.to_string n))
+  | True => result_value store (String "true")
+  | False => result_value store (String "false")
   | _ => result_fail "prim_to_str not implemented for this type."
   end
 .
 
-Definition prim_to_num store (v : Values.value) :=
+Definition prim_to_num store (v : value) :=
   match v with
-  | Undefined => Context.add_value_return store (Number JsNumber.nan)
-  | Null => Context.add_value_return store (Number JsNumber.zero)
-  | True => Context.add_value_return store (Number JsNumber.one)
-  | False => Context.add_value_return store (Number JsNumber.zero)
-  | Number n => Context.add_value_return store (Number n)
-  | String "" => Context.add_value_return store (Number JsNumber.zero)
-  | String s => Context.add_value_return store (Number (JsNumber.from_string s))
+  | Undefined => result_value store (Number JsNumber.nan)
+  | Null => result_value store (Number JsNumber.zero)
+  | True => result_value store (Number JsNumber.one)
+  | False => result_value store (Number JsNumber.zero)
+  | Number n => result_value store (Number n)
+  | String "" => result_value store (Number JsNumber.zero)
+  | String s => result_value store (Number (JsNumber.from_string s))
   | _ => result_fail "prim_to_num got invalid value."
   end
 .
 
-Definition prim_to_bool store (v : Values.value) :=
+Definition prim_to_bool store (v : value) :=
   match v with
-  | True => Context.add_value_return store True
-  | False => Context.add_value_return store False
-  | Undefined => Context.add_value_return store False
-  | Null => Context.add_value_return store False
-  | Number n => Context.add_value_return store (
+  | True => result_value store True
+  | False => result_value store False
+  | Undefined => result_value store False
+  | Null => result_value store False
+  | Number n => result_value store (
       if (decide(n = JsNumber.nan)) then
         False
       else if (decide(n = JsNumber.zero)) then
@@ -84,19 +84,19 @@ Definition prim_to_bool store (v : Values.value) :=
       else
         True
     )
-  | String "" => Context.add_value_return store False
-  | String _ => Context.add_value_return store True
-  | _ => Context.add_value_return store True
+  | String "" => result_value store False
+  | String _ => result_value store True
+  | _ => result_value store True
   end
 .
 
-Definition nnot store (v : Values.value) :=
+Definition nnot store (v : value) :=
   match v with
-  | Undefined => Context.add_value_return store True
-  | Null => Context.add_value_return store True
-  | True => Context.add_value_return store False
-  | False => Context.add_value_return store True
-  | Number d => Context.add_value_return store (
+  | Undefined => result_value store True
+  | Null => result_value store True
+  | True => result_value store False
+  | False => result_value store True
+  | Number d => result_value store (
       if (decide(d = JsNumber.zero)) then
         True
       else if (decide(d = JsNumber.neg_zero)) then
@@ -106,10 +106,10 @@ Definition nnot store (v : Values.value) :=
       else
         False
     )
-  | String "" => Context.add_value_return store True
-  | String _ => Context.add_value_return store False
-  | Object _ => Context.add_value_return store False
-  | Closure _ _ _ _ => Context.add_value_return store False
+  | String "" => result_value store True
+  | String _ => result_value store False
+  | Object _ => result_value store False
+  | Closure _ _ _ _ => result_value store False
   end
 .
 
@@ -119,10 +119,10 @@ Definition _seq {X Y : Type} (x : X) (y : Y) : Y :=
   y
 .
 
-Definition print store (v : Values.value) :=
+Definition print store (v : value) :=
   match v with
-  | String s => _seq (_print_string s) (Context.add_value_return store Undefined)
-  | Number n => _seq (_print_string (JsNumber.to_string n)) (Context.add_value_return store Undefined)
+  | String s => _seq (_print_string s) (result_value store Undefined)
+  | Number n => _seq (_print_string (JsNumber.to_string n)) (result_value store Undefined)
   | _ => result_fail "print of non-string and non-number."
   end
 .
@@ -130,33 +130,32 @@ Definition print store (v : Values.value) :=
 Definition pretty runs store v :=
   _seq
   (_pretty store v)
-  (Context.add_value_return store Undefined)
+  (result_value store Undefined)
 .
 
 Definition strlen store v :=
   match v with
-  | String s => add_value_return store (Number (JsNumber.of_int (String.length s)))
+  | String s => result_value store (Number (JsNumber.of_int (String.length s)))
   | _ => result_fail "strlen got non-string."
   end
 .
 
-Definition numstr_to_num store (v : Values.value) :=
+Definition numstr_to_num store (v : value) :=
   match v with
-  | String "" => Context.add_value_return store (Number JsNumber.zero)
-  | String s => Context.add_value_return store (Number (JsNumber.from_string s))
+  | String "" => result_value store (Number JsNumber.zero)
+  | String s => result_value store (Number (JsNumber.from_string s))
   | _ => result_fail "numstr_to_num got invalid value."
   end
 .
 
-Definition unary_arith store (op : number -> number) (v : Values.value) : result :=
+Definition unary_arith store (op : number -> number) (v : value) : result :=
   match v with
-  | Number n => Context.add_value_return store (Number (op n))
+  | Number n => result_value store (Number (op n))
   | _ => result_fail "Arithmetic with non-number."
   end
 .
 
-Definition unary (op : Syntax.unary_op) runs store v_loc : result :=
-  assert_deref store v_loc (fun v =>
+Definition unary (op : Syntax.unary_op) runs store v : result :=
     match op with
     | Syntax.unary_op_print => print store v
     | Syntax.unary_op_pretty => pretty runs store v
@@ -173,7 +172,6 @@ Definition unary (op : Syntax.unary_op) runs store v_loc : result :=
     | Syntax.unary_op_numstr_to_num => numstr_to_num store v
     | _ => result_fail ("Unary operator " ++ " not implemented.")
     end
-  )
 .
 
 (****** Binary operators ******)
@@ -182,18 +180,17 @@ Parameter _number_eq_bool : number -> number -> bool.
 
 Definition stx_eq store v1 v2 :=
   match (v1, v2) with
-  | (String s1, String s2) => Context.add_value_return store (if (decide(s1 = s2)) then True else False)
-  | (Null, Null) => Context.add_value_return store True
-  | (Undefined, Undefined) => Context.add_value_return store True
-  | (True, True) => Context.add_value_return store True
-  | (False, False) => Context.add_value_return store True
+  | (String s1, String s2) => result_value store (if (decide(s1 = s2)) then True else False)
+  | (Null, Null) => result_value store True
+  | (Undefined, Undefined) => result_value store True
+  | (True, True) => result_value store True
+  | (False, False) => result_value store True
   | (Number n1, Number n2) =>
-    let (store, loc) := Store.add_bool store (_number_eq_bool n1 n2) in
-    result_value store loc
-  | (Object ptr1, Object ptr2) => Context.add_value_return store (if (beq_nat ptr1 ptr2) then True else False)
-  | (Closure id1 _ _ _, Closure id2 _ _ _) => Context.add_value_return store (if (beq_nat id1 id2) then True else False)
-  | _ => Context.add_value_return store False
-  (*| _ => Context.add_value_return store (if (beq_nat v1_loc v2_loc) then True else False)*)
+    return_bool store (_number_eq_bool n1 n2) 
+  | (Object ptr1, Object ptr2) => result_value store (if (beq_nat ptr1 ptr2) then True else False)
+  | (Closure id1 _ _ _, Closure id2 _ _ _) => result_value store (if (beq_nat id1 id2) then True else False)
+  | _ => result_value store False
+  (*| _ => result_value store (if (beq_nat v1_loc v2_loc) then True else False)*)
   end
 .
 
@@ -203,8 +200,8 @@ Definition has_property runs store v1_loc v2 :=
     let res := Context.runs_type_get_property runs store (v1_loc, s) in
     if_result_some res (fun ret =>
       match ret with
-      | Some _ => Context.add_value_return store True
-      | None => Context.add_value_return store False
+      | Some _ => result_value store True
+      | None => result_value store False
       end
     )
   | _ => result_fail "hasProperty expected a string."
@@ -215,9 +212,9 @@ Definition has_own_property store v1 v2 :=
   match (v1, v2) with
   | (Object ptr, String s) =>
     assert_get_object_from_ptr store ptr (fun obj =>
-      match (Values.get_object_property obj s) with
-      | Some _ => Context.add_value_return store True
-      | None => Context.add_value_return store False
+      match (get_object_property obj s) with
+      | Some _ => result_value store True
+      | None => result_value store False
       end
     )
   | _ => result_fail "hasOwnProperty expected an object and a string."
@@ -230,31 +227,24 @@ Definition prop_to_obj store v1 v2 :=
   match (v1, v2) with
   | (Object ptr, String s) =>
     assert_get_object_from_ptr store ptr (fun obj =>
-      match (Values.get_object_property obj s) with
+      match (get_object_property obj s) with
       | Some (attributes_data_of (attributes_data_intro val writ enum config)) =>
-        let (store, proto_loc) := Store.add_value store Undefined in
-        let (store, config_loc) := Store.add_bool store config in
-        let (store, enum_loc) := Store.add_bool store enum in
-        let (store, writable_loc) := Store.add_bool store writ in
-        let props := Heap.write Heap.empty "configurable" (make_attr config_loc) in
-        let props := Heap.write props "enumerable" (make_attr enum_loc) in
-        let props := Heap.write props "writable" (make_attr writable_loc) in
+        let props := Heap.write Heap.empty "configurable" (make_attr (bool_to_value config)) in
+        let props := Heap.write props "enumerable" (make_attr (bool_to_value enum)) in
+        let props := Heap.write props "writable" (make_attr (bool_to_value writ)) in
         let props := Heap.write props "value" (make_attr val) in
-        let obj := object_intro proto_loc "Object" false None props None in
+        let obj := object_intro Undefined "Object" false None props None in
         let (store, loc) := Store.add_object store obj in
         result_value store loc
       | Some (attributes_accessor_of (attributes_accessor_intro get set enum config)) =>
-        let (store, proto_loc) := Store.add_value store Undefined in
-        let (store, config_loc) := Store.add_bool store config in
-        let (store, enum_loc) := Store.add_bool store enum in
-        let props := Heap.write Heap.empty "configurable" (make_attr config_loc) in
-        let props := Heap.write props "enumerable" (make_attr enum_loc) in
+        let props := Heap.write Heap.empty "configurable" (make_attr (bool_to_value config)) in
+        let props := Heap.write props "enumerable" (make_attr (bool_to_value enum)) in
         let props := Heap.write props "setter" (make_attr set) in
         let props := Heap.write props "getter" (make_attr get) in
-        let obj := object_intro proto_loc "Object" false None props None in
+        let obj := object_intro Undefined "Object" false None props None in
         let (store, loc) := Store.add_object store obj in
         result_value store loc
-      | None => Context.add_value_return store Undefined
+      | None => result_value store Undefined
       end
     )
   | _ => result_fail "hasOwnProperty expected an object and a string."
@@ -263,7 +253,7 @@ Definition prop_to_obj store v1 v2 :=
 
 Definition string_plus store v1 v2 : result :=
   match (v1, v2) with
-  | (String s1, String s2) => Context.add_value_return store (String (s1++s2))
+  | (String s1, String s2) => result_value store (String (s1++s2))
   | _ => result_fail "Only strings can be concatenated."
   end
 .
@@ -272,9 +262,9 @@ Parameter _nat_of_float : number -> nat.
 
 Definition char_at store v1 v2 :=
   match (v1, v2) with
-  | (Values.String s, Number n) =>
+  | (String s, Number n) =>
       match (String.get (_nat_of_float n) s) with
-      | Some char => add_value_return store (Values.String (String.String char String.EmptyString))
+      | Some char => result_value store (String (String.String char String.EmptyString))
       | None => result_fail "char_at called with index larger than length."
       end
   | _ => result_fail "char_at called with wrong argument types."
@@ -287,8 +277,8 @@ Definition is_accessor runs store v1_loc v2 :=
     let res := Context.runs_type_get_property runs store (v1_loc, s) in
     if_result_some res (fun ret =>
       match ret with
-      | Some (attributes_data_of _) => Context.add_value_return store False
-      | Some (attributes_accessor_of _) => Context.add_value_return store True
+      | Some (attributes_data_of _) => result_value store False
+      | Some (attributes_accessor_of _) => result_value store True
       | None => result_fail "isAccessor topped out."
       end
     )
@@ -302,19 +292,19 @@ Definition same_value store v1 v2 :=
   return_bool store (_same_value v1 v2)
 .
 
-Definition arith store (op : number -> number -> number) (v1 v2 : Values.value) : result :=
+Definition arith store (op : number -> number -> number) (v1 v2 : value) : result :=
   match (v1, v2) with
-  | (Number n1, Number n2) => Context.add_value_return store (Number (op n1 n2))
+  | (Number n1, Number n2) => result_value store (Number (op n1 n2))
   | _ => result_fail "Arithmetic with non-numbers."
   end
 .
 
-Definition cmp store undef_left undef_both undef_right (op : number -> number -> bool) (v1 v2 : Values.value) : result :=
+Definition cmp store undef_left undef_both undef_right (op : number -> number -> bool) (v1 v2 : value) : result :=
   match (v1, v2) with
-  | (Number n1, Number n2) => Context.add_value_return store (if (op n1 n2) then True else False)
-  | (Undefined, Number _) => Context.add_value_return store undef_left
-  | (Undefined, Undefined) => Context.add_value_return store undef_both
-  | (Number _, Undefined) => Context.add_value_return store undef_right
+  | (Number n1, Number n2) => result_value store (if (op n1 n2) then True else False)
+  | (Undefined, Number _) => result_value store undef_left
+  | (Undefined, Undefined) => result_value store undef_both
+  | (Number _, Undefined) => result_value store undef_right
   | _ => result_fail "Comparison/order of non-numbers."
   end
 .
@@ -324,9 +314,7 @@ Parameter gt_bool : number -> number -> bool.
 Parameter ge_bool : number -> number -> bool.
 
 
-Definition binary (op : Syntax.binary_op) runs store v1_loc v2_loc : result :=
-  assert_deref store v1_loc (fun v1 =>
-    assert_deref store v2_loc (fun v2 =>
+Definition binary (op : Syntax.binary_op) runs store v1 v2 : result :=
       match op with
       | Syntax.binary_op_add => arith store JsNumber.add v1 v2
       | Syntax.binary_op_sub => arith store JsNumber.sub v1 v2
@@ -339,13 +327,12 @@ Definition binary (op : Syntax.binary_op) runs store v1_loc v2_loc : result :=
       | Syntax.binary_op_ge => cmp store False True True ge_bool v1 v2
       | Syntax.binary_op_stx_eq => stx_eq store v1 v2
       | Syntax.binary_op_same_value => same_value store v1 v2
-      | Syntax.binary_op_has_property => has_property runs store v1_loc v2
+      | Syntax.binary_op_has_property => has_property runs store v1 v2
       | Syntax.binary_op_has_own_property => has_own_property store v1 v2
       | Syntax.binary_op_string_plus => string_plus store v1 v2
       | Syntax.binary_op_char_at => char_at store v1 v2
-      | Syntax.binary_op_is_accessor => is_accessor runs store v1_loc v2
+      | Syntax.binary_op_is_accessor => is_accessor runs store v1 v2
       | Syntax.binary_op_prop_to_obj => prop_to_obj store v1 v2 (* For debugging purposes *)
       | _ => result_fail ("Binary operator " ++ " not implemented.")
       end
-  ))
 .

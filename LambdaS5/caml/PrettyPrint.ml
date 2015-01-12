@@ -19,6 +19,9 @@ and string_of_value depth st = function
     Printf.sprintf "<closure func (%s) { %s }>"
       (String.concat ", " (List.map CoqUtils.implode args))
       (string_of_expression depth body)
+and string_of_value_option depth st = function
+| Some v -> string_of_value depth st v
+| None -> "<unset val>"
 and string_of_value_loc_option depth st = function
 | Some v -> string_of_value_loc depth st v
 | None -> "<unset val>"
@@ -29,9 +32,9 @@ and string_of_object_ptr depth st ptr =
     | Some obj -> string_of_object depth st obj
 and string_of_object depth st obj =
   Printf.sprintf "{[#proto: %s, #class: %s, #extensible: %B, #primval: %s, #code: %s] %s}"
-  (string_of_value_loc depth st obj.Values.object_proto) (CoqUtils.implode obj.Values.object_class)
-  (obj.Values.object_extensible) (string_of_value_loc_option depth st obj.Values.object_prim_value)
-  (string_of_value_loc_option depth st obj.Values.object_code)
+  (string_of_value depth st obj.Values.object_proto) (CoqUtils.implode obj.Values.object_class)
+  (obj.Values.object_extensible) (string_of_value_option depth st obj.Values.object_prim_value)
+  (string_of_value_option depth st obj.Values.object_code)
   (string_of_prop_list depth st (Values.Heap.to_list obj.Values.object_properties_) [])
 and string_of_prop_list depth st l skip =
   let string_of_prop = function (name, attr) ->
@@ -58,8 +61,8 @@ and string_of_expression_option depth = function
 | None -> "<unset expr>"
 
 and string_of_attr depth st = function
-| Values.Coq_attributes_data_of d -> Values.attributes_data_rect (fun v w c e -> Printf.sprintf "{#value %s, #writable %B, #configurable %B, #enumerable %B}" (string_of_value_loc depth st v) w c e) d
-| Values.Coq_attributes_accessor_of d -> Values.attributes_accessor_rect (fun g s e c -> Printf.sprintf "{#getter %s, #setter %s}" (string_of_value_loc depth st g) (string_of_value_loc depth st s)) d (* enumerable and configurable ignored *)
+| Values.Coq_attributes_data_of d -> Values.attributes_data_rect (fun v w c e -> Printf.sprintf "{#value %s, #writable %B, #configurable %B, #enumerable %B}" (string_of_value depth st v) w c e) d
+| Values.Coq_attributes_accessor_of d -> Values.attributes_accessor_rect (fun g s e c -> Printf.sprintf "{#getter %s, #setter %s}" (string_of_value depth st g) (string_of_value depth st s)) d (* enumerable and configurable ignored *)
 
 let string_of_store depth st =
   let locs = (Utils.Heap.to_list st.Store.loc_heap) in

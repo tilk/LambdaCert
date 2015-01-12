@@ -39,21 +39,33 @@ Definition add_value (st : store) (val : value) : (store * value_loc) :=
     (store_intro obj_heap (Heap.write val_heap loc val) loc_heap stream, loc)
   end
 .
-Definition add_object (st : store) (obj : object) : (store * value_loc) :=
-  match st with
-  | store_intro obj_heap val_heap loc_heap (loc ::: (ptr ::: stream)) =>
-    ((store_intro
-      (Heap.write obj_heap ptr obj)
-      (Heap.write val_heap loc (Object ptr))
-      loc_heap
-      stream
-    ), loc)
+Fixpoint add_values (st : store) (vals : list value) : store * list value_loc :=
+  match vals with
+  | nil => (st, nil)
+  | val :: vals => 
+    match add_value st val with
+    | (st', loc) => 
+      match add_values st' vals with
+      | (st'', locs) => (st'', loc :: locs)
+      end
+    end
   end
 .
-Definition add_closure (st : store) env args body : (store * value_loc) :=
+Definition add_object (st : store) (obj : object) : (store * value) :=
   match st with
-  | store_intro obj_heap val_heap loc_heap (loc ::: (id ::: stream)) =>
-    (store_intro obj_heap (Heap.write val_heap loc (Closure id env args body)) loc_heap stream, loc)
+  | store_intro obj_heap val_heap loc_heap (ptr ::: stream) =>
+    ((store_intro
+      (Heap.write obj_heap ptr obj)
+      val_heap
+      loc_heap
+      stream
+    ), (Object ptr))
+  end
+.
+Definition add_closure (st : store) env args body : (store * value) :=
+  match st with
+  | store_intro obj_heap val_heap loc_heap (id ::: stream) =>
+    (store_intro obj_heap val_heap loc_heap stream, Closure id env args body)
   end
 .
 Definition add_value_at_location (st : store) (loc : value_loc) (val : value) : store :=
