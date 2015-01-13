@@ -6,6 +6,8 @@ HeapUtils.v
 Interpreter.v
 Monads.v
 Operators.v
+PrettyInterm.v
+PrettyRules.v
 Store.v
 Syntax.v
 Utils.v

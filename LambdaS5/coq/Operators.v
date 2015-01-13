@@ -127,7 +127,7 @@ Definition print store (v : value) :=
   end
 .
 
-Definition pretty runs store v :=
+Definition pretty store v :=
   _seq
   (_pretty store v)
   (result_value store value_undefined)
@@ -155,10 +155,10 @@ Definition unary_arith store (op : number -> number) (v : value) : result :=
   end
 .
 
-Definition unary (op : Syntax.unary_op) runs store v : result :=
+Definition unary (op : Syntax.unary_op) store v : result :=
     match op with
     | Syntax.unary_op_print => print store v
-    | Syntax.unary_op_pretty => pretty runs store v
+    | Syntax.unary_op_pretty => pretty store v
     | Syntax.unary_op_strlen => strlen store v
     | Syntax.unary_op_typeof => typeof store v
     | Syntax.unary_op_is_primitive => is_primitive store v

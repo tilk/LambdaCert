@@ -587,7 +587,7 @@ Definition eval runs store (e : expr) : result :=
   | expr_own_field_names e => eval_ownfieldnames runs store e
   | expr_op1 op e =>
     if_eval_return runs store e (fun store v_loc =>
-      Operators.unary op runs store v_loc
+      Operators.unary op store v_loc
     )
   | expr_op2 op e1 e2 =>
     if_eval_return runs store e1 (fun store v1_loc =>
