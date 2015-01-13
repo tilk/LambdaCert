@@ -588,12 +588,12 @@ Definition eval runs store (e : expr) : result :=
   | expr_own_field_names e => eval_ownfieldnames runs store e
   | expr_op1 op e =>
     if_eval_return runs store e (fun store v_loc =>
-      Operators.unary op store v_loc
+      if_result_some (Operators.unary op store v_loc) (fun v_res => result_value store v_res)
     )
   | expr_op2 op e1 e2 =>
     if_eval_return runs store e1 (fun store v1_loc =>
       if_eval_return runs store e2 (fun store v2_loc =>
-        Operators.binary op store v1_loc v2_loc
+        if_result_some (Operators.binary op store v1_loc v2_loc) (fun v_res => result_value store v_res)
     ))
   | expr_label l e => eval_label runs store l e
   | expr_break l e => eval_break runs store l e
