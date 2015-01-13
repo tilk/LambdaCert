@@ -249,7 +249,7 @@ Definition eval_deletefield runs store (left_expr right_expr : expr) : result :=
 * Evaluate the body in the new store. *)
 Definition eval_let runs store (id : string) (value_expr body_expr : expr) : result :=
   if_eval_return runs store value_expr (fun store value =>
-      let (store, loc) := Store.add_named_value store id value in
+      let store := Store.add_named_value store id value in
         eval_cont_terminate runs store body_expr
   )
 .
@@ -259,7 +259,7 @@ Definition eval_let runs store (id : string) (value_expr body_expr : expr) : res
 * and bind this location to the name `id` in the store.
 * Evaluate the body in the new store. *)
 Definition eval_rec runs store (id : string) (value_expr body_expr : expr) : result :=
-  let (store, self_loc) := Store.add_named_value store id value_undefined in
+  let (store, self_loc) := Store.add_named_value_loc store id value_undefined in
   if_eval_return runs store value_expr (fun store value =>
       let store := Store.add_value_at_location store self_loc value in
         eval_cont_terminate runs store body_expr
@@ -534,12 +534,11 @@ Definition eval_throw runs store expr : result :=
 Definition eval_trycatch runs store body catch : result :=
   if_eval_ter runs store body (fun store res =>
     match res with
-    | res_value x => result_value store x
     | res_exception exc =>
       if_eval_return runs store catch (fun store catch =>
         apply runs store catch (exc :: nil)
       )
-    | res_break b v => result_break store b v
+    | r => result_res store r
     end
   )
 .
@@ -548,11 +547,10 @@ Definition eval_tryfinally runs store body fin : result :=
   if_eval_ter runs store body (fun store res =>
     match res with
     | res_value x => eval_cont_terminate runs store fin
-    | res_exception exc =>
+    | r =>
       if_eval_return runs store fin (fun store catch =>
-        result_exception store exc
+        result_res store r
       )
-    | res_break b v => result_break store b v
     end
   )
 .

@@ -42,9 +42,10 @@ Record runs_type : Type := runs_type_intro {
     runs_type_eval : Store.store -> Syntax.expr -> result
 }.
 
-Definition result_value st (v : value) : result := result_some (out_ter st (res_value v)).
-Definition result_exception st (v : value) : result := result_some (out_ter st (res_exception v)).
-Definition result_break st (l : string) (v : value) : result := result_some (out_ter st (res_break l v)).
+Definition result_res st (r : res) : result := result_some (out_ter st r).
+Definition result_value st (v : value) : result := result_res st (res_value v).
+Definition result_exception st (v : value) : result := result_res st (res_exception v).
+Definition result_break st (l : string) (v : value) : result := result_res st (res_break l v).
 
 (* Shortcut for instanciating and throwing an exception of the given name. *)
 Definition raise_exception store (name : string) : result :=

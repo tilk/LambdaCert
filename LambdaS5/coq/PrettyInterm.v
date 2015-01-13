@@ -12,23 +12,30 @@ Inductive ext_expr :=
 | expr_if_1 : out -> expr -> expr -> ext_expr
 (* app *)
 | expr_seq_1 : out -> expr -> ext_expr
-(* let *)
-(* recc *)
+| expr_let_1 : id -> out -> expr -> ext_expr
+| expr_recc_1 : value_loc -> out -> expr -> ext_expr
 | expr_label_1 : id -> out -> ext_expr
 | expr_break_1 : id -> out -> ext_expr
-(* try_catch *)
-(* try_finally *)
+| expr_try_catch_1 : out -> expr -> ext_expr
+| expr_try_finally_1 : out -> expr -> ext_expr
+| expr_try_finally_2 : res -> out -> ext_expr
 | expr_throw_1 : out -> ext_expr
+(* lambda *)
+(* eval *)
 .
 
 Coercion expr_basic : expr >-> ext_expr.
 
-Inductive res_control : res -> Prop :=
-| res_control_exception : forall v, res_control (res_exception v)
-| res_control_break : forall i v, res_control (res_break i v)
+Inductive res_is_value : res -> Prop :=
+| res_is_value_value : forall v, res_is_value (res_value v)
+.
+
+Inductive res_is_control : res -> Prop :=
+| res_is_control_exception : forall v, res_is_control (res_exception v)
+| res_is_control_break : forall i v, res_is_control (res_break i v)
 .
 
 Inductive abort : out -> Prop :=
 | abort_div : abort out_div
-| abort_control : forall st r, res_control r -> abort (out_ter st r)
+| abort_control : forall st r, res_is_control r -> abort (out_ter st r)
 .

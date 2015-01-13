@@ -80,10 +80,13 @@ Definition add_named_location (st : store) (name : id) (loc : value_loc) : store
     store_intro obj_heap val_heap (Heap.write loc_heap name loc) stream
   end
 .
-Definition add_named_value (st : store) (name : id) (val : value) : (store * value_loc) :=
+Definition add_named_value_loc (st : store) (name : id) (val : value) : (store * value_loc) :=
   match st with
   | store_intro obj_heap val_heap loc_heap (loc ::: stream) => (store_intro obj_heap (Heap.write val_heap loc val) (Heap.write loc_heap name loc) stream, loc)
   end
+.
+Definition add_named_value (st : store) (name : id) (val : value) : store := 
+  fst (add_named_value_loc st name val)
 .
 Definition update_object (st : store) (ptr : object_ptr) (new_obj : object) : store :=
   (* TODO: Remove the old object from the Heap (or fix LibHeap to prevent duplicates) *)
