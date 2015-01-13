@@ -39,14 +39,14 @@ Definition loc_heap_type := Heap.heap id value_loc.
 (******* Values. *******)
 
 Inductive value : Type :=
-| Null
-| Undefined
-| Number : Syntax.number -> value
-| String : string -> value
-| True
-| False
-| Object : object_ptr -> value
-| Closure : closure_id -> loc_heap_type -> list id -> Syntax.expr -> value (* closure_id is for making closures comparable with stx= *)
+| value_null
+| value_undefined
+| value_number : Syntax.number -> value
+| value_string : string -> value
+| value_true
+| value_false
+| value_object : object_ptr -> value
+| value_closure : closure_id -> loc_heap_type -> list id -> Syntax.expr -> value (* closure_id is for making closures comparable with stx= *)
 .
 
 (* Named data property attributes *)
@@ -102,4 +102,4 @@ Definition set_object_property (obj : object) (name : prop_name) (attrs : attrib
   end
 .
 
-Definition bool_to_value (b : bool) : value := if b then True else False.
+Definition bool_to_value (b : bool) : value := if b then value_true else value_false.

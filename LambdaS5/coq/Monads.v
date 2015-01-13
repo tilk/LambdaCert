@@ -113,7 +113,7 @@ Definition assert_get {A : Type} st (loc : value_loc) (cont : value -> resultof 
 * Fails otherwise. *)
 Definition assert_get_object_ptr {A : Type} (loc : value) (cont : object_ptr -> resultof A) : resultof A :=
   match loc with
-  | Values.Object ptr => cont ptr
+  | value_object ptr => cont ptr
   | _ => result_fail "Expected an object pointer."
   end
 .
@@ -136,7 +136,7 @@ Definition assert_get_object {A : Type} store (loc : Values.value) (cont : objec
 * Fails otherwise. *)
 Definition assert_get_string {A : Type} (loc : value) (cont : string -> resultof A) : resultof A :=
   match loc with
-  | Values.String s => cont s
+  | value_string s => cont s
   | _ => result_fail "Expected String but did not get one."
   end
 .
@@ -145,8 +145,8 @@ Definition assert_get_string {A : Type} (loc : value) (cont : string -> resultof
 * Fails otherwise. *)
 Definition assert_get_bool {A : Type} (loc : value) (cont : bool -> resultof A) : resultof A :=
   match loc with
-  | Values.True => cont true
-  | Values.False => cont false
+  | value_true => cont true
+  | value_false => cont false
   | _ => result_fail "Expected True or False but got none of them."
   end
 .

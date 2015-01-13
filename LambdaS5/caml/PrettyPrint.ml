@@ -8,14 +8,14 @@ let rec string_of_value_loc depth st loc =
       | None -> "<reference to non-existing value>"
       | Some v -> string_of_value (depth-1) st v
 and string_of_value depth st = function
-| Values.Null -> "null"
-| Values.Undefined -> "undefined"
-| Values.Number f -> CoqUtils.implode (JsNumber.to_string f)
-| Values.String s -> "\"" ^ (CoqUtils.implode s) ^ "\""
-| Values.True -> "true"
-| Values.False -> "false"
-| Values.Object ptr -> string_of_object_ptr depth st ptr
-| Values.Closure (_, loc_heap, args, body) ->
+| Values.Coq_value_null -> "null"
+| Values.Coq_value_undefined -> "undefined"
+| Values.Coq_value_number f -> CoqUtils.implode (JsNumber.to_string f)
+| Values.Coq_value_string s -> "\"" ^ (CoqUtils.implode s) ^ "\""
+| Values.Coq_value_true -> "true"
+| Values.Coq_value_false -> "false"
+| Values.Coq_value_object ptr -> string_of_object_ptr depth st ptr
+| Values.Coq_value_closure (_, loc_heap, args, body) ->
     Printf.sprintf "<closure func (%s) { %s }>"
       (String.concat ", " (List.map CoqUtils.implode args))
       (string_of_expression depth body)

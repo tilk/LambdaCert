@@ -59,13 +59,13 @@ Definition add_object (st : store) (obj : object) : (store * value) :=
       val_heap
       loc_heap
       stream
-    ), (Object ptr))
+    ), (value_object ptr))
   end
 .
 Definition add_closure (st : store) env args body : (store * value) :=
   match st with
   | store_intro obj_heap val_heap loc_heap (id ::: stream) =>
-    (store_intro obj_heap val_heap loc_heap stream, Closure id env args body)
+    (store_intro obj_heap val_heap loc_heap stream, value_closure id env args body)
   end
 .
 Definition add_value_at_location (st : store) (loc : value_loc) (val : value) : store :=
@@ -104,7 +104,7 @@ Definition add_option_value st (oval : option value) : (store * option Values.va
   end
 .
 Definition add_bool st (b : bool) : (store * Values.value_loc) :=
-  add_value st (if b then Values.True else Values.False)
+  add_value st (if b then value_true else value_false)
 .
 
 
