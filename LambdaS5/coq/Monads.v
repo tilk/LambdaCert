@@ -33,7 +33,7 @@ Definition if_result_some {A B : Type} (var : resultof A) (cont : A -> resultof 
   | result_some v => cont v
   | result_fail s => result_fail s
   | result_impossible s => result_impossible s
-  | result_bottom st => result_bottom st
+  | result_bottom => result_bottom
   end
 .
 
@@ -150,3 +150,47 @@ Definition assert_get_bool {A : Type} (loc : value) (cont : bool -> resultof A) 
   | _ => result_fail "Expected True or False but got none of them."
   end
 .
+
+(* TODO: move this somewhere else *)
+(* Gets a property recursively. *)
+Fixpoint get_property_aux limit store (val : value) (name : prop_name) : resultof (option attributes) :=
+  match val with
+  | value_object ptr =>
+    match limit with
+    | 0 => result_bottom
+    | S limit' =>
+      assert_get_object_from_ptr store ptr (fun obj =>
+        match get_object_property obj name with
+        | Some prop => result_some (Some prop)
+        | None => get_property_aux limit' store (object_proto obj) name
+        end
+      )
+    end
+  | _ => result_some None
+  end
+.
+
+Definition get_property store (val : value) (name : prop_name) : resultof (option attributes) :=
+  get_property_aux (num_objects store) store val name. 
+
+(* Calls a value (hopefully a function or a callable object) *)
+Fixpoint get_closure_aux limit store (v : value) : resultof value :=
+  match v with
+  | value_closure _ _ _ _ => result_some v
+  | value_object ptr =>
+    match limit with
+    | 0 => result_bottom
+    | S limit' =>
+      assert_get_object_from_ptr store ptr (fun obj =>
+        match object_code obj with
+        | None => result_fail "Applied an object a code attribute"
+        | Some v' => get_closure_aux limit' store v'
+        end
+      )
+    end
+  | _ => result_fail "Applied non-function."
+  end
+.
+
+Fixpoint get_closure store (v : value) : resultof value :=
+  get_closure_aux (num_objects store) store v.

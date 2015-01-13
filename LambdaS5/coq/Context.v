@@ -29,7 +29,7 @@ Inductive resultof (T : Type) : Type :=
 | result_some : T -> resultof T
 | result_fail : string -> resultof T
 | result_impossible : string -> resultof T
-| result_bottom : store -> resultof T
+| result_bottom : resultof T
 .
 Implicit Arguments result_some [[T]].
 Implicit Arguments result_fail [[T]].
@@ -39,9 +39,7 @@ Implicit Arguments result_bottom [[T]].
 Definition result := resultof out.
 
 Record runs_type : Type := runs_type_intro {
-    runs_type_eval : Store.store -> Syntax.expr -> result;
-    runs_type_get_closure : Store.store -> Values.value -> result;
-    runs_type_get_property : Store.store -> (Values.value * Values.prop_name) -> resultof (option Values.attributes)
+    runs_type_eval : Store.store -> Syntax.expr -> result
 }.
 
 Definition result_value st (v : value) : result := result_some (out_ter st (res_value v)).

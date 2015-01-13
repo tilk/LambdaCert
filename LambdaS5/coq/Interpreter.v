@@ -61,12 +61,12 @@ Definition make_app_store runs store (closure_env : loc_heap_type) (args_name : 
   end
 .
 
-Definition apply runs store (f_loc : value) (args : list value) : result :=
-  let res := ((runs_type_get_closure runs) store f_loc) in
-  if_value res (fun st f =>
+Definition apply runs st (f_loc : value) (args : list value) : result :=
+  let res := get_closure st f_loc in
+  if_result_some res (fun f =>
       match f with
       | value_closure id env args_names body =>
-        let (store, args_locs) := Store.add_values store args in
+        let (store, args_locs) := Store.add_values st args in
         let res := make_app_store runs store env args_names args_locs in
         if_result_some res (fun inner_store =>
           eval_cont runs inner_store body (fun res =>
@@ -98,7 +98,8 @@ Definition eval_if runs store (e_cond e_true e_false : expr) : result :=
   if_eval_return runs store e_cond (fun store v =>
     match v with
     | value_true => eval_cont_terminate runs store e_true
-    | _ => eval_cont_terminate runs store e_false
+    | value_false => eval_cont_terminate runs store e_false
+    | _ => result_fail "If on non-boolean value" (* as in the semantics *)
     end
   )
 .
@@ -183,7 +184,7 @@ Definition eval_get_field runs store (left_expr right_expr arg_expr : expr) : re
       if_eval_return runs store arg_expr (fun store arg_loc =>
         assert_get_object store left_loc (fun object =>
           assert_get_string right_loc (fun name =>
-            let res := runs_type_get_property runs store (left_loc, name) in
+            let res := get_property store left_loc name in
             if_result_some res (fun ret =>
               match ret with
               | Some (attributes_data_of data) => result_value store (attributes_data_value data)
@@ -592,7 +593,7 @@ Definition eval runs store (e : expr) : result :=
   | expr_op2 op e1 e2 =>
     if_eval_return runs store e1 (fun store v1_loc =>
       if_eval_return runs store e2 (fun store v2_loc =>
-        Operators.binary op runs store v1_loc v2_loc
+        Operators.binary op store v1_loc v2_loc
     ))
   | expr_label l e => eval_label runs store l e
   | expr_break l e => eval_break runs store l e
@@ -604,54 +605,17 @@ Definition eval runs store (e : expr) : result :=
   end
 .
 
-(* Calls a value (hopefully a function or a callable object) *)
-Definition get_closure runs store (v : value) : result :=
-    match v with
-    | value_closure _ _ _ _ => result_value store v
-    | value_object ptr =>
-      assert_get_object_from_ptr store ptr (fun obj =>
-        match (object_code obj) with
-        | None => result_fail "Applied an object a code attribute"
-        | Some loc =>
-          (runs_type_get_closure runs) store loc
-        end
-      )
-    | _ => result_fail "Applied non-function."
-    end
-.
-
-(* Gets a property recursivey. *)
-Definition get_property runs store (arg : value * prop_name) : resultof (option attributes) :=
-  let (val, name) := arg in
-    match val with
-    | value_object ptr =>
-      assert_get_object_from_ptr store ptr (fun obj =>
-        match (get_object_property obj name, object_proto obj) with
-        | (Some prop, _) => result_some (Some prop)
-        | (None, proto) => (runs_type_get_property runs) store (proto, name)
-        end
-      )
-    | _ => result_some None
-    end
-.
-
 Fixpoint runs max_step : runs_type :=
   match max_step with
   | 0 => {|
-      runs_type_eval := fun store _ => result_fail "Coq is not Turing-complete";
-      runs_type_get_closure := fun store _ => result_fail "Coq is not Turing-complete";
-      runs_type_get_property := fun store _ => result_fail "Coq is not Turing-complete"
+      runs_type_eval := fun store _ => result_bottom
     |}
   | S max_step' =>
     let wrap {A : Type} (f : runs_type -> Store.store -> A) S : A :=
       let runs' := runs max_step' in f runs' S
     in {|
-      runs_type_eval := wrap eval;
-      runs_type_get_closure := wrap get_closure;
-      runs_type_get_property := wrap get_property
+      runs_type_eval := wrap eval
     |}
   end.
 
 Definition runs_eval n := runs_type_eval (runs n).
-Definition runs_get_closure n := runs_type_get_closure (runs n).
-Definition runs_get_property n := runs_type_get_property (runs n).

@@ -194,10 +194,10 @@ Definition stx_eq store v1 v2 :=
   end
 .
 
-Definition has_property runs store v1_loc v2 :=
+Definition has_property store v1_loc v2 :=
   match v2 with
   | value_string s =>
-    let res := Context.runs_type_get_property runs store (v1_loc, s) in
+    let res := get_property store v1_loc s in
     if_result_some res (fun ret =>
       match ret with
       | Some _ => result_value store value_true
@@ -271,10 +271,10 @@ Definition char_at store v1 v2 :=
   end
 .
 
-Definition is_accessor runs store v1_loc v2 :=
+Definition is_accessor store v1_loc v2 :=
   match v2 with
   | value_string s =>
-    let res := Context.runs_type_get_property runs store (v1_loc, s) in
+    let res := get_property store v1_loc s in
     if_result_some res (fun ret =>
       match ret with
       | Some (attributes_data_of _) => result_value store value_false
@@ -314,7 +314,7 @@ Parameter gt_bool : number -> number -> bool.
 Parameter ge_bool : number -> number -> bool.
 
 
-Definition binary (op : Syntax.binary_op) runs store v1 v2 : result :=
+Definition binary (op : Syntax.binary_op) store v1 v2 : result :=
       match op with
       | Syntax.binary_op_add => arith store JsNumber.add v1 v2
       | Syntax.binary_op_sub => arith store JsNumber.sub v1 v2
@@ -327,11 +327,11 @@ Definition binary (op : Syntax.binary_op) runs store v1 v2 : result :=
       | Syntax.binary_op_ge => cmp store value_false value_true value_true ge_bool v1 v2
       | Syntax.binary_op_stx_eq => stx_eq store v1 v2
       | Syntax.binary_op_same_value => same_value store v1 v2
-      | Syntax.binary_op_has_property => has_property runs store v1 v2
+      | Syntax.binary_op_has_property => has_property store v1 v2
       | Syntax.binary_op_has_own_property => has_own_property store v1 v2
       | Syntax.binary_op_string_plus => string_plus store v1 v2
       | Syntax.binary_op_char_at => char_at store v1 v2
-      | Syntax.binary_op_is_accessor => is_accessor runs store v1 v2
+      | Syntax.binary_op_is_accessor => is_accessor store v1 v2
       | Syntax.binary_op_prop_to_obj => prop_to_obj store v1 v2 (* For debugging purposes *)
       | _ => result_fail ("Binary operator " ++ " not implemented.")
       end

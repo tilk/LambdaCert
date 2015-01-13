@@ -128,3 +128,8 @@ Definition get_value_of_name store (name : Values.id) : option Values.value :=
   end
 .
 
+Definition num_objects (st : store) : nat :=
+  length (Heap.to_list (object_heap st)).
+
+Definition num_values (st : store) : nat :=
+  length (Heap.to_list (value_heap st)).
