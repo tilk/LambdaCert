@@ -32,12 +32,12 @@ Implicit Type store : Store.store.
 (****** Closures handling ******)
 
 (* Evaluates all arguments, passing the store from one to the next. *)
-Definition eval_arg_list_aux runs (cont : Store.store -> list value -> result) (arg_expr : expr) store (l : list value) : result :=
-  if_eval_return runs store arg_expr (fun store arg_loc => cont store (arg_loc::l))
+Definition eval_arg_list_aux runs (arg_expr : expr) (cont : Store.store -> list value -> result) store (l : list value) : result :=
+  if_eval_return runs store arg_expr (fun store arg => cont store (arg::l)) 
 .
 
 Definition eval_arg_list runs store (args_expr : list expr) (cont : Store.store -> list value -> result) : result :=
-  List.fold_left (eval_arg_list_aux runs) args_expr cont store nil
+  List.fold_right (eval_arg_list_aux runs) (fun store args => cont store (rev args)) args_expr store nil
 .
 
 (* TODO: simplify these definitions *)

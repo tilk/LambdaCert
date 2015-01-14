@@ -33,7 +33,7 @@ let load_env filename =
     (match Run.eval_ast (get_store ()) (Translate.translate_expr (Run.parse_es5_env ch filename (Ljs_syntax.String (Ljs_syntax.Pos.dummy, "dumped")))) with
         | Context.Coq_result_some (Context.Coq_out_ter (st, (Context.Coq_res_value _))) ->
             store := Some st;
-        | _ -> failwith "Unexpected result when loading an environment");
+        | r -> failwith ("Unexpected result when loading an environment: " ^ Run.result_to_string r));
     close_in ch
 
 let s5_js_parser filename jsfile = 

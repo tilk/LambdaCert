@@ -1,0 +1,1 @@
+try {(func (x, y) { 'bug' })(throw {[] 'foo': {#value 'bar', #writable false}}, throw {[] 'foo': {#value 'baz', #writable false}})} catch { func (exc) { exc['foo'] } }

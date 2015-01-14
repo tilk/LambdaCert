@@ -33,16 +33,18 @@ let parse_es5_env cin name =
 let eval_ast store ast =
   Interpreter.runs_eval max_int store ast
 
-let print_result result =
-  (match result with
-  | Context.Coq_result_fail f -> print_string "Fail: "; print_string (CoqUtils.implode f)
-  | Context.Coq_result_impossible f -> print_string "The impossible happened: "; print_string (CoqUtils.implode f)
+let result_to_string result =
+  match result with
+  | Context.Coq_result_bottom -> "Interpreter timed out"
+  | Context.Coq_result_fail f -> "Fail: " ^ String.of_list f
+  | Context.Coq_result_impossible f -> "The impossible happened: " ^ String.of_list f
   | Context.Coq_result_some o -> match o with
-    | Context.Coq_out_div -> print_string "Interpreter produced out_div, should not happen!"
+    | Context.Coq_out_div -> "Interpreter produced out_div, should not happen!"
     | Context.Coq_out_ter (store, res) -> match res with
-      | Context.Coq_res_value v -> print_string (PrettyPrint.string_of_value 5 store v)
-      | Context.Coq_res_exception e -> print_string "Uncaught exception: "; print_string (PrettyPrint.string_of_value 5 store e)
-      | Context.Coq_res_break (l, v) -> Printf.printf "Uncaught break %s: %s" (CoqUtils.implode l) (PrettyPrint.string_of_value 5 store v)
-  );
-  print_string "\n"
+      | Context.Coq_res_value v -> PrettyPrint.string_of_value 5 store v
+      | Context.Coq_res_exception e -> "Uncaught exception: " ^ PrettyPrint.string_of_value 5 store e
+      | Context.Coq_res_break (l, v) -> Printf.sprintf "Uncaught break %s: %s" (String.of_list l) (PrettyPrint.string_of_value 5 store v)
+  
+
+let print_result result = print_string (result_to_string result); print_string "\n"
 
