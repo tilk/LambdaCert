@@ -4,6 +4,7 @@ Require Import Store.
 Require Import Context.
 Require Import Values.
 Require Import Operators.
+Require Import Monads.
 Require Import Coq.Strings.String.
 
 Require Import List.
@@ -20,6 +21,8 @@ Implicit Type n : number.
 Implicit Type i : id.
 Implicit Type o : out.
 Implicit Type c : ctx.
+Implicit Type ptr : object_ptr.
+Implicit Type obj : object.
 
 Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_null : forall c st, red_expr c st expr_null (out_ter st (res_value value_null))
@@ -37,6 +40,84 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_lambda args body) (out_ter st' (res_value v))
 
 (* object *)
+
+| red_expr_get_field : forall c st e1 e2 e3 o o',
+    red_expr c st e1 o ->
+    red_expr c st (expr_get_field_1 o e2 e3) o' ->
+    red_expr c st (expr_get_field e1 e2 e3) o'
+| red_expr_get_field_1 : forall c st' st v1 e2 e3 o o',
+    red_expr c st e2 o ->
+    red_expr c st (expr_get_field_2 v1 o e3) o' ->
+    red_expr c st' (expr_get_field_1 (out_ter st (res_value v1)) e2 e3) o'
+| red_expr_get_field_1_abort : forall c st e2 e3 o,
+    abort o ->
+    red_expr c st (expr_get_field_1 o e2 e3) o
+| red_expr_get_field_2 : forall c st' st v1 v2 e3 o o',
+    red_expr c st e3 o ->
+    red_expr c st (expr_get_field_3 v1 v2 o) o' ->
+    red_expr c st' (expr_get_field_2 v1 (out_ter st (res_value v2)) e3) o'
+| red_expr_get_field_2_abort : forall c st v1 e3 o,
+    abort o ->
+    red_expr c st (expr_get_field_2 v1 o e3) o
+| red_expr_get_field_3 : forall c st' st v3 ptr obj s oattr o,
+    get_object st ptr = Some obj ->
+    get_property st ptr s = result_some oattr ->
+    red_expr c st (expr_get_field_4 ptr oattr v3) o ->
+    red_expr c st' (expr_get_field_3 (value_object ptr) (value_string s) (out_ter st (res_value v3))) o
+| red_expr_get_field_3_abort : forall c st v1 v2 o,
+    abort o ->
+    red_expr c st (expr_get_field_3 v1 v2 o) o
+| red_expr_get_field_4_no_field : forall c st ptr v3,
+    red_expr c st (expr_get_field_4 ptr None v3) (out_ter st (res_value value_undefined))
+| red_expr_get_field_4_get_field : forall c st ptr v3 data,
+    red_expr c st (expr_get_field_4 ptr (Some (attributes_data_of data)) v3) (out_ter st (res_value (attributes_data_value data)))
+| red_expr_get_field_4_getter : forall c st ptr v3 acc o,
+    red_expr c st (expr_app_2 (attributes_accessor_get acc) [v3; value_object ptr] nil) o ->
+    red_expr c st (expr_get_field_4 ptr (Some (attributes_accessor_of acc)) v3) o
+
+| red_expr_set_field : forall c st e1 e2 e3 e4 o o',
+    red_expr c st e1 o ->
+    red_expr c st (expr_set_field_1 o e2 e3 e4) o' ->
+    red_expr c st (expr_set_field e1 e2 e3 e4) o'
+| red_expr_set_field_1 : forall c st' st v1 e2 e3 e4 o o',
+    red_expr c st e2 o ->
+    red_expr c st (expr_set_field_2 v1 o e3 e4) o' ->
+    red_expr c st' (expr_set_field_1 (out_ter st (res_value v1)) e2 e3 e4) o'
+| red_expr_set_field_1_abort : forall c st e2 e3 e4 o,
+    abort o ->
+    red_expr c st (expr_set_field_1 o e2 e3 e4) o
+| red_expr_set_field_2 : forall c st' st v1 v2 e3 e4 o o',
+    red_expr c st e3 o ->
+    red_expr c st (expr_set_field_3 v1 v2 o e4) o' ->
+    red_expr c st' (expr_set_field_2 v1 (out_ter st (res_value v2)) e3 e4) o'
+| red_expr_set_field_2_abort : forall c st v1 e3 e4 o,
+    abort o ->
+    red_expr c st (expr_set_field_2 v1 o e3 e4) o
+| red_expr_set_field_3 : forall c st' st v1 v2 v3 e4 o o',
+    red_expr c st e4 o ->
+    red_expr c st (expr_set_field_4 v1 v2 v3 o) o' ->
+    red_expr c st' (expr_set_field_3 v1 v2 (out_ter st (res_value v3)) e4) o'
+| red_expr_set_field_3_abort : forall c st v1 v2 e4 o,
+    abort o ->
+    red_expr c st (expr_set_field_3 v1 v2 o e4) o
+| red_expr_set_field_4_abort : forall c st v1 v2 v3 o,
+    abort o ->
+    red_expr c st (expr_set_field_4 v1 v2 v3 o) o
+
+| red_expr_delete_field : forall c st e1 e2 o o',
+    red_expr c st e1 o ->
+    red_expr c st (expr_delete_field_1 o e2) o' ->
+    red_expr c st (expr_delete_field e1 e2) o'
+| red_expr_delete_field_1 : forall c st' st v1 e2 o o',
+    red_expr c st e2 o ->
+    red_expr c st (expr_delete_field_2 v1 o) o' ->
+    red_expr c st' (expr_delete_field_1 (out_ter st (res_value v1)) e2) o'
+| red_expr_delete_field_1_abort : forall c st e2 o,
+    abort o ->
+    red_expr c st (expr_delete_field_1 o e2) o
+| red_expr_delete_field_2_abort : forall c st v1 o,
+    abort o ->
+    red_expr c st (expr_delete_field_2 v1 o) o
 
 | red_expr_set_bang : forall c st i e o o',
     red_expr c st e o ->

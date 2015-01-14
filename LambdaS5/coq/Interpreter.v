@@ -159,9 +159,9 @@ Definition eval_get_field runs c store (left_expr right_expr arg_expr : expr) : 
   if_eval_return runs c store left_expr (fun store left_loc =>
     if_eval_return runs c store right_expr (fun store right_loc =>
       if_eval_return runs c store arg_expr (fun store arg_loc =>
-        assert_get_object store left_loc (fun object =>
+        assert_get_object_ptr left_loc (fun ptr =>
           assert_get_string right_loc (fun name =>
-            let res := get_property store left_loc name in
+            let res := get_property store ptr name in
             if_result_some res (fun ret =>
               match ret with
               | Some (attributes_data_of data) => result_value store (attributes_data_value data)

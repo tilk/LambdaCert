@@ -5,6 +5,16 @@ Require Import Values.
 
 Inductive ext_expr :=
 | expr_basic : expr -> ext_expr
+| expr_get_field_1 : out -> expr -> expr -> ext_expr
+| expr_get_field_2 : value -> out -> expr -> ext_expr
+| expr_get_field_3 : value -> value -> out -> ext_expr
+| expr_get_field_4 : object_ptr -> option attributes -> value -> ext_expr
+| expr_set_field_1 : out -> expr -> expr -> expr -> ext_expr
+| expr_set_field_2 : value -> out -> expr -> expr -> ext_expr
+| expr_set_field_3 : value -> value -> out -> expr -> ext_expr
+| expr_set_field_4 : value -> value -> value -> out -> ext_expr
+| expr_delete_field_1 : out -> expr -> ext_expr
+| expr_delete_field_2 : value -> out -> ext_expr
 | expr_set_bang_1 : id -> out -> ext_expr
 | expr_op1_1 : unary_op -> out -> ext_expr
 | expr_op2_1 : binary_op -> out -> expr -> ext_expr

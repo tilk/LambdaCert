@@ -155,25 +155,26 @@ Definition assert_get_bool {A : Type} (loc : value) (cont : bool -> resultof A) 
 
 (* TODO: move this somewhere else *)
 (* Gets a property recursively. *)
-Fixpoint get_property_aux limit store (val : value) (name : prop_name) : resultof (option attributes) :=
-  match val with
-  | value_object ptr =>
-    match limit with
-    | 0 => result_bottom
-    | S limit' =>
-      assert_get_object_from_ptr store ptr (fun obj =>
-        match get_object_property obj name with
-        | Some prop => result_some (Some prop)
-        | None => get_property_aux limit' store (object_proto obj) name
+Fixpoint get_property_aux limit store (ptr : object_ptr) (name : prop_name) : resultof (option attributes) :=
+  match limit with
+  | 0 => result_bottom
+  | S limit' =>
+    assert_get_object_from_ptr store ptr (fun obj =>
+      match get_object_property obj name with
+      | Some prop => result_some (Some prop)
+      | None => 
+        match object_proto obj with
+        | value_object ptr =>
+          get_property_aux limit' store ptr name
+        | _ => result_some None
         end
-      )
-    end
-  | _ => result_some None
+      end
+    )
   end
 .
 
-Definition get_property store (val : value) (name : prop_name) : resultof (option attributes) :=
-  get_property_aux (num_objects store) store val name. 
+Definition get_property store (ptr : object_ptr) (name : prop_name) : resultof (option attributes) :=
+  get_property_aux (num_objects store) store ptr name. 
 
 (* Calls a value (hopefully a function or a callable object) *)
 Fixpoint get_closure_aux limit store (v : value) : resultof value :=
@@ -194,5 +195,5 @@ Fixpoint get_closure_aux limit store (v : value) : resultof value :=
   end
 .
 
-Fixpoint get_closure store (v : value) : resultof value :=
+Definition get_closure store (v : value) : resultof value :=
   get_closure_aux (num_objects store) store v.
