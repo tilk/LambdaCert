@@ -112,6 +112,7 @@ let rec translate_expr e = match e with
     | Ljs.Lambda (_, is, e) -> Cs.Coq_expr_lambda (List.map String.to_list is, translate_expr e)
     | Ljs.Eval (_, e1, e2) -> Cs.Coq_expr_eval (translate_expr e1, translate_expr e2)
     | Ljs.Hint (_, i, e) -> Cs.Coq_expr_hint (String.to_list i, translate_expr e)
+    | Ljs.Dump -> Cs.Coq_expr_dump
 and translate_data d = Cs.Coq_data_intro (translate_expr d.Ljs.value, d.Ljs.writable)
 and translate_accessor a = Cs.Coq_accessor_intro (translate_expr a.Ljs.getter, translate_expr a.Ljs.setter)
 and translate_prop p = match p with

@@ -5,6 +5,7 @@ Require Import Context.
 
 Implicit Type runs : Context.runs_type.
 Implicit Type st : Store.store.
+Implicit Type c : Store.ctx.
 Implicit Type e : Syntax.expr.
 Implicit Type loc : value_loc.
 
@@ -18,12 +19,12 @@ Implicit Type loc : value_loc.
 
 (* Evaluate an expression, and calls the continuation with
 * the new store and the Context.result of the evaluation. *)
-Definition eval_cont {A : Type} runs st e (cont : result -> resultof A) : resultof A :=
-  cont (Context.runs_type_eval runs st e).
+Definition eval_cont {A : Type} runs c st e (cont : result -> resultof A) : resultof A :=
+  cont (Context.runs_type_eval runs c st e).
 
 (* Alias for calling eval_cont with an empty continuation *)
-Definition eval_cont_terminate runs st e : result :=
-  eval_cont runs st e (fun res => res)
+Definition eval_cont_terminate runs c st e : result :=
+  eval_cont runs c st e (fun res => res)
 .
 
 (* Calls the continuation if the variable is a value.
@@ -34,6 +35,7 @@ Definition if_result_some {A B : Type} (var : resultof A) (cont : A -> resultof 
   | result_fail s => result_fail s
   | result_impossible s => result_impossible s
   | result_bottom => result_bottom
+  | result_dump c st => result_dump c st
   end
 .
 
@@ -64,32 +66,32 @@ Definition if_value  (var : result) (cont : store -> value -> result) : result :
 (* Evaluates an expression, and calls the continuation if
 * the evaluation finished successfully.
 * Returns the store and the variable verbatim otherwise. *)
-Definition if_eval_ter {A : Type} runs st e (cont : store -> res -> resultof A) : resultof A :=
-  eval_cont runs st e (fun res => if_out_ter res cont)
+Definition if_eval_ter {A : Type} runs c st e (cont : store -> res -> resultof A) : resultof A :=
+  eval_cont runs c st e (fun res => if_out_ter res cont)
 .
 
 (* Evaluates an expression, and calls the continuation if
 * the evaluation returned a value.
 * Returns the store and the variable verbatim otherwise. *)
-Definition if_eval_return runs st e (cont : store -> value -> result) : result :=
-  eval_cont runs st e (fun res => if_value res cont)
+Definition if_eval_return runs c st e (cont : store -> value -> result) : result :=
+  eval_cont runs c st e (fun res => if_value res cont)
 .
 
 (* Evaluates an expression with if it is Some, and calls the continuation
 * if the evaluation returned value. Calls the continuation with the default
 * value if the expression is None. *)
-Definition if_some_eval_else_default runs st (oe : option Syntax.expr) (default : value) (cont : store -> value -> result) : result :=
+Definition if_some_eval_else_default runs c st (oe : option Syntax.expr) (default : value) (cont : store -> value -> result) : result :=
   match oe with
-  | Some e => if_eval_return runs st e cont
+  | Some e => if_eval_return runs c st e cont
   | None => cont st default
   end
 .
 
 (* Same as if_some_and_eval_value, but returns an option as the Context.result, and
 * None is used as the default value passed to the continuation. *)
-Definition if_some_eval_return_else_none runs st (oe : option Syntax.expr) (cont : store -> option value -> result) : result :=
+Definition if_some_eval_return_else_none runs c st (oe : option Syntax.expr) (cont : store -> option value -> result) : result :=
   match oe with
-  | Some e => if_eval_return runs st e (fun ctx res => cont ctx (Some res))
+  | Some e => if_eval_return runs c st e (fun ctx res => cont ctx (Some res))
   | None => cont st None
   end
 .

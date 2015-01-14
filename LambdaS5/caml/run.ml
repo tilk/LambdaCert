@@ -30,14 +30,15 @@ let parse_es5_env cin name =
                        (Lexing.lexeme lexbuf))
 
 
-let eval_ast store ast =
-  Interpreter.runs_eval max_int store ast
+let eval_ast (c, st) ast =
+  Interpreter.runs_eval max_int c st ast
 
 let result_to_string result =
   match result with
   | Context.Coq_result_bottom -> "Interpreter timed out"
   | Context.Coq_result_fail f -> "Fail: " ^ String.of_list f
   | Context.Coq_result_impossible f -> "The impossible happened: " ^ String.of_list f
+  | Context.Coq_result_dump (_, _) -> "The interpreter dumped state"
   | Context.Coq_result_some o -> match o with
     | Context.Coq_out_div -> "Interpreter produced out_div, should not happen!"
     | Context.Coq_out_ter (store, res) -> match res with

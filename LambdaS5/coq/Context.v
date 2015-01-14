@@ -30,16 +30,18 @@ Inductive resultof (T : Type) : Type :=
 | result_fail : string -> resultof T
 | result_impossible : string -> resultof T
 | result_bottom : resultof T
+| result_dump : ctx -> store -> resultof T
 .
 Implicit Arguments result_some [[T]].
 Implicit Arguments result_fail [[T]].
 Implicit Arguments result_impossible [[T]].
 Implicit Arguments result_bottom [[T]].
+Implicit Arguments result_dump [[T]].
 
 Definition result := resultof out.
 
 Record runs_type : Type := runs_type_intro {
-    runs_type_eval : Store.store -> Syntax.expr -> result
+    runs_type_eval : ctx -> store -> Syntax.expr -> result
 }.
 
 Definition result_res st (r : res) : result := result_some (out_ter st r).
@@ -93,6 +95,13 @@ Definition update_object_property_cont st (ptr : object_ptr) (name : prop_name) 
 
 Definition update_object_property st (ptr : object_ptr) (name : prop_name) (pred : option attributes -> (store * option attributes * value)) : result :=
   update_object_property_cont st ptr name (fun attrs cont => match pred attrs with (st, oattrs, ret) => cont st oattrs ret end)
+.
+
+Definition make_app_store (closure_env : loc_heap_type) (args_name : list id) (args : list value_loc) : resultof loc_heap_type :=
+  match Utils.zip_left args_name args with
+  | Some args_heap => result_some (Utils.concat_list_heap args_heap closure_env)
+  | None => result_fail "Arity mismatch"
+  end
 .
 
 Definition return_bool store (b : bool) :=

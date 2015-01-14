@@ -7,7 +7,7 @@ let store = ref None
 
 let js_parser = ref None 
 
-let get_store () = if Option.is_none !store then store := Some Store.create_store; Option.get !store
+let get_store () = if Option.is_none !store then store := Some (Store.create_ctx, Store.create_store); Option.get !store
 
 let get_channel filename =
     if filename = "stdin" then stdin else open_in filename
@@ -30,9 +30,9 @@ let save_store filename =
 
 let load_env filename = 
     let ch = get_channel filename in 
-    (match Run.eval_ast (get_store ()) (Translate.translate_expr (Run.parse_es5_env ch filename (Ljs_syntax.String (Ljs_syntax.Pos.dummy, "dumped")))) with
-        | Context.Coq_result_some (Context.Coq_out_ter (st, (Context.Coq_res_value _))) ->
-            store := Some st;
+    (match Run.eval_ast (get_store ()) (Translate.translate_expr (Run.parse_es5_env ch filename (Ljs_syntax.Dump))) with
+        | Context.Coq_result_dump (c, st) ->
+            store := Some (c, st);
         | r -> failwith ("Unexpected result when loading an environment: " ^ Run.result_to_string r));
     close_in ch
 

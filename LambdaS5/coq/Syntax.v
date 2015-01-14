@@ -127,6 +127,7 @@ Inductive expr : Type :=
 | expr_lambda : list id -> expr -> expr
 | expr_eval : expr -> expr -> expr (* string -> env_object -> expr *)
 | expr_hint : string -> expr -> expr
+| expr_dump : expr (* special - for dumping the context in the interpreter *)
 with data : Type :=
 | data_intro : expr -> bool -> data (* expr -> writable -> data *)
 with accessor : Type :=

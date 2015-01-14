@@ -74,6 +74,7 @@ type exp =
   | Lambda of Pos.t * id list * exp
   | Eval of Pos.t * exp * exp (* Pos.t, string to be evaled, env object  *)
   | Hint of Pos.t * string * exp
+  | Dump
 and data =       
     {value : exp;
      writable : bool; }
