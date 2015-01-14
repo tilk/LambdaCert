@@ -28,7 +28,7 @@ Open Scope string_scope.
 Implicit Type runs : runs_type.
 Implicit Type store : Store.store. (* TODO search and destroy *)
 Implicit Type st : Store.store.
-Implicit Type c : Store.ctx.
+Implicit Type c : Values.ctx.
 
 (****** Closures handling ******)
 
@@ -47,9 +47,9 @@ Definition apply runs c st (f_loc : value) (args : list value) : result :=
       match f with
       | value_closure _id env args_names body =>
         let (st, args_locs) := Store.add_values st args in
-        let res := make_app_store env args_names args_locs in
+        let res := add_parameters env args_names args_locs in
         if_result_some res (fun vh =>
-          eval_cont_terminate runs (Store.ctx_intro vh) st body)
+          eval_cont_terminate runs vh st body)
       | _ => result_fail "Expected Closure but did not get one."
       end
   )
@@ -587,7 +587,7 @@ Fixpoint runs max_step : runs_type :=
       runs_type_eval := fun c store _ => result_bottom
     |}
   | S max_step' =>
-    let wrap {A : Type} (f : runs_type -> Store.ctx -> Store.store -> A) c st : A :=
+    let wrap {A : Type} (f : runs_type -> ctx -> Store.store -> A) c st : A :=
       let runs' := runs max_step' in f runs' c st
     in {|
       runs_type_eval := wrap eval

@@ -16,10 +16,6 @@ Record store := store_intro {
   fresh_locations : stream nat 
 }.
 
-Record ctx := ctx_intro {
-  loc_heap : loc_heap_type (* maps names to locations *)
-}.
-
 CoFixpoint all_locations (k:nat) : stream nat :=
   LibStream.stream_intro k (all_locations (S k)).
 Definition dummy_fresh_locations := all_locations 1%nat.
@@ -68,9 +64,9 @@ Definition add_object (st : store) (obj : object) : (store * value) :=
   end
 .
 Definition add_closure (c : ctx) (st : store) args body : (store * value) :=
-  match c, st with
-  | ctx_intro loc_heap, store_intro obj_heap val_heap (id ::: stream) =>
-    (store_intro obj_heap val_heap stream, value_closure id loc_heap args body)
+  match st with
+  | store_intro obj_heap val_heap (id ::: stream) =>
+    (store_intro obj_heap val_heap stream, value_closure id c args body)
   end
 .
 Definition add_value_at_location (st : store) (loc : value_loc) (val : value) : store :=

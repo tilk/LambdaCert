@@ -32,6 +32,10 @@ Definition object_ptr := nat.
 
 Definition loc_heap_type := Heap.heap id value_loc.
 
+Record ctx := ctx_intro {
+  loc_heap : loc_heap_type (* maps names to locations *)
+}.
+
 (****** Objects ******)
 
 (* (The code in this section comes mostly from JSCert.) *)
@@ -46,7 +50,7 @@ Inductive value : Type :=
 | value_true
 | value_false
 | value_object : object_ptr -> value
-| value_closure : closure_id -> loc_heap_type -> list id -> Syntax.expr -> value (* closure_id is for making closures comparable with stx= *)
+| value_closure : closure_id -> ctx -> list id -> Syntax.expr -> value (* closure_id is for making closures comparable with stx= *)
 .
 
 (* Named data property attributes *)

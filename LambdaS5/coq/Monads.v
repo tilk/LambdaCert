@@ -3,9 +3,9 @@ Require Import Values.
 Require Import Store.
 Require Import Context.
 
-Implicit Type runs : Context.runs_type.
-Implicit Type st : Store.store.
-Implicit Type c : Store.ctx.
+Implicit Type runs : runs_type.
+Implicit Type st : store.
+Implicit Type c : ctx.
 Implicit Type e : Syntax.expr.
 Implicit Type loc : value_loc.
 

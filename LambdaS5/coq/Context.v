@@ -97,9 +97,9 @@ Definition update_object_property st (ptr : object_ptr) (name : prop_name) (pred
   update_object_property_cont st ptr name (fun attrs cont => match pred attrs with (st, oattrs, ret) => cont st oattrs ret end)
 .
 
-Definition make_app_store (closure_env : loc_heap_type) (args_name : list id) (args : list value_loc) : resultof loc_heap_type :=
+Definition add_parameters (closure_env : ctx) (args_name : list id) (args : list value_loc) : resultof ctx :=
   match Utils.zip_left args_name args with
-  | Some args_heap => result_some (Utils.concat_list_heap args_heap closure_env)
+  | Some args_heap => result_some (ctx_intro (Utils.concat_list_heap args_heap (loc_heap closure_env)))
   | None => result_fail "Arity mismatch"
   end
 .
