@@ -59,8 +59,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_get_field_2_abort : forall c st v1 e3 o,
     abort o ->
     red_expr c st (expr_get_field_2 v1 o e3) o
-| red_expr_get_field_3 : forall c st' st v3 ptr obj s oattr o,
-    get_object st ptr = Some obj ->
+| red_expr_get_field_3 : forall c st' st v3 ptr s oattr o,
     get_property st ptr s = result_some oattr ->
     red_expr c st (expr_get_field_4 ptr oattr v3) o ->
     red_expr c st' (expr_get_field_3 (value_object ptr) (value_string s) (out_ter st (res_value v3))) o
@@ -115,9 +114,23 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_delete_field_1_abort : forall c st e2 o,
     abort o ->
     red_expr c st (expr_delete_field_1 o e2) o
+| red_expr_delete_field_2 : forall c st' st ptr s obj oattr o,
+    get_object st ptr = Some obj ->
+    get_object_property obj s = oattr ->
+    red_expr c st (expr_delete_field_3 ptr obj oattr s) o ->
+    red_expr c st' (expr_delete_field_2 (value_object ptr) (out_ter st (res_value (value_string s)))) o
 | red_expr_delete_field_2_abort : forall c st v1 o,
     abort o ->
     red_expr c st (expr_delete_field_2 v1 o) o
+| red_expr_delete_field_3_not_found : forall c st ptr obj s,
+    red_expr c st (expr_delete_field_3 ptr obj None s) (out_ter st (res_value value_false))
+| red_expr_delete_field_3_unconfigurable : forall c st ptr obj attr s,
+    attributes_configurable attr = false ->
+    red_expr c st (expr_delete_field_3 ptr obj (Some attr) s) (out_ter st (res_exception (value_string "unconfigurable-delete")))
+| red_expr_delete_field_3_found : forall c st st1 ptr obj attr s,
+    attributes_configurable attr = true ->
+    st1 = update_object st ptr (delete_object_property obj s) ->
+    red_expr c st (expr_delete_field_3 ptr obj (Some attr) s) (out_ter st1 (res_value value_true))
 
 | red_expr_set_bang : forall c st i e o o',
     red_expr c st e o ->

@@ -192,7 +192,7 @@ Definition eval_set_field runs c store (left_expr right_expr new_val_expr arg_ex
               assert_get_string right_loc (fun name =>
                 match (get_object_property object name) with
                 | Some (attributes_data_of (attributes_data_intro _ w e c)) =>
-                  update_object_property store left_ptr name (fun prop =>
+                  change_object_property store left_ptr name (fun prop =>
                     let attrs := attributes_data_of (attributes_data_intro new_val w e c) in
                     (store, Some attrs, new_val)
                   )
@@ -200,7 +200,7 @@ Definition eval_set_field runs c store (left_expr right_expr new_val_expr arg_ex
                     (* Note: pattr_setters don't get the new value. See https://github.com/brownplt/LambdaS5/issues/45 *)
                     apply runs c store setter (left_loc :: arg_loc :: nil)
                 | None => 
-                  update_object_property store left_ptr name (fun prop =>
+                  change_object_property store left_ptr name (fun prop =>
                     let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
                     (store, Some attrs, new_val)
                   )
@@ -212,10 +212,13 @@ Definition eval_deletefield runs c store (left_expr right_expr : expr) : result 
     if_eval_return runs c store right_expr (fun store right_loc =>
       assert_get_object_ptr left_loc (fun left_ptr =>
         assert_get_string right_loc (fun name =>
-          update_object store left_ptr (fun obj =>
-            match obj with
-            | object_intro v c e p props code =>
-              (store, object_intro v c e p (Heap.rem props name) code, value_true)
+          change_object store left_ptr (fun obj =>
+            match get_object_property obj name with
+            | Some attr => 
+              if attributes_configurable attr 
+              then (store, delete_object_property obj name, value_true)
+              else (store, delete_object_property obj name, value_true) (* TODO throw "unconfigurable-delete" *)
+            | None => (store, obj, value_false)
             end
   )))))
 .
@@ -410,7 +413,7 @@ Definition eval_setattr runs c store left_expr right_expr attr new_val_expr :=
       if_eval_return runs c store new_val_expr (fun store new_val =>
         assert_get_object_ptr left_ (fun obj_ptr =>
           assert_get_string right_ (fun fieldname =>
-            update_object_property_cont store obj_ptr fieldname (fun oprop =>
+            change_object_property_cont store obj_ptr fieldname (fun oprop =>
               set_property_attribute store oprop attr new_val
   ))))))
 .

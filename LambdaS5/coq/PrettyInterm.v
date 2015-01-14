@@ -15,6 +15,7 @@ Inductive ext_expr :=
 | expr_set_field_4 : value -> value -> value -> out -> ext_expr
 | expr_delete_field_1 : out -> expr -> ext_expr
 | expr_delete_field_2 : value -> out -> ext_expr
+| expr_delete_field_3 : object_ptr -> object -> option attributes -> prop_name -> ext_expr
 | expr_set_bang_1 : id -> out -> ext_expr
 | expr_op1_1 : unary_op -> out -> ext_expr
 | expr_op2_1 : binary_op -> out -> expr -> ext_expr

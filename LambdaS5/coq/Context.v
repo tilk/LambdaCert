@@ -58,7 +58,7 @@ Definition raise_exception store (name : string) : result :=
 
 (* Unpacks a store to get an object, calls the predicate with this
 * object, and updates the object to the returned value. *)
-Definition update_object_cont (st : store) (ptr : Values.object_ptr) (cont : Values.object -> (store -> object -> value -> result) -> result) : result :=
+Definition change_object_cont (st : store) (ptr : Values.object_ptr) (cont : Values.object -> (store -> object -> value -> result) -> result) : result :=
   match (Store.get_object st ptr) with
   | Some obj =>
       cont obj (fun st new_obj ret =>
@@ -68,8 +68,8 @@ Definition update_object_cont (st : store) (ptr : Values.object_ptr) (cont : Val
   end
 .
 
-Definition update_object (st : store) (ptr : Values.object_ptr) (pred : Values.object -> (store * object * value)) : result :=
-  update_object_cont st ptr (fun obj cont => match pred obj with (st, new_obj, ret) => cont st new_obj ret end)
+Definition change_object (st : store) (ptr : Values.object_ptr) (pred : Values.object -> (store * object * value)) : result :=
+  change_object_cont st ptr (fun obj cont => match pred obj with (st, new_obj, ret) => cont st new_obj ret end)
 .
 
 (* Fetches the object pointed by the ptr, gets the property associated
@@ -77,8 +77,8 @@ Definition update_object (st : store) (ptr : Values.object_ptr) (pred : Values.o
 * If the predicate returns None as the now property, the property is
 * destroyed; otherwise it is updated/created with the one returned by
 * the predicate. *)
-Definition update_object_property_cont st (ptr : object_ptr) (name : prop_name) (cont : option attributes -> (store -> option attributes -> value -> result) -> result) : result :=
-  update_object_cont st ptr (fun obj cont1 =>
+Definition change_object_property_cont st (ptr : object_ptr) (name : prop_name) (cont : option attributes -> (store -> option attributes -> value -> result) -> result) : result :=
+  change_object_cont st ptr (fun obj cont1 =>
     match obj with object_intro prot cl ext prim props code =>
       cont (get_object_property obj name) (fun st oprop res => match oprop with
         | Some prop =>
@@ -93,8 +93,8 @@ Definition update_object_property_cont st (ptr : object_ptr) (name : prop_name) 
   )
 .
 
-Definition update_object_property st (ptr : object_ptr) (name : prop_name) (pred : option attributes -> (store * option attributes * value)) : result :=
-  update_object_property_cont st ptr name (fun attrs cont => match pred attrs with (st, oattrs, ret) => cont st oattrs ret end)
+Definition change_object_property st (ptr : object_ptr) (name : prop_name) (pred : option attributes -> (store * option attributes * value)) : result :=
+  change_object_property_cont st ptr name (fun attrs cont => match pred attrs with (st, oattrs, ret) => cont st oattrs ret end)
 .
 
 Definition add_parameters (closure_env : ctx) (args_name : list id) (args : list value_loc) : resultof ctx :=

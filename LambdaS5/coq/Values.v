@@ -72,6 +72,19 @@ Inductive attributes :=
   | attributes_data_of : attributes_data -> attributes
   | attributes_accessor_of : attributes_accessor -> attributes.
 
+Definition attributes_enumerable attr :=
+  match attr with
+  | attributes_data_of data => attributes_data_enumerable data
+  | attributes_accessor_of acc => attributes_accessor_enumerable acc
+  end
+.
+
+Definition attributes_configurable attr :=
+  match attr with
+  | attributes_data_of data => attributes_data_configurable data
+  | attributes_accessor_of acc => attributes_accessor_configurable acc
+  end
+.
 
 Definition prop_name := string.
 Definition class_name := string.
@@ -100,10 +113,10 @@ Definition get_object_property (object : object) (name : prop_name) : option att
   Heap.read_option (object_properties_ object) name
 .
 Definition set_object_property (obj : object) (name : prop_name) (attrs : attributes) : object :=
-  match obj with (object_intro p c e p' props code) =>
-    let props2 := Heap.write props name attrs in
-    object_intro p c e p' props2 code
-  end
+  let 'object_intro p c e p' props code := obj in object_intro p c e p' (Heap.write props name attrs) code    
+.
+Definition delete_object_property (obj : object) (name : prop_name) : object :=
+  let 'object_intro p c e p' props cod := obj in object_intro p c e p' (Heap.rem props name) cod
 .
 
 Definition bool_to_value (b : bool) : value := if b then value_true else value_false.
