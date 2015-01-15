@@ -191,13 +191,13 @@ Definition eval_set_field runs c store (left_expr right_expr new_val_expr arg_ex
             assert_get_string right_loc (fun name =>
               if_result_some (get_property store left_ptr name) (fun ret =>
                 match ret with
-                | Some (attributes_data_of (attributes_data_intro _ w e c)) =>
-                  if w 
+                | Some (attributes_data_of data) =>
+                  if attributes_data_writable data
                   then change_object_property_cont store left_ptr name (fun prop cont =>
                     assert_get_object_from_ptr store left_ptr (fun object =>
                       match get_object_property object name with
                       | Some _ => 
-                        let attrs := attributes_data_of (attributes_data_intro new_val w e c) in
+                        let attrs := attributes_data_of (attributes_data_value_update data new_val) in
                         cont store (Some attrs) new_val
                       | None => 
                         let attrs := attributes_data_of (attributes_data_intro new_val true true true) in

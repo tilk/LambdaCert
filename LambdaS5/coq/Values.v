@@ -72,6 +72,10 @@ Inductive attributes :=
   | attributes_data_of : attributes_data -> attributes
   | attributes_accessor_of : attributes_accessor -> attributes.
 
+Definition attributes_data_value_update data v :=
+  let 'attributes_data_intro _v w e c := data in attributes_data_intro v w e c
+.
+
 Definition attributes_enumerable attr :=
   match attr with
   | attributes_data_of data => attributes_data_enumerable data

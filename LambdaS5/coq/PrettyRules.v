@@ -99,9 +99,31 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_set_field_3_abort : forall c st v1 v2 e4 o,
     abort o ->
     red_expr c st (expr_set_field_3 v1 v2 o e4) o
+| red_expr_set_field_4 : forall c st' st ptr obj oattr s v3 v4 o,
+    get_property st ptr s = result_some oattr ->
+    get_object st ptr = Some obj ->
+    red_expr c st (expr_set_field_5 ptr obj oattr s v3 v4) o ->
+    red_expr c st' (expr_set_field_4 (value_object ptr) (value_string s) v3 (out_ter st (res_value v4))) o
 | red_expr_set_field_4_abort : forall c st v1 v2 v3 o,
     abort o ->
     red_expr c st (expr_set_field_4 v1 v2 v3 o) o
+| red_expr_set_field_4_set_field : forall c st st1 ptr obj data attr s v3 v4,
+    get_object_property obj s = Some attr ->
+    attributes_data_writable data = true ->
+    st1 = update_object st ptr (set_object_property obj s (attributes_data_of (attributes_data_value_update data v3))) ->
+    red_expr c st (expr_set_field_5 ptr obj (Some (attributes_data_of data)) s v3 v4) (out_ter st1 (res_value v3))
+| red_expr_set_field_4_shadow_field : forall c st st1 ptr obj data s v3 v4,
+    get_object_property obj s = None ->
+    object_extensible obj = true ->
+    st1 = update_object st ptr (set_object_property obj s (attributes_data_of (attributes_data_intro v3 true true true))) ->
+    red_expr c st (expr_set_field_5 ptr obj (Some (attributes_data_of data)) s v3 v4) (out_ter st1 (res_value v3))
+| red_expr_set_field_4_add_field : forall c st st1 ptr obj s v3 v4,
+    object_extensible obj = true ->
+    st1 = update_object st ptr (set_object_property obj s (attributes_data_of (attributes_data_intro v3 true true true))) ->
+    red_expr c st (expr_set_field_5 ptr obj None s v3 v4) (out_ter st1 (res_value v3))
+| red_expr_set_field_4_setter : forall c st ptr obj acc s v3 v4 o,
+    red_expr c st (expr_app_2 (attributes_accessor_get acc) [v4; value_object ptr] nil) o ->
+    red_expr c st (expr_set_field_5 ptr obj (Some (attributes_accessor_of acc)) s v3 v4) o
 
 | red_expr_delete_field : forall c st e1 e2 o o',
     red_expr c st e1 o ->

@@ -13,6 +13,7 @@ Inductive ext_expr :=
 | expr_set_field_2 : value -> out -> expr -> expr -> ext_expr
 | expr_set_field_3 : value -> value -> out -> expr -> ext_expr
 | expr_set_field_4 : value -> value -> value -> out -> ext_expr
+| expr_set_field_5 : object_ptr -> object -> option attributes -> prop_name -> value -> value -> ext_expr
 | expr_delete_field_1 : out -> expr -> ext_expr
 | expr_delete_field_2 : value -> out -> ext_expr
 | expr_delete_field_3 : object_ptr -> object -> option attributes -> prop_name -> ext_expr
