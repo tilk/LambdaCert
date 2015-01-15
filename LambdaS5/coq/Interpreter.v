@@ -212,13 +212,13 @@ Definition eval_deletefield runs c store (left_expr right_expr : expr) : result 
     if_eval_return runs c store right_expr (fun store right_loc =>
       assert_get_object_ptr left_loc (fun left_ptr =>
         assert_get_string right_loc (fun name =>
-          change_object store left_ptr (fun obj =>
+          change_object_cont store left_ptr (fun obj cont =>
             match get_object_property obj name with
             | Some attr => 
               if attributes_configurable attr 
-              then (store, delete_object_property obj name, value_true)
-              else (store, delete_object_property obj name, value_true) (* TODO throw "unconfigurable-delete" *)
-            | None => (store, obj, value_false)
+              then cont store (delete_object_property obj name) value_true
+              else result_exception store (value_string "unconfigurable-delete")
+            | None => cont store obj value_false
             end
   )))))
 .
