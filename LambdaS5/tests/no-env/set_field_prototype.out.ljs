@@ -1,0 +1,1 @@
+{[#proto: {[#proto: undefined, #class: Object, #extensible: true, #primval: <unset val>, #code: <unset val>] 'bar': {#value "one", #writable true, #configurable false, #enumerable false}}, #class: Object, #extensible: true, #primval: <unset val>, #code: <unset val>] 'bar': {#value "two", #writable true, #configurable true, #enumerable true}}

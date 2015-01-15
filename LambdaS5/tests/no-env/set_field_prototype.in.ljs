@@ -1,0 +1,2 @@
+let (foo = {[#proto: {[] 'bar': {#value "one", #writable true, #enumerable false, #configurable false}}]}) {foo['bar' = "two"]; foo}
+

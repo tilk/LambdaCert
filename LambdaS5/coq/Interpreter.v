@@ -188,24 +188,34 @@ Definition eval_set_field runs c store (left_expr right_expr new_val_expr arg_ex
       if_eval_return runs c store new_val_expr (fun store new_val =>
         if_eval_return runs c store arg_expr (fun store arg_loc =>
           assert_get_object_ptr left_loc (fun left_ptr =>
-            assert_get_object_from_ptr store left_ptr (fun object =>
-              assert_get_string right_loc (fun name =>
-                match (get_object_property object name) with
+            assert_get_string right_loc (fun name =>
+              if_result_some (get_property store left_ptr name) (fun ret =>
+                match ret with
                 | Some (attributes_data_of (attributes_data_intro _ w e c)) =>
-                  change_object_property store left_ptr name (fun prop =>
-                    let attrs := attributes_data_of (attributes_data_intro new_val w e c) in
-                    (store, Some attrs, new_val)
-                  )
+                  if w 
+                  then change_object_property_cont store left_ptr name (fun prop cont =>
+                    assert_get_object_from_ptr store left_ptr (fun object =>
+                      match get_object_property object name with
+                      | Some _ => 
+                        let attrs := attributes_data_of (attributes_data_intro new_val w e c) in
+                        cont store (Some attrs) new_val
+                      | None => 
+                        let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
+                        cont store (Some attrs) new_val
+                      end))
+                  else result_exception store (value_string "unwritable-field")
                 | Some (attributes_accessor_of (attributes_accessor_intro _ setter _ _)) =>
                     (* Note: pattr_setters don't get the new value. See https://github.com/brownplt/LambdaS5/issues/45 *)
                     apply runs c store setter (left_loc :: arg_loc :: nil)
                 | None => 
-                  change_object_property store left_ptr name (fun prop =>
-                    let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
-                    (store, Some attrs, new_val)
-                  )
+                  assert_get_object_from_ptr store left_ptr (fun object =>
+                    if object_extensible object 
+                    then change_object_property store left_ptr name (fun prop =>
+                      let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
+                      (store, Some attrs, new_val))
+                    else result_value store value_undefined)
                 end)))))))
-.
+. (* get_object_property object name *)
 
 Definition eval_deletefield runs c store (left_expr right_expr : expr) : result :=
   if_eval_return runs c store left_expr (fun store left_loc =>

@@ -1,0 +1,2 @@
+let (foo = {[]}) {foo['bar' = "two"]; foo['bar']}
+

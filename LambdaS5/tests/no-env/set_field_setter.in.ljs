@@ -1,0 +1,1 @@
+let (foo = {[] 'bar': {#getter undefined, #setter (func (this, arg) { arg['0'] })}}) {foo['bar' = "two"]}

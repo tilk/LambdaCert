@@ -1,0 +1,1 @@
+let (foo = {[#proto: {[] 'bar': {#getter undefined, #setter (func (this, arg) { 'one' })}}]}) {foo['bar' = "two"]}
