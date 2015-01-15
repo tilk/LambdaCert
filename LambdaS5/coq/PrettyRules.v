@@ -154,6 +154,18 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     st1 = update_object st ptr (delete_object_property obj s) ->
     red_expr c st (expr_delete_field_3 ptr obj (Some attr) s) (out_ter st1 (res_value value_true))
 
+| red_expr_own_field_names : forall c st e o o',
+    red_expr c st e o ->
+    red_expr c st (expr_own_field_names_1 o) o' ->
+    red_expr c st (expr_own_field_names e) o'
+| red_expr_own_field_names_1 : forall c st' st st1 ptr obj v,
+    get_object st ptr = Some obj ->
+    (st1, v) = add_object st (make_prop_list obj) ->
+    red_expr c st' (expr_own_field_names_1 (out_ter st (res_value (value_object ptr)))) (out_ter st1 (res_value v))
+| red_expr_own_field_names_1_abort : forall c st o,
+    abort o ->
+    red_expr c st (expr_own_field_names_1 o) o
+
 | red_expr_set_bang : forall c st i e o o',
     red_expr c st e o ->
     red_expr c st (expr_set_bang_1 i o) o' ->

@@ -139,4 +139,3 @@ with objattrs : Type :=
 | objattrs_intro : option expr -> option expr -> option expr -> string -> bool -> objattrs (* primval -> code -> prototype -> class -> extensible -> objattrs *)
 .
 
-Definition default_objattrs := objattrs_intro None None None "Object" true.

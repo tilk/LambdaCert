@@ -47,6 +47,3 @@ Definition ascii_of_nat (a : nat) : ascii :=
 .
 
 Parameter string_of_nat : nat -> string.
-
-Definition make_number (n : nat) : JsNumber.number :=
-  Fappli_IEEE.binary_normalize 53 1024 eq_refl eq_refl Fappli_IEEE.mode_NE n 0 false.

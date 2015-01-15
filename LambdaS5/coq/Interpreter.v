@@ -449,50 +449,11 @@ Definition eval_getobjattr runs c store obj_expr oattr :=
   ))
 .
 
-Definition make_prop_list_aux (left : nat * Store.store * object_properties) (val : value) : nat * Store.store * object_properties :=
-  match left with
-  | (nb_entries, store, attrs) =>
-    let attr := attributes_data_of (attributes_data_intro val false false false) in
-    (S nb_entries, store, Heap.write attrs (Utils.string_of_nat nb_entries) attr)
-  end
-.
-Definition make_prop_heap runs store (vals : list value) : Store.store * object_properties :=
-  match List.fold_left make_prop_list_aux vals (0, store, Heap.empty) with
-  | (nb_entries, store, attrs) =>
-    let length := value_number (Utils.make_number nb_entries) in
-    let length_attr := attributes_data_of (attributes_data_intro length false false false) in
-    (store, Heap.write attrs "length" length_attr)
-  end
-.
-Definition left_to_string {X : Type} (x : (string * X)) : value :=
-  let (k, v) := x in value_string k
-.
 Definition eval_ownfieldnames runs c store obj_expr : result :=
   if_eval_return runs c store obj_expr (fun store obj_loc =>
     assert_get_object store obj_loc (fun obj =>
-      let props := (Heap.to_list (object_properties_ obj)) in
-      let props := (List.map left_to_string props) in
-      match (make_prop_heap runs store props) with
-      | (store, props) =>
-        match default_objattrs with
-        | objattrs_intro primval_expr code_expr prototype_expr class extensible =>
-          (* Following the order in the original implementation: *)
-          if_some_eval_return_else_none runs c store primval_expr (fun store primval_loc =>
-            let proto_default := value_undefined in
-            if_some_eval_else_default runs c store prototype_expr proto_default (fun store prototype_loc =>
-              if_some_eval_return_else_none runs c store code_expr (fun store code =>
-                let (store, loc) := Store.add_object store {|
-                    object_proto := prototype_loc;
-                    object_class := class;
-                    object_extensible := extensible;
-                    object_prim_value := primval_loc;
-                    object_properties_ := props;
-                    object_code := code |}
-                in result_value store loc
-                )))
-        end
-      end
-
+      let (store, loc) := Store.add_object store (make_prop_list obj)
+      in result_value store loc
   ))
 .
 

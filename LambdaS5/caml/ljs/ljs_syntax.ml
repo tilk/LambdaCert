@@ -95,7 +95,7 @@ and attrs =
 let d_attrs = 
   { primval = None;
     code = None;
-    proto = None; (* Some (Null Pos.dummy); mmaterzok: TODO: verify the coq default_attributes! *)
+    proto = Some (Null Pos.dummy); 
     klass = "Object";
     extensible = true; }
 

@@ -1,1 +1,1 @@
-{[#proto: undefined, #class: Object, #extensible: true, #primval: <unset val>, #code: <unset val>] 'bar': {#getter undefined, #setter <closure func (this, arg) { <expr> }>}}
+{[#proto: null, #class: Object, #extensible: true, #primval: <unset val>, #code: <unset val>] 'bar': {#getter undefined, #setter <closure func (this, arg) { <expr> }>}}
