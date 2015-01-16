@@ -5,6 +5,14 @@ Require Import Values.
 
 Inductive ext_expr :=
 | expr_basic : expr -> ext_expr
+| expr_get_attr_1 : pattr -> out -> expr -> ext_expr
+| expr_get_attr_2 : pattr -> value -> out -> ext_expr
+| expr_set_attr_1 : pattr -> out -> expr -> expr -> ext_expr
+| expr_set_attr_2 : pattr -> value -> out -> expr -> ext_expr
+| expr_set_attr_3 : pattr -> value -> value -> out -> ext_expr
+| expr_get_obj_attr_1 : oattr -> out -> ext_expr
+| expr_set_obj_attr_1 : oattr -> out -> expr -> ext_expr
+| expr_set_obj_attr_2 : oattr -> value -> out -> ext_expr
 | expr_get_field_1 : out -> expr -> expr -> ext_expr
 | expr_get_field_2 : value -> out -> expr -> ext_expr
 | expr_get_field_3 : value -> value -> out -> ext_expr

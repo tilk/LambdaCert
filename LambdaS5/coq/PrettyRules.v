@@ -41,6 +41,66 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 
 (* object *)
 
+| red_expr_get_attr : forall c st pa e1 e2 o o',
+    red_expr c st e1 o ->
+    red_expr c st (expr_get_attr_1 pa o e2) o' ->
+    red_expr c st (expr_get_attr pa e1 e2) o'
+| red_expr_get_attr_1 : forall c st' st pa v1 e2 o o',
+    red_expr c st e2 o ->
+    red_expr c st (expr_get_attr_2 pa v1 o) o' ->
+    red_expr c st' (expr_get_attr_1 pa (out_ter st (res_value v1)) e2) o'
+| red_expr_get_attr_1_abort : forall c st pa e2 o,
+    abort o ->
+    red_expr c st (expr_get_attr_1 pa o e2) o
+| red_expr_get_attr_2_abort : forall c st pa v1 o,
+    abort o ->
+    red_expr c st (expr_get_attr_2 pa v1 o) o
+
+| red_expr_set_attr : forall c st pa e1 e2 e3 o o',
+    red_expr c st e1 o ->
+    red_expr c st (expr_set_attr_1 pa o e2 e3) o' ->
+    red_expr c st (expr_set_attr pa e1 e2 e3) o'
+| red_expr_set_attr_1 : forall c st' st pa v1 e2 e3 o o',
+    red_expr c st e2 o ->
+    red_expr c st (expr_set_attr_2 pa v1 o e3) o' ->
+    red_expr c st' (expr_set_attr_1 pa (out_ter st (res_value v1)) e2 e3) o'
+| red_expr_set_attr_1_abort : forall c st pa e2 e3 o,
+    abort o ->
+    red_expr c st (expr_set_attr_1 pa o e2 e3) o
+| red_expr_set_attr_2 : forall c st' st pa v1 v2 e3 o o',
+    red_expr c st e3 o ->
+    red_expr c st (expr_set_attr_3 pa v1 v2 o) o' ->
+    red_expr c st' (expr_set_attr_2 pa v1 (out_ter st (res_value v2)) e3) o'
+| red_expr_set_attr_2_abort : forall c st pa v1 e3 o,
+    abort o ->
+    red_expr c st (expr_set_attr_2 pa v1 o e3) o
+| red_expr_set_attr_3_abort : forall c st pa v1 v2 o,
+    abort o ->
+    red_expr c st (expr_set_attr_3 pa v1 v2 o) o
+
+| red_expr_get_obj_attr : forall c st oa e1 o o',
+    red_expr c st e1 o ->
+    red_expr c st (expr_get_obj_attr_1 oa o) o' ->
+    red_expr c st (expr_get_obj_attr oa e1) o'
+| red_expr_get_obj_attr_1_abort : forall c st oa o,
+    abort o ->
+    red_expr c st (expr_get_obj_attr_1 oa o) o
+
+| red_expr_set_obj_attr : forall c st oa e1 e2 o o',
+    red_expr c st e1 o ->
+    red_expr c st (expr_set_obj_attr_1 oa o e2) o' ->
+    red_expr c st (expr_set_obj_attr oa e1 e2) o'
+| red_expr_set_obj_attr_1 : forall c st' st oa v1 e2 o o',
+    red_expr c st e2 o ->
+    red_expr c st (expr_set_obj_attr_2 oa v1 o) o' ->
+    red_expr c st' (expr_set_obj_attr_1 oa (out_ter st (res_value v1)) e2) o'
+| red_expr_set_obj_attr_1_abort : forall c st oa e2 o,
+    abort o ->
+    red_expr c st (expr_set_obj_attr_1 oa o e2) o
+| red_expr_set_obj_attr_2_abort : forall c st oa v1 o,
+    abort o ->
+    red_expr c st (expr_set_obj_attr_2 oa v1 o) o
+
 | red_expr_get_field : forall c st e1 e2 e3 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_get_field_1 o e2 e3) o' ->
