@@ -128,6 +128,38 @@ Definition set_object_oattr obj oa v : resultof object :=
   end
 .
 
+Definition get_object_pattr obj s (pa : pattr) : resultof value :=
+  match get_object_property obj s with
+  | None => result_some value_undefined
+  | Some prop =>
+    match pa, prop with
+    | pattr_enum, _ => result_some (bool_to_value (attributes_enumerable prop))
+
+    | pattr_config, _ => result_some (bool_to_value (attributes_configurable prop))
+
+    | pattr_writable, attributes_data_of data =>
+      result_some (bool_to_value (attributes_data_writable data))
+    | pattr_writable, attributes_accessor_of _ =>
+      result_fail "Access #writable of accessor."
+
+    | pattr_value, attributes_data_of data =>
+      result_some (attributes_data_value data)
+    | pattr_value, attributes_accessor_of _ =>
+      result_fail "Access #value of accessor."
+
+    | pattr_getter, attributes_accessor_of acc =>
+      result_some (attributes_accessor_get acc)
+    | pattr_getter, attributes_data_of _ =>
+      result_fail "Access #getter of data."
+
+    | pattr_setter, attributes_accessor_of acc =>
+      result_some (attributes_accessor_set acc)
+    | pattr_setter, attributes_data_of _ =>
+      result_fail "Access #setter of data."
+    end
+  end
+.
+
 Definition return_bool store (b : bool) :=
   result_value store (if b then value_true else value_false)
 .

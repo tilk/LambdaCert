@@ -295,41 +295,6 @@ Definition eval_app runs c store (f : expr) (args_expr : list expr) : result :=
   ))
 .
 
-Definition get_property_attribute store (oprop : option attributes) (attr : pattr) : result :=
-  match oprop with
-  | None => result_value store value_undefined
-  | Some prop =>
-    match (attr, prop) with
-    | (pattr_config,     attributes_data_of (attributes_data_intro      _ _ _ config))
-    | (pattr_config, attributes_accessor_of (attributes_accessor_intro _ _ _ config)) =>
-      return_bool store config
-
-    | (pattr_enum,     attributes_data_of (attributes_data_intro     _ _ enum _))
-    | (pattr_enum, attributes_accessor_of (attributes_accessor_intro _ _ enum _)) =>
-      return_bool store enum
-
-    | (pattr_writable, attributes_data_of (attributes_data_intro _ writable _ _)) =>
-      return_bool store writable
-    | (pattr_writable, attributes_accessor_of _) =>
-      result_fail "Access #writable of accessor."
-
-    | (pattr_value, attributes_data_of (attributes_data_intro value _ _ _)) =>
-      result_value store value
-    | (pattr_value, attributes_accessor_of _) =>
-      result_fail "Access #value of accessor."
-
-    | (pattr_getter, attributes_accessor_of (attributes_accessor_intro getter _ _ _)) =>
-      result_value store getter
-    | (pattr_getter, attributes_data_of _) =>
-      result_fail "Access #getter of data."
-
-    | (pattr_setter, attributes_accessor_of (attributes_accessor_intro _ setter _ _)) =>
-      result_value store setter
-    | (pattr_setter, attributes_data_of _) =>
-      result_fail "Access #setter of data."
-    end
-  end
-.
 
 (* left[right<attr>] *)
 Definition eval_getattr runs c store left_expr right_expr attr :=
@@ -337,8 +302,9 @@ Definition eval_getattr runs c store left_expr right_expr attr :=
     if_eval_return runs c store right_expr (fun store right_ =>
       assert_get_object store left_ (fun obj =>
         assert_get_string right_ (fun fieldname =>
-          get_property_attribute store (get_object_property obj fieldname) attr 
-  ))))
+          if_result_some (get_object_pattr obj fieldname attr) (fun v =>
+            result_value store v
+  )))))
 .
 
 Definition set_property_attribute store (oprop : option attributes) (attr : pattr) (new_val : value) (cont : Store.store -> option attributes -> value -> result) : result :=
