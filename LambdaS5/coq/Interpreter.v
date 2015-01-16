@@ -307,81 +307,6 @@ Definition eval_getattr runs c store left_expr right_expr attr :=
   )))))
 .
 
-Definition set_property_attribute store (oprop : option attributes) (attr : pattr) (new_val : value) (cont : Store.store -> option attributes -> value -> result) : result :=
-  (* Some abbreviations: *)
-  let aai := attributes_accessor_intro in
-  let adi := attributes_data_intro in
-  let aao := attributes_accessor_of in
-  let ado := attributes_data_of in
-  let raao := fun x => cont store (Some (aao x)) value_true in
-  let rado := fun x => cont store (Some (ado x)) value_true in
-  let getbool := assert_get_bool new_val in
-  match oprop with
-  | None =>
-    match attr with
-    | pattr_getter => raao (aai new_val value_undefined false false)
-    | pattr_setter => raao (aai value_undefined new_val false false)
-    | pattr_value => rado (adi new_val false false false)
-    | pattr_writable => getbool (fun b => rado (adi value_undefined b false false))
-    | pattr_enum => getbool (fun b => rado (adi value_undefined false b true))
-    | pattr_config => getbool (fun b => rado (adi value_undefined false true b))
-    end
-  | Some prop =>
-    match (attr, prop) with
-    (* Set #writable of data when #writable is true *)
-    | (pattr_writable, attributes_data_of (attributes_data_intro val true enum config)) =>
-        getbool (fun b =>      rado (attributes_data_intro val b    enum config))
-    (* Set #writable of data when #configurable is true *)
-    | (pattr_writable, attributes_data_of (attributes_data_intro val writ enum true)) =>
-        getbool (fun b =>      rado (attributes_data_intro val b    enum true))
-    (* Set #value of data when #writable is true *)
-    | (pattr_value, attributes_data_of (attributes_data_intro _       true enum config)) =>
-                            rado (attributes_data_intro new_val true enum config)
-    (* Set #setter when #configurable is true *)
-    | (pattr_setter,     attributes_data_of (attributes_data_intro     _      _       enum true)) =>
-                                 raao (attributes_accessor_intro value_undefined  new_val enum true)
-    | (pattr_setter, attributes_accessor_of (attributes_accessor_intro get _       enum true)) =>
-                                 raao (attributes_accessor_intro get new_val enum true)
-    (* Set #getter when #configurable is true *)
-    | (pattr_getter,     attributes_data_of (attributes_data_intro     _       _     enum true)) =>
-                                 raao (attributes_accessor_intro new_val value_undefined enum true)
-    | (pattr_getter, attributes_accessor_of (attributes_accessor_intro _       set enum true)) =>
-                                 raao (attributes_accessor_intro new_val set enum true)
-    (* Set #value of accessor when #configurable is true *)
-    | (pattr_value,  attributes_accessor_of (attributes_accessor_intro _       _     enum true)) =>
-                                 rado (attributes_data_intro     new_val false enum true)
-    (* Set #writable of accessor when #configurable is true *)
-    | (pattr_writable, attributes_accessor_of (attributes_accessor_intro _     _ enum true)) =>
-        getbool (fun b =>          rado (attributes_data_intro     value_undefined b enum true))
-    (* Set #enumerable when #configurable is true *)
-    | (pattr_enum,     attributes_data_of (attributes_data_intro     val writ _ true)) =>
-        getbool (fun b =>      rado (attributes_data_intro     val writ b true))
-    | (pattr_enum, attributes_accessor_of (attributes_accessor_intro get set  _ true)) =>
-        getbool (fun b =>      raao (attributes_accessor_intro get set  b true))
-    (* Set #configurable when #configurable is true *)
-    | (pattr_config,     attributes_data_of (attributes_data_intro     val writ enum true)) =>
-        getbool (fun b =>        rado (attributes_data_intro     val writ enum b   ))
-    | (pattr_config, attributes_accessor_of (attributes_accessor_intro get set  enum true)) =>
-        getbool (fun b =>        raao (attributes_accessor_intro get set  enum b   ))
-    (* Set #configurable to false when #configurable is false *)
-    | (pattr_config,     attributes_data_of (attributes_data_intro     _ _ _ false))
-    | (pattr_config, attributes_accessor_of (attributes_accessor_intro _ _ _ false)) =>
-      getbool (fun b =>
-        if b then result_fail "Set #configurable to true while #configurable is false"
-        else cont store oprop value_true (* unchanged *)
-      )
-    | (pattr_value, _) => result_fail "Invalid #value set."
-    | (pattr_writable, _) => result_fail "Invalid #writable set."
-    | (pattr_getter, _) => result_fail "Invalid #getter set."
-    | (pattr_setter, _) => result_fail "Invalid #setter set."
-    | (pattr_enum,     attributes_data_of (attributes_data_intro     _ _ _ false)) =>
-        result_fail "Invalid #enum set for data property."
-    | (pattr_enum, attributes_accessor_of (attributes_accessor_intro _ _ _ false)) =>
-        result_fail "Invalid #enum set for accessor property."
-    end
-  end
-.
-
 (* left[right<attr> = new_val] *)
 Definition eval_setattr runs c store left_expr right_expr attr new_val_expr :=
   if_eval_return runs c store left_expr (fun store left_ =>
@@ -389,9 +314,10 @@ Definition eval_setattr runs c store left_expr right_expr attr new_val_expr :=
       if_eval_return runs c store new_val_expr (fun store new_val =>
         assert_get_object_ptr left_ (fun obj_ptr =>
           assert_get_string right_ (fun fieldname =>
-            change_object_property_cont store obj_ptr fieldname (fun oprop =>
-              set_property_attribute store oprop attr new_val
-  ))))))
+            change_object_cont store obj_ptr (fun obj cont =>
+              if_result_some (set_object_pattr obj fieldname attr new_val) (fun obj' =>
+                cont store obj' new_val
+  )))))))
 .
 
 Definition eval_getobjattr runs c store obj_expr oattr :=

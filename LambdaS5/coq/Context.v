@@ -160,6 +160,71 @@ Definition get_object_pattr obj s (pa : pattr) : resultof value :=
   end
 .
 
+Definition pattr_okupdate (attr : attributes) (pa : pattr) (v : value) : bool := 
+  match attr, pa with
+  | attributes_accessor_of {| attributes_accessor_configurable := true |}, _ => true
+  | attributes_data_of {| attributes_data_configurable := true |}, _ => true
+  | attributes_data_of {| attributes_data_writable := true |}, pattr_value => true
+  | attributes_data_of {| attributes_data_writable := true |}, pattr_writable => true
+  | _, _ => false
+  end
+.
+
+Definition set_object_pattr obj s (pa : pattr) v : resultof object :=
+  match get_object_property obj s with
+  | None =>
+    if object_extensible obj then 
+      let oattr :=
+        match pa with
+        | pattr_getter => Some (attributes_accessor_of (attributes_accessor_intro v value_undefined false false))
+        | pattr_setter => Some (attributes_accessor_of (attributes_accessor_intro value_undefined v false false))
+        | pattr_value => Some (attributes_data_of (attributes_data_intro v false false false))
+        | pattr_writable => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined b false false)) (value_to_bool v)
+        | pattr_enum => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined false b false)) (value_to_bool v)
+        | pattr_config => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined false false b)) (value_to_bool v)
+        end in
+      match oattr with
+      | Some attr => result_some (set_object_property obj s attr)
+      | None => result_fail "Invalid operation."
+      end
+    else result_fail "Object inextensible."
+  | Some prop =>
+    if pattr_okupdate prop pa v then
+    let oattr :=
+      match pa, prop with
+      | pattr_getter, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+        Some (attributes_accessor_of (attributes_accessor_intro v se en co))
+      | pattr_setter, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+        Some (attributes_accessor_of (attributes_accessor_intro ge v en co))
+      | pattr_enum, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+        LibOption.map (fun b => attributes_accessor_of (attributes_accessor_intro ge se b co)) (value_to_bool v)
+      | pattr_config, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+        LibOption.map (fun b => attributes_accessor_of (attributes_accessor_intro ge se en b)) (value_to_bool v)
+      | pattr_value, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+        Some (attributes_data_of (attributes_data_intro v false en co))
+      | pattr_writable, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+        LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined b en co)) (value_to_bool v)
+      | pattr_value, attributes_data_of (attributes_data_intro va wr en co) =>
+        Some (attributes_data_of (attributes_data_intro v wr en co))
+      | pattr_writable, attributes_data_of (attributes_data_intro va wr en co) =>
+        LibOption.map (fun b => attributes_data_of (attributes_data_intro va b en co)) (value_to_bool v)
+      | pattr_enum, attributes_data_of (attributes_data_intro va wr en co) =>
+        LibOption.map (fun b => attributes_data_of (attributes_data_intro va wr b co)) (value_to_bool v)
+      | pattr_config, attributes_data_of (attributes_data_intro va wr en co) =>
+        LibOption.map (fun b => attributes_data_of (attributes_data_intro va wr en b)) (value_to_bool v)
+      | pattr_getter, attributes_data_of (attributes_data_intro va wr en co) =>
+        Some (attributes_accessor_of (attributes_accessor_intro v value_undefined en co))
+      | pattr_setter, attributes_data_of (attributes_data_intro va wr en co) =>
+        Some (attributes_accessor_of (attributes_accessor_intro value_undefined v en co))
+      end in
+      match oattr with
+      | Some attr => result_some (set_object_property obj s attr)
+      | None => result_fail "Invalid operation."
+      end
+    else result_fail "Attribute update not permitted"
+  end
+.
+
 Definition return_bool store (b : bool) :=
   result_value store (if b then value_true else value_false)
 .

@@ -78,6 +78,11 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_set_attr_2_abort : forall c st pa v1 e3 o,
     abort o ->
     red_expr c st (expr_set_attr_2 pa v1 o e3) o
+| red_expr_set_attr_3 : forall c st' st st1 pa ptr obj obj' s v,
+    get_object st ptr = Some obj ->
+    set_object_pattr obj s pa v = result_some obj' ->
+    st1 = update_object st ptr obj' ->
+    red_expr c st' (expr_set_attr_3 pa (value_object ptr) (value_string s) (out_ter st (res_value v))) (out_ter st1 (res_value v))
 | red_expr_set_attr_3_abort : forall c st pa v1 v2 o,
     abort o ->
     red_expr c st (expr_set_attr_3 pa v1 v2 o) o
