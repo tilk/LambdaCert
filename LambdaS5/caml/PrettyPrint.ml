@@ -35,8 +35,8 @@ and string_of_object_ptr depth st ptr =
 and string_of_object depth st obj =
   Printf.sprintf "{[#proto: %s, #class: %s, #extensible: %B, #primval: %s, #code: %s] %s}"
   (string_of_value depth st obj.Values.object_proto) (String.of_list obj.Values.object_class)
-  (obj.Values.object_extensible) (string_of_value_option depth st obj.Values.object_prim_value)
-  (string_of_value_option depth st obj.Values.object_code)
+  (obj.Values.object_extensible) (string_of_value depth st obj.Values.object_prim_value)
+  (string_of_value depth st obj.Values.object_code)
   (string_of_prop_list depth st (Values.Heap.to_list obj.Values.object_properties_) [])
 and string_of_prop_list depth st l skip =
   let string_of_prop = function (name, attr) ->

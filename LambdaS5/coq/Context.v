@@ -1,4 +1,5 @@
 Set Implicit Arguments.
+Require Import Syntax.
 Require Import Utils.
 Require Import String.
 Require Import Values.
@@ -49,13 +50,6 @@ Definition result_value st (v : value) : result := result_res st (res_value v).
 Definition result_exception st (v : value) : result := result_res st (res_exception v).
 Definition result_break st (l : string) (v : value) : result := result_res st (res_break l v).
 
-(* Shortcut for instanciating and throwing an exception of the given name. *)
-Definition raise_exception store (name : string) : result :=
-  match (Store.add_object store (Values.object_intro value_undefined name true None Heap.empty None)) with
-  | (new_st, loc) => result_exception new_st loc
-  end
-.
-
 (* Unpacks a store to get an object, calls the predicate with this
 * object, and updates the object to the returned value. *)
 Definition change_object_cont (st : store) (ptr : Values.object_ptr) (cont : Values.object -> (store -> object -> value -> result) -> result) : result :=
@@ -101,6 +95,36 @@ Definition add_parameters (closure_env : ctx) (args_name : list id) (args : list
   match Utils.zip_left args_name args with
   | Some args_heap => result_some (ctx_intro (Utils.concat_list_heap args_heap (loc_heap closure_env)))
   | None => result_fail "Arity mismatch"
+  end
+.
+
+Definition get_object_oattr obj (oa : oattr) : value :=
+  match oa with
+  | oattr_proto => object_proto obj
+  | oattr_extensible => bool_to_value (object_extensible obj)
+  | oattr_code => object_code obj
+  | oattr_primval => object_prim_value obj
+  | oattr_class => value_string (object_class obj)
+  end
+.
+
+Definition set_object_oattr obj oa v : resultof object :=
+  let 'object_intro pr cl ex pv pp co := obj in
+  match oa with
+  | oattr_proto => 
+    match v with
+    | value_null 
+    | value_object _ => result_some (object_intro v cl ex pv pp co)
+    | _ => result_fail "Update proto failed"
+    end
+  | oattr_extensible =>
+    match value_to_bool v with
+    | Some b => result_some (object_intro pr cl b pv pp co)
+    | None => result_fail "Update extensible failed"
+    end
+  | oattr_code => result_fail "Can't update code"
+  | oattr_primval => result_some (object_intro pr cl ex v pp co)
+  | oattr_class => result_fail "Can't update klass"
   end
 .
 

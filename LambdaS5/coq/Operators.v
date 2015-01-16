@@ -21,9 +21,9 @@ Definition typeof store (v : value) :=
   | value_true | value_false => result_some (value_string  "boolean")
   | value_object ptr =>
     assert_get_object_from_ptr store ptr (fun obj =>
-      match (object_code obj) with
-      | Some  _ => result_some (value_string "function")
-      | None => result_some (value_string  "object")
+      match object_code obj with
+      | value_null => result_some (value_string  "object")
+      | _ => result_some (value_string "function")
       end
     )
   | value_closure _ _ _ _ => result_fail "typeof got lambda"
@@ -235,7 +235,7 @@ Definition prop_to_obj store v1 v2 :=
         let props := Heap.write props "enumerable" (make_attr (bool_to_value enum)) in
         let props := Heap.write props "writable" (make_attr (bool_to_value writ)) in
         let props := Heap.write props "value" (make_attr val) in
-        let obj := object_intro value_undefined "Object" false None props None in
+        let obj := object_intro value_undefined "Object" false value_undefined props value_null in
         let (store, loc) := Store.add_object store obj in
         result_some loc
       | Some (attributes_accessor_of (attributes_accessor_intro get set enum config)) =>
@@ -243,7 +243,7 @@ Definition prop_to_obj store v1 v2 :=
         let props := Heap.write props "enumerable" (make_attr (bool_to_value enum)) in
         let props := Heap.write props "setter" (make_attr set) in
         let props := Heap.write props "getter" (make_attr get) in
-        let obj := object_intro value_undefined "Object" false None props None in
+        let obj := object_intro value_undefined "Object" false value_undefined props value_null in
         let (store, loc) := Store.add_object store obj in
         result_some loc
       | None => result_some value_undefined

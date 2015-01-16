@@ -82,6 +82,9 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st e1 o ->
     red_expr c st (expr_get_obj_attr_1 oa o) o' ->
     red_expr c st (expr_get_obj_attr oa e1) o'
+| red_expr_get_obj_attr_1 : forall c st' st oa ptr obj,
+    get_object st ptr = Some obj ->
+    red_expr c st' (expr_get_obj_attr_1 oa (out_ter st (res_value (value_object ptr)))) (out_ter st (res_value (get_object_oattr obj oa)))
 | red_expr_get_obj_attr_1_abort : forall c st oa o,
     abort o ->
     red_expr c st (expr_get_obj_attr_1 oa o) o
@@ -97,6 +100,11 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_set_obj_attr_1_abort : forall c st oa e2 o,
     abort o ->
     red_expr c st (expr_set_obj_attr_1 oa o e2) o
+| red_expr_set_obj_attr_2 : forall c st' st st1 oa ptr obj obj' v,
+    get_object st ptr = Some obj ->
+    set_object_oattr obj oa v = result_some obj' ->
+    st1 = update_object st ptr obj' ->
+    red_expr c st' (expr_set_obj_attr_2 oa (value_object ptr) (out_ter st (res_value v))) (out_ter st1 (res_value v))
 | red_expr_set_obj_attr_2_abort : forall c st oa v1 o,
     abort o ->
     red_expr c st (expr_set_obj_attr_2 oa v1 o) o

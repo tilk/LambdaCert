@@ -55,6 +55,16 @@ Inductive value : Type :=
 | value_closure : closure_id -> ctx -> list id -> Syntax.expr -> value (* closure_id is for making closures comparable with stx= *)
 .
 
+Definition bool_to_value (b : bool) : value := if b then value_true else value_false.
+
+Definition value_to_bool (v : value) : option bool :=
+  match v with
+  | value_true => Some true
+  | value_false => Some false
+  | _ => None
+  end
+.
+
 (* Named data property attributes *)
 Record attributes_data := attributes_data_intro {
    attributes_data_value : value;
@@ -100,9 +110,9 @@ Record object := object_intro {
    object_proto : value;
    object_class : class_name;
    object_extensible : bool;
-   object_prim_value : option value;
+   object_prim_value : value;
    object_properties_ : object_properties;
-   object_code : option value }.
+   object_code : value }.
 
 Fixpoint name_in_list (name : prop_name) (names : list prop_name) : bool :=
   match names with
@@ -142,11 +152,10 @@ Definition make_prop_list obj : object :=
       object_proto := value_null;
       object_class := "Internal"; 
       object_extensible := false;
-      object_prim_value := None;
+      object_prim_value := value_undefined;
       object_properties_ := props;
-      object_code := None
+      object_code := value_null (* or undefined? TODO *)
     |}
   end
 .
 
-Definition bool_to_value (b : bool) : value := if b then value_true else value_false.

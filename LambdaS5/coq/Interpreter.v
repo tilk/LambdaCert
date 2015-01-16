@@ -131,9 +131,9 @@ Definition eval_object_decl runs c store (attrs : objattrs) (l : list (string * 
   match attrs with
   | objattrs_intro primval_expr code_expr prototype_expr class extensible =>
     (* Following the order in the original implementation: *)
-    if_some_eval_return_else_none runs c store primval_expr (fun store primval_loc =>
+    if_some_eval_else_default runs c store primval_expr value_undefined (fun store primval_loc =>
       if_some_eval_else_default runs c store prototype_expr value_undefined (fun store prototype_loc =>
-        if_some_eval_return_else_none runs c store code_expr (fun store code =>
+        if_some_eval_else_default runs c store code_expr value_null (fun store code =>
           eval_object_properties runs c store l (fun store props =>
             let (store, loc) := Store.add_object store {|
                 object_proto := prototype_loc;
@@ -265,7 +265,7 @@ Definition eval_setbang runs c store (name : string) (expr : expr) : result :=
   if_eval_return runs c store expr (fun store value =>
       match Store.get_loc c name with
       | Some loc => result_value (Store.add_value_at_location store loc value) value
-      | None => raise_exception store ("ReferenceError: " ++ name)
+      | None => result_fail ("ReferenceError: " ++ name)
       end
   )
 .
@@ -431,22 +431,16 @@ Definition eval_setattr runs c store left_expr right_expr attr new_val_expr :=
 Definition eval_getobjattr runs c store obj_expr oattr :=
   if_eval_return runs c store obj_expr (fun store obj_loc =>
     assert_get_object store obj_loc (fun obj =>
-      match oattr with
-      | oattr_proto => result_value store (object_proto obj)
-      | oattr_extensible => return_bool store (object_extensible obj)
-      | oattr_code =>
-        match (object_code obj) with
-        | Some code => result_value store code
-        | None => result_value store value_null
-        end
-      | oattr_primval =>
-        match (object_prim_value obj) with
-        | Some v => result_value store v
-        | None => result_fail "primval attribute is None."
-        end
-      | oattr_class => result_value store (value_string (object_class obj))
-      end
-  ))
+      result_value store (get_object_oattr obj oattr)))
+.
+
+Definition eval_setobjattr runs c store obj_expr oattr attr :=
+  if_eval_return runs c store obj_expr (fun store obj_loc =>
+    if_eval_return runs c store attr (fun store v =>
+      assert_get_object_ptr obj_loc (fun obj_ptr =>
+        change_object_cont store obj_ptr (fun obj cont =>
+          if_result_some (set_object_oattr obj oattr v) (fun obj' =>
+            cont store obj' v)))))
 .
 
 Definition eval_ownfieldnames runs c store obj_expr : result :=
@@ -533,7 +527,7 @@ Definition eval runs c store (e : expr) : result :=
   | expr_get_attr attr left_ right_ => eval_getattr runs c store left_ right_ attr
   | expr_set_attr attr left_ right_ newval => eval_setattr runs c store left_ right_ attr newval
   | expr_get_obj_attr oattr obj => eval_getobjattr runs c store obj oattr
-  | expr_set_obj_attr oattr obj attr => result_fail "expr_set_obj_attr not implemented."
+  | expr_set_obj_attr oattr obj attr => eval_setobjattr runs c store obj oattr attr
   | expr_own_field_names e => eval_ownfieldnames runs c store e
   | expr_op1 op e =>
     if_eval_return runs c store e (fun store v_loc =>

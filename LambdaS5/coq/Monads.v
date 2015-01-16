@@ -185,10 +185,7 @@ Fixpoint get_closure_aux limit store (v : value) : resultof value :=
     | 0 => result_bottom
     | S limit' =>
       assert_get_object_from_ptr store ptr (fun obj =>
-        match object_code obj with
-        | None => result_fail "Applied an object a code attribute"
-        | Some v' => get_closure_aux limit' store v'
-        end
+        get_closure_aux limit' store (object_code obj)
       )
     end
   | _ => result_fail "Applied non-function."
