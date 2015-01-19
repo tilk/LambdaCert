@@ -225,3 +225,5 @@ Definition set_object_pattr obj s (pa : pattr) v : resultof object :=
 Definition return_bool store (b : bool) :=
   result_value store (if b then value_true else value_false)
 .
+
+Parameter desugar_expr : string -> option expr.

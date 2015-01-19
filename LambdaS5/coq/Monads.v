@@ -103,6 +103,13 @@ Definition assert_deref {A : Type} st (loc : value_loc) (cont : value -> resulto
 Definition assert_get {A : Type} st (loc : value_loc) (cont : value -> resultof A) : resultof A :=
   assert_deref st loc cont.
 
+Definition assert_some {A B : Type} (x : option A) (cont : A -> resultof B) : resultof B :=
+  match x with 
+  | Some a => cont a
+  | None => result_fail "Expected Some."
+  end
+.
+
 (* Calls the continuation if the value is an object pointer, and passes the pointer to the continuation.
 * Fails otherwise. *)
 Definition assert_get_object_ptr {A : Type} (loc : value) (cont : object_ptr -> resultof A) : resultof A :=

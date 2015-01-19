@@ -59,7 +59,8 @@ Inductive ext_expr :=
 | expr_try_finally_1 : out -> expr -> ext_expr
 | expr_try_finally_2 : res -> out -> ext_expr
 | expr_throw_1 : out -> ext_expr
-(* eval *)
+| expr_eval_1 : out -> expr -> ext_expr
+| expr_eval_2 : value -> out -> ext_expr
 .
 
 Coercion expr_basic : expr >-> ext_expr.

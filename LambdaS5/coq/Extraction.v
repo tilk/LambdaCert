@@ -210,8 +210,8 @@ Set Extraction AccessOpaque.
 
 
 
-
-
+(* TODO exception handling to get None *)
+Extract Constant Context.desugar_expr => "fun s -> Some (Desugar.desugar (Batteries.String.of_list s))".
 
 Extract Constant Utils.string_of_nat => "fun n -> Batteries.String.to_list (string_of_int n)".
 

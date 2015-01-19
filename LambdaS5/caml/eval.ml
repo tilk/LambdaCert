@@ -5,22 +5,20 @@ let usage_msg = "Usage: "
 
 let store = ref None
 
-let js_parser = ref None 
-
 let get_store () = if Option.is_none !store then store := Some (Store.create_ctx, Store.create_store); Option.get !store
 
 let get_channel filename =
     if filename = "stdin" then stdin else open_in filename
 
 let handle_parameter filename = 
-    let ast = match !js_parser with
+    let ast = match Desugar.get_js_parser () with
         | Some jp -> (* assuming inputs to be JS files *)
             jp filename
         | None -> (* assuming inputs to be LJS files *)
             let ch = get_channel filename in
-            let ret = Run.parse_es5 ch filename in
-            close_in ch; ret in
-    Run.print_result (Run.eval_ast (get_store ()) (Translate.translate_expr ast))
+            let ret = Parse.parse_es5 ch filename in
+            close_in ch; Translate.translate_expr ret in
+    Run.print_result (Run.eval_ast (get_store ()) ast)
 
 let load_store filename = 
     File.with_file_in filename (fun ch -> store := Some (Marshal.from_channel (open_in filename)))
@@ -28,22 +26,23 @@ let load_store filename =
 let save_store filename = 
     File.with_file_out filename (fun ch -> Marshal.to_channel ch (get_store ()) [Marshal.Closures])
 
+let mk_env_vars () =
+    let props = List.map (function (s, _) -> (s, Syntax.Coq_property_data (Syntax.Coq_data_intro (Syntax.Coq_expr_id s, Syntax.Coq_expr_true, Syntax.Coq_expr_false, Syntax.Coq_expr_false)))) (HeapUtils.Heap.to_list (Values.loc_heap (fst (get_store ())))) in
+    match Run.eval_ast (get_store ()) (Syntax.Coq_expr_seq (Syntax.Coq_expr_set_bang (String.to_list "%makeGlobalEnv", Syntax.Coq_expr_lambda ([], Syntax.Coq_expr_object (Translate.translate_attrs Ljs_syntax.d_attrs, props))), Syntax.Coq_expr_dump)) with
+        | Context.Coq_result_dump (c, st) -> 
+            store := Some (c, st)
+        | r -> failwith "Internal error"
+
 let load_env filename = 
     let ch = get_channel filename in 
-    (match Run.eval_ast (get_store ()) (Translate.translate_expr (Run.parse_es5_env ch filename (Ljs_syntax.Dump))) with
+    (match Run.eval_ast (get_store ()) (Translate.translate_expr (Parse.parse_es5_env ch filename (Ljs_syntax.Dump))) with
         | Context.Coq_result_dump (c, st) ->
             store := Some (c, st);
+            mk_env_vars ()
         | r -> failwith ("Unexpected result when loading an environment: " ^ Run.result_to_string r));
     close_in ch
 
-let s5_js_parser filename jsfile = 
-    let s5out = Unix.open_process_in (filename ^ " -desugar " ^ Filename.quote jsfile ^ " -print-src") in
-    let s5ret = Run.parse_es5 s5out jsfile in
-    match Unix.close_process_in s5out with
-        | Unix.WEXITED 0 -> s5ret
-        | _ -> failwith "S5 desugar failure"
-
-let desugar_s5 filename = js_parser := Some (s5_js_parser filename)
+let desugar_s5 filename = Desugar.set_js_parser_s5 filename
 
 let _ =
     Arg.parse 

@@ -400,6 +400,19 @@ Definition eval_tryfinally runs c store body fin : result :=
   )
 .
 
+Definition eval_eval runs c store estr bindings :=
+  if_eval_return runs c store estr (fun store v_estr =>
+    if_eval_return runs c store bindings (fun store v_bindings =>
+      assert_get_string v_estr (fun s =>
+        assert_get_object store v_bindings (fun obj => 
+          match desugar_expr s, Store.envstore_of_obj store obj with
+          | Some e, Some (c', store) => runs_type_eval runs c' store e          
+          | None, _ => result_fail "Parse error"
+          | _, None => result_fail "Invalid eval environment"
+          end 
+  ))))
+.
+
 (******** Closing the loop *******)
 
 (* Main evaluator *)
@@ -443,7 +456,7 @@ Definition eval runs c store (e : expr) : result :=
   | expr_try_catch body catch => eval_trycatch runs c store body catch
   | expr_try_finally body fin => eval_tryfinally runs c store body fin
   | expr_throw e => eval_throw runs c store e
-  | expr_eval e bindings => result_fail "Eval not implemented."
+  | expr_eval e bindings => eval_eval runs c store e bindings
   | expr_hint _ e => eval_cont_terminate runs c store e
   | expr_dump => result_dump c store
   end

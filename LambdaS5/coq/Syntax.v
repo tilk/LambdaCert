@@ -138,4 +138,3 @@ with property : Type :=
 with objattrs : Type :=
 | objattrs_intro : expr -> expr -> expr -> expr -> expr -> objattrs (* class -> extensible -> prototype -> code -> primval -> objattrs *)
 .
-

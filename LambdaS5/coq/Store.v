@@ -1,4 +1,5 @@
 Require Import Values.
+Require Import String.
 Require Import LibStream.
 
 Module Heap := HeapUtils.Heap.
@@ -126,7 +127,23 @@ Definition get_value_of_name c store (name : Values.id) : option Values.value :=
 .
 
 Definition num_objects (st : store) : nat :=
-  length (Heap.to_list (object_heap st)).
+  List.length (Heap.to_list (object_heap st)).
 
 Definition num_values (st : store) : nat :=
-  length (Heap.to_list (value_heap st)).
+  List.length (Heap.to_list (value_heap st)).
+
+Definition envstore_of_obj_aux (o : option (ctx * store)) (p : string * attributes) : option (ctx * store) :=
+  match o with
+  | Some (c, st) => 
+    let (s, a) := p in
+    match a with
+    | attributes_data_of data => Some (add_named_value c st s (attributes_data_value data))
+    | attributes_accessor_of _ => None
+    end
+  | None => None
+  end 
+.
+
+Definition envstore_of_obj st obj : option (ctx * store) :=
+  List.fold_left envstore_of_obj_aux (Heap.to_list (object_properties_ obj)) (Some (create_ctx, st))
+.

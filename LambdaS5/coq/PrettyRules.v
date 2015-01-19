@@ -538,5 +538,26 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_throw_1_abort : forall c st o,
     abort o ->
     red_expr c st (expr_throw_1 o) o
+
+| red_expr_eval : forall c st e1 e2 o o',
+    red_expr c st e1 o ->
+    red_expr c st (expr_eval_1 o e2) o' ->
+    red_expr c st (expr_eval e1 e2) o' 
+| red_expr_eval_1 : forall c st st' v1 e2 o o',
+    red_expr c st e2 o ->
+    red_expr c st (expr_eval_2 v1 o) o' -> 
+    red_expr c st' (expr_eval_1 (out_ter st (res_value v1)) e2) o'
+| red_expr_eval_1_abort : forall c st e2 o,
+    abort o ->
+    red_expr c st (expr_eval_1 o e2) o
+| red_expr_eval_2 : forall c c1 st' st st1 s e ptr obj o,
+    get_object st ptr = Some obj ->
+    envstore_of_obj st obj = Some (c1, st1) ->
+    desugar_expr s = Some e ->
+    red_expr c1 st1 e o ->
+    red_expr c st' (expr_eval_2 (value_string s) (out_ter st (res_value (value_object ptr)))) o
+| red_expr_eval_2_abort : forall c st v1 o,
+    abort o ->
+    red_expr c st (expr_eval_2 v1 o) o
 .
 
