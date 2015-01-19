@@ -90,30 +90,38 @@ Definition eval_seq runs c st (e1 e2 : expr) : result :=
 
 (* A tail-recursive helper for eval_object_properties, that constructs
 * the list of properties. *)
-Fixpoint eval_object_properties_aux runs c store (l : list (string * property)) (acc : object_properties) (cont : Store.store -> object_properties -> result) : result :=
+Fixpoint eval_object_properties_aux runs c store (l : list (string * property)) (acc : object_properties) (cont : Store.store -> object_properties -> result) {struct l} : result :=
   match l with
   | nil => cont store acc
-  | (name, property_data (data_intro value_expr writable) enumerable configurable) :: tail =>
-    (* The order of the evaluation follows the original implementation. *)
-    if_eval_return runs c store value_expr (fun store value_loc =>
-      eval_object_properties_aux runs c store tail (Heap.write acc name (
-        attributes_data_of {|
-            attributes_data_value := value_loc;
-            attributes_data_writable := writable;
-            attributes_data_enumerable := enumerable;
-            attributes_data_configurable := configurable |}
-      )) cont) 
-  | (name, property_accessor (accessor_intro getter_expr setter_expr) enumerable configurable) :: tail =>
-    (* The order of the evaluation follows the original implementation. *)
-    if_eval_return runs c store getter_expr (fun store getter_loc =>
-      if_eval_return runs c store setter_expr (fun store setter_loc =>
-        eval_object_properties_aux runs c store tail (Heap.write acc name (
-           attributes_accessor_of {|
-              attributes_accessor_get := getter_loc;
-              attributes_accessor_set := setter_loc;
-              attributes_accessor_enumerable := enumerable;
-              attributes_accessor_configurable := configurable |}
-    )) cont))
+  | (name, property_data (data_intro value_expr writable_expr enumerable_expr configurable_expr)) :: tail =>
+    if_eval_return runs c store configurable_expr (fun store configurable_v =>
+      if_eval_return runs c store enumerable_expr (fun store enumerable_v =>
+        if_eval_return runs c store value_expr (fun store value_v =>
+          if_eval_return runs c store writable_expr (fun store writable_v =>
+            assert_get_bool configurable_v (fun configurable =>
+              assert_get_bool enumerable_v (fun enumerable => 
+                assert_get_bool writable_v (fun writable => 
+                  eval_object_properties_aux runs c store tail (Heap.write acc name (
+                    attributes_data_of {|
+                      attributes_data_value := value_v;
+                      attributes_data_writable := writable;
+                      attributes_data_enumerable := enumerable;
+                      attributes_data_configurable := configurable |}
+                    )) cont))))))) 
+  | (name, property_accessor (accessor_intro getter_expr setter_expr enumerable_expr configurable_expr)) :: tail =>
+    if_eval_return runs c store configurable_expr (fun store configurable_v =>
+      if_eval_return runs c store enumerable_expr (fun store enumerable_v =>
+        if_eval_return runs c store getter_expr (fun store getter_v =>
+          if_eval_return runs c store setter_expr (fun store setter_v =>
+            assert_get_bool configurable_v (fun configurable =>
+              assert_get_bool enumerable_v (fun enumerable => 
+                eval_object_properties_aux runs c store tail (Heap.write acc name (
+                  attributes_accessor_of {|
+                    attributes_accessor_get := getter_v;
+                    attributes_accessor_set := setter_v;
+                    attributes_accessor_enumerable := enumerable;
+                    attributes_accessor_configurable := configurable |}
+                  )) cont))))))
   end
 .
 (* Reads a list of syntax trees of properties and converts it to a heap
@@ -127,24 +135,24 @@ Definition eval_object_properties runs c store (l : list (string * property)) (c
 * to Undefined), then properties. Finally, allocate a new object with the
 * computed values. *)
 Definition eval_object_decl runs c store (attrs : objattrs) (l : list (string * property)) : result :=
-
-  match attrs with
-  | objattrs_intro primval_expr code_expr prototype_expr class extensible =>
-    (* Following the order in the original implementation: *)
-    if_some_eval_else_default runs c store primval_expr value_undefined (fun store primval_loc =>
-      if_some_eval_else_default runs c store prototype_expr value_undefined (fun store prototype_loc =>
-        if_some_eval_else_default runs c store code_expr value_null (fun store code =>
-          eval_object_properties runs c store l (fun store props =>
-            let (store, loc) := Store.add_object store {|
-                object_proto := prototype_loc;
-                object_class := class;
-                object_extensible := extensible;
-                object_prim_value := primval_loc;
-                object_properties_ := props;
-                object_code := code |}
-            in result_value store loc
-          ))))
-  end
+  let 'objattrs_intro class_expr extensible_expr prototype_expr code_expr primval_expr := attrs in
+    (* Order of evaluation as in the paper: *)
+    if_eval_return runs c store class_expr (fun store class_v =>
+      if_eval_return runs c store extensible_expr (fun store extensible_v =>
+        if_eval_return runs c store prototype_expr (fun store prototype_v =>
+          if_eval_return runs c store code_expr (fun store code_v =>
+            if_eval_return runs c store primval_expr (fun store primval_v =>
+              assert_get_string class_v (fun class => assert_get_bool extensible_v (fun extensible =>
+                eval_object_properties runs c store l (fun store props =>
+                  let (store, loc) := Store.add_object store {|
+                    object_proto := prototype_v;
+                    object_class := class;
+                    object_extensible := extensible;
+                    object_prim_value := primval_v;
+                    object_properties_ := props;
+                    object_code := code_v |}
+                  in result_value store loc
+          ))))))))
 .
 
 (* left[right, arg].

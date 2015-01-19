@@ -79,6 +79,8 @@ let translate_binary_op s = match s with
     | "isAccessor" -> Cs.Coq_binary_op_is_accessor
     | _ -> failwith "operator not implemented"
 
+let translate_bool b = if b then Cs.Coq_expr_true else Cs.Coq_expr_false
+
 let rec translate_expr e = match e with
     | Ljs.Null _ -> Cs.Coq_expr_null
     | Ljs.Undefined _ -> Cs.Coq_expr_undefined
@@ -113,15 +115,15 @@ let rec translate_expr e = match e with
     | Ljs.Eval (_, e1, e2) -> Cs.Coq_expr_eval (translate_expr e1, translate_expr e2)
     | Ljs.Hint (_, i, e) -> Cs.Coq_expr_hint (String.to_list i, translate_expr e)
     | Ljs.Dump -> Cs.Coq_expr_dump
-and translate_data d = Cs.Coq_data_intro (translate_expr d.Ljs.value, d.Ljs.writable)
-and translate_accessor a = Cs.Coq_accessor_intro (translate_expr a.Ljs.getter, translate_expr a.Ljs.setter)
+and translate_data d e c = Cs.Coq_data_intro (translate_expr d.Ljs.value, translate_bool d.Ljs.writable, translate_bool e, translate_bool c)
+and translate_accessor a e c = Cs.Coq_accessor_intro (translate_expr a.Ljs.getter, translate_expr a.Ljs.setter, translate_bool e, translate_bool c)
 and translate_prop p = match p with
-    | Ljs.Data (d, e, c) -> Cs.Coq_property_data (translate_data d, e, c)
-    | Ljs.Accessor (a, e, c) -> Cs.Coq_property_accessor (translate_accessor a, e, c)
+    | Ljs.Data (d, e, c) -> Cs.Coq_property_data (translate_data d e c)
+    | Ljs.Accessor (a, e, c) -> Cs.Coq_property_accessor (translate_accessor a e c)
 and translate_attrs a = Cs.Coq_objattrs_intro 
-    (Option.map translate_expr a.Ljs.primval, 
-     Option.map translate_expr a.Ljs.code, 
-     Option.map translate_expr a.Ljs.proto, 
-     String.to_list a.Ljs.klass, 
-     a.Ljs.extensible)
-
+    (Cs.Coq_expr_string (String.to_list a.Ljs.klass), 
+     translate_bool a.Ljs.extensible,
+     Option.map_default translate_expr (Cs.Coq_expr_null) a.Ljs.proto, 
+     Option.map_default translate_expr (Cs.Coq_expr_null) a.Ljs.code, 
+     Option.map_default translate_expr (Cs.Coq_expr_undefined) a.Ljs.primval 
+     )

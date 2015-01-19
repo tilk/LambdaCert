@@ -228,7 +228,7 @@ end)".
 
 Extract Constant Operators._number_eq_bool => "(=)".
 
-Extract Constant Operators._print_string => "fun x -> print_string (CoqUtils.implode x); print_char '\n'".
+Extract Constant Operators._print_string => "fun x -> print_string (Batteries.String.of_list x); print_char '\n'".
 Extract Constant Operators._pretty => "fun store value -> print_string (PrettyPrint.string_of_value 100 store value); print_char '\n'".
 
 (* put a practical limit on recursive search *)

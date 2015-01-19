@@ -129,13 +129,13 @@ Inductive expr : Type :=
 | expr_hint : string -> expr -> expr
 | expr_dump : expr (* special - for dumping the context in the interpreter *)
 with data : Type :=
-| data_intro : expr -> bool -> data (* expr -> writable -> data *)
+| data_intro : expr -> expr -> expr -> expr -> data (* expr -> writable -> enumerable -> configurable -> data *)
 with accessor : Type :=
-| accessor_intro : expr -> expr -> accessor (* getter -> setter -> accessor *)
+| accessor_intro : expr -> expr -> expr -> expr -> accessor (* getter -> setter -> enumerable -> configurable -> accessor *)
 with property : Type := 
-| property_data : data -> bool -> bool -> property (* value -> enumerable -> configurable *)
-| property_accessor : accessor -> bool -> bool -> property
+| property_data : data -> property 
+| property_accessor : accessor -> property
 with objattrs : Type :=
-| objattrs_intro : option expr -> option expr -> option expr -> string -> bool -> objattrs (* primval -> code -> prototype -> class -> extensible -> objattrs *)
+| objattrs_intro : expr -> expr -> expr -> expr -> expr -> objattrs (* class -> extensible -> prototype -> code -> primval -> objattrs *)
 .
 

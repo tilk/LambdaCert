@@ -15,11 +15,8 @@ Inductive res :=
 
 Inductive out :=
 | out_div : out
-| out_ter : store -> res -> out.
-
-Inductive pout :=
-| pout_div : pout
-| pout_ter : attributes -> pout.
+| out_ter : store -> res -> out
+.
 
 (* Used for passing data through continuations/return values.
 * It is mostly used for returning a Javascript value, either as

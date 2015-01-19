@@ -114,6 +114,15 @@ Record object := object_intro {
    object_properties_ : object_properties;
    object_code : value }.
 
+Definition default_object : object := {|
+  object_proto := value_null;
+  object_class := "Object";
+  object_extensible := true;
+  object_prim_value := value_undefined;
+  object_properties_ := Heap.empty;
+  object_code := value_null
+|}.
+
 Fixpoint name_in_list (name : prop_name) (names : list prop_name) : bool :=
   match names with
   | nil => false

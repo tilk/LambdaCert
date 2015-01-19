@@ -47,14 +47,6 @@ Definition if_out_ter {A : Type} (var : result) (cont : store -> res -> resultof
     end)
 .
 
-Definition if_pout_ter {A : Type} (var : resultof pout) (cont : attributes -> resultof A) : resultof A :=
-  if_result_some var (fun o => 
-    match o with
-    | pout_ter r => cont r 
-    | _ => result_impossible "out_div found in interpreter"
-    end)
-.
-
 Definition if_value  (var : result) (cont : store -> value -> result) : result :=
   if_out_ter var (fun st r =>
     match r with
