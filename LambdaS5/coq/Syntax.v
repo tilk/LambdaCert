@@ -19,6 +19,8 @@ Inductive unary_op : Type :=
 | unary_op_strlen
 | unary_op_typeof
 | unary_op_is_primitive
+| unary_op_is_closure 
+| unary_op_is_array
 | unary_op_abs
 | unary_op_void
 | unary_op_floor
@@ -26,19 +28,17 @@ Inductive unary_op : Type :=
 | unary_op_prim_to_num
 | unary_op_prim_to_bool
 | unary_op_not
+| unary_op_bnot
 | unary_op_numstr_to_num
-(* not yet implemeted *)
-| unary_op_is_closure 
-| unary_op_object_to_string
-| unary_op_is_array
 | unary_op_to_int32
-| unary_op_ceil
-| unary_op_log
 | unary_op_ascii_ntoc
 | unary_op_ascii_cton
+(* not yet implemeted *)
+| unary_op_object_to_string
+| unary_op_ceil
+| unary_op_log
 | unary_op_to_lower
 | unary_op_to_upper
-| unary_op_bnot
 | unary_op_sin
 | unary_op_current_utc_millis
 .
@@ -54,6 +54,7 @@ Inductive binary_op : Type :=
 | binary_op_gt 
 | binary_op_ge
 | binary_op_stx_eq
+| binary_op_abs_eq
 | binary_op_same_value
 | binary_op_has_property
 | binary_op_has_own_property
@@ -61,17 +62,16 @@ Inductive binary_op : Type :=
 | binary_op_char_at
 | binary_op_is_accessor
 | binary_op_prop_to_obj
-(* not yet implemented *)
 | binary_op_band
 | binary_op_bor
 | binary_op_bxor
 | binary_op_shiftl
 | binary_op_shiftr
 | binary_op_zfshiftr
-| binary_op_abs_eq
 | binary_op_string_lt
-| binary_op_base
 | binary_op_locale_compare
+(* not yet implemented *)
+| binary_op_base
 | binary_op_pow
 | binary_op_to_fixed
 .

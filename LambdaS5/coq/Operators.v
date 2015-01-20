@@ -10,6 +10,17 @@ Open Scope string_scope.
 Implicit Type runs : Context.runs_type.
 Implicit Type store : Store.store.
 
+Implicit Type st : store.
+Implicit Type v : value.
+Implicit Type loc : value_loc.
+Implicit Type s : string.
+Implicit Type n : number.
+Implicit Type i : id.
+Implicit Type o : out.
+Implicit Type c : ctx.
+Implicit Type ptr : object_ptr.
+Implicit Type obj : object.
+
 (****** Unary operators ******)
 
 Definition typeof store (v : value) :=
@@ -30,12 +41,34 @@ Definition typeof store (v : value) :=
   end
 .
 
-Definition is_primitive store v :=
+Definition is_primitive v :=
   match v with
   | value_undefined | value_null | value_string _ | value_number _ | value_true | value_false =>
     result_some value_true
   | _ =>
     result_some value_false
+  end
+.
+
+Definition is_closure v :=
+  match v with
+  | value_closure _ _ _ _ =>
+    result_some value_true
+  | _ =>
+    result_some value_false
+  end
+.
+
+Definition is_array st v :=
+  match v with
+  | value_object ptr =>
+    assert_get_object_from_ptr st ptr (fun obj => 
+      match object_class obj with
+      | "Array" => result_some value_true
+      | _ => result_some value_false
+      end
+    )
+  | _ => result_some value_false
   end
 .
 
@@ -148,10 +181,35 @@ Definition numstr_to_num store (v : value) :=
   end
 .
 
-Definition unary_arith store (op : number -> number) (v : value) : resultof value :=
+Definition unary_arith (op : number -> number) (v : value) : resultof value :=
   match v with
   | value_number n => result_some (value_number (op n))
   | _ => result_fail "Arithmetic with non-number."
+  end
+.
+
+Definition unary_int_arith (op : int -> int) (v : value) : resultof value :=
+  match v with
+  | value_number n => result_some (value_number (of_int (op (to_int32 n))))
+  | _ => result_fail "Arithmetic with non-number."
+  end
+.
+
+Definition _ascii_of_int (i : int) : Ascii.ascii := Ascii.ascii_of_N (Z.to_N i).
+
+Definition _int_of_ascii (c : Ascii.ascii) : int := Z.of_N (Ascii.N_of_ascii c).
+
+Definition ascii_ntoc (v : value) : resultof value :=
+  match v with
+  | value_number n => result_some (value_string (String (_ascii_of_int (to_int32 n)) EmptyString))
+  | _ => result_fail "ascii_ntoc"
+  end
+.
+
+Definition ascii_cton (v : value) : resultof value :=
+  match v with
+  | value_string (String c _) => result_some (value_number (of_int (_int_of_ascii c)))
+  | _ => result_fail "ascii_cton"
   end
 .
 
@@ -161,15 +219,21 @@ Definition unary (op : Syntax.unary_op) store v : resultof value :=
     | Syntax.unary_op_pretty => pretty store v
     | Syntax.unary_op_strlen => strlen store v
     | Syntax.unary_op_typeof => typeof store v
-    | Syntax.unary_op_is_primitive => is_primitive store v
-    | Syntax.unary_op_abs => unary_arith store JsNumber.absolute v
+    | Syntax.unary_op_is_primitive => is_primitive v
+    | Syntax.unary_op_is_closure => is_closure v
+    | Syntax.unary_op_abs => unary_arith JsNumber.absolute v
     | Syntax.unary_op_void => void store v
-    | Syntax.unary_op_floor => unary_arith store JsNumber.floor v
+    | Syntax.unary_op_floor => unary_arith JsNumber.floor v
     | Syntax.unary_op_prim_to_str => prim_to_str store v
     | Syntax.unary_op_prim_to_num => prim_to_num store v
     | Syntax.unary_op_prim_to_bool => prim_to_bool store v
     | Syntax.unary_op_not => nnot store v
     | Syntax.unary_op_numstr_to_num => numstr_to_num store v
+    | Syntax.unary_op_bnot => unary_int_arith int32_bitwise_not v
+    | Syntax.unary_op_is_array => is_array store v
+    | Syntax.unary_op_to_int32 => unary_int_arith (fun x => x) v
+    | Syntax.unary_op_ascii_ntoc => ascii_ntoc v
+    | Syntax.unary_op_ascii_cton => ascii_cton v
     | _ => result_fail ("Unary operator " ++ " not implemented.")
     end
 .
@@ -179,18 +243,38 @@ Definition unary (op : Syntax.unary_op) store v : resultof value :=
 Parameter _number_eq_bool : number -> number -> bool.
 
 Definition stx_eq store v1 v2 :=
-  match (v1, v2) with
-  | (value_string s1, value_string s2) => result_some (if (decide(s1 = s2)) then value_true else value_false)
-  | (value_null, value_null) => result_some value_true
-  | (value_undefined, value_undefined) => result_some value_true
-  | (value_true, value_true) => result_some value_true
-  | (value_false, value_false) => result_some value_true
-  | (value_number n1, value_number n2) =>
-    result_some (bool_to_value (_number_eq_bool n1 n2))
-  | (value_object ptr1, value_object ptr2) => result_some (if (beq_nat ptr1 ptr2) then value_true else value_false)
-  | (value_closure id1 _ _ _, value_closure id2 _ _ _) => result_some (if (beq_nat id1 id2) then value_true else value_false)
-  | _ => result_some value_false
-  (*| _ => result_some (if (beq_nat v1_loc v2_loc) then value_true else False)*)
+  match v1, v2 with
+  | value_string s1, value_string s2 => result_some (bool_to_value (decide(s1 = s2)))
+  | value_null, value_null => result_some value_true
+  | value_undefined, value_undefined => result_some value_true
+  | value_true, value_true => result_some value_true
+  | value_false, value_false => result_some value_true
+  | value_number n1, value_number n2 => result_some (bool_to_value (_number_eq_bool n1 n2))
+  | value_object ptr1, value_object ptr2 => result_some (bool_to_value (beq_nat ptr1 ptr2))
+  | value_closure id1 _ _ _, value_closure id2 _ _ _ => result_some (bool_to_value (beq_nat id1 id2))
+  | _, _ => result_some value_false
+  end
+.
+
+Definition abs_eq store v1 v2 :=
+  match v1, v2 with
+  | value_string s1, value_string s2 => result_some (bool_to_value (decide(s1 = s2)))
+  | value_null, value_null => result_some value_true
+  | value_undefined, value_undefined => result_some value_true
+  | value_true, value_true => result_some value_true
+  | value_false, value_false => result_some value_true
+  | value_number n1, value_number n2 => result_some (bool_to_value (_number_eq_bool n1 n2))
+  | value_object ptr1, value_object ptr2 => result_some (bool_to_value (beq_nat ptr1 ptr2))
+  | value_closure id1 _ _ _, value_closure id2 _ _ _ => result_some (bool_to_value (beq_nat id1 id2))
+  | value_null, value_undefined => result_some value_true
+  | value_undefined, value_null => result_some value_true
+  | value_number n, value_string s
+  | value_string s, value_number n => result_some (bool_to_value (_number_eq_bool (JsNumber.from_string s) n))
+  | value_true, value_number n
+  | value_number n, value_true => result_some (bool_to_value (_number_eq_bool (JsNumber.of_int 1) n))
+  | value_false, value_number n
+  | value_number n, value_false => result_some (bool_to_value (_number_eq_bool (JsNumber.of_int 0) n))
+  | _, _ => result_some value_false
   end
 .
 
@@ -296,10 +380,17 @@ Definition same_value store v1 v2 :=
   result_some (bool_to_value (_same_value v1 v2))
 .
 
-Definition arith store (op : number -> number -> number) (v1 v2 : value) : resultof value :=
-  match (v1, v2) with
-  | (value_number n1, value_number n2) => result_some (value_number (op n1 n2))
-  | _ => result_fail "Arithmetic with non-numbers."
+Definition arith (op : number -> number -> number) (v1 v2 : value) : resultof value :=
+  match v1, v2 with
+  | value_number n1, value_number n2 => result_some (value_number (op n1 n2))
+  | _, _ => result_fail "Arithmetic with non-numbers."
+  end
+.
+
+Definition int_arith (op : int -> int -> int) (v1 v2 : value) : resultof value :=
+  match v1, v2 with
+  | value_number n1, value_number n2 => result_some (value_number (of_int (op (to_int32 n1) (to_int32 n2))))
+  | _, _ => result_fail "Arithmetic with non-numbers."
   end
 .
 
@@ -317,19 +408,35 @@ Parameter le_bool : number -> number -> bool.
 Parameter gt_bool : number -> number -> bool.
 Parameter ge_bool : number -> number -> bool.
 
+Parameter _string_lt_bool : string -> string -> bool.
+
+Definition string_lt v1 v2 : resultof value :=
+  match v1, v2 with
+  | value_string s1, value_string s2 => result_some (bool_to_value (_string_lt_bool s1 s2))
+  | _, _ => result_fail "string_lt"
+  end
+.
+
+Definition locale_compare v1 v2 : resultof value :=
+  match v1, v2 with
+  | value_string s1, value_string s2 => result_some (bool_to_value (_string_lt_bool s1 s2))
+  | _, _ => result_fail "locale_compare"
+  end
+.
 
 Definition binary (op : Syntax.binary_op) store v1 v2 : resultof value :=
       match op with
-      | Syntax.binary_op_add => arith store JsNumber.add v1 v2
-      | Syntax.binary_op_sub => arith store JsNumber.sub v1 v2
-      | Syntax.binary_op_mul => arith store JsNumber.mult v1 v2
-      | Syntax.binary_op_div => arith store JsNumber.div v1 v2
-      | Syntax.binary_op_mod => arith store JsNumber.fmod v1 v2
+      | Syntax.binary_op_add => arith JsNumber.add v1 v2
+      | Syntax.binary_op_sub => arith JsNumber.sub v1 v2
+      | Syntax.binary_op_mul => arith JsNumber.mult v1 v2
+      | Syntax.binary_op_div => arith JsNumber.div v1 v2
+      | Syntax.binary_op_mod => arith JsNumber.fmod v1 v2
       | Syntax.binary_op_lt => cmp store value_true value_false value_false JsNumber.lt_bool v1 v2
       | Syntax.binary_op_le => cmp store value_true value_true value_false le_bool v1 v2
       | Syntax.binary_op_gt => cmp store value_false value_false value_true gt_bool v1 v2
       | Syntax.binary_op_ge => cmp store value_false value_true value_true ge_bool v1 v2
       | Syntax.binary_op_stx_eq => stx_eq store v1 v2
+      | Syntax.binary_op_abs_eq => abs_eq store v1 v2
       | Syntax.binary_op_same_value => same_value store v1 v2
       | Syntax.binary_op_has_property => has_property store v1 v2
       | Syntax.binary_op_has_own_property => has_own_property store v1 v2
@@ -337,6 +444,14 @@ Definition binary (op : Syntax.binary_op) store v1 v2 : resultof value :=
       | Syntax.binary_op_char_at => char_at store v1 v2
       | Syntax.binary_op_is_accessor => is_accessor store v1 v2
       | Syntax.binary_op_prop_to_obj => prop_to_obj store v1 v2 (* For debugging purposes *)
+      | Syntax.binary_op_band => int_arith int32_bitwise_and v1 v2
+      | Syntax.binary_op_bor => int_arith int32_bitwise_or v1 v2
+      | Syntax.binary_op_bxor => int_arith int32_bitwise_xor v1 v2
+      | Syntax.binary_op_shiftl => int_arith int32_left_shift v1 v2
+      | Syntax.binary_op_shiftr => int_arith int32_right_shift v1 v2
+      | Syntax.binary_op_zfshiftr => int_arith uint32_right_shift v1 v2
+      | Syntax.binary_op_string_lt => string_lt v1 v2
+      | Syntax.binary_op_locale_compare => locale_compare v1 v2
       | _ => result_fail ("Binary operator " ++ " not implemented.")
       end
 .

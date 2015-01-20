@@ -129,8 +129,13 @@ Extract Constant JsNumber.to_string =>
     prerr_string (""Warning:  JsNumber.to_string called.  This might be responsible for errors.  Argument value:  "" ^ string_of_float f ^ ""."");
     prerr_newline();
     let string_of_number n =
-      let inum = int_of_float n in
-      if (float_of_int inum = n) then string_of_int inum else string_of_float n in
+      if not (n <= n || n >= n) then ""NaN""
+      else
+        if n == infinity then ""Infinity""
+        else if n == neg_infinity then ""-Infinity""
+        else
+          let inum = int_of_float n in
+          if (float_of_int inum = n) then string_of_int inum else string_of_float n in
     let ret = ref [] in (* Ugly, but the API for OCaml string is not very functionnal... *)
     String.iter (fun c -> ret := c :: !ret) (string_of_number f);
     List.rev !ret)
@@ -227,6 +232,11 @@ Extract Constant Operators._same_value => "(fun v1 v2 -> begin
 end)".
 
 Extract Constant Operators._number_eq_bool => "(=)".
+
+Extract Constant Operators._ascii_of_int => "(fun c -> char_of_int (int_of_float c))".
+Extract Constant Operators._int_of_ascii => "(fun c -> float_of_int (int_of_char c))".
+
+Extract Constant Operators._string_lt_bool => "(<)".
 
 Extract Constant Operators._print_string => "fun x -> print_string (Batteries.String.of_list x); print_char '\n'".
 Extract Constant Operators._pretty => "fun store value -> print_string (PrettyPrint.string_of_value 100 store value); print_char '\n'".
