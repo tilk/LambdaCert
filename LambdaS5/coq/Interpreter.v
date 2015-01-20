@@ -355,7 +355,7 @@ Definition eval_label runs c store (label : string) body : result :=
   if_eval_ter runs c store body (fun store res =>
     match res with
     | res_value ret => result_value store ret
-    | res_exception exc => result_value store exc
+    | res_exception exc => result_exception store exc
     | res_break b v =>
       if (decide(b = label)) then
         result_value store v
