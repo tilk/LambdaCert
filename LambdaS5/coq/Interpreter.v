@@ -107,10 +107,8 @@ Definition apply runs c st (f_loc : value) (args : list value) : result :=
 (* a lonely identifier.
 * Fetch the associated value location and return it. *)
 Definition eval_id runs c st (name : string) : result :=
-  match Store.get_loc c name with
-  | Some loc => assert_deref st loc (fun v => result_value st v)
-  | None => result_fail ("ReferenceError: " ++ name)
-  end
+  assert_get_loc c name (fun loc =>
+    assert_deref st loc (fun v => result_value st v))
 .
 
 
@@ -508,17 +506,23 @@ Definition eval runs c store (e : expr) : result :=
   end
 .
 
+Definition runs_0 := {|
+    runs_type_eval := fun c store _ => result_bottom
+  |}
+.
+
+Definition runs_S runs := 
+  let wrap {A : Type} (f : runs_type -> ctx -> Store.store -> A) c st : A :=
+    f runs c st
+  in {|
+    runs_type_eval := wrap eval
+  |}
+.
+
 Fixpoint runs max_step : runs_type :=
   match max_step with
-  | 0 => {|
-      runs_type_eval := fun c store _ => result_bottom
-    |}
-  | S max_step' =>
-    let wrap {A : Type} (f : runs_type -> ctx -> Store.store -> A) c st : A :=
-      let runs' := runs max_step' in f runs' c st
-    in {|
-      runs_type_eval := wrap eval
-    |}
+  | 0 => runs_0
+  | S max_step' => runs_S (runs max_step')
   end.
 
 Definition runs_eval n := runs_type_eval (runs n).

@@ -124,6 +124,14 @@ Proof.
     destruct* (get_object st ptr); tryfalse.
 Qed.
 
+Lemma assert_get_loc_out : forall c s o cont, 
+    assert_get_loc c s cont = result_some o ->
+    exists loc, get_loc c s = Some loc /\ cont loc = result_some o.
+Proof.
+    introv E. unfold assert_get_loc in E.
+    destruct* (get_loc c s); tryfalse.
+Qed.
+
 Lemma assert_get_object_out : forall st v o cont,
     assert_get_object st v cont = result_some o -> 
     exists ptr obj, v = value_object ptr /\ get_object st ptr = Some obj /\ cont obj = result_some o.
@@ -149,4 +157,95 @@ Lemma assert_deref_out : forall st loc cont o,
 Proof.
     introv E. unfold assert_deref in E.
     destruct* (get_value st loc); tryfalse.
+Qed.
+
+(* Tactics *)
+
+(* TODO *)
+Ltac ljs_run_select_ifres H :=
+    match type of H with ?T = _ => match T with
+    | assert_get_loc _ _ _ => constr:(assert_get_loc_out)
+    | assert_deref _ _ _ => constr:(assert_deref_out)
+    | _ => fail
+    end end
+.
+
+
+
+Ltac ljs_run_inv :=
+    repeat
+    match goal with
+    | H : result_value _ _ = _ |- _ => inverts H
+    end
+. 
+
+(* Main lemma *)
+
+Lemma eval_id_correct : forall runs c st s o,
+    runs_type_correct runs -> eval_id runs c st s = result_some o -> 
+    exists loc v, get_loc c s = Some loc /\ 
+        get_value st loc = Some v /\ o = out_ter st (res_value v).
+Proof.
+    introv IH R. unfolds in R.
+Admitted.
+
+Lemma eval_correct : forall runs c st e o,
+    runs_type_correct runs -> eval runs c st e = result_some o -> red_expr c st e o.
+Proof.
+    introv IH R. unfolds in R.
+    destruct e.
+    (* null *)
+    ljs_run_inv. apply red_expr_null.
+    (* undefined *)
+    ljs_run_inv. apply red_expr_undefined.
+    (* string *)
+    ljs_run_inv. apply red_expr_string.
+    (* number *)
+    ljs_run_inv. apply red_expr_number.
+    (* true *)
+    ljs_run_inv. apply red_expr_true.
+    (* false *)
+    ljs_run_inv. apply red_expr_false.
+    (* id *)
+    lets (loc&v&Hloc&Hv&Ho): eval_id_correct IH R.
+    inverts Ho.
+    eapply red_expr_id; eassumption.
+    (* object *)
+    skip.
+    (* get_attr *)
+    skip.
+    (* set_attr *)
+    skip.
+    (* get_obj_attr *)
+    skip.
+    (* set_obj_attr *)
+    skip.
+    (* get_field *)
+    skip.
+    (* set_field *)
+    skip.
+    (* delete_field *)
+    skip.
+    (* own_field_names *)
+    skip.
+    (* set_bang *)
+Admitted.
+
+Lemma runs_0_correct : runs_type_correct runs_0.
+Proof.
+    apply make_runs_type_correct.
+    introv H.
+    tryfalse.
+Qed.
+
+Lemma runs_S_correct : forall runs, runs_type_correct runs -> runs_type_correct (runs_S runs).
+Proof.
+    introv IH.
+    apply make_runs_type_correct.
+    eauto using eval_correct.
+Qed.
+
+Lemma runs_correct : forall k, runs_type_correct (runs k). 
+Proof.
+    induction k; eauto using runs_0_correct, runs_S_correct. 
 Qed.

@@ -55,6 +55,13 @@ Definition assert_deref {A : Type} st (loc : value_loc) (cont : value -> resulto
   end
 .
 
+Definition assert_get_loc {A : Type} c s (cont : value_loc -> resultof A) : resultof A :=
+  match get_loc c s with
+  | Some loc => cont loc
+  | None => result_fail ("ReferenceError:" ++ s)
+  end
+.
+
 Definition assert_some {A B : Type} (x : option A) (cont : A -> resultof B) : resultof B :=
   match x with 
   | Some a => cont a

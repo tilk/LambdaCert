@@ -26,7 +26,7 @@ Implicit Type obj : object.
 
 Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_null : forall c st, red_expr c st expr_null (out_ter st (res_value value_null))
-| red_expr_undefined : forall c st, red_expr c st expr_undefined (out_ter st (res_value value_null))
+| red_expr_undefined : forall c st, red_expr c st expr_undefined (out_ter st (res_value value_undefined))
 | red_expr_string : forall c st s, red_expr c st (expr_string s) (out_ter st (res_value (value_string s)))
 | red_expr_number : forall c st n, red_expr c st (expr_number n) (out_ter st (res_value (value_number n)))
 | red_expr_true : forall c st, red_expr c st expr_true (out_ter st (res_value value_true))
