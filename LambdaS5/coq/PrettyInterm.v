@@ -69,12 +69,19 @@ Inductive res_is_value : res -> Prop :=
 | res_is_value_value : forall v, res_is_value (res_value v)
 .
 
+Hint Constructors res_is_value.
+
 Inductive res_is_control : res -> Prop :=
 | res_is_control_exception : forall v, res_is_control (res_exception v)
 | res_is_control_break : forall i v, res_is_control (res_break i v)
 .
 
+Hint Constructors res_is_control.
+
 Inductive abort : out -> Prop :=
 | abort_div : abort out_div
 | abort_control : forall st r, res_is_control r -> abort (out_ter st r)
 .
+
+Hint Constructors abort.
+

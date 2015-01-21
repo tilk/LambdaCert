@@ -7,6 +7,7 @@ Implicit Type runs : runs_type.
 Implicit Type st : store.
 Implicit Type c : ctx.
 Implicit Type e : Syntax.expr.
+Implicit Type v : value.
 Implicit Type loc : value_loc.
 
 (*
@@ -16,16 +17,6 @@ Implicit Type loc : value_loc.
 * (either calling the continuation with a default, or returning a default,
 * or returning the data verbatim).
 *)
-
-(* Evaluate an expression, and calls the continuation with
-* the new store and the Context.result of the evaluation. *)
-Definition eval_cont {A : Type} runs c st e (cont : result -> resultof A) : resultof A :=
-  cont (Context.runs_type_eval runs c st e).
-
-(* Alias for calling eval_cont with an empty continuation *)
-Definition eval_cont_terminate runs c st e : result :=
-  eval_cont runs c st e (fun res => res)
-.
 
 (* Calls the continuation if the variable is a value.
 * Returns the variable and the store verbatim otherwise. *)
@@ -39,11 +30,11 @@ Definition if_result_some {A B : Type} (var : resultof A) (cont : A -> resultof 
   end
 .
 
-Definition if_out_ter {A : Type} (var : result) (cont : store -> res -> resultof A) : resultof A :=
+Definition if_out_ter (var : result) (cont : store -> res -> result) : result :=
   if_result_some var (fun o => 
     match o with
     | out_ter st r => cont st r 
-    | _ => result_impossible "out_div found in interpreter"
+    | out_div => result_some out_div
     end)
 .
 
@@ -55,53 +46,14 @@ Definition if_value  (var : result) (cont : store -> value -> result) : result :
     end)
 .
 
-(* Evaluates an expression, and calls the continuation if
-* the evaluation finished successfully.
-* Returns the store and the variable verbatim otherwise. *)
-Definition if_eval_ter {A : Type} runs c st e (cont : store -> res -> resultof A) : resultof A :=
-  eval_cont runs c st e (fun res => if_out_ter res cont)
-.
-
-(* Evaluates an expression, and calls the continuation if
-* the evaluation returned a value.
-* Returns the store and the variable verbatim otherwise. *)
-Definition if_eval_return runs c st e (cont : store -> value -> result) : result :=
-  eval_cont runs c st e (fun res => if_value res cont)
-.
-
-(* Evaluates an expression with if it is Some, and calls the continuation
-* if the evaluation returned value. Calls the continuation with the default
-* value if the expression is None. *)
-Definition if_some_eval_else_default runs c st (oe : option Syntax.expr) (default : value) (cont : store -> value -> result) : result :=
-  match oe with
-  | Some e => if_eval_return runs c st e cont
-  | None => cont st default
-  end
-.
-
-(* Same as if_some_and_eval_value, but returns an option as the Context.result, and
-* None is used as the default value passed to the continuation. *)
-Definition if_some_eval_return_else_none runs c st (oe : option Syntax.expr) (cont : store -> option value -> result) : result :=
-  match oe with
-  | Some e => if_eval_return runs c st e (fun ctx res => cont ctx (Some res))
-  | None => cont st None
-  end
-.
-
 (* Calls the continuation with the referenced value. Fails if the reference
 * points to a non-existing object (never actually happens). *)
 Definition assert_deref {A : Type} st (loc : value_loc) (cont : value -> resultof A) : resultof A :=
-  match (Store.get_value st loc) with
+  match get_value st loc with
   | Some val => cont val
   | None => result_impossible "Location of non-existing value."
   end
 .
-
-(* Calls the continuation if the value is a location to a value (always!), and passes the value to the continuation.
-* Fails otherwise. *)
-(* TODO erase *)
-Definition assert_get {A : Type} st (loc : value_loc) (cont : value -> resultof A) : resultof A :=
-  assert_deref st loc cont.
 
 Definition assert_some {A B : Type} (x : option A) (cont : A -> resultof B) : resultof B :=
   match x with 
@@ -112,15 +64,15 @@ Definition assert_some {A B : Type} (x : option A) (cont : A -> resultof B) : re
 
 (* Calls the continuation if the value is an object pointer, and passes the pointer to the continuation.
 * Fails otherwise. *)
-Definition assert_get_object_ptr {A : Type} (loc : value) (cont : object_ptr -> resultof A) : resultof A :=
-  match loc with
+Definition assert_get_object_ptr {A : Type} v (cont : object_ptr -> resultof A) : resultof A :=
+  match v with
   | value_object ptr => cont ptr
   | _ => result_fail "Expected an object pointer."
   end
 .
 
 Definition assert_get_object_from_ptr {A : Type} store (ptr : object_ptr) (cont : object -> resultof A) : resultof A :=
-  match (Store.get_object store ptr) with
+  match get_object store ptr with
   | Some obj => cont obj
   | None => result_impossible "Pointer to a non-existing object."
   end

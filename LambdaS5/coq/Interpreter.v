@@ -4,6 +4,7 @@ Require Import Syntax.
 Require Import Values.
 Require Import Context.
 Require Import Monads.
+Require Import Store.
 Require Import Utils.
 Require Import Operators.
 Require Import LibHeap.
@@ -26,9 +27,54 @@ Open Scope string_scope.
 
 
 Implicit Type runs : runs_type.
-Implicit Type store : Store.store. (* TODO search and destroy *)
-Implicit Type st : Store.store.
-Implicit Type c : Values.ctx.
+Implicit Type store : store. (* TODO search and destroy *)
+Implicit Type st : store.
+Implicit Type c : ctx.
+
+(* Monadic operations for interpreting *)
+
+(* Evaluate an expression, and calls the continuation with
+* the new store and the Context.result of the evaluation. *)
+Definition eval_cont {A : Type} runs c st e (cont : result -> resultof A) : resultof A :=
+  cont (Context.runs_type_eval runs c st e).
+
+(* Alias for calling eval_cont with an empty continuation *)
+Definition eval_cont_terminate runs c st e : result :=
+  eval_cont runs c st e (fun res => res)
+.
+
+(* Evaluates an expression, and calls the continuation if
+* the evaluation finished successfully.
+* Returns the store and the variable verbatim otherwise. *)
+Definition if_eval_ter runs c st e (cont : store -> res -> result) : result :=
+  eval_cont runs c st e (fun res => if_out_ter res cont)
+.
+
+(* Evaluates an expression, and calls the continuation if
+* the evaluation returned a value.
+* Returns the store and the variable verbatim otherwise. *)
+Definition if_eval_return runs c st e (cont : store -> value -> result) : result :=
+  eval_cont runs c st e (fun res => if_value res cont)
+.
+
+(* Evaluates an expression with if it is Some, and calls the continuation
+* if the evaluation returned value. Calls the continuation with the default
+* value if the expression is None. *)
+Definition if_some_eval_else_default runs c st (oe : option Syntax.expr) (default : value) (cont : store -> value -> result) : result :=
+  match oe with
+  | Some e => if_eval_return runs c st e cont
+  | None => cont st default
+  end
+.
+
+(* Same as if_some_and_eval_value, but returns an option as the Context.result, and
+* None is used as the default value passed to the continuation. *)
+Definition if_some_eval_return_else_none runs c st (oe : option Syntax.expr) (cont : store -> option value -> result) : result :=
+  match oe with
+  | Some e => if_eval_return runs c st e (fun ctx res => cont ctx (Some res))
+  | None => cont st None
+  end
+.
 
 (****** Closures handling ******)
 

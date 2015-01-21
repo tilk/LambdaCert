@@ -4,6 +4,8 @@ Context.v
 Extraction.v
 HeapUtils.v
 Interpreter.v
+LjsCorrectness.v
+LjsShared.v
 Monads.v
 Operators.v
 PrettyInterm.v
