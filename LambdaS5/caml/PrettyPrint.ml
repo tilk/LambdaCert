@@ -29,9 +29,10 @@ and string_of_value_loc_option depth st = function
 | None -> "<unset val>"
 
 and string_of_object_ptr depth st ptr =
+  if depth = 0 then "<cut>" else
   match (Store.get_object st ptr) with
     | None -> "<reference to non-existing object>"
-    | Some obj -> string_of_object depth st obj
+    | Some obj -> string_of_object (depth-1) st obj
 and string_of_object depth st obj =
   Printf.sprintf "{[#proto: %s, #class: %s, #extensible: %B, #primval: %s, #code: %s] %s}"
   (string_of_value depth st obj.Values.object_proto) (String.of_list obj.Values.object_class)

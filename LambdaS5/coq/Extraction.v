@@ -125,9 +125,10 @@ Extract Constant JsNumber.from_string =>
       behavior than JavaScript.  For instance it will read ""022"" as 22 instead of
       18, which should be the JavaScript result for it. *)".
 Extract Constant JsNumber.to_string =>
-  "(fun f -> 
-    prerr_string (""Warning:  JsNumber.to_string called.  This might be responsible for errors.  Argument value:  "" ^ string_of_float f ^ ""."");
-    prerr_newline();
+  "let warned = ref false in (fun f -> 
+    if not !warned then 
+    (prerr_string (""Warning:  JsNumber.to_string called.  This might be responsible for errors.  Argument value:  "" ^ string_of_float f ^ ""."");
+    prerr_newline(); warned := true);
     let string_of_number n =
       if not (n <= n || n >= n) then ""NaN""
       else

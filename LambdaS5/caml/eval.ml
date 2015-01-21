@@ -18,7 +18,11 @@ let handle_parameter filename =
             let ch = get_channel filename in
             let ret = Parse.parse_es5 ch filename in
             close_in ch; Translate.translate_expr ret in
-    Run.print_result (Run.eval_ast (get_store ()) ast)
+    try
+        Run.print_result (Run.eval_ast (get_store ()) ast)
+    with e -> 
+        Printexc.print_backtrace stderr;
+        raise e
 
 let load_store filename = 
     File.with_file_in filename (fun ch -> store := Some (Marshal.from_channel (open_in filename)))
