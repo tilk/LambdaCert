@@ -57,25 +57,6 @@ Definition if_eval_return runs c st e (cont : store -> value -> result) : result
   eval_cont runs c st e (fun res => if_value res cont)
 .
 
-(* Evaluates an expression with if it is Some, and calls the continuation
-* if the evaluation returned value. Calls the continuation with the default
-* value if the expression is None. *)
-Definition if_some_eval_else_default runs c st (oe : option Syntax.expr) (default : value) (cont : store -> value -> result) : result :=
-  match oe with
-  | Some e => if_eval_return runs c st e cont
-  | None => cont st default
-  end
-.
-
-(* Same as if_some_and_eval_value, but returns an option as the Context.result, and
-* None is used as the default value passed to the continuation. *)
-Definition if_some_eval_return_else_none runs c st (oe : option Syntax.expr) (cont : store -> option value -> result) : result :=
-  match oe with
-  | Some e => if_eval_return runs c st e (fun ctx res => cont ctx (Some res))
-  | None => cont st None
-  end
-.
-
 (****** Closures handling ******)
 
 (* Evaluates all arguments, passing the store from one to the next. *)
@@ -117,12 +98,11 @@ Definition eval_id runs c st (name : string) : result :=
 * e_true or e_false depending on the value. *)
 Definition eval_if runs c store (e_cond e_true e_false : expr) : result :=
   if_eval_return runs c store e_cond (fun store v =>
-    match v with
-    | value_true => eval_cont_terminate runs c store e_true
-    | value_false => eval_cont_terminate runs c store e_false
-    | _ => result_fail "If on non-boolean value" (* as in the semantics *)
-    end
-  )
+    assert_get_bool v (fun b =>
+      if b
+      then eval_cont_terminate runs c store e_true
+      else eval_cont_terminate runs c store e_false
+  ))
 .
 
 (* e1 ; e2.
@@ -315,11 +295,9 @@ Definition eval_rec runs c store (id : string) (value_expr body_expr : expr) : r
 * is not associated with a location in the store. *)
 Definition eval_setbang runs c store (name : string) (expr : expr) : result :=
   if_eval_return runs c store expr (fun store value =>
-      match Store.get_loc c name with
-      | Some loc => result_value (Store.add_value_at_location store loc value) value
-      | None => result_fail ("ReferenceError: " ++ name)
-      end
-  )
+    assert_get_loc c name (fun loc =>
+      result_value (Store.add_value_at_location store loc value) value
+  ))
 .
 
 (* func (args) { body }

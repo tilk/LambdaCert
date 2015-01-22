@@ -159,35 +159,163 @@ Proof.
     destruct* (get_value st loc); tryfalse.
 Qed.
 
+Lemma if_eval_ter_out : forall runs c st e cont o,
+    if_eval_ter runs c st e cont = result_some o ->
+    is_some (runs_type_eval runs c st e) (if_out_ter_post cont o).
+Proof. 
+    auto using if_out_ter_out.
+Qed.
+
+Lemma if_eval_return_out : forall runs c st e cont o,
+    if_eval_return runs c st e cont = result_some o ->
+    is_some (runs_type_eval runs c st e) (if_value_post cont o).
+Proof. 
+    auto using if_value_out.
+Qed.
+
 (* Tactics *)
 
 (* TODO *)
 Ltac ljs_run_select_ifres H :=
-    match type of H with ?T = _ => match T with
+    match type of H with ?T = result_some _ => match T with
     | assert_get_loc _ _ _ => constr:(assert_get_loc_out)
+    | assert_get_object_ptr _ _ => constr:(assert_get_object_ptr_out)
+    | assert_get_bool _ _ => constr:(assert_get_bool)
+    | assert_get_string _ _ => constr:(assert_get_string)
     | assert_deref _ _ _ => constr:(assert_deref_out)
+    | if_out_ter _ _ => constr:(if_out_ter_out)
+    | if_value _ _ => constr:(if_value_out)
+    | if_eval_ter _ _ _ _ _ => constr:(if_eval_ter_out)
+    | if_eval_return _ _ _ _ _ => constr:(if_eval_return_out)
     | _ => fail
     end end
 .
 
+Ltac ljs_run_push H a H1 H2 :=
+    let L := ljs_run_select_ifres H in
+    lets (a&H1&H2): L H; clear H
+.
 
+Tactic Notation "ljs_run_push" hyp(H) "as" ident(a) ident(H1) ident(H2) :=
+    ljs_run_push H a H1 H2. 
+
+Ltac ljs_run_push_auto :=
+    repeat
+    match goal with
+    | H : _ = result_some _ |- _ => 
+        let a := fresh "a" in
+        let H1 := fresh "H" in
+        let R := fresh "R" in
+        try ljs_run_push H as a H1 R 
+    end
+.
+
+Ltac ljs_run_post H st v Ho :=
+    match type of H with 
+    | if_value_post _ _ _ => destruct H as [(st&v&Ho&H)|H]
+    end
+.
+
+Tactic Notation "ljs_run_post" hyp(H) "as" ident(st) ident(v) ident(Ho) :=
+    ljs_run_post H st v Ho.
+
+Ltac ljs_run_post_auto :=
+    repeat
+    match goal with
+    | H : _ |- _ => 
+        let st := fresh "st" in
+        let v := fresh "v" in
+        let Ho := fresh "Ho" in
+        ljs_run_post H as st v Ho
+    end
+.
+
+Ltac ljs_run_push_post_auto := repeat (ljs_run_push_auto; ljs_run_post_auto). 
 
 Ltac ljs_run_inv :=
     repeat
     match goal with
     | H : result_value _ _ = _ |- _ => inverts H
+    | H : out_ter _ _ = out_ter _ _|- _  => inverts H
+    | H : eqabort _ _ |- _ => let H' := fresh "H" in destruct H as (H&H'); inverts H'
     end
 . 
+
+Ltac ljs_eval_ih := eapply runs_type_correct_eval; eassumption.
 
 (* Main lemma *)
 
 Lemma eval_id_correct : forall runs c st s o,
-    runs_type_correct runs -> eval_id runs c st s = result_some o -> 
+    runs_type_correct runs -> 
+    eval_id runs c st s = result_some o -> 
     exists loc v, get_loc c s = Some loc /\ 
         get_value st loc = Some v /\ o = out_ter st (res_value v).
 Proof.
     introv IH R. unfolds in R.
-Admitted.
+    ljs_run_push_auto.
+    ljs_run_inv. eauto.
+Qed.
+
+Lemma eval_if_correct : forall runs c st e e1 e2 o,
+    runs_type_correct runs ->
+    eval_if runs c st e e1 e2 = result_some o ->
+    is_some (runs_type_eval runs c st e) (fun o' =>
+        (exists st', o' = out_ter st' (res_value value_true) /\ 
+            runs_type_eval runs c st' e1 = result_some o) \/
+        (exists st', o' = out_ter st' (res_value value_false) /\
+            runs_type_eval runs c st' e2 = result_some o) \/
+        eqabort o o').
+Proof.
+    introv IH R. unfolds. unfolds in R.
+    ljs_run_push R as o' Ho' Co'.
+    destruct Co' as [(st'&()&Ho&Hr)|H]; jauto; tryfalse.
+Qed.
+
+Lemma eval_seq_correct : forall runs c st e1 e2 o,
+    runs_type_correct runs ->
+    eval_seq runs c st e1 e2 = result_some o -> 
+    is_some (runs_type_eval runs c st e1) (fun o' =>
+        (exists st' v, o' = out_ter st' (res_value v) /\
+            runs_type_eval runs c st' e2 = result_some o) \/
+        eqabort o o').
+Proof. 
+    introv IH R. unfolds. unfolds in R. 
+    ljs_run_push_auto; jauto.
+Qed.
+
+Lemma eval_setbang_correct : forall runs c st s e o,
+    runs_type_correct runs ->
+    eval_setbang runs c st s e = result_some o ->
+    is_some (runs_type_eval runs c st e) (fun o' =>
+        (exists st' loc v, o' = out_ter st' (res_value v) /\
+            get_loc c s = Some loc /\ 
+            o = out_ter (add_value_at_location st' loc v) (res_value v)) \/
+        eqabort o o').
+Proof.
+    introv IH R. unfolds. unfolds in R. 
+    ljs_run_push_post_auto; ljs_run_inv; jauto.
+    eexists. intuition jauto. 
+Qed.
+
+Lemma eval_let_correct : forall runs c st s e1 e2 o,
+    runs_type_correct runs ->
+    eval_let runs c st s e1 e2 = result_some o ->
+    is_some (runs_type_eval runs c st e1) (fun o' =>
+        (exists st' st'' c' v, o' = out_ter st' (res_value v) /\
+            (c', st'') = add_named_value c st' s v /\ 
+            runs_type_eval runs c' st'' e2 = result_some o) \/
+        eqabort o o').
+Proof. 
+    introv IH R. unfolds. unfolds in R.
+    unfold eval_cont_terminate, eval_cont in R.
+    ljs_run_push_post_auto; ljs_run_inv; jauto.
+    (* TODO: make a tactic for doing this! *)
+    assert (Z : exists t, t = add_named_value c st0 s v).
+    eauto.
+    destruct Z as ((c0,st1)&Z).
+    rewrite <- Z in R0.
+    eexists. intuition jauto.
+Qed. 
 
 Lemma eval_correct : forall runs c st e o,
     runs_type_correct runs -> eval runs c st e = result_some o -> red_expr c st e o.
@@ -229,6 +357,63 @@ Proof.
     (* own_field_names *)
     skip.
     (* set_bang *)
+    lets (o'&Ho&H): eval_setbang_correct IH R.
+    eapply red_expr_set_bang. ljs_eval_ih.
+    destruct H as [(st'&loc&v&Ho1&Hl&Ho2)|H].
+    inverts Ho1. inverts Ho2.
+    ljs_run_inv.
+    eapply red_expr_set_bang_1. reflexivity. assumption.
+    ljs_run_inv.
+    eapply red_expr_set_bang_1_abort; assumption.
+    (* op1 *)
+    skip.
+    (* op2 *)
+    skip.
+    (* if *)
+    lets (o'&Ho&H): eval_if_correct IH R.
+    eapply red_expr_if. 
+    ljs_eval_ih.
+    destruct H as [(st'&Hst'&Est')|[(st'&Hst'&Est')|H]].
+    inverts Hst'. eapply red_expr_if_1_true; ljs_eval_ih.
+    inverts Hst'. eapply red_expr_if_1_false; ljs_eval_ih.
+    ljs_run_inv. eapply red_expr_if_1_abort; assumption.
+    (* app *)
+    skip.
+    (* seq *)
+    lets (o'&Ho&H): eval_seq_correct IH R.
+    eapply red_expr_seq.
+    ljs_eval_ih.
+    destruct H as [(st'&v&Ho1&H)|H].
+    inverts Ho1.
+    eapply red_expr_seq_1.
+    ljs_eval_ih.
+    ljs_run_inv.
+    eapply red_expr_seq_1_abort; assumption.
+    (* let *)
+    lets (o'&Ho&H): eval_let_correct IH	 R.
+    eapply red_expr_let.
+    ljs_eval_ih.
+    destruct H as [(st'&st''&c'&v&Ho1&H&Ho2)|H].
+    inverts Ho1.
+    eapply red_expr_let_1. eassumption. ljs_eval_ih.
+    ljs_run_inv.
+    eapply red_expr_let_1_abort; assumption.
+    (* recc *)
+    skip.
+    (* label *)
+    skip.
+    (* break *)
+    skip.
+    (* try_catch *)
+    skip.
+    (* try_finally *)
+    skip.
+    (* throw *)
+    skip.
+    (* lambda *)
+    skip.
+    (* eval *)
+    skip.
 Admitted.
 
 Lemma runs_0_correct : runs_type_correct runs_0.
