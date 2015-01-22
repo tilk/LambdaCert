@@ -475,9 +475,9 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st e o ->
     red_expr c st (expr_label_1 i o) o' ->
     red_expr c st (expr_label i e) o'
-| red_expr_label_1 : forall c st' st i r,
-    (forall v, r <> res_break i v) ->
-    red_expr c st' (expr_label_1 i (out_ter st r)) (out_ter st r)
+| red_expr_label_1 : forall c st' i o,
+    (forall st v, o <> out_ter st (res_break i v)) ->
+    red_expr c st' (expr_label_1 i o) o
 | red_expr_label_1_break : forall c st' st i v,
     red_expr c st' (expr_label_1 i (out_ter st (res_break i v))) (out_ter st (res_value v))
 

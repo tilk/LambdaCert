@@ -213,6 +213,7 @@ Ltac ljs_run_push_auto :=
 Ltac ljs_run_post H st v Ho :=
     match type of H with 
     | if_value_post _ _ _ => destruct H as [(st&v&Ho&H)|H]
+    | if_out_ter_post _ _ _ => destruct H as [(st&r&Ho&H)|H]
     end
 .
 
@@ -236,6 +237,8 @@ Ltac ljs_run_inv :=
     repeat
     match goal with
     | H : result_value _ _ = _ |- _ => inverts H
+    | H : result_break _ _ _ = _ |- _ => inverts H
+    | H : result_exception _ _ = _ |- _ => inverts H
     | H : out_ter _ _ = out_ter _ _|- _  => inverts H
     | H : eqabort _ _ |- _ => let H' := fresh "H" in destruct H as (H&H'); inverts H'
     end
@@ -317,6 +320,43 @@ Proof.
     eexists. intuition jauto.
 Qed. 
 
+Lemma eval_break_correct : forall runs c st s e o,
+    runs_type_correct runs ->
+    eval_break runs c st s e = result_some o ->
+    is_some (runs_type_eval runs c st e) (fun o' =>
+        (exists st' v, o' = out_ter st' (res_value v) /\
+            o = out_ter st' (res_break s v)) \/
+        eqabort o o').
+Proof.
+    introv IH R. unfolds. unfolds in R.
+    ljs_run_push_post_auto; ljs_run_inv; jauto.
+Qed.
+
+Lemma eval_throw_correct : forall runs c st e o,
+    runs_type_correct runs ->
+    eval_throw runs c st e = result_some o ->
+    is_some (runs_type_eval runs c st e) (fun o' =>
+        (exists st' v, o' = out_ter st' (res_value v) /\
+            o = out_ter st' (res_exception v)) \/
+        eqabort o o').
+Proof.
+    introv IH R. unfolds. unfolds in R.
+    ljs_run_push_post_auto; ljs_run_inv; jauto.
+Qed.
+
+Lemma eval_label_correct : forall runs c st s e o,
+    runs_type_correct runs ->
+    eval_label runs c st s e = result_some o ->
+    is_some (runs_type_eval runs c st e) (fun o' =>
+        (exists st' v, o' = out_ter st' (res_break s v) /\ 
+            o = out_ter st' (res_value v)) \/
+        (o = o' /\ forall st' v, o' <> out_ter st' (res_break s v))).
+Proof.
+    introv IH R. unfolds. unfolds in R.
+    ljs_run_push_post_auto; eexists; intuition (jauto || tryfalse).
+    destruct r; ljs_run_inv; intuition (jauto || tryfalse).
+Admitted. (* TODO *)
+
 Lemma eval_correct : forall runs c st e o,
     runs_type_correct runs -> eval runs c st e = result_some o -> red_expr c st e o.
 Proof.
@@ -390,7 +430,7 @@ Proof.
     ljs_run_inv.
     eapply red_expr_seq_1_abort; assumption.
     (* let *)
-    lets (o'&Ho&H): eval_let_correct IH	 R.
+    lets (o'&Ho&H): eval_let_correct IH R.
     eapply red_expr_let.
     ljs_eval_ih.
     destruct H as [(st'&st''&c'&v&Ho1&H&Ho2)|H].
@@ -401,15 +441,39 @@ Proof.
     (* recc *)
     skip.
     (* label *)
-    skip.
+    lets (o'&Ho&H): eval_label_correct IH R.
+    eapply red_expr_label.
+    ljs_eval_ih.
+    destruct H as [(st'&v&Ho1&Ho2)|(He&H)].
+    inverts Ho1.
+    inverts Ho2.
+    eapply red_expr_label_1_break.
+    inverts He.
+    eapply red_expr_label_1; assumption.
     (* break *)
-    skip.
+    lets (o'&Ho&H): eval_break_correct IH R.
+    eapply red_expr_break.
+    ljs_eval_ih.
+    destruct H as [(st'&v&Ho1&Ho2)|H].
+    inverts Ho1.
+    inverts Ho2.
+    eapply red_expr_break_1.
+    ljs_run_inv.
+    eapply red_expr_break_1_abort; assumption.
     (* try_catch *)
     skip.
     (* try_finally *)
     skip.
     (* throw *)
-    skip.
+    lets (o'&Ho&H): eval_throw_correct IH R.
+    eapply red_expr_throw.
+    ljs_eval_ih.
+    destruct H as [(st'&v&Ho1&Ho2)|H].
+    inverts Ho1.
+    inverts Ho2.
+    eapply red_expr_throw_1.
+    ljs_run_inv.
+    eapply red_expr_throw_1_abort; assumption.
     (* lambda *)
     skip.
     (* eval *)
