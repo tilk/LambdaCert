@@ -496,7 +496,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_try_catch_1 o e2) o' ->
     red_expr c st (expr_try_catch e1 e2) o'
 | red_try_catch_1 : forall c st e2 o,
-    (forall c st v, o <> out_ter st (res_exception v)) -> (* TODO something better? *)
+    (forall st v, o <> out_ter st (res_exception v)) -> (* TODO something better? *)
     red_expr c st (expr_try_catch_1 o e2) o
 | red_try_catch_1_exc : forall c st' st v e2 o o',
     red_expr c st e2 o ->
