@@ -564,7 +564,14 @@ Proof.
     eauto using eval_correct.
 Qed.
 
+Lemma runs_lazy_correct : forall runs, runs_type_correct runs -> runs_type_correct (lazyruns (fun _ => runs)).
+Proof.
+    introv IH.
+    eapply make_runs_type_correct.
+    eauto using runs_type_correct_eval. 
+Qed.
+
 Lemma runs_correct : forall k, runs_type_correct (runs k). 
 Proof.
-    induction k; eauto using runs_0_correct, runs_S_correct. 
+    induction k; eauto using runs_0_correct, runs_S_correct, runs_lazy_correct. 
 Qed.

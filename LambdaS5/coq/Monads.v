@@ -58,7 +58,7 @@ Definition assert_deref {A : Type} st (loc : value_loc) (cont : value -> resulto
 Definition assert_get_loc {A : Type} c s (cont : value_loc -> resultof A) : resultof A :=
   match get_loc c s with
   | Some loc => cont loc
-  | None => result_fail ("ReferenceError:" ++ s)
+  | None => result_fail ("ReferenceError: " ++ s)
   end
 .
 
