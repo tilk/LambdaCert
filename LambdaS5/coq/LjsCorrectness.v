@@ -250,25 +250,43 @@ Ltac ljs_eval_ih := eapply runs_type_correct_eval; eassumption.
 
 Ltac destruct_exists H :=
     match type of H with
-    | exists v, ?e => destruct H as (v&H)
+    | exists v, _ => destruct H as (v&H)
     end
 .
 
-Ltac hoist_irref H expr :=
-    let rec rhsgoal := match goal with 
-    | |- exists _ _ _, _ = ?g => constr:g 
-    | |- exists _ _, _ = ?g => constr:g 
-    | |- exists _, _ = ?g => constr:g 
-    | |- _ = ?g => constr:g 
-    end 
-    in
-    assert (H : expr); [let e := rhsgoal in destruct e; solve[eauto] | repeat destruct_exists H ].
+Ltac destruct_or H :=
+    match type of H with
+    | _ \/ _ => destruct H as [H | H]
+    end
+.
 
-Tactic Notation "hoist_irref" constr(expr) "as" ident(H) := hoist_irref H expr.
+(* TODO remove?
+Ltac hoist_irref H e expr :=
+    assert (H : expr e); [destruct e; solve[eauto] | hnf in H; repeat (destruct_exists H || destruct_or H) ].
 
-Tactic Notation "hoist_irref" constr(expr) "as" ident(H) "in" hyp(Hy) :=
-    hoist_irref expr as H; rewrite <- H in Hy.
+Tactic Notation "hoist_irref" constr(e) constr(expr) "as" ident(H) := hoist_irref H e expr.
 
+Tactic Notation "hoist_irref" constr(e) constr(expr) "as" ident(H) "in" hyp(Hy) :=
+    hoist_irref e expr as H; rewrite <- H in Hy.
+*)
+
+Tactic Notation "cases_match_option" "as" simple_intropattern(Eq) :=
+  match goal with
+  | |- context [match ?B with Some _ => _ | None => _ end] => case_if_on B as Eq
+  | K: context [match ?B with Some _ => _ | None => _ end] |- _ => case_if_on B as Eq
+  end.
+
+Tactic Notation "cases_match_option" :=
+  let Eq := fresh in cases_match_option as Eq.
+
+Tactic Notation "cases_let" "as" simple_intropattern(Eq) :=
+  match goal with
+  | |- context [let '_ := ?B in _] => case_if_on B as Eq
+  | K: context [let '_ := ?B in _] |- _ => case_if_on B as Eq
+  end.
+
+Tactic Notation "cases_let" :=
+  let Eq := fresh in cases_let as Eq.
 
 (* Main lemma *)
 
@@ -344,7 +362,7 @@ Proof.
     introv IH R. unfolds in R.
     unfold eval_cont_terminate, eval_cont in R.
     ljs_run_push_post_auto; ljs_is_some_value_munch; ljs_run_inv; jauto.
-    hoist_irref (exists c0 st1, (c0, st1) = add_named_value c st0 s v) as Z in R0. jauto.
+    cases_let; jauto.
 Qed. 
 
 Lemma eval_break_correct : forall runs c st s e o,
@@ -403,10 +421,9 @@ Lemma eval_lambda_correct : forall runs c st vs e o,
     exists st' v, (st', v) = add_closure c st vs e /\ o = out_ter st' (res_value v).
 Proof.
     introv IH R. unfolds in R.
-    hoist_irref (exists st' v, (st', v) = add_closure c st vs e) as H in R.
+    cases_let.
     ljs_run_inv. eauto.
 Qed.
-
 
 Lemma eval_eval_correct : forall runs c st e1 e2 o,
     runs_type_correct runs ->
@@ -417,13 +434,39 @@ Lemma eval_eval_correct : forall runs c st e1 e2 o,
                 v' = value_string s /\
                 v'' = value_object ptr /\ 
                 get_object st'' ptr = Some obj /\ 
-                envstore_of_obj st obj = Some (c1, st1) /\
+                envstore_of_obj st'' obj = Some (c1, st1) /\
                 desugar_expr s = Some e /\ 
                 runs_type_eval runs c1 st1 e = result_some o)).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
-Admitted.
+    cases_match_option.
+    cases_match_option.
+    cases_let as Eq.
+    inverts Eq.
+    jauto.
+Qed.
+
+Ltac ljs_is_some_value_push H o st v H1 H2 :=
+    match type of H with
+    | is_some_value _ _ _ => let H' := fresh in destruct H as (o&H1&[(st&v&H'&H)|H]); [inverts H' | inverts H]
+    end.
+
+Tactic Notation "ljs_is_some_value_push" hyp(H) "as" ident(o) ident(st) ident(v) ident(H1) ident(H2) :=
+    ljs_is_some_value_push H o st v H1 H2. 
+
+Ltac ljs_is_some_push_auto :=
+    repeat
+    match goal with
+    | H : is_some_value _ _ _ |- _ => 
+        let o := fresh "o" in
+        let st := fresh "st" in
+        let v := fresh "v" in
+        let H1 := fresh "H" in
+        let H2 := fresh "H" in
+        try ljs_is_some_value_push H as o st v H1 H2 
+    end
+.
 
 Lemma eval_correct : forall runs c st e o,
     runs_type_correct runs -> eval runs c st e = result_some o -> red_expr c st e o.
@@ -488,14 +531,12 @@ Proof.
     (* app *)
     skip.
     (* seq *)
-    lets (o'&Ho&H): eval_seq_correct IH R.
-    eapply red_expr_seq.
-    ljs_eval_ih.
-    destruct H as [(st'&v&Ho1&H)|H].
-    inverts Ho1.
+    lets H: eval_seq_correct IH R.
+    ljs_is_some_push_auto;
+    eapply red_expr_seq;
+    try ljs_eval_ih. 
     eapply red_expr_seq_1.
     ljs_eval_ih.
-    ljs_run_inv.
     eapply red_expr_seq_1_abort; assumption.
     (* let *)
     lets (o'&Ho&H): eval_let_correct IH R.
@@ -547,7 +588,25 @@ Proof.
     inverts H.
     eapply red_expr_lambda; assumption.
     (* eval *)
-    skip.
+    lets H: eval_eval_correct IH R.
+    ljs_is_some_push_auto;
+    eapply red_expr_eval;
+    try ljs_eval_ih. 
+    ljs_is_some_push_auto;
+    eapply red_expr_eval_1;
+    try ljs_eval_ih.
+    repeat destruct_exists H.
+    destruct H as (st2&e&H).
+    destructs H.
+    ljs_run_inv.
+    inverts H. inverts H4.
+    eapply red_expr_eval_2; try eassumption.
+    ljs_eval_ih.
+    ljs_run_inv.
+    eapply red_expr_eval_1; try ljs_eval_ih.
+    eapply red_expr_eval_2_abort; assumption.
+    eapply red_expr_eval_1_abort; assumption.
+
 Admitted.
 
 Lemma runs_0_correct : runs_type_correct runs_0.
