@@ -434,6 +434,19 @@ Definition eval_eval runs c st estr bindings :=
   ))))
 .
 
+Definition eval_op1 runs c st op e :=
+    if_eval_return runs c st e (fun st v_loc =>
+      if_result_some (Operators.unary op st v_loc) (fun v_res => result_value st v_res)
+    )
+.
+
+Definition eval_op2 runs c st op e1 e2 :=
+    if_eval_return runs c st e1 (fun st v1_loc =>
+      if_eval_return runs c st e2 (fun st v2_loc =>
+        if_result_some (Operators.binary op st v1_loc v2_loc) (fun v_res => result_value st v_res)
+    ))
+. 
+
 (******** Closing the loop *******)
 
 (* Main evaluator *)
@@ -463,15 +476,8 @@ Definition eval runs c st (e : expr) : result :=
   | expr_get_obj_attr oattr obj => eval_getobjattr runs c st obj oattr
   | expr_set_obj_attr oattr obj attr => eval_setobjattr runs c st obj oattr attr
   | expr_own_field_names e => eval_ownfieldnames runs c st e
-  | expr_op1 op e =>
-    if_eval_return runs c st e (fun st v_loc =>
-      if_result_some (Operators.unary op st v_loc) (fun v_res => result_value st v_res)
-    )
-  | expr_op2 op e1 e2 =>
-    if_eval_return runs c st e1 (fun st v1_loc =>
-      if_eval_return runs c st e2 (fun st v2_loc =>
-        if_result_some (Operators.binary op st v1_loc v2_loc) (fun v_res => result_value st v_res)
-    ))
+  | expr_op1 op e => eval_op1 runs c st op e
+  | expr_op2 op e1 e2 => eval_op2 runs c st op e1 e2
   | expr_label l e => eval_label runs c st l e
   | expr_break l e => eval_break runs c st l e
   | expr_try_catch body catch => eval_trycatch runs c st body catch
