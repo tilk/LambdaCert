@@ -454,14 +454,25 @@ Lemma eval_tryfinally_correct : forall runs c st e1 e2 o,
     eval_tryfinally runs c st e1 e2 = result_some o ->
 *)
 
-(*
-Lemma eval_trycatch_correct: forall runs st e1 e2 o,
+Lemma eval_trycatch_correct : forall runs c st e1 e2 o,
     runs_type_correct runs ->
     eval_trycatch runs c st e1 e2 = result_some o ->
     is_some (runs_type_eval runs c st e1) (fun o' =>
         (exists st' v, o' = out_ter st' (res_exception v) /\
-            runs_
-*)
+            is_some_value o (runs_type_eval runs c st' e2) (fun st'' vv => 
+                apply_post runs c st'' vv [v] o)) \/
+        (o = o' /\ forall st' v, o' <> out_ter st' (res_exception v))).
+Proof. 
+    introv IH R. unfolds. unfolds in R.
+    ljs_run_push R as o' Ho' R'.
+    ljs_run_post R' as st' q Ho; eexists; intuition (jauto || tryfalse).
+    inverts Ho. 
+    destruct r; inverts R'; ljs_run_inv; intuition (jauto || tryfalse).
+    left. eexists; eexists; split. reflexivity.
+    ljs_run_push_post_auto;
+    ljs_is_some_value_munch.
+    eauto using apply_correct.
+Qed.
 
 Lemma eval_label_correct : forall runs c st s e o,
     runs_type_correct runs ->
@@ -692,7 +703,16 @@ Proof.
     inverts H.
     eapply red_expr_break_1.
     (* try_catch *)
-    skip.
+    lets (o'&Ho&H): eval_trycatch_correct IH R. 
+    eapply red_try_catch.
+    ljs_eval_ih.
+    destruct H as [(st'&v&Ho1&Ho2)|(He&H)].
+    inverts Ho1.
+    ljs_pretty_advance red_try_catch_1_exc red_try_catch_2_abort.
+    eapply red_try_catch_2.
+    eauto using red_expr_app_2_nil_lemma. 
+    inverts He.
+    eapply red_try_catch_1; eauto.
     (* try_finally *)
     skip.
     (* throw *)
