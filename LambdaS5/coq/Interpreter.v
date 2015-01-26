@@ -1,4 +1,3 @@
-Require Import List.
 Require Import Coq.Strings.String.
 Require Import Syntax.
 Require Import Values.
@@ -64,7 +63,7 @@ Definition eval_arg_list_aux runs c (arg_expr : expr) (cont : store -> list valu
 .
 
 Definition eval_arg_list runs c st (args_expr : list expr) (cont : store -> list value -> result) : result :=
-  List.fold_right (eval_arg_list_aux runs c) (fun st args => cont st (rev args)) args_expr st nil
+  fold_right (eval_arg_list_aux runs c) (fun st args => cont st (rev args)) args_expr st nil
 .
 
 Definition apply runs c st (f_loc : value) (args : list value) : result :=

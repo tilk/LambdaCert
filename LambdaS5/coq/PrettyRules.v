@@ -1,3 +1,4 @@
+Require Import LjsShared.
 Require Import Syntax.
 Require Import PrettyInterm.
 Require Import Store.
@@ -6,9 +7,7 @@ Require Import Values.
 Require Import Operators.
 Require Import Monads.
 Require Import Coq.Strings.String.
-
-Require Import List.
-Import ListNotations.
+Import List.ListNotations.
 
 Open Scope list_scope.
 
@@ -418,11 +417,11 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_app_1_abort : forall c st o el,
     abort o ->
     red_expr c st (expr_app_1 o el) o
-| red_expr_app_2 : forall c c' c'' st st' v ci c is e vl vll o,
-    v = value_closure ci c' is e ->
+| red_expr_app_2 : forall c c' c'' st st' v ci is e vl vll o,
+    get_closure st v = result_some (value_closure ci c' is e) ->
     (st', vll) = add_values st (rev vl) ->
     add_parameters c' is vll = result_some c'' ->
-    red_expr c'' st e o ->
+    red_expr c'' st' e o ->
     red_expr c st (expr_app_2 v vl nil) o 
 | red_expr_app_2_next : forall c st v vl e el o o',
     red_expr c st e o ->
@@ -430,7 +429,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_app_2 v vl (e :: el)) o'
 | red_expr_app_3 : forall c st' st v vl v' el o,
     red_expr c st (expr_app_2 v (v' :: vl) el) o ->
-    red_expr c st' (expr_app_3 v vl (out_ter st (res_value v)) el) o
+    red_expr c st' (expr_app_3 v vl (out_ter st (res_value v')) el) o
 | red_expr_app_3_abort : forall c st v vl el o,
     abort o ->
     red_expr c st (expr_app_3 v vl o el) o

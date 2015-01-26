@@ -11,12 +11,12 @@ Require Import Monads.
 Require Import Interpreter.
 Require Import Coq.Strings.String.
 
-Require Import List.
 Import ListNotations.
 
 Open Scope list_scope.
 
 Implicit Type A B : Type.
+Implicit Type runs : runs_type.
 Implicit Type st : store.
 Implicit Type e : expr.
 Implicit Type v : value.
@@ -306,6 +306,70 @@ Hint Resolve is_some_value_munch.
 
 Ltac ljs_is_some_value_munch := eapply is_some_value_munch; [eassumption | (right; eassumption) || (left; eexists; eexists; split; [eassumption | ])].
 
+(* Prerequisites for proving correctness for application *)
+
+Fixpoint is_some_values_eval runs c st o (es : list expr) (lv : list value) (Pred : store -> list value -> Prop) : Prop := 
+    match es with
+    | nil => Pred st (rev lv)
+    | e :: es' => is_some_value o (runs_type_eval runs c st e) (fun st' v => 
+        is_some_values_eval runs c st' o es' (v :: lv) Pred)
+    end.
+
+Lemma is_some_values_eval_lemma : forall runs c o es cont (Pred : _ -> _ -> Prop),
+    runs_type_correct runs -> 
+    (forall vs st, cont st vs = result_some o -> Pred st vs) ->
+    forall vs st,
+    fold_right (eval_arg_list_aux runs c)
+        (fun st args => cont st (rev args)) es st vs = result_some o -> 
+    is_some_values_eval runs c st o es vs Pred.
+Proof. 
+    introv IH CH.
+    induction es.
+    simpl; intros; eauto.
+    simpl.
+    introv H.
+    unfold eval_arg_list_aux in H at 1.
+    ljs_run_push_post_auto;
+    ljs_is_some_value_munch.
+    eapply IHes; assumption.
+Qed.
+
+Definition apply_post runs c st v vs o := exists k c'' is vls c' st' e, 
+    get_closure st v = result_some (value_closure k c'' is e) /\ 
+    (st', vls) = add_values st vs /\
+    add_parameters c'' is vls = result_some c' /\
+    runs_type_eval runs c' st' e = result_some o.
+
+Lemma apply_correct : forall runs c st v vs o,
+    runs_type_correct runs ->
+    apply runs c st v vs = result_some o ->
+    apply_post runs c st v vs o.
+Proof.
+    introv IH R. unfolds in R.
+    ljs_run_push_post_auto.
+    destruct a; tryfalse.
+    cases_let.
+    ljs_run_push_post_auto.
+    inverts H.
+    unfolds eval_cont_terminate, eval_cont. 
+    unfolds apply_post. jauto.
+Qed.
+
+(* Lemmas for proving the main lemma *)
+
+Lemma eval_app_correct : forall runs c st e es o,
+    runs_type_correct runs ->
+    eval_app runs c st e es = result_some o ->
+    is_some_value o (runs_type_eval runs c st e) (fun st' v => 
+        is_some_values_eval runs c st' o es nil (fun st'' vs => 
+            apply_post runs c st'' v vs o)).
+Proof.
+    introv IH R. unfolds in R.
+    ljs_run_push_post_auto; ljs_is_some_value_munch.
+    apply is_some_values_eval_lemma with (cont := fun st args => apply runs c st v args); try assumption.
+    eauto using apply_correct.
+Qed.
+
 Lemma eval_id_correct : forall runs c st s o,
     runs_type_correct runs -> 
     eval_id runs c st s = result_some o -> 
@@ -469,6 +533,8 @@ Proof.
     ljs_run_inv. eauto.
 Qed.
 
+(* Help for proving the main lemma *)
+
 Ltac ljs_is_some_value_push H o st v H1 H2 :=
     match type of H with
     | is_some_value _ _ _ => let H' := fresh in destruct H as (o&H1&[(st&v&H'&H)|H]); [inverts H' | inverts H]
@@ -493,6 +559,37 @@ Ltac ljs_pretty_advance rule rulea :=
     ljs_is_some_push;
     (eapply rule; [solve [ljs_eval_ih] | ]);
     [ | eapply rulea; assumption]. 
+
+Lemma red_expr_app_2_nil_lemma : forall runs c st v vl o,
+    runs_type_correct runs ->
+    apply_post runs c st v (rev vl) o ->
+    red_expr c st (expr_app_2 v vl nil) o.
+Proof.
+    introv IH R.
+    unfolds in R.
+    repeat destruct_exists R.
+    destruct R as (R1&R2&R3&R4).
+    eapply red_expr_app_2; eauto.
+    ljs_eval_ih.
+Qed.
+
+Lemma red_expr_app_2_lemma : forall runs c o v (Pred : _ -> _ -> Prop),
+    runs_type_correct runs -> 
+    (forall st vs, Pred st (rev vs) -> red_expr c st (expr_app_2 v vs nil) o) ->
+    forall es st vs,
+    is_some_values_eval runs c st o es vs Pred ->
+    red_expr c st (expr_app_2 v vs es) o.
+Proof.
+    introv IH PH.
+    induction es. eauto.
+    introv R. 
+    unfold is_some_values_eval in R at 1.
+    ljs_pretty_advance red_expr_app_2_next red_expr_app_3_abort.
+    eapply red_expr_app_3.
+    eauto.
+Qed.
+
+(* Main lemma *)
 
 Lemma eval_correct : forall runs c st e o,
     runs_type_correct runs -> eval runs c st e = result_some o -> red_expr c st e o.
@@ -559,7 +656,14 @@ Proof.
     eapply red_expr_if_1_true; ljs_eval_ih.
     eapply red_expr_if_1_false; ljs_eval_ih.
     (* app *)
-    skip.
+    lets H: eval_app_correct IH R.
+    ljs_pretty_advance red_expr_app red_expr_app_1_abort.
+    eapply red_expr_app_1.
+    eapply red_expr_app_2_lemma; try eassumption.
+    introv Hy.
+    simpl in Hy.
+    repeat destruct_exists Hy.
+    eauto using red_expr_app_2_nil_lemma. 
     (* seq *)
     lets H: eval_seq_correct IH R.
     ljs_pretty_advance red_expr_seq red_expr_seq_1_abort.
