@@ -544,6 +544,75 @@ Proof.
     ljs_run_inv. eauto.
 Qed.
 
+Lemma eval_getobjattr_correct : forall runs c st oa e1 o,
+    runs_type_correct runs ->
+    eval_getobjattr runs c st e1 oa = result_some o ->
+    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
+        exists ptr obj, v1 = value_object ptr /\ 
+            get_object st' ptr = Some obj /\ 
+            o = out_ter st' (res_value (get_object_oattr obj oa))).
+Proof.
+    introv IH R. unfolds in R.
+    ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
+    ljs_run_inv. eauto.
+Qed.
+
+Lemma eval_setobjattr_correct : forall runs c st oa e1 e2 o,
+    runs_type_correct runs ->
+    eval_setobjattr runs c st e1 oa e2 = result_some o ->
+    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
+        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
+            exists ptr obj obj', v1 = value_object ptr /\
+                get_object st'' ptr = Some obj /\
+                set_object_oattr obj oa v2 = result_some obj' /\
+                o = out_ter (update_object st'' ptr obj') (res_value v2))).
+Proof.
+    introv IH R. unfolds in R.
+    ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
+    unfolds change_object_cont.
+    cases_match_option; tryfalse.
+    ljs_run_push_post_auto.
+    inverts R.
+    jauto.
+Qed.
+
+Lemma eval_getattr_correct : forall runs c st pa e1 e2 o,
+    runs_type_correct runs ->
+    eval_getattr runs c st e1 e2 pa = result_some o ->
+    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
+        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
+            exists ptr obj s v, v1 = value_object ptr /\
+                v2 = value_string s /\
+                get_object st'' ptr = Some obj /\
+                get_object_pattr obj s pa = result_some v /\
+                o = out_ter st'' (res_value v))).
+Proof.
+    introv IH R. unfolds in R.
+    ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
+    ljs_run_inv. jauto. 
+Qed.
+
+Lemma eval_setattr_correct : forall runs c st pa e1 e2 e3 o,
+    runs_type_correct runs ->
+    eval_setattr runs c st e1 e2 pa e3 = result_some o ->
+    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
+        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
+            is_some_value o (runs_type_eval runs c st'' e3) (fun st''' v3 =>
+                exists ptr obj obj' s, v1 = value_object ptr /\
+                    v2 = value_string s /\
+                    get_object st''' ptr = Some obj /\
+                    set_object_pattr obj s pa v3 = result_some obj' /\
+                    o = out_ter (update_object st''' ptr obj') (res_value v3)))).
+Proof.
+    introv IH R. unfolds in R.
+    ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
+    unfolds change_object_cont.
+    cases_match_option; tryfalse.
+    ljs_run_push_post_auto.
+    inverts R.
+    jauto.
+Qed.
+
 (* Help for proving the main lemma *)
 
 Ltac ljs_is_some_value_push H o st v H1 H2 :=
@@ -626,13 +695,35 @@ Proof.
     (* object *)
     skip.
     (* get_attr *)
-    skip.
+    lets H: eval_getattr_correct IH R.
+    ljs_pretty_advance red_expr_get_attr red_expr_get_attr_1_abort.
+    ljs_pretty_advance red_expr_get_attr_1 red_expr_get_attr_2_abort.
+    destruct H as (ptr&obj&s&v1&Hy1&Hy2&Hy3&Hy4&Hy5).
+    inverts Hy1. inverts Hy2.
+    inverts Hy5.
+    eapply red_expr_get_attr_2; eauto.
     (* set_attr *)
-    skip.
+    lets H: eval_setattr_correct IH R.
+    ljs_pretty_advance red_expr_set_attr red_expr_set_attr_1_abort.
+    ljs_pretty_advance red_expr_set_attr_1 red_expr_set_attr_2_abort.
+    ljs_pretty_advance red_expr_set_attr_2 red_expr_set_attr_3_abort.
+    destruct H as (ptr&obj&obj'&s&Hy1&Hy2&Hy3&Hy4&Hy5).
+    inverts Hy1. inverts Hy2.
+    inverts Hy5.
+    eapply red_expr_set_attr_3; eauto.
     (* get_obj_attr *)
-    skip.
+    lets H: eval_getobjattr_correct IH R.
+    ljs_pretty_advance red_expr_get_obj_attr red_expr_get_obj_attr_1_abort.
+    destruct H as (ptr&obj&Hy1&Hy2&Hy3).
+    inverts Hy1. inverts Hy3.
+    eapply red_expr_get_obj_attr_1; eauto.
     (* set_obj_attr *)
-    skip.
+    lets H: eval_setobjattr_correct IH R.
+    ljs_pretty_advance red_expr_set_obj_attr red_expr_set_obj_attr_1_abort.
+    ljs_pretty_advance red_expr_set_obj_attr_1 red_expr_set_obj_attr_2_abort.
+    destruct H as (ptr&obj&obj'&Hy1&Hy2&Hy3&Hy4).
+    inverts Hy1. inverts Hy4.
+    eapply red_expr_set_obj_attr_2; eauto.
     (* get_field *)
     skip.
     (* set_field *)
