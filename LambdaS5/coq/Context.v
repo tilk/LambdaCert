@@ -70,18 +70,13 @@ Definition change_object (st : store) (ptr : Values.object_ptr) (pred : Values.o
 * the predicate. *)
 Definition change_object_property_cont st (ptr : object_ptr) (name : prop_name) (cont : option attributes -> (store -> option attributes -> value -> result) -> result) : result :=
   change_object_cont st ptr (fun obj cont1 =>
-    match obj with object_intro prot cl ext prim props code =>
-      cont (get_object_property obj name) (fun st oprop res => match oprop with
-        | Some prop =>
-          let new_props := (Heap.write props name prop) in
-          cont1 st (Values.object_intro prot cl ext prim new_props code) res
-        | None =>
-          let new_props := props in
-          (* TODO: Remove property *)
-          cont1 st (Values.object_intro prot cl ext prim new_props code) res
-      end)
-    end
-  )
+    cont (get_object_property obj name) (fun st oprop res => match oprop with
+      | Some prop =>
+        cont1 st (set_object_property obj name prop) res
+      | None =>
+        (* TODO: Remove property *)
+        cont1 st obj res
+    end))
 .
 
 Definition change_object_property st (ptr : object_ptr) (name : prop_name) (pred : option attributes -> (store * option attributes * value)) : result :=
