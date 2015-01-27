@@ -724,6 +724,21 @@ Proof.
     repeat (cases_match_option || cases_if); try inverts R; substs; ljs_run_inv; intuition eauto.
 Qed. 
 
+Lemma eval_own_field_names_correct : forall runs c st e o,
+    runs_type_correct runs ->
+    eval_own_field_names runs c st e = result_some o ->
+    is_some_value o (runs_type_eval runs c st e) (fun st' v =>
+        exists ptr obj st'' v', v = value_object ptr /\
+            get_object st' ptr = Some obj /\
+            (st'', v') = add_object st' (make_prop_list obj) /\
+            o = out_ter st'' (res_value v')).
+Proof.
+    introv IH R. unfolds in R.
+    ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
+    cases_let.
+    ljs_run_inv. jauto.
+Qed.
+
 (* Help for proving the main lemma *)
 
 Ltac ljs_is_some_value_push H o st v H1 H2 :=
@@ -880,7 +895,12 @@ Proof.
     eapply red_expr_delete_field_3_unconfigurable; eauto.
     eapply red_expr_delete_field_3_found; eauto.
     (* own_field_names *)
-    skip.
+    lets H: eval_own_field_names_correct IH R.
+    ljs_pretty_advance red_expr_own_field_names red_expr_own_field_names_1_abort.
+    repeat destruct_exists H.
+    destructs H.
+    substs.
+    eapply red_expr_own_field_names_1; eauto.
     (* set_bang *)
     lets H: eval_setbang_correct IH R.
     ljs_pretty_advance red_expr_set_bang red_expr_set_bang_1_abort.

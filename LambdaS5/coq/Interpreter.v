@@ -364,7 +364,7 @@ Definition eval_set_obj_attr runs c st obj_expr oattr attr :=
             cont st obj' v)))))
 .
 
-Definition eval_ownfieldnames runs c st obj_expr : result :=
+Definition eval_own_field_names runs c st obj_expr : result :=
   if_eval_return runs c st obj_expr (fun st obj_loc =>
     assert_get_object st obj_loc (fun obj =>
       let (st, loc) := add_object st (make_prop_list obj)
@@ -475,7 +475,7 @@ Definition eval runs c st (e : expr) : result :=
   | expr_set_attr attr left_ right_ newval => eval_set_attr runs c st left_ right_ attr newval
   | expr_get_obj_attr oattr obj => eval_get_obj_attr runs c st obj oattr
   | expr_set_obj_attr oattr obj attr => eval_set_obj_attr runs c st obj oattr attr
-  | expr_own_field_names e => eval_ownfieldnames runs c st e
+  | expr_own_field_names e => eval_own_field_names runs c st e
   | expr_op1 op e => eval_op1 runs c st op e
   | expr_op2 op e1 e2 => eval_op2 runs c st op e1 e2
   | expr_label l e => eval_label runs c st l e
