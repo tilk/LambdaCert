@@ -569,5 +569,9 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_eval_2_abort : forall c st v1 o,
     abort o ->
     red_expr c st (expr_eval_2 v1 o) o
+
+| red_expr_hint : forall c st s e o,
+    red_expr c st e o ->
+    red_expr c st (expr_hint s e) o 
 .
 

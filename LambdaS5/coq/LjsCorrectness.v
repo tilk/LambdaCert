@@ -1186,9 +1186,10 @@ Proof.
     eapply red_expr_eval_2; try eassumption.
     ljs_eval_ih.
     (* hint *)
-    skip.
+    eapply red_expr_hint.
+    ljs_eval_ih.
     (* dump *)
-    skip.
+    tryfalse.
 Qed.
 
 Lemma runs_0_correct : runs_type_correct runs_0.
