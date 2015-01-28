@@ -468,16 +468,16 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_let_1 i o e2) o
 
-| red_expr_recc : forall c c1 st st1 loc i e1 e2 o o',
+| red_expr_rec : forall c c1 st st1 loc i e1 e2 o o',
     (c1, st1, loc) = add_named_value_loc c st i value_undefined ->
     red_expr c1 st1 e1 o ->
     red_expr c1 st1 (expr_recc_1 loc o e2) o' ->
     red_expr c st (expr_recc i e1 e2) o'
-| red_expr_recc_1 : forall c st' st st1 loc v e2 o,
+| red_expr_rec_1 : forall c st' st st1 loc v e2 o,
     st1 = add_value_at_location st loc v ->
     red_expr c st1 e2 o ->
     red_expr c st' (expr_recc_1 loc (out_ter st (res_value v)) e2) o
-| red_expr_recc_1_abort : forall c st loc o e2,
+| red_expr_rec_1_abort : forall c st loc o e2,
     abort o ->
     red_expr c st (expr_recc_1 loc o e2) o
 
@@ -501,41 +501,41 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_break_1 i o) o
 
-| red_try_catch : forall c st e1 e2 o o',
+| red_expr_try_catch : forall c st e1 e2 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_try_catch_1 o e2) o' ->
     red_expr c st (expr_try_catch e1 e2) o'
-| red_try_catch_1 : forall c st e2 o,
+| red_expr_try_catch_1 : forall c st e2 o,
     (forall st v, o <> out_ter st (res_exception v)) -> (* TODO something better? *)
     red_expr c st (expr_try_catch_1 o e2) o
-| red_try_catch_1_exc : forall c st' st v e2 o o',
+| red_expr_try_catch_1_exc : forall c st' st v e2 o o',
     red_expr c st e2 o ->
     red_expr c st (expr_try_catch_2 v o) o' ->
     red_expr c st' (expr_try_catch_1 (out_ter st (res_exception v)) e2) o'
-| red_try_catch_2 : forall c st' st v v' o,
+| red_expr_try_catch_2 : forall c st' st v v' o,
     red_expr c st (expr_app_2 v' [v] nil) o ->
     red_expr c st' (expr_try_catch_2 v (out_ter st (res_value v'))) o
-| red_try_catch_2_abort : forall c st v o,
+| red_expr_try_catch_2_abort : forall c st v o,
     abort o ->
     red_expr c st (expr_try_catch_2 v o) o
 
-| red_try_finally : forall c st e1 e2 o o',
+| red_expr_try_finally : forall c st e1 e2 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_try_finally_1 o e2) o' ->
     red_expr c st (expr_try_finally e1 e2) o'
-| red_try_finally_1 : forall c st' st r e2 o o',
+| red_expr_try_finally_1 : forall c st' st r e2 o o',
     red_expr c st e2 o ->
     red_expr c st (expr_try_finally_2 r o) o' ->
     red_expr c st' (expr_try_finally_1 (out_ter st r) e2) o'
-| red_try_finally_1_div : forall c st e2,
+| red_expr_try_finally_1_div : forall c st e2,
     red_expr c st (expr_try_finally_1 out_div e2) out_div
-| red_try_finally_2_value : forall c st r o,
+| red_expr_try_finally_2_value : forall c st' st r v,
     res_is_value r ->
-    red_expr c st (expr_try_finally_2 r o) o
-| red_try_finally_2_control : forall c st' st r v o,
+    red_expr c st' (expr_try_finally_2 r (out_ter st (res_value v))) (out_ter st (res_value v))
+| red_expr_try_finally_2_control : forall c st' st r v,
     res_is_control r ->
     red_expr c st' (expr_try_finally_2 r (out_ter st (res_value v))) (out_ter st r)
-| red_try_finally_2_abort : forall c st r o,
+| red_expr_try_finally_2_abort : forall c st r o,
     abort o ->
     red_expr c st (expr_try_finally_2 r o) o
 

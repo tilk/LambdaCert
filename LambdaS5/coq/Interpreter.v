@@ -34,7 +34,7 @@ Implicit Type c : ctx.
 (* Evaluate an expression, and calls the continuation with
 * the new store and the Context.result of the evaluation. *)
 Definition eval_cont {A : Type} runs c st e (cont : result -> resultof A) : resultof A :=
-  cont (Context.runs_type_eval runs c st e).
+  cont (runs_type_eval runs c st e).
 
 (* Alias for calling eval_cont with an empty continuation *)
 Definition eval_cont_terminate runs c st e : result :=
@@ -280,13 +280,11 @@ Definition eval_let runs c st (id : string) (value_expr body_expr : expr) : resu
 * and bind this location to the name `id` in the store.
 * Evaluate the body in the new store. *)
 Definition eval_rec runs c st (id : string) (value_expr body_expr : expr) : result :=
-  match add_named_value_loc c st id value_undefined with
-  | (c, st, self_loc) =>
+  let '(c, st, self_loc) := add_named_value_loc c st id value_undefined in
     if_eval_return runs c st value_expr (fun st value =>
       let st := add_value_at_location st self_loc value in
         eval_cont_terminate runs c st body_expr
     )
-  end
 .
 
 (* name := expr

@@ -37,6 +37,14 @@ Record runs_type_correct runs :=
             runs_type_eval runs c st e = result_some o -> red_expr c st e o
 }.
 
+(* Useful lemmas *)
+
+Lemma out_is_value_or_abort : forall o, (exists st v, o = out_ter st (res_value v)) \/ abort o.
+Proof. 
+    intro o.
+    destruct o. eauto. destruct r; eauto.
+Qed.
+
 (* Lemmas on monadic ops *)
 
 Definition is_some {A} ra (Pred : A -> Prop) :=
@@ -173,6 +181,13 @@ Proof.
     auto using if_value_out.
 Qed.
 
+Lemma eval_cont_terminate_out : forall runs c st e o,
+    eval_cont_terminate runs c st e = result_some o ->
+    is_some (runs_type_eval runs c st e) (fun out => o = out).
+Proof. 
+    eauto.
+Qed.
+
 (* Tactics *)
 
 (* TODO *)
@@ -189,13 +204,16 @@ Ltac ljs_run_select_ifres H :=
     | if_eval_ter _ _ _ _ _ => constr:(if_eval_ter_out)
     | if_eval_return _ _ _ _ _ => constr:(if_eval_return_out)
     | if_result_some _ _ => constr:(if_result_some_out)
+    | eval_cont_terminate _ _ _ _ => constr:(eval_cont_terminate_out)
     | _ => fail
     end end
 .
 
 Ltac ljs_run_push H a H1 H2 :=
     let L := ljs_run_select_ifres H in
-    lets (a&H1&H2): L H; clear H
+    lets (a&H1&H2): L H;  
+    try match L with eval_cont_terminate_out => destruct H2 end;
+    clear H
 .
 
 Tactic Notation "ljs_run_push" hyp(H) "as" ident(a) ident(H1) ident(H2) :=
@@ -209,7 +227,7 @@ Ltac ljs_run_push_auto :=
         let H1 := fresh "H" in
         let R := fresh "R" in
         unfold assert_get_object in H;
-        try ljs_run_push H as a H1 R 
+        try ljs_run_push H as a H1 R
     end
 .
 
@@ -359,10 +377,8 @@ Proof.
     ljs_run_push_post_auto.
     destruct a; tryfalse.
     cases_let.
-    ljs_run_push_post_auto.
-    inverts H.
-    unfolds eval_cont_terminate, eval_cont. 
-    unfolds apply_post. jauto.
+    ljs_run_push_auto.
+    unfolds apply_post. jauto. 
 Qed.
 
 (* Lemmas for proving the main lemma *)
@@ -438,6 +454,19 @@ Proof.
     cases_let; jauto.
 Qed. 
 
+Lemma eval_rec_correct : forall runs c st s e1 e2 o,
+    runs_type_correct runs ->
+    eval_rec runs c st s e1 e2 = result_some o ->
+    exists c' st' loc, (c', st', loc) = add_named_value_loc c st s value_undefined /\
+        is_some_value o (runs_type_eval runs c' st' e1) (fun st' v =>
+            runs_type_eval runs c' (add_value_at_location st' loc v) e2 = result_some o).
+Proof.
+    introv IH R. unfolds in R.
+    unfold eval_cont_terminate, eval_cont in R.
+    repeat cases_let. substs. do 3 eexists. split. reflexivity.
+    ljs_run_push_post_auto; ljs_is_some_value_munch. assumption.
+Qed.
+
 Lemma eval_break_correct : forall runs c st s e o,
     runs_type_correct runs ->
     eval_break runs c st s e = result_some o ->
@@ -458,11 +487,26 @@ Proof.
     ljs_run_push_post_auto; ljs_run_inv; jauto.
 Qed.
 
-(* TODO: clarify the semantics of try-finally
 Lemma eval_tryfinally_correct : forall runs c st e1 e2 o,
     runs_type_correct runs ->
     eval_tryfinally runs c st e1 e2 = result_some o ->
-*)
+    is_some (runs_type_eval runs c st e1) (fun o' =>
+        (exists st' r, o' = out_ter st' r /\
+            is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 => 
+                res_is_value r /\ o = out_ter st'' (res_value v2) \/
+                res_is_control r /\ o = out_ter st'' r)) \/
+        (o = o' /\ o' = out_div)). 
+Proof.
+    introv IH R. unfolds. unfolds in R.
+    ljs_run_push_post_auto; eexists; (split; [eassumption | ]); [ | jauto].
+    left. do 2 eexists; split. eassumption.
+    destruct r; ljs_run_push_post_auto; try ljs_is_some_value_munch; ljs_run_inv.
+    eapply is_some_value_munch. eassumption.
+    destruct (out_is_value_or_abort o) as [(st'&v'&Hx)|Hx]; eauto.
+    left. jauto. 
+    inverts R; eauto.
+    inverts R; eauto.
+Qed.
 
 Lemma eval_trycatch_correct : forall runs c st e1 e2 o,
     runs_type_correct runs ->
@@ -946,7 +990,13 @@ Proof.
     destruct H as (st''&c'&H&Ho2).
     eapply red_expr_let_1. eassumption. ljs_eval_ih.
     (* recc *)
-    skip.
+    lets H: eval_rec_correct IH R.
+    repeat destruct_exists H.
+    destruct H as (Hv&H).
+    ljs_is_some_push;
+    (eapply red_expr_rec; [eassumption | ljs_eval_ih | ]);
+    [ | eapply red_expr_rec_1_abort; assumption].
+    eapply red_expr_rec_1. reflexivity. ljs_eval_ih. 
     (* label *)
     lets (o'&Ho&H): eval_label_correct IH R.
     eapply red_expr_label.
@@ -964,17 +1014,26 @@ Proof.
     eapply red_expr_break_1.
     (* try_catch *)
     lets (o'&Ho&H): eval_trycatch_correct IH R. 
-    eapply red_try_catch.
+    eapply red_expr_try_catch.
     ljs_eval_ih.
     destruct H as [(st'&v&Ho1&Ho2)|(He&H)].
     inverts Ho1.
-    ljs_pretty_advance red_try_catch_1_exc red_try_catch_2_abort.
-    eapply red_try_catch_2.
+    ljs_pretty_advance red_expr_try_catch_1_exc red_expr_try_catch_2_abort.
+    eapply red_expr_try_catch_2.
     eauto using red_expr_app_2_nil_lemma. 
     inverts He.
-    eapply red_try_catch_1; eauto.
+    eapply red_expr_try_catch_1; eauto.
     (* try_finally *)
-    skip.
+    lets (o'&Ho&H): eval_tryfinally_correct IH R. 
+    eapply red_expr_try_finally. ljs_eval_ih.
+    destruct H as [(st'&r&Ho'&H)|(Ho'&H)].
+    subst o'.
+    ljs_pretty_advance red_expr_try_finally_1 red_expr_try_finally_2_abort.
+    branches H; destructs H; subst o.
+    eapply red_expr_try_finally_2_value; eauto.
+    eapply red_expr_try_finally_2_control; eauto.
+    substs.
+    eapply red_expr_try_finally_1_div.
     (* throw *)
     lets H: eval_throw_correct IH R.
     ljs_pretty_advance red_expr_throw red_expr_throw_1_abort.
