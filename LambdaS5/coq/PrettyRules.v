@@ -71,10 +71,10 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_object_4_abort : forall c st v1 v2 v3 e5 a o,
     abort o ->
     red_expr c st (expr_object_4 v1 v2 v3 o e5 a) o
-| red_expr_object_5 : forall c st class extv ext proto code prim a o,
+| red_expr_object_5 : forall c st' st class extv ext proto code prim a o,
     value_to_bool extv = Some ext ->
     red_expr c st (expr_object_6 (object_intro proto class ext prim Heap.empty code) a) o ->
-    red_expr c st (expr_object_5 (value_string class) extv proto code (out_ter st (res_value prim)) a) o
+    red_expr c st' (expr_object_5 (value_string class) extv proto code (out_ter st (res_value prim)) a) o
 | red_expr_object_5_abort : forall c st v1 v2 v3 v4 a o,
     abort o ->
     red_expr c st (expr_object_5 v1 v2 v3 v4 o a) o
@@ -106,16 +106,16 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_object_data_3_abort : forall c st obj a s v1 v2 e4 o,
     abort o ->
     red_expr c st (expr_object_data_3 obj a s v1 v2 o e4) o
-| red_expr_object_data_4 : forall c st' st obj a s v1 v2 v3 v4 b1 b2 b4 o o',
+| red_expr_object_data_4 : forall c st' st obj a s v1 v2 v3 v4 b1 b2 b4 o,
     value_to_bool v1 = Some b1 ->
     value_to_bool v2 = Some b2 ->
     value_to_bool v4 = Some b4 ->
-    red_expr c st (expr_object_6 (set_object_property obj s (attributes_data_of (attributes_data_intro v3 b4 b2 b1))) a) o' ->
-    red_expr c st' (expr_object_data_4 obj a s v1 v2 v3 (out_ter st (res_value v4))) o'
+    red_expr c st (expr_object_6 (set_object_property obj s (attributes_data_of (attributes_data_intro v3 b4 b2 b1))) a) o ->
+    red_expr c st' (expr_object_data_4 obj a s v1 v2 v3 (out_ter st (res_value v4))) o
 | red_expr_object_data_4_abort : forall c st obj a s v1 v2 v3 o,
     abort o ->
     red_expr c st (expr_object_data_4 obj a s v1 v2 v3 o) o
-| red_expr_object_6_accessor : forall c st obj s e e1 e2 e3 e4 a o o',
+| red_expr_object_6_accessor : forall c st obj s e1 e2 e3 e4 a o o',
     red_expr c st e1 o ->
     red_expr c st (expr_object_accessor_1 obj a s o e2 e3 e4) o' ->
     red_expr c st (expr_object_6 obj ((s, property_accessor (accessor_intro e3 e4 e2 e1)) :: a)) o'
@@ -140,11 +140,11 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_object_accessor_3_abort : forall c st obj a s v1 v2 e4 o,
     abort o ->
     red_expr c st (expr_object_accessor_3 obj a s v1 v2 o e4) o
-| red_expr_object_accessor_4 : forall c st' st obj a s v1 v2 v3 v4 b1 b2 o o',
+| red_expr_object_accessor_4 : forall c st' st obj a s v1 v2 v3 v4 b1 b2 o,
     value_to_bool v1 = Some b1 ->
     value_to_bool v2 = Some b2 ->
-    red_expr c st (expr_object_6 (set_object_property obj s (attributes_accessor_of (attributes_accessor_intro v3 v4 b2 b1))) a) o' ->
-    red_expr c st' (expr_object_accessor_4 obj a s v1 v2 v3 (out_ter st (res_value v4))) o'
+    red_expr c st (expr_object_6 (set_object_property obj s (attributes_accessor_of (attributes_accessor_intro v3 v4 b2 b1))) a) o ->
+    red_expr c st' (expr_object_accessor_4 obj a s v1 v2 v3 (out_ter st (res_value v4))) o
 | red_expr_object_accessor_4_abort : forall c st obj a s v1 v2 v3 o,
     abort o ->
     red_expr c st (expr_object_accessor_4 obj a s v1 v2 v3 o) o

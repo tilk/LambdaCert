@@ -45,6 +45,14 @@ Proof.
     destruct o. eauto. destruct r; eauto.
 Qed.
 
+Lemma bool_to_value_to_bool : forall b, value_to_bool (bool_to_value b) = Some b.
+Proof.
+    intro b. destruct b; eauto.
+Qed.
+
+Hint Resolve bool_to_value_to_bool.
+Hint Rewrite bool_to_value_to_bool.
+
 (* Lemmas on monadic ops *)
 
 Definition is_some {A} ra (Pred : A -> Prop) :=
@@ -467,6 +475,83 @@ Proof.
     ljs_run_push_post_auto; ljs_is_some_value_munch. assumption.
 Qed.
 
+Definition is_some_eval_objattrs o runs c st attrs Pred : Prop :=
+    let 'objattrs_intro e1 e2 e3 e4 e5 := attrs in
+    is_some_value o (runs_type_eval runs c st e1) (fun st1 v1 =>
+    is_some_value o (runs_type_eval runs c st1 e2) (fun st2 v2 =>
+    is_some_value o (runs_type_eval runs c st2 e3) (fun st3 v3 =>
+    is_some_value o (runs_type_eval runs c st3 e4) (fun st4 v4 =>
+    is_some_value o (runs_type_eval runs c st4 e5) (fun st5 v5 =>
+        exists b s, v1 = value_string s /\ value_to_bool v2 = Some b /\
+            Pred st5 s b v3 v4 v5))))). 
+
+Definition is_some_eval_objprop o runs c st s prop Pred : Prop :=
+    match prop with
+    | property_data (data_intro e3 e4 e2 e1) =>
+        is_some_value o (runs_type_eval runs c st e1) (fun st1 v1 =>
+        is_some_value o (runs_type_eval runs c st1 e2) (fun st2 v2 =>
+        is_some_value o (runs_type_eval runs c st2 e3) (fun st3 v3 =>
+        is_some_value o (runs_type_eval runs c st3 e4) (fun st4 v4 =>
+            exists b1 b2 b4, 
+                value_to_bool v1 = Some b1 /\
+                value_to_bool v2 = Some b2 /\
+                value_to_bool v4 = Some b4 /\
+                Pred st4 (attributes_data_of (attributes_data_intro v3 b4 b2 b1))))))
+    | property_accessor (accessor_intro e3 e4 e2 e1) =>
+        is_some_value o (runs_type_eval runs c st e1) (fun st1 v1 =>
+        is_some_value o (runs_type_eval runs c st1 e2) (fun st2 v2 =>
+        is_some_value o (runs_type_eval runs c st2 e3) (fun st3 v3 =>
+        is_some_value o (runs_type_eval runs c st3 e4) (fun st4 v4 =>
+             exists b1 b2, 
+                value_to_bool v1 = Some b1 /\
+                value_to_bool v2 = Some b2 /\
+                Pred st4 (attributes_accessor_of (attributes_accessor_intro v3 v4 b2 b1))))))
+    end.
+
+Fixpoint is_some_eval_objprops o runs c st props obj Pred : Prop :=
+    match props with
+    | nil => Pred st obj
+    | (s, prop) :: props' => 
+        is_some_eval_objprop o runs c st s prop (fun st' attr =>
+            is_some_eval_objprops o runs c st' props' (set_object_property obj s attr) Pred)
+    end.
+
+Lemma is_some_eval_objprops_lemma : forall runs c o props cont (Pred : _ -> _ -> Prop),
+    runs_type_correct runs ->
+    (forall st obj, cont st obj = result_some o -> Pred st obj) ->
+    forall st obj,
+        eval_object_properties runs c st props obj cont = result_some o ->
+        is_some_eval_objprops o runs c st props obj Pred.
+Proof.
+    introv IH CH.
+    induction props.
+    eauto.
+    introv H.
+    destruct a as (s&[(data)|(acc)]);
+    simpls;
+    ljs_run_push_post_auto; repeat ljs_is_some_value_munch; substs; repeat eexists; eauto.
+Qed.
+
+Lemma eval_object_correct : forall runs c st attrs l o,
+    runs_type_correct runs ->
+    eval_object_decl runs c st attrs l = result_some o ->
+    is_some_eval_objattrs o runs c st attrs (fun st' class ext proto code prim => 
+        let obj := object_intro proto class ext prim Heap.empty code in
+        is_some_eval_objprops o runs c st' l obj (fun st'' obj =>
+            exists st''' v,
+                (st''', v) = add_object st'' obj /\
+                o = out_ter st''' (res_value v))).
+Proof.
+    introv IH R. unfolds in R.
+    cases_let.
+    unfolds.
+    ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
+    do 2 eexists; splits.
+    eassumption. substs; eauto.
+    eapply is_some_eval_objprops_lemma; try eassumption.
+    intros. simpl in H7. cases_let. ljs_run_inv. eauto.
+Qed.
+
 Lemma eval_break_correct : forall runs c st s e o,
     runs_type_correct runs ->
     eval_break runs c st s e = result_some o ->
@@ -839,6 +924,36 @@ Proof.
     eauto.
 Qed.
 
+Lemma red_expr_object_6_lemma : forall runs c o (Pred : _ -> _ -> Prop),
+    runs_type_correct runs ->
+    (forall st obj, Pred st obj -> red_expr c st (expr_object_6 obj nil) o) ->
+    forall props st obj,
+    is_some_eval_objprops o runs c st props obj Pred ->
+    red_expr c st (expr_object_6 obj props) o.
+Proof.
+    introv IH PH.
+    induction props. eauto.
+    introv R.
+    unfold is_some_eval_objprops in R at 1.
+    destruct a as (s&[data|acc]).
+    destruct data.
+    unfolds in R.
+    ljs_pretty_advance red_expr_object_6_data red_expr_object_data_1_abort.
+    ljs_pretty_advance red_expr_object_data_1 red_expr_object_data_2_abort.
+    ljs_pretty_advance red_expr_object_data_2 red_expr_object_data_3_abort.
+    ljs_pretty_advance red_expr_object_data_3 red_expr_object_data_4_abort.
+    destruct R as (b1&b2&b3&Hb1&Hb2&Hb3&R).
+    eapply red_expr_object_data_4; eauto. 
+    destruct acc.
+    unfolds in R.
+    ljs_pretty_advance red_expr_object_6_accessor red_expr_object_accessor_1_abort.
+    ljs_pretty_advance red_expr_object_accessor_1 red_expr_object_accessor_2_abort.
+    ljs_pretty_advance red_expr_object_accessor_2 red_expr_object_accessor_3_abort.
+    ljs_pretty_advance red_expr_object_accessor_3 red_expr_object_accessor_4_abort.
+    destruct R as (b1&b2&Hb1&Hb2&R).
+    eapply red_expr_object_accessor_4; eauto.
+Qed.
+
 (* Main lemma *)
 
 Lemma eval_correct : forall runs c st e o,
@@ -863,7 +978,23 @@ Proof.
     inverts Ho.
     eapply red_expr_id; eassumption.
     (* object *)
-    skip.
+    lets H: eval_object_correct IH R.
+    match goal with H : objattrs |- _ => destruct H end.
+    unfolds in H.
+    ljs_pretty_advance red_expr_object red_expr_object_1_abort.
+    ljs_pretty_advance red_expr_object_1 red_expr_object_2_abort.
+    ljs_pretty_advance red_expr_object_2 red_expr_object_3_abort.
+    ljs_pretty_advance red_expr_object_3 red_expr_object_4_abort.
+    ljs_pretty_advance red_expr_object_4 red_expr_object_5_abort.
+    destruct H as (b&s&Hs&Hb&H).
+    substs.
+    eapply red_expr_object_5; try eassumption.
+    applys red_expr_object_6_lemma IH; try eassumption.
+    introv Ho.
+    simpl in Ho.
+    destruct Ho as (st'''&v&Ho).
+    destructs Ho. substs.
+    eapply red_expr_object_6; eassumption.
     (* get_attr *)
     lets H: eval_get_attr_correct IH R.
     ljs_pretty_advance red_expr_get_attr red_expr_get_attr_1_abort.
@@ -1054,7 +1185,11 @@ Proof.
     inverts H. inverts H4.
     eapply red_expr_eval_2; try eassumption.
     ljs_eval_ih.
-Admitted.
+    (* hint *)
+    skip.
+    (* dump *)
+    skip.
+Qed.
 
 Lemma runs_0_correct : runs_type_correct runs_0.
 Proof.

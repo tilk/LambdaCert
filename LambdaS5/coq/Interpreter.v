@@ -110,9 +110,8 @@ Definition eval_seq runs c st (e1 e2 : expr) : result :=
 .
 
 
-(* A tail-recursive helper for eval_object_properties, that constructs
-* the list of properties. *)
-Fixpoint eval_object_properties_aux runs c st (l : list (string * property)) (acc : object_properties) (cont : store -> object_properties -> result) {struct l} : result :=
+(* Evaluates properties of object literals. *)
+Fixpoint eval_object_properties runs c st (l : list (string * property)) (acc : object) (cont : store -> object -> result) {struct l} : result :=
   match l with
   | nil => cont st acc
   | (name, property_data (data_intro value_expr writable_expr enumerable_expr configurable_expr)) :: tail =>
@@ -123,7 +122,7 @@ Fixpoint eval_object_properties_aux runs c st (l : list (string * property)) (ac
             assert_get_bool configurable_v (fun configurable =>
               assert_get_bool enumerable_v (fun enumerable => 
                 assert_get_bool writable_v (fun writable => 
-                  eval_object_properties_aux runs c st tail (Heap.write acc name (
+                  eval_object_properties runs c st tail (set_object_property acc name (
                     attributes_data_of {|
                       attributes_data_value := value_v;
                       attributes_data_writable := writable;
@@ -137,7 +136,7 @@ Fixpoint eval_object_properties_aux runs c st (l : list (string * property)) (ac
           if_eval_return runs c st setter_expr (fun st setter_v =>
             assert_get_bool configurable_v (fun configurable =>
               assert_get_bool enumerable_v (fun enumerable => 
-                eval_object_properties_aux runs c st tail (Heap.write acc name (
+                eval_object_properties runs c st tail (set_object_property acc name (
                   attributes_accessor_of {|
                     attributes_accessor_get := getter_v;
                     attributes_accessor_set := setter_v;
@@ -145,11 +144,6 @@ Fixpoint eval_object_properties_aux runs c st (l : list (string * property)) (ac
                     attributes_accessor_configurable := configurable |}
                   )) cont))))))
   end
-.
-(* Reads a list of syntax trees of properties and converts it to a heap
-* bindable to an object. *)
-Definition eval_object_properties runs c st (l : list (string * property)) (cont : store -> object_properties -> result) : result :=
-  eval_object_properties_aux runs c st l Heap.empty cont
 .
 
 (* { [ attrs ] props }
@@ -165,14 +159,15 @@ Definition eval_object_decl runs c st (attrs : objattrs) (l : list (string * pro
           if_eval_return runs c st code_expr (fun st code_v =>
             if_eval_return runs c st primval_expr (fun st primval_v =>
               assert_get_string class_v (fun class => assert_get_bool extensible_v (fun extensible =>
-                eval_object_properties runs c st l (fun st props =>
-                  let (st, loc) := add_object st {|
+                let obj := {|
                     object_proto := prototype_v;
                     object_class := class;
                     object_extensible := extensible;
                     object_prim_value := primval_v;
-                    object_properties_ := props;
-                    object_code := code_v |}
+                    object_properties_ := Heap.empty;
+                    object_code := code_v |} in
+                eval_object_properties runs c st l obj (fun st obj =>
+                  let (st, loc) := add_object st obj
                   in result_value st loc
           ))))))))
 .
