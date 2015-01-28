@@ -7,28 +7,16 @@ Require Import Store.
 
 (* Utilities for the Interpreter. *)
 
-Inductive res := 
-| res_value : value -> res
-| res_exception : value -> res
-| res_break : string -> value -> res
-.
-
-Inductive out :=
-| out_div : out
-| out_ter : store -> res -> out
-.
-
-(* Used for passing data through continuations/return values.
-* It is mostly used for returning a Javascript value, either as
-* Return or Exception, but sometimes we want to return another kind
-* of result, which is the reason why this type is parametered by
-* value_type. *)
+(* Type of interpreter results. 
+ * Interpreter functions can either succeed or fail in several ways.
+ * The result type is usually out, the type of outcomes. *)
+ 
 Inductive resultof (T : Type) : Type :=
 | result_some : T -> resultof T
-| result_fail : string -> resultof T
-| result_impossible : string -> resultof T
-| result_bottom : resultof T
-| result_dump : ctx -> store -> resultof T
+| result_fail : string -> resultof T        (* program error *)
+| result_impossible : string -> resultof T  (* inconsistency *)
+| result_bottom : resultof T                (* out of fuel *)
+| result_dump : ctx -> store -> resultof T  (* dump state *)
 .
 Implicit Arguments result_some [[T]].
 Implicit Arguments result_fail [[T]].
@@ -39,7 +27,7 @@ Implicit Arguments result_dump [[T]].
 Definition result := resultof out.
 
 Record runs_type : Type := runs_type_intro {
-    runs_type_eval : ctx -> store -> Syntax.expr -> result
+    runs_type_eval : ctx -> store -> expr -> result
 }.
 
 Definition result_res st (r : res) : result := result_some (out_ter st r).
@@ -49,7 +37,7 @@ Definition result_break st (l : string) (v : value) : result := result_res st (r
 
 (* Unpacks a store to get an object, calls the predicate with this
 * object, and updates the object to the returned value. *)
-Definition change_object_cont (st : store) (ptr : Values.object_ptr) (cont : Values.object -> (store -> object -> value -> result) -> result) : result :=
+Definition change_object_cont (st : store) (ptr : object_ptr) (cont : object -> (store -> object -> value -> result) -> result) : result :=
   match (Store.get_object st ptr) with
   | Some obj =>
       cont obj (fun st new_obj ret =>
@@ -59,7 +47,7 @@ Definition change_object_cont (st : store) (ptr : Values.object_ptr) (cont : Val
   end
 .
 
-Definition change_object (st : store) (ptr : Values.object_ptr) (pred : Values.object -> (store * object * value)) : result :=
+Definition change_object (st : store) (ptr : object_ptr) (pred : object -> (store * object * value)) : result :=
   change_object_cont st ptr (fun obj cont => match pred obj with (st, new_obj, ret) => cont st new_obj ret end)
 .
 

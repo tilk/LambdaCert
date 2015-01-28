@@ -1,11 +1,13 @@
 
 open Batteries
 
+open Syntax
+
 let usage_msg = "Usage: "
 
 let store = ref None
 
-let get_store () = if Option.is_none !store then store := Some (Store.create_ctx, Store.create_store); Option.get !store
+let get_store () = if Option.is_none !store then store := Some (create_ctx, create_store); Option.get !store
 
 let get_channel filename =
     if filename = "stdin" then stdin else open_in filename
@@ -31,7 +33,7 @@ let save_store filename =
     File.with_file_out filename (fun ch -> Marshal.to_channel ch (get_store ()) [Marshal.Closures])
 
 let mk_env_vars () =
-    let props = List.map (function (s, _) -> (s, Syntax.Coq_property_data (Syntax.Coq_data_intro (Syntax.Coq_expr_id s, Syntax.Coq_expr_true, Syntax.Coq_expr_false, Syntax.Coq_expr_false)))) (HeapUtils.Heap.to_list (Values.loc_heap (fst (get_store ())))) in
+    let props = List.map (function (s, _) -> (s, Syntax.Coq_property_data (Syntax.Coq_data_intro (Syntax.Coq_expr_id s, Syntax.Coq_expr_true, Syntax.Coq_expr_false, Syntax.Coq_expr_false)))) (HeapUtils.Heap.to_list (loc_heap (fst (get_store ())))) in
     match Run.eval_ast (get_store ()) (Syntax.Coq_expr_seq (Syntax.Coq_expr_set_bang (String.to_list "%makeGlobalEnv", Syntax.Coq_expr_lambda ([], Syntax.Coq_expr_object (Translate.translate_attrs Ljs_syntax.d_attrs, props))), Syntax.Coq_expr_dump)) with
         | Context.Coq_result_dump (c, st) -> 
             store := Some (c, st)

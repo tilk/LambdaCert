@@ -1,5 +1,6 @@
 Require Import String.
 Require Import Values.
+Require Import Syntax.
 Require Import Store.
 Require Import Context.
 
@@ -86,7 +87,7 @@ Definition assert_get_object_from_ptr {A : Type} store (ptr : object_ptr) (cont 
 .
 
 (* Calls the continuation if the value is an object pointer, and passes the object to the continuation *)
-Definition assert_get_object {A : Type} store (loc : Values.value) (cont : object -> resultof A) : resultof A :=
+Definition assert_get_object {A : Type} store (loc : value) (cont : object -> resultof A) : resultof A :=
   assert_get_object_ptr loc (fun ptr =>
     assert_get_object_from_ptr store ptr cont
   )

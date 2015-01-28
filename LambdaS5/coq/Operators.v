@@ -1,14 +1,15 @@
 Require Import LibInt.
 Require Import JsNumber.
 Require Import String.
+Require Import Syntax.
 Require Import Store.
 Require Import Monads.
 Require Import Values.
 Require Import Context.
 Open Scope string_scope.
 
-Implicit Type runs : Context.runs_type.
-Implicit Type store : Store.store.
+Implicit Type runs : runs_type.
+Implicit Type store : store.
 
 Implicit Type st : store.
 Implicit Type v : value.

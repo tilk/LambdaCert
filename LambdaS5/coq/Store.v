@@ -1,40 +1,10 @@
-Require Import Values.
+Require Import Syntax.
 Require Import String.
 Require Import LibStream.
 
 Module Heap := HeapUtils.Heap.
 
 (* LambdaJS environment storage. *)
-
-(* (The initial definitions of this file come from JSCert.) *)
-
-Definition value_heap_type := Heap.heap value_loc value.
-Definition object_heap_type := Heap.heap object_ptr object.
-
-Record store := store_intro {
-  object_heap : object_heap_type; (* simulates mutability of objects *)
-  value_heap : value_heap_type; (* maps locations to values *)
-  fresh_locations : stream nat 
-}.
-
-CoFixpoint all_locations (k:nat) : stream nat :=
-  LibStream.stream_intro k (all_locations (S k)).
-Definition dummy_fresh_locations := all_locations 1%nat.
-
-Definition object_heap_initial : Heap.heap object_ptr object :=
-  Heap.empty.
-Definition value_heap_initial : Heap.heap value_loc value :=
-  Heap.empty.
-Definition loc_heap_initial : Heap.heap id value_loc :=
-  Heap.empty.
-
-Definition create_store :=
-  {| object_heap := object_heap_initial;
-     value_heap := value_heap_initial;
-     fresh_locations := dummy_fresh_locations |}.
-
-Definition create_ctx :=
-  {| loc_heap := loc_heap_initial |}.
 
 Definition add_value (st : store) (val : value) : (store * value_loc) :=
   match st with
@@ -98,13 +68,13 @@ Definition update_object (st : store) (ptr : object_ptr) (new_obj : object) : st
   end
 .
 
-Definition add_option_value st (oval : option value) : (store * option Values.value_loc) :=
+Definition add_option_value st (oval : option value) : (store * option value_loc) :=
   match oval with
   | Some val => let (st, loc) := add_value st val in (st, Some loc)
   | None => (st, None)
   end
 .
-Definition add_bool st (b : bool) : (store * Values.value_loc) :=
+Definition add_bool st (b : bool) : (store * value_loc) :=
   add_value st (if b then value_true else value_false)
 .
 Definition get_object (st : store) (ptr : object_ptr) : option object :=
@@ -119,7 +89,7 @@ Definition get_loc  (c : ctx) (name : id) : option value_loc :=
 
 (* Returns the value associated to a variable name (aka. id) in the current
 * context. *)
-Definition get_value_of_name c store (name : Values.id) : option Values.value :=
+Definition get_value_of_name c store (name : id) : option value :=
   match get_loc c name with
   | Some loc => get_value store loc
   | None => None
