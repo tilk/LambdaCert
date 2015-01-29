@@ -1,11 +1,11 @@
 Require Import String.
-Require Import Values.
-Require Import Syntax.
-Require Import Store.
+Require Import LjsValues.
+Require Import LjsSyntax.
+Require Import LjsStore.
 
 Implicit Type st : store.
 Implicit Type c : ctx.
-Implicit Type e : Syntax.expr.
+Implicit Type e : expr.
 Implicit Type v : value.
 Implicit Type loc : value_loc.
 

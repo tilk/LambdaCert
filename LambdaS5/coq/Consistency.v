@@ -1,13 +1,13 @@
 Require Import String.
-Require Import Store.
-Require Import Values.
-Require Import Context.
+Require Import LjsStore.
+Require Import LjsValues.
+Require Import LjsCommon.
 Require Import HeapUtils.
-Require Import Interpreter.
+Require Import LjsInterpreter.
 Require Import LibNat.
 Require Import LibLogic.
 Require Import LibTactics.
-Module Heap := Values.Heap.
+Module Heap := LjsValues.Heap.
 
 
 (* TODO fix after the interpreter definition stabilizes! 
@@ -15,9 +15,9 @@ Module Heap := Values.Heap.
 (******** Definitions ********)
 
 Definition ok_loc st loc :=
-  Heap.indom (Store.value_heap st) loc
+  Heap.indom (LjsStore.value_heap st) loc
 .
-Definition ignore_loc {X : Type} (st : Store.store) (something : X) :=
+Definition ignore_loc {X : Type} (st : LjsStore.store) (something : X) :=
   Logic.True
 .
 Definition ok_loc_option st loc_option :=
@@ -27,25 +27,25 @@ Definition ok_loc_option st loc_option :=
   end
 .
 
-Definition all_locs_in_loc_heap_exist (st : Store.store) : Prop :=
-  forall (i : Values.id) l,
-  Heap.binds (Store.loc_heap st) i l ->
+Definition all_locs_in_loc_heap_exist (st : LjsStore.store) : Prop :=
+  forall (i : LjsValues.id) l,
+  Heap.binds (LjsStore.loc_heap st) i l ->
   ok_loc st l
 .
 
-Inductive attrs_locs_exist (st : Store.store) : Values.attributes -> Prop :=
+Inductive attrs_locs_exist (st : LjsStore.store) : LjsValues.attributes -> Prop :=
 | attrs_locs_exist_data : forall data,
-    ok_loc st (Values.attributes_data_value data) ->
-    attrs_locs_exist st (Values.attributes_data_of data)
+    ok_loc st (LjsValues.attributes_data_value data) ->
+    attrs_locs_exist st (LjsValues.attributes_data_of data)
 | attrs_locs_exist_accessor : forall accessors,
-    ok_loc st (Values.attributes_accessor_get accessors) ->
-    ok_loc st (Values.attributes_accessor_set accessors) ->
-    attrs_locs_exist st (Values.attributes_accessor_of accessors)
+    ok_loc st (LjsValues.attributes_accessor_get accessors) ->
+    ok_loc st (LjsValues.attributes_accessor_set accessors) ->
+    attrs_locs_exist st (LjsValues.attributes_accessor_of accessors)
 .
 Lemma attrs_locs_exist_data_rev :
   forall st data,
-  attrs_locs_exist st (Values.attributes_data_of data) ->
-  ok_loc st (Values.attributes_data_value data)
+  attrs_locs_exist st (LjsValues.attributes_data_of data) ->
+  ok_loc st (LjsValues.attributes_data_value data)
 .
 Proof.
   intros st data H.
@@ -54,9 +54,9 @@ Proof.
 Qed.
 Lemma attrs_locs_exist_accessor_rev :
   forall st accessors,
-  attrs_locs_exist st (Values.attributes_accessor_of accessors) ->
-  ok_loc st (Values.attributes_accessor_get accessors) /\
-  ok_loc st (Values.attributes_accessor_set accessors)
+  attrs_locs_exist st (LjsValues.attributes_accessor_of accessors) ->
+  ok_loc st (LjsValues.attributes_accessor_get accessors) /\
+  ok_loc st (LjsValues.attributes_accessor_set accessors)
 .
 Proof.
   intros st accessors H.
@@ -71,7 +71,7 @@ Definition ok_opt_attributes st attr_option : Prop :=
   end
 .
 
-Definition props_locs_exist (st : Store.store) (props : Values.object_properties) :=
+Definition props_locs_exist (st : LjsStore.store) (props : LjsValues.object_properties) :=
   forall k v,
   Heap.binds props k v ->
   attrs_locs_exist st v
@@ -143,30 +143,30 @@ Proof.
     apply binds_k1_props1.
 Qed.
 
-Definition object_locs_exist (st : Store.store) (obj : Values.object) :=
+Definition object_locs_exist (st : LjsStore.store) (obj : LjsValues.object) :=
   forall proto_loc class extensible primval_opt_loc props code_opt_loc,
   obj = object_intro proto_loc class extensible primval_opt_loc props code_opt_loc ->
   ok_loc st proto_loc /\ ok_loc_option st primval_opt_loc /\ ok_loc_option st code_opt_loc /\
   props_locs_exist st props
 .
-Definition all_locs_in_obj_heap_exist (st : Store.store) : Prop :=
-  forall (ptr : Values.object_ptr) obj,
-  Heap.binds (Store.object_heap st) ptr obj ->
+Definition all_locs_in_obj_heap_exist (st : LjsStore.store) : Prop :=
+  forall (ptr : LjsValues.object_ptr) obj,
+  Heap.binds (LjsStore.object_heap st) ptr obj ->
   object_locs_exist st obj
 .
 
-Definition all_locs_exist (st : Store.store) : Prop :=
+Definition all_locs_exist (st : LjsStore.store) : Prop :=
   (all_locs_in_loc_heap_exist st) /\ (all_locs_in_obj_heap_exist st)
 .
 
-Inductive result_value_loc_exists {value_type : Type} (ok : Store.store -> value_type -> Prop) (st : store) : (@Context.result value_type) -> Prop :=
+Inductive result_value_loc_exists {value_type : Type} (ok : LjsStore.store -> value_type -> Prop) (st : store) : (@LjsCommon.result value_type) -> Prop :=
   | result_value_loc_exists_return : forall (v : value_type),
       ok st v ->
       result_value_loc_exists ok st (Return value_type v)
-  | result_value_loc_exists_exception : forall (l : Values.value_loc),
+  | result_value_loc_exists_exception : forall (l : LjsValues.value_loc),
       ok_loc st l ->
       result_value_loc_exists ok st (Exception value_type l)
-  | result_value_loc_exists_break : forall (b : string) (l : Values.value_loc),
+  | result_value_loc_exists_break : forall (b : string) (l : LjsValues.value_loc),
       ok_loc st l ->
       result_value_loc_exists ok st (Break value_type b l)
   | result_value_loc_exists_fail : forall (s : string),
@@ -222,7 +222,7 @@ Qed.
 
 
 (* st2 is a superset of st. *)
-Definition superstore (st st2 : Store.store) :=
+Definition superstore (st st2 : LjsStore.store) :=
   forall loc, ok_loc st loc -> ok_loc st2 loc
 .
 
@@ -392,7 +392,7 @@ Definition res_pred :=
   fun st res => all_locs_exist st /\ result_value_loc_exists ok_loc st res
 .
 
-(******** Consistency of Store operations ********)
+(******** Consistency of LjsStore operations ********)
 
 Lemma get_loc_returns_valid_loc :
   forall st name,
@@ -434,19 +434,19 @@ Proof.
 Qed.
 
 
-Definition value_write_elimination {X : Type} (pred : Store.store -> X -> Prop) :=
+Definition value_write_elimination {X : Type} (pred : LjsStore.store -> X -> Prop) :=
   forall obj_heap val_heap loc_heap fresh_locs value_loc v_loc v,
   pred
   {|
   object_heap := obj_heap;
   value_heap := val_heap;
-  Store.loc_heap := loc_heap;
+  LjsStore.loc_heap := loc_heap;
   fresh_locations := fresh_locs |} value_loc ->
   pred
   {|
   object_heap := obj_heap;
-  value_heap := Store.Heap.write val_heap v_loc v;
-  Store.loc_heap := loc_heap;
+  value_heap := LjsStore.Heap.write val_heap v_loc v;
+  LjsStore.loc_heap := loc_heap;
   fresh_locations := fresh_locs |} value_loc
 .
 
@@ -506,19 +506,19 @@ Proof.
       apply binds_k_v.
 Qed.
 
-Definition fresh_loc_elimination {X : Type} (pred : Store.store -> X -> Prop) :=
+Definition fresh_loc_elimination {X : Type} (pred : LjsStore.store -> X -> Prop) :=
   forall obj_heap val_heap loc_heap fresh_locs value_loc n,
   pred
   {|
   object_heap := obj_heap;
   value_heap := val_heap;
-  Store.loc_heap := loc_heap;
+  LjsStore.loc_heap := loc_heap;
   fresh_locations := LibStream.stream_intro n fresh_locs |} value_loc ->
   pred
   {|
   object_heap := obj_heap;
   value_heap := val_heap;
-  Store.loc_heap := loc_heap;
+  LjsStore.loc_heap := loc_heap;
   fresh_locations := fresh_locs |} value_loc
 .
 Lemma fresh_loc_elimination_ok_loc :
@@ -566,9 +566,9 @@ Qed.
 
 
 Lemma add_value_preserves_store_consistency :
-  forall (st st2 : Store.store) (v : Values.value) loc,
+  forall (st st2 : LjsStore.store) (v : LjsValues.value) loc,
   all_locs_exist st ->
-  Store.add_value st v = (st2, loc) ->
+  LjsStore.add_value st v = (st2, loc) ->
   all_locs_exist st2
 .
 Proof.
@@ -663,9 +663,9 @@ Proof.
 Qed.
 
 Lemma add_value_returns_existing_value_loc :
-  forall (st st2 : Store.store) (v : Values.value) loc,
+  forall (st st2 : LjsStore.store) (v : LjsValues.value) loc,
   all_locs_exist st ->
-  Store.add_value st v = (st2, loc) ->
+  LjsStore.add_value st v = (st2, loc) ->
   ok_loc st2 loc
 .
 Proof.
@@ -705,15 +705,15 @@ Proof.
 Qed.
 
 Lemma add_value_return_preserves_all_locs_exist :
-  forall (st st2: Store.store) res (v : Values.value),
+  forall (st st2: LjsStore.store) res (v : LjsValues.value),
   all_locs_exist st ->
-  Context.add_value_return st v = (st2, res) ->
+  LjsCommon.add_value_return st v = (st2, res) ->
   superstore st st2 /\ all_locs_exist st2 /\ result_value_loc_exists ok_loc st2 res
 .
 Proof.
   intros st st2 res v IH H.
   unfold add_value_return.
-    (* Store is consistent *)
+    (* LjsStore is consistent *)
     unfold add_value_return in H.
     destruct res.
       (* Return *)
@@ -772,7 +772,7 @@ Lemma obj_write_makes_superstore :
   loc_heap := loc_heap;
   fresh_locations := fresh_locs |}
   {|
-  object_heap := Store.Heap.write obj_heap ptr obj;
+  object_heap := LjsStore.Heap.write obj_heap ptr obj;
   value_heap := val_heap;
   loc_heap := loc_heap;
   fresh_locations := fresh_locs |}
@@ -799,7 +799,7 @@ Lemma obj_write_preserves_all_locs_exist :
     fresh_locations := fresh_locs |} ->
   all_locs_exist
     {|
-    object_heap := Store.Heap.write obj_heap ptr obj;
+    object_heap := LjsStore.Heap.write obj_heap ptr obj;
     value_heap := val_heap;
     loc_heap := loc_heap;
     fresh_locations := fresh_locs |}
@@ -817,7 +817,7 @@ Proof.
              loc_heap := loc_heap;
              fresh_locations := fresh_locs |}
              {|
-             object_heap := Store.Heap.write obj_heap ptr0 obj0;
+             object_heap := LjsStore.Heap.write obj_heap ptr0 obj0;
              value_heap := val_heap;
              loc_heap := loc_heap;
              fresh_locations := fresh_locs |}).
@@ -880,7 +880,7 @@ Lemma prop_write_preserves_object_locs_exist :
   object_class := class;
   object_extensible := extensible;
   object_prim_value := prim_value;
-  object_properties_ := Store.Heap.write props fieldname prop;
+  object_properties_ := LjsStore.Heap.write props fieldname prop;
   object_code := code |}
 .
 Proof.
@@ -952,10 +952,10 @@ Lemma update_object_preserves_all_locs_exist :
 .
 Proof.
   intros st ptr pred st2 res2 st_cstt pred_cstt H.
-  unfold Context.update_object in H.
+  unfold LjsCommon.update_object in H.
   destruct (get_object st ptr) as [obj|_] eqn:obj_decl.
     destruct (pred obj) as ((st',obj2),res) eqn:st'_decl.
-    unfold Store.update_object in H.
+    unfold LjsStore.update_object in H.
     destruct st' eqn:st'_def.
     inversion H as [(st2_def,res_eq)].
     split.
@@ -1144,7 +1144,7 @@ Lemma add_object_preserves_store_consistant :
   forall st st2 obj loc,
   all_locs_exist st ->
   object_locs_exist st obj ->
-  Store.add_object st obj = (st2, loc)->
+  LjsStore.add_object st obj = (st2, loc)->
   all_locs_exist st2
 .
 Proof.
@@ -1173,8 +1173,8 @@ Proof.
     unfold all_locs_in_loc_heap_exist.
     intros name loc.
     assert (loc_heap_unchanged:
-    Heap.binds (Store.loc_heap st2) name loc =
-    Heap.binds (Store.loc_heap st) name loc).
+    Heap.binds (LjsStore.loc_heap st2) name loc =
+    Heap.binds (LjsStore.loc_heap st) name loc).
       inversion st2_decl as [(st2_def, loc0_def)].
       rewrite st_def.
       simpl.
@@ -1212,7 +1212,7 @@ Proof.
       symmetry.
       apply obj_eq_obj.
 
-    assert (obj_in_st: Heap.binds (Store.object_heap st) ptr {|
+    assert (obj_in_st: Heap.binds (LjsStore.object_heap st) ptr {|
             object_proto := proto_loc;
             object_class := class;
             object_extensible := extensible;
@@ -1272,7 +1272,7 @@ Lemma add_object_preserves_all_locs_exist :
   forall st st2 obj loc,
   all_locs_exist st ->
   object_locs_exist st obj ->
-  Store.add_object st obj = (st2, loc) ->
+  LjsStore.add_object st obj = (st2, loc) ->
   all_locs_exist st2 /\ ok_loc st2 loc
 .
 Proof.
@@ -1302,7 +1302,7 @@ Qed.
 (******** Consistency of monads ********)
 
 Lemma monad_ec_preserves_pred :
-  forall X runs st st2 e (cont : Store.store -> Context.result Values.value_loc -> (Store.store * @Context.result X)) res2 P,
+  forall X runs st st2 e (cont : LjsStore.store -> LjsCommon.result LjsValues.value_loc -> (LjsStore.store * @LjsCommon.result X)) res2 P,
   runs_type_eval_preserves_all_locs_exist runs ->
   all_locs_exist st ->
   (forall st0 res0 st1 res1,
@@ -1310,12 +1310,12 @@ Lemma monad_ec_preserves_pred :
     all_locs_exist st0 /\ result_value_loc_exists ok_loc st0 res0 ->
     cont st0 res0 = (st1, res1) ->
     superstore st0 st1 /\ P st1 res1) ->
-  Monads.eval_cont runs st e cont = (st2, res2) ->
+  LjsMonads.eval_cont runs st e cont = (st2, res2) ->
   superstore st st2 /\ P st2 res2
 .
 Proof.
   intros X runs st st2 e cont res2 P runs_cstt st_cstt cont_consistant st2_decl.
-  unfold Monads.eval_cont in st2_decl.
+  unfold LjsMonads.eval_cont in st2_decl.
   destruct (runs_type_eval runs st e) eqn:s_decl.
   split.
     apply superstore_trans with s.
@@ -1352,13 +1352,13 @@ Lemma monad_ect_preserves_all_locs_exist :
   forall runs st st2 e res2,
   runs_type_eval_preserves_all_locs_exist runs ->
   all_locs_exist st ->
-  Monads.eval_cont_terminate runs st e = (st2, res2) ->
+  LjsMonads.eval_cont_terminate runs st e = (st2, res2) ->
   all_locs_exist st2 /\ result_value_loc_exists ok_loc st2 res2
 .
 Proof.
   intros runs st st2 e res2 runs_cstt IH st2_decl.
-  unfold Monads.eval_cont_terminate in st2_decl.
-  eapply (monad_ec_preserves_pred Values.value_loc runs st st2 e (fun (store : store) (res : Context.result Values.value_loc) => (store, res)) res2).
+  unfold LjsMonads.eval_cont_terminate in st2_decl.
+  eapply (monad_ec_preserves_pred LjsValues.value_loc runs st st2 e (fun (store : store) (res : LjsCommon.result LjsValues.value_loc) => (store, res)) res2).
     apply runs_cstt.
 
     apply IH.
@@ -1376,23 +1376,23 @@ Proof.
 Qed.
 
 Lemma monad_ir_preserves_props_loc :
-  forall st st2 res (cont : Values.value_loc -> (Store.store * (@Context.result Values.value_loc))) res2 (P : Store.store -> Context.result Values.value_loc -> Prop),
+  forall st st2 res (cont : LjsValues.value_loc -> (LjsStore.store * (@LjsCommon.result LjsValues.value_loc))) res2 (P : LjsStore.store -> LjsCommon.result LjsValues.value_loc -> Prop),
   all_locs_exist st ->
   result_value_loc_exists ok_loc st res ->
-  (forall v, res = Exception Values.value_loc v -> P st res) ->
-  (forall b v, res = Break Values.value_loc b v -> P st res) ->
-  (forall f, res = Fail Values.value_loc f -> P st res) ->
-  (forall f, res = Impossible Values.value_loc f -> P st res) ->
+  (forall v, res = Exception LjsValues.value_loc v -> P st res) ->
+  (forall b v, res = Break LjsValues.value_loc b v -> P st res) ->
+  (forall f, res = Fail LjsValues.value_loc f -> P st res) ->
+  (forall f, res = Impossible LjsValues.value_loc f -> P st res) ->
   (forall loc st1 res,
     ok_loc st loc ->
     cont loc = (st1, res) ->
     superstore st st1 /\ P st1 res) ->
-  Monads.if_return st res cont = (st2, res2) ->
+  LjsMonads.if_return st res cont = (st2, res2) ->
   superstore st st2 /\ P st2 res2
 .
 Proof.
   intros st st2 res cont res2 P IH H_res H_exc H_brk H_fail H_imp H st2_decl.
-  unfold Monads.if_return in st2_decl.
+  unfold LjsMonads.if_return in st2_decl.
   destruct res eqn:res_def; inversion st2_decl as [(st2_def, res2_def)].
     apply H with v.
       inversion H_res.
@@ -1431,23 +1431,23 @@ Qed.
 
 
 Lemma monad_ir_preserves_pred :
-  forall Y st st2 (res : Context.result Values.value_loc) (cont : Values.value_loc -> (Store.store * (@Context.result Y))) res2 (P : Store.store -> Context.result Y -> Prop),
+  forall Y st st2 (res : LjsCommon.result LjsValues.value_loc) (cont : LjsValues.value_loc -> (LjsStore.store * (@LjsCommon.result Y))) res2 (P : LjsStore.store -> LjsCommon.result Y -> Prop),
   all_locs_exist st ->
   result_value_loc_exists ok_loc st res ->
-  (forall v, res = Exception Values.value_loc v -> P st (Exception Y v)) ->
-  (forall b v, res = Break Values.value_loc b v -> P st (Break Y b v)) ->
-  (forall f, res = Fail Values.value_loc f -> P st (Fail Y f)) ->
-  (forall f, res = Impossible Values.value_loc f -> P st (Impossible Y f)) ->
+  (forall v, res = Exception LjsValues.value_loc v -> P st (Exception Y v)) ->
+  (forall b v, res = Break LjsValues.value_loc b v -> P st (Break Y b v)) ->
+  (forall f, res = Fail LjsValues.value_loc f -> P st (Fail Y f)) ->
+  (forall f, res = Impossible LjsValues.value_loc f -> P st (Impossible Y f)) ->
   (forall loc st1 res,
     ok_loc st loc ->
     cont loc = (st1, res) ->
     superstore st st1 /\ P st1 res) ->
-  Monads.if_return st res cont = (st2, res2) ->
+  LjsMonads.if_return st res cont = (st2, res2) ->
   superstore st st2 /\ P st2 res2
 .
 Proof.
   intros Y st st2 res cont res2 P st_cstt res_cstt H_exc H_brk H_fail H_imp H st2_decl.
-  unfold Monads.if_return in st2_decl.
+  unfold LjsMonads.if_return in st2_decl.
   destruct res eqn:res_def; inversion st2_decl as [(st2_def, res2_def)].
     apply H with v.
       inversion res_cstt.
@@ -1485,31 +1485,31 @@ Proof.
 Qed.
 
 Lemma monad_ir_preserves_props :
-  forall Y st st2 (res : Context.result Values.object_properties) (cont : Values.object_properties -> (Store.store * (Context.result Y))) res2 (P : Store.store -> Context.result Y -> Prop),
+  forall Y st st2 (res : LjsCommon.result LjsValues.object_properties) (cont : LjsValues.object_properties -> (LjsStore.store * (LjsCommon.result Y))) res2 (P : LjsStore.store -> LjsCommon.result Y -> Prop),
   all_locs_exist st ->
   result_value_loc_exists props_locs_exist st res ->
   (forall props st1 res,
     props_locs_exist st props ->
     cont props = (st1, res) ->
     superstore st st1 /\ P st1 res) ->
-  Monads.if_return st res cont = (st2, res2) ->
+  LjsMonads.if_return st res cont = (st2, res2) ->
   superstore st st2 /\
-  (forall v, res = Return Values.object_properties v -> P st2 res2) /\
-  (forall v, res = Exception Values.object_properties v -> res2 = Exception Y v) /\
-  (forall b v, res = Break Values.object_properties b v -> res2 = Break Y b v) /\
-  (forall f, res = Fail Values.object_properties f -> res2 = Fail Y f) /\
-  (forall f, res = Impossible Values.object_properties f -> res2 = Impossible Y f)
+  (forall v, res = Return LjsValues.object_properties v -> P st2 res2) /\
+  (forall v, res = Exception LjsValues.object_properties v -> res2 = Exception Y v) /\
+  (forall b v, res = Break LjsValues.object_properties b v -> res2 = Break Y b v) /\
+  (forall f, res = Fail LjsValues.object_properties f -> res2 = Fail Y f) /\
+  (forall f, res = Impossible LjsValues.object_properties f -> res2 = Impossible Y f)
 .
 Proof.
   intros Y st st2 res cont res2 P IH res_cstt cont_cstt H.
-  sets_eq pred : (fun Y res st2 res2 (P : Store.store -> Context.result Y -> Prop) =>
+  sets_eq pred : (fun Y res st2 res2 (P : LjsStore.store -> LjsCommon.result Y -> Prop) =>
     (forall v : object_properties, res = Return object_properties v -> P st2 res2) /\
     (forall v : value_loc, res = Exception object_properties v -> res2 = Exception Y v) /\
     (forall (b : string) (v : value_loc), res = Break object_properties b v -> res2 = Break Y b v) /\
     (forall f : string, res = Fail object_properties f -> res2 = Fail Y f) /\
     (forall f : string, res = Impossible object_properties f -> res2 = Impossible Y f)
   ).
-  unfold Monads.if_return in H.
+  unfold LjsMonads.if_return in H.
   destruct res as [props|exc|brk|f|f] eqn:res_def; inversion H as [(st2_def, res2_def)].
     (* Return *)
     inversion res_cstt.
@@ -1626,7 +1626,7 @@ Proof.
 Qed.
 
 Lemma monad_ier_preserves_pred :
-  forall X runs st st2 e (cont : Store.store -> Values.value_loc -> (Store.store * @Context.result X)) loc2 (P : forall (Z : Type), Store.store -> Context.result Z -> Prop),
+  forall X runs st st2 e (cont : LjsStore.store -> LjsValues.value_loc -> (LjsStore.store * @LjsCommon.result X)) loc2 (P : forall (Z : Type), LjsStore.store -> LjsCommon.result Z -> Prop),
   runs_type_eval_preserves_all_locs_exist runs ->
   all_locs_exist st ->
   (forall st' res', all_locs_exist st' /\ result_value_loc_exists ok_loc st' res' -> P value_loc st' res') ->
@@ -1639,16 +1639,16 @@ Lemma monad_ier_preserves_pred :
     all_locs_exist st0 /\ ok_loc st0 loc0 ->
     cont st0 loc0 = (st1, res) ->
     superstore st0 st1 /\ P X st1 res) ->
-  Monads.if_eval_return runs st e cont = (st2, loc2) ->
+  LjsMonads.if_eval_return runs st e cont = (st2, loc2) ->
   superstore st st2 /\ P X st2 loc2
 .
 Proof.
   intros X runs st st2 e cont res P.
   intros runs_cstt IH H_P H_exc H_brk H_fail H_imp H H_res.
-  unfold Monads.if_eval_return in H_res.
+  unfold LjsMonads.if_eval_return in H_res.
   apply monad_ec_preserves_pred with runs e
           (fun (store : store) (res0 : result value_loc) =>
-           Monads.if_return store res0 (cont store)).
+           LjsMonads.if_return store res0 (cont store)).
     apply runs_cstt.
 
     apply IH.
@@ -1661,25 +1661,25 @@ Proof.
       apply IH1.
 
       intros v res0_def.
-      apply H_exc with Values.value_loc.
+      apply H_exc with LjsValues.value_loc.
       rewrite <-res0_def.
       apply H_P.
       apply IH1.
 
       intros b v res0_def.
-      apply H_brk with Values.value_loc.
+      apply H_brk with LjsValues.value_loc.
       rewrite <-res0_def.
       apply H_P.
       apply IH1.
 
       intros f res0_def.
-      apply H_fail with Values.value_loc.
+      apply H_fail with LjsValues.value_loc.
       rewrite <-res0_def.
       apply H_P.
       apply IH1.
 
       intros f res0_def.
-      apply H_imp with Values.value_loc.
+      apply H_imp with LjsValues.value_loc.
       rewrite <-res0_def.
       apply H_P.
       apply IH1.
@@ -1700,7 +1700,7 @@ Proof.
 Qed.
 
 Lemma monad_ier_for_locs_preserves_pred :
-  forall runs st st2 e (cont : Store.store -> Values.value_loc -> (Store.store * @Context.result Values.value_loc)) loc2 (P : Store.store -> Context.result Values.value_loc -> Prop),
+  forall runs st st2 e (cont : LjsStore.store -> LjsValues.value_loc -> (LjsStore.store * @LjsCommon.result LjsValues.value_loc)) loc2 (P : LjsStore.store -> LjsCommon.result LjsValues.value_loc -> Prop),
   runs_type_eval_preserves_all_locs_exist runs ->
   all_locs_exist st ->
   (forall st' res', all_locs_exist st' /\ result_value_loc_exists ok_loc st' res' -> P st' res') ->
@@ -1710,22 +1710,22 @@ Lemma monad_ier_for_locs_preserves_pred :
     all_locs_exist st0 /\ ok_loc st0 loc0 ->
     cont st0 loc0 = (st1, res) ->
     superstore st0 st1 /\ P st1 res) ->
-  Monads.if_eval_return runs st e cont = (st2, loc2) ->
+  LjsMonads.if_eval_return runs st e cont = (st2, loc2) ->
   superstore st st2 /\ P st2 loc2
 .
 Proof.
   intros runs st st2 e cont loc P runs_cstt st_cstt H_P H_P' H_cont H.
-  unfold Monads.if_eval_return in H.
+  unfold LjsMonads.if_eval_return in H.
   assert (H': superstore st st2 /\ all_locs_exist st2 /\ P st2 loc).
-    apply (monad_ec_preserves_pred Values.value_loc runs st st2 e
+    apply (monad_ec_preserves_pred LjsValues.value_loc runs st st2 e
             (fun (store : store) (res0 : result value_loc) =>
-             Monads.if_return store res0 (cont store))
+             LjsMonads.if_return store res0 (cont store))
             loc
             (fun st res => all_locs_exist st /\ P st res)); try assumption.
 
     intros st0 res0 st1 res1.
     intros superstore_st_st0 IH1 H1.
-    apply (monad_ir_preserves_pred Values.value_loc st0 st1 res0 (cont st0)
+    apply (monad_ir_preserves_pred LjsValues.value_loc st0 st1 res0 (cont st0)
            res1
            (fun st res => all_locs_exist st /\ P st res)); try assumption.
       apply IH1.
@@ -1786,7 +1786,7 @@ Proof.
 Qed.
 
 Lemma monad_ier_for_props_preserves_pred :
-  forall runs st st2 e (cont : Store.store -> Values.value_loc -> (Store.store * @Context.result Values.object_properties)) props2 (P : Store.store -> Context.result Values.object_properties -> Prop),
+  forall runs st st2 e (cont : LjsStore.store -> LjsValues.value_loc -> (LjsStore.store * @LjsCommon.result LjsValues.object_properties)) props2 (P : LjsStore.store -> LjsCommon.result LjsValues.object_properties -> Prop),
   runs_type_eval_preserves_all_locs_exist runs ->
   all_locs_exist st ->
   (forall st' res', all_locs_exist st' /\ result_value_loc_exists props_locs_exist st' res' -> P st' res') ->
@@ -1796,16 +1796,16 @@ Lemma monad_ier_for_props_preserves_pred :
     all_locs_exist st0 /\ ok_loc st0 loc0 ->
     cont st0 loc0 = (st1, res) ->
     superstore st0 st1 /\ P st1 res) ->
-  Monads.if_eval_return runs st e cont = (st2, props2) ->
+  LjsMonads.if_eval_return runs st e cont = (st2, props2) ->
   superstore st st2 /\ P st2 props2
 .
 Proof.
   intros runs st st2 e cont props2 P.
   intros runs_cstt IH H_P H_P' cont_cstt H.
-  unfold Monads.if_eval_return in H.
+  unfold LjsMonads.if_eval_return in H.
   apply monad_ec_preserves_pred with runs e
   (fun (store : store) (res : result value_loc) =>
-       Monads.if_return store res (cont store));
+       LjsMonads.if_return store res (cont store));
     try assumption.
 
   intros st0 res0 st1 res1.
@@ -1818,7 +1818,7 @@ Proof.
     split.
       try apply st0_cstt.
 
-      apply result_value_loc_exists_change_ok_exception with Values.value_loc ok_loc.
+      apply result_value_loc_exists_change_ok_exception with LjsValues.value_loc ok_loc.
       rewrite <-res0_def.
       apply res0_cstt.
 
@@ -1827,7 +1827,7 @@ Proof.
     split.
       try apply st0_cstt.
 
-      apply result_value_loc_exists_change_ok_break with Values.value_loc ok_loc b.
+      apply result_value_loc_exists_change_ok_break with LjsValues.value_loc ok_loc b.
       rewrite <-res0_def.
       apply res0_cstt.
 
@@ -1836,7 +1836,7 @@ Proof.
     split.
       try apply st0_cstt.
 
-      apply result_value_loc_exists_change_ok_fail with Values.value_loc ok_loc.
+      apply result_value_loc_exists_change_ok_fail with LjsValues.value_loc ok_loc.
       rewrite <-res0_def.
       apply res0_cstt.
 
@@ -1845,7 +1845,7 @@ Proof.
     split.
       try apply st0_cstt.
 
-      apply result_value_loc_exists_change_ok_impossible with Values.value_loc ok_loc.
+      apply result_value_loc_exists_change_ok_impossible with LjsValues.value_loc ok_loc.
       rewrite <-res0_def.
       apply res0_cstt.
 
@@ -1859,7 +1859,7 @@ Proof.
 Qed.
 
 Lemma monad_iseren_preserves_pred :
-  forall runs st st2 opt (cont : Store.store -> option Values.value_loc -> (Store.store * Context.result Values.value_loc)) res2 (P : Store.store -> Context.result Values.value_loc -> Prop),
+  forall runs st st2 opt (cont : LjsStore.store -> option LjsValues.value_loc -> (LjsStore.store * LjsCommon.result LjsValues.value_loc)) res2 (P : LjsStore.store -> LjsCommon.result LjsValues.value_loc -> Prop),
   runs_type_eval_preserves_all_locs_exist runs->
   all_locs_exist st ->
   (forall st' res', all_locs_exist st' /\ result_value_loc_exists ok_loc st' res' -> P st' res') ->
@@ -1870,12 +1870,12 @@ Lemma monad_iseren_preserves_pred :
     ok_loc_option st0 oloc0 ->
     cont st0 oloc0 = (st1, res) ->
     superstore st0 st1 /\ P st1 res) ->
-  Monads.if_some_eval_return_else_none runs st opt cont = (st2, res2) ->
+  LjsMonads.if_some_eval_return_else_none runs st opt cont = (st2, res2) ->
   superstore st st2 /\ P st2 res2
 .
 Proof.
   intros runs st st2 opt cont res2 P runs_cstt st_cstt H_P H_P' H_cont H.
-  unfold Monads.if_some_eval_return_else_none in H.
+  unfold LjsMonads.if_some_eval_return_else_none in H.
   destruct opt eqn:opt_def.
     apply (monad_ier_for_locs_preserves_pred runs st st2 e
            (fun (ctx : store) (res : value_loc) => cont ctx (Some res))
@@ -1897,7 +1897,7 @@ Qed.
 
 
 Lemma monad_iseed_for_locs_preserves_pred :
-  forall runs st st2 opt default (cont : Store.store -> Values.value_loc -> (Store.store * (@Context.result Values.value_loc))) res2 (P : Store.store -> Context.result Values.value_loc -> Prop),
+  forall runs st st2 opt default (cont : LjsStore.store -> LjsValues.value_loc -> (LjsStore.store * (@LjsCommon.result LjsValues.value_loc))) res2 (P : LjsStore.store -> LjsCommon.result LjsValues.value_loc -> Prop),
   runs_type_eval_preserves_all_locs_exist runs ->
   all_locs_exist st ->
   ok_loc st default ->
@@ -1909,13 +1909,13 @@ Lemma monad_iseed_for_locs_preserves_pred :
     ok_loc st0 loc0 ->
     cont st0 loc0 = (st1, res) ->
     superstore st0 st1 /\ P st1 res) ->
-  Monads.if_some_eval_else_default runs st opt default cont = (st2, res2) ->
+  LjsMonads.if_some_eval_else_default runs st opt default cont = (st2, res2) ->
   superstore st st2 /\ P st2 res2
 .
 Proof.
   intros runs st st2 oe default cont res2 P.
   intros runs_cstt st_cstt ok_loc_default H_P H_P' cont_cstt H.
-  unfold Monads.if_some_eval_else_default in H.
+  unfold LjsMonads.if_some_eval_else_default in H.
   destruct oe eqn:oe_def.
     apply monad_ier_for_locs_preserves_pred with runs e cont;
       try assumption.
@@ -1932,8 +1932,8 @@ Proof.
 Qed.
 
 Lemma monad_ag_preserves_pred :
-  forall X st loc (cont : Values.value -> (store * result X)),
-  forall st2 res2 (P : Store.store -> result X -> Prop),
+  forall X st loc (cont : LjsValues.value -> (store * result X)),
+  forall st2 res2 (P : LjsStore.store -> result X -> Prop),
   all_locs_exist st ->
   ok_loc st loc ->
   (forall f, P st (Impossible X f)) ->
@@ -1941,12 +1941,12 @@ Lemma monad_ag_preserves_pred :
     (* TODO: ok_ptr st ptr0 -> *)
     cont v = (st1, res1) ->
     superstore st st1 /\ P st1 res1) ->
-  @Monads.assert_get X st loc cont = (st2, res2) ->
+  @LjsMonads.assert_get X st loc cont = (st2, res2) ->
   superstore st st2 /\ P st2 res2
 .
 Proof.
   intros X st loc cont st2 res2 P st_cstt loc_cstt H_imp cont_cstt H.
-  unfold Monads.assert_get in H.
+  unfold LjsMonads.assert_get in H.
   destruct (get_value st loc) eqn:v_decl.
     destruct v eqn:v_def;
       apply cont_cstt with v;
@@ -1962,8 +1962,8 @@ Proof.
 Qed.
 
 Lemma monad_agop_preserves_pred :
-  forall X st loc (cont : Values.object_ptr -> (store * result X)),
-  forall st2 res2 (P : Store.store -> result X -> Prop),
+  forall X st loc (cont : LjsValues.object_ptr -> (store * result X)),
+  forall st2 res2 (P : LjsStore.store -> result X -> Prop),
   all_locs_exist st ->
   ok_loc st loc ->
   (forall f, P st (Fail X f)) ->
@@ -1972,12 +1972,12 @@ Lemma monad_agop_preserves_pred :
     (* TODO: ok_ptr st ptr0 -> *)
     cont ptr = (st1, res1) ->
     superstore st st1 /\ P st1 res1) ->
-  @Monads.assert_get_object_ptr X st loc cont = (st2, res2) ->
+  @LjsMonads.assert_get_object_ptr X st loc cont = (st2, res2) ->
   superstore st st2 /\ P st2 res2
 .
 Proof.
   intros X st loc cont st2 res2 P st_cstt loc_cstt H_fail H_imp cont_cstt H.
-  unfold Monads.assert_get_object_ptr in H.
+  unfold LjsMonads.assert_get_object_ptr in H.
   destruct (get_value st loc) eqn:v_decl.
     destruct v eqn:v_def; try solve [
       inversion H as [(st_eq,res_eq)];
@@ -1997,7 +1997,7 @@ Proof.
 Qed.
 
 Lemma monad_ags_preserves_pred :
-  forall X st loc cont st2 res2 (P : Store.store -> result X -> Prop),
+  forall X st loc cont st2 res2 (P : LjsStore.store -> result X -> Prop),
   all_locs_exist st ->
   ok_loc st loc ->
   (forall f, P st (Fail X f)) ->
@@ -2006,12 +2006,12 @@ Lemma monad_ags_preserves_pred :
     (* TODO: ok_ptr st ptr0 -> *)
     cont ptr = (st1, res1) ->
     superstore st st1 /\ P st1 res1) ->
-  @Monads.assert_get_string X st loc cont = (st2, res2) ->
+  @LjsMonads.assert_get_string X st loc cont = (st2, res2) ->
   superstore st st2 /\ P st2 res2
 .
 Proof.
   intros X st loc cont st2 res2 P st_cstt loc_cstt H_fail H_imp cont_cstt H.
-  unfold Monads.assert_get_string in H.
+  unfold LjsMonads.assert_get_string in H.
   destruct (get_value st loc) eqn:v_decl.
     destruct v eqn:v_def; try solve [
       inversion H as [(st_eq,res_eq)];
@@ -2036,7 +2036,7 @@ Lemma eval_id_preserves_all_locs_exist :
   forall runs st name st2 res,
   runs_type_eval_preserves_all_locs_exist runs ->
   all_locs_exist st ->
-  Interpreter.eval_id runs st name = (st2, res) ->
+  LjsInterpreter.eval_id runs st name = (st2, res) ->
   superstore st st2 /\ all_locs_exist st2 /\ result_value_loc_exists ok_loc st2 res
 .
 Proof.
@@ -2048,7 +2048,7 @@ Proof.
       apply superstore_refl.
 
       split.
-        (* Store is unchanged, so it is still consistent. *)
+        (* LjsStore is unchanged, so it is still consistent. *)
         rewrite <-st2_def.
         apply IH.
 
@@ -2068,7 +2068,7 @@ Proof.
       apply superstore_refl.
 
       split.
-        (* Store is unchanged. *)
+        (* LjsStore is unchanged. *)
         rewrite <-st2_def.
         apply IH.
 
@@ -2248,7 +2248,7 @@ Lemma eval_objectdecl_preserves_all_locs_exist :
   forall runs st st2 attrs props res,
   runs_type_eval_preserves_all_locs_exist runs ->
   all_locs_exist st ->
-  Interpreter.eval_object_decl runs st attrs props = (st2, res) ->
+  LjsInterpreter.eval_object_decl runs st attrs props = (st2, res) ->
   superstore st st2 /\ all_locs_exist st2 /\ result_value_loc_exists ok_loc st2 res
 .
 Proof.
@@ -2368,7 +2368,7 @@ Proof.
    props_locs_res = Fail object_properties f -> res4 = Fail value_loc f) /\
   (forall f : string,
    props_locs_res = Impossible object_properties f -> res4 = Impossible value_loc f)).
-    eapply (monad_ir_preserves_props Values.value_loc
+    eapply (monad_ir_preserves_props LjsValues.value_loc
            st5 st4' props_locs_res)
           with (res2:=res4) (P:=res_pred).
       apply st5_cstt.
@@ -2391,7 +2391,7 @@ Proof.
       reflexivity.
 
       unfold res_pred.
-      unfold Monads.if_return in st4'_decl.
+      unfold LjsMonads.if_return in st4'_decl.
       inversion st4'_decl as [(st4'_def,res4_def)].
       rewrite <-st4'_def.
       split.
@@ -2401,7 +2401,7 @@ Proof.
         assumption.
 
       unfold res_pred.
-      unfold Monads.if_return in st4'_decl.
+      unfold LjsMonads.if_return in st4'_decl.
       inversion st4'_decl as [(st4'_def,res4_def)].
       rewrite <-st4'_def.
       split.
@@ -2411,7 +2411,7 @@ Proof.
         assumption.
 
       unfold res_pred.
-      unfold Monads.if_return in st4'_decl.
+      unfold LjsMonads.if_return in st4'_decl.
       inversion st4'_decl as [(st4'_def,res4_def)].
       rewrite <-st4'_def.
       split.
@@ -2420,7 +2420,7 @@ Proof.
         apply result_value_loc_exists_fail.
 
       unfold res_pred.
-      unfold Monads.if_return in st4'_decl.
+      unfold LjsMonads.if_return in st4'_decl.
       inversion st4'_decl as [(st4'_def,res4_def)].
       rewrite <-st4'_def.
       split.
@@ -2531,7 +2531,7 @@ Lemma eval_setattr_preserves_all_locs_exist :
   forall runs st st2 left_expr right_expr attr newval_expr res,
   runs_type_eval_preserves_all_locs_exist runs ->
   all_locs_exist st ->
-  Interpreter.eval_setattr runs st left_expr right_expr attr newval_expr = (st2, res) ->
+  LjsInterpreter.eval_setattr runs st left_expr right_expr attr newval_expr = (st2, res) ->
   superstore st st2 /\ res_pred st2 res
 .
 Proof.
@@ -2586,7 +2586,7 @@ Proof.
   simpl in H.
 
   (* Get object_ptr *)
-  eapply (monad_agop_preserves_pred Values.value_loc st4 left_loc).
+  eapply (monad_agop_preserves_pred LjsValues.value_loc st4 left_loc).
     assumption.
 
     unfold superstore in superstore_st3_st4.
@@ -2680,11 +2680,11 @@ Qed.
 
 
 Theorem eval_preserves_all_locs_exist :
-  forall runs (st st2 : Store.store) res,
-  forall (e : Syntax.expr),
+  forall runs (st st2 : LjsStore.store) res,
+  forall (e : LjsSyntax.expr),
   runs_type_eval_preserves_all_locs_exist runs ->
   all_locs_exist st ->
-  Interpreter.eval runs st e = (st2, res) ->
+  LjsInterpreter.eval runs st e = (st2, res) ->
   superstore st st2 /\ all_locs_exist st2 /\ result_value_loc_exists ok_loc st2 res
 .
 Proof.
@@ -2708,10 +2708,10 @@ Proof.
 Admitted.
 
 Theorem runs_eval_preserves_all_locs_exist :
-  forall max_steps (st : Store.store),
-  forall (e : Syntax.expr) st2 res,
+  forall max_steps (st : LjsStore.store),
+  forall (e : LjsSyntax.expr) st2 res,
   all_locs_exist st ->
-  Interpreter.runs_eval max_steps st e = (st2, res) ->
+  LjsInterpreter.runs_eval max_steps st e = (st2, res) ->
   superstore st st2 /\ all_locs_exist st2 /\ result_value_loc_exists ok_loc st2 res
 .
 Proof.
@@ -2747,20 +2747,20 @@ Proof.
 Qed.
 
 Theorem get_closure_preserves_all_locs_exist :
-  forall runs (st st2 : Store.store) res,
-  forall (v : Values.value_loc),
+  forall runs (st st2 : LjsStore.store) res,
+  forall (v : LjsValues.value_loc),
   runs_type_get_closure_preserves_all_locs_exist runs ->
   all_locs_exist st ->
-  Interpreter.get_closure runs st v = (st2, res) ->
+  LjsInterpreter.get_closure runs st v = (st2, res) ->
   superstore st st2 /\ all_locs_exist st2 /\ result_value_loc_exists ok_loc st2 res
 .
 Admitted.
 
 Theorem runs_get_closure_preserves_all_locs_exist :
-  forall max_steps (st : Store.store),
-  forall (v : Values.value_loc) st2 res,
+  forall max_steps (st : LjsStore.store),
+  forall (v : LjsValues.value_loc) st2 res,
   all_locs_exist st ->
-  Interpreter.runs_get_closure max_steps st v = (st2, res) ->
+  LjsInterpreter.runs_get_closure max_steps st v = (st2, res) ->
   superstore st st2 /\ all_locs_exist st2 /\ result_value_loc_exists ok_loc st2 res
 .
 Proof.
@@ -2796,8 +2796,8 @@ Proof.
 Qed.
 
 Lemma monad_agofp_preserves_pred :
-  forall X st ptr (cont : Values.object -> (store * result X)),
-  forall st2 res2 (P : Store.store -> result X -> Prop),
+  forall X st ptr (cont : LjsValues.object -> (store * result X)),
+  forall st2 res2 (P : LjsStore.store -> result X -> Prop),
   all_locs_exist st ->
   (*ok_ptr st ptr ->*)
   (forall f, P st (Fail X f)) ->
@@ -2805,18 +2805,18 @@ Lemma monad_agofp_preserves_pred :
     object_locs_exist st obj ->
     cont obj = (st1, res1) ->
     superstore st st1 /\ P st1 res1) ->
-  @Monads.assert_get_object_from_ptr X st ptr cont = (st2, res2) ->
+  @LjsMonads.assert_get_object_from_ptr X st ptr cont = (st2, res2) ->
   superstore st st2 /\ P st2 res2
 .
 Admitted.
 
 Theorem get_property_preserves_all_locs_exist :
-  forall runs (st st2 : Store.store) res,
-  forall (v : Values.value_loc) (n : Values.prop_name),
+  forall runs (st st2 : LjsStore.store) res,
+  forall (v : LjsValues.value_loc) (n : LjsValues.prop_name),
   runs_type_get_property_preserves_all_locs_exist runs ->
   all_locs_exist st ->
   ok_loc st v ->
-  Interpreter.get_property runs st (v, n) = (st2, res) ->
+  LjsInterpreter.get_property runs st (v, n) = (st2, res) ->
   superstore st st2 /\ all_locs_exist st2 /\ result_value_loc_exists ok_opt_attributes st2 res
 .
 Proof.
@@ -2898,11 +2898,11 @@ Qed.
 
 
 Theorem runs_get_property_preserves_all_locs_exist :
-  forall max_steps (st : Store.store),
-  forall (v : Values.value_loc) (n : Values.prop_name) st2 res,
+  forall max_steps (st : LjsStore.store),
+  forall (v : LjsValues.value_loc) (n : LjsValues.prop_name) st2 res,
   all_locs_exist st ->
   ok_loc st v ->
-  Interpreter.runs_get_property max_steps st (v, n) = (st2, res) ->
+  LjsInterpreter.runs_get_property max_steps st (v, n) = (st2, res) ->
   superstore st st2 /\ all_locs_exist st2 /\
   result_value_loc_exists ok_opt_attributes st2 res
 .

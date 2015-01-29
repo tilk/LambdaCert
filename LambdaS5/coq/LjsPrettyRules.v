@@ -1,11 +1,11 @@
 Require Import LjsShared.
-Require Import Syntax.
-Require Import PrettyInterm.
-Require Import Store.
-Require Import Context.
-Require Import Values.
-Require Import Operators.
-Require Import Monads.
+Require Import LjsSyntax.
+Require Import LjsPrettyInterm.
+Require Import LjsStore.
+Require Import LjsCommon.
+Require Import LjsValues.
+Require Import LjsOperators.
+Require Import LjsMonads.
 Require Import Coq.Strings.String.
 Import List.ListNotations.
 
@@ -379,7 +379,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_op1_1 op o) o' ->
     red_expr c st (expr_op1 op e) o'
 | red_expr_op1_1 : forall c st' st op v v',
-    unary op st v = result_some v' ->
+    unary_operator op st v = result_some v' ->
     red_expr c st' (expr_op1_1 op (out_ter st (res_value v))) (out_ter st (res_value v'))
 | red_expr_op1_1_abort : forall c st op o,
     abort o ->
@@ -397,7 +397,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_op2_1 op o e2) o
 | red_expr_op2_2 : forall c st' st op v1 v2 v,
-    binary op st v1 v2 = result_some v ->
+    binary_operator op st v1 v2 = result_some v ->
     red_expr c st' (expr_op2_2 op v1 (out_ter st (res_value v2))) (out_ter st (res_value v))
 | red_expr_op2_2_abort : forall c st op v o,
     abort o ->

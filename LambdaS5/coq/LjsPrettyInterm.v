@@ -1,7 +1,7 @@
 Set Implicit Arguments.
-Require Import Syntax.
-Require Import Context.
-Require Import Values.
+Require Import LjsSyntax.
+Require Import LjsCommon.
+Require Import LjsValues.
 Require Import Coq.Strings.String.
 
 Inductive ext_expr :=

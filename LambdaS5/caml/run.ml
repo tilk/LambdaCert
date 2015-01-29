@@ -1,9 +1,9 @@
 
 open Batteries
-open Syntax
+open LjsSyntax
 
 let eval_ast (c, st) ast =
-  Interpreter.runs_eval max_int c st ast
+  LjsInterpreter.runs_eval max_int c st ast
 
 let result_to_string result =
   match result with

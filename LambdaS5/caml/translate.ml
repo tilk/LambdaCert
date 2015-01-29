@@ -2,7 +2,7 @@
 open Batteries
 
 module Ljs = Ljs_syntax
-module Cs = Syntax
+module Cs = LjsSyntax
 
 let translate_oattr o = match o with
     | Ljs.Proto -> Cs.Coq_oattr_proto

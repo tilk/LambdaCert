@@ -1,4 +1,4 @@
-Require Import Syntax.
+Require Import LjsSyntax.
 Require Import String.
 Require Import LibStream.
 

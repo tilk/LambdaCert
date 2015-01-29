@@ -1,10 +1,10 @@
 Set Implicit Arguments.
-Require Import Syntax.
+Require Import LjsSyntax.
 Require Import Utils.
 Require Import String.
-Require Import Values.
-Require Import Store.
-Require Import Monads.
+Require Import LjsValues.
+Require Import LjsStore.
+Require Import LjsMonads.
 
 (* Utility functions useful for both the interpreter and the semantics. *)
 

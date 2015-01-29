@@ -1,5 +1,5 @@
 Set Implicit Arguments.
-Require Import Interpreter.
+Require Import LjsInterpreter.
 Require Import JsNumber.
 
 
@@ -18,7 +18,7 @@ Require Import ExtrOcamlString.
 
 (*
 (* We do not want “raise Not_found” to be at the toplevel. *)
-Extraction Inline LibLogic.arbitrary.
+LjsExtraction Inline LibLogic.arbitrary.
 
 Extract Inductive Fappli_IEEE.binary_float => float [
   "(fun s -> if s then (0.) else (-0.))"
@@ -150,9 +150,9 @@ Extract Constant JsNumber.neg => "(~-.)".
 Extract Constant JsNumber.sign => "(fun f -> float_of_int (compare f 0.))".
 Extract Constant JsNumber.number_comparable => "(fun n1 n2 -> 0 = compare n1 n2)".
 Extract Constant JsNumber.lt_bool => "(<)".
-Extract Constant Operators.le_bool => "(<=)".
-Extract Constant Operators.gt_bool => "(>)".
-Extract Constant Operators.ge_bool => "(>=)".
+Extract Constant LjsOperators.le_bool => "(<=)".
+Extract Constant LjsOperators.gt_bool => "(>)".
+Extract Constant LjsOperators.ge_bool => "(>=)".
 
 Extract Constant JsNumber.to_int32 => 
 "fun n ->
@@ -217,13 +217,13 @@ Set Extraction AccessOpaque.
 
 
 (* TODO exception handling to get None *)
-Extract Constant Context.desugar_expr => "fun s -> Some (Desugar.desugar (Batteries.String.of_list s))".
+Extract Constant LjsCommon.desugar_expr => "fun s -> Some (Desugar.desugar (Batteries.String.of_list s))".
 
 Extract Constant Utils.string_of_nat => "fun n -> Batteries.String.to_list (string_of_int n)".
 
-Extract Constant Operators._nat_of_float => "int_of_float".
+Extract Constant LjsOperators._nat_of_float => "int_of_float".
 
-Extract Constant Operators._same_value => "(fun v1 v2 -> begin
+Extract Constant LjsOperators._same_value => "(fun v1 v2 -> begin
   match v1, v2 with
   | Coq_value_number x, Coq_value_number y ->
     if x = 0. && y = 0.
@@ -232,23 +232,23 @@ Extract Constant Operators._same_value => "(fun v1 v2 -> begin
   | _ -> compare v1 v2 = 0
 end)".
 
-Extract Constant Operators._number_eq_bool => "(=)".
+Extract Constant LjsOperators._number_eq_bool => "(=)".
 
-Extract Constant Operators._ascii_of_int => "(fun c -> char_of_int (int_of_float c))".
-Extract Constant Operators._int_of_ascii => "(fun c -> float_of_int (int_of_char c))".
+Extract Constant LjsOperators._ascii_of_int => "(fun c -> char_of_int (int_of_float c))".
+Extract Constant LjsOperators._int_of_ascii => "(fun c -> float_of_int (int_of_char c))".
 
-Extract Constant Operators._string_lt_bool => "(<)".
+Extract Constant LjsOperators._string_lt_bool => "(<)".
 
-Extract Constant Operators._print_string => "fun x -> print_string (Batteries.String.of_list x); print_char '\n'".
-Extract Constant Operators._pretty => "fun store value -> print_string (PrettyPrint.string_of_value 100 store value); print_char '\n'".
+Extract Constant LjsOperators._print_string => "fun x -> print_string (Batteries.String.of_list x); print_char '\n'".
+Extract Constant LjsOperators._pretty => "fun store value -> print_string (PrettyPrint.string_of_value 100 store value); print_char '\n'".
 
 (* put a practical limit on recursive search *)
-Extract Constant Context.get_property => "fun s v n -> get_property_aux 100000 s v n".
-Extract Constant Context.get_closure => "fun s v -> get_closure_aux 100000 s v".
+Extract Constant LjsCommon.get_property => "fun s v n -> get_property_aux 100000 s v n".
+Extract Constant LjsCommon.get_closure => "fun s v -> get_closure_aux 100000 s v".
 
 (* That would be more optimized than char lists...
 Extract Inductive String.string => "string" [ """""" "(^)" ]. *)
 
 Extraction Blacklist String List Bool.
 
-Separate Extraction Interpreter Values Syntax Context Store Monads JsNumber.to_string.
+Separate Extraction LjsInterpreter LjsValues LjsSyntax LjsCommon LjsStore LjsMonads JsNumber.to_string.

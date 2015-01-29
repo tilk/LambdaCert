@@ -1,11 +1,11 @@
 Require Import LibInt.
 Require Import JsNumber.
 Require Import String.
-Require Import Syntax.
-Require Import Store.
-Require Import Monads.
-Require Import Context.
-Require Import Values.
+Require Import LjsSyntax.
+Require Import LjsStore.
+Require Import LjsMonads.
+Require Import LjsCommon.
+Require Import LjsValues.
 Open Scope string_scope.
 
 Implicit Type store : store.
@@ -213,27 +213,27 @@ Definition ascii_cton (v : value) : resultof value :=
   end
 .
 
-Definition unary (op : Syntax.unary_op) store v : resultof value :=
+Definition unary_operator (op : unary_op) store v : resultof value :=
     match op with
-    | Syntax.unary_op_print => print store v
-    | Syntax.unary_op_pretty => pretty store v
-    | Syntax.unary_op_strlen => strlen store v
-    | Syntax.unary_op_typeof => typeof store v
-    | Syntax.unary_op_is_primitive => is_primitive v
-    | Syntax.unary_op_is_closure => is_closure v
-    | Syntax.unary_op_abs => unary_arith JsNumber.absolute v
-    | Syntax.unary_op_void => void store v
-    | Syntax.unary_op_floor => unary_arith JsNumber.floor v
-    | Syntax.unary_op_prim_to_str => prim_to_str store v
-    | Syntax.unary_op_prim_to_num => prim_to_num store v
-    | Syntax.unary_op_prim_to_bool => prim_to_bool store v
-    | Syntax.unary_op_not => nnot store v
-    | Syntax.unary_op_numstr_to_num => numstr_to_num store v
-    | Syntax.unary_op_bnot => unary_int_arith int32_bitwise_not v
-    | Syntax.unary_op_is_array => is_array store v
-    | Syntax.unary_op_to_int32 => unary_int_arith (fun x => x) v
-    | Syntax.unary_op_ascii_ntoc => ascii_ntoc v
-    | Syntax.unary_op_ascii_cton => ascii_cton v
+    | unary_op_print => print store v
+    | unary_op_pretty => pretty store v
+    | unary_op_strlen => strlen store v
+    | unary_op_typeof => typeof store v
+    | unary_op_is_primitive => is_primitive v
+    | unary_op_is_closure => is_closure v
+    | unary_op_abs => unary_arith JsNumber.absolute v
+    | unary_op_void => void store v
+    | unary_op_floor => unary_arith JsNumber.floor v
+    | unary_op_prim_to_str => prim_to_str store v
+    | unary_op_prim_to_num => prim_to_num store v
+    | unary_op_prim_to_bool => prim_to_bool store v
+    | unary_op_not => nnot store v
+    | unary_op_numstr_to_num => numstr_to_num store v
+    | unary_op_bnot => unary_int_arith int32_bitwise_not v
+    | unary_op_is_array => is_array store v
+    | unary_op_to_int32 => unary_int_arith (fun x => x) v
+    | unary_op_ascii_ntoc => ascii_ntoc v
+    | unary_op_ascii_cton => ascii_cton v
     | _ => result_fail ("Unary operator " ++ " not implemented.")
     end
 .
@@ -320,7 +320,7 @@ Definition prop_to_obj store v1 v2 :=
         let props := Heap.write props "writable" (make_attr (bool_to_value writ)) in
         let props := Heap.write props "value" (make_attr val) in
         let obj := object_intro value_undefined "Object" false value_undefined props value_null in
-        let (store, loc) := Store.add_object store obj in
+        let (store, loc) := add_object store obj in
         result_some loc
       | Some (attributes_accessor_of (attributes_accessor_intro get set enum config)) =>
         let props := Heap.write Heap.empty "configurable" (make_attr (bool_to_value config)) in
@@ -328,7 +328,7 @@ Definition prop_to_obj store v1 v2 :=
         let props := Heap.write props "setter" (make_attr set) in
         let props := Heap.write props "getter" (make_attr get) in
         let obj := object_intro value_undefined "Object" false value_undefined props value_null in
-        let (store, loc) := Store.add_object store obj in
+        let (store, loc) := add_object store obj in
         result_some loc
       | None => result_some value_undefined
       end
@@ -424,34 +424,34 @@ Definition locale_compare v1 v2 : resultof value :=
   end
 .
 
-Definition binary (op : Syntax.binary_op) store v1 v2 : resultof value :=
+Definition binary_operator (op : binary_op) store v1 v2 : resultof value :=
       match op with
-      | Syntax.binary_op_add => arith JsNumber.add v1 v2
-      | Syntax.binary_op_sub => arith JsNumber.sub v1 v2
-      | Syntax.binary_op_mul => arith JsNumber.mult v1 v2
-      | Syntax.binary_op_div => arith JsNumber.div v1 v2
-      | Syntax.binary_op_mod => arith JsNumber.fmod v1 v2
-      | Syntax.binary_op_lt => cmp store value_true value_false value_false JsNumber.lt_bool v1 v2
-      | Syntax.binary_op_le => cmp store value_true value_true value_false le_bool v1 v2
-      | Syntax.binary_op_gt => cmp store value_false value_false value_true gt_bool v1 v2
-      | Syntax.binary_op_ge => cmp store value_false value_true value_true ge_bool v1 v2
-      | Syntax.binary_op_stx_eq => stx_eq store v1 v2
-      | Syntax.binary_op_abs_eq => abs_eq store v1 v2
-      | Syntax.binary_op_same_value => same_value store v1 v2
-      | Syntax.binary_op_has_property => has_property store v1 v2
-      | Syntax.binary_op_has_own_property => has_own_property store v1 v2
-      | Syntax.binary_op_string_plus => string_plus store v1 v2
-      | Syntax.binary_op_char_at => char_at store v1 v2
-      | Syntax.binary_op_is_accessor => is_accessor store v1 v2
-      | Syntax.binary_op_prop_to_obj => prop_to_obj store v1 v2 (* For debugging purposes *)
-      | Syntax.binary_op_band => int_arith int32_bitwise_and v1 v2
-      | Syntax.binary_op_bor => int_arith int32_bitwise_or v1 v2
-      | Syntax.binary_op_bxor => int_arith int32_bitwise_xor v1 v2
-      | Syntax.binary_op_shiftl => int_arith int32_left_shift v1 v2
-      | Syntax.binary_op_shiftr => int_arith int32_right_shift v1 v2
-      | Syntax.binary_op_zfshiftr => int_arith uint32_right_shift v1 v2
-      | Syntax.binary_op_string_lt => string_lt v1 v2
-      | Syntax.binary_op_locale_compare => locale_compare v1 v2
+      | binary_op_add => arith JsNumber.add v1 v2
+      | binary_op_sub => arith JsNumber.sub v1 v2
+      | binary_op_mul => arith JsNumber.mult v1 v2
+      | binary_op_div => arith JsNumber.div v1 v2
+      | binary_op_mod => arith JsNumber.fmod v1 v2
+      | binary_op_lt => cmp store value_true value_false value_false JsNumber.lt_bool v1 v2
+      | binary_op_le => cmp store value_true value_true value_false le_bool v1 v2
+      | binary_op_gt => cmp store value_false value_false value_true gt_bool v1 v2
+      | binary_op_ge => cmp store value_false value_true value_true ge_bool v1 v2
+      | binary_op_stx_eq => stx_eq store v1 v2
+      | binary_op_abs_eq => abs_eq store v1 v2
+      | binary_op_same_value => same_value store v1 v2
+      | binary_op_has_property => has_property store v1 v2
+      | binary_op_has_own_property => has_own_property store v1 v2
+      | binary_op_string_plus => string_plus store v1 v2
+      | binary_op_char_at => char_at store v1 v2
+      | binary_op_is_accessor => is_accessor store v1 v2
+      | binary_op_prop_to_obj => prop_to_obj store v1 v2 (* For debugging purposes *)
+      | binary_op_band => int_arith int32_bitwise_and v1 v2
+      | binary_op_bor => int_arith int32_bitwise_or v1 v2
+      | binary_op_bxor => int_arith int32_bitwise_xor v1 v2
+      | binary_op_shiftl => int_arith int32_left_shift v1 v2
+      | binary_op_shiftr => int_arith int32_right_shift v1 v2
+      | binary_op_zfshiftr => int_arith uint32_right_shift v1 v2
+      | binary_op_string_lt => string_lt v1 v2
+      | binary_op_locale_compare => locale_compare v1 v2
       | _ => result_fail ("Binary operator " ++ " not implemented.")
       end
 .

@@ -1,5 +1,5 @@
 open Batteries
-open Syntax
+open LjsSyntax
 
 module StringSet = Set.Make(String)
 
@@ -7,7 +7,7 @@ let rec string_of_value_loc depth st loc =
   if (depth = 0) then
     "<cut>"
   else
-    match (Store.get_value st loc) with
+    match (LjsStore.get_value st loc) with
       | None -> "<reference to non-existing value>"
       | Some v -> string_of_value (depth-1) st v
 and string_of_value depth st = function
@@ -31,7 +31,7 @@ and string_of_value_loc_option depth st = function
 
 and string_of_object_ptr depth st ptr =
   if depth = 0 then "<cut>" else
-  match (Store.get_object st ptr) with
+  match (LjsStore.get_object st ptr) with
     | None -> "<reference to non-existing object>"
     | Some obj -> string_of_object (depth-1) st obj
 and string_of_object depth st obj =

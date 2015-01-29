@@ -9,7 +9,7 @@ Module Heap := HeapUtils.Heap.
 
 
 
-Require Import Syntax.
+Require Import LjsSyntax.
 
 
 (* LambdaJS values and objects *)

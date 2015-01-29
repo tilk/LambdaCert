@@ -1,14 +1,14 @@
 Set Implicit Arguments.
 Require Import LjsShared.
-Require Import Syntax.
-Require Import PrettyInterm.
-Require Import PrettyRules.
-Require Import Store.
-Require Import Context.
-Require Import Values.
-Require Import Operators.
-Require Import Monads.
-Require Import Interpreter.
+Require Import LjsSyntax.
+Require Import LjsPrettyInterm.
+Require Import LjsPrettyRules.
+Require Import LjsStore.
+Require Import LjsCommon.
+Require Import LjsValues.
+Require Import LjsOperators.
+Require Import LjsMonads.
+Require Import LjsInterpreter.
 Require Import Coq.Strings.String.
 
 Import ListNotations.
@@ -659,7 +659,7 @@ Lemma eval_op1_correct : forall runs c st op e1 o,
     runs_type_correct runs ->
     eval_op1 runs c st op e1 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
-        exists v, unary op st' v1 = result_some v /\ o = out_ter st' (res_value v)).
+        exists v, unary_operator op st' v1 = result_some v /\ o = out_ter st' (res_value v)).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
@@ -671,7 +671,7 @@ Lemma eval_op2_correct : forall runs c st op e1 e2 o,
     eval_op2 runs c st op e1 e2 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
-            exists v, binary op st'' v1 v2 = result_some v /\ o = out_ter st'' (res_value v))).
+            exists v, binary_operator op st'' v1 v2 = result_some v /\ o = out_ter st'' (res_value v))).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.

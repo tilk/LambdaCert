@@ -1,11 +1,11 @@
 Require Import Coq.Strings.String.
-Require Import Syntax.
-Require Import Values.
-Require Import Context.
-Require Import Monads.
-Require Import Store.
+Require Import LjsSyntax.
+Require Import LjsValues.
+Require Import LjsCommon.
+Require Import LjsMonads.
+Require Import LjsStore.
 Require Import Utils.
-Require Import Operators.
+Require Import LjsOperators.
 Require Import LibHeap.
 Require Import LibStream.
 Require Import JsNumber.
@@ -37,10 +37,10 @@ Implicit Type c : ctx.
 (* Unpacks a store to get an object, calls the predicate with this
 * object, and updates the object to the returned value. *)
 Definition change_object_cont (st : store) (ptr : object_ptr) (cont : object -> (store -> object -> value -> result) -> result) : result :=
-  match (Store.get_object st ptr) with
+  match get_object st ptr with
   | Some obj =>
       cont obj (fun st new_obj ret =>
-        result_some (out_ter (Store.update_object st ptr new_obj) (res_value ret))
+        result_some (out_ter (LjsStore.update_object st ptr new_obj) (res_value ret))
       )
   | None => result_impossible "Pointer to a non-existing object."
   end
@@ -73,7 +73,7 @@ Definition change_object_property st (ptr : object_ptr) (name : prop_name) (pred
 (***** Monadic operations for interpreting *******)
 
 (* Evaluate an expression, and calls the continuation with
-* the new store and the Context.result of the evaluation. *)
+* the new store and the result of the evaluation. *)
 Definition eval_cont {A : Type} runs c st e (cont : result -> resultof A) : resultof A :=
   cont (runs_type_eval runs c st e).
 
@@ -465,14 +465,14 @@ Definition eval_eval runs c st estr bindings :=
 
 Definition eval_op1 runs c st op e :=
     if_eval_return runs c st e (fun st v_loc =>
-      if_result_some (Operators.unary op st v_loc) (fun v_res => result_value st v_res)
+      if_result_some (unary_operator op st v_loc) (fun v_res => result_value st v_res)
     )
 .
 
 Definition eval_op2 runs c st op e1 e2 :=
     if_eval_return runs c st e1 (fun st v1_loc =>
       if_eval_return runs c st e2 (fun st v2_loc =>
-        if_result_some (Operators.binary op st v1_loc v2_loc) (fun v_res => result_value st v_res)
+        if_result_some (binary_operator op st v1_loc v2_loc) (fun v_res => result_value st v_res)
     ))
 . 
 
