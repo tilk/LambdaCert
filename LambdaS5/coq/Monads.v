@@ -2,9 +2,7 @@ Require Import String.
 Require Import Values.
 Require Import Syntax.
 Require Import Store.
-Require Import Context.
 
-Implicit Type runs : runs_type.
 Implicit Type st : store.
 Implicit Type c : ctx.
 Implicit Type e : Syntax.expr.
@@ -111,45 +109,3 @@ Definition assert_get_bool {A : Type} (loc : value) (cont : bool -> resultof A) 
   | _ => result_fail "Expected True or False but got none of them."
   end
 .
-
-(* TODO: move this somewhere else *)
-(* Gets a property recursively. *)
-Fixpoint get_property_aux limit store (ptr : object_ptr) (name : prop_name) : resultof (option attributes) :=
-  match limit with
-  | 0 => result_bottom
-  | S limit' =>
-    assert_get_object_from_ptr store ptr (fun obj =>
-      match get_object_property obj name with
-      | Some prop => result_some (Some prop)
-      | None => 
-        match object_proto obj with
-        | value_object ptr =>
-          get_property_aux limit' store ptr name
-        | _ => result_some None
-        end
-      end
-    )
-  end
-.
-
-Definition get_property store (ptr : object_ptr) (name : prop_name) : resultof (option attributes) :=
-  get_property_aux (num_objects store) store ptr name. 
-
-(* Calls a value (hopefully a function or a callable object) *)
-Fixpoint get_closure_aux limit store (v : value) : resultof value :=
-  match v with
-  | value_closure _ _ _ _ => result_some v
-  | value_object ptr =>
-    match limit with
-    | 0 => result_bottom
-    | S limit' =>
-      assert_get_object_from_ptr store ptr (fun obj =>
-        get_closure_aux limit' store (object_code obj)
-      )
-    end
-  | _ => result_fail "Applied non-function."
-  end
-.
-
-Definition get_closure store (v : value) : resultof value :=
-  get_closure_aux (num_objects store) store v.

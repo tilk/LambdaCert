@@ -7,11 +7,11 @@ let eval_ast (c, st) ast =
 
 let result_to_string result =
   match result with
-  | Context.Coq_result_bottom -> "Interpreter timed out"
-  | Context.Coq_result_fail f -> "Fail: " ^ String.of_list f
-  | Context.Coq_result_impossible f -> "The impossible happened: " ^ String.of_list f
-  | Context.Coq_result_dump (_, _) -> "The interpreter dumped state"
-  | Context.Coq_result_some o -> match o with
+  | Coq_result_bottom -> "Interpreter timed out"
+  | Coq_result_fail f -> "Fail: " ^ String.of_list f
+  | Coq_result_impossible f -> "The impossible happened: " ^ String.of_list f
+  | Coq_result_dump (_, _) -> "The interpreter dumped state"
+  | Coq_result_some o -> match o with
     | Coq_out_div -> "Interpreter produced out_div, should not happen!"
     | Coq_out_ter (store, res) -> match res with
       | Coq_res_value v -> PrettyPrint.string_of_value 5 store v

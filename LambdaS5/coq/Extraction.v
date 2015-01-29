@@ -243,12 +243,12 @@ Extract Constant Operators._print_string => "fun x -> print_string (Batteries.St
 Extract Constant Operators._pretty => "fun store value -> print_string (PrettyPrint.string_of_value 100 store value); print_char '\n'".
 
 (* put a practical limit on recursive search *)
-Extract Constant Monads.get_property => "fun s v n -> get_property_aux 100000 s v n".
-Extract Constant Monads.get_closure => "fun s v -> get_closure_aux 100000 s v".
+Extract Constant Context.get_property => "fun s v n -> get_property_aux 100000 s v n".
+Extract Constant Context.get_closure => "fun s v -> get_closure_aux 100000 s v".
 
 (* That would be more optimized than char lists...
 Extract Inductive String.string => "string" [ """""" "(^)" ]. *)
 
 Extraction Blacklist String List Bool.
 
-Separate Extraction Interpreter Values Syntax Store Monads JsNumber.to_string.
+Separate Extraction Interpreter Values Syntax Context Store Monads JsNumber.to_string.

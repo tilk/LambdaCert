@@ -24,12 +24,53 @@ Open Scope string_scope.
 *   code.
 *)
 
+Record runs_type : Type := runs_type_intro {
+    runs_type_eval : ctx -> store -> expr -> result
+}.
 
 Implicit Type runs : runs_type.
 Implicit Type st : store.
 Implicit Type c : ctx.
 
-(* Monadic operations for interpreting *)
+(***** Utilities ******)
+
+(* Unpacks a store to get an object, calls the predicate with this
+* object, and updates the object to the returned value. *)
+Definition change_object_cont (st : store) (ptr : object_ptr) (cont : object -> (store -> object -> value -> result) -> result) : result :=
+  match (Store.get_object st ptr) with
+  | Some obj =>
+      cont obj (fun st new_obj ret =>
+        result_some (out_ter (Store.update_object st ptr new_obj) (res_value ret))
+      )
+  | None => result_impossible "Pointer to a non-existing object."
+  end
+.
+
+Definition change_object (st : store) (ptr : object_ptr) (pred : object -> (store * object * value)) : result :=
+  change_object_cont st ptr (fun obj cont => match pred obj with (st, new_obj, ret) => cont st new_obj ret end)
+.
+
+(* Fetches the object pointed by the ptr, gets the property associated
+* with the name and passes it to the predicate (as an option).
+* If the predicate returns None as the now property, the property is
+* destroyed; otherwise it is updated/created with the one returned by
+* the predicate. *)
+Definition change_object_property_cont st (ptr : object_ptr) (name : prop_name) (cont : option attributes -> (store -> option attributes -> value -> result) -> result) : result :=
+  change_object_cont st ptr (fun obj cont1 =>
+    cont (get_object_property obj name) (fun st oprop res => match oprop with
+      | Some prop =>
+        cont1 st (set_object_property obj name prop) res
+      | None =>
+        (* TODO: Remove property *)
+        cont1 st obj res
+    end))
+.
+
+Definition change_object_property st (ptr : object_ptr) (name : prop_name) (pred : option attributes -> (store * option attributes * value)) : result :=
+  change_object_property_cont st ptr name (fun attrs cont => match pred attrs with (st, oattrs, ret) => cont st oattrs ret end)
+.
+
+(***** Monadic operations for interpreting *******)
 
 (* Evaluate an expression, and calls the continuation with
 * the new store and the Context.result of the evaluation. *)

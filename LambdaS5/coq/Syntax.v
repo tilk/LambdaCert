@@ -251,5 +251,31 @@ Inductive out :=
 | out_ter : store -> res -> out
 .
 
+(* Type of interpreter results *)
+(* Interpreter functions can either succeed or fail in several ways.
+ * The result type is usually out, the type of outcomes. *)
+ 
+Inductive resultof (T : Type) : Type :=
+| result_some : T -> resultof T
+| result_fail : string -> resultof T        (* program error *)
+| result_impossible : string -> resultof T  (* inconsistency *)
+| result_bottom : resultof T                (* out of fuel *)
+| result_dump : ctx -> store -> resultof T  (* dump state *)
+.
+Implicit Arguments result_some [[T]].
+Implicit Arguments result_fail [[T]].
+Implicit Arguments result_impossible [[T]].
+Implicit Arguments result_bottom [[T]].
+Implicit Arguments result_dump [[T]].
+
+Definition result := resultof out.
+
+Definition result_res st (r : res) : result := result_some (out_ter st r).
+Definition result_value st (v : value) : result := result_res st (res_value v).
+Definition result_exception st (v : value) : result := result_res st (res_exception v).
+Definition result_break st (l : string) (v : value) : result := result_res st (res_break l v).
+
+Definition return_bool store (b : bool) :=
+  result_value store (if b then value_true else value_false).
 
 

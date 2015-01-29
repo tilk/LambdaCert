@@ -4,11 +4,10 @@ Require Import String.
 Require Import Syntax.
 Require Import Store.
 Require Import Monads.
-Require Import Values.
 Require Import Context.
+Require Import Values.
 Open Scope string_scope.
 
-Implicit Type runs : runs_type.
 Implicit Type store : store.
 
 Implicit Type st : store.
