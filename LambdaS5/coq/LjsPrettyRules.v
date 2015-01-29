@@ -6,6 +6,7 @@ Require Import LjsCommon.
 Require Import LjsValues.
 Require Import LjsOperators.
 Require Import LjsMonads.
+Require Import JsNumber.
 Require Import Coq.Strings.String.
 Import List.ListNotations.
 

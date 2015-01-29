@@ -2,7 +2,6 @@ Require Import Utils.
 Require Import String.
 Require Import JsNumber.
 Require Import Coq.Strings.String.
-Require Import Fappli_IEEE Fappli_IEEE_bits.
 Require Import LibStream.
 
 Open Scope list_scope.
@@ -13,7 +12,6 @@ Module Heap := HeapUtils.Heap.
 (* Basic stuff *)
 
 Definition id : Type := string.
-Definition number : Type := Fappli_IEEE_bits.binary64.
 Definition closure_id := nat.
 Definition value_loc := nat.
 Definition object_ptr := nat.
@@ -146,6 +144,7 @@ with objattrs : Type :=
 | objattrs_intro : expr -> expr -> expr -> expr -> expr -> objattrs (* class -> extensible -> prototype -> code -> primval -> objattrs *)
 .
 
+Definition default_objattrs := objattrs_intro (expr_string "Object") expr_true expr_null expr_null expr_undefined.
 
 (* Lexical environments *)
 

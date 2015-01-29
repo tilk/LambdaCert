@@ -1,5 +1,7 @@
 -I ./../../jscert/tlc/ -R ./../../jscert/flocq/src/ Flocq -I ./../../jscert/coq/
 Consistency.v
+EjsSyntax.v
+EjsToLjs.v
 HeapUtils.v
 LjsCommon.v
 LjsCorrectness.v
