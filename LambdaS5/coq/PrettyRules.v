@@ -529,11 +529,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st' (expr_try_finally_1 (out_ter st r) e2) o'
 | red_expr_try_finally_1_div : forall c st e2,
     red_expr c st (expr_try_finally_1 out_div e2) out_div
-| red_expr_try_finally_2_value : forall c st' st r v,
-    res_is_value r ->
-    red_expr c st' (expr_try_finally_2 r (out_ter st (res_value v))) (out_ter st (res_value v))
-| red_expr_try_finally_2_control : forall c st' st r v,
-    res_is_control r ->
+| red_expr_try_finally_2 : forall c st' st r v,
     red_expr c st' (expr_try_finally_2 r (out_ter st (res_value v))) (out_ter st r)
 | red_expr_try_finally_2_abort : forall c st r o,
     abort o ->

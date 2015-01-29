@@ -265,6 +265,7 @@ Ltac ljs_run_push_post_auto := repeat (ljs_run_push_auto; ljs_run_post_auto).
 Ltac ljs_run_inv :=
     repeat
     match goal with
+    | H : result_res _ _ = _ |- _ => inverts H
     | H : result_value _ _ = _ |- _ => inverts H
     | H : result_break _ _ _ = _ |- _ => inverts H
     | H : result_exception _ _ = _ |- _ => inverts H
@@ -578,19 +579,13 @@ Lemma eval_tryfinally_correct : forall runs c st e1 e2 o,
     is_some (runs_type_eval runs c st e1) (fun o' =>
         (exists st' r, o' = out_ter st' r /\
             is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 => 
-                res_is_value r /\ o = out_ter st'' (res_value v2) \/
-                res_is_control r /\ o = out_ter st'' r)) \/
+                o = out_ter st'' r)) \/
         (o = o' /\ o' = out_div)). 
 Proof.
     introv IH R. unfolds. unfolds in R.
-    ljs_run_push_post_auto; eexists; (split; [eassumption | ]); [ | jauto].
-    left. do 2 eexists; split. eassumption.
-    destruct r; ljs_run_push_post_auto; try ljs_is_some_value_munch; ljs_run_inv.
-    eapply is_some_value_munch. eassumption.
-    destruct (out_is_value_or_abort o) as [(st'&v'&Hx)|Hx]; eauto.
-    left. jauto. 
-    inverts R; eauto.
-    inverts R; eauto.
+    ljs_run_push_post_auto; eexists; (split; [eassumption | ]); jauto;
+    left; do 2 eexists; (split; [eassumption | ]);
+    ljs_is_some_value_munch; ljs_run_inv; jauto.
 Qed.
 
 Lemma eval_trycatch_correct : forall runs c st e1 e2 o,
@@ -1160,9 +1155,7 @@ Proof.
     destruct H as [(st'&r&Ho'&H)|(Ho'&H)].
     subst o'.
     ljs_pretty_advance red_expr_try_finally_1 red_expr_try_finally_2_abort.
-    branches H; destructs H; subst o.
-    eapply red_expr_try_finally_2_value; eauto.
-    eapply red_expr_try_finally_2_control; eauto.
+    subst o. eapply red_expr_try_finally_2.
     substs.
     eapply red_expr_try_finally_1_div.
     (* throw *)

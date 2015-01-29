@@ -404,14 +404,9 @@ Definition eval_trycatch runs c st body catch : result :=
 
 Definition eval_tryfinally runs c st body fin : result :=
   if_eval_ter runs c st body (fun st res =>
-    match res with
-    | res_value x => eval_cont_terminate runs c st fin
-    | r =>
-      if_eval_return runs c st fin (fun st catch =>
-        result_res st r
-      )
-    end
-  )
+    if_eval_return runs c st fin (fun st catch =>
+      result_res st res
+    ))
 .
 
 Definition eval_eval runs c st estr bindings :=
