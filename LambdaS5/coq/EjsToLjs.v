@@ -2,6 +2,7 @@ Generalizable All Variables.
 Set Implicit Arguments.
 Require Import LjsShared.
 Require Import JsNumber.
+Require Import Utils.
 Require LjsSyntax.
 Require EjsSyntax.
 Require JsSyntax.
@@ -61,6 +62,7 @@ Proof.
     rewrite IHl.
     skip. (* TODO *)
 Defined.
+
 
 Module DesugarUtils.
 
@@ -262,6 +264,13 @@ Definition make_op2 op e1 e2 :=
     | J.binary_op_strict_disequal => L.expr_op1 L.unary_op_not (L.expr_op2 L.binary_op_stx_eq e1 e2)
     end.
 
+Definition make_array es :=
+    let mkprop e := L.property_data (L.data_intro e L.expr_true L.expr_true L.expr_true) in
+    let exp_props := number_list_from 0 (map mkprop es) in
+    let l_prop := L.property_data (L.data_intro (L.expr_number (length exp_props)) L.expr_true L.expr_false L.expr_false) in
+    let attrs := L.objattrs_intro (L.expr_string "Array") L.expr_true (make_builtin "%ArrayProto") L.expr_null L.expr_undefined in 
+    L.expr_object attrs (("length", l_prop) :: exp_props).
+
 End DesugarUtils.
 
 Import DesugarUtils.
@@ -276,6 +285,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_string s => L.expr_string s
     | E.expr_id i => L.expr_id i
     | E.expr_this => make_builtin "%this"
+    | E.expr_array es => make_array ((fix f l := match l with nil => nil | e :: l' => ejs_to_ljs e :: f l' end) es)
     | E.expr_func is e => make_fobj is (ejs_to_ljs e) context 
     | E.expr_func_stmt i is e => make_func_stmt i is (ejs_to_ljs e)
     | E.expr_seq e1 e2 => L.expr_seq (ejs_to_ljs e1) (ejs_to_ljs e2)

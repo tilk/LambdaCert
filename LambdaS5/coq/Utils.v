@@ -4,6 +4,7 @@ Require Import String.
 Require Import HeapUtils.
 Require Import JsNumber.
 Require Import Coq.Numbers.Natural.Peano.NPeano.
+Require LibStream.
 Open Scope list_scope.
 Open Scope string_scope.
 Open Scope char_scope.
@@ -47,3 +48,23 @@ Definition ascii_of_nat (a : nat) : ascii :=
 .
 
 Parameter string_of_nat : nat -> string.
+
+Import LibStream.
+
+CoFixpoint nat_stream_from (k : nat) : LibStream.stream nat :=
+  k ::: (nat_stream_from (S k)).
+
+Definition id_stream_from k : LibStream.stream string :=
+  map string_of_nat (nat_stream_from k). 
+
+Definition prefixed_id_stream_from s k :=
+  map (fun x => s ++ x) (id_stream_from k).
+
+Fixpoint zipl_stream {A B : Type} (st : stream A) (l : list B) :=
+    match st, l with
+    | _, nil => nil
+    | a ::: st', b :: l' => (a, b) :: zipl_stream st' l' 
+    end.
+
+Definition number_list_from {A : Type} k (l : list A) := zipl_stream (id_stream_from k) l.
+

@@ -2,7 +2,7 @@ Require Import Utils.
 Require Import String.
 Require Import JsNumber.
 Require Import Coq.Strings.String.
-Require Import LibStream.
+Require LibStream.
 
 Open Scope list_scope.
 Open Scope string_scope.
@@ -217,12 +217,10 @@ Definition object_heap_type := Heap.heap object_ptr object.
 Record store := store_intro {
   object_heap : object_heap_type; (* simulates mutability of objects *)
   value_heap : value_heap_type; (* maps locations to values *)
-  fresh_locations : stream nat 
+  fresh_locations : LibStream.stream nat 
 }.
 
-CoFixpoint all_locations (k:nat) : stream nat :=
-  LibStream.stream_intro k (all_locations (S k)).
-Definition dummy_fresh_locations := all_locations 1%nat.
+Definition dummy_fresh_locations := nat_stream_from 1%nat.
 
 Definition object_heap_initial : Heap.heap object_ptr object :=
   Heap.empty.
