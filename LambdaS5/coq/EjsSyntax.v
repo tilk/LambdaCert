@@ -1,8 +1,14 @@
 Require Import String.
 Require Import JsNumber.
 Require Import Coq.Strings.String.
+Require JsSyntax.
+
+Module J := JsSyntax.
 
 Definition id : Type := string.
+
+Definition unary_op := J.unary_op.
+Definition binary_op := J.binary_op.
 
 Inductive expr : Type := 
 | expr_null
@@ -15,17 +21,17 @@ Inductive expr : Type :=
 | expr_array : list expr -> expr
 | expr_object : list (string * property) -> expr
 | expr_this : expr
-| expr_bracket : expr -> expr -> expr
+| expr_get_field : expr -> expr -> expr
 | expr_new : expr -> list expr -> expr
-(* expr_prefix *)
-(* expr_infix *)
+| expr_op1 : J.unary_op -> expr -> expr
+| expr_op2 : J.binary_op -> expr -> expr -> expr
 | expr_if : expr -> expr -> expr -> expr
-| expr_assign :  expr -> expr -> expr -> expr
+| expr_set_field :  expr -> expr -> expr -> expr
 | expr_app : expr -> list expr -> expr
 | expr_func : list id -> expr -> expr
 | expr_let : id -> expr -> expr
 | expr_seq : expr -> expr -> expr
-| expr_while : expr -> expr
+| expr_while : expr -> expr -> expr -> expr (* test, body, after *) 
 | expr_label : id -> expr -> expr
 | expr_break : id -> expr -> expr
 | expr_for_in : id -> expr -> expr -> expr
@@ -33,7 +39,7 @@ Inductive expr : Type :=
 | expr_try_finally : expr -> expr -> expr
 | expr_throw : expr -> expr
 | expr_switch : expr -> list case -> expr
-| expr_func_stmt : id -> list id -> expr
+| expr_func_stmt : id -> list id -> expr -> expr
 | expr_with : expr -> expr -> expr
 | expr_strict : expr -> expr
 | expr_nonstrict : expr -> expr

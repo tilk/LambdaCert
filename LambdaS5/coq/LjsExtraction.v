@@ -1,7 +1,7 @@
 Set Implicit Arguments.
 Require Import LjsInterpreter.
 Require Import JsNumber.
-
+Require EjsToLjs.
 
 Require Import LibFix LibList.
 
@@ -251,4 +251,4 @@ Extract Inductive String.string => "string" [ """""" "(^)" ]. *)
 
 Extraction Blacklist String List Bool.
 
-Separate Extraction LjsInterpreter LjsValues LjsSyntax LjsCommon LjsStore LjsMonads JsNumber.to_string.
+Separate Extraction EjsToLjs LjsInterpreter LjsValues LjsSyntax LjsCommon LjsStore LjsMonads JsNumber.to_string.
