@@ -31,6 +31,9 @@ Inductive expr : Type :=
 | expr_func : list id -> expr -> expr
 | expr_let : id -> expr -> expr
 | expr_seq : expr -> expr -> expr
+(*
+| expr_do_while : expr -> expr -> expr 
+*)
 | expr_while : expr -> expr -> expr -> expr (* test, body, after *) 
 | expr_label : id -> expr -> expr
 | expr_break : id -> expr -> expr
@@ -45,8 +48,8 @@ Inductive expr : Type :=
 | expr_nonstrict : expr -> expr
 with property : Type :=
 | property_data : expr -> property
-| property_getter : id -> expr -> property
-| property_setter : id -> expr -> property
+| property_getter : expr -> property
+| property_setter : expr -> property
 with case : Type :=
 | case_case : expr -> expr -> case
 | case_default : expr -> case

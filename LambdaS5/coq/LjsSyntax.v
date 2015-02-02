@@ -144,7 +144,7 @@ with objattrs : Type :=
 | objattrs_intro : expr -> expr -> expr -> expr -> expr -> objattrs (* class -> extensible -> prototype -> code -> primval -> objattrs *)
 .
 
-Definition default_objattrs := objattrs_intro (expr_string "Object") expr_true expr_null expr_null expr_undefined.
+Definition default_objattrs := objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined expr_undefined.
 
 Definition objattrs_with_proto p oa := let 'objattrs_intro cl ex pr co pv := oa in objattrs_intro cl ex p co pv.
 

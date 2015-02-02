@@ -178,6 +178,7 @@ Definition to_js_error e := make_app_builtin "%ToJSError" [e].
 (*
 
 Definition create_context args body parent := 
+    
 
 Definition make_lambda args body := 
 
@@ -271,11 +272,83 @@ Definition make_array es :=
     let attrs := L.objattrs_intro (L.expr_string "Array") L.expr_true (make_builtin "%ArrayProto") L.expr_null L.expr_undefined in 
     L.expr_object attrs (("length", l_prop) :: exp_props).
 
+Definition make_args_obj is_new (es : list L.expr) := 
+    let mkprop e := L.property_data (L.data_intro e L.expr_true L.expr_true L.expr_true) in
+    let props := zipl_stream (id_stream_from 0) (map mkprop es) in
+    let arg_constructor := if is_new then make_builtin "%mkNewArgsObj" else make_builtin "%mkArgsObj" in
+    L.expr_app arg_constructor [L.expr_object L.default_objattrs props].
+
+Definition throw_typ_error msg := make_app_builtin "%TypeError" [L.expr_string msg].
+
+Definition appexpr_check e1 e2  := 
+    L.expr_if (type_test e1 "function") e2 (throw_typ_error "Not a function").
+
+Definition make_app (e : L.expr) es := 
+    let args_obj := make_args_obj false es in 
+    match e with
+    | L.expr_get_field (L.expr_id "%context") (L.expr_string "eval") _ =>
+        make_app_builtin "%maybeDirectEval" [L.expr_id "%this"; L.expr_id "%context"; args_obj; L.expr_id "#strict"]
+    | L.expr_get_field (L.expr_id "%context") _ _ =>
+        L.expr_let "%fun" e (appexpr_check (L.expr_id "%fun")
+            (L.expr_app (L.expr_id "%fun") [L.expr_undefined; args_obj]))
+    | L.expr_get_field obj fld _ =>
+        L.expr_let "%obj" obj (L.expr_let "%fun" (make_get_field (to_object (L.expr_id "%obj")) fld) 
+            (L.expr_app (L.expr_id "%fun") [to_object (L.expr_id "%obj"); args_obj]))
+    | _ => (* TODO get rid of the copy-paste *)
+        L.expr_let "%fun" e (appexpr_check (L.expr_id "%fun")
+            (L.expr_app (L.expr_id "%fun") [L.expr_undefined; args_obj]))
+    end.
+
+(* TODO move to utils *)
+Fixpoint remove_dupes' `{c : Comparable A} (l : list A) (met : list A) :=
+    match l with
+    | nil => nil
+    | a :: l' => ifb Mem a met then remove_dupes' l' met else a :: remove_dupes' l' (a :: met)
+    end.
+
+Definition remove_dupes `{c : Comparable A} (l : list A) := remove_dupes' l nil.
+
+Fixpoint assocs {B : Type} `{c : Comparable A} (a : A) (l : list (A*B)) := 
+    match l with
+    | nil => nil
+    | (b, v) :: l' => ifb a = b then v :: assocs a l' else assocs a l'
+    end.
+
+Definition combine_two_props (p1 p2 : L.property) :=
+    match p1, p2 with (* TODO error handling? 11.1.5 *)
+    | L.property_data d, L.property_data _ => p1
+    | L.property_accessor (L.accessor_intro g L.expr_undefined e c), L.property_accessor (L.accessor_intro L.expr_undefined s _ _) =>
+        L.property_accessor (L.accessor_intro g s e c)
+    | L.property_accessor (L.accessor_intro L.expr_undefined s e c), L.property_accessor (L.accessor_intro g L.expr_undefined _ _) =>
+        L.property_accessor (L.accessor_intro g s e c)
+    | _, _ => L.property_data (L.data_intro (syntax_error "Invalid object declaration") L.expr_true L.expr_true L.expr_true)
+    end.
+
+(* TODO: move *)
+Global Instance property_inhab : Inhab L.property.
+Proof.
+    intros. apply (prove_Inhab (L.property_data (L.data_intro L.expr_undefined L.expr_undefined L.expr_undefined L.expr_undefined))).
+Qed.
+
+Definition combine_props ps :=
+    match ps with
+    | p :: ps' => fold_left combine_two_props p ps'
+    | nil => arbitrary
+    end.
+
+Definition make_object ps :=    
+    let gs_ids := remove_dupes (map fst ps) in
+    let props := map (fun s => (s, combine_props (assocs s ps))) gs_ids in
+    let oa := L.objattrs_intro (L.expr_string "Object") L.expr_true (make_builtin "%ObjectProto") L.expr_undefined L.expr_undefined in
+    L.expr_object oa props.
+
 End DesugarUtils.
 
 Import DesugarUtils.
 
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
+    let map_ejs_to_ljs := (fix f l := match l with nil => nil | e :: l' => ejs_to_ljs e :: f l' end) in 
+    let map_property_to_ljs := (fix f l := match l with nil => nil | (s, e) :: l' => (s, property_to_ljs e) :: f l' end) in
     match e with
     | E.expr_true => L.expr_true
     | E.expr_false => L.expr_false
@@ -285,12 +358,15 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_string s => L.expr_string s
     | E.expr_id i => L.expr_id i
     | E.expr_this => make_builtin "%this"
-    | E.expr_array es => make_array ((fix f l := match l with nil => nil | e :: l' => ejs_to_ljs e :: f l' end) es)
+    | E.expr_object ps => make_object (map_property_to_ljs ps) 
+    | E.expr_array es => make_array (map_ejs_to_ljs es)
     | E.expr_func is e => make_fobj is (ejs_to_ljs e) context 
+    | E.expr_app e es => make_app (ejs_to_ljs e) (map_ejs_to_ljs es)
     | E.expr_func_stmt i is e => make_func_stmt i is (ejs_to_ljs e)
     | E.expr_seq e1 e2 => L.expr_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_if e e1 e2 => make_if (ejs_to_ljs e) (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_op1 op e => make_op1 op (ejs_to_ljs e)
+    | E.expr_op2 op e1 e2 => make_op2 op (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_set_field e1 e2 e3 => make_set_field (ejs_to_ljs e1) (ejs_to_ljs e2) (ejs_to_ljs e3)
     | E.expr_get_field e1 e2 => make_get_field (prop_accessor_check (ejs_to_ljs e1)) (ejs_to_ljs e2)
     | E.expr_for_in s e1 e2 => make_for_in s (ejs_to_ljs e1) (ejs_to_ljs e2) 
@@ -304,4 +380,13 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_strict e => L.expr_let "#strict" L.expr_true (ejs_to_ljs e)
     | E.expr_nonstrict e => L.expr_let "#strict" L.expr_false (ejs_to_ljs e)
     | _ => L.expr_dump
+    end
+with property_to_ljs p :=
+    match p with
+    | E.property_data d => 
+        L.property_data (L.data_intro (ejs_to_ljs d) L.expr_true L.expr_true L.expr_true)
+    | E.property_getter d => 
+        L.property_accessor (L.accessor_intro (ejs_to_ljs d) L.expr_undefined L.expr_false L.expr_false)
+    | E.property_setter d =>
+        L.property_accessor (L.accessor_intro L.expr_undefined (ejs_to_ljs d) L.expr_false L.expr_false)
     end.
