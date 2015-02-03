@@ -155,7 +155,7 @@ Definition set_object_pattr obj s (pa : pattr) v : resultof object :=
   end
 .
 
-(* Desugaring function, not yet implemented *)
+(* Desugaring function *)
 
 Parameter desugar_expr : string -> option expr.
 

@@ -24,17 +24,34 @@ Fixpoint js_literal_to_ejs l :=
     | J.literal_string s => E.expr_string s
     end.
 
-Fixpoint js_stat_block_to_ejs es :=
-    match es with
-    | nil => E.expr_undefined
-    | [e] => e
-    | e :: es' => E.expr_seq e (js_stat_block_to_ejs es')
+Definition js_expr_assign_to_ejs e1 oop e2 :=
+    let aop e := 
+        match oop with
+        | None => e
+        | Some op => E.expr_op2 op e1 e
+        end in
+    match e1 with
+    | E.expr_var_id s => E.expr_var_set s (aop e2)
+    | E.expr_get_field e1' e1'' => E.expr_set_field e1' e1'' (aop e2)
+    | _ => E.expr_syntaxerror
     end.
+
+Definition is_strict es := 
+    match es with
+    | J.element_stat (J.stat_expr (J.expr_literal (J.literal_string "use strict"))) :: _ => true
+    | _ => false
+    end.
+
+Definition strict_wrapper b e := if is_strict b then E.expr_strict e else e.
+
+Definition is_element_stat e := match e with J.element_stat _ => true | _ => false end.
+Definition is_element_func_decl e := match e with J.element_func_decl _ _ _ => true | _ => false end.
 
 Fixpoint js_expr_to_ejs (e : J.expr) : E.expr := 
     let map_js_expr_to_ejs := (fix f l := match l with nil => nil | e :: l' => js_expr_to_ejs e :: f l' end) in 
     match e with
     | J.expr_this => E.expr_this
+    | J.expr_identifier i => E.expr_var_id i
     | J.expr_literal l => js_literal_to_ejs l
     | J.expr_member e s => E.expr_get_field (js_expr_to_ejs e) (E.expr_string s) 
     | J.expr_access e1 e2 => E.expr_get_field (js_expr_to_ejs e1) (js_expr_to_ejs e2)
@@ -43,21 +60,32 @@ Fixpoint js_expr_to_ejs (e : J.expr) : E.expr :=
     | J.expr_conditional e1 e2 e3 => E.expr_if (js_expr_to_ejs e1) (js_expr_to_ejs e2) (js_expr_to_ejs e3)
     | J.expr_new e es => E.expr_new (js_expr_to_ejs e) (map_js_expr_to_ejs es)
     | J.expr_call e es => E.expr_app (js_expr_to_ejs e) (map_js_expr_to_ejs es)
-    | _ => E.expr_undefined
+    | J.expr_function onm xs (J.funcbody_intro p _) => 
+        match onm with
+        | None => E.expr_func xs (js_prog_to_ejs p)
+        | _ => E.expr_undefined
+        end 
+    | _ => E.expr_syntaxerror
     end
 with js_stat_to_ejs (e : J.stat) : E.expr := 
     let map_js_stat_to_ejs := (fix f l := match l with nil => nil | e :: l' => js_stat_to_ejs e :: f l' end) in
     let js_switchclause_to_ejs c := 
         match c with
-        | J.switchclause_intro e sts => E.case_case (js_expr_to_ejs e) (js_stat_block_to_ejs (map_js_stat_to_ejs sts))
+        | J.switchclause_intro e sts => E.case_case (js_expr_to_ejs e) (E.expr_seqs (map_js_stat_to_ejs sts))
         end in
     let map_js_switchclause_to_ejs := 
         (fix f l := match l with nil => nil | e :: l' => js_switchclause_to_ejs e :: f l' end) in 
+    let js_vardecl_to_ejs vd := 
+        let '(s, oe) := vd in 
+        let e := LibOption.map js_expr_to_ejs oe in
+        E.expr_var_decl s e in
+    let map_js_vardecl_to_ejs l :=
+        (fix f l := match l with nil => nil | e :: l' => js_vardecl_to_ejs e :: f l' end) l in
     match e with
     | J.stat_expr e => js_expr_to_ejs e
     | J.stat_label s st => E.expr_label s (js_stat_to_ejs st)
-    | J.stat_block sts => js_stat_block_to_ejs (map_js_stat_to_ejs sts)
-(*    | J.stat_var_decl *)
+    | J.stat_block sts => E.expr_seqs (map_js_stat_to_ejs sts)
+    | J.stat_var_decl l => E.expr_seqs (map_js_vardecl_to_ejs l)
     | J.stat_if e st None => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) (E.expr_undefined)
     | J.stat_if e st (Some st') => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) (js_stat_to_ejs st')
 (* TODO select implementation strategy
@@ -124,13 +152,28 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
     | J.stat_switch nil e (J.switchbody_withdefault cl1 sts cl2) => 
         E.expr_switch (js_expr_to_ejs e) 
             (map_js_switchclause_to_ejs cl1 ++ 
-                [E.case_default (js_stat_block_to_ejs (map_js_stat_to_ejs sts))] ++ 
+                [E.case_default (E.expr_seqs (map_js_stat_to_ejs sts))] ++ 
                 map_js_switchclause_to_ejs cl2)
-    | _ => E.expr_undefined
+    | _ => E.expr_syntaxerror
     end
 with js_element_to_ejs (e : J.element) : E.expr := 
     match e with
     | J.element_stat st => js_stat_to_ejs st
-    | _ => E.expr_undefined
+(*    | J.element_func_decl s ps fb => E.expr_syntaxerror *)
+    | _ => E.expr_syntaxerror
     end
-.
+with js_prog_to_ejs p : E.expr :=
+    let js_elements_to_ejs (es : list J.element) : E.expr :=
+        let filtmap_js_element_to_ejs p := fix f l :=
+            match l with nil => nil | e :: es => if p e then js_element_to_ejs e :: f es else f es end in
+        E.expr_seqs (filtmap_js_element_to_ejs is_element_func_decl es ++ 
+            filtmap_js_element_to_ejs is_element_stat es) in
+    match p with
+    | J.prog_intro _ sts => strict_wrapper sts (js_elements_to_ejs sts)
+    end.
+
+Require EjsToLjs.
+
+Parameter parse_js_expr : string -> option JsSyntax.prog.
+Definition desugar_expr s := LibOption.map (fun e => EjsToLjs.ejs_to_ljs (js_prog_to_ejs e)) (parse_js_expr s).
+

@@ -2,6 +2,8 @@ Require Import String.
 Require Import JsNumber.
 Require Import Coq.Strings.String.
 Require JsSyntax.
+Import ListNotations.
+Open Scope list_scope.
 
 Module J := JsSyntax.
 
@@ -18,6 +20,9 @@ Inductive expr : Type :=
 | expr_true
 | expr_false
 | expr_id : id -> expr
+| expr_var_id : id -> expr
+| expr_var_decl : id -> option expr -> expr
+| expr_var_set : id -> expr -> expr
 | expr_array : list expr -> expr
 | expr_object : list (string * property) -> expr
 | expr_this : expr
@@ -46,6 +51,7 @@ Inductive expr : Type :=
 | expr_with : expr -> expr -> expr
 | expr_strict : expr -> expr
 | expr_nonstrict : expr -> expr
+| expr_syntaxerror : expr
 with property : Type :=
 | property_data : expr -> property
 | property_getter : expr -> property
@@ -54,3 +60,10 @@ with case : Type :=
 | case_case : expr -> expr -> case
 | case_default : expr -> case
 .
+
+Fixpoint expr_seqs es :=
+    match es with
+    | nil => expr_undefined
+    | [e] => e
+    | e :: es' => expr_seq e (expr_seqs es')
+    end.

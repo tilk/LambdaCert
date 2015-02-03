@@ -2,6 +2,7 @@ Set Implicit Arguments.
 Require Import LjsInterpreter.
 Require Import JsNumber.
 Require EjsToLjs.
+Require EjsFromJs.
 
 Require Import LibFix LibList.
 
@@ -249,6 +250,21 @@ Extract Constant LjsCommon.get_closure => "fun s v -> get_closure_aux 100000 s v
 (* That would be more optimized than char lists...
 Extract Inductive String.string => "string" [ """""" "(^)" ]. *)
 
+(* Parsing *)
+Extract Constant EjsFromJs.parse_js_expr => "(fun s ->
+    let str = Batteries.String.of_list s in
+    let parserExp = Parser_main.exp_from_string str in
+    try
+      Some (Translate_syntax.exp_to_prog parserExp)
+    with
+    (* | Translate_syntax.CoqSyntaxDoesNotSupport _ -> assert false (* Temporary *) *)
+    | Parser.InvalidArgument _ ->
+      prerr_string (""Warning:  Parser error on eval.  Input string:  \"""" ^ str ^ ""\""\n"");
+      None
+  )".
+
+Extract Constant JsSyntax.env_loc_global_env_record => "0".
+
 Extraction Blacklist String List Bool.
 
-Separate Extraction EjsToLjs LjsInterpreter LjsValues LjsSyntax LjsCommon LjsStore LjsMonads JsNumber.to_string.
+Separate Extraction EjsToLjs EjsFromJs LjsInterpreter LjsValues LjsSyntax LjsCommon LjsStore LjsMonads JsNumber.to_string.

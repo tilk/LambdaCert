@@ -1,10 +1,10 @@
 #!/bin/bash
 
-S5_PATH=~/js/LambdaS5/src/s5.d.byte
+CLOSURE_PATH=~/js/LambdaCert/jscert/interp/parser/lib/js_parser.jar
 
 BASE_PATH=`dirname $0`/..
 
-OCAMLRUNPARAM="b" $BASE_PATH/build/eval.native -desugarS5 $S5_PATH -load $BASE_PATH/tests/es5.dump $1
+OCAMLRUNPARAM="b" $BASE_PATH/build/eval.native -desugarBuiltin $CLOSURE_PATH -load $BASE_PATH/tests/es5.dump $1
 
 EX=$?
 

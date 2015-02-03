@@ -328,7 +328,7 @@ Definition combine_two_props (p1 p2 : L.property) :=
 Global Instance property_inhab : Inhab L.property.
 Proof.
     intros. apply (prove_Inhab (L.property_data (L.data_intro L.expr_undefined L.expr_undefined L.expr_undefined L.expr_undefined))).
-Qed.
+Defined.
 
 Definition combine_props ps :=
     match ps with
