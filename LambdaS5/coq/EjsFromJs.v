@@ -175,5 +175,5 @@ with js_prog_to_ejs p : E.expr :=
 Require EjsToLjs.
 
 Parameter parse_js_expr : string -> option JsSyntax.prog.
-Definition desugar_expr s := LibOption.map (fun e => EjsToLjs.ejs_to_ljs (js_prog_to_ejs e)) (parse_js_expr s).
+Definition desugar_expr s := LibOption.map (fun e => EjsToLjs.ejs_prog_to_ljs (js_prog_to_ejs e)) (parse_js_expr s).
 

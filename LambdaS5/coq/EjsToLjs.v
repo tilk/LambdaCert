@@ -82,11 +82,7 @@ Definition make_app_builtin s es := L.expr_app (make_builtin s) es.
 
 Definition is_object_type e := make_app_builtin "%IsObject" e. 
 
-Definition to_object e :=
-    match e with
-    | L.expr_id "%context" => e
-    | _ => make_app_builtin "%ToObject" [e]
-    end.
+Definition to_object e := make_app_builtin "%ToObject" [e].
 
 Definition to_string e :=
     match e with
@@ -99,11 +95,7 @@ Definition to_bool e := make_app_builtin "%ToBoolean" [e].
 Definition with_error_dispatch e :=
     L.expr_try_catch e (make_builtin "%ErrorDispatch").
 
-Definition prop_accessor_check e :=
-    match e with
-    | L.expr_id "%context" => e
-    | _ => make_app_builtin "%PropAccessorCheck" [e]
-    end.
+Definition prop_accessor_check e := make_app_builtin "%PropAccessorCheck" [e].
 
 (* TODO: get rid of this argsobj nonsense someday *)
 Definition make_get_field obj fld :=
@@ -116,10 +108,10 @@ Definition make_set_field_naked obj fld v :=
     L.expr_let "%v" v (L.expr_set_field obj (to_string fld) (L.expr_id "%v") argsobj).
 
 Definition make_set_field obj fld v :=
-    match obj with
-    | L.expr_id "%context" => make_app_builtin "%EnvCheckAssign" [obj; to_string fld; v; L.expr_id "#strict"]
-    | _ => with_error_dispatch (make_app_builtin "%set-property" [to_object obj; to_string fld; v])
-    end.
+    with_error_dispatch (make_app_builtin "%set-property" [to_object obj; to_string fld; v]).
+
+Definition make_var_set fld v :=
+    make_app_builtin "%EnvCheckAssign" [L.expr_id "%context"; L.expr_string fld; v; L.expr_id "#strict"].
 
 Definition make_while (tst bdy after : L.expr) := L.expr_undefined.
 
@@ -357,6 +349,10 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_number n => L.expr_number n
     | E.expr_string s => L.expr_string s
     | E.expr_id i => L.expr_id i
+    | E.expr_var_id i => make_get_field (L.expr_id "%context") (L.expr_string i)
+    | E.expr_var_decl i None => L.expr_undefined
+    | E.expr_var_decl i (Some e) => make_var_set i (ejs_to_ljs e)
+    | E.expr_var_set i e => make_var_set i (ejs_to_ljs e)
     | E.expr_this => make_builtin "%this"
     | E.expr_object ps => make_object (map_property_to_ljs ps) 
     | E.expr_array es => make_array (map_ejs_to_ljs es)
@@ -390,3 +386,12 @@ with property_to_ljs p :=
     | E.property_setter d =>
         L.property_accessor (L.accessor_intro L.expr_undefined (ejs_to_ljs d) L.expr_false L.expr_false)
     end.
+
+Definition ejs_prog_to_ljs ep :=
+    let '(strict, inner) := 
+        match ep with
+        | E.expr_strict e => (true, ep)
+        | _ => (false, E.expr_nonstrict ep)
+        end in
+    L.expr_let "%context" (L.expr_id (if strict then "%strictContext" else "%nonstrictContext")) 
+        (ejs_to_ljs inner).
