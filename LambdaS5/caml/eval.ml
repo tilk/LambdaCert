@@ -5,7 +5,11 @@ open LjsSyntax
 
 let usage_msg = "Usage: "
 
+let fformat = ref false
+
 let store = ref None
+
+let fprint = ref false
 
 let get_store () = if Option.is_none !store then store := Some (create_ctx, create_store); Option.get !store
 
@@ -13,15 +17,17 @@ let get_channel filename =
     if filename = "stdin" then stdin else open_in filename
 
 let handle_parameter filename = 
-    let ast = match Desugar.get_js_parser () with
-        | Some jp -> (* assuming inputs to be JS files *)
+    let ast = 
+        if !fformat then
+            let Some jp = Desugar.get_js_parser () in
             jp filename
-        | None -> (* assuming inputs to be LJS files *)
+        else
             let ch = get_channel filename in
             let ret = Parse.parse_es5 ch filename in
             close_in ch; Translate.translate_expr ret in
     try
-        Run.print_result (Run.eval_ast (get_store ()) ast)
+        if !fprint then (print_string (Ljs_pretty.exp_to_string ast); print_string "\n")
+        else Run.print_result (Run.eval_ast (get_store ()) ast)
     with e -> 
         Printexc.print_backtrace stderr;
         raise e
@@ -52,6 +58,12 @@ let desugar_s5 filename = Desugar.set_js_parser_s5 filename
 
 let desugar_builtin filename = Desugar.set_js_parser_builtin filename
 
+let format_js () = fformat := true
+
+let format_ljs () = fformat := false
+
+let print_not_eval () = fprint := true
+
 let _ =
     Arg.parse 
         ["-load",
@@ -68,7 +80,16 @@ let _ =
          "path to the Closure Javascript parser";
          "-desugarS5",
          Arg.String desugar_s5,
-         "path to LambdaS5 (for desugaring js)"
+         "path to LambdaS5 (for desugaring js)";
+         "-js",
+         Arg.Unit format_js,
+         "parse inputs as Javascript";
+         "-ljs",
+         Arg.Unit format_ljs,
+         "parse inputs as S5";
+         "-print",
+         Arg.Unit print_not_eval,
+         "print S5 code instead of interpreting";
         ] 
         handle_parameter
         usage_msg

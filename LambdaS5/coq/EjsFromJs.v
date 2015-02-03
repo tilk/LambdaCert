@@ -132,7 +132,6 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         | Some e => js_expr_to_ejs e
         end in 
         E.expr_seq e1 (E.expr_label "%before" (E.expr_while e2 (js_stat_to_ejs st) e3))
-(* TODO decide on variable support 
     | J.stat_for_var nil le1 oe2 oe3 st =>
         let e2 := match oe2 with
         | None => E.expr_undefined
@@ -141,8 +140,9 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         let e3 := match oe3 with
         | None => E.expr_true
         | Some e => js_expr_to_ejs e
-        end in 
-*)       
+        end in
+        E.expr_seq (E.expr_seqs (map_js_vardecl_to_ejs le1)) 
+            (E.expr_label "%before" (E.expr_while e2 (js_stat_to_ejs st) e3))
 (* TODO for-in
     | J.stat_for_in nil lval e st => 
         E.expr_label "%before" (E.expr_for_in s (js_expr_to_ejs e) (js_stat_to_ejs st))
