@@ -9,7 +9,7 @@ coq: configure
 
 copy_ljs:
 	mkdir -p build/
-	cp caml/ljs/ljs_lexer.mll caml/ljs/ljs_parser.mly caml/ljs/ljs_syntax.ml build/
+	cp caml/ljs/ljs_lexer.mll caml/ljs/ljs_parser.mly caml/ljs/*.ml build/
 
 edit_ljs:
 	# You might want the following commands if you want to use the latest
