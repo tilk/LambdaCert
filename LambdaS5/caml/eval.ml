@@ -11,12 +11,15 @@ let store = ref None
 
 let fprint = ref false
 
+let had_files = ref false
+
 let get_store () = if Option.is_none !store then store := Some (create_ctx, create_store); Option.get !store
 
 let get_channel filename =
     if filename = "stdin" then stdin else open_in filename
 
 let handle_parameter filename = 
+    had_files := true;
     let ast = 
         if !fformat then
             let Some jp = Desugar.get_js_parser () in
@@ -92,5 +95,6 @@ let _ =
          "print S5 code instead of interpreting";
         ] 
         handle_parameter
-        usage_msg
+        usage_msg;
+    if not !had_files then print_string "Use -help to get information on usage\n"
 
