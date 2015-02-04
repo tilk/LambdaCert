@@ -1,3 +1,5 @@
+Set Implicit Arguments.
+Generalizable All Variables.
 Require Import List.
 Require Import Ascii.
 Require Import String.

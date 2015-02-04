@@ -6,6 +6,7 @@ Require Import Utils.
 Require LjsSyntax.
 Require EjsSyntax.
 Require JsSyntax.
+Require JsPreliminary.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
@@ -14,6 +15,7 @@ Local Coercion JsNumber.of_int : Z >-> JsNumber.number.
 
 Module E := EjsSyntax.
 Module J := JsSyntax.
+Module JI := JsPreliminary.
 
 Fixpoint js_literal_to_ejs l := 
     match l with
@@ -48,7 +50,6 @@ Definition is_element_stat e := match e with J.element_stat _ => true | _ => fal
 Definition is_element_func_decl e := match e with J.element_func_decl _ _ _ => true | _ => false end.
 
 Fixpoint js_expr_to_ejs (e : J.expr) : E.expr := 
-    let map_js_expr_to_ejs := (fix f l := match l with nil => nil | e :: l' => js_expr_to_ejs e :: f l' end) in 
     match e with
     | J.expr_this => E.expr_this
     | J.expr_identifier i => E.expr_var_id i
@@ -58,8 +59,9 @@ Fixpoint js_expr_to_ejs (e : J.expr) : E.expr :=
     | J.expr_unary_op o e => E.expr_op1 o (js_expr_to_ejs e) 
     | J.expr_binary_op e1 o e2 => E.expr_op2 o (js_expr_to_ejs e1) (js_expr_to_ejs e2)
     | J.expr_conditional e1 e2 e3 => E.expr_if (js_expr_to_ejs e1) (js_expr_to_ejs e2) (js_expr_to_ejs e3)
-    | J.expr_new e es => E.expr_new (js_expr_to_ejs e) (map_js_expr_to_ejs es)
-    | J.expr_call e es => E.expr_app (js_expr_to_ejs e) (map_js_expr_to_ejs es)
+    | J.expr_assign e1 oo e2 => js_expr_assign_to_ejs (js_expr_to_ejs e1) oo (js_expr_to_ejs e2)
+    | J.expr_new e es => E.expr_new (js_expr_to_ejs e) (List.map js_expr_to_ejs es)
+    | J.expr_call e es => E.expr_app (js_expr_to_ejs e) (List.map js_expr_to_ejs es)
     | J.expr_function onm xs (J.funcbody_intro p _) => 
         match onm with
         | None => E.expr_func xs (js_prog_to_ejs p)
@@ -68,24 +70,21 @@ Fixpoint js_expr_to_ejs (e : J.expr) : E.expr :=
     | _ => E.expr_syntaxerror
     end
 with js_stat_to_ejs (e : J.stat) : E.expr := 
-    let map_js_stat_to_ejs := (fix f l := match l with nil => nil | e :: l' => js_stat_to_ejs e :: f l' end) in
     let js_switchclause_to_ejs c := 
         match c with
-        | J.switchclause_intro e sts => E.case_case (js_expr_to_ejs e) (E.expr_seqs (map_js_stat_to_ejs sts))
+        | J.switchclause_intro e sts => E.case_case (js_expr_to_ejs e) (E.expr_seqs (List.map js_stat_to_ejs sts))
         end in
-    let map_js_switchclause_to_ejs := 
-        (fix f l := match l with nil => nil | e :: l' => js_switchclause_to_ejs e :: f l' end) in 
     let js_vardecl_to_ejs vd := 
         let '(s, oe) := vd in 
-        let e := LibOption.map js_expr_to_ejs oe in
-        E.expr_var_decl s e in
-    let map_js_vardecl_to_ejs l :=
-        (fix f l := match l with nil => nil | e :: l' => js_vardecl_to_ejs e :: f l' end) l in
+        match oe with
+        | None => E.expr_undefined
+        | Some e => E.expr_var_set s (js_expr_to_ejs e)
+        end in
     match e with
     | J.stat_expr e => js_expr_to_ejs e
     | J.stat_label s st => E.expr_label s (js_stat_to_ejs st)
-    | J.stat_block sts => E.expr_seqs (map_js_stat_to_ejs sts)
-    | J.stat_var_decl l => E.expr_seqs (map_js_vardecl_to_ejs l)
+    | J.stat_block sts => E.expr_seqs (List.map js_stat_to_ejs sts)
+    | J.stat_var_decl l => E.expr_seqs (List.map js_vardecl_to_ejs l)
     | J.stat_if e st None => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) (E.expr_undefined)
     | J.stat_if e st (Some st') => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) (js_stat_to_ejs st')
 (* TODO select implementation strategy
@@ -141,19 +140,19 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         | None => E.expr_true
         | Some e => js_expr_to_ejs e
         end in
-        E.expr_seq (E.expr_seqs (map_js_vardecl_to_ejs le1)) 
+        E.expr_seq (E.expr_seqs (List.map js_vardecl_to_ejs le1)) 
             (E.expr_label "%before" (E.expr_while e2 (js_stat_to_ejs st) e3))
 (* TODO for-in
     | J.stat_for_in nil lval e st => 
         E.expr_label "%before" (E.expr_for_in s (js_expr_to_ejs e) (js_stat_to_ejs st))
 *)
     | J.stat_switch nil e (J.switchbody_nodefault cl) => 
-        E.expr_switch (js_expr_to_ejs e) (map_js_switchclause_to_ejs cl)
+        E.expr_switch (js_expr_to_ejs e) (List.map js_switchclause_to_ejs cl)
     | J.stat_switch nil e (J.switchbody_withdefault cl1 sts cl2) => 
         E.expr_switch (js_expr_to_ejs e) 
-            (map_js_switchclause_to_ejs cl1 ++ 
-                [E.case_default (E.expr_seqs (map_js_stat_to_ejs sts))] ++ 
-                map_js_switchclause_to_ejs cl2)
+            (List.map js_switchclause_to_ejs cl1 ++ 
+                [E.case_default (E.expr_seqs (List.map js_stat_to_ejs sts))] ++ 
+                List.map js_switchclause_to_ejs cl2)
     | _ => E.expr_syntaxerror
     end
 with js_element_to_ejs (e : J.element) : E.expr := 
@@ -169,7 +168,7 @@ with js_prog_to_ejs p : E.expr :=
         E.expr_seqs (filtmap_js_element_to_ejs is_element_func_decl es ++ 
             filtmap_js_element_to_ejs is_element_stat es) in
     match p with
-    | J.prog_intro _ sts => strict_wrapper sts (js_elements_to_ejs sts)
+    | J.prog_intro _ sts => strict_wrapper sts (E.expr_var_decl (JI.prog_vardecl p) (js_elements_to_ejs sts))
     end.
 
 Require EjsToLjs.

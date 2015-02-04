@@ -334,12 +334,17 @@ Definition make_object ps :=
     let oa := L.objattrs_intro (L.expr_string "Object") L.expr_true (make_builtin "%ObjectProto") L.expr_undefined L.expr_undefined in
     L.expr_object oa props.
 
+Definition make_var_decl is e := (* TODO make it work well *)
+    let mkvar i := (i, L.property_data (L.data_intro L.expr_undefined L.expr_true L.expr_false L.expr_false)) in
+    derived_context_in (map mkvar is) e.
+
 End DesugarUtils.
 
 Import DesugarUtils.
 
+(* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
-    let map_ejs_to_ljs := (fix f l := match l with nil => nil | e :: l' => ejs_to_ljs e :: f l' end) in 
+    let map_ejs_to_ljs := List.map ejs_to_ljs in 
     let map_property_to_ljs := (fix f l := match l with nil => nil | (s, e) :: l' => (s, property_to_ljs e) :: f l' end) in
     match e with
     | E.expr_true => L.expr_true
@@ -348,10 +353,9 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_null => L.expr_null
     | E.expr_number n => L.expr_number n
     | E.expr_string s => L.expr_string s
-    | E.expr_id i => L.expr_id i
+(*    | E.expr_id i => L.expr_id i *)
     | E.expr_var_id i => make_get_field context (L.expr_string i)
-    | E.expr_var_decl i None => L.expr_undefined
-    | E.expr_var_decl i (Some e) => make_var_set i (ejs_to_ljs e)
+    | E.expr_var_decl is e => make_var_decl is (ejs_to_ljs e) (* TODO variables!!! *)
     | E.expr_var_set i e => make_var_set i (ejs_to_ljs e)
     | E.expr_this => make_builtin "%this"
     | E.expr_object ps => make_object (map_property_to_ljs ps) 
@@ -375,6 +379,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_with e1 e2 => make_with (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_strict e => L.expr_let "#strict" L.expr_true (ejs_to_ljs e)
     | E.expr_nonstrict e => L.expr_let "#strict" L.expr_false (ejs_to_ljs e)
+    | E.expr_syntaxerror => syntax_error "Syntax error"
     | _ => L.expr_dump
     end
 with property_to_ljs p :=
@@ -394,4 +399,4 @@ Definition ejs_prog_to_ljs ep :=
         | _ => (false, E.expr_nonstrict ep)
         end in
     L.expr_let "%context" (L.expr_id (if strict then "%strictContext" else "%nonstrictContext")) 
-        (ejs_to_ljs inner).
+        (ejs_to_ljs inner). (* TODO: global variable handling *)

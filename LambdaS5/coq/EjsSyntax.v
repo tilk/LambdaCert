@@ -19,9 +19,9 @@ Inductive expr : Type :=
 | expr_number : number -> expr
 | expr_true
 | expr_false
-| expr_id : id -> expr
+(* | expr_id : id -> expr *)
 | expr_var_id : id -> expr
-| expr_var_decl : id -> option expr -> expr
+| expr_var_decl : list id -> expr -> expr
 | expr_var_set : id -> expr -> expr
 | expr_array : list expr -> expr
 | expr_object : list (string * property) -> expr
@@ -34,7 +34,7 @@ Inductive expr : Type :=
 | expr_set_field :  expr -> expr -> expr -> expr
 | expr_app : expr -> list expr -> expr
 | expr_func : list id -> expr -> expr
-| expr_let : id -> expr -> expr
+(* | expr_let : id -> expr -> expr -> expr *)
 | expr_seq : expr -> expr -> expr
 (*
 | expr_do_while : expr -> expr -> expr 

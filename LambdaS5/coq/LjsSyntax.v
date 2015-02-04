@@ -4,6 +4,7 @@ Require Import JsNumber.
 Require Import Coq.Strings.String.
 Require LibStream.
 
+Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
 
@@ -143,6 +144,13 @@ with property : Type :=
 with objattrs : Type :=
 | objattrs_intro : expr -> expr -> expr -> expr -> expr -> objattrs (* class -> extensible -> prototype -> code -> primval -> objattrs *)
 .
+
+Fixpoint expr_seqs es :=
+    match es with
+    | nil => expr_undefined
+    | [e] => e
+    | e :: es' => expr_seq e (expr_seqs es')
+    end.
 
 Definition default_objattrs := objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined expr_undefined.
 
