@@ -21,7 +21,6 @@ Inductive expr : Type :=
 | expr_false
 (* | expr_id : id -> expr *)
 | expr_var_id : id -> expr
-| expr_var_decl : list id -> expr -> expr
 | expr_var_set : id -> expr -> expr
 | expr_array : list expr -> expr
 | expr_object : list (string * property) -> expr
@@ -33,7 +32,7 @@ Inductive expr : Type :=
 | expr_if : expr -> expr -> expr -> expr
 | expr_set_field :  expr -> expr -> expr -> expr
 | expr_app : expr -> list expr -> expr
-| expr_func : list id -> expr -> expr
+| expr_func : list id -> prog -> expr
 (* | expr_let : id -> expr -> expr -> expr *)
 | expr_seq : expr -> expr -> expr
 (*
@@ -47,11 +46,11 @@ Inductive expr : Type :=
 | expr_try_finally : expr -> expr -> expr
 | expr_throw : expr -> expr
 | expr_switch : expr -> list case -> expr
-| expr_func_stmt : id -> list id -> expr -> expr
+| expr_func_stmt : id -> list id -> prog -> expr
 | expr_with : expr -> expr -> expr
-| expr_strict : expr -> expr
-| expr_nonstrict : expr -> expr
 | expr_syntaxerror : expr
+with prog : Type :=
+| prog_intro : bool -> list id -> expr -> prog
 with property : Type :=
 | property_data : expr -> property
 | property_getter : expr -> property

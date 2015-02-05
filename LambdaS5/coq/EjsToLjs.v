@@ -159,35 +159,74 @@ Definition if_strict e1 e2 := L.expr_if (L.expr_id "#strict") e1 e2.
 
 Definition syntax_error s := make_app_builtin "%SyntaxError" [L.expr_string s].
 
+Definition store_parent_in e :=
+    L.expr_let "%parent" context e.
+
 Definition new_context_in ctx e :=
-    L.expr_let "%parent" context (L.expr_let "%context" ctx e).
+    L.expr_let "%context" ctx e.
 
 Definition derived_context_in flds e :=
     new_context_in (L.expr_object (L.objattrs_with_proto (L.expr_id "%parent") L.default_objattrs) flds) e.
 
 Definition to_js_error e := make_app_builtin "%ToJSError" [e].
 
-(*
+Definition make_var_decl is e := (* TODO make it work well *) (* TODO reimplement according to the semantics *) 
+    let mkvar ip := let '(i, e) := ip in
+        (i, L.property_data (L.data_intro e L.expr_true L.expr_false L.expr_false)) in
+    derived_context_in (map mkvar is) e.
 
-Definition create_context args body parent := 
-    
+Definition make_strictness b e := 
+    L.expr_let "#strict" (L.expr_bool b) e.
 
-Definition make_lambda args body := 
+Definition make_resolve_this e :=
+    make_app_builtin "%resolveThis" [L.expr_id "#strict"; e].
 
-*)
+Definition make_lambda f (is : list string) p := 
+    let 'E.prog_intro str vis e := p in 
+    let args_obj := L.expr_id "%args" in
+    let argdecls := 
+        map (fun p => let '(vnum, vid) := p in (vid, make_get_field (L.expr_id "%args") (L.expr_string vnum))) 
+            (zipl_stream (id_stream_from 0) is) in
+    let vdecls := map (fun i => (i, L.expr_undefined)) vis in
+    L.expr_lambda ["%this"; "%args"] (
+    L.expr_seq (L.expr_delete_field (L.expr_id "%args") (L.expr_string "%new")) ( (* TODO rationale? *)
+    L.expr_label "%ret" (
+    L.expr_let "%this" (make_resolve_this (L.expr_id "%this")) (
+    make_var_decl (vdecls ++ ("arguments", args_obj) :: argdecls) (
+    make_strictness str (
+    L.expr_seq (f e) L.expr_undefined)))))).
 
-Definition make_fobj is (e ctx : L.expr) :=
+Definition make_fobj f is p (ctx : L.expr) :=
     ifb Exists (fun nm => nm = "arguments" \/ nm = "eval") is \/ Has_dupes is then 
         if_strict (syntax_error "Illegal function definition") L.expr_undefined else
-    L.expr_null.
+    let proto_obj_objattrs := L.objattrs_with_proto (make_builtin "%ObjectProto") L.default_objattrs in
+    let proto_obj_props := [
+        ("constructor", L.property_data (L.data_intro L.expr_undefined L.expr_true L.expr_false L.expr_false))] in
+    let proto_obj := L.expr_object proto_obj_objattrs proto_obj_props in
+    let func_obj_objattrs := 
+        L.objattrs_intro (L.expr_string "Function") L.expr_true (make_builtin "%FunctionProto") 
+            (make_lambda f is p) L.expr_undefined in
+    let errorer := make_builtin "%ThrowTypeError" in 
+    let errorer_prop := L.property_accessor (L.accessor_intro errorer errorer L.expr_false L.expr_false) in
+    let func_obj_props := [
+        ("prototype", L.property_data (L.data_intro (L.expr_id "%prototype") L.expr_true L.expr_false L.expr_true));
+        ("length", L.property_data (L.data_intro (L.expr_number (length is)) L.expr_true L.expr_false L.expr_false));
+        ("caller", errorer_prop);
+        ("arguments", errorer_prop)] in
+    let func_obj := L.expr_object func_obj_objattrs func_obj_props in
+    L.expr_let "%prototype" proto_obj (
+    store_parent_in (
+    L.expr_let "%thisfunc" func_obj (
+    L.expr_seq (L.expr_set_field (L.expr_id "%prototype") (L.expr_string "constructor") (L.expr_id "%thisfunc") L.expr_null) (
+    L.expr_id "%thisfunc")))).
 
-Definition make_func_stmt i is e :=
-    let fobj := make_fobj is e context in
+Definition make_func_stmt f i is p :=
+    let fobj := make_fobj f is p context in
     make_set_field_naked context (L.expr_string i) fobj.
 
 Definition make_try_catch body i catch :=
     let prop := L.property_data (L.data_intro (to_js_error (L.expr_id i)) L.expr_true L.expr_false L.expr_false) in
-    L.expr_try_catch body (L.expr_lambda [i] (derived_context_in [(i, prop)] catch)).
+    L.expr_try_catch body (L.expr_lambda [i] (store_parent_in (derived_context_in [(i, prop)] catch))).
 
 Definition make_xfix s e :=
     match e with
@@ -195,36 +234,33 @@ Definition make_xfix s e :=
     | _ => syntax_error "Illegal use of an prefix/postfix operator"
     end.
 
-Definition make_typeof e :=
+Definition make_typeof f e :=
     match e with
-    | L.expr_get_field (L.expr_id "%context") fldexpr _ => 
-        make_app_builtin "%Typeof" [context; fldexpr]
-    | _ => L.expr_op1 L.unary_op_typeof e    
+    | E.expr_var_id fldexpr => 
+        make_app_builtin "%Typeof" [context; L.expr_string fldexpr]
+    | _ => L.expr_op1 L.unary_op_typeof (f e)
     end.
 
-Definition make_delete e :=
+Definition make_delete f e :=
     match e with
-    | L.expr_get_field obj fldexpr _ =>
-        match obj with
-        | L.expr_id "%context" => syntax_error "Delete on context"
-        | _ => L.expr_delete_field obj (to_string fldexpr)
-        end
+    | E.expr_get_field obj fldexpr =>
+        L.expr_delete_field (f obj) (to_string (f fldexpr))
     | _ => L.expr_true
     end.
 
-Definition make_op1 op e :=
+Definition make_op1 f op e :=
     match op with
-    | J.unary_op_delete => make_delete e
-    | J.unary_op_post_incr => make_xfix "%PostIncrement" e
-    | J.unary_op_post_decr => make_xfix "%PostDecrement" e
-    | J.unary_op_pre_incr => make_xfix "%PrefixIncrement" e
-    | J.unary_op_pre_decr => make_xfix "%PrefixDecrement" e
-    | J.unary_op_neg => make_app_builtin "%UnaryNeg" [e]
-    | J.unary_op_add => make_app_builtin "%UnaryPlus" [e]
-    | J.unary_op_bitwise_not => make_app_builtin "%BitwiseNot" [e]
-    | J.unary_op_not => L.expr_op1 L.unary_op_not e
-    | J.unary_op_typeof => make_typeof e
-    | J.unary_op_void => L.expr_op1 L.unary_op_void e
+    | J.unary_op_delete => make_delete f e
+    | J.unary_op_post_incr => make_xfix "%PostIncrement" (f e)
+    | J.unary_op_post_decr => make_xfix "%PostDecrement" (f e)
+    | J.unary_op_pre_incr => make_xfix "%PrefixIncrement" (f e)
+    | J.unary_op_pre_decr => make_xfix "%PrefixDecrement" (f e)
+    | J.unary_op_neg => make_app_builtin "%UnaryNeg" [f e]
+    | J.unary_op_add => make_app_builtin "%UnaryPlus" [f e]
+    | J.unary_op_bitwise_not => make_app_builtin "%BitwiseNot" [f e]
+    | J.unary_op_not => L.expr_op1 L.unary_op_not (f e)
+    | J.unary_op_typeof => make_typeof f e
+    | J.unary_op_void => L.expr_op1 L.unary_op_void (f e)
     end.
 
 Definition op2_func op := L.expr_lambda ["%x1";"%x2"] (L.expr_op2 op (L.expr_id "%x1") (L.expr_id "%x2")).
@@ -275,19 +311,16 @@ Definition throw_typ_error msg := make_app_builtin "%TypeError" [L.expr_string m
 Definition appexpr_check e1 e2  := 
     L.expr_if (type_test e1 "function") e2 (throw_typ_error "Not a function").
 
-Definition make_app (e : L.expr) es := 
+Definition make_app f (e : E.expr) es := 
     let args_obj := make_args_obj false es in 
     match e with
-    | L.expr_get_field (L.expr_id "%context") (L.expr_string "eval") _ =>
+    | E.expr_var_id "eval" =>
         make_app_builtin "%maybeDirectEval" [L.expr_id "%this"; L.expr_id "%context"; args_obj; L.expr_id "#strict"]
-    | L.expr_get_field (L.expr_id "%context") _ _ =>
-        L.expr_let "%fun" e (appexpr_check (L.expr_id "%fun")
-            (L.expr_app (L.expr_id "%fun") [L.expr_undefined; args_obj]))
-    | L.expr_get_field obj fld _ =>
-        L.expr_let "%obj" obj (L.expr_let "%fun" (make_get_field (to_object (L.expr_id "%obj")) fld) 
+    | E.expr_get_field obj fld =>
+        L.expr_let "%obj" (f obj) (L.expr_let "%fun" (make_get_field (to_object (L.expr_id "%obj")) (f fld)) 
             (L.expr_app (L.expr_id "%fun") [to_object (L.expr_id "%obj"); args_obj]))
-    | _ => (* TODO get rid of the copy-paste *)
-        L.expr_let "%fun" e (appexpr_check (L.expr_id "%fun")
+    | _ => 
+        L.expr_let "%fun" (f e) (appexpr_check (L.expr_id "%fun")
             (L.expr_app (L.expr_id "%fun") [L.expr_undefined; args_obj]))
     end.
 
@@ -334,18 +367,12 @@ Definition make_object ps :=
     let oa := L.objattrs_intro (L.expr_string "Object") L.expr_true (make_builtin "%ObjectProto") L.expr_undefined L.expr_undefined in
     L.expr_object oa props.
 
-Definition make_var_decl is e := (* TODO make it work well *)
-    let mkvar i := (i, L.property_data (L.data_intro L.expr_undefined L.expr_true L.expr_false L.expr_false)) in
-    derived_context_in (map mkvar is) e.
-
 End DesugarUtils.
 
 Import DesugarUtils.
 
 (* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
-    let map_ejs_to_ljs := List.map ejs_to_ljs in 
-    let map_property_to_ljs := (fix f l := match l with nil => nil | (s, e) :: l' => (s, property_to_ljs e) :: f l' end) in
     match e with
     | E.expr_true => L.expr_true
     | E.expr_false => L.expr_false
@@ -355,17 +382,17 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_string s => L.expr_string s
 (*    | E.expr_id i => L.expr_id i *)
     | E.expr_var_id i => make_get_field context (L.expr_string i)
-    | E.expr_var_decl is e => make_var_decl is (ejs_to_ljs e) (* TODO variables!!! *)
+(*    | E.expr_var_decl is e => make_var_decl is (ejs_to_ljs e) *)
     | E.expr_var_set i e => make_var_set i (ejs_to_ljs e)
     | E.expr_this => make_builtin "%this"
-    | E.expr_object ps => make_object (map_property_to_ljs ps) 
-    | E.expr_array es => make_array (map_ejs_to_ljs es)
-    | E.expr_func is e => make_fobj is (ejs_to_ljs e) context 
-    | E.expr_app e es => make_app (ejs_to_ljs e) (map_ejs_to_ljs es)
-    | E.expr_func_stmt i is e => make_func_stmt i is (ejs_to_ljs e)
+    | E.expr_object ps => make_object (List.map (fun (p : string * E.property) => let (a,b) := p in (a, property_to_ljs b)) ps) 
+    | E.expr_array es => make_array (List.map ejs_to_ljs es)
+    | E.expr_app e es => make_app ejs_to_ljs e (List.map ejs_to_ljs es)
+    | E.expr_func is p => make_fobj ejs_to_ljs is p context
+    | E.expr_func_stmt i is p => make_func_stmt ejs_to_ljs i is p
     | E.expr_seq e1 e2 => L.expr_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_if e e1 e2 => make_if (ejs_to_ljs e) (ejs_to_ljs e1) (ejs_to_ljs e2)
-    | E.expr_op1 op e => make_op1 op (ejs_to_ljs e)
+    | E.expr_op1 op e => make_op1 ejs_to_ljs op e
     | E.expr_op2 op e1 e2 => make_op2 op (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_set_field e1 e2 e3 => make_set_field (ejs_to_ljs e1) (ejs_to_ljs e2) (ejs_to_ljs e3)
     | E.expr_get_field e1 e2 => make_get_field (prop_accessor_check (ejs_to_ljs e1)) (ejs_to_ljs e2)
@@ -377,12 +404,12 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_try_catch e1 i e2 => make_try_catch (ejs_to_ljs e1) i (ejs_to_ljs e2)
     | E.expr_try_finally e1 e2 => L.expr_try_finally (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_with e1 e2 => make_with (ejs_to_ljs e1) (ejs_to_ljs e2)
-    | E.expr_strict e => L.expr_let "#strict" L.expr_true (ejs_to_ljs e)
-    | E.expr_nonstrict e => L.expr_let "#strict" L.expr_false (ejs_to_ljs e)
+(*    | E.expr_strict e => L.expr_let "#strict" L.expr_true (ejs_to_ljs e)
+    | E.expr_nonstrict e => L.expr_let "#strict" L.expr_false (ejs_to_ljs e) *)
     | E.expr_syntaxerror => syntax_error "Syntax error"
     | _ => L.expr_dump
     end
-with property_to_ljs p :=
+with property_to_ljs (p : E.property) : L.property :=
     match p with
     | E.property_data d => 
         L.property_data (L.data_intro (ejs_to_ljs d) L.expr_true L.expr_true L.expr_true)
@@ -392,11 +419,10 @@ with property_to_ljs p :=
         L.property_accessor (L.accessor_intro L.expr_undefined (ejs_to_ljs d) L.expr_false L.expr_false)
     end.
 
+Definition init_global i :=
+    make_app_builtin "%defineGlobalVar" [context; L.expr_string i].
+
 Definition ejs_prog_to_ljs ep :=
-    let '(strict, inner) := 
-        match ep with
-        | E.expr_strict e => (true, ep)
-        | _ => (false, E.expr_nonstrict ep)
-        end in
+    let 'E.prog_intro strict is inner := ep in
     L.expr_let "%context" (L.expr_id (if strict then "%strictContext" else "%nonstrictContext")) 
-        (ejs_to_ljs inner). (* TODO: global variable handling *)
+        (L.expr_seq (L.expr_seqs (List.map init_global is)) (make_strictness strict (ejs_to_ljs inner))). 

@@ -152,6 +152,8 @@ Fixpoint expr_seqs es :=
     | e :: es' => expr_seq e (expr_seqs es')
     end.
 
+Definition expr_bool (b : bool) := if b then expr_true else expr_false.
+
 Definition default_objattrs := objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined expr_undefined.
 
 Definition objattrs_with_proto p oa := let 'objattrs_intro cl ex pr co pv := oa in objattrs_intro cl ex p co pv.

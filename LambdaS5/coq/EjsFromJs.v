@@ -44,8 +44,6 @@ Definition is_strict es :=
     | _ => false
     end.
 
-Definition strict_wrapper b e := if is_strict b then E.expr_strict e else e.
-
 Definition is_element_stat e := match e with J.element_stat _ => true | _ => false end.
 Definition is_element_func_decl e := match e with J.element_func_decl _ _ _ => true | _ => false end.
 
@@ -84,8 +82,8 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
     | J.stat_expr e => js_expr_to_ejs e
     | J.stat_label s st => E.expr_label s (js_stat_to_ejs st)
     | J.stat_block sts => E.expr_seqs (List.map js_stat_to_ejs sts)
-    | J.stat_var_decl l => E.expr_seqs (List.map js_vardecl_to_ejs l)
-    | J.stat_if e st None => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) (E.expr_undefined)
+    | J.stat_var_decl l => E.expr_seq (E.expr_seqs (List.map js_vardecl_to_ejs l)) E.expr_undefined
+    | J.stat_if e st None => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) E.expr_undefined
     | J.stat_if e st (Some st') => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) (js_stat_to_ejs st')
 (* TODO select implementation strategy
     | J.stat_do_while nil st e => E.expr_label "%before" (E.expr_do_while (js_stat_to_ejs st) (js_expr_to_ejs e)) 
@@ -158,17 +156,18 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
 with js_element_to_ejs (e : J.element) : E.expr := 
     match e with
     | J.element_stat st => js_stat_to_ejs st
-(*    | J.element_func_decl s ps fb => E.expr_syntaxerror *)
-    | _ => E.expr_syntaxerror
+    | J.element_func_decl s ps (J.funcbody_intro p _) => 
+(* TODO reconsider implementation strategy *)
+        E.expr_func_stmt s ps (js_prog_to_ejs p)
     end
-with js_prog_to_ejs p : E.expr :=
+with js_prog_to_ejs p : E.prog :=
     let js_elements_to_ejs (es : list J.element) : E.expr :=
         let filtmap_js_element_to_ejs p := fix f l :=
             match l with nil => nil | e :: es => if p e then js_element_to_ejs e :: f es else f es end in
         E.expr_seqs (filtmap_js_element_to_ejs is_element_func_decl es ++ 
             filtmap_js_element_to_ejs is_element_stat es) in
     match p with
-    | J.prog_intro _ sts => strict_wrapper sts (E.expr_var_decl (JI.prog_vardecl p) (js_elements_to_ejs sts))
+    | J.prog_intro _ sts => E.prog_intro (is_strict sts) (JI.prog_vardecl p) (js_elements_to_ejs sts)
     end.
 
 Require EjsToLjs.
