@@ -1,10 +1,12 @@
 #!/bin/bash
 
-CLOSURE_PATH=~/js/LambdaCert/jscert/interp/parser/lib/js_parser.jar
+#CLOSURE_PATH=~/js/LambdaCert/jscert/interp/parser/lib/js_parser.jar
 
 BASE_PATH=`dirname $0`/..
 
-OCAMLRUNPARAM="b" $BASE_PATH/build/eval.native -desugarBuiltin $CLOSURE_PATH -js -load $BASE_PATH/tests/es5.dump $@
+PARSER_PATH=$BASE_PATH/tests/jsparser.sh
+
+OCAMLRUNPARAM="b" $BASE_PATH/build/eval.native -desugarBuiltin $PARSER_PATH -js -load $BASE_PATH/tests/es5.dump $@
 
 EX=$?
 

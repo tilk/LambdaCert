@@ -1,1 +1,1 @@
-<*.ml> or "eval.native" or "eval.p.native" or "eval.byte": package(batteries,xml-light)
+<*.ml> or "eval.native" or "eval.p.native" or "eval.byte": package(batteries,yojson)

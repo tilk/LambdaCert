@@ -2,6 +2,7 @@
 *.v.d
 *.vo
 *.glob
+*.crashcoqide
 /LambdaS5/coq/Makefile
 
 # Extraction

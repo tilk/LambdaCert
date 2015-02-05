@@ -80,7 +80,7 @@ let _ =
          "environment to parse";
          "-desugarBuiltin",
          Arg.String desugar_builtin,
-         "path to the Closure Javascript parser";
+         "path to the external Javascript-to-JSON parser";
          "-desugarS5",
          Arg.String desugar_s5,
          "path to LambdaS5 (for desugaring js)";

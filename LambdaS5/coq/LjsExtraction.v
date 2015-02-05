@@ -255,14 +255,7 @@ Extract Constant EjsFromJs.parse_js_expr => "JsPreliminary.parse_pickable".
 
 Extract Constant JsPreliminary.parse_pickable => "(fun s ->
     let str = Batteries.String.of_list s in
-    let parserExp = Parser_main.exp_from_string str in
-    try
-      Some (Translate_syntax.exp_to_prog parserExp)
-    with
-    (* | Translate_syntax.CoqSyntaxDoesNotSupport _ -> assert false (* Temporary *) *)
-    | Parser.InvalidArgument _ ->
-      prerr_string (""Warning:  Parser error on eval.  Input string:  \"""" ^ str ^ ""\""\n"");
-      None
+    Some (JsParser.parse str)
   )".
 Extract Constant JsSyntaxAux.prealloc_comparable => "(=)".
 

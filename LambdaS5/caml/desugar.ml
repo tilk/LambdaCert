@@ -20,8 +20,8 @@ let builtin_js_parser jsfile =
     | Some e -> e 
     | None -> failwith "desugar failure"
 
-let set_js_parser_builtin jarname = 
-    Parser_main.js_to_xml_parser := jarname;
+let set_js_parser_builtin parsecmd = 
+    JsParser.set_parsecmd parsecmd;
     js_parser := Some builtin_js_parser
 
 let desugar_file s = 
