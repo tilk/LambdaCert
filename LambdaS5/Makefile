@@ -1,5 +1,5 @@
 
-all: configure coq interpreter
+all: configure coq interpreter snapshot
 
 configure: coq/configure coq/*.v
 	cd coq;	./configure
@@ -34,12 +34,12 @@ profiling: ocamlbuild/eval.p.native
 ocamlbuild/eval.native: copy
 	cd build/; ocamlbuild -use-ocamlfind eval.native
 
-native: ocamlbuild/eval.native
+native: ocamlbuild/eval.native 
 
 ocamlbuild/eval.byte: copy
 	cd build/; ocamlbuild -use-ocamlfind eval.byte -tag debug
 
-byte: ocamlbuild/eval.byte
+byte: ocamlbuild/eval.byte 
 
 interpreter: native
 

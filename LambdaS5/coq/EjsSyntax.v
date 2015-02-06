@@ -32,7 +32,7 @@ Inductive expr : Type :=
 | expr_if : expr -> expr -> expr -> expr
 | expr_set_field :  expr -> expr -> expr -> expr
 | expr_app : expr -> list expr -> expr
-| expr_func : list id -> prog -> expr
+| expr_func : option id -> list id -> prog -> expr
 (* | expr_let : id -> expr -> expr -> expr *)
 | expr_seq : expr -> expr -> expr
 (*

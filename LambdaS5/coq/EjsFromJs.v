@@ -60,19 +60,15 @@ Fixpoint js_expr_to_ejs (e : J.expr) : E.expr :=
     | J.expr_assign e1 oo e2 => js_expr_assign_to_ejs (js_expr_to_ejs e1) oo (js_expr_to_ejs e2)
     | J.expr_new e es => E.expr_new (js_expr_to_ejs e) (List.map js_expr_to_ejs es)
     | J.expr_call e es => E.expr_app (js_expr_to_ejs e) (List.map js_expr_to_ejs es)
-    | J.expr_function onm xs (J.funcbody_intro p _) => 
-        match onm with
-        | None => E.expr_func xs (js_prog_to_ejs p)
-        | _ => E.expr_undefined (* TODO recursive function - maybe just pass? *)
-        end 
-    | J.expr_object ps => 
+    | J.expr_function onm xs (J.funcbody_intro p _) => E.expr_func onm xs (js_prog_to_ejs p)
+     | J.expr_object ps => 
         E.expr_object (List.map (fun (pp : J.propname * J.propbody) => let (pn, p) := pp in (JI.string_of_propname pn, js_prop_to_ejs p)) ps) 
     end
 with js_prop_to_ejs p :=
     match p with
     | J.propbody_val e => E.property_data (js_expr_to_ejs e)
-    | J.propbody_get (J.funcbody_intro p _) => E.property_getter (E.expr_func nil (js_prog_to_ejs p))
-    | J.propbody_set is (J.funcbody_intro p _) => E.property_setter (E.expr_func is (js_prog_to_ejs p))
+    | J.propbody_get (J.funcbody_intro p _) => E.property_getter (E.expr_func None nil (js_prog_to_ejs p))
+    | J.propbody_set is (J.funcbody_intro p _) => E.property_setter (E.expr_func None is (js_prog_to_ejs p))
     end
 with js_stat_to_ejs (e : J.stat) : E.expr := 
     let js_switchclause_to_ejs c := 

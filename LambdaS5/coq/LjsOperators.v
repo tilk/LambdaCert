@@ -33,6 +33,7 @@ Definition typeof store (v : value) :=
   | value_object ptr =>
     assert_get_object_from_ptr store ptr (fun obj =>
       match object_code obj with
+      | value_undefined (* choose one *)
       | value_null => result_some (value_string  "object")
       | _ => result_some (value_string "function")
       end

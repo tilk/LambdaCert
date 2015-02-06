@@ -170,10 +170,21 @@ Definition derived_context_in flds e :=
 
 Definition to_js_error e := make_app_builtin "%ToJSError" [e].
 
-Definition make_var_decl is e := (* TODO make it work well *) (* TODO reimplement according to the semantics *) 
-    let mkvar ip := let '(i, e) := ip in
-        (i, L.property_data (L.data_intro e L.expr_true L.expr_false L.expr_false)) in
-    derived_context_in (map mkvar is) e.
+Fixpoint make_lets is e :=
+    match is with
+    | nil => e
+    | (k, v) :: is' => L.expr_let k v (make_lets is' e)
+    end.
+
+Definition make_var_decl is e := (* TODO reimplement according to the semantics *) 
+    let nis : list (string * (string * L.expr)) := zipl_stream (prefixed_id_stream_from "%%" 0) is in
+    let lis := map (fun p => let '(sf, (i, e)) := p in (i ++ sf, e)) nis in
+    let mkvar ip := 
+        let '(sf, (i, e)) := ip in
+        let getter := L.expr_lambda ["t"; "a"] (L.expr_id (i ++ sf)) in
+        let setter := L.expr_lambda ["t"; "a"] (L.expr_set_bang (i ++ sf) (make_get_field (L.expr_id "a") (L.expr_string "0"))) in
+        (i, L.property_accessor (L.accessor_intro getter setter L.expr_false L.expr_false)) in
+    make_lets lis (derived_context_in (map mkvar nis) e).
 
 Definition make_strictness b e := 
     L.expr_let "#strict" (L.expr_bool b) e.
@@ -225,8 +236,8 @@ Definition make_func_stmt f i is p :=
     make_set_field_naked context (L.expr_string i) fobj.
 
 Definition make_try_catch body i catch :=
-    let prop := L.property_data (L.data_intro (to_js_error (L.expr_id i)) L.expr_true L.expr_false L.expr_false) in
-    L.expr_try_catch body (L.expr_lambda [i] (store_parent_in (derived_context_in [(i, prop)] catch))).
+    L.expr_try_catch body (L.expr_lambda [i] (
+        store_parent_in (make_var_decl [(i, to_js_error (L.expr_id i))] catch))).
 
 Definition make_xfix s e :=
     match e with
@@ -388,7 +399,8 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_object ps => make_object (List.map (fun (p : string * E.property) => let (a,b) := p in (a, property_to_ljs b)) ps) 
     | E.expr_array es => make_array (List.map ejs_to_ljs es)
     | E.expr_app e es => make_app ejs_to_ljs e (List.map ejs_to_ljs es)
-    | E.expr_func is p => make_fobj ejs_to_ljs is p context
+    | E.expr_func None is p => make_fobj ejs_to_ljs is p context
+    | E.expr_func (Some i) is p => make_fobj ejs_to_ljs is p context (* TODO *)
     | E.expr_func_stmt i is p => make_func_stmt ejs_to_ljs i is p
     | E.expr_seq e1 e2 => L.expr_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_if e e1 e2 => make_if (ejs_to_ljs e) (ejs_to_ljs e1) (ejs_to_ljs e2)
