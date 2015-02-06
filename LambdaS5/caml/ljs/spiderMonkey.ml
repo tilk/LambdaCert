@@ -90,10 +90,8 @@ let unary_op (v : json) : unary_op = match string (get "operator" v) with
   | "delete" -> Coq_unary_op_delete
   | "void" -> Coq_unary_op_void
   | "typeof" -> Coq_unary_op_typeof
-  | "postfix:++" -> Coq_unary_op_post_incr
-  | "postfix:--" -> Coq_unary_op_post_decr
-  | "prefix:++" -> Coq_unary_op_pre_incr
-  | "prefix:--" -> Coq_unary_op_pre_decr
+  | "++" -> if bool (get "prefix" v) then Coq_unary_op_pre_incr else Coq_unary_op_post_incr
+  | "--" -> if bool (get "prefix" v) then Coq_unary_op_pre_decr else Coq_unary_op_post_decr
   | "+" -> Coq_unary_op_add
   | "-" -> Coq_unary_op_neg
   | "~" -> Coq_unary_op_bitwise_not
@@ -154,8 +152,8 @@ let rec stmt (v : json) : stat =
     | "Break" -> Coq_stat_break (label (get "label" v))
     | "Continue" -> Coq_stat_continue (label (get "label" v))
     | "With" -> Coq_stat_with (expr (get "object" v), stmt (get "body" v))
-(* TODO   | "Switch" ->
-      Coq_stat_switch (expr (get "discriminant" v), map case (list (get "cases" v))) *)
+    | "Switch" ->
+      Coq_stat_switch ([], expr (get "discriminant" v), switchbody (list (get "cases" v))) 
     | "Return" -> Coq_stat_return (maybe expr (get "argument" v))
     | "Throw" -> Coq_stat_throw (expr (get "argument" v))
     | "Try" -> Coq_stat_try (Coq_stat_block (block (get "block" v)),
@@ -196,10 +194,9 @@ let rec stmt (v : json) : stat =
         failwith "for-each statements are not valid ES5"
       else
         begin match string (get "type" left) with
-        (* TODO 
           | "VariableDeclaration" ->
-            Coq_stat_for_in_var ([], List.nth (map varDecl (list (get "declarations" left))) 0,
-                      right, body) *)
+            let (name, value) = List.hd (List.map varDecl (list (get "declarations" left))) in
+            Coq_stat_for_in_var ([], name, value, right, body) 
           | _ -> Coq_stat_for_in ([], expr left, right, body)
         end
     | "Debugger" -> Coq_stat_debugger 
@@ -264,22 +261,17 @@ and expr (v : json) : expr =
 (*    | "Sequence" -> Coq_expr_list (map expr (list (get "expressions" v))) *)
     | "Unary" -> 
       if bool (get "prefix" v) then
-	Coq_expr_unary_op (unary_op v,
-		expr (get "argument" v))
+        Coq_expr_unary_op (unary_op v, expr (get "argument" v))
       else
-	failwith "unexpected POSTFIX unary operator"
+        failwith "unexpected POSTFIX unary operator"
     | "Binary"
     | "Logical" ->
       Coq_expr_binary_op (expr (get "left" v), binary_op v, expr (get "right" v))
     | "Assignment" -> 
       Coq_expr_assign (expr (get "left" v), assign_op v, expr (get "right" v))
     (* "UpdateOperator" disagrees with docs---operator is just a string *)
-    (* TODO
     | "Update" ->
-      let op = 
-	(if bool (get "prefix" v) then "prefix:" else "postfix:") ^
-	  string (get "operator" v) in
-      UnaryAssign (op, expr (get "argument" v)) *)
+      Coq_expr_unary_op (unary_op v, expr (get "argument" v)) 
     | "Conditional" ->
       Coq_expr_conditional (expr (get "test" v), expr (get "consequent" v),
 	    expr (get "alternate" v)) 
@@ -296,15 +288,25 @@ and expr (v : json) : expr =
       else
 	Coq_expr_member (expr (get "object" v), String.to_list (identifier (get "property" v)))
     | typ -> failwith (sprintf "%s expressions are not in ES5" typ)
-(* TODO 
-and case (v : json) : case =
-  let p = mk_pos (get "loc" v) in
+
+and case (v : json) =
   let e = get "test" v in
-  let stmts = Block (map stmt (list (get "consequent" v))) in
+  let stmts = List.map stmt (list (get "consequent" v)) in
   match e with
-    | Json_type.Null -> Default (stmts)
-    | _ -> Case (expr e, stmts)
-*)
+    | `Null -> `Default stmts
+    | _ -> `Case (Coq_switchclause_intro (expr e, stmts))
+
+and switchbody (vs : json list) : switchbody =
+  let allcases = List.map case vs in
+  let from_Case x = match x with `Case c -> c | _ -> failwith "bug" in
+  let deflts = List.filter_map (fun x -> match x with `Default stmts -> Some stmts | _ -> None) allcases in 
+  match deflts with
+  | [] -> Coq_switchbody_nodefault (List.map from_Case allcases)
+  | [dstmts] -> 
+    let [lcases; rcases] = List.nsplit (fun x -> match x with `Default _ -> true | _ -> false) allcases in
+    Coq_switchbody_withdefault (List.map from_Case lcases, dstmts, List.map from_Case rcases)
+  | _ -> failwith "Too many defaults in switch"
+
 and catch (v : json) = 
     if is_array v then failwith "Multiple catches are spidermonky-only"
     else
