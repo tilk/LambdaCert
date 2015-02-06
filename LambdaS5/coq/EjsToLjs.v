@@ -282,6 +282,10 @@ Definition make_op1 f op e :=
 
 Definition op2_func op := L.expr_lambda ["%x1";"%x2"] (L.expr_op2 op (L.expr_id "%x1") (L.expr_id "%x2")).
 
+Definition make_and e1 e2 := L.expr_let "%e" e1 (L.expr_if (to_bool e1) e2 (L.expr_id "%e")).
+
+Definition make_or e1 e2 := L.expr_let "%e" e1 (L.expr_if (to_bool e1) (L.expr_id "%e") e2).
+
 Definition make_op2 op e1 e2 :=
     match op with
     | J.binary_op_coma => syntax_error "Unknown infix operator"
@@ -291,8 +295,8 @@ Definition make_op2 op e1 e2 :=
     | J.binary_op_bitwise_and => make_app_builtin "%BitwiseInfix" [e1; e2; op2_func L.binary_op_band]
     | J.binary_op_bitwise_or => make_app_builtin "%BitwiseInfix" [e1; e2; op2_func L.binary_op_bor]
     | J.binary_op_bitwise_xor => make_app_builtin "%BitwiseInfix" [e1; e2; op2_func L.binary_op_bxor]
-    | J.binary_op_and => L.expr_let "%e" e1 (L.expr_if (to_bool e1) e2 (L.expr_id "%e"))
-    | J.binary_op_or => L.expr_let "%e" e1 (L.expr_if (to_bool e1) (L.expr_id "%e") e2)
+    | J.binary_op_and => make_and e1 e2
+    | J.binary_op_or => make_or e1 e2
     | J.binary_op_add => make_app_builtin "%PrimAdd" [e1; e2] 
     | J.binary_op_sub => make_app_builtin "%PrimSub" [e1; e2] 
     | J.binary_op_left_shift => make_app_builtin "%LeftShift" [e1; e2] 
@@ -394,6 +398,26 @@ Definition make_new e es :=
     L.expr_let "%constr_ret" (L.expr_app (L.expr_id "%constr") [L.expr_id "%newobj"; make_args_obj true es]) (
     L.expr_if (is_object_type (L.expr_id "%constr_ret")) (L.expr_id "%constr_ret") (L.expr_id "%newobj"))))))).
 
+Definition make_case_a fd (tb : L.expr * L.expr) := let (test, body) := tb in
+        L.expr_if (make_or (eq (L.expr_id "%disc") test) (L.expr_id fd)) 
+            (L.expr_seq body (L.expr_set_bang fd L.expr_true)) L.expr_null.
+
+Definition make_switch_nodefault e cls :=
+    L.expr_label "%before" (
+    L.expr_let "%found" L.expr_false (
+    L.expr_let "%disc" e (
+    L.expr_seqs (map (make_case_a "%found") cls)))).
+
+Definition make_switch_withdefault e acls def bcls :=
+    L.expr_label "%before" (
+    L.expr_let "%deflt" (L.expr_lambda [] def) (
+    L.expr_let "%found" L.expr_false (
+    L.expr_let "%disc" e (
+    L.expr_seq (L.expr_seqs (map (make_case_a "%found") acls)) (
+    L.expr_seq (L.expr_if (L.expr_id "%found") (L.expr_app (L.expr_id "%deflt") []) L.expr_undefined) (
+    L.expr_seq (L.expr_seqs (map (make_case_a "%found") bcls)) (
+    L.expr_if (L.expr_id "%found") L.expr_undefined (L.expr_app (L.expr_id "%deflt") [])))))))).
+
 End DesugarUtils.
 
 Import DesugarUtils.
@@ -434,7 +458,13 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_with e1 e2 => make_with (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_new e es => make_new (ejs_to_ljs e) (List.map ejs_to_ljs es)
     | E.expr_syntaxerror => syntax_error "Syntax error"
-    | _ => L.expr_dump
+    | E.expr_switch e (E.switchbody_nodefault cls) => 
+        make_switch_nodefault (ejs_to_ljs e) (List.map (fun (p : E.expr * E.expr) => let (a, b) := p in (ejs_to_ljs a, ejs_to_ljs b)) cls) 
+    | E.expr_switch e (E.switchbody_withdefault acls def bcls) => 
+        make_switch_withdefault (ejs_to_ljs e) 
+            (List.map (fun (p : E.expr * E.expr) => let (a, b) := p in (ejs_to_ljs a, ejs_to_ljs b)) acls) 
+            (ejs_to_ljs def)
+            (List.map (fun (p : E.expr * E.expr) => let (a, b) := p in (ejs_to_ljs a, ejs_to_ljs b)) bcls) 
     end
 with property_to_ljs (p : E.property) : L.property :=
     match p with

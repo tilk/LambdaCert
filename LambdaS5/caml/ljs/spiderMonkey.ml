@@ -126,7 +126,7 @@ let binary_op (v : json) : binary_op = match string (get "operator" v) with
 
 let assign_op (v : json) : binary_op option = match string (get "operator" v) with
   | "=" -> None
-  | x -> Some (binary_op (`Assoc ["operator", `String (String.lchop x)]))
+  | x -> Some (binary_op (`Assoc ["operator", `String (String.rchop x)]))
 
 let rec stmt (v : json) : stat = 
   let typ = 

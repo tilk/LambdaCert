@@ -71,10 +71,6 @@ with js_prop_to_ejs p :=
     | J.propbody_set is (J.funcbody_intro p _) => E.property_setter (E.expr_func None is (js_prog_to_ejs p))
     end
 with js_stat_to_ejs (e : J.stat) : E.expr := 
-    let js_switchclause_to_ejs c := 
-        match c with
-        | J.switchclause_intro e sts => E.case_case (js_expr_to_ejs e) (E.expr_seqs (List.map js_stat_to_ejs sts))
-        end in
     let js_vardecl_to_ejs vd := 
         let '(s, oe) := vd in 
         match oe with
@@ -148,14 +144,18 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         E.expr_label "%before" (E.expr_for_in s (js_expr_to_ejs e) (js_stat_to_ejs st))
 *)
     | J.stat_switch nil e (J.switchbody_nodefault cl) => 
-        E.expr_switch (js_expr_to_ejs e) (List.map js_switchclause_to_ejs cl)
+        E.expr_switch (js_expr_to_ejs e) (E.switchbody_nodefault (List.map js_switchclause_to_ejs cl))
     | J.stat_switch nil e (J.switchbody_withdefault cl1 sts cl2) => 
-        E.expr_switch (js_expr_to_ejs e) 
-            (List.map js_switchclause_to_ejs cl1 ++ 
-                [E.case_default (E.expr_seqs (List.map js_stat_to_ejs sts))] ++ 
-                List.map js_switchclause_to_ejs cl2)
+        E.expr_switch (js_expr_to_ejs e) (E.switchbody_withdefault
+            (List.map js_switchclause_to_ejs cl1)
+            (E.expr_seqs (List.map js_stat_to_ejs sts))
+            (List.map js_switchclause_to_ejs cl2))
     | _ => E.expr_syntaxerror
     end
+with js_switchclause_to_ejs c := 
+    match c with
+    | J.switchclause_intro e sts => (js_expr_to_ejs e, E.expr_seqs (List.map js_stat_to_ejs sts))
+    end 
 with js_element_to_ejs (e : J.element) : E.expr := 
     match e with
     | J.element_stat st => js_stat_to_ejs st

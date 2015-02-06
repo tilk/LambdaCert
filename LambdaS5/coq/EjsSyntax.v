@@ -33,6 +33,7 @@ Inductive expr : Type :=
 | expr_set_field :  expr -> expr -> expr -> expr
 | expr_app : expr -> list expr -> expr
 | expr_func : option id -> list id -> prog -> expr
+| expr_func_stmt : id -> list id -> prog -> expr (* TODO find way to remove it *)
 (* | expr_let : id -> expr -> expr -> expr *)
 | expr_seq : expr -> expr -> expr
 (*
@@ -45,8 +46,7 @@ Inductive expr : Type :=
 | expr_try_catch : expr -> id -> expr -> expr
 | expr_try_finally : expr -> expr -> expr
 | expr_throw : expr -> expr
-| expr_switch : expr -> list case -> expr
-| expr_func_stmt : id -> list id -> prog -> expr
+| expr_switch : expr -> switchbody -> expr
 | expr_with : expr -> expr -> expr
 | expr_syntaxerror : expr
 with prog : Type :=
@@ -55,9 +55,9 @@ with property : Type :=
 | property_data : expr -> property
 | property_getter : expr -> property
 | property_setter : expr -> property
-with case : Type :=
-| case_case : expr -> expr -> case
-| case_default : expr -> case
+with switchbody : Type :=
+| switchbody_nodefault : list (expr * expr) -> switchbody
+| switchbody_withdefault : list (expr * expr) -> expr -> list (expr * expr) -> switchbody
 .
 
 Fixpoint expr_seqs es :=
