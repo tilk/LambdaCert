@@ -231,6 +231,10 @@ Definition make_fobj f is p (ctx : L.expr) :=
     L.expr_seq (L.expr_set_field (L.expr_id "%prototype") (L.expr_string "constructor") (L.expr_id "%thisfunc") L.expr_null) (
     L.expr_id "%thisfunc")))).
 
+Definition make_rec_fobj f i is p ctx :=
+    let fobj := make_fobj f is p ctx in
+    store_parent_in (make_var_decl [(i, L.expr_undefined)] (make_var_set i fobj)).
+
 Definition make_func_stmt f i is p :=
     let fobj := make_fobj f is p context in
     make_set_field_naked context (L.expr_string i) fobj.
@@ -400,7 +404,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_array es => make_array (List.map ejs_to_ljs es)
     | E.expr_app e es => make_app ejs_to_ljs e (List.map ejs_to_ljs es)
     | E.expr_func None is p => make_fobj ejs_to_ljs is p context
-    | E.expr_func (Some i) is p => make_fobj ejs_to_ljs is p context (* TODO *)
+    | E.expr_func (Some i) is p => make_rec_fobj ejs_to_ljs i is p context 
     | E.expr_func_stmt i is p => make_func_stmt ejs_to_ljs i is p
     | E.expr_seq e1 e2 => L.expr_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_if e e1 e2 => make_if (ejs_to_ljs e) (ejs_to_ljs e1) (ejs_to_ljs e2)
@@ -416,8 +420,6 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_try_catch e1 i e2 => make_try_catch (ejs_to_ljs e1) i (ejs_to_ljs e2)
     | E.expr_try_finally e1 e2 => L.expr_try_finally (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_with e1 e2 => make_with (ejs_to_ljs e1) (ejs_to_ljs e2)
-(*    | E.expr_strict e => L.expr_let "#strict" L.expr_true (ejs_to_ljs e)
-    | E.expr_nonstrict e => L.expr_let "#strict" L.expr_false (ejs_to_ljs e) *)
     | E.expr_syntaxerror => syntax_error "Syntax error"
     | _ => L.expr_dump
     end
