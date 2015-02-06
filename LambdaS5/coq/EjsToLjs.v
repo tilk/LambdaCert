@@ -78,9 +78,11 @@ Definition null_test e := eq e L.expr_null.
 
 Definition type_test e s := eq (L.expr_op1 L.unary_op_typeof e) (L.expr_string s).
 
+Definition make_not e := L.expr_op1 L.unary_op_not e.
+
 Definition make_app_builtin s es := L.expr_app (make_builtin s) es.
 
-Definition is_object_type e := make_app_builtin "%IsObject" e. 
+Definition is_object_type e := make_app_builtin "%IsObject" [e]. 
 
 Definition to_object e := make_app_builtin "%ToObject" [e].
 
@@ -324,7 +326,7 @@ Definition make_args_obj is_new (es : list L.expr) :=
 Definition throw_typ_error msg := make_app_builtin "%TypeError" [L.expr_string msg].
 
 Definition appexpr_check e1 e2  := 
-    L.expr_if (type_test e1 "function") e2 (throw_typ_error "Not a function").
+    L.expr_if (make_not (type_test e1 "function")) (throw_typ_error "Not a function") e2.
 
 Definition make_app f (e : E.expr) es := 
     let args_obj := make_args_obj false es in 
@@ -382,6 +384,16 @@ Definition make_object ps :=
     let oa := L.objattrs_intro (L.expr_string "Object") L.expr_true (make_builtin "%ObjectProto") L.expr_undefined L.expr_undefined in
     L.expr_object oa props.
 
+Definition make_new e es :=
+    L.expr_let "%constr" e (
+    appexpr_check (L.expr_id "%constr") (
+    L.expr_let "%cproto" (make_get_field (L.expr_id "%constr") (L.expr_string "prototype")) (
+    L.expr_seq (L.expr_if (make_not (is_object_type (L.expr_id "%cproto"))) 
+        (L.expr_set_bang "%cproto" (make_builtin "%ObjectProto")) L.expr_undefined) (
+    L.expr_let "%newobj" (L.expr_object (L.objattrs_with_proto (L.expr_id "%cproto") L.default_objattrs) nil) (
+    L.expr_let "%constr_ret" (L.expr_app (L.expr_id "%constr") [L.expr_id "%newobj"; make_args_obj true es]) (
+    L.expr_if (is_object_type (L.expr_id "%constr_ret")) (L.expr_id "%constr_ret") (L.expr_id "%newobj"))))))).
+
 End DesugarUtils.
 
 Import DesugarUtils.
@@ -420,6 +432,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_try_catch e1 i e2 => make_try_catch (ejs_to_ljs e1) i (ejs_to_ljs e2)
     | E.expr_try_finally e1 e2 => L.expr_try_finally (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_with e1 e2 => make_with (ejs_to_ljs e1) (ejs_to_ljs e2)
+    | E.expr_new e es => make_new (ejs_to_ljs e) (List.map ejs_to_ljs es)
     | E.expr_syntaxerror => syntax_error "Syntax error"
     | _ => L.expr_dump
     end

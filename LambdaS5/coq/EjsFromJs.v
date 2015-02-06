@@ -61,7 +61,7 @@ Fixpoint js_expr_to_ejs (e : J.expr) : E.expr :=
     | J.expr_new e es => E.expr_new (js_expr_to_ejs e) (List.map js_expr_to_ejs es)
     | J.expr_call e es => E.expr_app (js_expr_to_ejs e) (List.map js_expr_to_ejs es)
     | J.expr_function onm xs (J.funcbody_intro p _) => E.expr_func onm xs (js_prog_to_ejs p)
-     | J.expr_object ps => 
+    | J.expr_object ps => 
         E.expr_object (List.map (fun (pp : J.propname * J.propbody) => let (pn, p) := pp in (JI.string_of_propname pn, js_prop_to_ejs p)) ps) 
     end
 with js_prop_to_ejs p :=
