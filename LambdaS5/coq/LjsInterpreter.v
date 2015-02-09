@@ -531,7 +531,7 @@ Definition runs_S runs :=
   |}
 .
 
-Definition lazyruns fruns :=  {|
+Definition suspend_runs fruns :=  {|
     runs_type_eval := fun c st e => runs_type_eval (fruns tt) c st e  
   |}  
 .
@@ -539,8 +539,15 @@ Definition lazyruns fruns :=  {|
 Fixpoint runs max_step : runs_type :=
   match max_step with
   | 0 => runs_0
-  | S max_step' => runs_S (lazyruns (fun _ => runs max_step'))
+  | S max_step' => runs_S (runs max_step')
   end
 .
 
-Definition runs_eval n := runs_type_eval (runs n).
+Fixpoint lazy_runs max_step : runs_type :=
+  match max_step with
+  | 0 => runs_0
+  | S max_step' => runs_S (suspend_runs (fun _ => lazy_runs max_step'))
+  end
+.
+
+Definition runs_eval n := runs_type_eval (lazy_runs n).

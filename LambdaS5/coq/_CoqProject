@@ -5,6 +5,7 @@ EjsSyntax.v
 EjsToLjs.v
 HeapUtils.v
 LjsCommon.v
+LjsCompleteness.v
 LjsCorrectness.v
 LjsExtraction.v
 LjsInterpreter.v
