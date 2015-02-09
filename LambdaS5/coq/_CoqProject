@@ -12,6 +12,7 @@ LjsMonads.v
 LjsOperators.v
 LjsPrettyInterm.v
 LjsPrettyRules.v
+LjsRulesCorrect.v
 LjsShared.v
 LjsStore.v
 LjsSyntax.v
