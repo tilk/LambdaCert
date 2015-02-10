@@ -73,3 +73,27 @@ Fixpoint zipl_stream {A B : Type} (st : stream A) (l : list B) :=
 
 Definition number_list_from {A : Type} k (l : list A) := zipl_stream (id_stream_from k) l.
 
+(* this should go to TLC *)
+Tactic Notation "cases_match_option" "as" simple_intropattern(Eq) :=
+  match goal with
+  | |- context [match ?B with Some _ => _ | None => _ end] => case_if_on B as Eq
+  | K: context [match ?B with Some _ => _ | None => _ end] |- _ => case_if_on B as Eq
+  end.
+
+Tactic Notation "cases_match_option" :=
+  let Eq := fresh in cases_match_option as Eq.
+
+Tactic Notation "cases_let" "as" simple_intropattern(Eq) :=
+  match goal with
+  | |- context [let '_ := ?B in _] => case_if_on B as Eq
+  | K: context [let '_ := ?B in _] |- _ => case_if_on B as Eq
+  end.
+
+Tactic Notation "cases_let" :=
+  let Eq := fresh in cases_let as Eq.
+
+Tactic Notation "injects" :=
+    match goal with
+    | H : _ = _ |- _ => injects H
+    end.
+

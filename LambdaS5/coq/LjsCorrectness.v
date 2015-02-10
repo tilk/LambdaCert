@@ -1,5 +1,6 @@
 Set Implicit Arguments.
 Require Import LjsShared.
+Require Import Utils.
 Require Import LjsSyntax.
 Require Import LjsPrettyInterm.
 Require Import LjsPrettyRules.
@@ -289,34 +290,6 @@ Ltac destruct_or H :=
     | _ \/ _ => destruct H as [H | H]
     end
 .
-
-(* TODO remove?
-Ltac hoist_irref H e expr :=
-    assert (H : expr e); [destruct e; solve[eauto] | hnf in H; repeat (destruct_exists H || destruct_or H) ].
-
-Tactic Notation "hoist_irref" constr(e) constr(expr) "as" ident(H) := hoist_irref H e expr.
-
-Tactic Notation "hoist_irref" constr(e) constr(expr) "as" ident(H) "in" hyp(Hy) :=
-    hoist_irref e expr as H; rewrite <- H in Hy.
-*)
-
-Tactic Notation "cases_match_option" "as" simple_intropattern(Eq) :=
-  match goal with
-  | |- context [match ?B with Some _ => _ | None => _ end] => case_if_on B as Eq
-  | K: context [match ?B with Some _ => _ | None => _ end] |- _ => case_if_on B as Eq
-  end.
-
-Tactic Notation "cases_match_option" :=
-  let Eq := fresh in cases_match_option as Eq.
-
-Tactic Notation "cases_let" "as" simple_intropattern(Eq) :=
-  match goal with
-  | |- context [let '_ := ?B in _] => case_if_on B as Eq
-  | K: context [let '_ := ?B in _] |- _ => case_if_on B as Eq
-  end.
-
-Tactic Notation "cases_let" :=
-  let Eq := fresh in cases_let as Eq.
 
 Tactic Notation "cases_match_attributes" "as" simple_intropattern(Eq) :=
   match goal with
