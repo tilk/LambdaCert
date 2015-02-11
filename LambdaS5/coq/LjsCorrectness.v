@@ -191,16 +191,8 @@ Proof.
     auto using if_value_out.
 Qed.
 
-Lemma eval_cont_terminate_out : forall runs c st e o,
-    eval_cont_terminate runs c st e = result_some o ->
-    is_some (runs_type_eval runs c st e) (fun out => o = out).
-Proof. 
-    eauto.
-Qed.
-
 (* Tactics *)
 
-(* TODO *)
 Ltac ljs_run_select_ifres H :=
     match type of H with ?T = result_some _ => match T with
     | assert_get_loc _ _ _ => constr:(assert_get_loc_out)
@@ -214,7 +206,6 @@ Ltac ljs_run_select_ifres H :=
     | if_eval_ter _ _ _ _ _ => constr:(if_eval_ter_out)
     | if_eval_return _ _ _ _ _ => constr:(if_eval_return_out)
     | if_result_some _ _ => constr:(if_result_some_out)
-    | eval_cont_terminate _ _ _ _ => constr:(eval_cont_terminate_out)
     | _ => fail
     end end
 .
@@ -222,7 +213,6 @@ Ltac ljs_run_select_ifres H :=
 Ltac ljs_run_push H a H1 H2 :=
     let L := ljs_run_select_ifres H in
     lets (a&H1&H2): L H;  
-    try match L with eval_cont_terminate_out => destruct H2 end;
     clear H
 .
 
@@ -432,7 +422,7 @@ Lemma eval_let_correct : forall runs c st s e1 e2 o,
             runs_type_eval runs c' st'' e2 = result_some o).
 Proof. 
     introv IH R. unfolds in R.
-    unfold eval_cont_terminate, eval_cont in R.
+    unfold eval_cont in R.
     ljs_run_push_post_auto; ljs_is_some_value_munch; ljs_run_inv; jauto.
     cases_let; jauto.
 Qed. 
@@ -445,7 +435,7 @@ Lemma eval_rec_correct : forall runs c st s e1 e2 o,
             runs_type_eval runs c' (add_value_at_location st' loc v) e2 = result_some o).
 Proof.
     introv IH R. unfolds in R.
-    unfold eval_cont_terminate, eval_cont in R.
+    unfold eval_cont in R.
     repeat cases_let. substs. do 3 eexists. split. reflexivity.
     ljs_run_push_post_auto; ljs_is_some_value_munch. assumption.
 Qed.
@@ -778,6 +768,7 @@ Lemma eval_set_field_correct : forall runs c st e1 e2 e3 e4 o,
                             o = out_ter (update_object st'''' ptr (set_object_property obj s 
                                 (attributes_data_of (attributes_data_intro v3 true true true)))) (res_value v3)) \/
                          (exists data, oattrs = Some (attributes_data_of data) /\
+                            attributes_data_writable data = true /\
                             get_object_property obj s = None /\
                             object_extensible obj = false /\
                             o = out_ter st'''' (res_value value_undefined)) \/
@@ -1018,13 +1009,13 @@ Proof.
     eapply red_expr_set_field_4; try eassumption.
     repeat destruct_or H; repeat destruct_exists H; destructs H; try subst o;
     match goal with H : oattrs = _ |- _ => inverts H end.
-    eapply red_expr_set_field_4_add_field; eauto.
-    eapply red_expr_set_field_4_unextensible_add; eauto. 
-    eapply red_expr_set_field_4_unwritable; eauto. 
-    eapply red_expr_set_field_4_set_field; eauto.
-    eapply red_expr_set_field_4_shadow_field; eauto.
-    eapply red_expr_set_field_4_unextensible_shadow; eauto. 
-    eapply red_expr_set_field_4_setter. 
+    eapply red_expr_set_field_5_add_field; eauto.
+    eapply red_expr_set_field_5_unextensible_add; eauto. 
+    eapply red_expr_set_field_5_unwritable; eauto. 
+    eapply red_expr_set_field_5_set_field; eauto.
+    eapply red_expr_set_field_5_shadow_field; eauto.
+    eapply red_expr_set_field_5_unextensible_shadow; eauto. 
+    eapply red_expr_set_field_5_setter. 
     eauto using red_expr_app_2_nil_lemma. 
     (* delete_field *)
     lets H: eval_delete_field_correct IH R.

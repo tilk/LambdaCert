@@ -1,3 +1,5 @@
+Generalizable All Variables.
+Set Implicit Arguments.
 Require Import LjsShared.
 Require Import LjsSyntax.
 Require Import LjsPrettyInterm.
@@ -150,6 +152,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_object_accessor_4 obj a s v1 v2 v3 o) o
 
+(* get_attr *)
 | red_expr_get_attr : forall c st pa e1 e2 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_get_attr_1 pa o e2) o' ->
@@ -169,6 +172,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_get_attr_2 pa v1 o) o
 
+(* set_attr *)
 | red_expr_set_attr : forall c st pa e1 e2 e3 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_set_attr_1 pa o e2 e3) o' ->
@@ -196,6 +200,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_set_attr_3 pa v1 v2 o) o
 
+(* get_obj_attr *)
 | red_expr_get_obj_attr : forall c st oa e1 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_get_obj_attr_1 oa o) o' ->
@@ -207,6 +212,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_get_obj_attr_1 oa o) o
 
+(* set_obj_attr *)
 | red_expr_set_obj_attr : forall c st oa e1 e2 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_set_obj_attr_1 oa o e2) o' ->
@@ -227,6 +233,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_set_obj_attr_2 oa v1 o) o
 
+(* get_field *)
 | red_expr_get_field : forall c st e1 e2 e3 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_get_field_1 o e2 e3) o' ->
@@ -260,6 +267,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_app_2 (attributes_accessor_get acc) [v3; value_object ptr] nil) o ->
     red_expr c st (expr_get_field_4 ptr (Some (attributes_accessor_of acc)) v3) o
 
+(* set_field *)
 | red_expr_set_field : forall c st e1 e2 e3 e4 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_set_field_1 o e2 e3 e4) o' ->
@@ -293,35 +301,37 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_set_field_4_abort : forall c st v1 v2 v3 o,
     abort o ->
     red_expr c st (expr_set_field_4 v1 v2 v3 o) o
-| red_expr_set_field_4_set_field : forall c st st1 ptr obj data s v3 v4,
+| red_expr_set_field_5_set_field : forall c st st1 ptr obj data s v3 v4,
     get_object_property obj s <> None ->
     attributes_data_writable data = true ->
     st1 = update_object st ptr (set_object_property obj s (attributes_data_of (attributes_data_value_update data v3))) ->
     red_expr c st (expr_set_field_5 ptr obj (Some (attributes_data_of data)) s v3 v4) (out_ter st1 (res_value v3))
-| red_expr_set_field_4_shadow_field : forall c st st1 ptr obj data s v3 v4,
+| red_expr_set_field_5_shadow_field : forall c st st1 ptr obj data s v3 v4,
     get_object_property obj s = None ->
     object_extensible obj = true ->
     attributes_data_writable data = true ->
     st1 = update_object st ptr (set_object_property obj s (attributes_data_of (attributes_data_intro v3 true true true))) ->
     red_expr c st (expr_set_field_5 ptr obj (Some (attributes_data_of data)) s v3 v4) (out_ter st1 (res_value v3))
-| red_expr_set_field_4_add_field : forall c st st1 ptr obj s v3 v4,
+| red_expr_set_field_5_add_field : forall c st st1 ptr obj s v3 v4,
     object_extensible obj = true ->
     st1 = update_object st ptr (set_object_property obj s (attributes_data_of (attributes_data_intro v3 true true true))) ->
     red_expr c st (expr_set_field_5 ptr obj None s v3 v4) (out_ter st1 (res_value v3))
-| red_expr_set_field_4_setter : forall c st ptr obj acc s v3 v4 o,
+| red_expr_set_field_5_setter : forall c st ptr obj acc s v3 v4 o,
     red_expr c st (expr_app_2 (attributes_accessor_set acc) [v4; value_object ptr] nil) o ->
     red_expr c st (expr_set_field_5 ptr obj (Some (attributes_accessor_of acc)) s v3 v4) o
-| red_expr_set_field_4_unwritable : forall c st ptr obj data s v3 v4,
+| red_expr_set_field_5_unwritable : forall c st ptr obj data s v3 v4,
     attributes_data_writable data = false ->
     red_expr c st (expr_set_field_5 ptr obj (Some (attributes_data_of data)) s v3 v4) (out_ter st (res_exception (value_string "unwritable-field")))
-| red_expr_set_field_4_unextensible_add : forall c st ptr obj s v3 v4,
+| red_expr_set_field_5_unextensible_add : forall c st ptr obj s v3 v4,
     object_extensible obj = false ->
     red_expr c st (expr_set_field_5 ptr obj None s v3 v4) (out_ter st (res_value value_undefined))
-| red_expr_set_field_4_unextensible_shadow : forall c st ptr obj data s v3 v4,
+| red_expr_set_field_5_unextensible_shadow : forall c st ptr obj data s v3 v4,
+    attributes_data_writable data = true ->
     get_object_property obj s = None ->
     object_extensible obj = false ->
     red_expr c st (expr_set_field_5 ptr obj (Some (attributes_data_of data)) s v3 v4) (out_ter st (res_value value_undefined))
 
+(* delete_field *)
 | red_expr_delete_field : forall c st e1 e2 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_delete_field_1 o e2) o' ->
@@ -351,6 +361,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     st1 = update_object st ptr (delete_object_property obj s) ->
     red_expr c st (expr_delete_field_3 ptr obj (Some attr) s) (out_ter st1 (res_value value_true))
 
+(* own_field_names *)
 | red_expr_own_field_names : forall c st e o o',
     red_expr c st e o ->
     red_expr c st (expr_own_field_names_1 o) o' ->
@@ -363,6 +374,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_own_field_names_1 o) o
 
+(* set_bang *)
 | red_expr_set_bang : forall c st i e o o',
     red_expr c st e o ->
     red_expr c st (expr_set_bang_1 i o) o' ->
@@ -375,6 +387,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_set_bang_1 i o) o
 
+(* op1 *)
 | red_expr_op1 : forall c st e op o o',
     red_expr c st e o ->
     red_expr c st (expr_op1_1 op o) o' ->
@@ -386,6 +399,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_op1_1 op o) o
 
+(* op2 *)
 | red_expr_op2 : forall c st e1 e2 op o o',
     red_expr c st e1 o ->
     red_expr c st (expr_op2_1 op o e2) o' ->
@@ -404,6 +418,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_op2_2 op v o) o
 
+(* if *)
 | red_expr_if : forall c st e e1 e2 o o',
     red_expr c st e o ->
     red_expr c st (expr_if_1 o e1 e2) o' ->
@@ -446,6 +461,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_app_3 v vl o el) o
 
+(* seq *)
 | red_expr_seq : forall c st e1 e2 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_seq_1 o e2) o' ->
@@ -457,6 +473,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_seq_1 o e2) o
 
+(* let *)
 | red_expr_let : forall c st i e1 e2 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_let_1 i o e2) o' ->
@@ -469,6 +486,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_let_1 i o e2) o
 
+(* rec *)
 | red_expr_rec : forall c c1 st st1 loc i e1 e2 o o',
     (c1, st1, loc) = add_named_value_loc c st i value_undefined ->
     red_expr c1 st1 e1 o ->
@@ -482,6 +500,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_recc_1 loc o e2) o
 
+(* label *)
 | red_expr_label : forall c st i e o o',
     red_expr c st e o ->
     red_expr c st (expr_label_1 i o) o' ->
@@ -492,6 +511,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_label_1_break : forall c st' st i v,
     red_expr c st' (expr_label_1 i (out_ter st (res_break i v))) (out_ter st (res_value v))
 
+(* break *)
 | red_expr_break : forall c st i e o o',
     red_expr c st e o ->
     red_expr c st (expr_break_1 i o) o' ->
@@ -502,6 +522,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_break_1 i o) o
 
+(* try_catch *)
 | red_expr_try_catch : forall c st e1 e2 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_try_catch_1 o e2) o' ->
@@ -520,6 +541,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_try_catch_2 v o) o
 
+(* try_finally *)
 | red_expr_try_finally : forall c st e1 e2 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_try_finally_1 o e2) o' ->
@@ -536,6 +558,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_try_finally_2 r o) o
 
+(* throw *)
 | red_expr_throw : forall c st e o o',
     red_expr c st e o ->
     red_expr c st (expr_throw_1 o) o' ->
@@ -546,6 +569,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_throw_1 o) o
 
+(* eval *)
 | red_expr_eval : forall c st e1 e2 o o',
     red_expr c st e1 o ->
     red_expr c st (expr_eval_1 o e2) o' ->
@@ -567,6 +591,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_eval_2 v1 o) o
 
+(* hint *)
 | red_expr_hint : forall c st s e o,
     red_expr c st e o ->
     red_expr c st (expr_hint s e) o 

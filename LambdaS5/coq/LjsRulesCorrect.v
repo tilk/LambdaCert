@@ -3,7 +3,7 @@ Set Implicit Arguments.
 Require Import LjsShared.
 Require Import JsNumber.
 Require Import Utils.
-Require LjsSyntax LjsPrettyRules LjsPrettyInterm.
+Require LjsSyntax LjsPrettyRules LjsPrettyInterm LjsStore.
 Require EjsSyntax.
 Require JsSyntax JsPrettyRules JsPrettyInterm.
 Require Import EjsFromJs EjsToLjs.
@@ -17,12 +17,14 @@ Module L.
 Include LjsSyntax.
 Include LjsPrettyRules.
 Include LjsPrettyInterm.
+Include LjsStore.
 End L.
 
 Module E := EjsSyntax.
 
 Module J.
 Include JsSyntax.
+Include JsPreliminary.
 Include JsPrettyRules.
 Include JsPrettyInterm.
 End J.
@@ -55,15 +57,36 @@ Definition object_bisim := J.object_loc -> L.object_ptr -> bool.
 
 Implicit Type BR : object_bisim.
 
+Definition js_literal_to_ljs jl := ejs_to_ljs (js_literal_to_ejs jl).
+Definition js_expr_to_ljs je := ejs_to_ljs (js_expr_to_ejs je).
+
 Inductive object_flat_sim jobj obj :=
-| object_flat_sim_intro : (* TODO *)
+| object_flat_sim_intro : (* TODO *) 
+    J.object_class_ jobj = L.object_class obj ->
+    J.object_extensible_ jobj = L.object_extensible obj ->
     object_flat_sim jobj obj
 .
 
-Inductive heaps_bisim jst st : Type := 
+Inductive ref_label :=
+| ref_label_proto : ref_label
+| ref_label_primval : ref_label
+| ref_label_value : string -> ref_label
+.
+
+Inductive js_ref_label_binds : J.object -> ref_label -> J.object_loc -> Prop :=
+| js_ref_label_binds_proto : forall jobj jptr, 
+    J.object_proto_ jobj = J.value_object jptr ->
+    js_ref_label_binds jobj ref_label_proto jptr
+.
+
+(* TODO ljs_ref_label_binds *)
+
+Inductive heaps_bisim jst st : Prop := 
 heaps_bisim_intro : forall BR, 
-    (forall jptr ptr, istrue (BR jptr ptr) -> 
-     forall jobj obj, (* they are pointed at *)
+    (forall jptr ptr jobj obj, 
+     istrue (BR jptr ptr) -> 
+     J.object_binds jst jptr jobj ->
+     L.object_binds st ptr obj ->
      object_flat_sim jobj obj /\ True) -> (* TODO *)
     heaps_bisim jst st
 .
@@ -94,9 +117,6 @@ Create HintDb js_ljs discriminated.
 Hint Constructors js_value_ljs : js_ljs.
 Hint Constructors js_res_ljs : js_ljs.
 Hint Constructors js_out_ljs : js_ljs.
-
-Definition js_literal_to_ljs jl := ejs_to_ljs (js_literal_to_ejs jl).
-Definition js_expr_to_ljs je := ejs_to_ljs (js_expr_to_ejs je).
 
 Lemma red_literal_ok : forall jst jc jo st c o l (bisim : heaps_bisim jst st), 
     J.red_expr jst jc (J.expr_basic (J.expr_literal l)) jo -> 

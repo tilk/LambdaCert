@@ -77,11 +77,6 @@ Definition change_object_property st (ptr : object_ptr) (name : prop_name) (pred
 Definition eval_cont {A : Type} runs c st e (cont : result -> resultof A) : resultof A :=
   cont (runs_type_eval runs c st e).
 
-(* Alias for calling eval_cont with an empty continuation *)
-Definition eval_cont_terminate runs c st e : result :=
-  eval_cont runs c st e (fun res => res)
-.
-
 (* Evaluates an expression, and calls the continuation if
 * the evaluation finished successfully.
 * Returns the store and the variable verbatim otherwise. *)
@@ -115,7 +110,7 @@ Definition apply runs c st (f_loc : value) (args : list value) : result :=
         let (st, args_locs) := add_values st args in
         let res := add_parameters env args_names args_locs in
         if_result_some res (fun vh =>
-          eval_cont_terminate runs vh st body)
+          runs_type_eval runs vh st body)
       | _ => result_fail "Expected Closure but did not get one."
       end
   )
@@ -139,15 +134,15 @@ Definition eval_if runs c st (e_cond e_true e_false : expr) : result :=
   if_eval_return runs c st e_cond (fun st v =>
     assert_get_bool v (fun b =>
       if b
-      then eval_cont_terminate runs c st e_true
-      else eval_cont_terminate runs c st e_false
+      then runs_type_eval runs c st e_true
+      else runs_type_eval runs c st e_false
   ))
 .
 
 (* e1 ; e2.
 * Evaluate e1, then e2, and return the value location returned by e2. *)
 Definition eval_seq runs c st (e1 e2 : expr) : result :=
-  if_eval_return runs c st e1 (fun st v => eval_cont_terminate runs c st e2 )
+  if_eval_return runs c st e1 (fun st v => runs_type_eval runs c st e2 )
 .
 
 
@@ -272,9 +267,9 @@ Definition eval_set_field runs c st (left_expr right_expr new_val_expr arg_expr 
                         else result_value st value_undefined
                       end)
                     else result_exception st (value_string "unwritable-field")
-                  | Some (attributes_accessor_of (attributes_accessor_intro _ setter _ _)) =>
+                  | Some (attributes_accessor_of acc) =>
                       (* Note: pattr_setters don't get the new value. See https://github.com/brownplt/LambdaS5/issues/45 *)
-                      apply runs c st setter (left_loc :: arg_loc :: nil)
+                      apply runs c st (attributes_accessor_set acc) (left_loc :: arg_loc :: nil)
                   | None => 
                     if object_extensible object 
                     then change_object_property st left_ptr name (fun prop =>
@@ -307,7 +302,7 @@ Definition eval_delete_field runs c st (left_expr right_expr : expr) : result :=
 Definition eval_let runs c st (id : string) (value_expr body_expr : expr) : result :=
   if_eval_return runs c st value_expr (fun st value =>
       let (c, st) := add_named_value c st id value in
-        eval_cont_terminate runs c st body_expr
+        runs_type_eval runs c st body_expr
   )
 .
 
@@ -319,7 +314,7 @@ Definition eval_rec runs c st (id : string) (value_expr body_expr : expr) : resu
   let '(c, st, self_loc) := add_named_value_loc c st id value_undefined in
     if_eval_return runs c st value_expr (fun st value =>
       let st := add_value_at_location st self_loc value in
-        eval_cont_terminate runs c st body_expr
+        runs_type_eval runs c st body_expr
     )
 .
 
@@ -513,7 +508,7 @@ Definition eval runs c st (e : expr) : result :=
   | expr_try_finally body fin => eval_tryfinally runs c st body fin
   | expr_throw e => eval_throw runs c st e
   | expr_eval e bindings => eval_eval runs c st e bindings
-  | expr_hint _ e => eval_cont_terminate runs c st e
+  | expr_hint _ e => runs_type_eval runs c st e
   | expr_dump => result_dump c st
   end
 .
