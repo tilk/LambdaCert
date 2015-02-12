@@ -3,7 +3,7 @@ Set Implicit Arguments.
 Require Import LjsShared.
 Require Import JsNumber.
 Require Import Utils.
-Require LjsSyntax LjsPrettyRules LjsPrettyInterm LjsStore.
+Require LjsSyntax LjsPrettyRules LjsPrettyInterm LjsStore LjsAuxiliary.
 Require EjsSyntax.
 Require JsSyntax JsPrettyRules JsPrettyInterm.
 Require Import EjsFromJs EjsToLjs.
@@ -18,6 +18,7 @@ Include LjsSyntax.
 Include LjsPrettyRules.
 Include LjsPrettyInterm.
 Include LjsStore.
+Include LjsAuxiliary.
 End L.
 
 Module E := EjsSyntax.
@@ -53,75 +54,117 @@ Implicit Type jv : J.value.
 Implicit Type jptr : J.object_loc.
 Implicit Type jobj : J.object.
 
-Definition object_bisim := J.object_loc -> L.object_ptr -> bool.
+Definition object_bisim := J.object_loc -> L.object_ptr -> Prop.
 
 Implicit Type BR : object_bisim.
+
+Inductive value_related BR : J.value -> L.value -> Prop :=
+| value_related_null : value_related BR (J.value_prim J.prim_null) L.value_null
+| value_related_undefined : value_related BR (J.value_prim J.prim_undef) L.value_undefined
+| value_related_number : forall n, value_related BR (J.value_prim (J.prim_number n)) (L.value_number n)
+| value_related_string : forall s, value_related BR (J.value_prim (J.prim_string s)) (L.value_string s)
+| value_related_true : value_related BR (J.value_prim (J.prim_bool true)) L.value_true
+| value_related_false : value_related BR (J.value_prim (J.prim_bool false)) L.value_false
+| value_related_object : forall jptr ptr, 
+    BR jptr ptr -> value_related BR (J.value_object jptr) (L.value_object ptr) 
+.
+
+Inductive attributes_data_related BR : J.attributes_data -> L.attributes_data -> Prop := 
+| attributes_data_related_intro : forall jv v b1 b2 b3, 
+    value_related BR jv v ->
+    attributes_data_related BR 
+        (J.attributes_data_intro jv b1 b2 b3) 
+        (L.attributes_data_intro v b1 b2 b3)
+.
+
+Inductive attributes_accessor_related BR : J.attributes_accessor -> L.attributes_accessor -> Prop := 
+| attributes_accessor_related_intro : forall jv1 jv2 v1 v2 b1 b2, 
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    attributes_accessor_related BR 
+        (J.attributes_accessor_intro jv1 jv2 b1 b2) 
+        (L.attributes_accessor_intro v1 v2 b1 b2)
+.
+
+Inductive attributes_related BR : J.attributes -> L.attributes -> Prop :=
+| attributes_related_data : forall jdata data,
+    attributes_data_related BR jdata data -> 
+    attributes_related BR (J.attributes_data_of jdata) (L.attributes_data_of data)
+| attributes_related_accessor : forall jacc acc,
+    attributes_accessor_related BR jacc acc -> 
+    attributes_related BR (J.attributes_accessor_of jacc) (L.attributes_accessor_of acc)
+.
+
+Definition object_bisim_lfun BR :=
+    forall jptr ptr1 ptr2, BR jptr ptr1 -> BR jptr ptr2 -> ptr1 = ptr2.
+
+Definition object_bisim_rfun BR :=
+    forall jptr1 jptr2 ptr, BR jptr1 ptr -> BR jptr2 ptr -> jptr1 = jptr2.
+
+Definition object_bisim_ltotal jst BR :=
+    forall jptr, J.object_indom jst jptr -> exists ptr, BR jptr ptr.
+
+Definition object_bisim_lnoghost jst BR :=
+    forall jptr ptr, BR jptr ptr -> J.object_indom jst jptr.
+
+Definition object_bisim_rnoghost st BR :=
+    forall jptr ptr, BR jptr ptr -> L.object_indom st ptr.
+
+Definition object_bisim_consistent jst st BR :=
+    object_bisim_lfun BR /\
+    object_bisim_rfun BR /\
+    object_bisim_ltotal jst BR /\
+    object_bisim_lnoghost jst BR /\
+    object_bisim_rnoghost st BR.
+
+Definition object_attributes_related BR jobj obj := forall s, 
+    ~J.Heap.indom (J.object_properties_ jobj) s /\ ~Heap.indom (L.object_properties_ obj) s \/
+    exists jptr ptr, 
+        J.Heap.binds (J.object_properties_ jobj) s jptr /\ Heap.binds (L.object_properties_ obj) s ptr /\
+        attributes_related BR jptr ptr.
+
+Definition object_prim_related BR jobj obj := 
+    J.object_class_ jobj = L.object_class obj /\
+    J.object_extensible_ jobj = L.object_extensible obj.
+
+Definition object_related BR jobj obj :=
+    object_prim_related BR jobj obj /\
+    object_attributes_related BR jobj obj.
+
+Definition heaps_bisim BR jst st := forall jptr ptr jobj obj, 
+     BR jptr ptr -> 
+     J.object_binds jst jptr jobj ->
+     L.object_binds st ptr obj ->
+     object_related BR jobj obj.
 
 Definition js_literal_to_ljs jl := ejs_to_ljs (js_literal_to_ejs jl).
 Definition js_expr_to_ljs je := ejs_to_ljs (js_expr_to_ejs je).
 
-Inductive object_flat_sim jobj obj :=
-| object_flat_sim_intro : (* TODO *) 
-    J.object_class_ jobj = L.object_class obj ->
-    J.object_extensible_ jobj = L.object_extensible obj ->
-    object_flat_sim jobj obj
+Inductive res_related BR : J.res -> L.res -> Prop :=
+| res_related_normal_value : forall jv v,
+    value_related BR jv v ->
+    res_related BR (J.res_intro J.restype_normal (J.resvalue_value jv) J.label_empty) (L.res_value v)
 .
 
-Inductive ref_label :=
-| ref_label_proto : ref_label
-| ref_label_primval : ref_label
-| ref_label_value : string -> ref_label
-.
-
-Inductive js_ref_label_binds : J.object -> ref_label -> J.object_loc -> Prop :=
-| js_ref_label_binds_proto : forall jobj jptr, 
-    J.object_proto_ jobj = J.value_object jptr ->
-    js_ref_label_binds jobj ref_label_proto jptr
-.
-
-(* TODO ljs_ref_label_binds *)
-
-Inductive heaps_bisim jst st : Prop := 
-heaps_bisim_intro : forall BR, 
-    (forall jptr ptr jobj obj, 
-     istrue (BR jptr ptr) -> 
-     J.object_binds jst jptr jobj ->
-     L.object_binds st ptr obj ->
-     object_flat_sim jobj obj /\ True) -> (* TODO *)
-    heaps_bisim jst st
-.
-
-Inductive js_value_ljs `(bisim : heaps_bisim jst st) : J.value -> L.value -> Prop :=
-| js_value_ljs_undefined : js_value_ljs bisim (J.value_prim J.prim_undef) L.value_undefined
-| js_value_ljs_null : js_value_ljs bisim (J.value_prim J.prim_null) L.value_null
-| js_value_ljs_true : js_value_ljs bisim (J.value_prim (J.prim_bool true)) L.value_true 
-| js_value_ljs_false : js_value_ljs bisim (J.value_prim (J.prim_bool false)) L.value_false  
-| js_value_ljs_number : forall n, js_value_ljs bisim (J.value_prim (J.prim_number n)) (L.value_number n)  
-| js_value_ljs_string : forall s, js_value_ljs bisim (J.value_prim (J.prim_string s)) (L.value_string s)  
-.
-
-Inductive js_res_ljs `(bisim : heaps_bisim jst st) : J.res -> L.res -> Prop :=
-| js_res_ljs_normal_value : forall jv v,
-    js_value_ljs bisim jv v ->
-    js_res_ljs bisim (J.res_intro J.restype_normal (J.resvalue_value jv) J.label_empty) (L.res_value v)
-.
-
-Inductive js_out_ljs `(bisim : heaps_bisim jst st) : J.out -> L.out -> Prop :=
-| js_out_ljs_ter : forall jr r,
-    js_res_ljs bisim jr r ->
-    js_out_ljs bisim (J.out_ter jst jr) (L.out_ter st r)
+Inductive out_related BR : J.out -> L.out -> Prop :=
+| out_related_ter : forall jst st jr r,
+    res_related BR jr r ->
+    out_related BR (J.out_ter jst jr) (L.out_ter st r)
 .
 
 Create HintDb js_ljs discriminated.
 
-Hint Constructors js_value_ljs : js_ljs.
-Hint Constructors js_res_ljs : js_ljs.
-Hint Constructors js_out_ljs : js_ljs.
+Hint Constructors attributes_data_related : js_ljs.
+Hint Constructors attributes_accessor_related : js_ljs.
+Hint Constructors attributes_related : js_ljs.
+Hint Constructors value_related : js_ljs.
+Hint Constructors res_related : js_ljs.
+Hint Constructors out_related : js_ljs.
 
-Lemma red_literal_ok : forall jst jc jo st c o l (bisim : heaps_bisim jst st), 
+Lemma red_literal_ok : forall jst jc jo st c o l BR, 
     J.red_expr jst jc (J.expr_basic (J.expr_literal l)) jo -> 
     L.red_expr c st (L.expr_basic (js_literal_to_ljs l)) o ->
-    js_out_ljs bisim jo o.
+    out_related BR jo o.
 Proof.
     introv jred lred.
     destruct l as [ | [ | ] | | ]; 

@@ -92,12 +92,6 @@ Definition get_value st loc : option value :=
 Definition get_loc c i : option value_loc :=
   Heap.read_option (loc_heap c) i
 .
-Definition object_binds st ptr obj :=
-  Heap.binds (object_heap st) ptr obj
-.
-Definition value_binds st loc v :=
-  Heap.binds (value_heap st) loc v
-.
 
 (* Returns the value associated to a variable name (aka. id) in the current
 * context. *)
