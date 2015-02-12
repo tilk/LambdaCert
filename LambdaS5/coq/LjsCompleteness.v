@@ -6,6 +6,7 @@ Require Import LjsSyntax.
 Require Import LjsPrettyInterm.
 Require Import LjsPrettyRules.
 Require Import LjsPrettyRulesIndexed.
+Require Import LjsPrettyRulesIndexedAux.
 Require Import LjsStore.
 Require Import LjsCommon.
 Require Import LjsValues.
@@ -34,6 +35,8 @@ Implicit Type ptr : object_ptr.
 Implicit Type obj : object.
 Implicit Type re : result.
 Implicit Type r : res.
+
+(* Lemmas on monadic ops *)
 
 Lemma assert_get_loc_lemma : forall {A c i loc} cont, get_loc c i = Some loc -> @assert_get_loc A c i cont = cont loc.
 Proof.
@@ -116,32 +119,15 @@ Proof.
     introv H. unfolds. rewrite H. reflexivity.
 Qed.
 
-Ltac ljs_eval :=
-    match goal with
-    | H : get_loc ?c ?i = Some _ |- assert_get_loc ?c ?i _ = _ => rewrite (assert_get_loc_lemma _ H)
-    | H : get_value ?st ?loc = Some _ |- assert_deref ?st ?loc _ = _ => rewrite (assert_deref_lemma _ H)
-    | H : runs_type_eval ?runs ?c ?st ?e = _ |- eval_cont ?runs ?c ?st ?e _ = _ => rewrite (eval_cont_lemma _ H)
-    | H : runs_type_eval ?runs ?c ?st ?e = result_some (out_ter _ (res_value _)) 
-        |- if_eval_return ?runs ?c ?st ?e _ = _ => rewrite (if_eval_return_lemma _ H)
-    | H : get_object ?st ?ptr = Some _ |- assert_get_object_from_ptr ?st ?ptr _ = _ => 
-        rewrite (assert_get_object_from_ptr_lemma _ H)
-    | H : get_object ?st ?ptr = Some _ |- assert_get_object ?st (value_object ?ptr) _ = _ => 
-        rewrite (assert_get_object_lemma _ H)
-    | H : get_object ?st ?ptr = Some _ |- change_object_cont ?st ?ptr _ = _ => 
-        rewrite (change_object_cont_lemma _ H)
-    | H : value_to_bool ?v = Some _ |- assert_get_bool ?v _ = _ => rewrite (assert_get_bool_lemma _ H)
-    | |- assert_get_bool value_true _ = _ => rewrite (assert_get_bool_true_lemma _)
-    | |- assert_get_bool value_false _ = _ => rewrite (assert_get_bool_false_lemma _)
-    | |- assert_get_string (value_string _) _ = _ => rewrite (assert_get_string_lemma _)
-    | |- assert_get_object_ptr (value_object _) _ = _ => rewrite (assert_get_object_ptr_lemma _)
-    | H : ?res = result_some _ |- if_result_some ?res _ = _ => rewrite (if_result_some_lemma _ H)
-(*
-    | |- result_value _ _ = _ => reflexivity
-    | |- result_exception _ _ = _ => reflexivity
-    | |- result_break _ _ = _ => reflexivity
-    | |- ?x = ?x => reflexivity
-*)
-    end.
+Lemma if_out_ter_lemma : forall {re st r} cont,
+    re = result_some (out_ter st r) ->
+    if_out_ter re cont = cont st r.
+Proof.
+    introv H.
+    unfolds.
+    rewrite (if_result_some_lemma _ H).
+    reflexivity.
+Qed.
 
 Lemma if_value_abort_lemma : forall {o} cont,
     abort o ->
@@ -161,6 +147,33 @@ Proof.
     applys @if_value_abort_lemma HA.
 Qed.
 
+(* Useful tactics *)
+
+Ltac ljs_eval :=
+    match goal with
+    | H : get_loc ?c ?i = Some _ |- assert_get_loc ?c ?i _ = _ => rewrite (assert_get_loc_lemma _ H)
+    | H : get_value ?st ?loc = Some _ |- assert_deref ?st ?loc _ = _ => rewrite (assert_deref_lemma _ H)
+    | H : runs_type_eval ?runs ?c ?st ?e = _ |- eval_cont ?runs ?c ?st ?e _ = _ => rewrite (eval_cont_lemma _ H)
+    | H : runs_type_eval ?runs ?c ?st ?e = result_some (out_ter _ (res_value _)) 
+        |- if_eval_return ?runs ?c ?st ?e _ = _ => rewrite (if_eval_return_lemma _ H)
+    | H : get_object ?st ?ptr = Some _ |- assert_get_object_from_ptr ?st ?ptr _ = _ => 
+        rewrite (assert_get_object_from_ptr_lemma _ H)
+    | H : get_object ?st ?ptr = Some _ |- assert_get_object ?st (value_object ?ptr) _ = _ => 
+        rewrite (assert_get_object_lemma _ H)
+    | H : get_object ?st ?ptr = Some _ |- change_object_cont ?st ?ptr _ = _ => 
+        rewrite (change_object_cont_lemma _ H)
+    | H : value_to_bool ?v = Some _ |- assert_get_bool ?v _ = _ => rewrite (assert_get_bool_lemma _ H)
+    | |- assert_get_bool value_true _ = _ => rewrite (assert_get_bool_true_lemma _)
+    | |- assert_get_bool value_false _ = _ => rewrite (assert_get_bool_false_lemma _)
+    | |- assert_get_string (value_string _) _ = _ => rewrite (assert_get_string_lemma _)
+    | |- assert_get_object_ptr (value_object _) _ = _ => rewrite (assert_get_object_ptr_lemma _)
+    | H : ?re = result_some (out_ter _ _) |- if_out_ter ?re _ = _ => rewrite (if_out_ter_lemma _ H)
+    | |- if_out_ter (result_some (out_ter ?st ?r)) _ = _ => 
+        let X := fresh in let H := fresh in 
+        sets_eq X H :(result_some (out_ter st r)); rewrite (if_out_ter_lemma _ H); inverts H
+    | H : ?res = result_some _ |- if_result_some ?res _ = _ => rewrite (if_result_some_lemma _ H)
+    end.
+
 Ltac ljs_abort :=
     match goal with
     | H : abort ?o |- if_value (result_some ?o) _ = result_some ?o => apply (if_value_abort_lemma _ H)
@@ -175,21 +188,6 @@ Proof.
     autorewrite with rew_eta. 
     reflexivity.
 Qed.
-
-Lemma eval_runs_geq : forall e c st o (n1 n2 : nat), 
-    n1 <= n2 -> runs_type_eval (runs n1) c st e = result_some o -> 
-    runs_type_eval (runs n2) c st e = result_some o. 
-Proof.
-    (* TODO *)
-Admitted.
-
-(*
-Ltac injects := 
-    match goal with
-    | H : (_, _) = (_, _) |- _ => injection H; clear H
-    | H : Some _ = Some _ |- _ => injection H; clear H
-    end.
-*)
 
 Ltac ljs_specialize_ih H1 :=
     match goal with
@@ -225,10 +223,10 @@ Proof.
 Qed.
 
 Ltac ljs_eval_step := ljs_specialize_ih; ljs_inv_red_abort; ljs_eval.
-(*
-Ltac ljs_eval_push := ljs_eval_step || ljs_eval.
-*)
+
 Ltac ljs_eval_push := ljs_specialize_ih || ljs_inv_red_abort || ljs_eval || reflexivity || assumption.
+
+(* Lemmas about complex constructions of ljs (object literals and function application) *)
 
 Lemma object_properties_lemma : forall k,
     (forall c st e o, red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o) -> 
@@ -256,6 +254,42 @@ Proof.
     repeat ljs_eval_push.
     eauto.
 Qed.
+
+Lemma apply_lemma : forall k,
+    (forall c st e o, red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o) -> 
+    forall c st v vs vsr o,
+    red_exprh k c st (expr_app_2 v vsr nil) o ->
+    vsr = rev vs ->
+    apply (runs k) c st v vs = result_some o.
+Proof.
+    introv IH H HR.
+    substs.
+    ljs_inv_red_internal.
+    unfolds.
+    repeat ljs_eval_push.
+    rew_list in *.
+    cases_let.
+    injects.
+    repeat ljs_eval_push.
+Qed.
+
+Lemma eval_arg_list_lemma : forall k, 
+    (forall c st e o, red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o) -> 
+    forall es c st v vs o,
+    red_exprh k c st (expr_app_2 v vs es) o ->
+    fold_right (eval_arg_list_aux (runs k) c) (fun st vs => apply (runs k) c st v (rev vs)) es st vs = result_some o.
+Proof.
+    introv IH.
+    induction es; introv H.
+    eapply apply_lemma; rew_list; eauto.
+    simpl.
+    unfolds.
+    ljs_inv_red_internal.
+    repeat ljs_eval_push.
+    eauto.
+Qed.
+
+(* The main lemma *)
 
 Lemma eval_complete_lemma : forall k c st e o,
     red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o.
@@ -302,7 +336,8 @@ Proof.
     repeat ljs_eval_push.
     destruct oattr as [[|]|].
     ljs_inv_red. reflexivity.
-    skip.
+    ljs_inv_red_internal.
+    eapply apply_lemma; eauto.
     ljs_inv_red. reflexivity.
     (* set_field *)
     unfolds.
@@ -310,7 +345,8 @@ Proof.
     unfold change_object_property, change_object_property_cont.
     destruct oattr as [[|]|].
     repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; tryfalse; reflexivity.
-    skip.
+    ljs_inv_red_internal.
+    eapply apply_lemma; eauto.
     cases_if; ljs_inv_red; tryfalse; try ljs_eval; reflexivity.
     (* delete_field *)
     unfolds.
@@ -342,7 +378,7 @@ Proof.
     (* app *)
     unfolds.
     repeat ljs_eval_push.
-    skip.
+    eapply eval_arg_list_lemma; eassumption.
     (* seq *)
     unfolds.
     repeat ljs_eval_push.
@@ -361,18 +397,31 @@ Proof.
     (* label *)
     unfolds.
     repeat ljs_eval_push.
-    skip.
+    unfolds.
+    ljs_eval.
+    destruct o as [ | zz [ | | ] ];
+    ljs_inv_red_internal;
+    simpl; try cases_if; reflexivity.
     (* break *)
     unfolds.
     repeat ljs_eval_push.
     (* trycatch *)
     unfolds.
     repeat ljs_eval_push.
-    skip.
+    unfolds.
+    ljs_eval.
+    ljs_inv_red_internal.
+    destruct o as [ | zz [ | | ] ];
+    tryfalse; repeat ljs_eval_push. 
+    simpl. repeat ljs_eval_push.
+    eapply apply_lemma; eauto.
     (* tryfinally *)
     unfolds.
     repeat ljs_eval_push.
-    skip.
+    unfolds.
+    ljs_inv_red_internal.
+    repeat ljs_eval_push.
+    repeat ljs_eval_push.
     (* throw *)
     unfolds.
     repeat ljs_eval_push.
@@ -385,4 +434,15 @@ Proof.
     repeat ljs_eval_push.
     (* hint *)
     repeat ljs_eval_push.
+Qed.
+
+(* Completeness *)
+
+Lemma eval_complete : forall c st e o,
+    red_expr c st e o -> exists k, runs_type_eval (runs k) c st e = result_some o.
+Proof.
+    introv H.
+    lets (k&H1) : red_expr_add_h H.
+    exists k.
+    applys eval_complete_lemma H1.
 Qed.

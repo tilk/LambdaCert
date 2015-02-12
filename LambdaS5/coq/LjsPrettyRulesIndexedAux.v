@@ -28,7 +28,23 @@ Implicit Type c : ctx.
 Implicit Type ptr : object_ptr.
 Implicit Type obj : object.
 
+Local Hint Constructors red_expr red_exprh.
+
+Lemma red_expr_forget_h : forall k c st e o, red_exprh k c st e o -> red_expr c st e o.
+Proof.
+    introv H. induction* H.
+Qed.
+
+Local Hint Extern 1 ((_ < _)%nat) => omega.
+
+Lemma red_exprh_lt : forall k k' c st ee o, 
+    red_exprh k c st ee o -> (k < k')%nat -> red_exprh k' c st ee o.
+Proof.
+    introv H. gen k'. induction H; introv L; (destruct k' as [|k']; [false; omega | auto*]).
+Qed.
+
 Lemma red_expr_add_h : forall c st e o, red_expr c st e o -> exists k, red_exprh k c st e o.
 Proof.
-(* TODO *)
-Admitted.
+    hint red_exprh_lt. introv H. induction H; induct_height. 
+Qed.
+
