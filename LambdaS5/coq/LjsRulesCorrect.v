@@ -161,16 +161,17 @@ Hint Constructors value_related : js_ljs.
 Hint Constructors res_related : js_ljs.
 Hint Constructors out_related : js_ljs.
 
-Lemma red_literal_ok : forall jst jc jo st c o l BR, 
-    J.red_expr jst jc (J.expr_basic (J.expr_literal l)) jo -> 
+Hint Constructors J.red_expr : js_ljs.
+
+Lemma red_literal_ok : forall jst jc st c o l BR, 
     L.red_expr c st (L.expr_basic (js_literal_to_ljs l)) o ->
+    exists jo,
+    J.red_expr jst jc (J.expr_basic (J.expr_literal l)) jo /\ 
     out_related BR jo o.
 Proof.
-    introv jred lred.
-    destruct l as [ | [ | ] | | ]; 
-    inverts jred; inverts lred; tryfalse;
-    eauto with js_ljs. 
-Admitted. (* faster *)
+    introv lred.
+    destruct l as [ | [ | ] | | ]; inverts lred; eexists; eauto with js_ljs.
+Qed.
 
 Ltac inv_internal_ljs :=
     match goal with
@@ -182,13 +183,19 @@ Ltac inv_internal_ljs :=
     end
 .
 
-(* TODO 
 
-Lemma red_identifier_ok : forall jst jc jo st c o i (bisim : heaps_bisim jst st),
-    J.red_expr jst jc (J.expr_basic (J.expr_identifier i)) jo -> 
+(*
+
+Lemma red_identifier_ok : forall jst jc st c o i BR,
+    heaps_bisim BR jst st ->
     L.red_expr c st (L.expr_basic (js_expr_to_ljs (J.expr_identifier i))) o ->
-    js_out_ljs bisim jo o.
+    exists jo,
+    J.red_expr jst jc (J.expr_basic (J.expr_identifier i)) jo /\
+    out_related BR jo o.
 Proof.
+    introv Bisim lred.
+    inverts lred.
+
     introv jred lred.
     inverts jred; inverts lred; tryfalse.
     inv_internal_ljs.
@@ -219,4 +226,5 @@ Proof.
 
     inverts H0; tryfalse.
     inverts H3; tryfalse.
+
 *)

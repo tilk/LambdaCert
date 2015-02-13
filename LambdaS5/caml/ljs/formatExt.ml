@@ -53,6 +53,8 @@ let wrapBox (p : printer list) (fmt : formatter) : unit =
 let int n fmt = pp_print_int fmt n
  
 let float f fmt = pp_print_float fmt f
+
+let bool f fmt = pp_print_bool fmt f
  
 let enclose l r (inner : printer) (fmt : formatter) = 
   pp_open_box fmt 2;
@@ -69,6 +71,20 @@ let brackets = enclose "[" "]"
 
 let angles = enclose "<" ">"
 
+let rec intersperse el list =
+  match list with
+  | [] | [ _ ]   -> list
+  | x :: y :: tl -> x :: el :: intersperse el (y::tl)
+
+let rec vert_intersperse a lst = match lst with
+  | [] -> []
+  | [x] -> [x]
+  | x :: xs -> squish [x; a] :: (vert_intersperse a xs)
+
 let to_string (f : 'a -> printer) (x : 'a) : string  =
   f x str_formatter;
   flush_str_formatter ()
+
+let to_output o f x =
+  f x (formatter_of_output o)
+

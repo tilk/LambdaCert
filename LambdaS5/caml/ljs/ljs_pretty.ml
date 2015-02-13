@@ -4,16 +4,6 @@ open LjsSyntax
 open Format
 open FormatExt 
 
-let rec intersperse el list =
-  match list with
-  | [] | [ _ ]   -> list
-  | x :: y :: tl -> x :: el :: intersperse el (y::tl) 
-
-let rec vert_intersperse a lst = match lst with
-  | [] -> []
-  | [x] -> [x]
-  | x :: xs -> squish [x; a] :: (vert_intersperse a xs)
-
 let string_of_attr attr = match attr with
   | Coq_pattr_value -> "#value"
   | Coq_pattr_getter -> "#getter"

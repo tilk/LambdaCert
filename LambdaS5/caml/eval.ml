@@ -57,6 +57,10 @@ let load_env filename =
         | r -> failwith ("Unexpected result when loading an environment: " ^ Run.result_to_string r));
     close_in ch
 
+let coq_save_store filename = 
+    let (c, st) = get_store () in
+    File.with_file_out filename (fun ch -> PrettyPrintCoq.ctx_store_to_output ch c st)
+
 let desugar_s5 filename = Desugar.set_js_parser_s5 filename 
 
 let desugar_builtin filename = Desugar.set_js_parser_builtin filename
@@ -75,6 +79,9 @@ let _ =
          "-save",
          Arg.String save_store,
          "save the environment in a file";
+         "-coq-save",
+         Arg.String coq_save_store,
+         "export the environment to Coq";
          "-env",
          Arg.String load_env,
          "environment to parse";
