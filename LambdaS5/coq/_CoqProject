@@ -3,6 +3,7 @@ EjsFromJs.v
 EjsSyntax.v
 EjsToLjs.v
 HeapUtils.v
+LibFsetMy.v
 LjsAuxiliary.v
 LjsCommon.v
 LjsCompleteness.v

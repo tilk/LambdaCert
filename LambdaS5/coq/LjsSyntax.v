@@ -8,8 +8,6 @@ Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
 
-Module Heap := HeapUtils.Heap.
-
 (* Basic stuff *)
 
 Definition id : Type := string.
@@ -99,7 +97,6 @@ Inductive pattr : Type := (* property attribute name *)
 | pattr_enum
 .
 
-
 Inductive expr : Type :=
 | expr_null
 | expr_undefined
@@ -143,6 +140,53 @@ with property : Type :=
 | property_accessor : accessor -> property
 with objattrs : Type :=
 | objattrs_intro : expr -> expr -> expr -> expr -> expr -> objattrs (* class -> extensible -> prototype -> code -> primval -> objattrs *)
+.
+
+Fixpoint expr_fv e : Fset.fset id := match e with
+| expr_null
+| expr_undefined
+| expr_string _  
+| expr_number _ 
+| expr_true
+| expr_false 
+| expr_dump => \{}
+| expr_id i => \{i}
+| expr_object oa ps => 
+    objattrs_fv oa \u 
+    List.fold_left (fun x y => x \u y) 
+        (List.map (fun (x : string * property) => let (_, p) := x in property_fv p) ps) \{} 
+| expr_get_attr _ e1 e2 => expr_fv e1 \u expr_fv e2
+| expr_set_attr _ e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
+| expr_get_obj_attr _ e1 => expr_fv e1 
+| expr_set_obj_attr _ e1 e2 => expr_fv e1 \u expr_fv e2 
+| expr_get_field e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
+| expr_set_field e1 e2 e3 e4 => expr_fv e1 \u expr_fv e2 \u expr_fv e3 \u expr_fv e4
+| expr_delete_field e1 e2 => expr_fv e1 \u expr_fv e2
+| expr_own_field_names e => expr_fv e
+| expr_set_bang i e => \{i} \u expr_fv e
+| expr_op1 _ e => expr_fv e
+| expr_op2 _ e1 e2 => expr_fv e1 \u expr_fv e2
+| expr_if e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
+| expr_app e es => expr_fv e \u List.fold_left (fun x y => x \u y) (List.map expr_fv es) \{} 
+| expr_seq e1 e2 => expr_fv e1 \u expr_fv e2
+| expr_let i e1 e2 => expr_fv e1 \u (expr_fv e2 \-- i)
+| expr_recc i e1 e2 => (expr_fv e1 \u expr_fv e2) \-- i
+| expr_label _ e => expr_fv e
+| expr_break _ e => expr_fv e
+| expr_try_catch e1 e2 => expr_fv e1 \u expr_fv e2
+| expr_try_finally e1 e2 => expr_fv e1 \u expr_fv e2
+| expr_throw e => expr_fv e
+| expr_lambda is e => expr_fv e \- Fset.from_list is
+| expr_eval e1 e2 => expr_fv e1 \u expr_fv e2
+| expr_hint _ e => expr_fv e
+end
+with objattrs_fv oa := match oa with
+| objattrs_intro e1 e2 e3 e4 e5 => expr_fv e1 \u expr_fv e2 \u expr_fv e3 \u expr_fv e4 \u expr_fv e5
+end
+with property_fv p := match p with
+| property_data (data_intro e1 e2 e3 e4) => expr_fv e1 \u expr_fv e2 \u expr_fv e3 \u expr_fv e4
+| property_accessor (accessor_intro e1 e2 e3 e4) => expr_fv e1 \u expr_fv e2 \u expr_fv e3 \u expr_fv e4
+end
 .
 
 Fixpoint expr_seqs es :=

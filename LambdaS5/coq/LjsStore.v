@@ -1,3 +1,4 @@
+Require Import Utils.
 Require Import LjsSyntax.
 Require Import String.
 Require Import LibStream.
@@ -11,6 +12,8 @@ Implicit Type ptr : object_ptr.
 Implicit Type obj : object.
 
 (* LambdaJS environment storage. *)
+Definition narrow_ctx c e := 
+  ctx_intro (List.fold_left (fun cc (i : string) => Heap.write cc i (Heap.read (loc_heap c) i)) (Fset.to_list (expr_fv e)) (Heap.empty)).
 
 Definition add_value st v : (store * value_loc) :=
   match st with
@@ -43,7 +46,7 @@ Definition add_object st obj : (store * value) :=
 Definition add_closure c st args body : (store * value) :=
   match st with
   | store_intro obj_heap val_heap (id ::: stream) =>
-    (store_intro obj_heap val_heap stream, value_closure id c args body)
+    (store_intro obj_heap val_heap stream, value_closure id (narrow_ctx c (expr_lambda args body)) args body)
   end
 .
 Definition add_value_at_location st loc v : store :=

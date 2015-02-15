@@ -39,7 +39,7 @@ and string_of_object depth st obj =
   (string_of_value depth st obj.object_proto) (String.of_list obj.object_class)
   (obj.object_extensible) (string_of_value depth st obj.object_prim_value)
   (string_of_value depth st obj.object_code)
-  (string_of_prop_list depth st (Heap.to_list obj.object_properties_) [])
+  (string_of_prop_list depth st (HeapUtils.Heap.to_list obj.object_properties_) [])
 and string_of_prop_list depth st l skip =
   let string_of_prop = function (name, attr) ->
     Printf.sprintf "'%s': %s" (String.of_list name) (string_of_attr depth st attr)

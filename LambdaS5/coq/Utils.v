@@ -4,7 +4,7 @@ Require Import List.
 Require Import Ascii.
 Require Import String.
 Require Import HeapUtils.
-Require LibFset.
+Require LibFsetMy.
 Require Import JsNumber.
 Require Import Coq.Numbers.Natural.Peano.NPeano.
 Require LibStream.
@@ -14,7 +14,7 @@ Open Scope char_scope.
 
 Module Heap := HeapUtils.Heap.
 
-Module Fset := LibFset.FsetImpl.
+Module Fset := LibFsetMy.FsetImpl.
 
 Fixpoint concat_list_heap {X Y : Type} (front : list (X * Y)) (back : Heap.heap X Y) : Heap.heap X Y :=
   match front with

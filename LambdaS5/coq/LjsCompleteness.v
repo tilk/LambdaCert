@@ -434,7 +434,7 @@ Proof.
     repeat ljs_eval_push.
     (* hint *)
     repeat ljs_eval_push.
-Qed.
+Admitted. (* faster *)
 
 (* Completeness *)
 
