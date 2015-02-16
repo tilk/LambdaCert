@@ -337,6 +337,7 @@ Proof.
     destruct oattr as [[|]|].
     ljs_inv_red. reflexivity.
     ljs_inv_red_internal.
+    cases_let. injects.
     eapply apply_lemma; eauto.
     ljs_inv_red. reflexivity.
     (* set_field *)
@@ -344,9 +345,10 @@ Proof.
     repeat ljs_eval_push.
     unfold change_object_property, change_object_property_cont.
     destruct oattr as [[|]|].
-    repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; tryfalse; reflexivity.
+    repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; tryfalse; try reflexivity.
     ljs_inv_red_internal.
-    eapply apply_lemma; eauto.
+    cases_let. injects.
+    eapply apply_lemma; eauto. 
     cases_if; ljs_inv_red; tryfalse; try ljs_eval; reflexivity.
     (* delete_field *)
     unfolds.

@@ -28,15 +28,13 @@ Inductive ext_expr :=
 | expr_get_obj_attr_1 : oattr -> out -> ext_expr
 | expr_set_obj_attr_1 : oattr -> out -> expr -> ext_expr
 | expr_set_obj_attr_2 : oattr -> value -> out -> ext_expr
-| expr_get_field_1 : out -> expr -> expr -> ext_expr
-| expr_get_field_2 : value -> out -> expr -> ext_expr
-| expr_get_field_3 : value -> value -> out -> ext_expr
-| expr_get_field_4 : object_ptr -> option attributes -> value -> ext_expr
-| expr_set_field_1 : out -> expr -> expr -> expr -> ext_expr
-| expr_set_field_2 : value -> out -> expr -> expr -> ext_expr
-| expr_set_field_3 : value -> value -> out -> expr -> ext_expr
-| expr_set_field_4 : value -> value -> value -> out -> ext_expr
-| expr_set_field_5 : object_ptr -> object -> option attributes -> prop_name -> value -> value -> ext_expr
+| expr_get_field_1 : out -> expr -> ext_expr
+| expr_get_field_2 : value -> out -> ext_expr
+| expr_get_field_3 : object_ptr -> option attributes -> ext_expr
+| expr_set_field_1 : out -> expr -> expr -> ext_expr
+| expr_set_field_2 : value -> out -> expr -> ext_expr
+| expr_set_field_3 : value -> value -> out -> ext_expr
+| expr_set_field_4 : object_ptr -> object -> option attributes -> prop_name -> value -> ext_expr
 | expr_delete_field_1 : out -> expr -> ext_expr
 | expr_delete_field_2 : value -> out -> ext_expr
 | expr_delete_field_3 : object_ptr -> object -> option attributes -> prop_name -> ext_expr

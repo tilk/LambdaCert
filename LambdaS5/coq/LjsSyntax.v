@@ -110,8 +110,8 @@ Inductive expr : Type :=
 | expr_set_attr : pattr -> expr -> expr -> expr -> expr (* property -> object -> field_name -> new_value -> expr *)
 | expr_get_obj_attr : oattr -> expr -> expr
 | expr_set_obj_attr : oattr -> expr -> expr -> expr
-| expr_get_field : expr -> expr -> expr -> expr (* left -> right -> args_object -> expr *)
-| expr_set_field : expr -> expr -> expr -> expr -> expr (* object -> field -> new_val -> args -> expr *)
+| expr_get_field : expr -> expr -> expr (* object -> field -> expr *)
+| expr_set_field : expr -> expr -> expr -> expr (* object -> field -> new_val -> expr *)
 | expr_delete_field : expr -> expr -> expr (* object -> field -> expr *)
 | expr_own_field_names : expr -> expr
 | expr_set_bang : id -> expr -> expr
@@ -159,8 +159,8 @@ Fixpoint expr_fv e : Fset.fset id := match e with
 | expr_set_attr _ e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
 | expr_get_obj_attr _ e1 => expr_fv e1 
 | expr_set_obj_attr _ e1 e2 => expr_fv e1 \u expr_fv e2 
-| expr_get_field e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
-| expr_set_field e1 e2 e3 e4 => expr_fv e1 \u expr_fv e2 \u expr_fv e3 \u expr_fv e4
+| expr_get_field e1 e2 => expr_fv e1 \u expr_fv e2
+| expr_set_field e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
 | expr_delete_field e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_own_field_names e => expr_fv e
 | expr_set_bang i e => \{i} \u expr_fv e
@@ -262,6 +262,10 @@ Definition default_object : object := {|
   object_properties_ := Heap.empty;
   object_code := value_null
 |}.
+
+Definition object_with_properties props obj :=
+  let 'object_intro x1 x2 x3 x4 x5 x6 := obj in
+  object_intro x1 x2 x3 x4 props x6.
 
 (* Representation of the store *)
 

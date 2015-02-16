@@ -99,15 +99,11 @@ Definition with_error_dispatch e :=
 
 Definition prop_accessor_check e := make_app_builtin "%PropAccessorCheck" [e].
 
-(* TODO: get rid of this argsobj nonsense someday *)
 Definition make_get_field obj fld :=
-    let argsobj := L.expr_object L.default_objattrs [] in
-    L.expr_get_field obj (to_string fld) argsobj.
+    L.expr_get_field obj (to_string fld).
 
 Definition make_set_field_naked obj fld v :=
-    let prop := L.property_data (L.data_intro (L.expr_id "%v") L.expr_true L.expr_true L.expr_true) in 
-    let argsobj := L.expr_object L.default_objattrs [("0", prop)] in 
-    L.expr_let "%v" v (L.expr_set_field obj (to_string fld) (L.expr_id "%v") argsobj).
+    L.expr_set_field obj (to_string fld) v.
 
 Definition make_set_field obj fld v :=
     with_error_dispatch (make_app_builtin "%set-property" [to_object obj; to_string fld; v]).
@@ -121,7 +117,7 @@ Definition prop_itr :=
     let tst := L.expr_op2 L.binary_op_has_own_property (L.expr_id "%obj") 
         (L.expr_op1 L.unary_op_prim_to_str (L.expr_id "%index")) in
     let cns := L.expr_let "%rval" 
-        (L.expr_get_field (L.expr_id "%obj") (L.expr_op1 L.unary_op_prim_to_str (L.expr_id "%index")) L.expr_null) 
+        (L.expr_get_field (L.expr_id "%obj") (L.expr_op1 L.unary_op_prim_to_str (L.expr_id "%index"))) 
         (L.expr_seq 
             (L.expr_set_bang "%index" (L.expr_op2 L.binary_op_add (L.expr_id "%index") (L.expr_number 1))) 
             (L.expr_id "%rval")) in 
@@ -131,7 +127,7 @@ Definition prop_itr :=
 
 Definition make_for_in s robj bdy := 
     let sv := L.expr_string s in
-    let tst := L.expr_op1 L.unary_op_not (undef_test (L.expr_get_field context sv L.expr_null)) in
+    let tst := L.expr_op1 L.unary_op_not (undef_test (L.expr_get_field context sv)) in
     let after := make_set_field context sv (L.expr_app (L.expr_id "%prop_itr") []) in
     L.expr_let "%do_loop"
         (L.expr_lambda nil
@@ -172,21 +168,15 @@ Definition derived_context_in flds e :=
 
 Definition to_js_error e := make_app_builtin "%ToJSError" [e].
 
-Fixpoint make_lets is e :=
-    match is with
-    | nil => e
-    | (k, v) :: is' => L.expr_let k v (make_lets is' e)
-    end.
-
 Definition make_var_decl is e := (* TODO reimplement according to the semantics *) 
-    let nis : list (string * (string * L.expr)) := zipl_stream (prefixed_id_stream_from "%%" 0) is in
-    let lis := map (fun p => let '(sf, (i, e)) := p in (i ++ sf, e)) nis in
+    let flds := List.map (fun ip => 
+        let '(i, e) := ip in (i, L.property_data (L.data_intro e L.expr_true L.expr_false L.expr_false))) is in
     let mkvar ip := 
-        let '(sf, (i, e)) := ip in
-        let getter := L.expr_lambda ["t"; "a"] (L.expr_id (i ++ sf)) in
-        let setter := L.expr_lambda ["t"; "a"] (L.expr_set_bang (i ++ sf) (make_get_field (L.expr_id "a") (L.expr_string "0"))) in
+        let '(i, e) := ip in
+        let getter := L.expr_lambda ["t"; "a"] (make_get_field (L.expr_id "%ctxstore") (L.expr_string i)) in
+        let setter := L.expr_lambda ["t"; "a"] (make_set_field (L.expr_id "%ctxstore") (L.expr_string i) (make_get_field (L.expr_id "a") (L.expr_string "0"))) in
         (i, L.property_accessor (L.accessor_intro getter setter L.expr_false L.expr_false)) in
-    make_lets lis (derived_context_in (map mkvar nis) e).
+    L.expr_let "%ctxstore" (L.expr_object L.default_objattrs flds) (derived_context_in (map mkvar is) e).
 
 Definition make_strictness b e := 
     L.expr_let "#strict" (L.expr_bool b) e.
@@ -230,7 +220,7 @@ Definition make_fobj f is p (ctx : L.expr) :=
     L.expr_let "%prototype" proto_obj (
     store_parent_in (
     L.expr_let "%thisfunc" func_obj (
-    L.expr_seq (L.expr_set_field (L.expr_id "%prototype") (L.expr_string "constructor") (L.expr_id "%thisfunc") L.expr_null) (
+    L.expr_seq (L.expr_set_field (L.expr_id "%prototype") (L.expr_string "constructor") (L.expr_id "%thisfunc")) (
     L.expr_id "%thisfunc")))).
 
 Definition make_rec_fobj f i is p ctx :=
@@ -247,7 +237,7 @@ Definition make_try_catch body i catch :=
 
 Definition make_xfix s e :=
     match e with
-    | L.expr_get_field obj fld _ => make_app_builtin s [obj; fld]
+    | L.expr_get_field obj fld => make_app_builtin s [obj; fld]
     | _ => syntax_error "Illegal use of an prefix/postfix operator"
     end.
 

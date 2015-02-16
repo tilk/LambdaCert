@@ -102,10 +102,10 @@ let rec exp_helper exprec e = match e with
     | [] -> braces (attrsv exprec avs)
     | _ -> braces (vert [attrsv exprec avs; vert (vert_intersperse (text ",") (List.map (prop exprec) props))])
   end
-  | Coq_expr_set_field (o, f, v, args) ->
-    squish [exprec o; brackets (horzOrVert [horz [exprec f; text "="; exprec v; text ","]; exprec args])]
-  | Coq_expr_get_field (o, f, args) ->
-    squish [exprec o; brackets (horz [exprec f; text ","; exprec args])]
+  | Coq_expr_set_field (o, f, v) ->
+    squish [exprec o; brackets (horzOrVert [exprec f; text "="; exprec v])]
+  | Coq_expr_get_field (o, f) ->
+    squish [exprec o; brackets (exprec f)]
   | Coq_expr_delete_field (o, f) ->
     squish [exprec o; brackets (horz [text "delete"; exprec f])]
   | Coq_expr_get_attr (a, o, f) ->

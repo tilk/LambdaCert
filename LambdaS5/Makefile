@@ -5,7 +5,10 @@ configure: coq/configure coq/*.v
 	cd coq;	./configure
 
 coq: configure
-	make -C coq/
+	make -C coq/ LjsExtraction.vo # to omit metatheory
+
+coq-all: configure
+	make -C coq/ 
 
 copy_ljs:
 	mkdir -p build/

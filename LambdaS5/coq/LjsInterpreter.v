@@ -216,22 +216,23 @@ Definition eval_object_decl runs c st (attrs : objattrs) (l : list (string * pro
 * the getter with the arguments.
 * Note the arguments are evaluated even if they are not passed to any
 * function. *)
-Definition eval_get_field runs c st (left_expr right_expr arg_expr : expr) : result :=
+Definition eval_get_field runs c st (left_expr right_expr  : expr) : result :=
   if_eval_return runs c st left_expr (fun st left_loc =>
     if_eval_return runs c st right_expr (fun st right_loc =>
-      if_eval_return runs c st arg_expr (fun st arg_loc =>
-        assert_get_object_ptr left_loc (fun ptr =>
-          assert_get_string right_loc (fun name =>
-            let res := get_property st ptr name in
-            if_result_some res (fun ret =>
-              match ret with
-              | Some (attributes_data_of data) => result_value st (attributes_data_value data)
-              | Some (attributes_accessor_of acc) =>
-                  apply runs c st (attributes_accessor_get acc) (left_loc :: (arg_loc :: nil))
-              | None =>
-                  result_value st value_undefined
-              end
-  ))))))
+      assert_get_object_ptr left_loc (fun ptr =>
+        assert_get_string right_loc (fun name =>
+          let res := get_property st ptr name in
+          if_result_some res (fun ret =>
+            match ret with
+            | Some (attributes_data_of data) => result_value st (attributes_data_value data)
+            | Some (attributes_accessor_of acc) =>
+                let arg_obj := default_object in
+                let '(st, arg_loc) := add_object st arg_obj in
+                apply runs c st (attributes_accessor_get acc) (left_loc :: (arg_loc :: nil))
+            | None =>
+                result_value st value_undefined
+            end
+  )))))
 .
 
 (* left[right, arg] = new_val
@@ -243,40 +244,42 @@ Definition eval_get_field runs c st (left_expr right_expr arg_expr : expr) : res
 * with the `new_val` prepended to the list.
 * Note the arguments are evaluated even if they are not passed to any
 * function. *)
-Definition eval_set_field runs c st (left_expr right_expr new_val_expr arg_expr : expr) : result :=
+Definition eval_set_field runs c st (left_expr right_expr new_val_expr : expr) : result :=
   if_eval_return runs c st left_expr (fun st left_loc =>
     if_eval_return runs c st right_expr (fun st right_loc =>
       if_eval_return runs c st new_val_expr (fun st new_val =>
-        if_eval_return runs c st arg_expr (fun st arg_loc =>
-          assert_get_object_ptr left_loc (fun left_ptr =>
-            assert_get_string right_loc (fun name =>
-              assert_get_object_from_ptr st left_ptr (fun object =>
-                if_result_some (get_property st left_ptr name) (fun ret =>
-                  match ret with
-                  | Some (attributes_data_of data) =>
-                    if attributes_data_writable data
-                    then change_object_property_cont st left_ptr name (fun prop cont =>
-                      match get_object_property object name with
-                      | Some _ => 
-                        let attrs := attributes_data_of (attributes_data_value_update data new_val) in
+        assert_get_object_ptr left_loc (fun left_ptr =>
+          assert_get_string right_loc (fun name =>
+            assert_get_object_from_ptr st left_ptr (fun object =>
+              if_result_some (get_property st left_ptr name) (fun ret =>
+                match ret with
+                | Some (attributes_data_of data) =>
+                  if attributes_data_writable data
+                  then change_object_property_cont st left_ptr name (fun prop cont =>
+                    match get_object_property object name with
+                    | Some _ => 
+                      let attrs := attributes_data_of (attributes_data_value_update data new_val) in
+                      cont st (Some attrs) new_val
+                    | None => 
+                      if object_extensible object
+                      then let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
                         cont st (Some attrs) new_val
-                      | None => 
-                        if object_extensible object
-                        then let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
-                          cont st (Some attrs) new_val
-                        else result_value st value_undefined
-                      end)
-                    else result_exception st (value_string "unwritable-field")
-                  | Some (attributes_accessor_of acc) =>
-                      (* Note: pattr_setters don't get the new value. See https://github.com/brownplt/LambdaS5/issues/45 *)
-                      apply runs c st (attributes_accessor_set acc) (left_loc :: arg_loc :: nil)
-                  | None => 
-                    if object_extensible object 
-                    then change_object_property st left_ptr name (fun prop =>
-                      let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
-                      (st, Some attrs, new_val))
-                    else result_value st value_undefined
-                  end))))))))
+                      else result_value st value_undefined
+                    end)
+                  else result_exception st (value_string "unwritable-field")
+                | Some (attributes_accessor_of acc) =>
+                    let arg_obj := object_with_properties 
+                      (Heap.write Heap.empty "0" (attributes_data_of 
+                        (attributes_data_intro new_val true false false))) default_object in
+                    let '(st, arg_loc) := add_object st arg_obj in
+                    apply runs c st (attributes_accessor_set acc) (left_loc :: arg_loc :: nil)
+                | None => 
+                  if object_extensible object 
+                  then change_object_property st left_ptr name (fun prop =>
+                    let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
+                    (st, Some attrs, new_val))
+                  else result_value st value_undefined
+                end)))))))
 . (* get_object_property object name *)
 
 Definition eval_delete_field runs c st (left_expr right_expr : expr) : result :=
@@ -487,8 +490,8 @@ Definition eval runs c st (e : expr) : result :=
   | expr_if e_cond e_true e_false => eval_if runs c st e_cond e_true e_false
   | expr_seq e1 e2 => eval_seq runs c st e1 e2
   | expr_object attrs l => eval_object_decl runs c st attrs l
-  | expr_get_field left_ right_ attributes => eval_get_field runs c st left_ right_ attributes
-  | expr_set_field left_ right_ new_val attributes => eval_set_field runs c st left_ right_ new_val attributes
+  | expr_get_field left_ right_ => eval_get_field runs c st left_ right_ 
+  | expr_set_field left_ right_ new_val => eval_set_field runs c st left_ right_ new_val
   | expr_delete_field left_ right_ => eval_delete_field runs c st left_ right_
   | expr_let id value body => eval_let runs c st id value body
   | expr_recc id value body => eval_rec runs c st id value body

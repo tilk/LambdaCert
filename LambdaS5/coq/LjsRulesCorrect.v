@@ -163,11 +163,19 @@ Hint Constructors out_related : js_ljs.
 
 Hint Constructors J.red_expr : js_ljs.
 
-Lemma red_literal_ok : forall jst jc st c o l BR, 
-    L.red_expr c st (L.expr_basic (js_literal_to_ljs l)) o ->
+Definition concl_expr BR jst jc st c o je :=
     exists jo,
-    J.red_expr jst jc (J.expr_basic (J.expr_literal l)) jo /\ 
+    J.red_expr jst jc (J.expr_basic je) jo /\ 
     out_related BR jo o.
+
+Definition concl_stat BR jst jc st c o jt :=
+    exists jo,
+    J.red_stat jst jc (J.stat_basic jt) jo /\ 
+    out_related BR jo o.
+
+Lemma red_expr_literal_ok : forall jst jc st c o l BR, 
+    L.red_expr c st (L.expr_basic (js_literal_to_ljs l)) o ->
+    concl_expr BR jst jc st c o (J.expr_literal l).
 Proof.
     introv lred.
     destruct l as [ | [ | ] | | ]; inverts lred; eexists; eauto with js_ljs.
@@ -183,6 +191,22 @@ Ltac inv_internal_ljs :=
     end
 .
 
+Lemma red_stat_expr_ok : forall jst jc st c o je BR, 
+    (forall BR jst jc st c o, L.red_expr c st (L.expr_basic (js_expr_to_ljs je)) o ->
+      concl_expr BR jst jc st c o je) ->
+    L.red_expr c st (L.expr_basic (js_expr_to_ljs je)) o ->
+    concl_stat BR jst jc st c o (J.stat_expr je).
+Proof.
+    introv IH lred.
+    specializes IH lred.
+    destruct IH.
+    eexists x.
+    destruct H.
+    splits.    
+    eapply J.red_stat_expr.
+    eapply J.red_spec_expr_get_value.
+    eassumption.
+Admitted.
 
 (*
 
