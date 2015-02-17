@@ -12,59 +12,11 @@ Open Scope string_scope.
 
 Local Coercion JsNumber.of_int : Z >-> JsNumber.number.
 
+Module Import EjsToLjsHelper.
 Module L := LjsSyntax.
 Module E := EjsSyntax.
 Module J := JsSyntax.
-
-(* TODO move to TLC *)
-Global Instance Exists_decidable : 
-    forall `(l : list A) P (HD : forall a, Decidable (P a)), Decidable (Exists P l).
-Proof.
-    introv HD.
-    applys decidable_make (exists_st (fun a => decide (P a)) l).
-    induction l as [ | a l]; unfolds exists_st; simpl.
-    fold_bool; rew_reflect. eauto using Exists_nil_inv. 
-    rew_refl.
-    rewrite IHl.
-    remember (isTrue (P a)) as b1 eqn: Eq1.
-    destruct b1; rew_bool; fold_bool. 
-    rew_refl in *.
-    apply~ Exists_here.
-    remember (isTrue (Exists P l)) as b2 eqn: Eq2.
-    destruct b2; fold_bool.
-    rew_reflect in *.
-    apply~ Exists_next.
-    rew_reflect in *.
-    intro.
-    inverts~ H.
-Defined.
-
-(* TODO move to utilities *)
-
-Inductive Has_dupes {A : Type} : list A -> Prop :=
-    | Has_dupes_here : forall a l, Exists (fun b => a = b) l -> Has_dupes (a :: l)
-    | Has_dupes_next : forall a l, Has_dupes l -> Has_dupes (a :: l).
-
-Fixpoint has_dupes `{c : Comparable A} (l : list A) := 
-    match l with
-    | a :: l' => exists_st (fun b => decide (a = b)) l' || has_dupes l'
-    | nil => false
-    end.
-
-Global Instance Has_dupes_decidable : forall `(l : list A) `(c : Comparable A),
-    Decidable (Has_dupes l).
-Proof.
-    intros.
-    applys decidable_make (has_dupes l).
-    induction l as [ | a l]; unfold has_dupes; simpl.
-    fold_bool; rew_reflect. intro. inverts H.
-    fold has_dupes.
-    rewrite IHl.
-    skip. (* TODO *)
-Defined.
-
-
-Module DesugarUtils.
+End EjsToLjsHelper.
 
 Definition make_builtin s := L.expr_id s.
 
@@ -407,10 +359,6 @@ Definition make_switch_withdefault e acls def bcls :=
     L.expr_seq (L.expr_if (L.expr_id "%found") (L.expr_app (L.expr_id "%deflt") []) L.expr_undefined) (
     L.expr_seq (L.expr_seqs (map (make_case_a "%found") bcls)) (
     L.expr_if (L.expr_id "%found") L.expr_undefined (L.expr_app (L.expr_id "%deflt") [])))))))).
-
-End DesugarUtils.
-
-Import DesugarUtils.
 
 (* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=

@@ -13,9 +13,11 @@ Open Scope string_scope.
 
 Local Coercion JsNumber.of_int : Z >-> JsNumber.number.
 
+Module Import EjsFromJsHelper.
 Module E := EjsSyntax.
 Module J := JsSyntax.
 Module JI := JsPreliminary.
+End EjsFromJsHelper.
 
 Fixpoint js_literal_to_ejs l := 
     match l with
