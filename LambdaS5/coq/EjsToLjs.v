@@ -271,8 +271,7 @@ Definition make_args_obj is_new (es : list L.expr) :=
 
 Definition throw_typ_error msg := make_app_builtin "%TypeError" [L.expr_string msg].
 
-Definition appexpr_check e1 e2  := 
-    L.expr_if (make_not (type_test e1 "function")) (throw_typ_error "Not a function") e2.
+Definition appexpr_check e1 e2 e3 := make_app_builtin "%AppExprCheck" [e1; e2; e3].
 
 Definition make_app f (e : E.expr) es := 
     let args_obj := make_args_obj false es in 
@@ -283,8 +282,7 @@ Definition make_app f (e : E.expr) es :=
         L.expr_let "%obj" (f obj) (L.expr_let "%fun" (make_get_field (to_object (L.expr_id "%obj")) (f fld)) 
             (L.expr_app (L.expr_id "%fun") [to_object (L.expr_id "%obj"); args_obj]))
     | _ => 
-        L.expr_let "%fun" (f e) (appexpr_check (L.expr_id "%fun")
-            (L.expr_app (L.expr_id "%fun") [L.expr_undefined; args_obj]))
+        L.expr_let "%fun" (f e) (appexpr_check (L.expr_id "%fun") L.expr_undefined args_obj)
     end.
 
 (* TODO move to utils *)
@@ -330,15 +328,7 @@ Definition make_object ps :=
     let oa := L.objattrs_intro (L.expr_string "Object") L.expr_true (make_builtin "%ObjectProto") L.expr_undefined L.expr_undefined in
     L.expr_object oa props.
 
-Definition make_new e es :=
-    L.expr_let "%constr" e (
-    appexpr_check (L.expr_id "%constr") (
-    L.expr_let "%cproto" (make_get_field (L.expr_id "%constr") (L.expr_string "prototype")) (
-    L.expr_seq (L.expr_if (make_not (is_object_type (L.expr_id "%cproto"))) 
-        (L.expr_set_bang "%cproto" (make_builtin "%ObjectProto")) L.expr_undefined) (
-    L.expr_let "%newobj" (L.expr_object (L.objattrs_with_proto (L.expr_id "%cproto") L.default_objattrs) nil) (
-    L.expr_let "%constr_ret" (L.expr_app (L.expr_id "%constr") [L.expr_id "%newobj"; make_args_obj true es]) (
-    L.expr_if (is_object_type (L.expr_id "%constr_ret")) (L.expr_id "%constr_ret") (L.expr_id "%newobj"))))))).
+Definition make_new e es := make_app_builtin "%PrimNew" [e; make_args_obj true es].
 
 Definition make_case_a fd (tb : L.expr * L.expr) := let (test, body) := tb in
         L.expr_if (make_or (eq (L.expr_id "%disc") test) (L.expr_id fd)) 
