@@ -72,25 +72,13 @@ Definition make_setter e := make_app_builtin "%MakeSetter" [e].
 
 Definition make_while (tst bdy after : L.expr) := L.expr_undefined.
 
-Definition prop_itr := 
-    let tst := L.expr_op2 L.binary_op_has_own_property (L.expr_id "%obj") 
-        (L.expr_op1 L.unary_op_prim_to_str (L.expr_id "%index")) in
-    let cns := L.expr_let "%rval" 
-        (L.expr_get_field (L.expr_id "%obj") (L.expr_op1 L.unary_op_prim_to_str (L.expr_id "%index"))) 
-        (L.expr_seq 
-            (L.expr_set_bang "%index" (L.expr_op2 L.binary_op_add (L.expr_id "%index") (L.expr_number 1))) 
-            (L.expr_id "%rval")) in 
-    L.expr_lambda ["%obj"] 
-        (L.expr_let "%index" (L.expr_number 0) 
-            (L.expr_lambda [] (L.expr_if tst cns L.expr_undefined))).
-
 Definition make_for_in s robj bdy := 
     let sv := L.expr_string s in
     let tst := L.expr_op1 L.unary_op_not (undef_test (L.expr_get_field context sv)) in
     let after := make_set_field context sv (L.expr_app (L.expr_id "%prop_itr") []) in
     L.expr_let "%do_loop"
         (L.expr_lambda nil
-            (L.expr_recc "%get_itr" prop_itr
+            (L.expr_recc "%get_itr" (make_builtin "%PropItr")
             (L.expr_let "%pnameobj" (make_app_builtin "%propertyNames" [robj; L.expr_false])
             (L.expr_let "%prop_itr"
                 (L.expr_app (L.expr_id "%get_itr") [L.expr_id "%pnameobj"])
