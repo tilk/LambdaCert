@@ -243,12 +243,12 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_set_field_4 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st (res_exception (value_string "unwritable-field")))
 | red_expr_set_field_4_unextensible_add : forall c st ptr obj s v3,
     object_extensible obj = false ->
-    red_expr c st (expr_set_field_4 ptr obj None s v3) (out_ter st (res_value value_undefined))
+    red_expr c st (expr_set_field_4 ptr obj None s v3) (out_ter st (res_exception (value_string "unextensible-set")))
 | red_expr_set_field_4_unextensible_shadow : forall c st ptr obj data s v3,
     attributes_data_writable data = true ->
     get_object_property obj s = None ->
     object_extensible obj = false ->
-    red_expr c st (expr_set_field_4 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st (res_value value_undefined))
+    red_expr c st (expr_set_field_4 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st (res_exception (value_string "unextensible-shadow")))
 
 (* delete_field *)
 | red_expr_delete_field : forall c st e1 e2 o o',

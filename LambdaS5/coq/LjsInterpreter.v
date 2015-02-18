@@ -265,7 +265,7 @@ Definition eval_set_field runs c st (left_expr right_expr new_val_expr : expr) :
                       if object_extensible object
                       then let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
                         cont st (Some attrs) new_val
-                      else result_value st value_undefined
+                      else result_exception st (value_string "unextensible-shadow")
                     end)
                   else result_exception st (value_string "unwritable-field")
                 | Some (attributes_accessor_of acc) =>
@@ -275,7 +275,7 @@ Definition eval_set_field runs c st (left_expr right_expr new_val_expr : expr) :
                   then change_object_property st left_ptr name (fun prop =>
                     let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
                     (st, Some attrs, new_val))
-                  else result_value st value_undefined
+                  else result_exception st (value_string "unextensible-set")
                 end)))))))
 . (* get_object_property object name *)
 

@@ -750,7 +750,7 @@ Lemma eval_set_field_correct : forall runs c st e1 e2 e3 o,
                         o = out_ter (update_object st''' ptr (set_object_property obj s 
                             (attributes_data_of (attributes_data_intro v3 true true true)))) (res_value v3)) \/
                      (oattrs = None /\ object_extensible obj = false /\
-                        o = out_ter st''' (res_value value_undefined)) \/
+                        o = out_ter st''' (res_exception (value_string "unextensible-set"))) \/
                      (exists data, oattrs = Some (attributes_data_of data) /\
                         attributes_data_writable data = false /\
                         o = out_ter st''' (res_exception (value_string "unwritable-field"))) \/
@@ -769,7 +769,7 @@ Lemma eval_set_field_correct : forall runs c st e1 e2 e3 o,
                         attributes_data_writable data = true /\
                         get_object_property obj s = None /\
                         object_extensible obj = false /\
-                        o = out_ter st''' (res_value value_undefined)) \/
+                        o = out_ter st''' (res_exception (value_string "unextensible-shadow"))) \/
                      (exists acc, oattrs = Some (attributes_accessor_of acc) /\
                         apply_post runs c st''' (attributes_accessor_set acc) [value_object ptr; v3] o))))).
 Proof.
