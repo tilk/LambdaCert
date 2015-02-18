@@ -196,12 +196,15 @@ Definition eval_object_decl runs c st (attrs : objattrs) (l : list (string * pro
             if_eval_return runs c st primval_expr (fun st primval_v =>
               assert_get_string class_v (fun class => assert_get_bool extensible_v (fun extensible =>
                 let obj := {|
-                    object_proto := prototype_v;
-                    object_class := class;
-                    object_extensible := extensible;
-                    object_prim_value := primval_v;
-                    object_properties_ := Heap.empty;
-                    object_code := code_v |} in
+                    object_attrs := {|
+                      oattrs_proto := prototype_v;
+                      oattrs_class := class;
+                      oattrs_extensible := extensible;
+                      oattrs_prim_value := primval_v;
+                      oattrs_code := code_v 
+                    |};
+                    object_properties := Heap.empty
+                |} in
                 eval_object_properties runs c st l obj (fun st obj =>
                   let (st, loc) := add_object st obj
                   in result_value st loc

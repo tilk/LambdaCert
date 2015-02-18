@@ -184,13 +184,16 @@ let format_object_properties vh =
     horz [text "Heap.of_list"; format_list (List.map format_object_properties_item (Heap.to_list vh))] 
 
 let format_object o = 
+    let l1 = [
+        "object_proto", format_value (object_proto o);
+        "object_class", format_id (object_class o);
+        "object_extensible", bool (object_extensible o);
+        "object_prim_value", format_value (object_prim_value o);
+        "object_code", format_value (object_code o)
+    ] in
     let l = [
-        "object_proto", format_value o.object_proto;
-        "object_class", format_id o.object_class;
-        "object_extensible", bool o.object_extensible;
-        "object_prim_value", format_value o.object_prim_value;
-        "object_properties_", format_object_properties o.object_properties_; 
-        "object_code", format_value o.object_code
+        "object_attrs", coqrecord l1;
+        "object_properties", format_object_properties (object_properties o)
     ] in
     coqrecord l
 

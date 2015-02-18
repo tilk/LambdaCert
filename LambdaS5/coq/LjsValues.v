@@ -55,16 +55,16 @@ Fixpoint name_in_list (name : prop_name) (names : list prop_name) : bool :=
 .
 
 Definition get_object_property (object : object) (name : prop_name) : option attributes :=
-  Heap.read_option (object_properties_ object) name
+  Heap.read_option (object_properties object) name
 .
 Definition set_object_property (obj : object) (name : prop_name) (attrs : attributes) : object :=
-  let 'object_intro p c e p' props code := obj in object_intro p c e p' (Heap.write props name attrs) code    
+  let 'object_intro ps props := obj in object_intro ps (Heap.write props name attrs)   
 .
 Definition delete_object_property (obj : object) (name : prop_name) : object :=
-  let 'object_intro p c e p' props cod := obj in object_intro p c e p' (Heap.rem props name) cod
+  let 'object_intro ps props := obj in object_intro ps (Heap.rem props name) 
 .
 
-Definition make_prop_list_aux (left : nat * object_properties) (val : string) : nat * object_properties :=
+Definition make_prop_list_aux (left : nat * object_props) (val : string) : nat * object_props :=
   match left with
   | (nb_entries, attrs) =>
     let attr := attributes_data_of (attributes_data_intro (value_string val) false false false) in
@@ -72,18 +72,20 @@ Definition make_prop_list_aux (left : nat * object_properties) (val : string) : 
   end
 .
 Definition make_prop_list obj : object :=
-  match List.fold_left make_prop_list_aux (List.map fst (Heap.to_list (object_properties_ obj))) (0, Heap.empty) with
+  match List.fold_left make_prop_list_aux (List.map fst (Heap.to_list (object_properties obj))) (0, Heap.empty) with
   | (nb_entries, attrs) =>
     let length := value_number (JsNumber.of_int nb_entries) in
     let length_attr := attributes_data_of (attributes_data_intro length false false false) in
     let props := Heap.write attrs "length" length_attr in
     {| 
-      object_proto := value_null;
-      object_class := "Internal"; 
-      object_extensible := false;
-      object_prim_value := value_undefined;
-      object_properties_ := props;
-      object_code := value_null (* or undefined? TODO *)
+      object_attrs := {|
+        oattrs_proto := value_null;
+        oattrs_class := "Internal"; 
+        oattrs_extensible := false;
+        oattrs_prim_value := value_undefined;
+        oattrs_code := value_null 
+      |};
+      object_properties := props
     |}
   end
 .

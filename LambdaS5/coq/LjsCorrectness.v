@@ -501,7 +501,7 @@ Lemma eval_object_correct : forall runs c st attrs l o,
     runs_type_correct runs ->
     eval_object_decl runs c st attrs l = result_some o ->
     is_some_eval_objattrs o runs c st attrs (fun st' class ext proto code prim => 
-        let obj := object_intro proto class ext prim Heap.empty code in
+        let obj := object_intro (oattrs_intro proto class ext prim code) Heap.empty in
         is_some_eval_objprops o runs c st' l obj (fun st'' obj =>
             exists st''' v,
                 (st''', v) = add_object st'' obj /\

@@ -33,21 +33,21 @@ Definition get_object_oattr obj (oa : oattr) : value :=
 (* May fail because of wrong type. *)
 
 Definition set_object_oattr obj oa v : resultof object :=
-  let 'object_intro pr cl ex pv pp co := obj in
+  let 'object_intro (oattrs_intro pr cl ex pv co) pp := obj in
   match oa with
   | oattr_proto => 
     match v with
     | value_null 
-    | value_object _ => result_some (object_intro v cl ex pv pp co)
+    | value_object _ => result_some (object_intro (oattrs_intro v cl ex pv co) pp)
     | _ => result_fail "Update proto failed"
     end
   | oattr_extensible =>
     match value_to_bool v with
-    | Some b => result_some (object_intro pr cl b pv pp co)
+    | Some b => result_some (object_intro (oattrs_intro pr cl b pv co) pp)
     | None => result_fail "Update extensible failed"
     end
   | oattr_code => result_fail "Can't update code"
-  | oattr_primval => result_some (object_intro pr cl ex v pp co)
+  | oattr_primval => result_some (object_intro (oattrs_intro pr cl ex v co) pp)
   | oattr_class => result_fail "Can't update klass"
   end
 .

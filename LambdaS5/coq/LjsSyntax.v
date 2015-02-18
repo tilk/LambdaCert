@@ -220,7 +220,8 @@ Inductive value : Type :=
 | value_true
 | value_false
 | value_object : object_ptr -> value
-| value_closure : closure_id -> ctx -> list id -> expr -> value (* closure_id is for making closures comparable with stx= *)
+| value_closure : closure_id -> ctx -> list id -> expr -> value 
+  (* closure_id is for making closures comparable with stx= *)
 .
 
 (* Named data property attributes *)
@@ -244,28 +245,43 @@ Inductive attributes :=
 
 Definition prop_name := string.
 Definition class_name := string.
-Definition object_properties := Heap.heap prop_name attributes.
+Definition object_props := Heap.heap prop_name attributes.
+
+Record oattrs := oattrs_intro {
+   oattrs_proto : value;
+   oattrs_class : class_name;
+   oattrs_extensible : bool;
+   oattrs_prim_value : value;
+   oattrs_code : value 
+}.
 
 Record object := object_intro {
-   object_proto : value;
-   object_class : class_name;
-   object_extensible : bool;
-   object_prim_value : value;
-   object_properties_ : object_properties;
-   object_code : value }.
+   object_attrs : oattrs;
+   object_properties : object_props
+}.
+
+Definition object_proto obj := oattrs_proto (object_attrs obj).
+Definition object_class obj := oattrs_class (object_attrs obj).
+Definition object_extensible obj := oattrs_extensible (object_attrs obj).
+Definition object_prim_value obj := oattrs_prim_value (object_attrs obj).
+Definition object_code obj := oattrs_code (object_attrs obj).
+
+Definition default_oattrs : oattrs := {|
+  oattrs_proto := value_null;
+  oattrs_class := "Object";
+  oattrs_extensible := true;
+  oattrs_prim_value := value_undefined;
+  oattrs_code := value_null
+|}.
 
 Definition default_object : object := {|
-  object_proto := value_null;
-  object_class := "Object";
-  object_extensible := true;
-  object_prim_value := value_undefined;
-  object_properties_ := Heap.empty;
-  object_code := value_null
+  object_attrs := default_oattrs;
+  object_properties := Heap.empty
 |}.
 
 Definition object_with_properties props obj :=
-  let 'object_intro x1 x2 x3 x4 x5 x6 := obj in
-  object_intro x1 x2 x3 x4 props x6.
+  let 'object_intro x1 x2 := obj in
+  object_intro x1 props.
 
 (* Representation of the store *)
 

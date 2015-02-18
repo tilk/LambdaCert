@@ -124,5 +124,5 @@ Definition envstore_of_obj_aux (o : option (ctx * store)) (p : string * attribut
 .
 
 Definition envstore_of_obj st obj : option (ctx * store) :=
-  List.fold_left envstore_of_obj_aux (Heap.to_list (object_properties_ obj)) (Some (create_ctx, st))
+  List.fold_left envstore_of_obj_aux (Heap.to_list (object_properties obj)) (Some (create_ctx, st))
 .

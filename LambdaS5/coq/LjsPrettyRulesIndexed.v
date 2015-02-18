@@ -76,7 +76,7 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     red_exprh k c st (expr_object_4 v1 v2 v3 o e5 a) o
 | red_exprh_object_5 : forall k c st' st class extv ext proto code prim a o,
     value_to_bool extv = Some ext ->
-    red_exprh k c st (expr_object_6 (object_intro proto class ext prim Heap.empty code) a) o ->
+    red_exprh k c st (expr_object_6 (object_intro (oattrs_intro proto class ext prim code) Heap.empty) a) o ->
     red_exprh k c st' (expr_object_5 (value_string class) extv proto code (out_ter st (res_value prim)) a) o
 | red_exprh_object_5_abort : forall k c st v1 v2 v3 v4 a o,
     abort o ->
