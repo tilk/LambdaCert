@@ -858,10 +858,10 @@ Ltac ljs_pretty_advance rule rulea :=
     (eapply rule; [solve [ljs_eval_ih] | ]);
     [ | eapply rulea; assumption]. 
 
-Lemma red_expr_app_2_nil_lemma : forall runs c st v vl o,
+Lemma red_expr_app_2_lemma : forall runs c st v vl o,
     runs_type_correct runs ->
-    apply_post runs c st v (rev vl) o ->
-    red_expr c st (expr_app_2 v vl nil) o.
+    apply_post runs c st v vl o ->
+    red_expr c st (expr_app_2 v vl) o.
 Proof.
     introv IH R.
     unfolds in R.
@@ -871,6 +871,24 @@ Proof.
     ljs_eval_ih.
 Qed.
 
+Lemma red_expr_eval_many_lemma : forall runs c o C (Pred : _ -> _ -> Prop),
+    runs_type_correct runs -> 
+    (forall st vs, Pred st (rev vs) -> red_expr c st (C (rev vs)) o) ->
+    forall es st vs,
+    is_some_values_eval runs c st o es vs Pred ->
+    red_expr c st (expr_eval_many_1 es vs C) o.
+Proof.
+    introv IH PH.
+    induction es; introv R.
+    eapply red_expr_eval_many_1.
+    eauto.
+    unfold is_some_values_eval in R at 1.
+    ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort.
+    eapply red_expr_eval_many_2.
+    eauto.
+Qed.
+
+(*
 Lemma red_expr_app_2_lemma : forall runs c o v (Pred : _ -> _ -> Prop),
     runs_type_correct runs -> 
     (forall st vs, Pred st (rev vs) -> red_expr c st (expr_app_2 v vs nil) o) ->
@@ -886,13 +904,14 @@ Proof.
     eapply red_expr_app_3.
     eauto.
 Qed.
+*)
 
-Lemma red_expr_object_6_lemma : forall runs c o (Pred : _ -> _ -> Prop),
+Lemma red_expr_object_2_lemma : forall runs c o (Pred : _ -> _ -> Prop),
     runs_type_correct runs ->
-    (forall st obj, Pred st obj -> red_expr c st (expr_object_6 obj nil) o) ->
+    (forall st obj, Pred st obj -> red_expr c st (expr_object_2 obj nil) o) ->
     forall props st obj,
     is_some_eval_objprops o runs c st props obj Pred ->
-    red_expr c st (expr_object_6 obj props) o.
+    red_expr c st (expr_object_2 obj props) o.
 Proof.
     introv IH PH.
     induction props. eauto.
@@ -901,20 +920,20 @@ Proof.
     destruct a as (s&[data|acc]).
     destruct data.
     unfolds in R.
-    ljs_pretty_advance red_expr_object_6_data red_expr_object_data_1_abort.
-    ljs_pretty_advance red_expr_object_data_1 red_expr_object_data_2_abort.
-    ljs_pretty_advance red_expr_object_data_2 red_expr_object_data_3_abort.
-    ljs_pretty_advance red_expr_object_data_3 red_expr_object_data_4_abort.
+    eapply red_expr_object_2_data.
+    repeat (ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort;
+            eapply red_expr_eval_many_2).
+    eapply red_expr_eval_many_1.
     destruct R as (b1&b2&b3&Hb1&Hb2&Hb3&R).
-    eapply red_expr_object_data_4; eauto. 
+    eapply red_expr_object_data_1; eauto. 
     destruct acc.
     unfolds in R.
-    ljs_pretty_advance red_expr_object_6_accessor red_expr_object_accessor_1_abort.
-    ljs_pretty_advance red_expr_object_accessor_1 red_expr_object_accessor_2_abort.
-    ljs_pretty_advance red_expr_object_accessor_2 red_expr_object_accessor_3_abort.
-    ljs_pretty_advance red_expr_object_accessor_3 red_expr_object_accessor_4_abort.
+    eapply red_expr_object_2_accessor.
+    repeat (ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort;
+            eapply red_expr_eval_many_2).
+    eapply red_expr_eval_many_1.
     destruct R as (b1&b2&Hb1&Hb2&R).
-    eapply red_expr_object_accessor_4; eauto.
+    eapply red_expr_object_accessor_1; eauto.
 Qed.
 
 (* Main lemma *)
@@ -944,20 +963,19 @@ Proof.
     lets H: eval_object_correct IH R.
     match goal with H : objattrs |- _ => destruct H end.
     unfolds in H.
-    ljs_pretty_advance red_expr_object red_expr_object_1_abort.
-    ljs_pretty_advance red_expr_object_1 red_expr_object_2_abort.
-    ljs_pretty_advance red_expr_object_2 red_expr_object_3_abort.
-    ljs_pretty_advance red_expr_object_3 red_expr_object_4_abort.
-    ljs_pretty_advance red_expr_object_4 red_expr_object_5_abort.
+    eapply red_expr_object. 
+    repeat (ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort;
+            eapply red_expr_eval_many_2).
+    eapply red_expr_eval_many_1.
     destruct H as (b&s&Hs&Hb&H).
     substs.
-    eapply red_expr_object_5; try eassumption.
-    applys red_expr_object_6_lemma IH; try eassumption.
+    eapply red_expr_object_1; try eassumption.
+    applys red_expr_object_2_lemma IH; try eassumption.
     introv Ho.
     simpl in Ho.
     destruct Ho as (st'''&v&Ho).
     destructs Ho. substs.
-    eapply red_expr_object_6; eassumption.
+    eapply red_expr_object_2; eassumption.
     (* get_attr *)
     lets H: eval_get_attr_correct IH R.
     ljs_pretty_advance red_expr_get_attr red_expr_get_attr_1_abort.
@@ -999,7 +1017,7 @@ Proof.
     eapply red_expr_get_field_3_no_field.
     eapply red_expr_get_field_3_get_field.
     eapply red_expr_get_field_3_getter; try eassumption.
-    eauto using red_expr_app_2_nil_lemma. 
+    eauto using red_expr_app_2_lemma. 
     (* set_field *)
     lets H: eval_set_field_correct IH R.
     ljs_pretty_advance red_expr_set_field red_expr_set_field_1_abort.
@@ -1017,7 +1035,7 @@ Proof.
     eapply red_expr_set_field_4_shadow_field; eauto.
     eapply red_expr_set_field_4_unextensible_shadow; eauto. 
     eapply red_expr_set_field_4_setter; try eassumption.
-    eauto using red_expr_app_2_nil_lemma. 
+    eauto using red_expr_app_2_lemma. 
     (* delete_field *)
     lets H: eval_delete_field_correct IH R.
     ljs_pretty_advance red_expr_delete_field red_expr_delete_field_1_abort.
@@ -1066,11 +1084,11 @@ Proof.
     lets H: eval_app_correct IH R.
     ljs_pretty_advance red_expr_app red_expr_app_1_abort.
     eapply red_expr_app_1.
-    eapply red_expr_app_2_lemma; try eassumption.
+    eapply red_expr_eval_many_lemma; try eassumption.
     introv Hy.
     simpl in Hy.
     repeat destruct_exists Hy.
-    eauto using red_expr_app_2_nil_lemma. 
+    eauto using red_expr_app_2_lemma. 
     (* seq *)
     lets H: eval_seq_correct IH R.
     ljs_pretty_advance red_expr_seq red_expr_seq_1_abort.
@@ -1112,7 +1130,7 @@ Proof.
     inverts Ho1.
     ljs_pretty_advance red_expr_try_catch_1_exc red_expr_try_catch_2_abort.
     eapply red_expr_try_catch_2.
-    eauto using red_expr_app_2_nil_lemma. 
+    eauto using red_expr_app_2_lemma. 
     inverts He.
     eapply red_expr_try_catch_1; eauto.
     (* try_finally *)

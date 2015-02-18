@@ -213,6 +213,17 @@ Ltac ljs_inv_red_internal :=
         end
     end.
 
+Ltac ljs_inv_red_inter := 
+    match goal with
+    | H	: red_exprh _ _ _ ?e _ |- _ => 
+        match e with 
+        | expr_eval_many_1 _ _ _ => inverts H
+        | expr_object_1 _ _ => inverts H
+        | expr_object_data_1 _ _ _ _ => inverts H
+        | expr_object_accessor_1 _ _ _ _ => inverts H
+        end; [idtac]
+    end.
+
 Ltac ljs_inv_red_abort := ljs_inv_red_internal; [ | ljs_abort].
 
 Lemma exists_S : forall (P : nat -> Prop), (exists k, P (S k)) -> exists k, P k.
@@ -224,14 +235,14 @@ Qed.
 
 Ltac ljs_eval_step := ljs_specialize_ih; ljs_inv_red_abort; ljs_eval.
 
-Ltac ljs_eval_push := ljs_specialize_ih || ljs_inv_red_abort || ljs_eval || reflexivity || assumption.
+Ltac ljs_eval_push := solve [auto] || ljs_specialize_ih || ljs_inv_red_abort || ljs_eval || ljs_inv_red_inter.
 
 (* Lemmas about complex constructions of ljs (object literals and function application) *)
 
 Lemma object_properties_lemma : forall k,
     (forall c st e o, red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o) -> 
     forall l c st obj o,
-    red_exprh k c st (expr_object_6 obj l) o ->
+    red_exprh k c st (expr_object_2 obj l) o ->
     eval_object_properties (runs k) c st l obj (fun st obj =>
                   let (st, loc) := add_object st obj
                   in result_value st loc
@@ -248,26 +259,22 @@ Proof.
     (* [] *)
     destruct p as (i&[()|()]); ljs_inv_red; simpl.
     (* data *)
-    repeat ljs_eval_push.
-    eauto.
+    abstract (repeat ljs_eval_push; eauto).
     (* accessor *)
-    repeat ljs_eval_push.
-    eauto.
+    abstract (repeat ljs_eval_push; eauto).
 Qed.
 
 Lemma apply_lemma : forall k,
     (forall c st e o, red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o) -> 
-    forall c st v vs vsr o,
-    red_exprh k c st (expr_app_2 v vsr nil) o ->
-    vsr = rev vs ->
+    forall c st v vs o,
+    red_exprh k c st (expr_app_2 v vs) o ->
     apply (runs k) c st v vs = result_some o.
 Proof.
-    introv IH H HR.
+    introv IH H.
     substs.
     ljs_inv_red_internal.
     unfolds.
     repeat ljs_eval_push.
-    rew_list in *.
     cases_let.
     injects.
     repeat ljs_eval_push.
@@ -276,15 +283,14 @@ Qed.
 Lemma eval_arg_list_lemma : forall k, 
     (forall c st e o, red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o) -> 
     forall es c st v vs o,
-    red_exprh k c st (expr_app_2 v vs es) o ->
+    red_exprh k c st (expr_eval_many_1 es vs (expr_app_2 v)) o ->
     fold_right (eval_arg_list_aux (runs k) c) (fun st vs => apply (runs k) c st v (rev vs)) es st vs = result_some o.
 Proof.
     introv IH.
-    induction es; introv H.
-    eapply apply_lemma; rew_list; eauto.
+    induction es; introv H. 
+    inverts H; eapply apply_lemma; eauto.
     simpl.
     unfolds.
-    ljs_inv_red_internal.
     repeat ljs_eval_push.
     eauto.
 Qed.
@@ -317,20 +323,20 @@ Proof.
     unfolds.
     cases_let. injects. reflexivity.
     (* object *)
-    repeat ljs_eval_push.
-    eauto using object_properties_lemma.
+    abstract (repeat ljs_eval_push;
+              eauto using object_properties_lemma).
     (* get_attr *)
     unfolds.
-    repeat ljs_eval_push.
+    abstract (repeat ljs_eval_push).
     (* set_attr *)
     unfolds.
-    repeat ljs_eval_push.
+    abstract (repeat ljs_eval_push).
     (* get_obj_attr *)
     unfolds.
-    repeat ljs_eval_push.
+    abstract (repeat ljs_eval_push).
     (* set_obj_attr *)
     unfolds.
-    repeat ljs_eval_push.
+    abstract (repeat ljs_eval_push).
     (* get_field *)
     unfolds.
     repeat ljs_eval_push.
@@ -362,13 +368,13 @@ Proof.
     reflexivity.
     (* set_bang *)
     unfolds.
-    repeat ljs_eval_push.
+    abstract (repeat ljs_eval_push).
     (* op1 *)
     unfolds.
-    repeat ljs_eval_push.
+    abstract (repeat ljs_eval_push).
     (* op2 *)
     unfolds.
-    repeat ljs_eval_push.
+    abstract (repeat ljs_eval_push).
     (* if *)
     unfolds.
     ljs_specialize_ih. ljs_inv_red_internal.
@@ -383,7 +389,7 @@ Proof.
     eapply eval_arg_list_lemma; eassumption.
     (* seq *)
     unfolds.
-    repeat ljs_eval_push.
+    abstract (repeat ljs_eval_push).
     (* let *)
     unfolds.
     repeat ljs_eval_push.
@@ -406,7 +412,7 @@ Proof.
     simpl; try cases_if; reflexivity.
     (* break *)
     unfolds.
-    repeat ljs_eval_push.
+    abstract (repeat ljs_eval_push).
     (* trycatch *)
     unfolds.
     repeat ljs_eval_push.
@@ -426,7 +432,7 @@ Proof.
     repeat ljs_eval_push.
     (* throw *)
     unfolds.
-    repeat ljs_eval_push.
+    abstract (repeat ljs_eval_push).
     (* eval *)
     unfolds.
     repeat ljs_eval_push.
@@ -436,7 +442,7 @@ Proof.
     repeat ljs_eval_push.
     (* hint *)
     repeat ljs_eval_push.
-Admitted. (* faster *)
+Qed.
 
 (* Completeness *)
 

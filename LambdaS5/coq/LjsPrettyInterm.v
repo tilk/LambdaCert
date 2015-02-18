@@ -6,20 +6,12 @@ Require Import Coq.Strings.String.
 
 Inductive ext_expr :=
 | expr_basic : expr -> ext_expr
-| expr_object_1 : out -> expr -> expr -> expr -> expr -> list (string * property) -> ext_expr
-| expr_object_2 : value -> out -> expr -> expr -> expr -> list (string * property) -> ext_expr
-| expr_object_3 : value -> value -> out -> expr -> expr -> list (string * property) -> ext_expr
-| expr_object_4 : value -> value -> value -> out -> expr -> list (string * property) -> ext_expr
-| expr_object_5 : value -> value -> value -> value -> out -> list (string * property) -> ext_expr
-| expr_object_6 : object -> list (string * property) -> ext_expr
-| expr_object_data_1 : object -> list (string * property) -> string -> out -> expr -> expr -> expr -> ext_expr
-| expr_object_data_2 : object -> list (string * property) -> string -> value -> out -> expr -> expr -> ext_expr
-| expr_object_data_3 : object -> list (string * property) -> string -> value -> value -> out -> expr -> ext_expr
-| expr_object_data_4 : object -> list (string * property) -> string -> value -> value -> value -> out -> ext_expr
-| expr_object_accessor_1 : object -> list (string * property) -> string -> out -> expr -> expr -> expr -> ext_expr
-| expr_object_accessor_2 : object -> list (string * property) -> string -> value -> out -> expr -> expr -> ext_expr
-| expr_object_accessor_3 : object -> list (string * property) -> string -> value -> value -> out -> expr -> ext_expr
-| expr_object_accessor_4 : object -> list (string * property) -> string -> value -> value -> value -> out -> ext_expr
+| expr_eval_many_1 : list expr -> list value -> (list value -> ext_expr) -> ext_expr
+| expr_eval_many_2 : list expr -> out -> list value -> (list value -> ext_expr) -> ext_expr
+| expr_object_1 : list (string * property) -> list value -> ext_expr
+| expr_object_2 : object -> list (string * property) -> ext_expr
+| expr_object_data_1 : object -> list (string * property) -> string -> list value -> ext_expr
+| expr_object_accessor_1 : object -> list (string * property) -> string -> list value -> ext_expr
 | expr_get_attr_1 : pattr -> out -> expr -> ext_expr
 | expr_get_attr_2 : pattr -> value -> out -> ext_expr
 | expr_set_attr_1 : pattr -> out -> expr -> expr -> ext_expr
@@ -45,8 +37,7 @@ Inductive ext_expr :=
 | expr_op2_2 : binary_op -> value -> out -> ext_expr 
 | expr_if_1 : out -> expr -> expr -> ext_expr
 | expr_app_1 : out -> list expr -> ext_expr
-| expr_app_2 : value -> list value -> list expr -> ext_expr
-| expr_app_3 : value -> list value -> out -> list expr -> ext_expr
+| expr_app_2 : value -> list value -> ext_expr
 | expr_seq_1 : out -> expr -> ext_expr
 | expr_let_1 : id -> out -> expr -> ext_expr
 | expr_recc_1 : value_loc -> out -> expr -> ext_expr

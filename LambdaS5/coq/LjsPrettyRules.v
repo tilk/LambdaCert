@@ -41,116 +41,49 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     (st', v) = add_closure c st args body ->
     red_expr c st (expr_lambda args body) (out_ter st' (res_value v))
 
+(* eval_many *)
+| red_expr_eval_many_1 : forall c st vs E o,
+    red_expr c st (E (rev vs)) o ->
+    red_expr c st (expr_eval_many_1 nil vs E) o
+| red_expr_eval_many_1_next : forall c st e es vs E o o',
+    red_expr c st e o ->
+    red_expr c st (expr_eval_many_2 es o vs E) o' ->
+    red_expr c st (expr_eval_many_1 (e::es) vs E) o'
+| red_expr_eval_many_2 : forall c st' st es v vs E o,
+    red_expr c st (expr_eval_many_1 es (v::vs) E) o ->
+    red_expr c st' (expr_eval_many_2 es (out_ter st (res_value v)) vs E) o
+| red_expr_eval_many_2_abort : forall c st es vs E o,
+    abort o ->
+    red_expr c st (expr_eval_many_2 es o vs E) o
+
 (* object *)
-| red_expr_object : forall c st e1 e2 e3 e4 e5 a o o',
-    red_expr c st e1 o ->
-    red_expr c st (expr_object_1 o e2 e3 e4 e5 a) o' ->
-    red_expr c st (expr_object (objattrs_intro e1 e2 e3 e4 e5) a) o'
-| red_expr_object_1 : forall c st' st v1 e2 e3 e4 e5 a o o',
-    red_expr c st e2 o ->
-    red_expr c st (expr_object_2 v1 o e3 e4 e5 a) o' ->
-    red_expr c st' (expr_object_1 (out_ter st (res_value v1)) e2 e3 e4 e5 a) o'
-| red_expr_object_1_abort : forall c st e2 e3 e4 e5 a o,
-    abort o ->
-    red_expr c st (expr_object_1 o e2 e3 e4 e5 a) o
-| red_expr_object_2 : forall c st' st v1 v2 e3 e4 e5 a o o',
-    red_expr c st e3 o ->
-    red_expr c st (expr_object_3 v1 v2 o e4 e5 a) o' ->
-    red_expr c st' (expr_object_2 v1 (out_ter st (res_value v2)) e3 e4 e5 a) o'
-| red_expr_object_2_abort : forall c st v1 e3 e4 e5 a o,
-    abort o ->
-    red_expr c st (expr_object_2 v1 o e3 e4 e5 a) o
-| red_expr_object_3 : forall c st' st v1 v2 v3 e4 e5 a o o',
-    red_expr c st e4 o ->
-    red_expr c st (expr_object_4 v1 v2 v3 o e5 a) o' ->
-    red_expr c st' (expr_object_3 v1 v2 (out_ter st (res_value v3)) e4 e5 a) o'
-| red_expr_object_3_abort : forall c st v1 v2 e4 e5 a o,
-    abort o ->
-    red_expr c st (expr_object_3 v1 v2 o e4 e5 a) o
-| red_expr_object_4 : forall c st' st v1 v2 v3 v4 e5 a o o',
-    red_expr c st e5 o ->
-    red_expr c st (expr_object_5 v1 v2 v3 v4 o a) o' ->
-    red_expr c st' (expr_object_4 v1 v2 v3 (out_ter st (res_value v4)) e5 a) o'
-| red_expr_object_4_abort : forall c st v1 v2 v3 e5 a o,
-    abort o ->
-    red_expr c st (expr_object_4 v1 v2 v3 o e5 a) o
-| red_expr_object_5 : forall c st' st class extv ext proto code prim a o,
+| red_expr_object : forall c st e1 e2 e3 e4 e5 a o,
+    red_expr c st (expr_eval_many_1 [e1; e2; e3; e4; e5] nil (expr_object_1 a)) o ->
+    red_expr c st (expr_object (objattrs_intro e1 e2 e3 e4 e5) a) o
+| red_expr_object_1 : forall c st class extv ext proto code prim a o,
     value_to_bool extv = Some ext ->
-    red_expr c st (expr_object_6 (object_intro (oattrs_intro proto class ext prim code) Heap.empty) a) o ->
-    red_expr c st' (expr_object_5 (value_string class) extv proto code (out_ter st (res_value prim)) a) o
-| red_expr_object_5_abort : forall c st v1 v2 v3 v4 a o,
-    abort o ->
-    red_expr c st (expr_object_5 v1 v2 v3 v4 o a) o
-| red_expr_object_6 : forall c st st1 obj v,
+    red_expr c st (expr_object_2 (object_intro (oattrs_intro proto class ext prim code) Heap.empty) a) o ->
+    red_expr c st (expr_object_1 a [value_string class; extv; proto; code; prim]) o
+| red_expr_object_2 : forall c st st1 obj v,
     (st1, v) = add_object st obj ->
-    red_expr c st (expr_object_6 obj nil) (out_ter st1 (res_value v))
-| red_expr_object_6_data : forall c st obj s e1 e2 e3 e4 a o o',
-    red_expr c st e1 o ->
-    red_expr c st (expr_object_data_1 obj a s o e2 e3 e4) o' ->
-    red_expr c st (expr_object_6 obj ((s, property_data (data_intro e3 e4 e2 e1)) :: a)) o'
-| red_expr_object_data_1 : forall c st' st obj a s v1 e2 e3 e4 o o',
-    red_expr c st e2 o ->
-    red_expr c st (expr_object_data_2 obj a s v1 o e3 e4) o' ->
-    red_expr c st' (expr_object_data_1 obj a s (out_ter st (res_value v1)) e2 e3 e4) o'
-| red_expr_object_data_1_abort : forall c st obj a s e2 e3 e4 o,
-    abort o ->
-    red_expr c st (expr_object_data_1 obj a s o e2 e3 e4) o
-| red_expr_object_data_2 : forall c st' st obj a s v1 v2 e3 e4 o o',
-    red_expr c st e3 o ->
-    red_expr c st (expr_object_data_3 obj a s v1 v2 o e4) o' ->
-    red_expr c st' (expr_object_data_2 obj a s v1 (out_ter st (res_value v2)) e3 e4) o'
-| red_expr_object_data_2_abort : forall c st obj a s v1 e3 e4 o,
-    abort o ->
-    red_expr c st (expr_object_data_2 obj a s v1 o e3 e4) o
-| red_expr_object_data_3 : forall c st' st obj a s v1 v2 v3 e4 o o',
-    red_expr c st e4 o ->
-    red_expr c st (expr_object_data_4 obj a s v1 v2 v3 o) o' ->
-    red_expr c st' (expr_object_data_3 obj a s v1 v2 (out_ter st (res_value v3)) e4) o'
-| red_expr_object_data_3_abort : forall c st obj a s v1 v2 e4 o,
-    abort o ->
-    red_expr c st (expr_object_data_3 obj a s v1 v2 o e4) o
-| red_expr_object_data_4 : forall c st' st obj a s v1 v2 v3 v4 b1 b2 b4 o,
+    red_expr c st (expr_object_2 obj nil) (out_ter st1 (res_value v))
+| red_expr_object_2_data : forall c st obj s e1 e2 e3 e4 a o,
+    red_expr c st (expr_eval_many_1 [e1; e2; e3; e4] nil (expr_object_data_1 obj a s)) o ->
+    red_expr c st (expr_object_2 obj ((s, property_data (data_intro e3 e4 e2 e1)) :: a)) o
+| red_expr_object_data_1 : forall c st obj a s v1 v2 v3 v4 b1 b2 b4 o,
     value_to_bool v1 = Some b1 ->
     value_to_bool v2 = Some b2 ->
     value_to_bool v4 = Some b4 ->
-    red_expr c st (expr_object_6 (set_object_property obj s (attributes_data_of (attributes_data_intro v3 b4 b2 b1))) a) o ->
-    red_expr c st' (expr_object_data_4 obj a s v1 v2 v3 (out_ter st (res_value v4))) o
-| red_expr_object_data_4_abort : forall c st obj a s v1 v2 v3 o,
-    abort o ->
-    red_expr c st (expr_object_data_4 obj a s v1 v2 v3 o) o
-| red_expr_object_6_accessor : forall c st obj s e1 e2 e3 e4 a o o',
-    red_expr c st e1 o ->
-    red_expr c st (expr_object_accessor_1 obj a s o e2 e3 e4) o' ->
-    red_expr c st (expr_object_6 obj ((s, property_accessor (accessor_intro e3 e4 e2 e1)) :: a)) o'
-| red_expr_object_accessor_1 : forall c st' st obj a s v1 e2 e3 e4 o o',
-    red_expr c st e2 o ->
-    red_expr c st (expr_object_accessor_2 obj a s v1 o e3 e4) o' ->
-    red_expr c st' (expr_object_accessor_1 obj a s (out_ter st (res_value v1)) e2 e3 e4) o'
-| red_expr_object_accessor_1_abort : forall c st obj a s e2 e3 e4 o,
-    abort o ->
-    red_expr c st (expr_object_accessor_1 obj a s o e2 e3 e4) o
-| red_expr_object_accessor_2 : forall c st' st obj a s v1 v2 e3 e4 o o',
-    red_expr c st e3 o ->
-    red_expr c st (expr_object_accessor_3 obj a s v1 v2 o e4) o' ->
-    red_expr c st' (expr_object_accessor_2 obj a s v1 (out_ter st (res_value v2)) e3 e4) o'
-| red_expr_object_accessor_2_abort : forall c st obj a s v1 e3 e4 o,
-    abort o ->
-    red_expr c st (expr_object_accessor_2 obj a s v1 o e3 e4) o
-| red_expr_object_accessor_3 : forall c st' st obj a s v1 v2 v3 e4 o o',
-    red_expr c st e4 o ->
-    red_expr c st (expr_object_accessor_4 obj a s v1 v2 v3 o) o' ->
-    red_expr c st' (expr_object_accessor_3 obj a s v1 v2 (out_ter st (res_value v3)) e4) o'
-| red_expr_object_accessor_3_abort : forall c st obj a s v1 v2 e4 o,
-    abort o ->
-    red_expr c st (expr_object_accessor_3 obj a s v1 v2 o e4) o
-| red_expr_object_accessor_4 : forall c st' st obj a s v1 v2 v3 v4 b1 b2 o,
+    red_expr c st (expr_object_2 (set_object_property obj s (attributes_data_of (attributes_data_intro v3 b4 b2 b1))) a) o ->
+    red_expr c st (expr_object_data_1 obj a s [v1; v2; v3; v4]) o
+| red_expr_object_2_accessor : forall c st obj s e1 e2 e3 e4 a o,
+    red_expr c st (expr_eval_many_1 [e1; e2; e3; e4] nil (expr_object_accessor_1 obj a s)) o ->
+    red_expr c st (expr_object_2 obj ((s, property_accessor (accessor_intro e3 e4 e2 e1)) :: a)) o
+| red_expr_object_accessor_1 : forall c st obj a s v1 v2 v3 v4 b1 b2 o,
     value_to_bool v1 = Some b1 ->
     value_to_bool v2 = Some b2 ->
-    red_expr c st (expr_object_6 (set_object_property obj s (attributes_accessor_of (attributes_accessor_intro v3 v4 b2 b1))) a) o ->
-    red_expr c st' (expr_object_accessor_4 obj a s v1 v2 v3 (out_ter st (res_value v4))) o
-| red_expr_object_accessor_4_abort : forall c st obj a s v1 v2 v3 o,
-    abort o ->
-    red_expr c st (expr_object_accessor_4 obj a s v1 v2 v3 o) o
+    red_expr c st (expr_object_2 (set_object_property obj s (attributes_accessor_of (attributes_accessor_intro v3 v4 b2 b1))) a) o ->
+    red_expr c st (expr_object_accessor_1 obj a s [v1; v2; v3; v4]) o
 
 (* get_attr *)
 | red_expr_get_attr : forall c st pa e1 e2 o o',
@@ -258,7 +191,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_get_field_3 ptr (Some (attributes_data_of data))) (out_ter st (res_value (attributes_data_value data)))
 | red_expr_get_field_3_getter : forall c st st' ptr v3 acc o,
     (st', v3) = add_object st (default_object) ->
-    red_expr c st' (expr_app_2 (attributes_accessor_get acc) [v3; value_object ptr] nil) o ->
+    red_expr c st' (expr_app_2 (attributes_accessor_get acc) [value_object ptr; v3]) o ->
     red_expr c st (expr_get_field_3 ptr (Some (attributes_accessor_of acc))) o
 
 (* set_field *)
@@ -307,7 +240,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     (st', v4) = add_object st (object_with_properties 
                       (Heap.write Heap.empty "0" (attributes_data_of 
                         (attributes_data_intro v3 true false false))) default_object) ->
-    red_expr c st' (expr_app_2 (attributes_accessor_set acc) [v4; value_object ptr] nil) o ->
+    red_expr c st' (expr_app_2 (attributes_accessor_set acc) [value_object ptr; v4]) o ->
     red_expr c st (expr_set_field_4 ptr obj (Some (attributes_accessor_of acc)) s v3) o
 | red_expr_set_field_4_unwritable : forall c st ptr obj data s v3,
     attributes_data_writable data = false ->
@@ -429,27 +362,17 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_app_1 o el) o' ->
     red_expr c st (expr_app e el) o'
 | red_expr_app_1 : forall c st' st v el o,
-    red_expr c st (expr_app_2 v nil el) o ->
+    red_expr c st (expr_eval_many_1 el nil (expr_app_2 v)) o ->
     red_expr c st' (expr_app_1 (out_ter st (res_value v)) el) o
 | red_expr_app_1_abort : forall c st o el,
     abort o ->
     red_expr c st (expr_app_1 o el) o
 | red_expr_app_2 : forall c c' c'' st st' v ci is e vl vll o,
     get_closure st v = result_some (value_closure ci c' is e) ->
-    (st', vll) = add_values st (rev vl) ->
+    (st', vll) = add_values st vl ->
     add_parameters c' is vll = result_some c'' ->
     red_expr c'' st' e o ->
-    red_expr c st (expr_app_2 v vl nil) o 
-| red_expr_app_2_next : forall c st v vl e el o o',
-    red_expr c st e o ->
-    red_expr c st (expr_app_3 v vl o el) o' ->
-    red_expr c st (expr_app_2 v vl (e :: el)) o'
-| red_expr_app_3 : forall c st' st v vl v' el o,
-    red_expr c st (expr_app_2 v (v' :: vl) el) o ->
-    red_expr c st' (expr_app_3 v vl (out_ter st (res_value v')) el) o
-| red_expr_app_3_abort : forall c st v vl el o,
-    abort o ->
-    red_expr c st (expr_app_3 v vl o el) o
+    red_expr c st (expr_app_2 v vl) o 
 
 (* seq *)
 | red_expr_seq : forall c st e1 e2 o o',
@@ -525,7 +448,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_try_catch_2 v o) o' ->
     red_expr c st' (expr_try_catch_1 (out_ter st (res_exception v)) e2) o'
 | red_expr_try_catch_2 : forall c st' st v v' o,
-    red_expr c st (expr_app_2 v' [v] nil) o ->
+    red_expr c st (expr_app_2 v' [v]) o ->
     red_expr c st' (expr_try_catch_2 v (out_ter st (res_value v'))) o
 | red_expr_try_catch_2_abort : forall c st v o,
     abort o ->
