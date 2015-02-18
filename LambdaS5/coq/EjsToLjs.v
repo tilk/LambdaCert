@@ -63,6 +63,10 @@ Definition make_set_field obj fld v :=
 Definition make_var_set fld v :=
     make_app_builtin "%EnvCheckAssign" [L.expr_id "%context"; L.expr_string fld; v; L.expr_id "#strict"].
 
+Definition make_getter e := make_app_builtin "%MakeGetter" [e].
+
+Definition make_setter e := make_app_builtin "%MakeSetter" [e].
+
 Definition make_while (tst bdy after : L.expr) := L.expr_undefined.
 
 Definition prop_itr := 
@@ -125,8 +129,8 @@ Definition make_var_decl is e := (* TODO reimplement according to the semantics 
         let '(i, e) := ip in (i, L.property_data (L.data_intro e L.expr_true L.expr_false L.expr_false))) is in
     let mkvar ip := 
         let '(i, e) := ip in
-        let getter := L.expr_lambda ["t"; "a"] (make_get_field (L.expr_id "%ctxstore") (L.expr_string i)) in
-        let setter := L.expr_lambda ["t"; "a"] (make_set_field (L.expr_id "%ctxstore") (L.expr_string i) (make_get_field (L.expr_id "a") (L.expr_string "0"))) in
+        let getter := L.expr_lambda ["t"] (L.expr_get_field (L.expr_id "%ctxstore") (L.expr_string i)) in
+        let setter := L.expr_lambda ["t"; "a"] (L.expr_set_field (L.expr_id "%ctxstore") (L.expr_string i) (L.expr_id "a")) in
         (i, L.property_accessor (L.accessor_intro getter setter L.expr_false L.expr_false)) in
     L.expr_let "%ctxstore" (L.expr_object L.default_objattrs flds) (derived_context_in (map mkvar is) e).
 
@@ -399,9 +403,9 @@ with property_to_ljs (p : E.property) : L.property :=
     | E.property_data d => 
         L.property_data (L.data_intro (ejs_to_ljs d) L.expr_true L.expr_true L.expr_true)
     | E.property_getter d => 
-        L.property_accessor (L.accessor_intro (ejs_to_ljs d) L.expr_undefined L.expr_false L.expr_false)
+        L.property_accessor (L.accessor_intro (make_getter (ejs_to_ljs d)) L.expr_undefined L.expr_false L.expr_false)
     | E.property_setter d =>
-        L.property_accessor (L.accessor_intro L.expr_undefined (ejs_to_ljs d) L.expr_false L.expr_false)
+        L.property_accessor (L.accessor_intro L.expr_undefined (make_setter (ejs_to_ljs d)) L.expr_false L.expr_false)
     end.
 
 Definition init_global i :=

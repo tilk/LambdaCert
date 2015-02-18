@@ -229,9 +229,7 @@ Definition eval_get_field runs c st (left_expr right_expr  : expr) : result :=
             match ret with
             | Some (attributes_data_of data) => result_value st (attributes_data_value data)
             | Some (attributes_accessor_of acc) =>
-                let arg_obj := default_object in
-                let '(st, arg_loc) := add_object st arg_obj in
-                apply runs c st (attributes_accessor_get acc) (left_loc :: (arg_loc :: nil))
+                apply runs c st (attributes_accessor_get acc) (left_loc :: nil)
             | None =>
                 result_value st value_undefined
             end
@@ -271,11 +269,7 @@ Definition eval_set_field runs c st (left_expr right_expr new_val_expr : expr) :
                     end)
                   else result_exception st (value_string "unwritable-field")
                 | Some (attributes_accessor_of acc) =>
-                    let arg_obj := object_with_properties 
-                      (Heap.write Heap.empty "0" (attributes_data_of 
-                        (attributes_data_intro new_val true false false))) default_object in
-                    let '(st, arg_loc) := add_object st arg_obj in
-                    apply runs c st (attributes_accessor_set acc) (left_loc :: arg_loc :: nil)
+                    apply runs c st (attributes_accessor_set acc) (left_loc :: new_val :: nil)
                 | None => 
                   if object_extensible object 
                   then change_object_property st left_ptr name (fun prop =>

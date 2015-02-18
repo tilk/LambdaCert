@@ -722,9 +722,8 @@ Lemma eval_get_field_correct : forall runs c st e1 e2 o,
                 ((oattrs = None /\ o = out_ter st'' (res_value value_undefined)) \/
                  (exists data, oattrs = Some (attributes_data_of data) /\
                     o = out_ter st'' (res_value (attributes_data_value data))) \/
-                 (exists acc st''' v3, oattrs = Some (attributes_accessor_of acc) /\
-                    (st''', v3) = add_object st'' (default_object) /\
-                    apply_post runs c st''' (attributes_accessor_get acc) [value_object ptr; v3] o)))).
+                 (exists acc, oattrs = Some (attributes_accessor_of acc) /\
+                    apply_post runs c st'' (attributes_accessor_get acc) [value_object ptr] o)))).
 Proof.
     introv IH RR. unfolds in RR.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
@@ -732,7 +731,6 @@ Proof.
     cases_match_option;
     [cases_match_attributes | ];
     ljs_run_inv; jauto.
-    cases_let.
     lets HR: apply_correct IH R.
     match goal with H : _ = value_object _ |- _ => inverts H end.
     intuition jauto.
@@ -772,11 +770,8 @@ Lemma eval_set_field_correct : forall runs c st e1 e2 e3 o,
                         get_object_property obj s = None /\
                         object_extensible obj = false /\
                         o = out_ter st''' (res_value value_undefined)) \/
-                     (exists acc st'''' v4, oattrs = Some (attributes_accessor_of acc) /\
-                        (st'''', v4) = add_object st''' (object_with_properties 
-                            (Heap.write Heap.empty "0" (attributes_data_of 
-                                (attributes_data_intro v3 true false false))) default_object) /\
-                        apply_post runs c st'''' (attributes_accessor_set acc) [value_object ptr; v4] o))))).
+                     (exists acc, oattrs = Some (attributes_accessor_of acc) /\
+                        apply_post runs c st''' (attributes_accessor_set acc) [value_object ptr; v3] o))))).
 Proof.
     introv IH RR. unfolds in RR.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.

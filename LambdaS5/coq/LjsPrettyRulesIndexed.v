@@ -189,9 +189,8 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     red_exprh k c st (expr_get_field_3 ptr None) (out_ter st (res_value value_undefined))
 | red_exprh_get_field_3_get_field : forall k c st ptr data,
     red_exprh k c st (expr_get_field_3 ptr (Some (attributes_data_of data))) (out_ter st (res_value (attributes_data_value data)))
-| red_exprh_get_field_3_getter : forall k c st st' ptr v3 acc o,
-    (st', v3) = add_object st (default_object) ->
-    red_exprh k c st' (expr_app_2 (attributes_accessor_get acc) [value_object ptr; v3]) o ->
+| red_exprh_get_field_3_getter : forall k c st ptr acc o,
+    red_exprh k c st (expr_app_2 (attributes_accessor_get acc) [value_object ptr]) o ->
     red_exprh k c st (expr_get_field_3 ptr (Some (attributes_accessor_of acc))) o
 
 (* set_field *)
@@ -236,11 +235,8 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     object_extensible obj = true ->
     st1 = update_object st ptr (set_object_property obj s (attributes_data_of (attributes_data_intro v3 true true true))) ->
     red_exprh k c st (expr_set_field_4 ptr obj None s v3) (out_ter st1 (res_value v3))
-| red_exprh_set_field_4_setter : forall k c st st' ptr obj acc s v3 v4 o,
-    (st', v4) = add_object st (object_with_properties 
-                      (Heap.write Heap.empty "0" (attributes_data_of 
-                        (attributes_data_intro v3 true false false))) default_object) ->
-    red_exprh k c st' (expr_app_2 (attributes_accessor_set acc) [value_object ptr; v4]) o ->
+| red_exprh_set_field_4_setter : forall k c st ptr obj acc s v3 o,
+    red_exprh k c st (expr_app_2 (attributes_accessor_set acc) [value_object ptr; v3]) o ->
     red_exprh k c st (expr_set_field_4 ptr obj (Some (attributes_accessor_of acc)) s v3) o
 | red_exprh_set_field_4_unwritable : forall k c st ptr obj data s v3,
     attributes_data_writable data = false ->
