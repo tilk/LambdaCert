@@ -63,6 +63,9 @@ Definition make_set_field obj fld v :=
 Definition make_var_set fld v :=
     make_app_builtin "%EnvCheckAssign" [L.expr_id "%context"; L.expr_string fld; v; L.expr_id "#strict"].
 
+Definition make_var_id i :=    
+    make_app_builtin "%EnvGet" [L.expr_id "%context"; L.expr_string i; L.expr_id "#strict"].
+
 Definition make_getter e := make_app_builtin "%MakeGetter" [e].
 
 Definition make_setter e := make_app_builtin "%MakeSetter" [e].
@@ -364,7 +367,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_number n => L.expr_number n
     | E.expr_string s => L.expr_string s
 (*    | E.expr_id i => L.expr_id i *)
-    | E.expr_var_id i => make_get_field context (L.expr_string i)
+    | E.expr_var_id i => make_var_id i
 (*    | E.expr_var_decl is e => make_var_decl is (ejs_to_ljs e) *)
     | E.expr_var_set i e => make_var_set i (ejs_to_ljs e)
     | E.expr_this => make_builtin "%this"

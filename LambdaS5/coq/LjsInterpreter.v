@@ -211,14 +211,12 @@ Definition eval_object_decl runs c st (attrs : objattrs) (l : list (string * pro
           ))))))))
 .
 
-(* left[right, arg].
-* Evaluate left, then right, then the arguments.
+(* left[right].
+* Evaluate left, then right.
 * Fails if left does not evaluate to a location of an object pointer.
 * Otherwise, if the `right` attribute of the object pointed to by `left`
 * is a value field, return it; and if it is an “accessor field”, call
-* the getter with the arguments.
-* Note the arguments are evaluated even if they are not passed to any
-* function. *)
+* the getter. *)
 Definition eval_get_field runs c st (left_expr right_expr  : expr) : result :=
   if_eval_return runs c st left_expr (fun st left_loc =>
     if_eval_return runs c st right_expr (fun st right_loc =>
@@ -236,15 +234,12 @@ Definition eval_get_field runs c st (left_expr right_expr  : expr) : result :=
   )))))
 .
 
-(* left[right, arg] = new_val
-* Evaluate left, then right, then the arguments, then the new_val.
+(* left[right] = new_val
+* Evaluate left, then right, then the new_val.
 * Fails if left does not evaluate to a location of an object pointer.
 * Otherwise, if the `right` attribute of the object pointed to by `left`
 * is a value field, set it to the `new_val` and return the `new_val`;
-* and if it is an “accessor field”, call the getter with the arguments,
-* with the `new_val` prepended to the list.
-* Note the arguments are evaluated even if they are not passed to any
-* function. *)
+* and if it is an “accessor field”, call the getter with the arguments. *)
 Definition eval_set_field runs c st (left_expr right_expr new_val_expr : expr) : result :=
   if_eval_return runs c st left_expr (fun st left_loc =>
     if_eval_return runs c st right_expr (fun st right_loc =>
