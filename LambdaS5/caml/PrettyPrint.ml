@@ -4,6 +4,7 @@ open LjsSyntax
 module StringSet = Set.Make(String)
 
 let rec string_of_value depth st = function
+| Coq_value_empty -> "empty"
 | Coq_value_null -> "null"
 | Coq_value_undefined -> "undefined"
 | Coq_value_number f -> String.of_list (JsNumber.to_string f)

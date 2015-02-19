@@ -149,6 +149,8 @@ Definition js_expr_to_ljs je := E.ejs_to_ljs (E.js_expr_to_ejs je).
 Definition js_stat_to_ljs jt := E.ejs_to_ljs (E.js_stat_to_ejs jt).
 
 Inductive resvalue_related BR : J.resvalue -> L.value -> Prop :=
+| resvalue_related_empty :  
+    resvalue_related BR J.resvalue_empty L.value_empty
 | resvalue_related_value : forall jv v,
     value_related BR jv v ->
     resvalue_related BR (J.resvalue_value jv) v

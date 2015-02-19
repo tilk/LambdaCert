@@ -39,6 +39,7 @@ let string_of_attr attr = match attr with
   | Enum -> "#enumerable"
 
 type exp =
+  | Empty of Pos.t
   | Null of Pos.t
   | Undefined of Pos.t
   | String of Pos.t * string

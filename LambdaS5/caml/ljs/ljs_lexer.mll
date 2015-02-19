@@ -79,6 +79,7 @@ rule token = parse
    | ')' { RPAREN }
    | "undefined" { UNDEFINED }
    | "null" { NULL }
+   | "empty" { EMPTY }
    | "func" { FUNC }
    | "let" { LET }
    | "rec" { REC }

@@ -459,6 +459,7 @@ Definition eval_op2 runs c st op e1 e2 :=
 Definition eval runs c st (e : expr) : result :=
   let return_value := result_value st in
   match e with
+  | expr_empty => return_value value_empty
   | expr_undefined => return_value value_undefined
   | expr_null => return_value value_null
   | expr_string s => return_value (value_string s)

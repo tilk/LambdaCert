@@ -49,6 +49,7 @@ let translate_unary_op s = match s with
     | _ -> failwith "operator not implemented"
 
 let translate_binary_op s = match s with
+    | ";" -> Cs.Coq_binary_op_seq
     | "+" -> Cs.Coq_binary_op_add
     | "-" -> Cs.Coq_binary_op_sub
     | "/" -> Cs.Coq_binary_op_div
@@ -82,6 +83,7 @@ let translate_binary_op s = match s with
 let translate_bool b = if b then Cs.Coq_expr_true else Cs.Coq_expr_false
 
 let rec translate_expr e = match e with
+    | Ljs.Empty _ -> Cs.Coq_expr_empty
     | Ljs.Null _ -> Cs.Coq_expr_null
     | Ljs.Undefined _ -> Cs.Coq_expr_undefined
     | Ljs.String (_, s) -> Cs.Coq_expr_string (String.to_list s)

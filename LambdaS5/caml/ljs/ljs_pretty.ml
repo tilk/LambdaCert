@@ -49,6 +49,7 @@ let string_of_unary_op s = match s with
     | _ -> failwith "operator not implemented"
 
 let string_of_binary_op s = match s with
+    | Coq_binary_op_seq -> ";"
     | Coq_binary_op_add -> "+"
     | Coq_binary_op_sub -> "-"
     | Coq_binary_op_div -> "/"
@@ -90,6 +91,7 @@ let string_of_binary_op s = match s with
  * For a real example, check out ljs_sym_trace.ml.
  *)
 let rec exp_helper exprec e = match e with
+  | Coq_expr_empty -> text "empty"
   | Coq_expr_null _ -> text "null"
   | Coq_expr_undefined _ -> text "undefined"
   | Coq_expr_number n -> text (string_of_float n)

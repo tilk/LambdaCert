@@ -51,6 +51,8 @@ Definition with_error_dispatch e :=
 
 Definition prop_accessor_check e := make_app_builtin "%PropAccessorCheck" [e].
 
+Definition make_seq e1 e2 := L.expr_op2 L.binary_op_seq e1 e2.
+
 Definition make_get_field obj fld :=
     L.expr_get_field obj (to_string fld).
 
@@ -337,12 +339,12 @@ Definition make_switch_nodefault e cls :=
     L.expr_label "%before" (
     L.expr_let "%found" L.expr_false (
     L.expr_let "%disc" e (
-    make_cases cls (fun _ => L.expr_undefined) "%found"))).
+    make_cases cls (fun _ => L.expr_empty) "%found"))).
 
 Definition make_switch_withdefault e acls def bcls :=
-    let last_case found := L.expr_if (L.expr_id found) L.expr_undefined (L.expr_app (L.expr_id "%deflt") []) in
+    let last_case found := L.expr_if (L.expr_id found) L.expr_empty (L.expr_app (L.expr_id "%deflt") []) in
     let deflt_case cont found := 
-        L.expr_seq (L.expr_if (L.expr_id found) (L.expr_app (L.expr_id "%deflt") []) L.expr_undefined)
+        L.expr_seq (L.expr_if (L.expr_id found) (L.expr_app (L.expr_id "%deflt") []) L.expr_empty)
                    (cont found) in
     L.expr_label "%before" (
     L.expr_let "%deflt" (L.expr_lambda [] def) (
@@ -353,6 +355,7 @@ Definition make_switch_withdefault e acls def bcls :=
 (* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     match e with
+    | E.expr_empty => L.expr_empty
     | E.expr_true => L.expr_true
     | E.expr_false => L.expr_false
     | E.expr_undefined => L.expr_undefined
@@ -370,7 +373,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_func None is p => make_fobj ejs_to_ljs is p context
     | E.expr_func (Some i) is p => make_rec_fobj ejs_to_ljs i is p context 
     | E.expr_func_stmt i is p => make_func_stmt ejs_to_ljs i is p
-    | E.expr_seq e1 e2 => L.expr_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
+    | E.expr_seq e1 e2 => make_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_if e e1 e2 => make_if (ejs_to_ljs e) (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_op1 op e => make_op1 ejs_to_ljs op e
     | E.expr_op2 op e1 e2 => make_op2 op (ejs_to_ljs e1) (ejs_to_ljs e2)

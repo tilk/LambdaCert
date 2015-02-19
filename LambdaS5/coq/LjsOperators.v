@@ -22,6 +22,7 @@ Implicit Type obj : object.
 
 (****** Unary operators ******)
 
+(* TODO move the js-specific typeof logic to env? *)
 Definition typeof store (v : value) :=
   match v with
   | value_undefined => result_some (value_string "undefined")
@@ -32,12 +33,13 @@ Definition typeof store (v : value) :=
   | value_object ptr =>
     assert_get_object_from_ptr store ptr (fun obj =>
       match object_code obj with
-      | value_undefined (* choose one *)
+      | value_undefined (* TODO choose one *)
       | value_null => result_some (value_string  "object")
       | _ => result_some (value_string "function")
       end
     )
   | value_closure _ => result_fail "typeof got lambda"
+  | value_empty => result_fail "typeof got empty"
   end
 .
 
@@ -119,6 +121,7 @@ Definition prim_to_bool store (v : value) :=
     )
   | value_string "" => result_some value_false
   | value_string _ => result_some value_true
+  | value_empty => result_some value_false
   | _ => result_some value_true
   end
 .
@@ -141,8 +144,8 @@ Definition nnot store (v : value) :=
     )
   | value_string "" => result_some value_true
   | value_string _ => result_some value_false
-  | value_object _ => result_some value_false
-  | value_closure _ => result_some value_false
+  | value_empty => result_some value_true
+  | _ => result_some value_false
   end
 .
 
@@ -244,6 +247,7 @@ Parameter _number_eq_bool : number -> number -> bool.
 
 Definition stx_eq store v1 v2 :=
   match v1, v2 with
+  | value_empty, value_empty => result_some value_true
   | value_string s1, value_string s2 => result_some (bool_to_value (decide(s1 = s2)))
   | value_null, value_null => result_some value_true
   | value_undefined, value_undefined => result_some value_true
@@ -257,6 +261,7 @@ Definition stx_eq store v1 v2 :=
 
 Definition abs_eq store v1 v2 :=
   match v1, v2 with
+  | value_empty, value_empty => result_some value_true
   | value_string s1, value_string s2 => result_some (bool_to_value (decide(s1 = s2)))
   | value_null, value_null => result_some value_true
   | value_undefined, value_undefined => result_some value_true
@@ -422,8 +427,16 @@ Definition locale_compare v1 v2 : resultof value :=
   end
 .
 
+Definition seq_empty_op v1 v2 :=
+  match v2 with
+  | value_empty => result_some v1
+  | _ => result_some v2
+  end
+.
+
 Definition binary_operator (op : binary_op) store v1 v2 : resultof value :=
       match op with
+      | binary_op_seq => seq_empty_op v1 v2
       | binary_op_add => arith JsNumber.add v1 v2
       | binary_op_sub => arith JsNumber.sub v1 v2
       | binary_op_mul => arith JsNumber.mult v1 v2

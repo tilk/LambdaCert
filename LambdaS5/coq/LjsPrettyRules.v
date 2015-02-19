@@ -26,6 +26,7 @@ Implicit Type ptr : object_ptr.
 Implicit Type obj : object.
 
 Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
+| red_expr_empty : forall c st, red_expr c st expr_empty (out_ter st (res_value value_empty))
 | red_expr_null : forall c st, red_expr c st expr_null (out_ter st (res_value value_null))
 | red_expr_undefined : forall c st, red_expr c st expr_undefined (out_ter st (res_value value_undefined))
 | red_expr_string : forall c st s, red_expr c st (expr_string s) (out_ter st (res_value (value_string s)))

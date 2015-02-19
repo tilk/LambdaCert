@@ -911,6 +911,8 @@ Lemma eval_correct : forall runs c st e o,
 Proof.
     introv IH R. unfolds in R.
     destruct e.
+    (* empty *)
+    ljs_run_inv. apply red_expr_empty.
     (* null *)
     ljs_run_inv. apply red_expr_null.
     (* undefined *)

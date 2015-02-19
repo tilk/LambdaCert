@@ -2,6 +2,7 @@
 open Ljs_syntax
 
 let with_pos exp pos = match exp with
+  | Empty _ -> Empty pos
   | Null _ -> Null pos
   | Undefined _ -> Undefined pos
   | String (_, str) -> String (pos, str)
@@ -43,7 +44,7 @@ let with_pos exp pos = match exp with
 %token <string> HINT
 %token <bool> BOOL
 %token <string> ID
-%token UNDEFINED NULL FUNC LET DELETE LBRACE RBRACE LPAREN RPAREN LBRACK
+%token UNDEFINED EMPTY NULL FUNC LET DELETE LBRACE RBRACE LPAREN RPAREN LBRACK
   RBRACK EQUALS COMMA DEREF REF COLON COLONEQ PRIM IF ELSE SEMI
   LABEL BREAK TRY CATCH FINALLY THROW EQEQEQUALS TYPEOF
   AMPAMP PIPEPIPE RETURN BANGEQEQUALS FUNCTION REC WRITABLE GETTER SETTER
@@ -73,6 +74,7 @@ const :
  | INT {  Num (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1), (float_of_int $1)) }
  | STRING {  String (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1), $1) }
  | UNDEFINED { Undefined (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1)) }
+ | EMPTY { Empty (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1)) }
  | NULL { Null (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1)) }
  | BOOL { if $1 
           then True (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1)) 

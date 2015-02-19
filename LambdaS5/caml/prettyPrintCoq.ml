@@ -48,6 +48,7 @@ let format_unary_op o = match o with
     | Coq_unary_op_current_utc_millis -> text "unary_op_current_utc_millis"
 
 let format_binary_op o = match o with
+    | Coq_binary_op_seq -> text "binary_op_seq"
     | Coq_binary_op_add -> text "binary_op_add"
     | Coq_binary_op_sub -> text "binary_op_sub"
     | Coq_binary_op_mul -> text "binary_op_mul"
@@ -147,6 +148,7 @@ let format_option b f o = match o with
     | None -> coqconstr b "None" []
 
 let rec format_value v = match v with
+    | Coq_value_empty -> text "value_empty"
     | Coq_value_null -> text "value_null"
     | Coq_value_undefined -> text "value_undefined"
     | Coq_value_number n -> coqconstr false "value_number" [float n]

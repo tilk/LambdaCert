@@ -294,6 +294,8 @@ Proof.
     introv R;
     inverts R;
     simpls.
+    (* empty *)
+    reflexivity.
     (* null *)
     reflexivity.
     (* undefined *)

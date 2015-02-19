@@ -46,6 +46,7 @@ Inductive unary_op : Type :=
 .
 
 Inductive binary_op : Type :=
+| binary_op_seq
 | binary_op_add
 | binary_op_sub
 | binary_op_mul
@@ -96,6 +97,7 @@ Inductive pattr : Type := (* property attribute name *)
 .
 
 Inductive expr : Type :=
+| expr_empty
 | expr_null
 | expr_undefined
 | expr_string : string -> expr
@@ -140,6 +142,7 @@ with objattrs : Type :=
 .
 
 Fixpoint expr_fv e : Fset.fset id := match e with
+| expr_empty
 | expr_null
 | expr_undefined
 | expr_string _  
@@ -201,6 +204,7 @@ Definition objattrs_with_proto p oa := let 'objattrs_intro cl ex pr co pv := oa 
 (* Values *)
 
 Inductive value : Type :=
+| value_empty
 | value_null
 | value_undefined
 | value_number : number -> value

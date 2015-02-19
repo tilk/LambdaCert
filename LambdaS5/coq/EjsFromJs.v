@@ -84,7 +84,7 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
     | J.stat_label s st => E.expr_label s (js_stat_to_ejs st)
     | J.stat_block sts => E.expr_seqs (List.map js_stat_to_ejs sts)
     | J.stat_var_decl l => E.expr_seq (E.expr_seqs (List.map js_vardecl_to_ejs l)) E.expr_undefined
-    | J.stat_if e st None => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) E.expr_undefined
+    | J.stat_if e st None => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) E.expr_empty
     | J.stat_if e st (Some st') => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) (js_stat_to_ejs st')
 (* TODO select implementation strategy
     | J.stat_do_while nil st e => E.expr_label "%before" (E.expr_do_while (js_stat_to_ejs st) (js_expr_to_ejs e)) 

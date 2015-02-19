@@ -13,6 +13,7 @@ Definition unary_op := J.unary_op.
 Definition binary_op := J.binary_op.
 
 Inductive expr : Type := 
+| expr_empty
 | expr_null
 | expr_undefined
 | expr_string : string -> expr
