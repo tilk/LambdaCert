@@ -22,7 +22,6 @@ Implicit Type runs : runs_type.
 Implicit Type st : store.
 Implicit Type e : expr.
 Implicit Type v : value.
-Implicit Type loc : value_loc.
 Implicit Type s : string.
 Implicit Type n : number.
 Implicit Type i : id.
@@ -142,14 +141,6 @@ Proof.
     destruct* (get_object st ptr); tryfalse.
 Qed.
 
-Lemma assert_get_loc_out : forall c s o cont, 
-    assert_get_loc c s cont = result_some o ->
-    exists loc, get_loc c s = Some loc /\ cont loc = result_some o.
-Proof.
-    introv E. unfold assert_get_loc in E.
-    destruct* (get_loc c s); tryfalse.
-Qed.
-
 Lemma assert_get_object_out : forall st v o cont,
     assert_get_object st v cont = result_some o -> 
     exists ptr obj, v = value_object ptr /\ get_object st ptr = Some obj /\ cont obj = result_some o.
@@ -169,12 +160,12 @@ Proof.
     destruct* opt; tryfalse.
 Qed.
 
-Lemma assert_deref_out : forall st loc cont o,
-    assert_deref st loc cont = result_some o ->
-    exists v, get_value st loc = Some v /\ cont v = result_some o.
+Lemma assert_deref_out : forall c i cont o,
+    assert_deref c i cont = result_some o ->
+    exists v, get_value c i = Some v /\ cont v = result_some o.
 Proof.
     introv E. unfold assert_deref in E.
-    destruct* (get_value st loc); tryfalse.
+    cases_match_option. jauto.
 Qed.
 
 Lemma if_eval_ter_out : forall runs c st e cont o,
@@ -195,7 +186,6 @@ Qed.
 
 Ltac ljs_run_select_ifres H :=
     match type of H with ?T = result_some _ => match T with
-    | assert_get_loc _ _ _ => constr:(assert_get_loc_out)
     | assert_get_object_ptr _ _ => constr:(assert_get_object_ptr_out)
     | assert_get_object_from_ptr _ _ _ => constr:(assert_get_object_from_ptr_out)
     | assert_get_bool _ _ => constr:(assert_get_bool_out)
@@ -335,11 +325,10 @@ Proof.
     eapply IHes; assumption.
 Qed.
 
-Definition apply_post runs c st v vs o := exists k c'' is vls c' st' e, 
-    get_closure st v = result_some (value_closure k c'' is e) /\ 
-    (st', vls) = add_values st vs /\
-    add_parameters c'' is vls = result_some c' /\
-    runs_type_eval runs c' st' e = result_some o.
+Definition apply_post runs c st v vs o := exists clo c', 
+    get_closure st v = result_some (value_closure clo) /\ 
+    closure_ctx clo vs = result_some c' /\
+    runs_type_eval runs c' st (closure_body clo) = result_some o.
 
 Lemma apply_correct : forall runs c st v vs o,
     runs_type_correct runs ->
@@ -349,7 +338,6 @@ Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto.
     destruct a; tryfalse.
-    cases_let.
     ljs_run_push_auto.
     unfolds apply_post. jauto. 
 Qed.
@@ -372,8 +360,8 @@ Qed.
 Lemma eval_id_correct : forall runs c st s o,
     runs_type_correct runs -> 
     eval_id runs c st s = result_some o -> 
-    exists loc v, get_loc c s = Some loc /\ 
-        get_value st loc = Some v /\ o = out_ter st (res_value v).
+    exists v, get_value c s = Some v /\ 
+        o = out_ter st (res_value v).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_auto.
@@ -403,41 +391,30 @@ Proof.
     ljs_run_push_auto; jauto.
 Qed.
 
-Lemma eval_setbang_correct : forall runs c st s e o,
-    runs_type_correct runs ->
-    eval_setbang runs c st s e = result_some o ->
-    is_some_value o (runs_type_eval runs c st e) (fun st' v =>
-        exists loc, get_loc c s = Some loc /\ 
-            o = out_ter (add_value_at_location st' loc v) (res_value v)).
-Proof.
-    introv IH R. unfolds in R. 
-    ljs_run_push_post_auto; ljs_is_some_value_munch; ljs_run_inv; jauto.
-Qed.
-
 Lemma eval_let_correct : forall runs c st s e1 e2 o,
     runs_type_correct runs ->
     eval_let runs c st s e1 e2 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v =>
-        exists st'' c', (c', st'') = add_named_value c st' s v /\ 
-            runs_type_eval runs c' st'' e2 = result_some o).
+        exists c', c' = add_value c s v /\ 
+            runs_type_eval runs c' st' e2 = result_some o).
 Proof. 
     introv IH R. unfolds in R.
     unfold eval_cont in R.
     ljs_run_push_post_auto; ljs_is_some_value_munch; ljs_run_inv; jauto.
-    cases_let; jauto.
 Qed. 
 
 Lemma eval_rec_correct : forall runs c st s e1 e2 o,
     runs_type_correct runs ->
     eval_rec runs c st s e1 e2 = result_some o ->
-    exists c' st' loc, (c', st', loc) = add_named_value_loc c st s value_undefined /\
-        is_some_value o (runs_type_eval runs c' st' e1) (fun st' v =>
-            runs_type_eval runs c' (add_value_at_location st' loc v) e2 = result_some o).
+    exists args body st' c' v, e1 = expr_lambda args body /\
+            (st', v) = add_closure c st (Some s) args body /\
+            c' = add_value c s v /\
+            runs_type_eval runs c' st' e2 = result_some o.
 Proof.
     introv IH R. unfolds in R.
-    unfold eval_cont in R.
-    repeat cases_let. substs. do 3 eexists. split. reflexivity.
-    ljs_run_push_post_auto; ljs_is_some_value_munch. assumption.
+    destruct e1; tryfalse.
+    cases_let.
+    jauto.
 Qed.
 
 Definition is_some_eval_objattrs o runs c st attrs Pred : Prop :=
@@ -590,7 +567,7 @@ Qed.
 Lemma eval_lambda_correct : forall runs c st vs e o,
     runs_type_correct runs ->
     eval_lambda runs c st vs e = result_some o ->
-    exists st' v, (st', v) = add_closure c st vs e /\ o = out_ter st' (res_value v).
+    exists st' v, (st', v) = add_closure c st None vs e /\ o = out_ter st' (res_value v).
 Proof.
     introv IH R. unfolds in R.
     cases_let.
@@ -602,20 +579,18 @@ Lemma eval_eval_correct : forall runs c st e1 e2 o,
     eval_eval runs c st e1 e2 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v' =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v'' =>
-            exists s ptr obj c1 st1 e, 
+            exists s ptr obj c1 e, 
                 v' = value_string s /\
                 v'' = value_object ptr /\ 
                 get_object st'' ptr = Some obj /\ 
-                envstore_of_obj st'' obj = Some (c1, st1) /\
+                ctx_of_obj obj = Some c1 /\
                 desugar_expr s = Some e /\ 
-                runs_type_eval runs c1 st1 e = result_some o)).
+                runs_type_eval runs c1 st'' e = result_some o)).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
     cases_match_option.
     cases_match_option.
-    cases_let as Eq.
-    inverts Eq.
     jauto.
 Qed.
 
@@ -861,7 +836,7 @@ Proof.
     introv IH R.
     unfolds in R.
     repeat destruct_exists R.
-    destruct R as (R1&R2&R3&R4).
+    destruct R as (R1&R2&R3).
     eapply red_expr_app_2; eauto.
     ljs_eval_ih.
 Qed.
@@ -951,7 +926,7 @@ Proof.
     (* false *)
     ljs_run_inv. apply red_expr_false.
     (* id *)
-    lets (loc&v&Hloc&Hv&Ho): eval_id_correct IH R.
+    lets (v&Hv&Ho): eval_id_correct IH R. 
     inverts Ho.
     eapply red_expr_id; eassumption.
     (* object *)
@@ -1050,12 +1025,6 @@ Proof.
     destructs H.
     substs.
     eapply red_expr_own_field_names_1; eauto.
-    (* set_bang *)
-    lets H: eval_setbang_correct IH R.
-    ljs_pretty_advance red_expr_set_bang red_expr_set_bang_1_abort.
-    destruct H as (loc&Hl&Ho2).
-    inverts Ho2.
-    eapply red_expr_set_bang_1. reflexivity. assumption.
     (* op1 *)
     lets H: eval_op1_correct IH R.
     ljs_pretty_advance red_expr_op1 red_expr_op1_1_abort.
@@ -1092,16 +1061,14 @@ Proof.
     (* let *)
     lets H: eval_let_correct IH R.
     ljs_pretty_advance red_expr_let red_expr_let_1_abort.
-    destruct H as (st''&c'&H&Ho2).
+    destruct H as (c'&H&Ho2).
     eapply red_expr_let_1. eassumption. ljs_eval_ih.
     (* recc *)
     lets H: eval_rec_correct IH R.
-    repeat destruct_exists H.
-    destruct H as (Hv&H).
-    ljs_is_some_push;
-    (eapply red_expr_rec; [eassumption | ljs_eval_ih | ]);
-    [ | eapply red_expr_rec_1_abort; assumption].
-    eapply red_expr_rec_1. reflexivity. ljs_eval_ih. 
+    jauto_set.
+    substs.
+    eapply red_expr_rec; eauto.
+    ljs_eval_ih.
     (* label *)
     lets (o'&Ho&H): eval_label_correct IH R.
     eapply red_expr_label.
@@ -1150,12 +1117,10 @@ Proof.
     lets H: eval_eval_correct IH R.
     ljs_pretty_advance red_expr_eval red_expr_eval_1_abort.
     ljs_pretty_advance red_expr_eval_1 red_expr_eval_2_abort.
-    repeat destruct_exists H.
-    destruct H as (st2&e&H).
-    destructs H.
+    jauto_set.
+    substs.
+    eapply red_expr_eval_2; eauto.
     ljs_run_inv.
-    inverts H. inverts H4.
-    eapply red_expr_eval_2; try eassumption.
     ljs_eval_ih.
     (* hint *)
     eapply red_expr_hint.

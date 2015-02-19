@@ -8,15 +8,6 @@ Require Import LjsMonads.
 
 (* Utility functions useful for both the interpreter and the semantics. *)
 
-(* Adds function arguments to the lexical environment *)
-
-Definition add_parameters (closure_env : ctx) (args_name : list id) (args : list value_loc) : resultof ctx :=
-  match Utils.zip_left args_name args with
-  | Some args_heap => result_some (ctx_intro (Utils.concat_list_heap args_heap (loc_heap closure_env)))
-  | None => result_fail "Arity mismatch"
-  end
-.
-
 (* Get object attribute *)
 
 Definition get_object_oattr obj (oa : oattr) : value :=
@@ -186,7 +177,7 @@ Definition get_property store (ptr : object_ptr) (name : prop_name) : resultof (
 
 Fixpoint get_closure_aux limit store (v : value) : resultof value :=
   match v with
-  | value_closure _ _ _ _ => result_some v
+  | value_closure _ => result_some v
   | value_object ptr =>
     match limit with
     | 0 => result_bottom

@@ -7,7 +7,6 @@ Implicit Type st : store.
 Implicit Type c : ctx.
 Implicit Type e : expr.
 Implicit Type v : value.
-Implicit Type loc : value_loc.
 
 (*
 * The monadic constructors, which mostly take a store, some
@@ -45,18 +44,9 @@ Definition if_value  (var : result) (cont : store -> value -> result) : result :
     end)
 .
 
-(* Calls the continuation with the referenced value. Fails if the reference
-* points to a non-existing object (never actually happens). *)
-Definition assert_deref {A : Type} st (loc : value_loc) (cont : value -> resultof A) : resultof A :=
-  match get_value st loc with
-  | Some val => cont val
-  | None => result_impossible "Location of non-existing value."
-  end
-.
-
-Definition assert_get_loc {A : Type} c s (cont : value_loc -> resultof A) : resultof A :=
-  match get_loc c s with
-  | Some loc => cont loc
+Definition assert_deref {A : Type} c s (cont : value -> resultof A) : resultof A :=
+  match get_value c s with
+  | Some v => cont v
   | None => result_fail ("ReferenceError: " ++ s)
   end
 .

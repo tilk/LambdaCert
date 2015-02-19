@@ -124,8 +124,6 @@ let rec exp_helper exprec e = match e with
                               text "="; exprec v])]
   | Coq_expr_own_field_names (o) ->
     squish [text "get-own-field-names"; parens (exprec o)]
-  | Coq_expr_set_bang (x, e) ->
-    horz [text (String.of_list x); text ":="; exprec e]
   | Coq_expr_op1 (op, e) -> 
     squish [text "prim"; parens (horz [text ("\"" ^ string_of_unary_op op ^ "\","); exprec e])]
   | Coq_expr_op2 (op, e1, e2) ->

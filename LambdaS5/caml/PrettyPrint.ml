@@ -3,14 +3,7 @@ open LjsSyntax
 
 module StringSet = Set.Make(String)
 
-let rec string_of_value_loc depth st loc =
-  if (depth = 0) then
-    "<cut>"
-  else
-    match (LjsStore.get_value st loc) with
-      | None -> "<reference to non-existing value>"
-      | Some v -> string_of_value (depth-1) st v
-and string_of_value depth st = function
+let rec string_of_value depth st = function
 | Coq_value_null -> "null"
 | Coq_value_undefined -> "undefined"
 | Coq_value_number f -> String.of_list (JsNumber.to_string f)
@@ -18,23 +11,20 @@ and string_of_value depth st = function
 | Coq_value_true -> "true"
 | Coq_value_false -> "false"
 | Coq_value_object ptr -> string_of_object_ptr depth st ptr
-| Coq_value_closure (_, loc_heap, args, body) ->
+| Coq_value_closure (Coq_closure_intro (_, loc_heap, _, args, body)) ->
     Printf.sprintf "<closure func (%s) { %s }>"
       (String.concat ", " (List.map String.of_list args))
       (string_of_expression depth body)
 and string_of_value_option depth st = function
 | Some v -> string_of_value depth st v
 | None -> "<unset val>"
-and string_of_value_loc_option depth st = function
-| Some v -> string_of_value_loc depth st v
-| None -> "<unset val>"
 
 and string_of_object_ptr depth st ptr =
   if depth = 0 then "<cut>" else
-  match (LjsStore.get_object st ptr) with
+  match LjsStore.get_object st ptr with
     | None -> "<reference to non-existing object>"
     | Some obj -> string_of_object (depth-1) st obj
-and string_of_object depth st obj =
+and string_of_object depth (st : store) obj =
   Printf.sprintf "{[#proto: %s, #class: %s, #extensible: %B, #primval: %s, #code: %s] %s}"
   (string_of_value depth st (object_proto obj)) (String.of_list (object_class obj))
   (object_extensible obj) (string_of_value depth st (object_prim_value obj))
@@ -70,6 +60,6 @@ and string_of_attr depth st = function
 
 let string_of_store depth c st =
   let locs = Utils.Heap.to_list c in
-  let pred = string_of_value_loc depth st in
+  let pred = string_of_value depth st in
   String.concat "" (List.map (fun (k, v) -> Printf.sprintf "let (%s = %s) \n" (String.of_list k) (pred v)) locs)
 

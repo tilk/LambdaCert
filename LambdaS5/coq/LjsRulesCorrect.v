@@ -42,7 +42,6 @@ Implicit Type i : L.id.
 Implicit Type st : L.store.
 Implicit Type e : L.expr.
 Implicit Type v : L.value.
-Implicit Type loc : L.value_loc.
 Implicit Type o : L.out.
 Implicit Type c : L.ctx.
 Implicit Type ptr : L.object_ptr.

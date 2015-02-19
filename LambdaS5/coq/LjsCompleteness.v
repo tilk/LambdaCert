@@ -25,7 +25,6 @@ Implicit Type runs : runs_type.
 Implicit Type st : store.
 Implicit Type e : expr.
 Implicit Type v : value.
-Implicit Type loc : value_loc.
 Implicit Type s : string.
 Implicit Type n : number.
 Implicit Type i : id.
@@ -38,12 +37,7 @@ Implicit Type r : res.
 
 (* Lemmas on monadic ops *)
 
-Lemma assert_get_loc_lemma : forall {A c i loc} cont, get_loc c i = Some loc -> @assert_get_loc A c i cont = cont loc.
-Proof.
-    introv H. unfolds. rewrite H. reflexivity.
-Qed.
-
-Lemma assert_deref_lemma : forall {A st loc v} cont, get_value st loc = Some v -> @assert_deref A st loc cont = cont v.
+Lemma assert_deref_lemma : forall {A c i v} cont, get_value c i = Some v -> @assert_deref A c i cont = cont v.
 Proof.
     introv H. unfolds. rewrite H. reflexivity.
 Qed.
@@ -151,8 +145,7 @@ Qed.
 
 Ltac ljs_eval :=
     match goal with
-    | H : get_loc ?c ?i = Some _ |- assert_get_loc ?c ?i _ = _ => rewrite (assert_get_loc_lemma _ H)
-    | H : get_value ?st ?loc = Some _ |- assert_deref ?st ?loc _ = _ => rewrite (assert_deref_lemma _ H)
+    | H : get_value ?c ?v = Some _ |- assert_deref ?c ?v _ = _ => rewrite (assert_deref_lemma _ H)
     | H : runs_type_eval ?runs ?c ?st ?e = _ |- eval_cont ?runs ?c ?st ?e _ = _ => rewrite (eval_cont_lemma _ H)
     | H : runs_type_eval ?runs ?c ?st ?e = result_some (out_ter _ (res_value _)) 
         |- if_eval_return ?runs ?c ?st ?e _ = _ => rewrite (if_eval_return_lemma _ H)
@@ -275,9 +268,6 @@ Proof.
     ljs_inv_red_internal.
     unfolds.
     repeat ljs_eval_push.
-    cases_let.
-    injects.
-    repeat ljs_eval_push.
 Qed.
 
 Lemma eval_arg_list_lemma : forall k, 
@@ -364,9 +354,6 @@ Proof.
     cases_let.
     injects.
     reflexivity.
-    (* set_bang *)
-    unfolds.
-    abstract (repeat ljs_eval_push).
     (* op1 *)
     unfolds.
     abstract (repeat ljs_eval_push).
@@ -392,12 +379,9 @@ Proof.
     unfolds.
     repeat ljs_eval_push.
     cases_let.
-    injects.
     repeat ljs_eval_push.
     (* rec *)
-    unfolds.
-    repeat ljs_eval_push.
-    cases_let.
+    match goal with Y : (_, _) = _ |- _ => unfold id in Y; rewrite <- Y in * end.
     injects.
     repeat ljs_eval_push.
     (* label *)
@@ -435,7 +419,6 @@ Proof.
     unfolds.
     repeat ljs_eval_push.
     repeat cases_match_option.
-    cases_let.
     repeat injects.
     repeat ljs_eval_push.
     (* hint *)

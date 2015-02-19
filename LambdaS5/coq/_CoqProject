@@ -19,6 +19,7 @@ LjsPrettyRules.v
 LjsRulesCorrect.v
 LjsShared.v
 LjsStore.v
+LjsSyntaxAux.v
 LjsSyntax.v
 LjsValues.v
 Utils.v

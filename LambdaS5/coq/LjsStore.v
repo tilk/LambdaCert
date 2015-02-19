@@ -1,128 +1,93 @@
 Require Import Utils.
-Require Import LjsSyntax.
+Require Import LjsShared.
+Require Import LjsSyntaxAux.
 Require Import String.
 Require Import LibStream.
 
 Implicit Type st : store.
 Implicit Type e : expr.
 Implicit Type v : value.
-Implicit Type loc : value_loc.
 Implicit Type c : ctx.
 Implicit Type ptr : object_ptr.
 Implicit Type obj : object.
 
 (* LambdaJS environment storage. *)
-Definition narrow_ctx c e := 
-  ctx_intro (List.fold_left (fun cc (i : string) => Heap.write cc i (Heap.read (loc_heap c) i)) (Fset.to_list (expr_fv e)) (Heap.empty)).
+Definition narrow_ctx c s := 
+  ctx_intro (List.fold_left (fun cc (i : string) => Heap.write cc i (Heap.read (value_heap c) i)) (Fset.to_list s) (Heap.empty)).
 
-Definition add_value st v : (store * value_loc) :=
-  match st with
-  | store_intro obj_heap val_heap (loc ::: stream) =>
-    (store_intro obj_heap (Heap.write val_heap loc v) stream, loc)
-  end
-.
-Fixpoint add_values st (vals : list value) : store * list value_loc :=
-  match vals with
-  | nil => (st, nil)
-  | val :: vals => 
-    match add_value st val with
-    | (st', loc) => 
-      match add_values st' vals with
-      | (st'', locs) => (st'', loc :: locs)
-      end
-    end
-  end
-.
 Definition add_object st obj : (store * value) :=
   match st with
-  | store_intro obj_heap val_heap (ptr ::: stream) =>
+  | store_intro obj_heap (ptr ::: stream) =>
     ((store_intro
       (Heap.write obj_heap ptr obj)
-      val_heap
       stream
     ), (value_object ptr))
   end
 .
-Definition add_closure c st args body : (store * value) :=
+Definition add_closure c st recid args body : (store * value) :=
+  let si := match recid with 
+    | Some i => expr_fv (expr_lambda args body) \-- i
+    | None => expr_fv (expr_lambda args body) 
+    end in
   match st with
-  | store_intro obj_heap val_heap (id ::: stream) =>
-    (store_intro obj_heap val_heap stream, value_closure id (narrow_ctx c (expr_lambda args body)) args body)
+  | store_intro obj_heap (id ::: stream) =>
+    (store_intro obj_heap stream, value_closure (closure_intro id (Heap.to_list (value_heap (narrow_ctx c si))) recid args body))
   end
 .
-Definition add_value_at_location st loc v : store :=
-  (* TODO: Remove the old value from the Heap (or fix LibHeap to prevent duplicates) *)
-  match st with
-  | store_intro obj_heap val_heap stream => (store_intro obj_heap (Heap.write val_heap loc v) stream)
+
+(* Adds function arguments to the lexical environment *)
+
+Definition add_parameters (closure_env : ctx) (args_name : list id) (args : list value) : resultof ctx :=
+  match Utils.zip_left args_name args with
+  | Some args_heap => result_some (ctx_intro (Utils.concat_list_heap args_heap (value_heap closure_env)))
+  | None => result_fail "Arity mismatch"
   end
 .
-Definition add_named_location c i loc : ctx :=
+
+Definition closure_ctx clo args :=
+  let 'closure_intro _ c rid args_name _ := clo in
+  let c' := fold_left (fun (p : string * value) h => let (s, v) := p in Heap.write h s v) Heap.empty c in
+  let c'' := match rid with
+    | Some i => ctx_intro (Heap.write c' i (value_closure clo))
+    | None => ctx_intro c'
+    end in
+  add_parameters c'' args_name args.
+
+Definition add_value c i v :=
   match c with
-  | ctx_intro loc_heap =>
-    ctx_intro (Heap.write loc_heap i loc) 
+  | ctx_intro val_heap => ctx_intro (Heap.write val_heap i v)
   end
 .
-Definition add_named_value_loc c st i v : (ctx * store * value_loc) :=
-  match c, st with
-  | ctx_intro loc_heap, store_intro obj_heap val_heap (loc ::: stream) => 
-    (ctx_intro (Heap.write loc_heap i loc), store_intro obj_heap (Heap.write val_heap loc v) stream, loc)
-  end
-.
-Definition add_named_value c st i v : ctx * store := 
-  match add_named_value_loc c st i v with (c', st', _) => (c', st') end
-.
+
 Definition update_object st ptr obj : store :=
   (* TODO: Remove the old object from the Heap (or fix LibHeap to prevent duplicates) *)
   match st with
-  | store_intro obj_heap val_heap stream => (store_intro (Heap.write obj_heap ptr obj) val_heap stream)
+  | store_intro obj_heap stream => (store_intro (Heap.write obj_heap ptr obj) stream)
   end
 .
 
-Definition add_option_value st (oval : option value) : (store * option value_loc) :=
-  match oval with
-  | Some val => let (st, loc) := add_value st val in (st, Some loc)
-  | None => (st, None)
-  end
-.
-Definition add_bool st (b : bool) : (store * value_loc) :=
-  add_value st (if b then value_true else value_false)
-.
 Definition get_object st ptr : option object :=
   Heap.read_option (object_heap st) ptr
 .
-Definition get_value st loc : option value :=
-  Heap.read_option (value_heap st) loc
-.
-Definition get_loc c i : option value_loc :=
-  Heap.read_option (loc_heap c) i
-.
-
-(* Returns the value associated to a variable name (aka. id) in the current
-* context. *)
-Definition get_value_of_name c store (name : id) : option value :=
-  match get_loc c name with
-  | Some loc => get_value store loc
-  | None => None
-  end
+Definition get_value c i : option value :=
+  Heap.read_option (value_heap c) i
 .
 
 Definition num_objects st : nat :=
   List.length (Heap.to_list (object_heap st)).
 
-Definition num_values st : nat :=
-  List.length (Heap.to_list (value_heap st)).
-
-Definition envstore_of_obj_aux (o : option (ctx * store)) (p : string * attributes) : option (ctx * store) :=
+Definition ctx_of_obj_aux (o : option ctx) (p : string * attributes) : option ctx  :=
   match o with
-  | Some (c, st) => 
+  | Some c => 
     let (s, a) := p in
     match a with
-    | attributes_data_of data => Some (add_named_value c st s (attributes_data_value data))
+    | attributes_data_of data => Some (add_value c s (attributes_data_value data))
     | attributes_accessor_of _ => None
     end
   | None => None
   end 
 .
 
-Definition envstore_of_obj st obj : option (ctx * store) :=
-  List.fold_left envstore_of_obj_aux (Heap.to_list (object_properties obj)) (Some (create_ctx, st))
+Definition ctx_of_obj obj : option ctx :=
+  List.fold_left ctx_of_obj_aux (Heap.to_list (object_properties obj)) (Some create_ctx)
 .

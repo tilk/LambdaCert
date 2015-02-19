@@ -19,7 +19,6 @@ Open Scope list_scope.
 Implicit Type st : store.
 Implicit Type e : expr.
 Implicit Type v : value.
-Implicit Type loc : value_loc.
 Implicit Type s : string.
 Implicit Type n : number.
 Implicit Type i : id.

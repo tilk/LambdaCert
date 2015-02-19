@@ -40,7 +40,6 @@ Inductive ext_expr :=
 | expr_app_2 : value -> list value -> ext_expr
 | expr_seq_1 : out -> expr -> ext_expr
 | expr_let_1 : id -> out -> expr -> ext_expr
-| expr_recc_1 : value_loc -> out -> expr -> ext_expr
 | expr_label_1 : id -> out -> ext_expr
 | expr_break_1 : id -> out -> ext_expr
 | expr_try_catch_1 : out -> expr -> ext_expr

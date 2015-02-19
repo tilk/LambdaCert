@@ -17,7 +17,6 @@ Open Scope list_scope.
 Implicit Type st : store.
 Implicit Type e : expr.
 Implicit Type v : value.
-Implicit Type loc : value_loc.
 Implicit Type s : string.
 Implicit Type n : number.
 Implicit Type i : id.
@@ -33,12 +32,11 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_number : forall k c st n, red_exprh (S k) c st (expr_number n) (out_ter st (res_value (value_number n)))
 | red_exprh_true : forall k c st, red_exprh (S k) c st expr_true (out_ter st (res_value value_true))
 | red_exprh_false : forall k c st, red_exprh (S k) c st expr_false (out_ter st (res_value value_false))
-| red_exprh_id : forall k c st i loc v, 
-    get_loc c i = Some loc -> 
-    get_value st loc = Some v -> 
+| red_exprh_id : forall k c st i v, 
+    get_value c i = Some v -> 
     red_exprh (S k) c st (expr_id i) (out_ter st (res_value v))
 | red_exprh_lambda : forall k c st st' args body v,
-    (st', v) = add_closure c st args body ->
+    (st', v) = add_closure c st None args body ->
     red_exprh (S k) c st (expr_lambda args body) (out_ter st' (res_value v))
 
 (* eval_many *)
@@ -293,19 +291,6 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_exprh k c st (expr_own_field_names_1 o) o
 
-(* set_bang *)
-| red_exprh_set_bang : forall k c st i e o o',
-    red_exprh k c st e o ->
-    red_exprh k c st (expr_set_bang_1 i o) o' ->
-    red_exprh (S k) c st (expr_set_bang i e) o'
-| red_exprh_set_bang_1 : forall k c st' st st1 i loc v,
-    st1 = add_value_at_location st loc v ->
-    get_loc c i = Some loc -> 
-    red_exprh k c st' (expr_set_bang_1 i (out_ter st (res_value v))) (out_ter st1 (res_value v))
-| red_exprh_set_bang_1_abort : forall k c st i o,
-    abort o ->
-    red_exprh k c st (expr_set_bang_1 i o) o
-
 (* op1 *)
 | red_exprh_op1 : forall k c st e op o o',
     red_exprh k c st e o ->
@@ -363,11 +348,10 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_app_1_abort : forall k c st o el,
     abort o ->
     red_exprh k c st (expr_app_1 o el) o
-| red_exprh_app_2 : forall k c c' c'' st st' v ci is e vl vll o,
-    get_closure st v = result_some (value_closure ci c' is e) ->
-    (st', vll) = add_values st vl ->
-    add_parameters c' is vll = result_some c'' ->
-    red_exprh k c'' st' e o ->
+| red_exprh_app_2 : forall k c c' st v clo vl o,
+    get_closure st v = result_some (value_closure clo) ->
+    closure_ctx clo vl = result_some c' ->
+    red_exprh k c' st (closure_body clo) o ->
     red_exprh k c st (expr_app_2 v vl) o 
 
 (* seq *)
@@ -387,27 +371,20 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     red_exprh k c st e1 o ->
     red_exprh k c st (expr_let_1 i o e2) o' ->
     red_exprh (S k) c st (expr_let i e1 e2) o'
-| red_exprh_let_1 : forall k c c1 st' st st1 i v e2 o,
-    (c1, st1) = add_named_value c st i v ->
-    red_exprh k c1 st1 e2 o ->
+| red_exprh_let_1 : forall k c c' st' st i v e2 o,
+    c' = add_value c i v ->
+    red_exprh k c' st e2 o ->
     red_exprh k c st' (expr_let_1 i (out_ter st (res_value v)) e2) o
 | red_exprh_let_1_abort : forall k c st i o e2,
     abort o ->
     red_exprh k c st (expr_let_1 i o e2) o
 
 (* rec *)
-| red_exprh_rec : forall k c c1 st st1 loc i e1 e2 o o',
-    (c1, st1, loc) = add_named_value_loc c st i value_undefined ->
-    red_exprh k c1 st1 e1 o ->
-    red_exprh k c1 st1 (expr_recc_1 loc o e2) o' ->
-    red_exprh (S k) c st (expr_recc i e1 e2) o'
-| red_exprh_rec_1 : forall k c st' st st1 loc v e2 o,
-    st1 = add_value_at_location st loc v ->
-    red_exprh k c st1 e2 o ->
-    red_exprh k c st' (expr_recc_1 loc (out_ter st (res_value v)) e2) o
-| red_exprh_rec_1_abort : forall k c st loc o e2,
-    abort o ->
-    red_exprh k c st (expr_recc_1 loc o e2) o
+| red_exprh_rec : forall k c c' st st' i args body v e2 o,
+    (st', v) = add_closure c st (Some i) args body ->
+    c' = add_value c i v ->
+    red_exprh k c' st' e2 o ->
+    red_exprh (S k) c st (expr_recc i (expr_lambda args body) e2) o
 
 (* label *)
 | red_exprh_label : forall k c st i e o o',
@@ -490,11 +467,11 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_eval_1_abort : forall k c st e2 o,
     abort o ->
     red_exprh k c st (expr_eval_1 o e2) o
-| red_exprh_eval_2 : forall k c c1 st' st st1 s e ptr obj o,
+| red_exprh_eval_2 : forall k c c1 st' st s e ptr obj o,
     get_object st ptr = Some obj ->
-    envstore_of_obj st obj = Some (c1, st1) ->
+    ctx_of_obj obj = Some c1 ->
     desugar_expr s = Some e ->
-    red_exprh k c1 st1 e o ->
+    red_exprh k c1 st e o ->
     red_exprh k c st' (expr_eval_2 (value_string s) (out_ter st (res_value (value_object ptr)))) o
 | red_exprh_eval_2_abort : forall k c st v1 o,
     abort o ->

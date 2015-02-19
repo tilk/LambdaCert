@@ -98,7 +98,7 @@ let rec translate_expr e = match e with
     | Ljs.SetField (_, e, e1, e2, e3) -> Cs.Coq_expr_set_field (translate_expr e, translate_expr e1, translate_expr e2)
     | Ljs.DeleteField (_, e, e1) -> Cs.Coq_expr_delete_field (translate_expr e, translate_expr e1)
     | Ljs.OwnFieldNames (_, e) -> Cs.Coq_expr_own_field_names (translate_expr e)
-    | Ljs.SetBang (_, i, e) -> Cs.Coq_expr_set_bang (String.to_list i, translate_expr e)
+    | Ljs.SetBang (_, i, e) -> failwith "no setbang in lambdacert"
     | Ljs.Op1 (_, i, e) -> Cs.Coq_expr_op1 (translate_unary_op i, translate_expr e)
     | Ljs.Op2 (_, i, e1, e2) -> Cs.Coq_expr_op2 (translate_binary_op i, translate_expr e1, translate_expr e2)
     | Ljs.If (_, e, e1, e2) -> Cs.Coq_expr_if (translate_expr e, translate_expr e1, translate_expr e2)

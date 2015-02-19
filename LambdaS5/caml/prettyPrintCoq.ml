@@ -11,13 +11,9 @@ let format_list l = brackets (horzOrVert (vert_intersperse (text ";") l))
 
 let format_id_list il = format_list (List.map format_id il)
 
-let format_loc k = int k
-
-let format_ctx (c : ctx) = 
-    let format_ctx_item (i, l) = parens (squish [format_id i; text ", "; format_loc l]) in
-    format_list (List.map format_ctx_item (Heap.to_list c))
-
 let opt_parens b f = if b then parens f else f
+
+let format_ptr = int
 
 let coqrecord f = 
     let coqrecord_item (k, v) = horz [text k; text ":="; v] in 
@@ -116,7 +112,6 @@ let rec format_expr b e = match e with
     | Coq_expr_set_field (e1, e2, e3) -> coqconstr b "expr_set_field" [format_expr true e1; format_expr true e2; format_expr true e3]
     | Coq_expr_delete_field (e1, e2) -> coqconstr b "expr_delete_field" [format_expr true e1; format_expr true e2]
     | Coq_expr_own_field_names e -> coqconstr b "expr_own_field_names" [format_expr true e]
-    | Coq_expr_set_bang (i, e) -> coqconstr b "expr_set_bang" [format_id i; format_expr true e]
     | Coq_expr_op1 (o, e) -> coqconstr b "expr_op1" [format_unary_op o; format_expr true e]
     | Coq_expr_op2 (o, e1, e2) -> coqconstr b "expr_op2" [format_binary_op o; format_expr true e1; format_expr true e2]
     | Coq_expr_if (e1, e2, e3) -> coqconstr b "expr_if" [format_expr true e1; format_expr true e2; format_expr true e3]
@@ -147,7 +142,11 @@ and format_property b p = match p with
     | Coq_property_accessor (Coq_accessor_intro (e1, e2, e3, e4)) -> 
         coqconstr b "property_accessor" [coqconstr true "accessor_intro" (List.map (format_expr true) [e1; e2; e3; e4])]
 
-let format_value v = match v with
+let format_option b f o = match o with
+    | Some x -> coqconstr b "Some" [f x]
+    | None -> coqconstr b "None" []
+
+let rec format_value v = match v with
     | Coq_value_null -> text "value_null"
     | Coq_value_undefined -> text "value_undefined"
     | Coq_value_number n -> coqconstr false "value_number" [float n]
@@ -155,11 +154,13 @@ let format_value v = match v with
     | Coq_value_true -> text "value_true"
     | Coq_value_false -> text "value_false"
     | Coq_value_object n -> coqconstr false "value_object" [int n]
-    | Coq_value_closure (i, c, is, e) -> coqconstr false "value_closure" [int i; format_ctx c; format_id_list is; format_expr true e]
+    | Coq_value_closure (Coq_closure_intro (i, c, rid, is, e)) -> 
+        let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_value v]) in
+        coqconstr false "value_closure" [int i; format_list (List.map format_ctx_item c); format_option true format_id rid; format_id_list is; format_expr true e]
 
-let format_value_heap vh = 
-    let format_value_heap_item (l, v) = parens (squish [format_loc l; text ", "; format_value v]) in
-    format_list (List.map format_value_heap_item (Heap.to_list vh))
+let format_ctx (c : ctx) = 
+    let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_value v]) in
+    format_list (List.map format_ctx_item (Heap.to_list c))
 
 let format_attributes a = match a with
     | Coq_attributes_data_of d ->
@@ -201,8 +202,8 @@ let format_ctx_def (c : ctx) =
     vert [text "Definition ctx_items := "; format_ctx c; text "."]
 
 let format_store (st : store) =
-    let format_store_object_item (l, o) = squish [parens (squish [format_loc l; text ", "; format_object o]); text ";"] in
-    vert ([text "Definition store_value_items := "; format_value_heap st.value_heap; text "."; text "Definition store_object_items := ["] @ List.map format_store_object_item (Heap.to_list (st.object_heap)) @ [text "]."])
+    let format_store_object_item (l, o) = squish [parens (squish [format_ptr l; text ", "; format_object o]); text ";"] in
+    vert ([text "Definition store_items := ["] @ List.map format_store_object_item (Heap.to_list (st.object_heap)) @ [text "]."])
 
 let format_ctx_store (c, st) = vert [format_ctx_def c; format_store st]
 

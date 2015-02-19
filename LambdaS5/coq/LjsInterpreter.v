@@ -106,11 +106,10 @@ Definition apply runs c st (f_loc : value) (args : list value) : result :=
   let res := get_closure st f_loc in
   if_result_some res (fun f =>
       match f with
-      | value_closure _id env args_names body =>
-        let (st, args_locs) := add_values st args in
-        let res := add_parameters env args_names args_locs in
+      | value_closure clo => 
+        let res := closure_ctx clo args in
         if_result_some res (fun vh =>
-          runs_type_eval runs vh st body)
+          runs_type_eval runs vh st (closure_body clo))
       | _ => result_fail "Expected Closure but did not get one."
       end
   )
@@ -122,8 +121,7 @@ Definition apply runs c st (f_loc : value) (args : list value) : result :=
 (* a lonely identifier.
 * Fetch the associated value location and return it. *)
 Definition eval_id runs c st (name : string) : result :=
-  assert_get_loc c name (fun loc =>
-    assert_deref st loc (fun v => result_value st v))
+  assert_deref c name (fun v => result_value st v)
 .
 
 
@@ -295,9 +293,8 @@ Definition eval_delete_field runs c st (left_expr right_expr : expr) : result :=
 * location to the name `id` in the store.
 * Evaluate the body in the new store. *)
 Definition eval_let runs c st (id : string) (value_expr body_expr : expr) : result :=
-  if_eval_return runs c st value_expr (fun st value =>
-      let (c, st) := add_named_value c st id value in
-        runs_type_eval runs c st body_expr
+  if_eval_return runs c st value_expr (fun st val =>
+    runs_type_eval runs (add_value c id val) st body_expr
   )
 .
 
@@ -306,27 +303,18 @@ Definition eval_let runs c st (id : string) (value_expr body_expr : expr) : resu
 * and bind this location to the name `id` in the store.
 * Evaluate the body in the new store. *)
 Definition eval_rec runs c st (id : string) (value_expr body_expr : expr) : result :=
-  let '(c, st, self_loc) := add_named_value_loc c st id value_undefined in
-    if_eval_return runs c st value_expr (fun st value =>
-      let st := add_value_at_location st self_loc value in
-        runs_type_eval runs c st body_expr
-    )
-.
-
-(* name := expr
-* Evaluate expr, and set it at the location bound to `name`. Fail if `name`
-* is not associated with a location in the store. *)
-Definition eval_setbang runs c st (name : string) (expr : expr) : result :=
-  if_eval_return runs c st expr (fun st value =>
-    assert_get_loc c name (fun loc =>
-      result_value (add_value_at_location st loc value) value
-  ))
+  match value_expr with
+  | expr_lambda args body =>
+    let (st, v) := add_closure c st (Some id) args body in
+    runs_type_eval runs (add_value c id v) st body_expr
+  | _ => result_fail "rec with no lambda"
+  end
 .
 
 (* func (args) { body }
 * Capture the environment's name-to-location heap and return a closure. *)
 Definition eval_lambda runs c st (args : list id) (body : expr) : result :=
-  let (st, v) := add_closure c st args body in
+  let (st, v) := add_closure c st None args body in
   result_value st v
 .
 
@@ -445,8 +433,8 @@ Definition eval_eval runs c st estr bindings :=
     if_eval_return runs c st bindings (fun st v_bindings =>
       assert_get_string v_estr (fun s =>
         assert_get_object st v_bindings (fun obj => 
-          match desugar_expr s, envstore_of_obj st obj with
-          | Some e, Some (c', st) => runs_type_eval runs c' st e          
+          match desugar_expr s, ctx_of_obj obj with
+          | Some e, Some c' => runs_type_eval runs c' st e          
           | None, _ => result_fail "Parse error"
           | _, None => result_fail "Invalid eval environment"
           end 
@@ -487,7 +475,6 @@ Definition eval runs c st (e : expr) : result :=
   | expr_delete_field left_ right_ => eval_delete_field runs c st left_ right_
   | expr_let id value body => eval_let runs c st id value body
   | expr_recc id value body => eval_rec runs c st id value body
-  | expr_set_bang id expr => eval_setbang runs c st id expr
   | expr_lambda args body => eval_lambda runs c st args body
   | expr_app f args => eval_app runs c st f args
   | expr_get_attr attr left_ right_ => eval_get_attr runs c st left_ right_ attr

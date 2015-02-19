@@ -12,7 +12,6 @@ Open Scope string_scope.
 
 Definition id : Type := string.
 Definition closure_id := nat.
-Definition value_loc := nat.
 Definition object_ptr := nat.
 
 (* Syntax of S5 *)
@@ -114,7 +113,6 @@ Inductive expr : Type :=
 | expr_set_field : expr -> expr -> expr -> expr (* object -> field -> new_val -> expr *)
 | expr_delete_field : expr -> expr -> expr (* object -> field -> expr *)
 | expr_own_field_names : expr -> expr
-| expr_set_bang : id -> expr -> expr
 | expr_op1 : unary_op -> expr -> expr
 | expr_op2 : binary_op -> expr -> expr -> expr
 | expr_if : expr -> expr -> expr -> expr
@@ -163,7 +161,6 @@ Fixpoint expr_fv e : Fset.fset id := match e with
 | expr_set_field e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
 | expr_delete_field e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_own_field_names e => expr_fv e
-| expr_set_bang i e => \{i} \u expr_fv e
 | expr_op1 _ e => expr_fv e
 | expr_op2 _ e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_if e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
@@ -202,14 +199,6 @@ Definition default_objattrs := objattrs_intro (expr_string "Object") expr_true e
 
 Definition objattrs_with_proto p oa := let 'objattrs_intro cl ex pr co pv := oa in objattrs_intro cl ex p co pv.
 
-(* Lexical environments *)
-
-Definition loc_heap_type := Heap.heap id value_loc.
-
-Record ctx := ctx_intro {
-  loc_heap : loc_heap_type (* maps names to locations *)
-}.
-
 (* Values *)
 
 Inductive value : Type :=
@@ -220,9 +209,21 @@ Inductive value : Type :=
 | value_true
 | value_false
 | value_object : object_ptr -> value
-| value_closure : closure_id -> ctx -> list id -> expr -> value 
-  (* closure_id is for making closures comparable with stx= *)
+| value_closure : closure -> value 
+with closure := 
+| closure_intro : closure_id -> list (id * value) -> option id -> list id -> expr -> closure
 .
+
+Definition closure_body clo :=
+  let 'closure_intro _ _ _ _ body := clo in body.
+
+(* Lexical environments *)
+
+Definition value_heap_type := Heap.heap id value.
+
+Record ctx := ctx_intro {
+  value_heap : value_heap_type (* maps names to values *)
+}.
 
 (* Named data property attributes *)
 Record attributes_data := attributes_data_intro {
@@ -285,12 +286,10 @@ Definition object_with_properties props obj :=
 
 (* Representation of the store *)
 
-Definition value_heap_type := Heap.heap value_loc value.
 Definition object_heap_type := Heap.heap object_ptr object.
 
 Record store := store_intro {
   object_heap : object_heap_type; (* simulates mutability of objects *)
-  value_heap : value_heap_type; (* maps locations to values *)
   fresh_locations : LibStream.stream nat 
 }.
 
@@ -298,18 +297,15 @@ Definition dummy_fresh_locations := nat_stream_from 1%nat.
 
 Definition object_heap_initial : Heap.heap object_ptr object :=
   Heap.empty.
-Definition value_heap_initial : Heap.heap value_loc value :=
-  Heap.empty.
-Definition loc_heap_initial : Heap.heap id value_loc :=
+Definition loc_heap_initial : Heap.heap id value :=
   Heap.empty.
 
 Definition create_store :=
   {| object_heap := object_heap_initial;
-     value_heap := value_heap_initial;
      fresh_locations := dummy_fresh_locations |}.
 
 Definition create_ctx :=
-  {| loc_heap := loc_heap_initial |}.
+  {| value_heap := loc_heap_initial |}.
 
 (* Definitions of outcomes *)
 
