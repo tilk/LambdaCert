@@ -11,7 +11,6 @@ Open Scope string_scope.
 (* Basic stuff *)
 
 Definition id : Type := string.
-Definition closure_id := nat.
 Definition object_ptr := nat.
 
 (* Syntax of S5 *)
@@ -211,11 +210,11 @@ Inductive value : Type :=
 | value_object : object_ptr -> value
 | value_closure : closure -> value 
 with closure := 
-| closure_intro : closure_id -> list (id * value) -> option id -> list id -> expr -> closure
+| closure_intro : list (id * value) -> option id -> list id -> expr -> closure
 .
 
 Definition closure_body clo :=
-  let 'closure_intro _ _ _ _ body := clo in body.
+  let 'closure_intro _ _ _ body := clo in body.
 
 (* Lexical environments *)
 

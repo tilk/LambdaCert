@@ -251,8 +251,6 @@ Definition stx_eq store v1 v2 :=
   | value_false, value_false => result_some value_true
   | value_number n1, value_number n2 => result_some (bool_to_value (_number_eq_bool n1 n2))
   | value_object ptr1, value_object ptr2 => result_some (bool_to_value (beq_nat ptr1 ptr2))
-  | value_closure (closure_intro id1 _ _ _ _), value_closure (closure_intro id2 _ _ _ _) => 
-    result_some (bool_to_value (beq_nat id1 id2))
   | _, _ => result_some value_false
   end
 .
@@ -266,8 +264,6 @@ Definition abs_eq store v1 v2 :=
   | value_false, value_false => result_some value_true
   | value_number n1, value_number n2 => result_some (bool_to_value (_number_eq_bool n1 n2))
   | value_object ptr1, value_object ptr2 => result_some (bool_to_value (beq_nat ptr1 ptr2))
-  | value_closure (closure_intro id1 _ _ _ _), value_closure (closure_intro id2 _ _ _ _) => 
-    result_some (bool_to_value (beq_nat id1 id2))
   | value_null, value_undefined => result_some value_true
   | value_undefined, value_null => result_some value_true
   | value_number n, value_string s

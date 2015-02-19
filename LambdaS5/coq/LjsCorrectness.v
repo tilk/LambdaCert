@@ -406,14 +406,13 @@ Qed.
 Lemma eval_rec_correct : forall runs c st s e1 e2 o,
     runs_type_correct runs ->
     eval_rec runs c st s e1 e2 = result_some o ->
-    exists args body st' c' v, e1 = expr_lambda args body /\
-            (st', v) = add_closure c st (Some s) args body /\
+    exists args body c' v, e1 = expr_lambda args body /\
+            v = add_closure c (Some s) args body /\
             c' = add_value c s v /\
-            runs_type_eval runs c' st' e2 = result_some o.
+            runs_type_eval runs c' st e2 = result_some o.
 Proof.
     introv IH R. unfolds in R.
     destruct e1; tryfalse.
-    cases_let.
     jauto.
 Qed.
 
@@ -567,10 +566,9 @@ Qed.
 Lemma eval_lambda_correct : forall runs c st vs e o,
     runs_type_correct runs ->
     eval_lambda runs c st vs e = result_some o ->
-    exists st' v, (st', v) = add_closure c st None vs e /\ o = out_ter st' (res_value v).
+    exists v, v = add_closure c None vs e /\ o = out_ter st (res_value v).
 Proof.
     introv IH R. unfolds in R.
-    cases_let.
     ljs_run_inv. eauto.
 Qed.
 
@@ -1110,7 +1108,7 @@ Proof.
     inverts H.
     eapply red_expr_throw_1.
     (* lambda *)
-    lets (st'&v&Ho&H): eval_lambda_correct IH R.
+    lets (v&Ho&H): eval_lambda_correct IH R.
     inverts H.
     eapply red_expr_lambda; assumption.
     (* eval *)

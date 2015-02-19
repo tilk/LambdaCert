@@ -24,15 +24,12 @@ Definition add_object st obj : (store * value) :=
     ), (value_object ptr))
   end
 .
-Definition add_closure c st recid args body : (store * value) :=
+Definition add_closure c recid args body : value :=
   let si := match recid with 
     | Some i => expr_fv (expr_lambda args body) \-- i
     | None => expr_fv (expr_lambda args body) 
     end in
-  match st with
-  | store_intro obj_heap (id ::: stream) =>
-    (store_intro obj_heap stream, value_closure (closure_intro id (Heap.to_list (value_heap (narrow_ctx c si))) recid args body))
-  end
+  value_closure (closure_intro (Heap.to_list (value_heap (narrow_ctx c si))) recid args body)
 .
 
 (* Adds function arguments to the lexical environment *)
@@ -45,7 +42,7 @@ Definition add_parameters (closure_env : ctx) (args_name : list id) (args : list
 .
 
 Definition closure_ctx clo args :=
-  let 'closure_intro _ c rid args_name _ := clo in
+  let 'closure_intro c rid args_name _ := clo in
   let c' := fold_left (fun (p : string * value) h => let (s, v) := p in Heap.write h s v) Heap.empty c in
   let c'' := match rid with
     | Some i => ctx_intro (Heap.write c' i (value_closure clo))

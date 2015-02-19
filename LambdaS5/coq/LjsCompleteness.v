@@ -310,8 +310,7 @@ Proof.
     unfolds. 
     repeat ljs_eval; reflexivity.
     (* lambda *)
-    unfolds.
-    cases_let. injects. reflexivity.
+    reflexivity.
     (* object *)
     abstract (repeat ljs_eval_push;
               eauto using object_properties_lemma).
@@ -378,11 +377,7 @@ Proof.
     (* let *)
     unfolds.
     repeat ljs_eval_push.
-    cases_let.
-    repeat ljs_eval_push.
     (* rec *)
-    match goal with Y : (_, _) = _ |- _ => unfold id in Y; rewrite <- Y in * end.
-    injects.
     repeat ljs_eval_push.
     (* label *)
     unfolds.

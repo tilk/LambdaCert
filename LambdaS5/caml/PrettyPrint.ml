@@ -11,7 +11,7 @@ let rec string_of_value depth st = function
 | Coq_value_true -> "true"
 | Coq_value_false -> "false"
 | Coq_value_object ptr -> string_of_object_ptr depth st ptr
-| Coq_value_closure (Coq_closure_intro (_, loc_heap, _, args, body)) ->
+| Coq_value_closure (Coq_closure_intro (loc_heap, _, args, body)) ->
     Printf.sprintf "<closure func (%s) { %s }>"
       (String.concat ", " (List.map String.of_list args))
       (string_of_expression depth body)

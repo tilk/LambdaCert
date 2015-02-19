@@ -35,9 +35,9 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_id : forall c st i v, 
     get_value c i = Some v -> 
     red_expr c st (expr_id i) (out_ter st (res_value v))
-| red_expr_lambda : forall c st st' args body v,
-    (st', v) = add_closure c st None args body ->
-    red_expr c st (expr_lambda args body) (out_ter st' (res_value v))
+| red_expr_lambda : forall c st args body v,
+    v = add_closure c None args body ->
+    red_expr c st (expr_lambda args body) (out_ter st (res_value v))
 
 (* eval_many *)
 | red_expr_eval_many_1 : forall c st vs E o,
@@ -380,10 +380,10 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_let_1 i o e2) o
 
 (* rec *)
-| red_expr_rec : forall c c' st st' i args body v e2 o,
-    (st', v) = add_closure c st (Some i) args body ->
+| red_expr_rec : forall c c' st i args body v e2 o,
+    v = add_closure c (Some i) args body ->
     c' = add_value c i v ->
-    red_expr c' st' e2 o ->
+    red_expr c' st e2 o ->
     red_expr c st (expr_recc i (expr_lambda args body) e2) o
 
 (* label *)

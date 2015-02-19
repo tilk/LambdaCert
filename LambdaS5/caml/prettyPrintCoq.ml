@@ -154,9 +154,9 @@ let rec format_value v = match v with
     | Coq_value_true -> text "value_true"
     | Coq_value_false -> text "value_false"
     | Coq_value_object n -> coqconstr false "value_object" [int n]
-    | Coq_value_closure (Coq_closure_intro (i, c, rid, is, e)) -> 
+    | Coq_value_closure (Coq_closure_intro (c, rid, is, e)) -> 
         let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_value v]) in
-        coqconstr false "value_closure" [int i; format_list (List.map format_ctx_item c); format_option true format_id rid; format_id_list is; format_expr true e]
+        coqconstr false "value_closure" [format_list (List.map format_ctx_item c); format_option true format_id rid; format_id_list is; format_expr true e]
 
 let format_ctx (c : ctx) = 
     let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_value v]) in

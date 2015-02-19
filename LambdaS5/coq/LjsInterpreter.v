@@ -305,7 +305,7 @@ Definition eval_let runs c st (id : string) (value_expr body_expr : expr) : resu
 Definition eval_rec runs c st (id : string) (value_expr body_expr : expr) : result :=
   match value_expr with
   | expr_lambda args body =>
-    let (st, v) := add_closure c st (Some id) args body in
+    let v := add_closure c  (Some id) args body in
     runs_type_eval runs (add_value c id v) st body_expr
   | _ => result_fail "rec with no lambda"
   end
@@ -314,8 +314,7 @@ Definition eval_rec runs c st (id : string) (value_expr body_expr : expr) : resu
 (* func (args) { body }
 * Capture the environment's name-to-location heap and return a closure. *)
 Definition eval_lambda runs c st (args : list id) (body : expr) : result :=
-  let (st, v) := add_closure c st None args body in
-  result_value st v
+  result_value st (add_closure c None args body)
 .
 
 (* f (args)
