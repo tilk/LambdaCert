@@ -325,25 +325,30 @@ Definition make_object ps :=
 
 Definition make_new e es := make_app_builtin "%PrimNew" [e; make_args_obj true es].
 
-Definition make_case_a fd (tb : L.expr * L.expr) := let (test, body) := tb in
-        L.expr_if (make_or (eq (L.expr_id "%disc") test) (L.expr_id fd)) 
-            (L.expr_seq body (L.expr_set_bang fd L.expr_true)) L.expr_null.
+Definition make_case (tb : L.expr * L.expr) cont found := let (test, body) := tb in
+    L.expr_let "%found" (make_or (eq (L.expr_id "%disc") test) (L.expr_id found))
+        (L.expr_seq
+            (L.expr_if (L.expr_id "%found") body L.expr_undefined)
+            (cont "%found")).
+
+Definition make_cases cls last := fold_right make_case last cls.
 
 Definition make_switch_nodefault e cls :=
     L.expr_label "%before" (
     L.expr_let "%found" L.expr_false (
     L.expr_let "%disc" e (
-    L.expr_seqs (map (make_case_a "%found") cls)))).
+    make_cases cls (fun _ => L.expr_undefined) "%found"))).
 
 Definition make_switch_withdefault e acls def bcls :=
+    let last_case found := L.expr_if (L.expr_id found) L.expr_undefined (L.expr_app (L.expr_id "%deflt") []) in
+    let deflt_case cont found := 
+        L.expr_seq (L.expr_if (L.expr_id found) (L.expr_app (L.expr_id "%deflt") []) L.expr_undefined)
+                   (cont found) in
     L.expr_label "%before" (
     L.expr_let "%deflt" (L.expr_lambda [] def) (
     L.expr_let "%found" L.expr_false (
     L.expr_let "%disc" e (
-    L.expr_seq (L.expr_seqs (map (make_case_a "%found") acls)) (
-    L.expr_seq (L.expr_if (L.expr_id "%found") (L.expr_app (L.expr_id "%deflt") []) L.expr_undefined) (
-    L.expr_seq (L.expr_seqs (map (make_case_a "%found") bcls)) (
-    L.expr_if (L.expr_id "%found") L.expr_undefined (L.expr_app (L.expr_id "%deflt") [])))))))).
+    make_cases acls (deflt_case (make_cases bcls last_case)) "%found")))).
 
 (* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
