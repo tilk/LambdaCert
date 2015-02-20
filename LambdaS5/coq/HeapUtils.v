@@ -1,10 +1,21 @@
+Generalizable All Variables.
 Require Import Shared.
 Require Import LibHeap.
 Require Import LibTactics.
 Require Import LibReflect.
 
-Module Heap : HeapSpec := LibHeap.HeapList.
+Module Type MyHeapSpec.
+Include HeapSpec.
+Parameter of_list : forall {A B}, list (A * B) -> heap A B.
+End MyHeapSpec.
 
+Module Heap : MyHeapSpec.
+Include LibHeap.HeapList.
+
+Definition of_list `(l : list (A * B)) := fold_left (fun (x : A * B) h => let (k, v) := x in write h k v) empty l.
+End Heap.
+
+(*
 Lemma write_preserves_indom : forall (X Y : Type) (h : Heap.heap X Y) k k0 v0,
   LibReflect.Comparable X -> Heap.indom h k -> Heap.indom (Heap.write h k0 v0) k
 .
@@ -43,4 +54,4 @@ Proof.
     destruct H as (H_keys,H_binds).
     apply H_binds.
 Qed.
-
+*)

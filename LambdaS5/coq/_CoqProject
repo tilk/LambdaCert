@@ -9,6 +9,7 @@ LjsCommon.v
 LjsCompleteness.v
 LjsCorrectness.v
 LjsExtraction.v
+LjsInitEnv.v
 LjsInterpreter.v
 LjsMonads.v
 LjsOperators.v

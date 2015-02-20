@@ -5,6 +5,38 @@ open FormatExt
 open HeapUtils
 open LjsSyntax
 
+let vals_store = ref Map.empty
+
+let used_names = ref Set.empty
+
+let ordered_vals = ref []
+
+let rfun c = match c with
+    | '%' -> "priv" 
+    | '-' -> "_"
+    | _ -> String.of_char c
+
+let ident_for i =
+    let ii = String.of_list i in 
+    let ii' = String.replace_chars rfun ii in
+    if not (Set.mem ii' !used_names)
+    then (used_names := Set.add ii' !used_names; ii')
+    else
+    let rec f k i = 
+        let i' = i ^ string_of_int k in
+        if not (Set.mem i' !used_names)
+        then (used_names := Set.add i' !used_names; i')
+        else f (k+1) i
+    in f 1 ii'
+
+let named_val i v = 
+    let vst = !vals_store in
+    if Map.mem v vst then Map.find v vst
+    else let ii = ident_for i in 
+    vals_store := Map.add v ii vst; 
+    ordered_vals := (ii,v) :: !ordered_vals;
+    ii
+
 let format_id i = text ("\"" ^ String.of_list i ^ "\"") (* TODO escaping *)
 
 let format_list l = brackets (horzOrVert (vert_intersperse (text ";") l))
@@ -16,8 +48,10 @@ let opt_parens b f = if b then parens f else f
 let format_ptr = int
 
 let coqrecord f = 
-    let coqrecord_item (k, v) = horz [text k; text ":="; v] in 
+    let coqrecord_item (k, v) = horzOrVert [text (k ^ " :="); v] in 
     enclose "{|" "|}" (horzOrVert (vert_intersperse (text ";") (List.map coqrecord_item f)))
+
+let coqconstr b s fs = opt_parens (not (List.is_empty fs) && b) (wrapBox (text s::fs))
 
 let format_unary_op o = match o with
     | Coq_unary_op_print -> text "unary_op_print"
@@ -94,12 +128,14 @@ let format_oattr a = match a with
     | Coq_oattr_primval -> text "oattr_primval"
     | Coq_oattr_code -> text "oattr_code"
 
-let coqconstr b s fs = opt_parens (not (List.is_empty fs) && b) (wrapBox (text s::fs))
+let format_number n = 
+    if n == nan then text "JsNumber.nan"
+    else parens (squish [text "JsNumber.of_int "; int (Float.to_int n)])
 
 let rec format_expr b e = match e with
     | Coq_expr_null -> text "expr_null"
     | Coq_expr_undefined -> text "expr_undefined"
-    | Coq_expr_number n -> coqconstr b "expr_number" [float n]
+    | Coq_expr_number n -> coqconstr b "expr_number" [format_number n]
     | Coq_expr_string s -> coqconstr b "expr_string" [format_id s]
     | Coq_expr_true -> text "expr_true"
     | Coq_expr_false -> text "expr_false"
@@ -134,7 +170,7 @@ and format_objattrs b e = match e with
     | Coq_objattrs_intro (e1, e2, e3, e4, e5) -> coqconstr b "objattrs_intro" (List.map (format_expr true) [e1; e2; e3; e4; e5])
 
 and format_property_list ps = 
-    let format_property_item (i, p) = squish [format_id i; text ", "; format_property true p] in
+    let format_property_item (i, p) = parens (squish [format_id i; text ", "; format_property false p]) in
     format_list (List.map format_property_item ps)
 
 and format_property b p = match p with
@@ -147,21 +183,23 @@ let format_option b f o = match o with
     | Some x -> coqconstr b "Some" [f x]
     | None -> coqconstr b "None" []
 
-let rec format_value v = match v with
+let rec format_named_val i v = format_value v; text (named_val i v)
+
+and format_value v = match v with
     | Coq_value_empty -> text "value_empty"
     | Coq_value_null -> text "value_null"
     | Coq_value_undefined -> text "value_undefined"
-    | Coq_value_number n -> coqconstr false "value_number" [float n]
+    | Coq_value_number n -> coqconstr false "value_number" [format_number n]
     | Coq_value_string s -> coqconstr false "value_string" [format_id s]
     | Coq_value_true -> text "value_true"
     | Coq_value_false -> text "value_false"
     | Coq_value_object n -> coqconstr false "value_object" [int n]
     | Coq_value_closure (Coq_closure_intro (c, rid, is, e)) -> 
-        let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_value v]) in
-        coqconstr false "value_closure" [format_list (List.map format_ctx_item c); format_option true format_id rid; format_id_list is; format_expr true e]
+        let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_named_val i v]) in
+        coqconstr false "value_closure" [coqconstr true "closure_intro" [format_list (List.map format_ctx_item c); format_option true format_id rid; format_id_list is; format_expr true e]]
 
 let format_ctx (c : ctx) = 
-    let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_value v]) in
+    let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_named_val i v]) in
     format_list (List.map format_ctx_item (Heap.to_list c))
 
 let format_attributes a = match a with
@@ -183,16 +221,16 @@ let format_attributes a = match a with
         horz [text "attributes_accessor_of"; coqrecord l]
 
 let format_object_properties vh = 
-    let format_object_properties_item (i, a) = parens (squish [format_id i; text ", "; format_attributes a]) in
+    let format_object_properties_item (i, a) = parens (horzOrVert [squish [format_id i; text ", "]; format_attributes a]) in
     horz [text "Heap.of_list"; format_list (List.map format_object_properties_item (Heap.to_list vh))] 
 
 let format_object o = 
     let l1 = [
-        "object_proto", format_value (object_proto o);
-        "object_class", format_id (object_class o);
-        "object_extensible", bool (object_extensible o);
-        "object_prim_value", format_value (object_prim_value o);
-        "object_code", format_value (object_code o)
+        "oattrs_proto", format_value (object_proto o);
+        "oattrs_class", format_id (object_class o);
+        "oattrs_extensible", bool (object_extensible o);
+        "oattrs_prim_value", format_value (object_prim_value o);
+        "oattrs_code", format_named_val (String.to_list "objCode") (object_code o)
     ] in
     let l = [
         "object_attrs", coqrecord l1;
@@ -204,10 +242,27 @@ let format_ctx_def (c : ctx) =
     vert [text "Definition ctx_items := "; format_ctx c; text "."]
 
 let format_store (st : store) =
-    let format_store_object_item (l, o) = squish [parens (squish [format_ptr l; text ", "; format_object o]); text ";"] in
-    vert ([text "Definition store_items := ["] @ List.map format_store_object_item (Heap.to_list (st.object_heap)) @ [text "]."])
+    let format_store_object_item (l, o) = parens (squish [format_ptr l; text ", "; format_object o]) in
+    vert ([text "Definition store_items := ["] @ vert_intersperse (text ";") (List.map format_store_object_item (Heap.to_list (st.object_heap))) @ [text "]."])
 
-let format_ctx_store (c, st) = vert [format_ctx_def c; format_store st]
+let format_named_vals () = 
+    let f (i, v) = horzOrVert [text ("Definition " ^ i ^ " := "); format_value v; text "."]
+    in vert (List.map f (List.rev !ordered_vals))
 
-let ctx_store_to_output o c st = to_output o format_ctx_store (c, st)
+let header () = vert (List.map text [
+    "Require Import Utils.";
+    "Require Import LjsShared.";
+    "Require Import LjsSyntax.";
+    "Require Import String.";
+
+    "Import ListNotations.";
+    "Open Scope list_scope.";
+    "Open Scope string_scope."])
+
+let format_ctx_store (c, st) = vert [header(); format_named_vals (); format_ctx_def c; format_store st]
+
+let ctx_store_to_output o c st = 
+    Format.set_margin 200;
+    Format.set_max_indent 50;
+    to_output o format_ctx_store (c, st)
 
