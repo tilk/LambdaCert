@@ -14,6 +14,7 @@ LjsInterpreter.v
 LjsMonads.v
 LjsOperators.v
 LjsPrettyInterm.v
+LjsPrettyRulesAux.v
 LjsPrettyRulesIndexedAux.v
 LjsPrettyRulesIndexed.v
 LjsPrettyRules.v

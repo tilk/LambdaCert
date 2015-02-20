@@ -88,3 +88,18 @@ Definition ctx_of_obj_aux (o : option ctx) (p : string * attributes) : option ct
 Definition ctx_of_obj obj : option ctx :=
   List.fold_left ctx_of_obj_aux (Heap.to_list (object_properties obj)) (Some create_ctx)
 .
+
+(* predicates for store lookup *)
+
+Definition object_binds st ptr obj :=
+    Heap.binds (object_heap st) ptr obj.
+
+Definition object_indom st ptr :=
+    Heap.indom (object_heap st) ptr.
+
+Definition id_binds c i loc :=
+    Heap.binds (value_heap c) i loc.
+
+Definition id_indom c i :=
+    Heap.indom (value_heap c) i.
+

@@ -103,15 +103,9 @@ Definition eval_arg_list runs c st (args_expr : list expr) (cont : store -> list
 .
 
 Definition apply runs c st (f_loc : value) (args : list value) : result :=
-  let res := get_closure st f_loc in
-  if_result_some res (fun f =>
-      match f with
-      | value_closure clo => 
-        let res := closure_ctx clo args in
-        if_result_some res (fun vh =>
-          runs_type_eval runs vh st (closure_body clo))
-      | _ => result_fail "Expected Closure but did not get one."
-      end
+  if_result_some (get_closure st f_loc) (fun clo =>
+    if_result_some (closure_ctx clo args) (fun vh =>
+      runs_type_eval runs vh st (closure_body clo))
   )
 .
 

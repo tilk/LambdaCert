@@ -110,17 +110,12 @@ Definition prim_to_bool store (v : value) :=
   | value_undefined => result_some value_false
   | value_null => result_some value_false
   | value_number n => result_some (
-      if (decide(n = JsNumber.nan)) then
-        value_false
-      else if (decide(n = JsNumber.zero)) then
-        value_false
-      else if (decide(n = JsNumber.neg_zero)) then
+      ifb n = JsNumber.zero \/ n = JsNumber.neg_zero \/ n = JsNumber.nan then
         value_false
       else
         value_true
     )
-  | value_string "" => result_some value_false
-  | value_string _ => result_some value_true
+  | value_string s => result_some (ifb s = "" then value_false else value_true)
   | value_empty => result_some value_false
   | _ => result_some value_true
   end

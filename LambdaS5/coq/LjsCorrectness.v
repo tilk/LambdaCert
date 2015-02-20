@@ -326,7 +326,7 @@ Proof.
 Qed.
 
 Definition apply_post runs c st v vs o := exists clo c', 
-    get_closure st v = result_some (value_closure clo) /\ 
+    get_closure st v = result_some clo /\ 
     closure_ctx clo vs = result_some c' /\
     runs_type_eval runs c' st (closure_body clo) = result_some o.
 

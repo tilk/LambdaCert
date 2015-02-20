@@ -31,7 +31,6 @@ Inductive ext_expr :=
 | expr_delete_field_2 : value -> out -> ext_expr
 | expr_delete_field_3 : object_ptr -> object -> option attributes -> prop_name -> ext_expr
 | expr_own_field_names_1 : out -> ext_expr
-| expr_set_bang_1 : id -> out -> ext_expr
 | expr_op1_1 : unary_op -> out -> ext_expr
 | expr_op2_1 : binary_op -> out -> expr -> ext_expr
 | expr_op2_2 : binary_op -> value -> out -> ext_expr 
@@ -52,6 +51,44 @@ Inductive ext_expr :=
 .
 
 Coercion expr_basic : expr >-> ext_expr.
+
+Definition out_of_ext_expr p := match p with
+| expr_eval_many_2 _ o _ _ 
+| expr_get_attr_1 _ o _ 
+| expr_get_attr_2 _ _ o 
+| expr_set_attr_1 _ o _ _ 
+| expr_set_attr_2 _ _ o _
+| expr_set_attr_3 _ _ _ o
+| expr_get_obj_attr_1 _ o
+| expr_set_obj_attr_1 _ o _
+| expr_set_obj_attr_2 _ _ o
+| expr_get_field_1 o _ 
+| expr_get_field_2 _ o 
+| expr_set_field_1 o _ _
+| expr_set_field_2 _ o _
+| expr_set_field_3 _ _ o 
+| expr_delete_field_1 o _ 
+| expr_delete_field_2 _ o 
+| expr_own_field_names_1 o
+| expr_op1_1 _ o
+| expr_op2_1 _ o _ 
+| expr_op2_2 _ _ o 
+| expr_if_1 o _ _
+| expr_app_1 o _
+| expr_seq_1 o _
+| expr_let_1 _ o _
+| expr_label_1 _ o
+| expr_break_1 _ o
+| expr_try_catch_1 o _
+| expr_try_catch_2 _ o
+| expr_try_finally_1 o _
+| expr_try_finally_2 _ o
+| expr_throw_1 o 
+| expr_eval_1 o _
+| expr_eval_2 _ o
+    => Some o
+| _ => None
+end.
 
 Inductive res_is_value : res -> Prop :=
 | res_is_value_value : forall v, res_is_value (res_value v)

@@ -3,7 +3,8 @@ Set Implicit Arguments.
 Require Import LjsShared.
 Require Import JsNumber.
 Require Import Utils.
-Require LjsSyntax LjsPrettyRules LjsPrettyInterm LjsStore LjsAuxiliary.
+Require LjsSyntax LjsPrettyRules LjsPrettyRulesAux LjsPrettyInterm LjsStore LjsAuxiliary.
+Require LjsInitEnv.
 Require EjsSyntax.
 Require JsSyntax JsPrettyInterm JsPrettyRules.
 Require EjsFromJs EjsToLjs.
@@ -16,6 +17,7 @@ Local Coercion JsNumber.of_int : Z >-> JsNumber.number.
 Module L. 
 Include LjsSyntax.
 Include LjsPrettyRules.
+Include LjsPrettyRulesAux.
 Include LjsPrettyInterm.
 Include LjsStore.
 Include LjsAuxiliary.
@@ -34,6 +36,8 @@ Include JsPreliminary.
 Include JsPrettyInterm.
 Include JsPrettyRules.
 End J.
+
+Import LjsPrettyRulesAux.Tactics.
 
 Implicit Type A B : Type.
 Implicit Type s : string.
@@ -193,8 +197,12 @@ Hint Constructors J.red_expr : js_ljs.
 Hint Constructors J.red_stat : js_ljs.
 Hint Constructors J.red_spec : js_ljs.
 
+Definition includes_init_ctx c :=
+    forall i v v', L.id_binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'. 
+
 Definition state_invariant BR jst jc c st :=
-    heaps_bisim BR jst st.
+    heaps_bisim BR jst st /\
+    includes_init_ctx c.
 
 Definition concl_expr_value BR jst jc c st st' r je :=
     exists jst' jr,
@@ -316,21 +324,79 @@ Proof.
     jauto_js.
 Qed.
 *)
-(* TODO
-Lemma ljs_to_bool_lemma : forall BR jst jc c st st' r jv v loc v1,
+
+(* TODO move this lemma! *)
+Lemma get_closure_lemma : forall st clo, LjsCommon.get_closure st (L.value_closure clo) = L.result_some clo.
+Proof.
+    intros. unfolds. destruct (LjsStore.num_objects st); reflexivity. 
+Qed.
+
+Lemma ljs_to_bool_lemma : forall BR jst jc c st st' r jv v,
     state_invariant BR jst jc c st ->
     value_related BR jv v -> 
-    L.id_binds c "%ToBoolean" loc ->
-    L.value_binds st loc v1 ->
-    L.red_expr c st (L.expr_app_2 v1 [v] nil) (L.out_ter st' r) ->
+    L.red_expr c st (L.expr_app_2 LjsInitEnv.privToBoolean [v]) (L.out_ter st' r) ->
     st = st' /\
     exists b,
     r = L.res_value (L.bool_to_value b) /\
     J.red_expr jst jc (J.spec_to_boolean jv) 
         (J.out_ter jst (J.res_val (J.value_prim (J.prim_bool b)))).
 Proof.
+    introv Hinv Hrel Hlred.
+    inverts Hlred.
+
+    unfold LjsInitEnv.privToBoolean in *.
+    rewrite get_closure_lemma in *.
+    injects.
+    simpl in H4.
+    unfolds in H4.
+    simpl in H4.
+    injects.
+    simpl in H6.
+    inverts H6.
+    inverts H3.
+    unfolds in H2.
+    simpl in H2.
+    inverts H5.
+    simpl in H3.
+    assert (Htodo : v0 = v). skip. substs. (* TODO better heap library *)
+    splits. reflexivity.
+    inverts Hrel;
+    unfolds in H3; try injects; jauto_js.
+    cases_if; 
+    simpl; unfold J.convert_number_to_bool; cases_if; reflexivity.
+    cases_if; 
+    simpl; unfold J.convert_string_to_bool; cases_if; reflexivity.
+    inverts H3. inverts H0.
+Qed.
+
+Lemma get_value_binds : forall c i v,
+    L.get_value c i = Some v ->
+    L.id_binds c i v.
+Proof.
 Admitted.
-*)
+
+Hint Resolve get_value_binds.
+
+Lemma state_invariant_includes_init_ctx : forall BR jst jc c st i v v',
+    state_invariant BR jst jc c st ->
+    L.id_binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'.
+Proof.
+    introv Hinv.
+    unfold state_invariant, includes_init_ctx in Hinv.
+    jauto.
+Qed.
+
+Lemma builtin_assoc : forall BR jst jc c st st' i v r,
+    state_invariant BR jst jc c st ->
+    L.red_expr c st (L.expr_basic (L.expr_id i)) (L.out_ter st' r) ->
+    Mem (i, v) LjsInitEnv.ctx_items ->
+    st = st' /\ r = L.res_value v.
+Proof.
+    introv Hinv Hlred Hmem.
+    inverts Hlred.
+    forwards Hic : state_invariant_includes_init_ctx Hinv; eauto.
+    substs; eauto.
+Qed.
 
 Lemma red_spec_to_boolean_ok : forall jst jc c st st' r je BR, 
     ih_expr je ->
@@ -342,7 +408,55 @@ Lemma red_spec_to_boolean_ok : forall jst jc c st st' r je BR,
 Proof.
     introv IHe Hinv Hlred.
     inverts Hlred.
-Admitted.
+    ljs_out_red_ter.
+
+    forwards (Hlol1&Hlol2) : builtin_assoc Hinv H3.
+    unfold LjsInitEnv.ctx_items.
+    repeat (eapply Mem_here || apply Mem_next). (* TODO VERY SLOW! *)
+    clear H3.
+    substs.
+
+    inverts H5.
+    inverts H6.
+    ljs_out_red_ter.
+
+    specializes IHe Hinv H7.
+    destruct IHe as (st''&Hinv'&[(x&Ha1&v'&Ha2&Ha3)| H]). substs.
+
+    inverts H8.
+    inverts H9.
+
+    forwards (st'''&b&Rb&Hooy) : ljs_to_bool_lemma Hinv' Ha3 H4. substs.
+    unfold concl_spec.
+    eexists. split. eapply Hinv'. left. 
+    jauto_js.
+
+    inverts H2. inverts H0.
+
+    inverts H8.
+    inverts H10.
+
+    destruct H as (jr&Hrs&Hab&Hred).
+    unfold concl_spec.
+    inverts Hred.
+    inverts Hab.
+    unfold J.res_is_normal, J.res_type in H0. tryfalse.
+
+    destruct H as (jr&Hrs&Hab&Hred).
+    unfold concl_spec.
+    jauto_js.
+    right.
+    jauto_js.
+    eapply J.red_spec_expr_get_value_conv.
+    eapply Hrs.
+    eapply J.red_spec_abort.
+    reflexivity.
+    assumption.
+    intro Hzez.
+    inverts Hzez.
+
+    inverts H2. inverts H0.
+Qed.
 
 Lemma res_related_abort : forall BR jst jst' st jr r,
     res_related BR jst st jr r ->

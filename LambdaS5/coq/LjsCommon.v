@@ -175,9 +175,9 @@ Definition get_property store (ptr : object_ptr) (name : prop_name) : resultof (
 
 (* Finds a closure for a function call *)
 
-Fixpoint get_closure_aux limit store (v : value) : resultof value :=
+Fixpoint get_closure_aux limit store (v : value) : resultof closure :=
   match v with
-  | value_closure _ => result_some v
+  | value_closure clo => result_some clo
   | value_object ptr =>
     match limit with
     | 0 => result_bottom
@@ -190,5 +190,5 @@ Fixpoint get_closure_aux limit store (v : value) : resultof value :=
   end
 .
 
-Definition get_closure store (v : value) : resultof value :=
+Definition get_closure store (v : value) : resultof closure :=
   get_closure_aux (num_objects store) store v.
