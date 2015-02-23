@@ -274,6 +274,15 @@ Ltac inv_internal_ljs :=
     end
 .
 
+Ltac ljs_abort := match goal with
+    | H : L.abort (L.out_ter _ (L.res_value _)) |- _ => 
+        let H1 := fresh "H" in 
+        solve [invert H as H1; inverts H1]
+    end.
+
+Ltac inv_internal_fwd_ljs :=
+    (inv_internal_ljs; try ljs_abort); [idtac].
+
 Ltac inv_res_related :=
     match goal with
     | H : res_related _ _ _ |- _ => inverts H
@@ -284,13 +293,54 @@ Ltac inv_resvalue_related :=
     | H : resvalue_related _ _ _ |- _ => inverts H
     end.
 
-Ltac unfold_concl := unfold concl_expr_value, concl_expr_getvalue, concl_stat, concl_spec in *.
+Ltac unfold_concl := unfold concl_expr_value, concl_expr_getvalue, concl_stat, concl_spec.
+ 
+Ltac jauto_js := jauto_set; eauto with js_ljs; repeat (try unfold_concl; jauto_set; eauto with js_ljs).
 
-Ltac jauto_js := repeat (jauto_set; eauto with js_ljs).
-
-Hint Extern 10 => match goal with 
+Ltac js_abort_intercepted := match goal with 
+    | |- ~ J.abort_intercepted_stat _ => let H := fresh "H" in intro H; solve [inverts H]
+    | |- ~ J.abort_intercepted_spec _ => let H := fresh "H" in intro H; solve [inverts H]
     | H : J.abort_intercepted_stat _ |- _ => solve [inverts H]
-    end : js_ljs. 
+    | H : J.abort_intercepted_spec _ |- _ => solve [inverts H]
+    end.
+
+Hint Extern 1 (~ J.abort_intercepted_stat _) => js_abort_intercepted : js_ljs.
+Hint Extern 1 (~ J.abort_intercepted_spec _) => js_abort_intercepted : js_ljs.
+Hint Extern 10 => js_abort_intercepted : js_ljs.
+
+Ltac js_abort_rel_contr := match goal with
+    | Ha : J.abort (J.out_ter ?jst ?x), Hr : res_related _ ?jst _ ?x (L.res_value _) |- _ =>
+        let Hisn := fresh "Hisn" in
+        inverts Ha as Hisn; inverts Hr; unfold J.res_is_normal, J.res_type in Hisn; false
+    end.
+
+Hint Extern 10 => js_abort_rel_contr : js_ljs.
+ 
+Ltac apply_ih_expr := match goal with
+    | H : ih_expr _, HS : state_invariant _ _ _ ?c ?st, 
+      HR : L.red_expr ?c ?st (L.expr_basic _) _ |- _ => 
+        specializes H HS HR; clear HR
+    end.
+
+Ltac apply_ih_stat := match goal with
+    | H : ih_stat _, HS : state_invariant _ _ _ ?c ?st, 
+      HR : L.red_expr ?c ?st (L.expr_basic _) _ |- _ => 
+        specializes H HS HR; clear HR
+    end.
+
+Ltac destr_concl_expr_getvalue H := match type of H with
+    | concl_expr_getvalue _ _ _ _ _ _ _ _ => 
+        let Hres := fresh "Hres" in
+        destruct H as (?jst'&?Hinv'&[(?jv&?Hjred&?lv&Hres&?Hrel)|]); 
+        [match type of Hres with
+         | ?r = _ => is_var r; subst r 
+         end | ]
+    end.
+
+Ltac destr_concl_expr_getvalue_any := match goal with
+    | H : concl_expr_getvalue _ _ _ _ _ _ _ _ |- _ =>
+        destr_concl_expr_getvalue H
+    end.
 
 Lemma red_stat_expr_ok : forall jst jc c st st' r je BR, 
     ih_expr je ->
@@ -299,19 +349,14 @@ Lemma red_stat_expr_ok : forall jst jc c st st' r je BR,
     concl_stat BR jst jc c st st' r (J.stat_expr je).
 Proof.
     introv IH Hinv Hlred.
-    specializes IH Hinv Hlred.
-    unfold_concl.
-    destruct IH as (jst'&Hinv'&[|]). (* TODO better tactics *)
-    jauto_js.
-    substs.
-    jauto_js.
-    jauto_js.
+    apply_ih_expr.
+    destr_concl_expr_getvalue_any; jauto_js.
 Qed.
 (*
 Lemma red_spec_get_value_ok : forall jst jc c st st' r je BR, 
     ih_expr je ->
     state_invariant BR jst jc c st ->
-    L.red_expr c st (L.expr_basic (js_expr_to_ljs je)) (L.out_ter st' r) ->
+    L.red_expr c st (js_expr_to_ljs je) (L.out_ter st' r) ->
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
        (fun jv => exists v, r = L.res_value v /\ value_related BR jv v).
 Proof.
@@ -416,46 +461,29 @@ Proof.
     clear H3.
     substs.
 
-    inverts H5.
-    inverts H6.
+    inv_internal_fwd_ljs.
+    inv_internal_fwd_ljs.
     ljs_out_red_ter.
 
-    specializes IHe Hinv H7.
-    destruct IHe as (st''&Hinv'&[(x&Ha1&v'&Ha2&Ha3)| H]). substs.
+    apply_ih_expr.
+    destr_concl_expr_getvalue_any.
 
-    inverts H8.
-    inverts H9.
+    inv_internal_fwd_ljs.
+    inv_internal_fwd_ljs.
 
-    forwards (st'''&b&Rb&Hooy) : ljs_to_bool_lemma Hinv' Ha3 H4. substs.
-    unfold concl_spec.
-    eexists. split. eapply Hinv'. left. 
+    forwards (st'''&b&Rb&Hooy) : ljs_to_bool_lemma Hinv' Hrel H4. substs.
+    jauto_js.
+    left. 
     jauto_js.
 
-    inverts H2. inverts H0.
+    inv_internal_ljs.
+    inv_internal_fwd_ljs.
 
-    inverts H8.
-    inverts H10.
+    jauto_js.
 
-    destruct H as (jr&Hrs&Hab&Hred).
-    unfold concl_spec.
-    inverts Hred.
-    inverts Hab.
-    unfold J.res_is_normal, J.res_type in H0. tryfalse.
-
-    destruct H as (jr&Hrs&Hab&Hred).
-    unfold concl_spec.
     jauto_js.
     right.
     jauto_js.
-    eapply J.red_spec_expr_get_value_conv.
-    eapply Hrs.
-    eapply J.red_spec_abort.
-    reflexivity.
-    assumption.
-    intro Hzez.
-    inverts Hzez.
-
-    inverts H2. inverts H0.
 Qed.
 
 Lemma res_related_abort : forall BR jst jst' st jr r,
@@ -465,7 +493,7 @@ Lemma res_related_abort : forall BR jst jst' st jr r,
 Proof.
     introv Hrel Hab.
     inverts Hrel.
-    inverts Hab. unfold J.res_is_normal in *. simpls. tryfalse.
+    inverts Hab. unfold J.res_is_normal in *. simpls. false.
     eapply L.res_is_control_exception.
 Qed.
 
@@ -479,34 +507,25 @@ Lemma red_stat_if_ok : forall jst jc c st st' r je jt1 jt2 BR,
 Proof.
     introv IHe IHt1 IHt2 Hinv Hlred.
     inverts Hlred.
-    destruct o.
-    inverts H6.
+    ljs_out_red_ter.
     forwards Hh : red_spec_to_boolean_ok IHe Hinv H5.
     unfold concl_spec in Hh.
     destruct Hh as (jst'&Hinv'&[|]). (* TODO better tactics *)
     jauto_set.
     substs.
     destruct x0.
-    (* true *) 
-    inverts H6.
-    specializes IHt1 Hinv' H8.
+    (* true *)
+    inv_internal_fwd_ljs.
+    apply_ih_stat. 
     unfold concl_stat in *.
     jauto_js.
-    inverts H3. inverts H1.
     (* false *)
-    inverts H6.
+    inv_internal_fwd_ljs. 
     specializes IHt2 Hinv' H8.
     unfold concl_stat in *.
     jauto_js.
-    inverts H3. inverts H1.
     (* abort *)
-    jauto_set. 
-    forwards Hab : res_related_abort H1 H0.
-    inverts H6.
-    inverts Hab. 
-    inverts Hab. 
-    unfold concl_stat.
-    jauto_js.
+    inv_internal_ljs; jauto_js.
 Qed.
 
 Lemma red_stat_throw_ok : forall jst jc c st st' r je BR,
@@ -527,7 +546,7 @@ Admitted. (* TODO lemmas, tactics needed! *)
 
 Lemma red_identifier_ok : forall jst jc st c o i BR,
     heaps_bisim BR jst st ->
-    L.red_expr c st (L.expr_basic (js_expr_to_ljs (J.expr_identifier i))) o ->
+    L.red_expr c st (js_expr_to_ljs (J.expr_identifier i)) o ->
     exists jo,
     J.red_expr jst jc (J.expr_basic (J.expr_identifier i)) jo /\
     out_related BR jo o.
