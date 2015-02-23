@@ -249,6 +249,13 @@ let format_named_vals () =
     let f (i, v) = horzOrVert [text ("Definition " ^ i ^ " := "); format_value v; text "."]
     in vert (List.map f (List.rev !ordered_vals))
 
+let format_ctx_mems c =
+    let format_ctx_mem (l, m) (i, v) = 
+        let ii = Map.find v !vals_store in
+        let f = squish [text ("Definition Mem_" ^ ii ^ " : Mem ("); format_id i; text ", "; text ii; text ") ctx_items := "; m; text "."] in
+        (f :: l, coqconstr true "Mem_next" [text "_"; m]) in
+    vert (List.rev ((fst (List.fold_left format_ctx_mem ([], text "(Mem_here _ _)") (Heap.to_list c)))))
+
 let header () = vert (List.map text [
     "Require Import Utils.";
     "Require Import LjsShared.";
@@ -259,7 +266,10 @@ let header () = vert (List.map text [
     "Open Scope list_scope.";
     "Open Scope string_scope."])
 
-let format_ctx_store (c, st) = vert [header(); format_named_vals (); format_ctx_def c; format_store st]
+let format_ctx_store (c, st) = 
+    let fst = format_store st in
+    let fctx = format_ctx_def c in
+    vert [header(); format_named_vals (); fctx; (* format_ctx_mems c;*) fst]
 
 let ctx_store_to_output o c st = 
     Format.set_margin 200;
