@@ -34,7 +34,7 @@ let named_val i v =
     if Map.mem v vst then Map.find v vst
     else let ii = ident_for i in 
     vals_store := Map.add v ii vst; 
-    ordered_vals := (ii,v) :: !ordered_vals;
+    ordered_vals := (ii,i,v) :: !ordered_vals;
     ii
 
 let format_id i = text ("\"" ^ String.of_list i ^ "\"") (* TODO escaping *)
@@ -198,10 +198,6 @@ and format_value v = match v with
         let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_named_val i v]) in
         coqconstr false "value_closure" [coqconstr true "closure_intro" [format_list (List.map format_ctx_item c); format_option true format_id rid; format_id_list is; format_expr true e]]
 
-let format_ctx (c : ctx) = 
-    let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_named_val i v]) in
-    format_list (List.map format_ctx_item (Heap.to_list c))
-
 let format_attributes a = match a with
     | Coq_attributes_data_of d ->
         let l = [
@@ -238,6 +234,10 @@ let format_object o =
     ] in
     coqrecord l
 
+let format_ctx (c : ctx) = 
+    let format_ctx_item (i, v) = parens (squish [text ("name_"); format_named_val i v; text ", "; format_named_val i v]) in
+    format_list (List.map format_ctx_item (Heap.to_list c))
+
 let format_ctx_def (c : ctx) = 
     vert [text "Definition ctx_items := "; format_ctx c; text "."]
 
@@ -246,13 +246,15 @@ let format_store (st : store) =
     vert ([text "Definition store_items := ["] @ vert_intersperse (text ";") (List.map format_store_object_item (Heap.to_list (st.object_heap))) @ [text "]."])
 
 let format_named_vals () = 
-    let f (i, v) = horzOrVert [text ("Definition " ^ i ^ " := "); format_value v; text "."]
+    let f (ii, i, v) = vert [
+        horzOrVert [text ("Definition " ^ ii ^ " := "); format_value v; text "."];
+        horz [text ("Definition name_" ^ ii ^ " := "); format_id i ; text "."]]
     in vert (List.map f (List.rev !ordered_vals))
 
 let format_ctx_mems c =
     let format_ctx_mem (l, m) (i, v) = 
         let ii = Map.find v !vals_store in
-        let f = squish [text ("Definition Mem_" ^ ii ^ " : Mem ("); format_id i; text ", "; text ii; text ") ctx_items := "; m; text "."] in
+        let f = squish [text ("Definition Mem_" ^ ii ^ " : Mem ("); text ("name_" ^ ii); text ", "; text ii; text ") ctx_items := "; m; text "."] in
         (f :: l, coqconstr true "Mem_next" [text "_"; m]) in
     vert (List.rev ((fst (List.fold_left format_ctx_mem ([], text "(Mem_here _ _)") (Heap.to_list c)))))
 
