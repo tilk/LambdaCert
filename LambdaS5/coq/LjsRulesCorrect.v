@@ -255,24 +255,29 @@ Definition ih_expr k := forall je k', (k' < k)%nat -> th_expr k' je.
 
 Definition ih_stat k := forall jt k', (k' < k)%nat -> th_stat k' jt.
 
-Ltac inv_internal_ljs :=
-    match goal with
-    | H	: L.red_exprh _ _ _ ?e _ |- _ => 
-        match e with 
-        | L.expr_basic _ => fail 
-        | _ => inverts H 
-        end
-    end
-.
-
 Ltac ljs_abort := match goal with
     | H : L.abort (L.out_ter _ (L.res_value _)) |- _ => 
         let H1 := fresh "H" in 
         solve [invert H as H1; inverts H1]
     end.
 
+Ltac inv_internal_ljs :=
+    match goal with
+    | H	: L.red_exprh _ _ _ ?e _ |- _ => 
+        match e with 
+        | L.expr_basic _ => fail 
+        | _ => inverts H; try ljs_abort
+        end
+    end.
+
 Ltac inv_internal_fwd_ljs :=
-    (inv_internal_ljs; try ljs_abort); [idtac].
+    match goal with
+    | H	: L.red_exprh _ _ _ ?e _ |- _ => 
+        match e with 
+        | L.expr_basic _ => fail 
+        | _ => (inverts H; try ljs_abort); [idtac]
+        end
+    end.
 
 Ltac inv_res_related :=
     match goal with
@@ -592,13 +597,18 @@ Proof.
     ljs_out_redh_ter.
     inverts Hlred'.
     repeat inv_internal_fwd_ljs.
-Admitted.
-(*
-(*    ljs_out_redh_ter. *)
-inv_internal_ljs. skip. (* TODO tactic for evaluating! literals! *)
-inv_internal_ljs. ljs_abort.
-Admitted. (* TODO lemmas, tactics needed! *)
-*)
+    ljs_out_redh_ter.
+    apply_ih_expr.
+    destr_concl. (* TODO seems like something to automate *)
+        repeat inv_internal_fwd_ljs.
+        jauto_js.
+        skip. (* TODO *)
+        skip. (* TODO *)
+    inv_internal_ljs.
+    jauto_js.
+    inv_internal_ljs.
+    jauto_js.
+Qed.
 
 Lemma red_stat_return_ok : forall k oje,
     ih_expr k ->
