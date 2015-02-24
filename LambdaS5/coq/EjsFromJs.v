@@ -80,7 +80,7 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         | Some e => E.expr_var_set s (js_expr_to_ejs e)
         end in
     match e with
-    | J.stat_expr e => js_expr_to_ejs e
+    | J.stat_expr e => E.expr_noop (js_expr_to_ejs e)
     | J.stat_label s st => E.expr_label s (js_stat_to_ejs st)
     | J.stat_block sts => E.expr_seqs (List.map js_stat_to_ejs sts)
     | J.stat_var_decl l => E.expr_seq (E.expr_seqs (List.map js_vardecl_to_ejs l)) E.expr_undefined
@@ -111,7 +111,7 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         | J.label_string s => s
         end in 
         E.expr_break s E.expr_undefined
-    | J.stat_try st None None => js_stat_to_ejs st
+    | J.stat_try st None None => E.expr_noop (js_stat_to_ejs st)
     | J.stat_try st (Some (s, st1)) None => E.expr_try_catch (js_stat_to_ejs st) s (js_stat_to_ejs st1)
     | J.stat_try st None (Some st2) => E.expr_try_finally (js_stat_to_ejs st) (js_stat_to_ejs st2)
     | J.stat_try st (Some (s, st1)) (Some st2) => 

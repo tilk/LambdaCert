@@ -355,6 +355,7 @@ Definition make_switch_withdefault e acls def bcls :=
 (* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     match e with
+    | E.expr_noop e => L.expr_hint "" (ejs_to_ljs e) (* just to make induction easier *)
     | E.expr_empty => L.expr_empty
     | E.expr_true => L.expr_true
     | E.expr_false => L.expr_false

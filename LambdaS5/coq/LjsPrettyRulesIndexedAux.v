@@ -1,9 +1,11 @@
 Generalizable All Variables.
 Set Implicit Arguments.
+Require Import Utils.
 Require Import LjsShared.
 Require Import LjsSyntax.
 Require Import LjsPrettyInterm.
 Require Import LjsPrettyRules.
+Require Import LjsPrettyRulesAux.
 Require Import LjsPrettyRulesIndexed.
 Require Import LjsStore.
 Require Import LjsCommon.
@@ -27,9 +29,11 @@ Implicit Type c : ctx.
 Implicit Type ptr : object_ptr.
 Implicit Type obj : object.
 
+(* Induction on height helpers *)
+
 Local Hint Constructors red_expr red_exprh.
 
-Lemma red_expr_forget_h : forall k c st e o, red_exprh k c st e o -> red_expr c st e o.
+Lemma red_expr_forget_h : forall k c st ee o, red_exprh k c st ee o -> red_expr c st ee o.
 Proof.
     introv H. induction* H.
 Qed.
@@ -47,3 +51,14 @@ Proof.
     hint red_exprh_lt. introv H. induction H; induct_height. 
 Qed.
 
+(* Useful tactics and lemmas *)
+
+Module Export Tactics.
+
+Tactic Notation "ljs_out_redh_ter" "in" hyp(Hred) := ljs_out_red_ter in (red_expr_forget_h Hred).
+
+Tactic Notation "ljs_out_redh_ter" := match goal with 
+    | H : red_exprh _ _ _ _ (out_ter _ _) |- _ => ljs_out_redh_ter in H
+    end.
+
+End Tactics.

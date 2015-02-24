@@ -3,7 +3,8 @@ Set Implicit Arguments.
 Require Import LjsShared.
 Require Import JsNumber.
 Require Import Utils.
-Require LjsSyntax LjsPrettyRules LjsPrettyRulesAux LjsPrettyInterm LjsStore LjsAuxiliary.
+Require LjsSyntax LjsPrettyRules LjsPrettyRulesAux LjsPrettyRulesIndexed LjsPrettyRulesIndexedAux
+    LjsPrettyInterm LjsStore LjsAuxiliary.
 Require LjsInitEnv.
 Require EjsSyntax.
 Require JsSyntax JsPrettyInterm JsPrettyRules.
@@ -17,7 +18,8 @@ Local Coercion JsNumber.of_int : Z >-> JsNumber.number.
 Module L. 
 Include LjsSyntax.
 Include LjsPrettyRules.
-Include LjsPrettyRulesAux.
+Include LjsPrettyRulesIndexed.
+Include LjsPrettyRulesIndexedAux.
 Include LjsPrettyInterm.
 Include LjsStore.
 Include LjsAuxiliary.
@@ -38,6 +40,7 @@ Include JsPrettyRules.
 End J.
 
 Import LjsPrettyRulesAux.Tactics.
+Import LjsPrettyRulesIndexedAux.Tactics.
 
 Implicit Type A B : Type.
 Implicit Type s : string.
@@ -216,16 +219,6 @@ Definition concl_stat BR jst jc c st st' r jt :=
     J.red_stat jst jc (J.stat_basic jt) (J.out_ter jst' jr) /\ 
     res_related BR jst' st' jr r.
 
-(*
-Definition concl_spec {A : Type} BR jst jc c st st' r js (P : A -> Prop) :=
-    exists jst',
-    state_invariant BR jst' jc c st' /\ 
-    ((exists x, J.red_spec jst jc js (J.specret_val jst' x) /\ P x) \/
-     (exists jr, 
-        J.red_spec jst jc js (@J.specret_out A (J.out_ter jst' jr)) /\ 
-        res_related BR jst' st' jr r)).
-*)
-
 Definition concl_spec {A : Type} BR jst jc c st st' r js (P : A -> Prop) :=
     exists jst',
     state_invariant BR jst' jc c st' /\ 
@@ -245,28 +238,23 @@ Definition ih_expr je := forall BR jst jc c st st' r,
     L.red_expr c st (L.expr_basic (js_expr_to_ljs je)) (L.out_ter st' r) ->
     concl_expr BR jst jc c st st' r je.
 *)
-Definition ih_expr je := forall BR jst jc c st st' r, 
+Definition th_expr k je := forall BR jst jc c st st' r, 
     state_invariant BR jst jc c st ->
-    L.red_expr c st (L.expr_basic (js_expr_to_ljs je)) (L.out_ter st' r) ->
+    L.red_exprh k c st (L.expr_basic (js_expr_to_ljs je)) (L.out_ter st' r) ->
     concl_expr_getvalue BR jst jc c st st' r je.
 
-Definition ih_stat jt := forall BR jst jc c st st' r, 
+Definition th_stat k jt := forall BR jst jc c st st' r, 
     state_invariant BR jst jc c st ->
-    L.red_expr c st (L.expr_basic (js_stat_to_ljs jt)) (L.out_ter st' r) ->
+    L.red_exprh k c st (L.expr_basic (js_stat_to_ljs jt)) (L.out_ter st' r) ->
     concl_stat BR jst jc c st st' r jt.
 
-Lemma red_expr_literal_ok : forall jst jc c st st' r l BR, 
-    state_invariant BR jst jc c st ->
-    L.red_expr c st (L.expr_basic (js_literal_to_ljs l)) (L.out_ter st' r) ->
-    concl_expr_value BR jst jc c st st' r (J.expr_literal l).
-Proof.
-    introv Hinv Hlred.
-    destruct l as [ | [ | ] | | ]; inverts Hlred; eexists; jauto_set; eauto with js_ljs.
-Qed.
+Definition ih_expr k := forall je k', (k' < k)%nat -> th_expr k' je.
+
+Definition ih_stat k := forall jt k', (k' < k)%nat -> th_stat k' jt.
 
 Ltac inv_internal_ljs :=
     match goal with
-    | H	: L.red_expr _ _ ?e _ |- _ => 
+    | H	: L.red_exprh _ _ _ ?e _ |- _ => 
         match e with 
         | L.expr_basic _ => fail 
         | _ => inverts H 
@@ -318,17 +306,20 @@ Ltac js_abort_rel_contr := match goal with
 Hint Extern 10 => js_abort_rel_contr : js_ljs.
  
 Ltac apply_ih_expr := match goal with
-    | H : ih_expr _, HS : state_invariant _ _ _ ?c ?st, 
-      HR : L.red_expr ?c ?st (L.expr_basic _) _ |- _ => 
-        specializes H HS HR; clear HR
+    | H : ih_expr ?k', HS : state_invariant _ _ _ ?c ?st, 
+      HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
+        let Hle := fresh "Hle" in
+        asserts Hle : (k < k')%nat; [omega | specializes H Hle HS HR; clear Hle; clear HR]
     end.
 
 Ltac apply_ih_stat := match goal with
-    | H : ih_stat _, HS : state_invariant _ _ _ ?c ?st, 
-      HR : L.red_expr ?c ?st (L.expr_basic _) _ |- _ => 
-        specializes H HS HR; clear HR
+    | H : ih_stat ?k', HS : state_invariant _ _ _ ?c ?st, 
+      HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
+        let Hle := fresh "Hle" in
+        asserts Hle : (k < k')%nat; [omega | specializes H HS HR; clear HR]
     end.
 
+(* TODO move to utilities *)
 Ltac destruct_hyp H := match type of H with
     | _ \/ _ => destruct H as [H|H]; try destruct_hyp H
     | _ /\ _ => 
@@ -340,7 +331,7 @@ Ltac destruct_hyp H := match type of H with
     end.
 
 Tactic Notation "autoforwards" simple_intropattern(I) ":" constr(E) :=
-    (forwards I : E; try eassumption); [idtac].
+    (forwards I : E; try eassumption; try omega); [idtac].
 
 Ltac destr_concl := match goal with
     | H : concl_spec _ _ _ _ _ _ _ _ _ |- _ =>
@@ -354,13 +345,23 @@ Ltac destr_concl := match goal with
 Ltac jauto_js := repeat destr_concl; jauto_set; eauto with js_ljs; 
     repeat (try unfold_concl; jauto_set; eauto with js_ljs).
 
-Lemma red_stat_expr_ok : forall jst jc c st st' r je BR, 
-    ih_expr je ->
-    state_invariant BR jst jc c st ->
-    L.red_expr c st (L.expr_basic (js_expr_to_ljs je)) (L.out_ter st' r) ->
-    concl_stat BR jst jc c st st' r (J.stat_expr je).
+(* HERE START PROOFS *)
+
+Lemma red_expr_literal_ok : forall k l,
+    th_expr k (J.expr_literal l).
+Proof.
+    introv.
+    unfolds.
+    introv Hinv Hlred.
+    destruct l as [ | [ | ] | | ]; inverts Hlred; jauto_js; solve [intuition jauto_js].
+Qed.
+
+Lemma red_stat_expr_ok : forall k je, 
+    ih_expr k ->
+    th_stat k (J.stat_expr je).
 Proof.
     introv IH Hinv Hlred.
+    inverts Hlred.
     apply_ih_expr.
     jauto_js.
 Qed.
@@ -387,11 +388,20 @@ Lemma get_closure_lemma : forall st clo, LjsCommon.get_closure st (L.value_closu
 Proof.
     intros. unfolds. destruct (LjsStore.num_objects st); reflexivity. 
 Qed.
+ 
+(* TODO move this one too! *)
+Lemma get_value_binds : forall c i v,
+    L.get_value c i = Some v ->
+    L.id_binds c i v.
+Proof.
+Admitted.
 
-Lemma ljs_to_bool_lemma : forall BR jst jc c st st' r jv v,
+Hint Resolve get_value_binds.
+
+Lemma ljs_to_bool_lemma : forall k BR jst jc c st st' r jv v,
     state_invariant BR jst jc c st ->
     value_related BR jv v -> 
-    L.red_expr c st (L.expr_app_2 LjsInitEnv.privToBoolean [v]) (L.out_ter st' r) ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privToBoolean [v]) (L.out_ter st' r) ->
     st = st' /\
     exists b,
     r = L.res_value (L.bool_to_value b) /\
@@ -404,16 +414,16 @@ Proof.
     unfold LjsInitEnv.privToBoolean in *.
     rewrite get_closure_lemma in *.
     injects.
-    simpl in H4.
-    unfolds in H4.
-    simpl in H4.
+    simpl in H5.
+    unfolds in H5.
+    simpl in H5.
     injects.
-    simpl in H6.
+    simpl in H7.
+    inverts H7.
+    inverts H4.
+    unfolds in H3.
+    simpl in H3.
     inverts H6.
-    inverts H3.
-    unfolds in H2.
-    simpl in H2.
-    inverts H5.
     simpl in H3.
     assert (Htodo : v0 = v). skip. substs. (* TODO better heap library *)
     splits. reflexivity.
@@ -423,17 +433,10 @@ Proof.
     simpl; unfold J.convert_number_to_bool; cases_if; reflexivity.
     cases_if; 
     simpl; unfold J.convert_string_to_bool; cases_if; reflexivity.
-    inverts H3. inverts H0.
+    ljs_abort.
 Qed.
 
-Lemma get_value_binds : forall c i v,
-    L.get_value c i = Some v ->
-    L.id_binds c i v.
-Proof.
-Admitted.
-
-Hint Resolve get_value_binds.
-
+(* TODO should occur earlier *)
 Lemma state_invariant_includes_init_ctx : forall BR jst jc c st i v v',
     state_invariant BR jst jc c st ->
     L.id_binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'.
@@ -443,9 +446,9 @@ Proof.
     jauto.
 Qed.
 
-Lemma builtin_assoc : forall BR jst jc c st st' i v r,
+Lemma builtin_assoc : forall k BR jst jc c st st' i v r,
     state_invariant BR jst jc c st ->
-    L.red_expr c st (L.expr_basic (L.expr_id i)) (L.out_ter st' r) ->
+    L.red_exprh k c st (L.expr_basic (L.expr_id i)) (L.out_ter st' r) ->
     Mem (i, v) LjsInitEnv.ctx_items ->
     st = st' /\ r = L.res_value v.
 Proof.
@@ -455,27 +458,28 @@ Proof.
     substs; eauto.
 Qed.
 
-Lemma red_spec_to_boolean_ok : forall jst jc c st st' r je BR, 
-    ih_expr je ->
+Lemma red_spec_to_boolean_ok : forall k' k jst jc c st st' r je BR, 
+    (k <= k')%nat ->
+    ih_expr k' ->
     state_invariant BR jst jc c st ->
-    L.red_expr c st (L.expr_basic (E.to_bool (js_expr_to_ljs je))) (L.out_ter st' r) ->
+    L.red_exprh k c st (L.expr_basic (E.to_bool (js_expr_to_ljs je))) (L.out_ter st' r) ->
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value_conv J.spec_to_boolean je) 
        (fun jv => exists b, jv = J.value_prim (J.prim_bool b) /\ 
            r = L.res_value (L.bool_to_value b)).
 Proof.
-    introv IHe Hinv Hlred.
+    introv Hleq IHe Hinv Hlred.
     inverts Hlred.
-    ljs_out_red_ter.
+    ljs_out_redh_ter.
 
-    forwards (Hlol1&Hlol2) : builtin_assoc Hinv H3.
+    forwards (Hlol1&Hlol2) : builtin_assoc Hinv H4.
     unfold LjsInitEnv.ctx_items.
     repeat (eapply Mem_here || apply Mem_next). (* TODO VERY SLOW! *)
-    clear H3.
+    clear H4.
     substs.
 
     inv_internal_fwd_ljs.
     inv_internal_fwd_ljs.
-    ljs_out_red_ter.
+    ljs_out_redh_ter.
 
     apply_ih_expr.
     destr_concl.
@@ -485,18 +489,14 @@ Proof.
 
     autoforwards Hbool : ljs_to_bool_lemma.
     destruct_hyp Hbool.
-    jauto_js.
-    left. 
-    jauto_js.
+    solve [repeat intuition jauto_js].
 
     inv_internal_ljs.
     inv_internal_fwd_ljs.
 
     jauto_js.
 
-    jauto_js.
-    right.
-    jauto_js.
+    solve [repeat intuition jauto_js].
 Qed.
 
 Lemma res_related_abort : forall BR jst jst' st jr r,
@@ -510,18 +510,15 @@ Proof.
     eapply L.res_is_control_exception.
 Qed.
 
-Lemma red_stat_if_ok : forall jst jc c st st' r je jt1 jt2 BR, 
-    ih_expr je ->
-    ih_stat jt1 ->
-    ih_stat jt2 ->
-    state_invariant BR jst jc c st ->
-    L.red_expr c st (L.expr_basic (js_stat_to_ljs (J.stat_if je jt1 (Some jt2)))) (L.out_ter st' r) ->
-    concl_stat BR jst jc c st st' r (J.stat_if je jt1 (Some jt2)).
+Lemma red_stat_if_ok : forall k je jt1 jt2,
+    ih_stat k ->
+    ih_expr k ->
+    th_stat k (J.stat_if je jt1 (Some jt2)).
 Proof.
-    introv IHe IHt1 IHt2 Hinv Hlred.
+    introv IHt IHe Hinv Hlred.
     inverts Hlred.
-    ljs_out_red_ter.
-    autoforwards Hh : red_spec_to_boolean_ok.
+    ljs_out_redh_ter.
+    autoforwards Hh : red_spec_to_boolean_ok. 
     destr_concl.
     destruct b.
     (* true *)
@@ -536,19 +533,100 @@ Proof.
     inv_internal_ljs; jauto_js.
 Qed.
 
-Lemma red_stat_throw_ok : forall jst jc c st st' r je BR,
-    ih_expr je ->
-    state_invariant BR jst jc c st ->
-    L.red_expr c st (L.expr_basic (js_stat_to_ljs (J.stat_throw je))) (L.out_ter st' r) ->
-    concl_stat BR jst jc c st st' r (J.stat_throw je).
+Lemma red_stat_throw_ok : forall k je,
+    ih_expr k ->
+    th_stat k (J.stat_throw je).
 Proof.
     introv IHe Hinv Hlred.
-    inverts Hlred.
-    inverts H0.
+    inverts Hlred as Hlred'.
+    ljs_out_redh_ter.
+    inverts Hlred'.
+    repeat inv_internal_fwd_ljs.
+Admitted.
+(*
+(*    ljs_out_redh_ter. *)
+inv_internal_ljs. skip. (* TODO tactic for evaluating! literals! *)
+inv_internal_ljs. ljs_abort.
 Admitted. (* TODO lemmas, tactics needed! *)
+*)
 
-    
-    
+Lemma main_lemma : forall k, (forall jt, th_stat k jt) /\ (forall je, th_expr k je).
+Proof.
+    intro k.
+    induction_wf IH : lt_wf k.
+    asserts IHt : (ih_stat k). unfolds. introv Hle. specializes IH Hle. jauto.
+    asserts IHe : (ih_expr k). unfolds. introv Hle. specializes IH Hle. jauto.
+    clear IH.
+    splits.
+    (* STATEMENTS *)
+    destruct 0.
+    (* stat_expr *)
+    applys red_stat_expr_ok; eassumption.
+    (* stat_label *)
+    skip.
+    (* stat_block *)
+    skip.
+    (* stat_var_decl *)
+    skip.
+    (* stat_if *)
+    skip.
+    (* stat_do_while *)
+    skip.
+    (* stat_while *)
+    skip.
+    (* stat_with *)
+    skip.
+    (* stat_throw *)
+    applys red_stat_throw_ok; eassumption.
+    (* stat_return *)
+    skip.
+    (* stat_break *)
+    skip.
+    (* stat_continue *)
+    skip.
+    (* stat_try *)
+    skip.
+    (* stat_for *)
+    skip.
+    (* stat_for_var *)
+    skip.
+    (* stat_for_in *)
+    skip.
+    (* stat_for_in_var *)
+    skip.
+    (* stat_debugger *)
+    skip.
+    (* stat_switch *)
+    skip.
+    (* EXPRESSIONS *)
+    destruct 0.
+    (* expr_this *)
+    skip.
+    (* expr_identifier *)
+    skip.
+    (* expr_literal *)
+    eapply red_expr_literal_ok.
+    (* expr_object *)
+    skip.
+    (* expr_function *)
+    skip.
+    (* expr_access *)
+    skip.
+    (* expr_member *)
+    skip.
+    (* expr_new *)
+    skip.
+    (* expr_call *)
+    skip.
+    (* expr_unary_op *)
+    skip.
+    (* expr_binary_op *)
+    skip.
+    (* expr_conditional *)
+    skip.
+    (* expr_assign *)
+    skip.
+Qed.
 
 (*
 

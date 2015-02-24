@@ -43,7 +43,7 @@ Ltac ljs_out_red_ter Hred :=
     match type of H with ?x = _ => is_var x end; 
     rewrite H in *; clear H.
 
-Tactic Notation "ljs_out_red_ter" "in" hyp(Hred) := ljs_out_red_ter Hred.
+Tactic Notation "ljs_out_red_ter" "in" constr(Hred) := ljs_out_red_ter Hred.
 
 Tactic Notation "ljs_out_red_ter" := match goal with 
     | H : red_expr _ _ _ (out_ter _ _) |- _ => ljs_out_red_ter in H

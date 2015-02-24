@@ -49,6 +49,7 @@ Inductive expr : Type :=
 | expr_throw : expr -> expr
 | expr_switch : expr -> switchbody -> expr
 | expr_with : expr -> expr -> expr
+| expr_noop : expr -> expr
 | expr_syntaxerror : expr
 with prog : Type :=
 | prog_intro : bool -> list id -> expr -> prog
