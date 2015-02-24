@@ -176,6 +176,9 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
     js_exn_object obj v ->
     res_related BR jst st (J.res_intro J.restype_throw jrv J.label_empty) 
         (L.res_exception (L.value_object ptr))
+| res_related_return : forall jrv v,
+    resvalue_related BR jrv v ->
+    res_related BR jst st (J.res_intro J.restype_return jrv J.label_empty) (L.res_break "%ret" v)
 .
 
 (*
@@ -508,9 +511,10 @@ Proof.
     inverts Hrel.
     inverts Hab. unfold J.res_is_normal in *. simpls. false.
     eapply L.res_is_control_exception.
+    eapply L.res_is_control_break.
 Qed.
 
-Lemma red_stat_if_ok : forall k je jt1 jt2,
+Lemma red_stat_if2_ok : forall k je jt1 jt2,
     ih_stat k ->
     ih_expr k ->
     th_stat k (J.stat_if je jt1 (Some jt2)).
@@ -533,6 +537,52 @@ Proof.
     inv_internal_ljs; jauto_js.
 Qed.
 
+(* TODO move *)
+Ltac inv_literal_ljs := 
+    let H := match goal with
+    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_empty) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_true) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_false) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_null) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_undefined) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic (L.expr_number _)) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic (L.expr_string _)) _ |- _ => constr:H
+    end in inverts H.
+
+Lemma red_stat_if1_ok : forall k je jt,
+    ih_stat k ->
+    ih_expr k ->
+    th_stat k (J.stat_if je jt None).
+Proof.
+    introv IHt IHe Hinv Hlred.
+    inverts Hlred.
+    ljs_out_redh_ter.
+    autoforwards Hh : red_spec_to_boolean_ok. 
+    destr_concl.
+    destruct b.
+    (* true *)
+    inv_internal_fwd_ljs.
+    apply_ih_stat. 
+    jauto_js.
+    (* false *)
+    inv_internal_fwd_ljs.
+    inv_literal_ljs.
+    jauto_js.
+    (* abort *)
+    inv_internal_ljs; jauto_js.
+Qed.
+
+Lemma red_stat_if_ok : forall k je jt ojt,
+    ih_stat k ->
+    ih_expr k ->
+    th_stat k (J.stat_if je jt ojt).
+Proof.
+    introv IHt IHe.
+    destruct ojt.
+    applys red_stat_if2_ok; eassumption.
+    applys red_stat_if1_ok; eassumption.
+Qed.
+
 Lemma red_stat_throw_ok : forall k je,
     ih_expr k ->
     th_stat k (J.stat_throw je).
@@ -549,6 +599,27 @@ inv_internal_ljs. skip. (* TODO tactic for evaluating! literals! *)
 inv_internal_ljs. ljs_abort.
 Admitted. (* TODO lemmas, tactics needed! *)
 *)
+
+Lemma red_stat_return_ok : forall k oje,
+    ih_expr k ->
+    th_stat k (J.stat_return oje).
+Proof.
+    introv IHe Hinv Hlred.
+    inverts Hlred.
+    ljs_out_redh_ter.
+    destruct oje as [je|].
+    apply_ih_expr.
+    inv_internal_ljs.
+    jauto_js.
+    injects.
+    jauto_js.
+    jauto_js.
+    ljs_abort.
+    simpls.
+    inv_literal_ljs.
+    inv_internal_fwd_ljs.
+    jauto_js.
+Qed.
 
 Lemma main_lemma : forall k, (forall jt, th_stat k jt) /\ (forall je, th_expr k je).
 Proof.
@@ -569,7 +640,7 @@ Proof.
     (* stat_var_decl *)
     skip.
     (* stat_if *)
-    skip.
+    applys red_stat_if_ok; eassumption.
     (* stat_do_while *)
     skip.
     (* stat_while *)
@@ -579,7 +650,7 @@ Proof.
     (* stat_throw *)
     applys red_stat_throw_ok; eassumption.
     (* stat_return *)
-    skip.
+    applys red_stat_return_ok; eassumption.
     (* stat_break *)
     skip.
     (* stat_continue *)
