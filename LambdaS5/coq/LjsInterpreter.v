@@ -195,7 +195,7 @@ Definition eval_object_decl runs c st (attrs : objattrs) (l : list (string * pro
                       oattrs_prim_value := primval_v;
                       oattrs_code := code_v 
                     |};
-                    object_properties := Heap.empty
+                    object_properties := \{}
                 |} in
                 eval_object_properties runs c st l obj (fun st obj =>
                   let (st, loc) := add_object st obj

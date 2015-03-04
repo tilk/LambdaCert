@@ -13,6 +13,7 @@ Require Import Coq.Strings.String.
 Import List.ListNotations.
 
 Open Scope list_scope.
+Open Scope container_scope.
 
 Implicit Type st : store.
 Implicit Type e : expr.
@@ -61,7 +62,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_object (objattrs_intro e1 e2 e3 e4 e5) a) o
 | red_expr_object_1 : forall c st class extv ext proto code prim a o,
     value_to_bool extv = Some ext ->
-    red_expr c st (expr_object_2 (object_intro (oattrs_intro proto class ext prim code) Heap.empty) a) o ->
+    red_expr c st (expr_object_2 (object_intro (oattrs_intro proto class ext prim code) \{}) a) o ->
     red_expr c st (expr_object_1 a [value_string class; extv; proto; code; prim]) o
 | red_expr_object_2 : forall c st st1 obj v,
     (st1, v) = add_object st obj ->

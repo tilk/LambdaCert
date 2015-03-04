@@ -3,27 +3,24 @@ Generalizable All Variables.
 Require Import List.
 Require Import Ascii.
 Require Import String.
-Require Import HeapUtils.
-Require LibFsetMy.
+Require Import LjsShared.
 Require Import JsNumber.
 Require Import Coq.Numbers.Natural.Peano.NPeano.
 Require LibStream.
 Open Scope list_scope.
 Open Scope string_scope.
 Open Scope char_scope.
+Open Scope container_scope.
 
-Module Heap := HeapUtils.Heap.
-
-Module Fset := LibFsetMy.FsetImpl.
-
-Fixpoint concat_list_heap {X Y : Type} (front : list (X * Y)) (back : Heap.heap X Y) : Heap.heap X Y :=
+Fixpoint concat_list_heap {X Y : Type} {LT : Lt X} (front : list (X * Y)) (back : finmap X Y) : finmap X Y :=
   match front with
   | nil => back
-  | (key, val) :: tail => concat_list_heap tail (Heap.write back key val)
+  | (key, val) :: tail => concat_list_heap tail (back \( key := val ))
   end
 .
-Definition concat_heaps {X Y : Type} (front back : Heap.heap X Y) :=
-  concat_list_heap (Heap.to_list front) back
+
+Definition concat_heaps {X Y : Type} {LT : Lt X} (front back : finmap X Y) :=
+  concat_list_heap (FinmapImpl.to_list front) back
 .
 
 Fixpoint zip_aux {X Y : Type} (lx : list X) (ly : list Y) (acc : list (X * Y)) : option (list (X * Y)) :=
@@ -144,3 +141,11 @@ Proof.
     skip. (* TODO *)
 Defined.
 
+(* instances *)
+
+Global Instance le_string_inst : Le string.
+Admitted.
+
+Extraction Language Ocaml.
+
+Extract Constant le_string_inst => "LibOrder.Build_Le". (* TODO *)

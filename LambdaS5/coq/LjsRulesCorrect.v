@@ -132,9 +132,9 @@ Definition object_bisim_consistent jst st BR :=
     object_bisim_rnoghost st BR.
 
 Definition object_attributes_related BR jobj obj := forall s, 
-    ~J.Heap.indom (J.object_properties_ jobj) s /\ ~Heap.indom (L.object_properties obj) s \/
+    ~J.Heap.indom (J.object_properties_ jobj) s /\ ~(s \in L.object_properties obj) \/
     exists jptr ptr, 
-        J.Heap.binds (J.object_properties_ jobj) s jptr /\ Heap.binds (L.object_properties obj) s ptr /\
+        J.Heap.binds (J.object_properties_ jobj) s jptr /\ binds (L.object_properties obj) s ptr /\
         attributes_related BR jptr ptr.
 
 Definition object_prim_related BR jobj obj := 
@@ -164,7 +164,7 @@ Inductive resvalue_related BR : J.resvalue -> L.value -> Prop :=
 .
 
 Definition js_exn_object obj v := 
-    Heap.binds (L.object_properties obj) "%js-exn" 
+    binds (L.object_properties obj) "%js-exn" 
         (L.attributes_data_of (L.attributes_data_intro v false false false)).
 
 Inductive res_related BR jst st : J.res -> L.res -> Prop :=
@@ -435,8 +435,7 @@ Proof.
     simpl in H3.
     assert (Htodo : v0 = v). skip. substs. (* TODO better heap library *)
     splits. reflexivity.
-    inverts Hrel;
-    unfolds in H3; try injects; jauto_js.
+    inverts Hrel; try injects; jauto_js. 
     cases_if; 
     simpl; unfold J.convert_number_to_bool; cases_if; reflexivity.
     cases_if; 

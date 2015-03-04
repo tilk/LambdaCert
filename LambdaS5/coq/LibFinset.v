@@ -5,7 +5,7 @@
 
 Set Implicit Arguments.
 Require Import LibTactics LibList.
-Require Import LibSet LibLogic LibEqual LibReflect.
+Require Import LibSet LibLogic LibEqual LibReflect LibOrder.
 Generalizable Variable A.
 
 (** DISCLAIMER: for the time being, this file only contains the
@@ -15,7 +15,7 @@ Generalizable Variable A.
 
 (* ********************************************************************** *)
 (** * Abstract interface for finite sets *)
-
+(*
 Module Type FsetSig.
 
 (** Definitions and operations on finite sets *)
@@ -79,18 +79,18 @@ Print Module Type FsetSig.
 (** * Implementation of finite sets *)
 
 Module Export FsetImpl : FsetSig.
-
+*)
 (** Note: most of the material contained in this module will ultimately
     be moved into the TLC library in a file called LibFset. *)
 
-Definition fset A := list A.
+Definition finset A := list A.
 
 Section Operations.
 Variables (A:Type).
  
-Definition from_list (L : list A) := L.
+Definition from_list (L : list A) : finset A := L.
 
-Definition to_list (E : fset A) := E.
+Definition to_list (E : finset A) : list A := E.
 
 End Operations.
 
@@ -99,58 +99,58 @@ End Operations.
 Section Properties.
 Variables A : Type.
 Implicit Types x : A.
-Implicit Types E : fset A.
+Implicit Types E : finset A.
 
-Instance union_inst : Comparable A -> BagUnion (fset A) :=
+Global Instance union_inst : Comparable A -> BagUnion (finset A) :=
   { union := fun E F => E ++ List.filter (fun x => !LibList.mem_decide x E) F }. 
 
-Instance inter_inst : Comparable A -> BagInter (fset A) :=
+Global Instance inter_inst : Comparable A -> BagInter (finset A) :=
   { inter := fun E F => List.filter (fun x => LibList.mem_decide x F) E }.
 
-Instance remove_inst : Comparable A -> BagRemove (fset A) (fset A) :=
+Global Instance remove_inst : Comparable A -> BagRemove (finset A) (finset A) :=
   { remove := fun E F => List.filter (fun x => !LibList.mem_decide x F) E }.
 
-Instance empty_inst : Comparable A -> BagEmpty (fset A) := 
+Global Instance empty_inst : Comparable A -> BagEmpty (finset A) := 
   { empty := nil }.
 
-Instance in_inst : Comparable A -> BagIn A (fset A) :=
+Global Instance in_inst : Comparable A -> BagIn A (finset A) :=
   { is_in := fun x E => LibList.Mem x E }.
 
-Instance single_inst : Comparable A -> BagSingle A (fset A) := 
+Global Instance single_inst : Comparable A -> BagSingle A (finset A) := 
   { single := fun x => x :: nil }.
 
-Instance incl_inst : Comparable A -> BagIncl (fset A) :=
+Global Instance incl_inst : Comparable A -> BagIncl (finset A) :=
   { incl := fun E F => forall x, x \in E -> x \in F }.
 
-Instance disjoint_inst : Comparable A -> BagDisjoint (fset A) :=
+Global Instance disjoint_inst : Comparable A -> BagDisjoint (finset A) :=
   { disjoint := fun E F => inter E F = empty }.
 
-Lemma fset_extens_eq : forall (cmp : Comparable A) (E : fset A) F,
+Lemma finset_extens_eq : forall (cmp : Comparable A) (E : finset A) F,
   (forall x, x \in E = x \in F) -> E = F.
 Proof.
 (* TODO *)
 Admitted.
 
-Lemma fset_extens : forall (cmp : Comparable A) (E : fset A)  F, 
+Lemma finset_extens : forall (cmp : Comparable A) (E : finset A)  F, 
   E \c F -> F \c E -> E = F.
-Proof. intros. applys fset_extens_eq. extens*. Qed.
+Proof. intros. applys finset_extens_eq. extens*. Qed.
 
-Instance in_empty_eq_inst : forall (cmp : Comparable A), In_empty_eq (A:=A) (T:=fset A).
+Global Instance in_empty_eq_inst : forall (cmp : Comparable A), In_empty_eq (A:=A) (T:=finset A).
 Proof. constructor. simpl. intros. apply Mem_nil_eq. Qed.
 
-Instance in_single_eq_inst : forall (cmp : Comparable A), In_single_eq (A:=A) (T:=fset A).
+Global Instance in_single_eq_inst : forall (cmp : Comparable A), In_single_eq (A:=A) (T:=finset A).
 Proof. constructor. simpl. intros. rewrite Mem_cons_eq. rewrite Mem_nil_eq. rew_logic*. Qed.
 
-Instance in_union_eq_inst : forall (cmp : Comparable A), In_union_eq (A:=A) (T:=fset A).
+Global Instance in_union_eq_inst : forall (cmp : Comparable A), In_union_eq (A:=A) (T:=finset A).
 Proof. Admitted.
 
-Instance in_inter_eq_inst : forall (cmp : Comparable A), In_inter_eq (A:=A) (T:=fset A).
+Global Instance in_inter_eq_inst : forall (cmp : Comparable A), In_inter_eq (A:=A) (T:=finset A).
 Proof. Admitted.
 
-Instance in_remove_eq_inst : forall (cmp : Comparable A), In_remove_eq (A:=A) (T:=fset A).
+Global Instance in_remove_eq_inst : forall (cmp : Comparable A), In_remove_eq (A:=A) (T:=finset A).
 Proof. Admitted.
 
-Lemma mem_decidable : forall (cmp : Comparable A) (s:fset A) x,
+Lemma mem_decidable : forall (cmp : Comparable A) (s:finset A) x,
    Decidable (x \in s).
 Proof.
   intros. applys decidable_make (LibList.mem_decide x s).
@@ -158,9 +158,9 @@ Proof.
 Defined.
 
 End Properties.
-
+(*
 End FsetImpl.
-
+*)
 
 
 (* ********************************************************************** *)

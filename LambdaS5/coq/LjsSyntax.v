@@ -1,3 +1,4 @@
+Require Import LjsShared.
 Require Import Utils.
 Require Import String.
 Require Import JsNumber.
@@ -7,6 +8,7 @@ Require LibStream.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
+Open Scope container_scope.
 
 (* Basic stuff *)
 
@@ -141,7 +143,7 @@ with objattrs : Type :=
 | objattrs_intro : expr -> expr -> expr -> expr -> expr -> objattrs (* class -> extensible -> prototype -> code -> primval -> objattrs *)
 .
 
-Fixpoint expr_fv e : Fset.fset id := match e with
+Fixpoint expr_fv e : finset id := match e with
 | expr_empty
 | expr_null
 | expr_undefined
@@ -175,7 +177,7 @@ Fixpoint expr_fv e : Fset.fset id := match e with
 | expr_try_catch e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_try_finally e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_throw e => expr_fv e
-| expr_lambda is e => expr_fv e \- Fset.from_list is
+| expr_lambda is e => expr_fv e \- LibFinset.from_list is
 | expr_eval e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_hint _ e => expr_fv e
 end
@@ -222,7 +224,7 @@ Definition closure_body clo :=
 
 (* Lexical environments *)
 
-Definition value_heap_type := Heap.heap id value.
+Definition value_heap_type := finmap id value.
 
 Record ctx := ctx_intro {
   value_heap : value_heap_type (* maps names to values *)
@@ -249,7 +251,7 @@ Inductive attributes :=
 
 Definition prop_name := string.
 Definition class_name := string.
-Definition object_props := Heap.heap prop_name attributes.
+Definition object_props := finmap prop_name attributes.
 
 Record oattrs := oattrs_intro {
    oattrs_proto : value;
@@ -280,7 +282,7 @@ Definition default_oattrs : oattrs := {|
 
 Definition default_object : object := {|
   object_attrs := default_oattrs;
-  object_properties := Heap.empty
+  object_properties := \{}
 |}.
 
 Definition object_with_properties props obj :=
@@ -289,7 +291,7 @@ Definition object_with_properties props obj :=
 
 (* Representation of the store *)
 
-Definition object_heap_type := Heap.heap object_ptr object.
+Definition object_heap_type := finmap object_ptr object.
 
 Record store := store_intro {
   object_heap : object_heap_type; (* simulates mutability of objects *)
@@ -298,10 +300,8 @@ Record store := store_intro {
 
 Definition dummy_fresh_locations := nat_stream_from 1%nat.
 
-Definition object_heap_initial : Heap.heap object_ptr object :=
-  Heap.empty.
-Definition loc_heap_initial : Heap.heap id value :=
-  Heap.empty.
+Definition object_heap_initial : object_heap_type := \{}.
+Definition loc_heap_initial : value_heap_type := \{}.
 
 Definition create_store :=
   {| object_heap := object_heap_initial;
