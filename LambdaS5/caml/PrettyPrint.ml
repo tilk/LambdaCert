@@ -22,7 +22,7 @@ and string_of_value_option depth st = function
 
 and string_of_object_ptr depth st ptr =
   if depth = 0 then "<cut>" else
-  match LjsStore.get_object st ptr with
+  match LibFinmap.read_option_inst LibOrder.Build_Lt st ptr with
     | None -> "<reference to non-existing object>"
     | Some obj -> string_of_object (depth-1) st obj
 and string_of_object depth (st : store) obj =

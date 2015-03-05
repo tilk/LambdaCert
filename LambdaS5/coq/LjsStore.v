@@ -15,15 +15,9 @@ Implicit Type obj : object.
 Definition narrow_ctx c s := 
   List.fold_left (fun cc (i : string) => cc \( i := c \( i ))) (LibFinset.to_list s) \{}.
 
-Definition add_object st obj : (store * value) :=
-  match st with
-  | store_intro obj_heap (ptr ::: stream) =>
-    ((store_intro
-      (obj_heap \( ptr := obj))
-      stream
-    ), (value_object ptr))
-  end
-.
+Definition add_object st obj : (store * value) := 
+  let ptr := fresh st in (st \(fresh st := obj), value_object ptr).
+
 Definition add_closure c recid args body : value :=
   let si := match recid with 
     | Some i => expr_fv (expr_lambda args body) \-- i
@@ -50,20 +44,6 @@ Definition closure_ctx clo args :=
     end in
   add_parameters c'' args_name args.
 
-Definition update_object st ptr obj : store :=
-  (* TODO: Remove the old object from the Heap (or fix LibHeap to prevent duplicates) *)
-  match st with
-  | store_intro obj_heap stream => (store_intro (obj_heap \( ptr := obj)) stream)
-  end
-.
-
-Definition get_object st ptr : option object :=
-  object_heap st \( ptr ?)
-.
-
-Definition num_objects st : nat :=
-  List.length (FinmapImpl.to_list (object_heap st)).
-
 Definition ctx_of_obj_aux (o : option ctx) (p : string * attributes) : option ctx  :=
   match o with
   | Some c => 
@@ -79,12 +59,3 @@ Definition ctx_of_obj_aux (o : option ctx) (p : string * attributes) : option ct
 Definition ctx_of_obj obj : option ctx :=
   List.fold_left ctx_of_obj_aux (FinmapImpl.to_list (object_properties obj)) (Some create_ctx)
 .
-
-(* predicates for store lookup *)
-
-Definition object_binds st ptr obj :=
-    binds (object_heap st) ptr obj.
-
-Definition object_indom st ptr :=
-    ptr \in object_heap st.
-

@@ -8,11 +8,24 @@ Open Scope list_scope.
 (* TODO utitities *)
 Definition rel_fst {A B} (R : binary A) : binary (A * B) := fun x y => R (fst x) (fst y).
 
-(* TODO this should get to LibBag later *)
+(* TODO this should get to TLC LibBag later *)
 Class BagReadOption A B T := { read_option : T -> A -> option B }. 
+Class BagFresh A T := { fresh : T -> A }.
 
 Notation "m \( x ?)" := (read_option m x)
   (at level 33, format "m \( x ?)") : container_scope.
+
+(* TODO this should get to TLC LibOrder *)
+Class Minimal A := { minimal : A }.
+Class PickGreater A := { pick_greater : A -> A }.
+
+Class Minimal_lt `{Lt A} `{Minimal A} := { minimal_lt : forall a, lt minimal a }.
+Class PickGreater_lt `{Lt A} `{PickGreater A} := { pick_greater_lt : forall a, lt a (pick_greater a) }.
+
+Instance minimal_inst_nat : Minimal nat := 
+    { minimal := 0 }.
+Instance pick_greater_inst_nat : PickGreater nat := 
+    { pick_greater := S }.
 
 (* Map signature (for hiding the implementation *)
 
@@ -36,6 +49,8 @@ Parameter read_impl : Inhab B -> finmap A B -> A -> B.
 Parameter read_option_impl : finmap A B -> A -> option B.
 Parameter remove_impl : finmap A B -> A -> finmap A B.
 Parameter update_impl : finmap A B -> A -> B -> finmap A B.
+Parameter card_impl : finmap A B -> nat.
+Parameter fresh_impl : Minimal A -> PickGreater A -> finmap A B -> A. (* TODO good typeclasses *)
 
 End Definitions.
 End FinmapSig.
@@ -47,7 +62,10 @@ Section Definitions.
 
 Variables (A B : Type).
 Context {LTA : Lt A}.
+Context {IA : Inhab A}.
 Context {IB : Inhab B}.
+Context {MMA : Minimal A}.
+Context {PGA : PickGreater A}.
 Context {ST : Lt_strict_total_order }.
 
 Inductive finmap_i := finmap_intro {
@@ -78,6 +96,12 @@ Obligation 1.
 Admitted. 
 Definition update_impl M k x : finmap.
 Admitted.
+Definition card_impl M := length (finmap_list M).
+Definition fresh_impl M : A := 
+    match rev (finmap_list M) with 
+    | nil => minimal
+    | (k, x) :: _ => pick_greater k
+    end.
 
 End Definitions.
 End FinmapImpl.
@@ -113,6 +137,12 @@ Global Instance remove_inst : BagRemove (finmap A B) A :=
 Global Instance write_inst : BagUpdate A B (finmap A B) :=
     { update := @update_impl _ _ _ }.
 
+Global Instance card_inst : BagCard (finmap A B) :=
+    { card := @card_impl _ _ _ }.
+
+Global Instance fresh_inst : Minimal A -> PickGreater A -> BagFresh A (finmap A B) :=
+    { fresh := @fresh_impl _ _ _ _ _ }.
+
 End Instances.
 
 (* Extraction.
@@ -131,4 +161,5 @@ Extract Constant FinmapImpl.read_impl => "fun _ m k -> BatMap.find k m".
 Extract Constant FinmapImpl.read_option_impl => "fun _ m k -> try Some (BatMap.find k m) with Not_found -> None".
 Extract Constant FinmapImpl.remove_impl => "fun _ m k -> BatMap.remove k m".
 Extract Constant FinmapImpl.update_impl => "fun _ m k x -> BatMap.add k x m".
-
+Extract Constant FinmapImpl.card_impl => "fun _ m -> BatMap.cardinal m".
+Extract Constant FinmapImpl.fresh_impl => "fun _ mm pg m -> if BatMap.is_empty m then mm else pg (fst (BatMap.max_binding m))".

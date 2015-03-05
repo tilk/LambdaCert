@@ -136,15 +136,15 @@ Qed.
 
 Lemma assert_get_object_from_ptr_out : forall st ptr o cont,
     assert_get_object_from_ptr st ptr cont = result_some o ->
-    exists obj, get_object st ptr = Some obj /\ cont obj = result_some o.
+    exists obj, st \(ptr?) = Some obj /\ cont obj = result_some o.
 Proof.
     introv E. unfold assert_get_object_from_ptr in E.
-    destruct* (get_object st ptr); tryfalse.
+    cases_match_option; eauto.
 Qed.
 
 Lemma assert_get_object_out : forall st v o cont,
     assert_get_object st v cont = result_some o -> 
-    exists ptr obj, v = value_object ptr /\ get_object st ptr = Some obj /\ cont obj = result_some o.
+    exists ptr obj, v = value_object ptr /\ st \(ptr?) = Some obj /\ cont obj = result_some o.
 Proof. 
     introv E. 
     unfold assert_get_object in E.
@@ -491,7 +491,7 @@ Proof.
     do 2 eexists; splits.
     eassumption. substs; eauto.
     eapply is_some_eval_objprops_lemma; try eassumption.
-    intros. simpl in H7. cases_let. ljs_run_inv. eauto.
+    intros. cbv beta in H7. cases_let. ljs_run_inv. eauto.
 Qed.
 
 Lemma eval_break_correct : forall runs c st s e o,
@@ -581,7 +581,7 @@ Lemma eval_eval_correct : forall runs c st e1 e2 o,
             exists s ptr obj c1 e, 
                 v' = value_string s /\
                 v'' = value_object ptr /\ 
-                get_object st'' ptr = Some obj /\ 
+                st'' \(ptr?) = Some obj /\ 
                 ctx_of_obj obj = Some c1 /\
                 desugar_expr s = Some e /\ 
                 runs_type_eval runs c1 st'' e = result_some o)).
@@ -621,7 +621,7 @@ Lemma eval_get_obj_attr_correct : forall runs c st oa e1 o,
     eval_get_obj_attr runs c st e1 oa = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
         exists ptr obj, v1 = value_object ptr /\ 
-            get_object st' ptr = Some obj /\ 
+            st' \(ptr?) = Some obj /\ 
             o = out_ter st' (res_value (get_object_oattr obj oa))).
 Proof.
     introv IH R. unfolds in R.
@@ -635,9 +635,9 @@ Lemma eval_set_obj_attr_correct : forall runs c st oa e1 e2 o,
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
             exists ptr obj obj', v1 = value_object ptr /\
-                get_object st'' ptr = Some obj /\
+                st'' \(ptr?) = Some obj /\
                 set_object_oattr obj oa v2 = result_some obj' /\
-                o = out_ter (update_object st'' ptr obj') (res_value v2))).
+                o = out_ter (st'' \(ptr := obj')) (res_value v2))).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
@@ -655,7 +655,7 @@ Lemma eval_get_attr_correct : forall runs c st pa e1 e2 o,
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
             exists ptr obj s v, v1 = value_object ptr /\
                 v2 = value_string s /\
-                get_object st'' ptr = Some obj /\
+                st'' \(ptr?) = Some obj /\
                 get_object_pattr obj s pa = result_some v /\
                 o = out_ter st'' (res_value v))).
 Proof.
@@ -672,9 +672,9 @@ Lemma eval_set_attr_correct : forall runs c st pa e1 e2 e3 o,
             is_some_value o (runs_type_eval runs c st'' e3) (fun st''' v3 =>
                 exists ptr obj obj' s, v1 = value_object ptr /\
                     v2 = value_string s /\
-                    get_object st''' ptr = Some obj /\
+                    st''' \(ptr?) = Some obj /\
                     set_object_pattr obj s pa v3 = result_some obj' /\
-                    o = out_ter (update_object st''' ptr obj') (res_value v3)))).
+                    o = out_ter (st''' \(ptr := obj')) (res_value v3)))).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
@@ -717,11 +717,11 @@ Lemma eval_set_field_correct : forall runs c st e1 e2 e3 o,
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
             is_some_value o (runs_type_eval runs c st'' e3) (fun st''' v3 =>
                 exists ptr obj s oattrs, v1 = value_object ptr /\
-                    get_object st''' ptr = Some obj /\
+                    st''' \(ptr?) = Some obj /\
                     v2 = value_string s /\
                     get_property st''' ptr s = result_some oattrs /\
                     ((oattrs = None /\ object_extensible obj = true /\
-                        o = out_ter (update_object st''' ptr (set_object_property obj s 
+                        o = out_ter (st''' \(ptr := set_object_property obj s 
                             (attributes_data_of (attributes_data_intro v3 true true true)))) (res_value v3)) \/
                      (oattrs = None /\ object_extensible obj = false /\
                         o = out_ter st''' (res_exception (value_string "unextensible-set"))) \/
@@ -731,13 +731,13 @@ Lemma eval_set_field_correct : forall runs c st e1 e2 e3 o,
                      (exists data, oattrs = Some (attributes_data_of data) /\
                         get_object_property obj s <> None /\
                         attributes_data_writable data = true /\
-                        o = out_ter (update_object st''' ptr (set_object_property obj s
+                        o = out_ter (st''' \(ptr := set_object_property obj s
                             (attributes_data_of (attributes_data_value_update data v3)))) (res_value v3)) \/
                      (exists data, oattrs = Some (attributes_data_of data) /\
                         get_object_property obj s = None /\
                         object_extensible obj = true /\
                         attributes_data_writable data = true /\
-                        o = out_ter (update_object st''' ptr (set_object_property obj s 
+                        o = out_ter (st''' \(ptr := set_object_property obj s 
                             (attributes_data_of (attributes_data_intro v3 true true true)))) (res_value v3)) \/
                      (exists data, oattrs = Some (attributes_data_of data) /\
                         attributes_data_writable data = true /\
@@ -768,7 +768,7 @@ Lemma eval_delete_field_correct : forall runs c st e1 e2 o,
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
             exists ptr obj s oattrs, v1 = value_object ptr /\
-                get_object st'' ptr = Some obj /\
+                st'' \(ptr?) = Some obj /\
                 v2 = value_string s /\
                 get_object_property obj s = oattrs /\
                 ((oattrs = None /\ o = out_ter st'' (res_value value_false)) \/
@@ -777,7 +777,7 @@ Lemma eval_delete_field_correct : forall runs c st e1 e2 o,
                   o = out_ter st'' (res_exception (value_string "unconfigurable-delete"))) \/
                  (exists attrs, oattrs = Some attrs /\
                   attributes_configurable attrs = true /\
-                  o = out_ter (update_object st'' ptr (delete_object_property obj s)) (res_value value_true))))).
+                  o = out_ter (st'' \(ptr := delete_object_property obj s)) (res_value value_true))))).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
@@ -790,7 +790,7 @@ Lemma eval_own_field_names_correct : forall runs c st e o,
     eval_own_field_names runs c st e = result_some o ->
     is_some_value o (runs_type_eval runs c st e) (fun st' v =>
         exists ptr obj st'' v', v = value_object ptr /\
-            get_object st' ptr = Some obj /\
+            st' \(ptr?) = Some obj /\
             (st'', v') = add_object st' (make_prop_list obj) /\
             o = out_ter st'' (res_value v')).
 Proof.

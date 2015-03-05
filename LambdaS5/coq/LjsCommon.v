@@ -1,7 +1,7 @@
 Set Implicit Arguments.
+Require Import LjsShared.
 Require Import LjsSyntax.
 Require Import Utils.
-Require Import String.
 Require Import LjsValues.
 Require Import LjsStore.
 Require Import LjsMonads.
@@ -171,7 +171,7 @@ Fixpoint get_property_aux limit store (ptr : object_ptr) (name : prop_name) : re
 .
 
 Definition get_property store (ptr : object_ptr) (name : prop_name) : resultof (option attributes) :=
-  get_property_aux (num_objects store) store ptr name. 
+  get_property_aux (card store) store ptr name. 
 
 (* Finds a closure for a function call *)
 
@@ -191,4 +191,4 @@ Fixpoint get_closure_aux limit store (v : value) : resultof closure :=
 .
 
 Definition get_closure store (v : value) : resultof closure :=
-  get_closure_aux (num_objects store) store v.
+  get_closure_aux (card store) store v.

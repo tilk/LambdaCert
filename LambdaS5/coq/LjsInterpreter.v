@@ -37,10 +37,10 @@ Implicit Type c : ctx.
 (* Unpacks a store to get an object, calls the predicate with this
 * object, and updates the object to the returned value. *)
 Definition change_object_cont (st : store) (ptr : object_ptr) (cont : object -> (store -> object -> value -> result) -> result) : result :=
-  match get_object st ptr with
+  match st \(ptr?) with
   | Some obj =>
       cont obj (fun st new_obj ret =>
-        result_some (out_ter (LjsStore.update_object st ptr new_obj) (res_value ret))
+        result_some (out_ter (st \(ptr := new_obj)) (res_value ret))
       )
   | None => result_impossible "Pointer to a non-existing object."
   end
@@ -275,7 +275,7 @@ Definition eval_delete_field runs c st (left_expr right_expr : expr) : result :=
             match get_object_property obj name with
             | Some attr => 
               if attributes_configurable attr 
-              then result_value (update_object st left_ptr (delete_object_property obj name)) value_true
+              then result_value (st \(left_ptr := delete_object_property obj name)) value_true
               else result_exception st (value_string "unconfigurable-delete")
             | None => result_value st value_false
             end

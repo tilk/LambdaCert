@@ -71,7 +71,7 @@ Definition assert_get_object_ptr {A : Type} v (cont : object_ptr -> resultof A) 
 .
 
 Definition assert_get_object_from_ptr {A : Type} store (ptr : object_ptr) (cont : object -> resultof A) : resultof A :=
-  match get_object store ptr with
+  match store \(ptr?) with
   | Some obj => cont obj
   | None => result_impossible "Pointer to a non-existing object."
   end

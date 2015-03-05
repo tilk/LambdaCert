@@ -122,7 +122,7 @@ Definition object_bisim_lnoghost jst BR :=
     forall jptr ptr, BR jptr ptr -> J.object_indom jst jptr.
 
 Definition object_bisim_rnoghost st BR :=
-    forall jptr ptr, BR jptr ptr -> L.object_indom st ptr.
+    forall jptr ptr, BR jptr ptr -> ptr \in st.
 
 Definition object_bisim_consistent jst st BR :=
     object_bisim_lfun BR /\
@@ -148,7 +148,7 @@ Definition object_related BR jobj obj :=
 Definition heaps_bisim BR jst st := forall jptr ptr jobj obj, 
      BR jptr ptr -> 
      J.object_binds jst jptr jobj ->
-     L.object_binds st ptr obj ->
+     binds st ptr obj ->
      object_related BR jobj obj.
 
 Definition js_literal_to_ljs jl := E.ejs_to_ljs (E.js_literal_to_ejs jl).
@@ -172,7 +172,7 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
     resvalue_related BR jrv v ->
     res_related BR jst st (J.res_intro J.restype_normal jrv J.label_empty) (L.res_value v)
 | res_related_throw : forall jrv ptr obj v,
-    L.object_binds st ptr obj ->
+    binds st ptr obj ->
     js_exn_object obj v ->
     res_related BR jst st (J.res_intro J.restype_throw jrv J.label_empty) 
         (L.res_exception (L.value_object ptr))
@@ -392,11 +392,16 @@ Qed.
 *)
 
 (* TODO move this lemma! *)
+Lemma get_closure_aux_lemma : forall k st clo, LjsCommon.get_closure_aux k st (L.value_closure clo) = L.result_some clo.
+Proof.
+    destruct k; reflexivity.
+Qed.
+
 Lemma get_closure_lemma : forall st clo, LjsCommon.get_closure st (L.value_closure clo) = L.result_some clo.
 Proof.
-    intros. unfolds. destruct (LjsStore.num_objects st); reflexivity. 
-Qed.
- 
+    intros. unfolds. rewrite get_closure_aux_lemma. reflexivity.
+Qed. 
+
 (* TODO should be generic in Finmap! *)
 Lemma get_value_binds : forall c i v,
     c \(i?) = Some v ->

@@ -287,20 +287,9 @@ Definition object_with_properties props obj :=
 
 (* Representation of the store *)
 
-Definition object_heap_type := finmap object_ptr object.
+Definition store := finmap object_ptr object.
 
-Record store := store_intro {
-  object_heap : object_heap_type; (* simulates mutability of objects *)
-  fresh_locations : LibStream.stream nat 
-}.
-
-Definition dummy_fresh_locations := nat_stream_from 1%nat.
-
-Definition object_heap_initial : object_heap_type := \{}.
-
-Definition create_store :=
-  {| object_heap := object_heap_initial;
-     fresh_locations := dummy_fresh_locations |}.
+Definition create_store : store := \{}.
 
 Definition create_ctx : ctx := \{}.
 

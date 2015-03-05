@@ -243,7 +243,7 @@ let format_ctx_def (c : ctx) =
 
 let format_store (st : store) =
     let format_store_object_item (l, o) = parens (squish [format_ptr l; text ", "; format_object o]) in
-    vert ([text "Definition store_items := ["] @ vert_intersperse (text ";") (List.map format_store_object_item (LibFinmap.FinmapImpl.to_list LibOrder.Build_Lt (st.object_heap))) @ [text "]."])
+    vert ([text "Definition store_items := ["] @ vert_intersperse (text ";") (List.map format_store_object_item (LibFinmap.FinmapImpl.to_list LibOrder.Build_Lt st)) @ [text "]."])
 
 let format_named_vals () = 
     let f (ii, i, v) = vert [

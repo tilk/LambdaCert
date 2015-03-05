@@ -63,13 +63,13 @@ Proof.
 Qed.
 
 Lemma assert_get_object_from_ptr_lemma : forall {A st ptr obj} cont, 
-    get_object st ptr = Some obj -> @assert_get_object_from_ptr A st ptr cont = cont obj.
+    st \(ptr?) = Some obj -> @assert_get_object_from_ptr A st ptr cont = cont obj.
 Proof.
-    introv H. unfolds. rewrite H. reflexivity.
+    introv H. unfolds. simpls; rewrite H. reflexivity.
 Qed.
 
 Lemma assert_get_object_lemma : forall {A st ptr obj} cont, 
-    get_object st ptr = Some obj -> @assert_get_object A st (value_object ptr) cont = cont obj.
+    st \(ptr?) = Some obj -> @assert_get_object A st (value_object ptr) cont = cont obj.
 Proof.
     introv H. unfolds. rewrite assert_get_object_ptr_lemma. 
     auto using assert_get_object_from_ptr_lemma.
@@ -106,9 +106,9 @@ Proof.
 Qed.
 
 Lemma change_object_cont_lemma : forall {st ptr obj} cont, 
-    get_object st ptr = Some obj -> 
+    st \(ptr?) = Some obj -> 
     change_object_cont st ptr cont = cont obj (fun st new_obj ret =>
-        result_some (out_ter (LjsStore.update_object st ptr new_obj) (res_value ret))).
+        result_some (out_ter (st \(ptr := new_obj)) (res_value ret))).
 Proof.
     introv H. unfolds. rewrite H. reflexivity.
 Qed.
@@ -149,11 +149,11 @@ Ltac ljs_eval :=
     | H : runs_type_eval ?runs ?c ?st ?e = _ |- eval_cont ?runs ?c ?st ?e _ = _ => rewrite (eval_cont_lemma _ H)
     | H : runs_type_eval ?runs ?c ?st ?e = result_some (out_ter _ (res_value _)) 
         |- if_eval_return ?runs ?c ?st ?e _ = _ => rewrite (if_eval_return_lemma _ H)
-    | H : get_object ?st ?ptr = Some _ |- assert_get_object_from_ptr ?st ?ptr _ = _ => 
+    | H : ?st \( ?ptr ?) = Some _ |- assert_get_object_from_ptr ?st ?ptr _ = _ => 
         rewrite (assert_get_object_from_ptr_lemma _ H)
-    | H : get_object ?st ?ptr = Some _ |- assert_get_object ?st (value_object ?ptr) _ = _ => 
+    | H : ?st \( ?ptr ?) = Some _ |- assert_get_object ?st (value_object ?ptr) _ = _ => 
         rewrite (assert_get_object_lemma _ H)
-    | H : get_object ?st ?ptr = Some _ |- change_object_cont ?st ?ptr _ = _ => 
+    | H : ?st \( ?ptr ?) = Some _ |- change_object_cont ?st ?ptr _ = _ => 
         rewrite (change_object_cont_lemma _ H)
     | H : value_to_bool ?v = Some _ |- assert_get_bool ?v _ = _ => rewrite (assert_get_bool_lemma _ H)
     | |- assert_get_bool value_true _ = _ => rewrite (assert_get_bool_true_lemma _)
@@ -246,7 +246,6 @@ Proof.
     (* [] *)
     simpl.
     ljs_inv_red.
-    cases_let.
     injects.
     reflexivity.
     (* [] *)
@@ -355,7 +354,7 @@ Proof.
     unfolds.
     repeat ljs_eval_push.
     cases_let.
-    injects.
+    match goal with H : (_, _) = (_, _) |- _ => injects H end.
     reflexivity.
     (* op1 *)
     unfolds.
