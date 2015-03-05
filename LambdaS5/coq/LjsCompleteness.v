@@ -37,9 +37,10 @@ Implicit Type r : res.
 
 (* Lemmas on monadic ops *)
 
-Lemma assert_deref_lemma : forall {A c i v} cont, c \(i?) = Some v -> @assert_deref A c i cont = cont v.
+Lemma assert_deref_lemma : forall {A c i v} cont, binds c i v -> @assert_deref A c i cont = cont v.
 Proof.
-    introv H. unfolds. rewrite H. reflexivity.
+    introv H. unfolds. rewrite <- read_option_binds_eq in H.
+    unfold ctx. rewrite H. reflexivity.
 Qed.
 
 Lemma eval_cont_lemma : forall {A runs c st e re} cont,
@@ -63,15 +64,16 @@ Proof.
 Qed.
 
 Lemma assert_get_object_from_ptr_lemma : forall {A st ptr obj} cont, 
-    st \(ptr?) = Some obj -> @assert_get_object_from_ptr A st ptr cont = cont obj.
+    binds st ptr obj -> @assert_get_object_from_ptr A st ptr cont = cont obj.
 Proof.
-    introv H. unfolds. simpls; rewrite H. reflexivity.
+    introv H. unfolds. rewrite <- read_option_binds_eq in H. rewrite H. reflexivity.
 Qed.
 
 Lemma assert_get_object_lemma : forall {A st ptr obj} cont, 
-    st \(ptr?) = Some obj -> @assert_get_object A st (value_object ptr) cont = cont obj.
+    binds st ptr obj -> @assert_get_object A st (value_object ptr) cont = cont obj.
 Proof.
-    introv H. unfolds. rewrite assert_get_object_ptr_lemma. 
+    introv H. unfolds. 
+    rewrite assert_get_object_ptr_lemma. 
     auto using assert_get_object_from_ptr_lemma.
 Qed.
 
@@ -106,11 +108,11 @@ Proof.
 Qed.
 
 Lemma change_object_cont_lemma : forall {st ptr obj} cont, 
-    st \(ptr?) = Some obj -> 
+    binds st ptr obj -> 
     change_object_cont st ptr cont = cont obj (fun st new_obj ret =>
         result_some (out_ter (st \(ptr := new_obj)) (res_value ret))).
 Proof.
-    introv H. unfolds. rewrite H. reflexivity.
+    introv H. unfolds. rewrite <- read_option_binds_eq in H. unfold store. rewrite H. reflexivity.
 Qed.
 
 Lemma if_out_ter_lemma : forall {re st r} cont,
@@ -145,15 +147,15 @@ Qed.
 
 Ltac ljs_eval :=
     match goal with
-    | H : ?c \( ?i ?) = Some _ |- assert_deref ?c ?i _ = _ => rewrite (assert_deref_lemma _ H)
+    | H : binds ?c ?i _ |- assert_deref ?c ?i _ = _ => rewrite (assert_deref_lemma _ H)
     | H : runs_type_eval ?runs ?c ?st ?e = _ |- eval_cont ?runs ?c ?st ?e _ = _ => rewrite (eval_cont_lemma _ H)
     | H : runs_type_eval ?runs ?c ?st ?e = result_some (out_ter _ (res_value _)) 
         |- if_eval_return ?runs ?c ?st ?e _ = _ => rewrite (if_eval_return_lemma _ H)
-    | H : ?st \( ?ptr ?) = Some _ |- assert_get_object_from_ptr ?st ?ptr _ = _ => 
+    | H : binds ?st ?ptr _ |- assert_get_object_from_ptr ?st ?ptr _ = _ => 
         rewrite (assert_get_object_from_ptr_lemma _ H)
-    | H : ?st \( ?ptr ?) = Some _ |- assert_get_object ?st (value_object ?ptr) _ = _ => 
+    | H : binds ?st ?ptr _ |- assert_get_object ?st (value_object ?ptr) _ = _ => 
         rewrite (assert_get_object_lemma _ H)
-    | H : ?st \( ?ptr ?) = Some _ |- change_object_cont ?st ?ptr _ = _ => 
+    | H : binds ?st ?ptr _ |- change_object_cont ?st ?ptr _ = _ => 
         rewrite (change_object_cont_lemma _ H)
     | H : value_to_bool ?v = Some _ |- assert_get_bool ?v _ = _ => rewrite (assert_get_bool_lemma _ H)
     | |- assert_get_bool value_true _ = _ => rewrite (assert_get_bool_true_lemma _)

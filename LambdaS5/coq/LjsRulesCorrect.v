@@ -402,15 +402,6 @@ Proof.
     intros. unfolds. rewrite get_closure_aux_lemma. reflexivity.
 Qed. 
 
-(* TODO should be generic in Finmap! *)
-Lemma get_value_binds : forall c i v,
-    c \(i?) = Some v ->
-    binds c i v.
-Proof.
-Admitted.
-
-Hint Resolve get_value_binds.
-
 Lemma ljs_to_bool_lemma : forall k BR jst jc c st st' r jv v,
     state_invariant BR jst jc c st ->
     value_related BR jv v -> 

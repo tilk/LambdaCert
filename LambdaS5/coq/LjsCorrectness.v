@@ -927,7 +927,8 @@ Proof.
     (* false *)
     ljs_run_inv. apply red_expr_false.
     (* id *)
-    lets (v&Hv&Ho): eval_id_correct IH R. 
+    lets (v&Hv&Ho): eval_id_correct IH R.
+    rewrite read_option_binds_eq in Hv. 
     inverts Ho.
     eapply red_expr_id; eassumption.
     (* object *)
@@ -954,6 +955,7 @@ Proof.
     destruct H as (ptr&obj&s&v1&Hy1&Hy2&Hy3&Hy4&Hy5).
     inverts Hy1. inverts Hy2.
     inverts Hy5.
+    rewrite read_option_binds_eq in Hy3. 
     eapply red_expr_get_attr_2; eauto.
     (* set_attr *)
     lets H: eval_set_attr_correct IH R.
@@ -963,12 +965,14 @@ Proof.
     destruct H as (ptr&obj&obj'&s&Hy1&Hy2&Hy3&Hy4&Hy5).
     inverts Hy1. inverts Hy2.
     inverts Hy5.
+    rewrite read_option_binds_eq in Hy3.  
     eapply red_expr_set_attr_3; eauto.
     (* get_obj_attr *)
     lets H: eval_get_obj_attr_correct IH R.
     ljs_pretty_advance red_expr_get_obj_attr red_expr_get_obj_attr_1_abort.
     destruct H as (ptr&obj&Hy1&Hy2&Hy3).
     inverts Hy1. inverts Hy3.
+    rewrite read_option_binds_eq in Hy2. 
     eapply red_expr_get_obj_attr_1; eauto.
     (* set_obj_attr *)
     lets H: eval_set_obj_attr_correct IH R.
@@ -976,6 +980,7 @@ Proof.
     ljs_pretty_advance red_expr_set_obj_attr_1 red_expr_set_obj_attr_2_abort.
     destruct H as (ptr&obj&obj'&Hy1&Hy2&Hy3&Hy4).
     inverts Hy1. inverts Hy4.
+    rewrite read_option_binds_eq in Hy2. 
     eapply red_expr_set_obj_attr_2; eauto.
     (* get_field *)
     lets H: eval_get_field_correct IH R.
@@ -995,6 +1000,7 @@ Proof.
     ljs_pretty_advance red_expr_set_field_1 red_expr_set_field_2_abort.
     ljs_pretty_advance red_expr_set_field_2 red_expr_set_field_3_abort.
     destruct H as (ptr&obj&s&oattrs&Hv&Ho&Hs&Hp&H).
+    rewrite read_option_binds_eq in Ho. 
     substs.
     eapply red_expr_set_field_3; try eassumption.
     repeat destruct_or H; repeat destruct_exists H; destructs H; try subst o;
@@ -1012,6 +1018,7 @@ Proof.
     ljs_pretty_advance red_expr_delete_field red_expr_delete_field_1_abort.
     ljs_pretty_advance red_expr_delete_field_1 red_expr_delete_field_2_abort.
     destruct H as (ptr&obj&s&oattrs&Hv&Ho&Hs&Hp&H).
+    rewrite read_option_binds_eq in Ho. 
     inverts Hv. inverts Hs.
     eapply red_expr_delete_field_2; try eassumption.
     repeat destruct_or H; repeat destruct_exists H; destructs H; subst o;
@@ -1023,7 +1030,8 @@ Proof.
     lets H: eval_own_field_names_correct IH R.
     ljs_pretty_advance red_expr_own_field_names red_expr_own_field_names_1_abort.
     repeat destruct_exists H.
-    destructs H.
+    destruct H as (Hv&Ho&Ha&Hb).
+    rewrite read_option_binds_eq in Ho. 
     substs.
     eapply red_expr_own_field_names_1; eauto.
     (* op1 *)
@@ -1119,6 +1127,7 @@ Proof.
     ljs_pretty_advance red_expr_eval red_expr_eval_1_abort.
     ljs_pretty_advance red_expr_eval_1 red_expr_eval_2_abort.
     jauto_set.
+    rewrite read_option_binds_eq in H1. 
     substs.
     eapply red_expr_eval_2; eauto.
     ljs_run_inv.

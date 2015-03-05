@@ -1,6 +1,6 @@
 Require Import LibTactics LibList LibListSorted.
 Require Import LibSet LibLogic LibEqual LibReflect LibOrder LibRelation.
-Generalizable Variable A R B.
+Generalizable Variable A R B T.
 
 Import ListNotations.
 Open Scope list_scope.
@@ -14,6 +14,25 @@ Class BagFresh A T := { fresh : T -> A }.
 
 Notation "m \( x ?)" := (read_option m x)
   (at level 33, format "m \( x ?)") : container_scope.
+
+Class ReadOptionBinds_eq `{BagReadOption A B T} `{BagBinds A B T} :=
+    { read_option_binds_eq : forall M k x, (M \(k?) = Some x) = binds M k x }.
+
+Class ReadOptionBinds `{BagReadOption A B T} `{BagBinds A B T} :=
+    { read_option_binds : forall M k x, M \(k?) = Some x -> binds M k x }.
+
+Class ReadOptionBinds_inv `{BagReadOption A B T} `{BagBinds A B T} :=
+    { read_option_binds_inv : forall M k x, binds M k x -> M \(k?) = Some x }.
+
+Instance read_option_binds_from_read_option_binds_eq : 
+    forall `{BagReadOption A B T} `{BagBinds A B T},
+    ReadOptionBinds_eq -> ReadOptionBinds.
+Proof. constructor. introv I. rewrite <- read_option_binds_eq. assumption. Qed.
+
+Instance read_option_binds_inv_from_read_option_binds_eq : 
+    forall `{BagReadOption A B T} `{BagBinds A B T},
+    ReadOptionBinds_eq -> ReadOptionBinds_inv.
+Proof. constructor. introv I. rewrite read_option_binds_eq. assumption. Qed.
 
 (* TODO this should get to TLC LibOrder *)
 Class Minimal A := { minimal : A }.
@@ -51,6 +70,8 @@ Parameter remove_impl : finmap A B -> A -> finmap A B.
 Parameter update_impl : finmap A B -> A -> B -> finmap A B.
 Parameter card_impl : finmap A B -> nat.
 Parameter fresh_impl : Minimal A -> PickGreater A -> finmap A B -> A. (* TODO good typeclasses *)
+
+Parameter read_option_binds_eq_impl : forall M k x, (read_option_impl M k = Some x) = binds_impl M k x.
 
 End Definitions.
 End FinmapSig.
@@ -103,6 +124,10 @@ Definition fresh_impl M : A :=
     | (k, x) :: _ => pick_greater k
     end.
 
+Lemma read_option_binds_eq_impl : forall M k x, (read_option_impl M k = Some x) = binds_impl M k x.
+Proof.
+Admitted.
+
 End Definitions.
 End FinmapImpl.
 
@@ -143,7 +168,13 @@ Global Instance card_inst : BagCard (finmap A B) :=
 Global Instance fresh_inst : Minimal A -> PickGreater A -> BagFresh A (finmap A B) :=
     { fresh := @fresh_impl _ _ _ _ _ }.
 
+Global Instance read_option_binds_eq_inst : ReadOptionBinds_eq :=
+    { read_option_binds_eq := @read_option_binds_eq_impl _ _ _ }.
+
 End Instances.
+
+Global Opaque empty_inst single_bind_inst in_inst binds_inst read_inst
+    read_option_inst remove_inst write_inst card_inst fresh_inst.
 
 (* Extraction.
  * Ordering relation is ignored, because it does not extracts well.

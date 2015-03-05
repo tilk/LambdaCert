@@ -35,7 +35,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_true : forall c st, red_expr c st expr_true (out_ter st (res_value value_true))
 | red_expr_false : forall c st, red_expr c st expr_false (out_ter st (res_value value_false))
 | red_expr_id : forall c st i v, 
-    c \(i?) = Some v -> 
+    binds c i v -> 
     red_expr c st (expr_id i) (out_ter st (res_value v))
 | red_expr_lambda : forall c st args body v,
     v = add_closure c None args body ->
@@ -98,7 +98,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_get_attr_1 pa o e2) o
 | red_expr_get_attr_2 : forall c st' st pa s ptr obj v,
-    st \(ptr?) = Some obj ->
+    binds st ptr obj ->
     get_object_pattr obj s pa = result_some v ->
     red_expr c st' (expr_get_attr_2 pa (value_object ptr) (out_ter st (res_value (value_string s)))) (out_ter st (res_value v))
 | red_expr_get_attr_2_abort : forall c st pa v1 o,
@@ -125,7 +125,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_set_attr_2 pa v1 o e3) o
 | red_expr_set_attr_3 : forall c st' st st1 pa ptr obj obj' s v,
-    st \(ptr?) = Some obj ->
+    binds st ptr obj ->
     set_object_pattr obj s pa v = result_some obj' ->
     st1 = st \(ptr := obj') ->
     red_expr c st' (expr_set_attr_3 pa (value_object ptr) (value_string s) (out_ter st (res_value v))) (out_ter st1 (res_value v))
@@ -139,7 +139,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_get_obj_attr_1 oa o) o' ->
     red_expr c st (expr_get_obj_attr oa e1) o'
 | red_expr_get_obj_attr_1 : forall c st' st oa ptr obj,
-    st \(ptr?) = Some obj ->
+    binds st ptr obj ->
     red_expr c st' (expr_get_obj_attr_1 oa (out_ter st (res_value (value_object ptr)))) (out_ter st (res_value (get_object_oattr obj oa)))
 | red_expr_get_obj_attr_1_abort : forall c st oa o,
     abort o ->
@@ -158,7 +158,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_set_obj_attr_1 oa o e2) o
 | red_expr_set_obj_attr_2 : forall c st' st st1 oa ptr obj obj' v,
-    st \(ptr?) = Some obj ->
+    binds st ptr obj ->
     set_object_oattr obj oa v = result_some obj' ->
     st1 = st \(ptr := obj') ->
     red_expr c st' (expr_set_obj_attr_2 oa (value_object ptr) (out_ter st (res_value v))) (out_ter st1 (res_value v))
@@ -214,7 +214,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_set_field_2 v1 o e3) o
 | red_expr_set_field_3 : forall c st' st ptr obj oattr s v3 v4 o,
     get_property st ptr s = result_some oattr ->
-    st \(ptr?) = Some obj ->
+    binds st ptr obj ->
     red_expr c st (expr_set_field_4 ptr obj oattr s v3) o ->
     red_expr c st' (expr_set_field_3 (value_object ptr) (value_string s) (out_ter st (res_value v3))) o
 | red_expr_set_field_3_abort : forall c st v1 v2 o,
@@ -263,7 +263,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_delete_field_1 o e2) o
 | red_expr_delete_field_2 : forall c st' st ptr s obj oattr o,
-    st \(ptr?) = Some obj ->
+    binds st ptr obj ->
     get_object_property obj s = oattr ->
     red_expr c st (expr_delete_field_3 ptr obj oattr s) o ->
     red_expr c st' (expr_delete_field_2 (value_object ptr) (out_ter st (res_value (value_string s)))) o
@@ -286,7 +286,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_own_field_names_1 o) o' ->
     red_expr c st (expr_own_field_names e) o'
 | red_expr_own_field_names_1 : forall c st' st st1 ptr obj v,
-    st \(ptr?) = Some obj ->
+    binds st ptr obj ->
     (st1, v) = add_object st (make_prop_list obj) ->
     red_expr c st' (expr_own_field_names_1 (out_ter st (res_value (value_object ptr)))) (out_ter st1 (res_value v))
 | red_expr_own_field_names_1_abort : forall c st o,
@@ -470,7 +470,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_eval_1 o e2) o
 | red_expr_eval_2 : forall c c1 st' st s e ptr obj o,
-    st \(ptr?) = Some obj ->
+    binds st ptr obj ->
     ctx_of_obj obj = Some c1 ->
     desugar_expr s = Some e ->
     red_expr c1 st e o ->
