@@ -425,11 +425,9 @@ Proof.
     simpl in H7.
     inverts H7.
     inverts H4.
-    unfolds in H3.
-    simpl in H3.
+    forwards Eq : (binds_update_same_inv _ _ _ _ H3).
+    substs. clear H3.
     inverts H6.
-    simpl in H3.
-    assert (Htodo : v0 = v). skip. substs. (* TODO better heap library *)
     splits. reflexivity.
     inverts Hrel; try injects; jauto_js. 
     cases_if; 

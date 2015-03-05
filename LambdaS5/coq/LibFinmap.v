@@ -24,6 +24,22 @@ Class ReadOptionBinds `{BagReadOption A B T} `{BagBinds A B T} :=
 Class ReadOptionBinds_inv `{BagReadOption A B T} `{BagBinds A B T} :=
     { read_option_binds_inv : forall M k x, binds M k x -> M \(k?) = Some x }.
 
+Class BindsUpdate_eq `{BagBinds A B T} `{BagUpdate A B T} := 
+    { binds_update_eq : forall M k k' x x', 
+        binds (M \(k' := x')) k x = (k = k' /\ x = x' \/ k <> k' /\ binds M k x) }.
+
+Class BindsUpdate_same_eq `{BagBinds A B T} `{BagUpdate A B T} := 
+    { binds_update_same_eq : forall M k x x', binds (M \(k := x)) k x' = (x = x') }.
+
+Class BindsUpdate_same `{BagBinds A B T} `{BagUpdate A B T} := 
+    { binds_update_same : forall M k x, binds (M \(k := x)) k x }.
+
+Class BindsUpdate_same_inv `{BagBinds A B T} `{BagUpdate A B T} := 
+    { binds_update_same_inv : forall M k x x', binds (M \(k := x)) k x' -> x = x' }.
+
+Class BindsUpdate_diff `{BagBinds A B T} `{BagUpdate A B T} := 
+    { binds_update_diff : forall M k k' x, k <> k' -> binds M k x -> binds (M \(k' := x)) k x }.
+
 Instance read_option_binds_from_read_option_binds_eq : 
     forall `{BagReadOption A B T} `{BagBinds A B T},
     ReadOptionBinds_eq -> ReadOptionBinds.
@@ -33,6 +49,24 @@ Instance read_option_binds_inv_from_read_option_binds_eq :
     forall `{BagReadOption A B T} `{BagBinds A B T},
     ReadOptionBinds_eq -> ReadOptionBinds_inv.
 Proof. constructor. introv I. rewrite read_option_binds_eq. assumption. Qed.
+
+Instance binds_update_same_eq_from_binds_update_eq :
+    forall `{BagBinds A B T} `{BagUpdate A B T},
+    BindsUpdate_eq -> BindsUpdate_same_eq.
+Proof. 
+    constructor. intros. rewrite binds_update_eq. rew_logic. 
+    apply iff_intro; iauto.
+Qed.
+
+Instance binds_update_same_from_binds_update_same_eq :
+    forall `{BagBinds A B T} `{BagUpdate A B T},
+    BindsUpdate_same_eq -> BindsUpdate_same.
+Proof. constructor. intros. rewrite binds_update_same_eq. reflexivity. Qed.
+
+Instance binds_update_same_inv_from_binds_update_same_eq :
+    forall `{BagBinds A B T} `{BagUpdate A B T},
+    BindsUpdate_same_eq -> BindsUpdate_same_inv.
+Proof. constructor. introv I. rewrite binds_update_same_eq in I. assumption. Qed.
 
 (* TODO this should get to TLC LibOrder *)
 Class Minimal A := { minimal : A }.
@@ -72,6 +106,8 @@ Parameter card_impl : finmap A B -> nat.
 Parameter fresh_impl : Minimal A -> PickGreater A -> finmap A B -> A. (* TODO good typeclasses *)
 
 Parameter read_option_binds_eq_impl : forall M k x, (read_option_impl M k = Some x) = binds_impl M k x.
+Parameter binds_update_eq_impl : forall M k k' x x', 
+    binds_impl (update_impl M k' x') k x = (k = k' /\ x = x' \/ k <> k' /\ binds_impl M k x).
 
 End Definitions.
 End FinmapSig.
@@ -128,6 +164,11 @@ Lemma read_option_binds_eq_impl : forall M k x, (read_option_impl M k = Some x) 
 Proof.
 Admitted.
 
+Lemma binds_update_eq_impl : forall M k k' x x', 
+    binds_impl (update_impl M k' x') k x = (k = k' /\ x = x' \/ k <> k' /\ binds_impl M k x).
+Proof.
+Admitted.
+
 End Definitions.
 End FinmapImpl.
 
@@ -159,7 +200,7 @@ Global Instance read_option_inst : BagReadOption A B (finmap A B) :=
 Global Instance remove_inst : BagRemove (finmap A B) A :=
     { remove := @remove_impl _ _ _ }.
 
-Global Instance write_inst : BagUpdate A B (finmap A B) :=
+Global Instance update_inst : BagUpdate A B (finmap A B) :=
     { update := @update_impl _ _ _ }.
 
 Global Instance card_inst : BagCard (finmap A B) :=
@@ -171,10 +212,13 @@ Global Instance fresh_inst : Minimal A -> PickGreater A -> BagFresh A (finmap A 
 Global Instance read_option_binds_eq_inst : ReadOptionBinds_eq :=
     { read_option_binds_eq := @read_option_binds_eq_impl _ _ _ }.
 
+Global Instance binds_update_eq_inst : BindsUpdate_eq :=
+    { binds_update_eq := @binds_update_eq_impl _ _ _ }.
+
 End Instances.
 
 Global Opaque empty_inst single_bind_inst in_inst binds_inst read_inst
-    read_option_inst remove_inst write_inst card_inst fresh_inst.
+    read_option_inst remove_inst update_inst card_inst fresh_inst.
 
 (* Extraction.
  * Ordering relation is ignored, because it does not extracts well.
