@@ -1,4 +1,4 @@
-Require Import Coq.Strings.String.
+Require Import LjsShared.
 Require Import LjsSyntax.
 Require Import LjsValues.
 Require Import LjsCommon.
@@ -6,11 +6,11 @@ Require Import LjsMonads.
 Require Import LjsStore.
 Require Import Utils.
 Require Import LjsOperators.
-Require Import LibHeap.
-Require Import LibStream.
 Require Import JsNumber.
+
 Open Scope list_scope.
 Open Scope string_scope.
+Open Scope container_scope.
 
 (* Basic idea of how this file works:
 * There are tree sections in this file:
@@ -288,7 +288,7 @@ Definition eval_delete_field runs c st (left_expr right_expr : expr) : result :=
 * Evaluate the body in the new store. *)
 Definition eval_let runs c st (id : string) (value_expr body_expr : expr) : result :=
   if_eval_return runs c st value_expr (fun st val =>
-    runs_type_eval runs (add_value c id val) st body_expr
+    runs_type_eval runs (c \(id := val)) st body_expr
   )
 .
 
@@ -300,7 +300,7 @@ Definition eval_rec runs c st (id : string) (value_expr body_expr : expr) : resu
   match value_expr with
   | expr_lambda args body =>
     let v := add_closure c  (Some id) args body in
-    runs_type_eval runs (add_value c id v) st body_expr
+    runs_type_eval runs (c \(id := v)) st body_expr
   | _ => result_fail "rec with no lambda"
   end
 .

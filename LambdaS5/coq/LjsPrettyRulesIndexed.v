@@ -35,7 +35,7 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_true : forall k c st, red_exprh (S k) c st expr_true (out_ter st (res_value value_true))
 | red_exprh_false : forall k c st, red_exprh (S k) c st expr_false (out_ter st (res_value value_false))
 | red_exprh_id : forall k c st i v, 
-    get_value c i = Some v -> 
+    c \(i?) = Some v -> 
     red_exprh (S k) c st (expr_id i) (out_ter st (res_value v))
 | red_exprh_lambda : forall k c st args body v,
     v = add_closure c None args body ->
@@ -374,7 +374,7 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     red_exprh k c st (expr_let_1 i o e2) o' ->
     red_exprh (S k) c st (expr_let i e1 e2) o'
 | red_exprh_let_1 : forall k c c' st' st i v e2 o,
-    c' = add_value c i v ->
+    c' = c \(i := v) ->
     red_exprh k c' st e2 o ->
     red_exprh k c st' (expr_let_1 i (out_ter st (res_value v)) e2) o
 | red_exprh_let_1_abort : forall k c st i o e2,
@@ -384,7 +384,7 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 (* rec *)
 | red_exprh_rec : forall k c c' st i args body v e2 o,
     v = add_closure c (Some i) args body ->
-    c' = add_value c i v ->
+    c' = c \(i := v) ->
     red_exprh k c' st e2 o ->
     red_exprh (S k) c st (expr_recc i (expr_lambda args body) e2) o
 

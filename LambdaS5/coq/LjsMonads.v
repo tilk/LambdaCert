@@ -1,12 +1,15 @@
-Require Import String.
+Require Import LjsShared.
 Require Import LjsValues.
 Require Import LjsSyntax.
 Require Import LjsStore.
+
+Open Scope container_scope.
 
 Implicit Type st : store.
 Implicit Type c : ctx.
 Implicit Type e : expr.
 Implicit Type v : value.
+Implicit Type i : id.
 
 (*
 * The monadic constructors, which mostly take a store, some
@@ -44,10 +47,10 @@ Definition if_value  (var : result) (cont : store -> value -> result) : result :
     end)
 .
 
-Definition assert_deref {A : Type} c s (cont : value -> resultof A) : resultof A :=
-  match get_value c s with
+Definition assert_deref {A : Type} c i (cont : value -> resultof A) : resultof A :=
+  match c \(i?) with
   | Some v => cont v
-  | None => result_fail ("ReferenceError: " ++ s)
+  | None => result_fail ("ReferenceError: " ++ i)
   end
 .
 

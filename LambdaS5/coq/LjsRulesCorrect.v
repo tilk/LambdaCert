@@ -204,7 +204,7 @@ Hint Constructors J.red_stat : js_ljs.
 Hint Constructors J.red_spec : js_ljs.
 
 Definition includes_init_ctx c :=
-    forall i v v', L.id_binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'. 
+    forall i v v', binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'. 
 
 Definition state_invariant BR jst jc c st :=
     heaps_bisim BR jst st /\
@@ -397,10 +397,10 @@ Proof.
     intros. unfolds. destruct (LjsStore.num_objects st); reflexivity. 
 Qed.
  
-(* TODO move this one too! *)
+(* TODO should be generic in Finmap! *)
 Lemma get_value_binds : forall c i v,
-    L.get_value c i = Some v ->
-    L.id_binds c i v.
+    c \(i?) = Some v ->
+    binds c i v.
 Proof.
 Admitted.
 
@@ -446,7 +446,7 @@ Qed.
 (* TODO should occur earlier *)
 Lemma state_invariant_includes_init_ctx : forall BR jst jc c st i v v',
     state_invariant BR jst jc c st ->
-    L.id_binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'.
+    binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'.
 Proof.
     introv Hinv.
     unfold state_invariant, includes_init_ctx in Hinv.

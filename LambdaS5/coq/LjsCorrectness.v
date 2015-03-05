@@ -163,7 +163,7 @@ Qed.
 
 Lemma assert_deref_out : forall c i cont o,
     assert_deref c i cont = result_some o ->
-    exists v, get_value c i = Some v /\ cont v = result_some o.
+    exists v, c \(i?) = Some v /\ cont v = result_some o.
 Proof.
     introv E. unfold assert_deref in E.
     cases_match_option. jauto.
@@ -361,7 +361,7 @@ Qed.
 Lemma eval_id_correct : forall runs c st s o,
     runs_type_correct runs -> 
     eval_id runs c st s = result_some o -> 
-    exists v, get_value c s = Some v /\ 
+    exists v, c \(s?) = Some v /\ 
         o = out_ter st (res_value v).
 Proof.
     introv IH R. unfolds in R.
@@ -396,7 +396,7 @@ Lemma eval_let_correct : forall runs c st s e1 e2 o,
     runs_type_correct runs ->
     eval_let runs c st s e1 e2 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v =>
-        exists c', c' = add_value c s v /\ 
+        exists c', c' = c \(s := v) /\ 
             runs_type_eval runs c' st' e2 = result_some o).
 Proof. 
     introv IH R. unfolds in R.
@@ -409,7 +409,7 @@ Lemma eval_rec_correct : forall runs c st s e1 e2 o,
     eval_rec runs c st s e1 e2 = result_some o ->
     exists args body c' v, e1 = expr_lambda args body /\
             v = add_closure c (Some s) args body /\
-            c' = add_value c s v /\
+            c' = c \(s := v) /\
             runs_type_eval runs c' st e2 = result_some o.
 Proof.
     introv IH R. unfolds in R.

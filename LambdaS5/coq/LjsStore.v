@@ -13,7 +13,7 @@ Implicit Type obj : object.
 
 (* LambdaJS environment storage. *)
 Definition narrow_ctx c s := 
-  ctx_intro (List.fold_left (fun cc (i : string) => cc \( i := value_heap c \( i ))) (LibFinset.to_list s) \{}).
+  List.fold_left (fun cc (i : string) => cc \( i := c \( i ))) (LibFinset.to_list s) \{}.
 
 Definition add_object st obj : (store * value) :=
   match st with
@@ -29,14 +29,14 @@ Definition add_closure c recid args body : value :=
     | Some i => expr_fv (expr_lambda args body) \-- i
     | None => expr_fv (expr_lambda args body) 
     end in
-  value_closure (closure_intro (FinmapImpl.to_list (value_heap (narrow_ctx c si))) recid args body)
+  value_closure (closure_intro (FinmapImpl.to_list (narrow_ctx c si)) recid args body)
 .
 
 (* Adds function arguments to the lexical environment *)
 
 Definition add_parameters (closure_env : ctx) (args_name : list id) (args : list value) : resultof ctx :=
   match Utils.zip_left args_name args with
-  | Some args_heap => result_some (ctx_intro (Utils.concat_list_heap args_heap (value_heap closure_env)))
+  | Some args_heap => result_some (Utils.concat_list_heap args_heap closure_env)
   | None => result_fail "Arity mismatch"
   end
 .
@@ -45,16 +45,10 @@ Definition closure_ctx clo args :=
   let 'closure_intro c rid args_name _ := clo in
   let c' := fold_left (fun (p : string * value) h => let (s, v) := p in h \( s := v )) \{} c in
   let c'' := match rid with
-    | Some i => ctx_intro (c' \( i := value_closure clo))
-    | None => ctx_intro c'
+    | Some i => c' \( i := value_closure clo)
+    | None => c'
     end in
   add_parameters c'' args_name args.
-
-Definition add_value c i v :=
-  match c with
-  | ctx_intro val_heap => ctx_intro (val_heap \( i := v ))
-  end
-.
 
 Definition update_object st ptr obj : store :=
   (* TODO: Remove the old object from the Heap (or fix LibHeap to prevent duplicates) *)
@@ -66,9 +60,6 @@ Definition update_object st ptr obj : store :=
 Definition get_object st ptr : option object :=
   object_heap st \( ptr ?)
 .
-Definition get_value c i : option value :=
-  value_heap c \( i ?)
-.
 
 Definition num_objects st : nat :=
   List.length (FinmapImpl.to_list (object_heap st)).
@@ -78,7 +69,7 @@ Definition ctx_of_obj_aux (o : option ctx) (p : string * attributes) : option ct
   | Some c => 
     let (s, a) := p in
     match a with
-    | attributes_data_of data => Some (add_value c s (attributes_data_value data))
+    | attributes_data_of data => Some (c \(s := attributes_data_value data))
     | attributes_accessor_of _ => None
     end
   | None => None
@@ -96,10 +87,4 @@ Definition object_binds st ptr obj :=
 
 Definition object_indom st ptr :=
     ptr \in object_heap st.
-
-Definition id_binds c i loc :=
-    binds (value_heap c) i loc.
-
-Definition id_indom c i :=
-    i \in value_heap c.
 

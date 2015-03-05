@@ -8,10 +8,13 @@ Open Scope list_scope.
 (* TODO utitities *)
 Definition rel_fst {A B} (R : binary A) : binary (A * B) := fun x y => R (fst x) (fst y).
 
+(* TODO this should get to LibBag later *)
 Class BagReadOption A B T := { read_option : T -> A -> option B }. 
 
 Notation "m \( x ?)" := (read_option m x)
   (at level 33, format "m \( x ?)") : container_scope.
+
+(* Map signature (for hiding the implementation *)
 
 Module Type FinmapSig.
 Section Definitions. 
@@ -36,6 +39,8 @@ Parameter update_impl : finmap A B -> A -> B -> finmap A B.
 
 End Definitions.
 End FinmapSig.
+
+(* Implementation (based on sorted lists) *)
 
 Module Export FinmapImpl : FinmapSig.
 Section Definitions.

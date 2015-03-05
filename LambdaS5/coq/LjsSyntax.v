@@ -224,11 +224,7 @@ Definition closure_body clo :=
 
 (* Lexical environments *)
 
-Definition value_heap_type := finmap id value.
-
-Record ctx := ctx_intro {
-  value_heap : value_heap_type (* maps names to values *)
-}.
+Definition ctx := finmap id value.
 
 (* Named data property attributes *)
 Record attributes_data := attributes_data_intro {
@@ -301,14 +297,12 @@ Record store := store_intro {
 Definition dummy_fresh_locations := nat_stream_from 1%nat.
 
 Definition object_heap_initial : object_heap_type := \{}.
-Definition loc_heap_initial : value_heap_type := \{}.
 
 Definition create_store :=
   {| object_heap := object_heap_initial;
      fresh_locations := dummy_fresh_locations |}.
 
-Definition create_ctx :=
-  {| value_heap := loc_heap_initial |}.
+Definition create_ctx : ctx := \{}.
 
 (* Definitions of outcomes *)
 

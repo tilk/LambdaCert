@@ -37,7 +37,7 @@ Implicit Type r : res.
 
 (* Lemmas on monadic ops *)
 
-Lemma assert_deref_lemma : forall {A c i v} cont, get_value c i = Some v -> @assert_deref A c i cont = cont v.
+Lemma assert_deref_lemma : forall {A c i v} cont, c \(i?) = Some v -> @assert_deref A c i cont = cont v.
 Proof.
     introv H. unfolds. rewrite H. reflexivity.
 Qed.
@@ -145,7 +145,7 @@ Qed.
 
 Ltac ljs_eval :=
     match goal with
-    | H : get_value ?c ?v = Some _ |- assert_deref ?c ?v _ = _ => rewrite (assert_deref_lemma _ H)
+    | H : ?c \( ?i ?) = Some _ |- assert_deref ?c ?i _ = _ => rewrite (assert_deref_lemma _ H)
     | H : runs_type_eval ?runs ?c ?st ?e = _ |- eval_cont ?runs ?c ?st ?e _ = _ => rewrite (eval_cont_lemma _ H)
     | H : runs_type_eval ?runs ?c ?st ?e = result_some (out_ter _ (res_value _)) 
         |- if_eval_return ?runs ?c ?st ?e _ = _ => rewrite (if_eval_return_lemma _ H)
@@ -287,6 +287,8 @@ Qed.
 
 (* The main lemma *)
 
+Opaque read_option. 
+
 Lemma eval_complete_lemma : forall k c st e o,
     red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o.
 Proof.
@@ -308,8 +310,8 @@ Proof.
     reflexivity.
     (* false *)
     reflexivity.
-    (* id *)
-    unfolds. 
+    (* id *) 
+    unfolds.
     repeat ljs_eval; reflexivity.
     (* lambda *)
     reflexivity.
