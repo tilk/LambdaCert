@@ -122,7 +122,7 @@ Definition object_bisim_lnoghost jst BR :=
     forall jptr ptr, BR jptr ptr -> J.object_indom jst jptr.
 
 Definition object_bisim_rnoghost st BR :=
-    forall jptr ptr, BR jptr ptr -> ptr \in st.
+    forall jptr ptr, BR jptr ptr -> index st ptr.
 
 Definition object_bisim_consistent jst st BR :=
     object_bisim_lfun BR /\
@@ -132,7 +132,7 @@ Definition object_bisim_consistent jst st BR :=
     object_bisim_rnoghost st BR.
 
 Definition object_attributes_related BR jobj obj := forall s, 
-    ~J.Heap.indom (J.object_properties_ jobj) s /\ ~(s \in L.object_properties obj) \/
+    ~J.Heap.indom (J.object_properties_ jobj) s /\ ~index (L.object_properties obj) s \/
     exists jptr ptr, 
         J.Heap.binds (J.object_properties_ jobj) s jptr /\ binds (L.object_properties obj) s ptr /\
         attributes_related BR jptr ptr.

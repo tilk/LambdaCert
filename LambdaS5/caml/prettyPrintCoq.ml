@@ -218,7 +218,7 @@ let format_attributes a = match a with
 
 let format_object_properties vh = 
     let format_object_properties_item (i, a) = parens (horzOrVert [squish [format_id i; text ", "]; format_attributes a]) in
-    horz [text "@FinmapImpl.from_list _ _ _"; format_list (List.map format_object_properties_item (LibFinmap.FinmapImpl.to_list vh))] 
+    horz [text "FinmapImpl.from_list"; format_list (List.map format_object_properties_item (LibFinmap.FinmapImpl.to_list vh))] 
 
 let format_object o = 
     let l1 = [
