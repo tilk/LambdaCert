@@ -261,23 +261,36 @@ Ltac ljs_abort := match goal with
         solve [invert H as H1; inverts H1]
     end.
 
-Ltac inv_internal_ljs :=
+Ltac inv_ljs_in H :=
+    inverts H; try ljs_abort.
+
+Ltac inv_fwd_ljs_in H :=
+    (inverts H; try ljs_abort); [idtac].
+ 
+Ltac with_red_exprh T :=
     match goal with
-    | H	: L.red_exprh _ _ _ ?e _ |- _ => 
-        match e with 
-        | L.expr_basic _ => fail 
-        | _ => inverts H; try ljs_abort
+    | H	: L.red_exprh _ _ _ ?ee _ |- _ => 
+        match ee with 
+        | L.expr_app_2 _ _ => fail 1 (* so that lemmas can be easily applied *)
+        | _ => T H
         end
     end.
 
-Ltac inv_internal_fwd_ljs :=
+Ltac with_internal_red_exprh T :=
     match goal with
-    | H	: L.red_exprh _ _ _ ?e _ |- _ => 
-        match e with 
-        | L.expr_basic _ => fail 
-        | _ => (inverts H; try ljs_abort); [idtac]
+    | H	: L.red_exprh _ _ _ ?ee _ |- _ => 
+        match ee with 
+        | L.expr_basic _ => fail 1
+        | L.expr_app_2 _ _ => fail 1 (* so that lemmas can be easily applied *) 
+        | _ => T H
         end
     end.
+
+Ltac inv_internal_ljs := with_internal_red_exprh inv_ljs_in.
+
+Ltac inv_fwd_ljs := with_red_exprh inv_fwd_ljs_in.
+
+Ltac inv_internal_fwd_ljs := with_internal_red_exprh inv_fwd_ljs_in.
 
 Ltac inv_res_related :=
     match goal with
@@ -355,41 +368,7 @@ Ltac jauto_js := repeat destr_concl; jauto_set; eauto with js_ljs;
 
 (* HERE START PROOFS *)
 
-Lemma red_expr_literal_ok : forall k l,
-    th_expr k (J.expr_literal l).
-Proof.
-    introv.
-    unfolds.
-    introv Hinv Hlred.
-    destruct l as [ | [ | ] | | ]; inverts Hlred; jauto_js; solve [intuition jauto_js].
-Qed.
-
-Lemma red_stat_expr_ok : forall k je, 
-    ih_expr k ->
-    th_stat k (J.stat_expr je).
-Proof.
-    introv IH Hinv Hlred.
-    inverts Hlred.
-    apply_ih_expr.
-    jauto_js.
-Qed.
-(*
-Lemma red_spec_get_value_ok : forall jst jc c st st' r je BR, 
-    ih_expr je ->
-    state_invariant BR jst jc c st ->
-    L.red_expr c st (js_expr_to_ljs je) (L.out_ter st' r) ->
-    concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
-       (fun jv => exists v, r = L.res_value v /\ value_related BR jv v).
-Proof.
-    introv IHe Hinv Hlred.
-    specializes IHe Hinv Hlred.
-    unfold_concl.
-    jauto_js. 
-    inverts H1. inverts H2. (* TODO *)
-    left.
-    jauto_js.
-Qed.
-*)
+(* Prerequisites *)
 
 (* TODO move this lemma! *)
 Lemma get_closure_aux_lemma : forall k st clo, LjsCommon.get_closure_aux k st (L.value_closure clo) = L.result_some clo.
@@ -459,6 +438,70 @@ Proof.
     substs; eauto.
 Qed.
 
+Ltac ljs_get_builtin :=
+    match goal with
+    | Hinv : state_invariant _ _ _ ?c ?st,
+      H : L.red_exprh _ ?c ?st (L.expr_basic (E.make_builtin _)) _ |- _ =>
+        let H1 := fresh in
+        let H2 := fresh in
+        forwards (H1&H2) : builtin_assoc Hinv H; [
+        unfold LjsInitEnv.ctx_items;
+        solve [repeat (eapply Mem_here || apply Mem_next)] | 
+        clear H;
+        subst_hyp H1; subst_hyp H2 ]
+    end.
+
+(* Expressions *)
+
+Lemma red_expr_literal_ok : forall k l,
+    th_expr k (J.expr_literal l).
+Proof.
+    introv.
+    unfolds.
+    introv Hinv Hlred.
+    destruct l as [ | [ | ] | | ]; inverts Hlred; jauto_js; solve [intuition jauto_js].
+Qed.
+
+Lemma red_expr_identifier_ok : forall k i,
+    th_expr k (J.expr_identifier i).
+Proof.
+    introv Hinv Hlred.
+    inv_fwd_ljs.
+    ljs_out_redh_ter.
+
+    ljs_get_builtin.
+
+    repeat inv_fwd_ljs.
+    skip.
+Qed.
+
+Lemma red_stat_expr_ok : forall k je, 
+    ih_expr k ->
+    th_stat k (J.stat_expr je).
+Proof.
+    introv IH Hinv Hlred.
+    inverts Hlred.
+    apply_ih_expr.
+    jauto_js.
+Qed.
+(*
+Lemma red_spec_get_value_ok : forall jst jc c st st' r je BR, 
+    ih_expr je ->
+    state_invariant BR jst jc c st ->
+    L.red_expr c st (js_expr_to_ljs je) (L.out_ter st' r) ->
+    concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
+       (fun jv => exists v, r = L.res_value v /\ value_related BR jv v).
+Proof.
+    introv IHe Hinv Hlred.
+    specializes IHe Hinv Hlred.
+    unfold_concl.
+    jauto_js. 
+    inverts H1. inverts H2. (* TODO *)
+    left.
+    jauto_js.
+Qed.
+*)
+
 Lemma red_spec_to_boolean_ok : forall k' k jst jc c st st' r je BR, 
     (k <= k')%nat ->
     ih_expr k' ->
@@ -472,21 +515,15 @@ Proof.
     inverts Hlred.
     ljs_out_redh_ter.
 
-    forwards (Hlol1&Hlol2) : builtin_assoc Hinv H4.
-    unfold LjsInitEnv.ctx_items.
-    repeat (eapply Mem_here || apply Mem_next). (* TODO VERY SLOW! *)
-    clear H4.
-    substs.
+    ljs_get_builtin.
 
-    inv_internal_fwd_ljs.
-    inv_internal_fwd_ljs.
+    repeat inv_internal_fwd_ljs.
     ljs_out_redh_ter.
 
     apply_ih_expr.
     destr_concl.
 
-    inv_internal_fwd_ljs.
-    inv_internal_fwd_ljs.
+    repeat inv_internal_fwd_ljs.
 
     autoforwards Hbool : ljs_to_bool_lemma.
     destruct_hyp Hbool.
@@ -589,7 +626,7 @@ Proof.
     inverts Hlred as Hlred'.
     ljs_out_redh_ter.
     inverts Hlred'.
-    repeat inv_internal_fwd_ljs.
+    repeat inv_fwd_ljs.
     ljs_out_redh_ter.
     apply_ih_expr.
     destr_concl. (* TODO seems like something to automate *)
@@ -677,7 +714,7 @@ Proof.
     (* expr_this *)
     skip.
     (* expr_identifier *)
-    skip.
+    eapply red_expr_identifier_ok.
     (* expr_literal *)
     eapply red_expr_literal_ok.
     (* expr_object *)
@@ -702,13 +739,3 @@ Proof.
     skip.
 Qed.
 
-(*
-
-Lemma red_identifier_ok : forall jst jc st c o i BR,
-    heaps_bisim BR jst st ->
-    L.red_expr c st (js_expr_to_ljs (J.expr_identifier i)) o ->
-    exists jo,
-    J.red_expr jst jc (J.expr_basic (J.expr_identifier i)) jo /\
-    out_related BR jo o.
-Proof.
-*)
