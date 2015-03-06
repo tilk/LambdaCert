@@ -13,7 +13,7 @@ Implicit Type obj : object.
 
 (* LambdaJS environment storage. *)
 Definition narrow_ctx c s := 
-  List.fold_left (fun cc (i : string) => cc \( i := c \( i ))) (LibFinset.to_list s) \{}.
+  List.fold_left (fun cc (i : string) => cc \( i := c \( i ))) (FinsetImpl.to_list s) \{}.
 
 Definition add_object st obj : (store * value) := 
   let ptr := fresh st in (st \(fresh st := obj), value_object ptr).

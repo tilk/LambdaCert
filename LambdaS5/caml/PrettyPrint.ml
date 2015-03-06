@@ -22,7 +22,7 @@ and string_of_value_option depth st = function
 
 and string_of_object_ptr depth st ptr =
   if depth = 0 then "<cut>" else
-  match LibFinmap.read_option_inst LibOrder.Build_Lt st ptr with
+  match LibFinmap.read_option_inst st ptr with
     | None -> "<reference to non-existing object>"
     | Some obj -> string_of_object (depth-1) st obj
 and string_of_object depth (st : store) obj =
@@ -30,7 +30,7 @@ and string_of_object depth (st : store) obj =
   (string_of_value depth st (object_proto obj)) (String.of_list (object_class obj))
   (object_extensible obj) (string_of_value depth st (object_prim_value obj))
   (string_of_value depth st (object_code obj))
-  (string_of_prop_list depth st (LibFinmap.FinmapImpl.to_list LibOrder.Build_Lt (object_properties obj)) [])
+  (string_of_prop_list depth st (LibFinmap.FinmapImpl.to_list (object_properties obj)) [])
 and string_of_prop_list depth st l skip =
   let string_of_prop = function (name, attr) ->
     Printf.sprintf "'%s': %s" (String.of_list name) (string_of_attr depth st attr)
@@ -60,7 +60,7 @@ and string_of_attr depth st = function
 | Coq_attributes_accessor_of d -> attributes_accessor_rect (fun g s e c -> Printf.sprintf "{#getter %s, #setter %s}" (string_of_value depth st g) (string_of_value depth st s)) d (* enumerable and configurable ignored *)
 
 let string_of_store depth c st =
-  let locs = LibFinmap.FinmapImpl.to_list LibOrder.Build_Lt c in
+  let locs = LibFinmap.FinmapImpl.to_list c in
   let pred = string_of_value depth st in
   String.concat "" (List.map (fun (k, v) -> Printf.sprintf "let (%s = %s) \n" (String.of_list k) (pred v)) locs)
 

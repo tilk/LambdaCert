@@ -177,7 +177,7 @@ Fixpoint expr_fv e : finset id := match e with
 | expr_try_catch e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_try_finally e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_throw e => expr_fv e
-| expr_lambda is e => expr_fv e \- LibFinset.from_list is
+| expr_lambda is e => expr_fv e \- FinsetImpl.from_list is
 | expr_eval e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_hint _ e => expr_fv e
 end

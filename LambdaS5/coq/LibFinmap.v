@@ -1,6 +1,7 @@
 Require Import LibTactics LibList LibListSorted.
-Require Import LibSet LibLogic LibEqual LibReflect LibOrder LibRelation.
-Generalizable Variable A R B T.
+Require Import LibSet LibMap LibLogic LibEqual LibReflect LibOrder LibRelation.
+Require Import LibFinset.
+Generalizable Variable A R U B T.
 
 Import ListNotations.
 Open Scope list_scope.
@@ -85,9 +86,9 @@ Instance pick_greater_inst_nat : PickGreater nat :=
 Module Type FinmapSig.
 Section Definitions. 
 
-Variables (A B : Type) (LTA : Lt A).
+Variables (A B : Type).
 
-Parameter finmap : forall (A B : Type) {LTA : Lt A}, Type.
+Parameter finmap : forall (A B : Type), Type.
 
 Set Implicit Arguments.
 
@@ -96,11 +97,11 @@ Parameter to_list : finmap A B -> list (A * B).
 
 Parameter empty_impl : finmap A B.
 Parameter single_bind_impl : A -> B -> finmap A B.
-Parameter in_impl : A -> finmap A B -> Prop.
+Parameter index_impl : finmap A B -> A -> Prop.
 Parameter binds_impl : finmap A B -> A -> B -> Prop.
 Parameter read_impl : Inhab B -> finmap A B -> A -> B.
 Parameter read_option_impl : finmap A B -> A -> option B.
-Parameter remove_impl : finmap A B -> A -> finmap A B.
+Parameter remove_impl : finmap A B -> finset A -> finmap A B.
 Parameter update_impl : finmap A B -> A -> B -> finmap A B.
 Parameter card_impl : finmap A B -> nat.
 Parameter fresh_impl : Minimal A -> PickGreater A -> finmap A B -> A. (* TODO good typeclasses *)
@@ -112,7 +113,7 @@ Parameter binds_update_eq_impl : forall M k k' x x',
 End Definitions.
 End FinmapSig.
 
-(* Implementation (based on sorted lists) *)
+(* Implementation *)
 
 Module Export FinmapImpl : FinmapSig.
 Section Definitions.
@@ -125,40 +126,71 @@ Context {MMA : Minimal A}.
 Context {PGA : PickGreater A}.
 Context {ST : Lt_strict_total_order }.
 
-Inductive finmap_i := finmap_intro {
-    finmap_list : list (A * B);
-    finmap_sorted : sorted (rel_fst lt) finmap_list 
-}.
+Definition finite (M : map A B) :=
+  exists (S : finset A), forall x, index M x -> x \in S.
 
-Definition finmap := finmap_i.
+Definition finmap := sig finite.
 
 Implicit Types k : A.
 Implicit Types x : B.
 Implicit Types M : finmap.
 
+Definition build_finmap `(F:finite U) : finmap := exist finite U F.
 
-Definition to_list := finmap_list.
-Definition from_list (l : list (A * B)) : finmap.
+Lemma finite_empty : finite \{}.
+Proof.
+  exists (\{} : finset A). 
 Admitted.
 
-Definition empty_impl : finmap := finmap_intro nil (sorted_nil _).
-Definition single_bind_impl k x : finmap := finmap_intro [(k, x)] (sorted_one _ _).
-Definition in_impl k M : Prop := exists x, Assoc k x (finmap_list M).
-Definition binds_impl M k x : Prop := Assoc k x (finmap_list M).
-Definition read_option_impl M k : option B.
+Lemma single_bind_finite : forall k x, finite (k \:= x).
+Proof.
+  intros. exists \{k}. intros y. 
 Admitted.
-Definition read_impl M k : B := LibList.assoc k (finmap_list M).
-Program Definition remove_impl M k : finmap := finmap_intro (remove_assoc k (finmap_list M)) _.
-Obligation 1.
-Admitted. 
-Definition update_impl M k x : finmap.
+
+Lemma union_finite : forall U V : map A B,
+  finite U -> finite V -> finite (U \u V).
+Proof.
+  introv [S1 E1] [S2 E2]. exists (S1 \u S2). intros x.
+  rewrite in_union_eq. 
 Admitted.
-Definition card_impl M := length (finmap_list M).
-Definition fresh_impl M : A := 
-    match rev (finmap_list M) with 
-    | nil => minimal
-    | (k, x) :: _ => pick_greater k
-    end.
+
+Lemma remove_finite : forall U {S : set A}, finite U -> finite (U \- S).
+Proof.
+  introv [S1 E1]. exists S1. 
+Admitted.
+
+Set Implicit Arguments.
+
+Lemma update_finite : forall U k x, finite U -> finite (U \(k := x)).
+Proof.
+  introv [S1 E1]. exists (S1 \u \{k}).
+Admitted.
+
+Definition empty_impl : finmap := build_finmap finite_empty.
+Definition single_bind_impl k x : finmap := build_finmap (single_bind_finite k x).
+Definition index_impl M k : Prop := index (proj1_sig M) k.
+Definition binds_impl M k x : Prop := binds (proj1_sig M) k x.
+Definition read_option_impl M k : option B := proj1_sig M k. (* TODO abstract it!!! change TLC *)
+Definition read_impl M k : B := proj1_sig M \(k).
+Definition remove_impl M (S : finset A) : finmap.
+Admitted.
+Definition update_impl M k x : finmap := build_finmap (update_finite k x (proj2_sig M)).
+Definition fresh_impl : Minimal A -> PickGreater A -> finmap -> A.
+Admitted.
+
+Definition listish (U : map A B) := 
+  exists L, forall k x, binds U k x = Mem (k, x) L.
+
+Lemma finite_listish : forall U, finite U -> listish U.
+Proof.
+Admitted.
+
+Definition from_list (L : list (A * B)) : finmap := 
+  fold_right (fun p acc => let '(k, x) := p in update_impl acc k x) empty_impl L.
+
+Definition to_list M := proj1_sig (indefinite_description (finite_listish (proj2_sig M))).
+
+Definition card_impl M := length (to_list M).
 
 Lemma read_option_binds_eq_impl : forall M k x, (read_option_impl M k = Some x) = binds_impl M k x.
 Proof.
@@ -167,6 +199,10 @@ Admitted.
 Lemma binds_update_eq_impl : forall M k k' x x', 
     binds_impl (update_impl M k' x') k x = (k = k' /\ x = x' \/ k <> k' /\ binds_impl M k x).
 Proof.
+    intros.
+    rew_logic.
+    apply iff_intro; intro H.
+    skip.
 Admitted.
 
 End Definitions.
@@ -180,40 +216,40 @@ Context {IB : Inhab B}.
 Context {ST : Lt_strict_total_order }.
 
 Global Instance empty_inst : BagEmpty (finmap A B) :=
-    { empty := @empty_impl _ _ _ }.
+    { empty := @empty_impl _ _ }.
 
 Global Instance single_bind_inst : Lt_strict_total_order -> BagSingleBind A B (finmap A B) :=
-    { single_bind := @single_bind_impl _ _ _ }.
+    { single_bind := @single_bind_impl _ _ }.
 
-Global Instance in_inst : BagIn A (finmap A B) :=
-    { is_in := @in_impl _ _ _ }.
+Global Instance index_inst : BagIndex (finmap A B) A :=
+    { index := @index_impl _ _ }.
 
 Global Instance binds_inst : BagBinds A B (finmap A B) :=
-    { binds := @binds_impl _ _ _ }.
+    { binds := @binds_impl _ _ }.
 
 Global Instance read_inst : BagRead A B (finmap A B) :=
-    { read := @read_impl _ _ _ _ }.
+    { read := @read_impl _ _ _ }.
 
 Global Instance read_option_inst : BagReadOption A B (finmap A B) :=
-    { read_option := @read_option_impl _ _ _ }.
+    { read_option := @read_option_impl _ _ }.
 
-Global Instance remove_inst : BagRemove (finmap A B) A :=
-    { remove := @remove_impl _ _ _ }.
+Global Instance remove_inst : BagRemove (finmap A B) (finset A) :=
+    { remove := @remove_impl _ _ }.
 
 Global Instance update_inst : BagUpdate A B (finmap A B) :=
-    { update := @update_impl _ _ _ }.
+    { update := @update_impl _ _ }.
 
 Global Instance card_inst : BagCard (finmap A B) :=
-    { card := @card_impl _ _ _ }.
+    { card := @card_impl _ _ }.
 
 Global Instance fresh_inst : Minimal A -> PickGreater A -> BagFresh A (finmap A B) :=
-    { fresh := @fresh_impl _ _ _ _ _ }.
+    { fresh := @fresh_impl _ _ _ _ }.
 
 Global Instance read_option_binds_eq_inst : ReadOptionBinds_eq :=
-    { read_option_binds_eq := @read_option_binds_eq_impl _ _ _ }.
+    { read_option_binds_eq := @read_option_binds_eq_impl _ _ }.
 
 Global Instance binds_update_eq_inst : BindsUpdate_eq :=
-    { binds_update_eq := @binds_update_eq_impl _ _ _ }.
+    { binds_update_eq := @binds_update_eq_impl _ _ }.
 
 End Instances.
 
@@ -228,13 +264,14 @@ Global Opaque empty_inst single_bind_inst in_inst binds_inst read_inst
 Extraction Language Ocaml.
 
 Extract Constant FinmapImpl.finmap "'A" "'B" => "('A, 'B) BatMap.t". 
-Extract Constant FinmapImpl.from_list => "fun _ l -> BatMap.of_enum (BatList.enum l)".
-Extract Constant FinmapImpl.to_list => "fun _ m -> BatMap.bindings m".
-Extract Constant FinmapImpl.empty_impl => "fun _ -> BatMap.empty".
-Extract Constant FinmapImpl.single_bind_impl => "fun _ k x -> BatMap.singleton k x".
-Extract Constant FinmapImpl.read_impl => "fun _ m k -> BatMap.find k m".
-Extract Constant FinmapImpl.read_option_impl => "fun _ m k -> try Some (BatMap.find k m) with Not_found -> None".
-Extract Constant FinmapImpl.remove_impl => "fun _ m k -> BatMap.remove k m".
-Extract Constant FinmapImpl.update_impl => "fun _ m k x -> BatMap.add k x m".
-Extract Constant FinmapImpl.card_impl => "fun _ m -> BatMap.cardinal m".
-Extract Constant FinmapImpl.fresh_impl => "fun _ mm pg m -> if BatMap.is_empty m then mm else pg (fst (BatMap.max_binding m))".
+Extract Constant FinmapImpl.from_list => "fun l -> BatMap.of_enum (BatList.enum l)".
+Extract Constant FinmapImpl.to_list => "fun m -> BatMap.bindings m".
+Extract Constant FinmapImpl.empty_impl => "BatMap.empty".
+Extract Constant FinmapImpl.single_bind_impl => "fun k x -> BatMap.singleton k x".
+Extract Constant FinmapImpl.read_impl => "fun m k -> BatMap.find k m".
+Extract Constant FinmapImpl.read_option_impl => "fun m k -> try Some (BatMap.find k m) with Not_found -> None".
+(* Extract Constant FinmapImpl.remove_impl => "fun m k -> BatMap.remove k m". *)
+ Extract Constant FinmapImpl.remove_impl => "fun m s -> BatList.fold_right (BatMap.remove) (FinsetImpl.to_list s) m". 
+Extract Constant FinmapImpl.update_impl => "fun m k x -> BatMap.add k x m".
+Extract Constant FinmapImpl.card_impl => "fun m -> BatMap.cardinal m".
+Extract Constant FinmapImpl.fresh_impl => "fun mm pg m -> if BatMap.is_empty m then mm else pg (fst (BatMap.max_binding m))".

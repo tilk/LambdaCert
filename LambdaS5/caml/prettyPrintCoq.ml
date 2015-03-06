@@ -218,7 +218,7 @@ let format_attributes a = match a with
 
 let format_object_properties vh = 
     let format_object_properties_item (i, a) = parens (horzOrVert [squish [format_id i; text ", "]; format_attributes a]) in
-    horz [text "@FinmapImpl.from_list _ _ _"; format_list (List.map format_object_properties_item (LibFinmap.FinmapImpl.to_list LibOrder.Build_Lt vh))] 
+    horz [text "@FinmapImpl.from_list _ _ _"; format_list (List.map format_object_properties_item (LibFinmap.FinmapImpl.to_list vh))] 
 
 let format_object o = 
     let l1 = [
@@ -236,14 +236,14 @@ let format_object o =
 
 let format_ctx (c : ctx) = 
     let format_ctx_item (i, v) = parens (squish [text ("name_"); format_named_val i v; text ", "; format_named_val i v]) in
-    format_list (List.map format_ctx_item (LibFinmap.FinmapImpl.to_list LibOrder.Build_Lt c))
+    format_list (List.map format_ctx_item (LibFinmap.FinmapImpl.to_list c))
 
 let format_ctx_def (c : ctx) = 
     vert [text "Definition ctx_items := "; format_ctx c; text "."]
 
 let format_store (st : store) =
     let format_store_object_item (l, o) = parens (squish [format_ptr l; text ", "; format_object o]) in
-    vert ([text "Definition store_items := ["] @ vert_intersperse (text ";") (List.map format_store_object_item (LibFinmap.FinmapImpl.to_list LibOrder.Build_Lt st)) @ [text "]."])
+    vert ([text "Definition store_items := ["] @ vert_intersperse (text ";") (List.map format_store_object_item (LibFinmap.FinmapImpl.to_list st)) @ [text "]."])
 
 let format_named_vals () = 
     let f (ii, i, v) = vert [
@@ -256,7 +256,7 @@ let format_ctx_mems c =
         let ii = Map.find v !vals_store in
         let f = squish [text ("Definition Mem_" ^ ii ^ " : Mem ("); text ("name_" ^ ii); text ", "; text ii; text ") ctx_items := "; m; text "."] in
         (f :: l, coqconstr true "Mem_next" [text "_"; m]) in
-    vert (List.rev ((fst (List.fold_left format_ctx_mem ([], text "(Mem_here _ _)") (LibFinmap.FinmapImpl.to_list LibOrder.Build_Lt c)))))
+    vert (List.rev ((fst (List.fold_left format_ctx_mem ([], text "(Mem_here _ _)") (LibFinmap.FinmapImpl.to_list c)))))
 
 let header () = vert (List.map text [
     "Require Import Utils.";

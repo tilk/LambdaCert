@@ -55,7 +55,7 @@ Definition set_object_property (obj : object) (name : prop_name) (attrs : attrib
   let 'object_intro ps props := obj in object_intro ps (props \( name :=  attrs))   
 .
 Definition delete_object_property (obj : object) (name : prop_name) : object :=
-  let 'object_intro ps props := obj in object_intro ps (props \- name) 
+  let 'object_intro ps props := obj in object_intro ps (props \-- name) 
 .
 
 Definition make_prop_list_aux (left : nat * object_props) (val : string) : nat * object_props :=
