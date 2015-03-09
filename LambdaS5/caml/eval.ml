@@ -42,7 +42,7 @@ let save_store filename =
     File.with_file_out filename (fun ch -> Marshal.to_channel ch (get_store ()) [Marshal.Closures])
 
 let mk_env_vars () =
-    let props = List.map (function (s, _) -> (s, Coq_property_data (Coq_data_intro (Coq_expr_id s, Coq_expr_true, Coq_expr_false, Coq_expr_false)))) (LibFinmap.FinmapImpl.to_list (fst (get_store ()))) in
+    let props = List.map (function (s, _) -> (s, Coq_property_data (Coq_data_intro (Coq_expr_id s, Coq_expr_bool true, Coq_expr_bool false, Coq_expr_bool false)))) (LibFinmap.FinmapImpl.to_list (fst (get_store ()))) in
     match Run.eval_ast (get_store ()) (Coq_expr_seq (Coq_expr_set_attr (Coq_pattr_getter, Coq_expr_id (String.to_list "%makeGlobalEnv"), Coq_expr_string (String.to_list "make"), Coq_expr_lambda ([String.to_list "%"], Coq_expr_object (Translate.translate_attrs Ljs_syntax.d_attrs, props))), Coq_expr_dump)) with
         | Coq_result_dump (c, st) -> 
             store := Some (c, st)

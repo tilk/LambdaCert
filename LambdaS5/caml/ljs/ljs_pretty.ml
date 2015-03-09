@@ -96,8 +96,8 @@ let rec exp_helper exprec e = match e with
   | Coq_expr_undefined _ -> text "undefined"
   | Coq_expr_number n -> text (string_of_float n)
   | Coq_expr_string s -> text ("\"" ^ (String.escaped (String.of_list s)) ^ "\"")
-  | Coq_expr_true _ -> text "true"
-  | Coq_expr_false _-> text "false"
+  | Coq_expr_bool true -> text "true"
+  | Coq_expr_bool false -> text "false"
   | Coq_expr_id x -> text (String.of_list x)
   | Coq_expr_object (avs, props) -> begin
     match props with

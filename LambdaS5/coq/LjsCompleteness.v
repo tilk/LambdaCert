@@ -307,9 +307,7 @@ Proof.
     reflexivity.
     (* number *)
     reflexivity.
-    (* true *)
-    reflexivity.
-    (* false *)
+    (* bool *)
     reflexivity.
     (* id *) 
     unfolds.

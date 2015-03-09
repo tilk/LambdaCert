@@ -77,8 +77,7 @@ Inductive value_related BR : J.value -> L.value -> Prop :=
 | value_related_undefined : value_related BR (J.value_prim J.prim_undef) L.value_undefined
 | value_related_number : forall n, value_related BR (J.value_prim (J.prim_number n)) (L.value_number n)
 | value_related_string : forall s, value_related BR (J.value_prim (J.prim_string s)) (L.value_string s)
-| value_related_true : value_related BR (J.value_prim (J.prim_bool true)) L.value_true
-| value_related_false : value_related BR (J.value_prim (J.prim_bool false)) L.value_false
+| value_related_bool : forall b, value_related BR (J.value_prim (J.prim_bool b)) (L.value_bool b)
 | value_related_object : forall jptr ptr, 
     BR jptr ptr -> value_related BR (J.value_object jptr) (L.value_object ptr) 
 .
@@ -398,7 +397,7 @@ Lemma ljs_to_bool_lemma : forall k BR jst jc c st st' r jv v,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privToBoolean [v]) (L.out_ter st' r) ->
     st = st' /\
     exists b,
-    r = L.res_value (L.bool_to_value b) /\
+    r = L.res_value (L.value_bool b) /\
     J.red_expr jst jc (J.spec_to_boolean jv) 
         (J.out_ter jst (J.res_val (J.value_prim (J.prim_bool b)))).
 Proof.
@@ -424,6 +423,7 @@ Proof.
     simpl; unfold J.convert_number_to_bool; cases_if; reflexivity.
     cases_if; 
     simpl; unfold J.convert_string_to_bool; cases_if; reflexivity.
+    destruct b; injects; reflexivity.
     ljs_abort.
 Qed.
 
@@ -520,7 +520,7 @@ Lemma red_spec_to_boolean_ok : forall k' k jst jc c st st' r je BR,
     L.red_exprh k c st (L.expr_basic (E.to_bool (js_expr_to_ljs je))) (L.out_ter st' r) ->
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value_conv J.spec_to_boolean je) 
        (fun jv => exists b, jv = J.value_prim (J.prim_bool b) /\ 
-           r = L.res_value (L.bool_to_value b)).
+           r = L.res_value (L.value_bool b)).
 Proof.
     introv Hleq IHe Hinv Hlred.
     inverts Hlred.
@@ -637,6 +637,44 @@ Proof.
     jauto_js.
     inv_internal_ljs.
     jauto_js.
+    (*
+    forwards H : res_related_abort IHe4 IHe1.
+    *)
+Qed.
+
+Lemma red_expr_unary_op_not_ok : forall k je,
+    ih_expr k ->
+    th_expr k (J.expr_unary_op J.unary_op_not je).
+Proof.
+    introv IHe Hinv Hlred.
+    inv_fwd_ljs.
+    ljs_out_redh_ter.
+    autoforwards Hh : red_spec_to_boolean_ok. 
+    destr_concl.
+    skip.
+    (* abort *)
+    inv_internal_ljs;
+    jauto_js.
+    right; jauto_js.
+    skip.
+Qed.
+
+Lemma red_expr_unary_op_ok : forall op k je,
+    ih_expr k ->
+    th_expr k (J.expr_unary_op op je).
+Proof.
+    destruct op.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    apply red_expr_unary_op_not_ok.
 Qed.
 
 Lemma red_stat_return_ok : forall k oje,

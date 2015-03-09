@@ -8,16 +8,12 @@ Open Scope string_scope.
 
 (* LambdaJS values and objects *)
 
-Definition bool_to_value (b : bool) : value := if b then value_true else value_false.
-
 Definition value_to_bool (v : value) : option bool :=
   match v with
-  | value_true => Some true
-  | value_false => Some false
+  | value_bool b => Some b
   | _ => None
   end
 .
-
 
 Definition attributes_data_value_update data v :=
   let 'attributes_data_intro _v w e c := data in attributes_data_intro v w e c

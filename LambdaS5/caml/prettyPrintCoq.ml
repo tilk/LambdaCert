@@ -137,8 +137,8 @@ let rec format_expr b e = match e with
     | Coq_expr_undefined -> text "expr_undefined"
     | Coq_expr_number n -> coqconstr b "expr_number" [format_number n]
     | Coq_expr_string s -> coqconstr b "expr_string" [format_id s]
-    | Coq_expr_true -> text "expr_true"
-    | Coq_expr_false -> text "expr_false"
+    | Coq_expr_bool true -> text "expr_true"
+    | Coq_expr_bool false -> text "expr_false"
     | Coq_expr_id s -> coqconstr b "expr_id" [format_id s]
     | Coq_expr_object (oa, ps) -> coqconstr b "expr_object" [format_objattrs true oa; format_property_list ps]
     | Coq_expr_get_attr (a, e1, e2) -> coqconstr b "expr_get_attr" [format_pattr a; format_expr true e1; format_expr true e2]
@@ -191,8 +191,8 @@ and format_value v = match v with
     | Coq_value_undefined -> text "value_undefined"
     | Coq_value_number n -> coqconstr false "value_number" [format_number n]
     | Coq_value_string s -> coqconstr false "value_string" [format_id s]
-    | Coq_value_true -> text "value_true"
-    | Coq_value_false -> text "value_false"
+    | Coq_value_bool true -> text "value_true"
+    | Coq_value_bool false -> text "value_false"
     | Coq_value_object n -> coqconstr false "value_object" [int n]
     | Coq_value_closure (Coq_closure_intro (c, rid, is, e)) -> 
         let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_named_val i v]) in

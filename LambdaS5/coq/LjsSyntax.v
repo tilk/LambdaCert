@@ -104,8 +104,7 @@ Inductive expr : Type :=
 | expr_undefined
 | expr_string : string -> expr
 | expr_number : number -> expr
-| expr_true
-| expr_false
+| expr_bool : bool -> expr
 | expr_id : id -> expr
 | expr_object : objattrs -> list (string * property) -> expr
 | expr_get_attr : pattr -> expr -> expr -> expr (* property -> object -> field_name -> expr *)
@@ -149,8 +148,7 @@ Fixpoint expr_fv e : finset id := match e with
 | expr_undefined
 | expr_string _  
 | expr_number _ 
-| expr_true
-| expr_false 
+| expr_bool _ 
 | expr_dump => \{}
 | expr_id i => \{i}
 | expr_object oa ps => 
@@ -197,7 +195,8 @@ Fixpoint expr_seqs es :=
     | e :: es' => expr_seq e (expr_seqs es')
     end.
 
-Definition expr_bool (b : bool) := if b then expr_true else expr_false.
+Definition expr_true := expr_bool true.
+Definition expr_false := expr_bool false.
 
 Definition default_objattrs := objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined expr_undefined.
 
@@ -211,13 +210,15 @@ Inductive value : Type :=
 | value_undefined
 | value_number : number -> value
 | value_string : string -> value
-| value_true
-| value_false
+| value_bool : bool -> value
 | value_object : object_ptr -> value
 | value_closure : closure -> value 
 with closure := 
 | closure_intro : list (id * value) -> option id -> list id -> expr -> closure
 .
+
+Definition value_true := value_bool true.
+Definition value_false := value_bool false.
 
 Definition closure_body clo :=
   let 'closure_intro _ _ _ body := clo in body.
@@ -331,6 +332,6 @@ Definition result_exception st (v : value) : result := result_res st (res_except
 Definition result_break st (l : string) (v : value) : result := result_res st (res_break l v).
 
 Definition return_bool store (b : bool) :=
-  result_value store (if b then value_true else value_false).
+  result_value store (value_bool b).
 
 

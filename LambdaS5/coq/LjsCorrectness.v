@@ -47,7 +47,7 @@ Proof.
     destruct o. eauto. destruct r; eauto.
 Qed.
 
-Lemma bool_to_value_to_bool : forall b, value_to_bool (bool_to_value b) = Some b.
+Lemma bool_to_value_to_bool : forall b, value_to_bool (value_bool b) = Some b.
 Proof.
     intro b. destruct b; eauto.
 Qed.
@@ -129,9 +129,9 @@ Qed.
 
 Lemma assert_get_bool_out : forall v o cont,
     assert_get_bool v cont = result_some o ->
-    exists b, v = bool_to_value b /\ cont b = result_some o.
+    exists b, v = value_bool b /\ cont b = result_some o.
 Proof.
-    introv E. destruct* v; tryfalse; [exists true | exists false]; jauto. 
+    introv E. destruct* v; tryfalse.
 Qed.
 
 Lemma assert_get_object_from_ptr_out : forall st ptr o cont,
@@ -922,10 +922,8 @@ Proof.
     ljs_run_inv. apply red_expr_string.
     (* number *)
     ljs_run_inv. apply red_expr_number.
-    (* true *)
-    ljs_run_inv. apply red_expr_true.
-    (* false *)
-    ljs_run_inv. apply red_expr_false.
+    (* bool *)
+    ljs_run_inv. apply red_expr_bool.
     (* id *)
     lets (v&Hv&Ho): eval_id_correct IH R.
     rewrite read_option_binds_eq in Hv. 

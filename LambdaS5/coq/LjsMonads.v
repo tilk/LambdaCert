@@ -97,8 +97,7 @@ Definition assert_get_string {A : Type} (loc : value) (cont : string -> resultof
 * Fails otherwise. *)
 Definition assert_get_bool {A : Type} (loc : value) (cont : bool -> resultof A) : resultof A :=
   match loc with
-  | value_true => cont true
-  | value_false => cont false
+  | value_bool b => cont b
   | _ => result_fail "Expected True or False but got none of them."
   end
 .

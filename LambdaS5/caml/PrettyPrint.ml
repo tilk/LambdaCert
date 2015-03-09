@@ -9,8 +9,8 @@ let rec string_of_value depth st = function
 | Coq_value_undefined -> "undefined"
 | Coq_value_number f -> String.of_list (JsNumber.to_string f)
 | Coq_value_string s -> "\"" ^ (String.of_list s) ^ "\""
-| Coq_value_true -> "true"
-| Coq_value_false -> "false"
+| Coq_value_bool true -> "true"
+| Coq_value_bool false -> "false"
 | Coq_value_object ptr -> string_of_object_ptr depth st ptr
 | Coq_value_closure (Coq_closure_intro (loc_heap, _, args, body)) ->
     Printf.sprintf "<closure func (%s) { %s }>"

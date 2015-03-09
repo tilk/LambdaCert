@@ -32,8 +32,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_undefined : forall c st, red_expr c st expr_undefined (out_ter st (res_value value_undefined))
 | red_expr_string : forall c st s, red_expr c st (expr_string s) (out_ter st (res_value (value_string s)))
 | red_expr_number : forall c st n, red_expr c st (expr_number n) (out_ter st (res_value (value_number n)))
-| red_expr_true : forall c st, red_expr c st expr_true (out_ter st (res_value value_true))
-| red_expr_false : forall c st, red_expr c st expr_false (out_ter st (res_value value_false))
+| red_expr_bool : forall c st b, red_expr c st (expr_bool b) (out_ter st (res_value (value_bool b)))
 | red_expr_id : forall c st i v, 
     binds c i v -> 
     red_expr c st (expr_id i) (out_ter st (res_value v))

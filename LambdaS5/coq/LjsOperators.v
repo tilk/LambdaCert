@@ -29,7 +29,7 @@ Definition typeof store (v : value) :=
   | value_null => result_some (value_string  "null")
   | value_string _ => result_some (value_string  "string")
   | value_number _ => result_some (value_string  "number")
-  | value_true | value_false => result_some (value_string  "boolean")
+  | value_bool _ => result_some (value_string  "boolean")
   | value_object ptr =>
     assert_get_object_from_ptr store ptr (fun obj =>
       match object_code obj with
@@ -45,7 +45,7 @@ Definition typeof store (v : value) :=
 
 Definition is_primitive v :=
   match v with
-  | value_undefined | value_null | value_string _ | value_number _ | value_true | value_false =>
+  | value_undefined | value_null | value_string _ | value_number _ | value_bool _ =>
     result_some value_true
   | _ =>
     result_some value_false
@@ -84,8 +84,8 @@ Definition prim_to_str store (v : value) :=
   | value_null => result_some (value_string "null")
   | value_string s => result_some (value_string s)
   | value_number n => result_some (value_string (JsNumber.to_string n))
-  | value_true => result_some (value_string "true")
-  | value_false => result_some (value_string "false")
+  | value_bool true => result_some (value_string "true")
+  | value_bool false => result_some (value_string "false")
   | _ => result_fail "prim_to_str not implemented for this type."
   end
 .
@@ -94,8 +94,8 @@ Definition prim_to_num store (v : value) :=
   match v with
   | value_undefined => result_some (value_number JsNumber.nan)
   | value_null => result_some (value_number JsNumber.zero)
-  | value_true => result_some (value_number JsNumber.one)
-  | value_false => result_some (value_number JsNumber.zero)
+  | value_bool true => result_some (value_number JsNumber.one)
+  | value_bool false => result_some (value_number JsNumber.zero)
   | value_number n => result_some (value_number n)
   | value_string "" => result_some (value_number JsNumber.zero)
   | value_string s => result_some (value_number (JsNumber.from_string s))
@@ -105,8 +105,8 @@ Definition prim_to_num store (v : value) :=
 
 Definition prim_to_bool store (v : value) :=
   match v with
-  | value_true => result_some value_true
-  | value_false => result_some value_false
+  | value_bool true => result_some value_true
+  | value_bool false => result_some value_false
   | value_undefined => result_some value_false
   | value_null => result_some value_false
   | value_number n => result_some (
@@ -123,24 +123,9 @@ Definition prim_to_bool store (v : value) :=
 
 Definition nnot store (v : value) :=
   match v with
-  | value_undefined => result_some value_true
-  | value_null => result_some value_true
-  | value_true => result_some value_false
-  | value_false => result_some value_true
-  | value_number d => result_some (
-      if (decide(d = JsNumber.zero)) then
-        value_true
-      else if (decide(d = JsNumber.neg_zero)) then
-        value_true
-      else if (decide(d <> d)) then
-        value_true
-      else
-        value_false
-    )
-  | value_string "" => result_some value_true
-  | value_string _ => result_some value_false
-  | value_empty => result_some value_true
-  | _ => result_some value_false
+  | value_bool true => result_some value_false
+  | value_bool false => result_some value_true
+  | _ => result_fail "negation with non-boolean"
   end
 .
 
@@ -243,13 +228,13 @@ Parameter _number_eq_bool : number -> number -> bool.
 Definition stx_eq store v1 v2 :=
   match v1, v2 with
   | value_empty, value_empty => result_some value_true
-  | value_string s1, value_string s2 => result_some (bool_to_value (decide(s1 = s2)))
+  | value_string s1, value_string s2 => result_some (value_bool (decide(s1 = s2)))
   | value_null, value_null => result_some value_true
   | value_undefined, value_undefined => result_some value_true
-  | value_true, value_true => result_some value_true
-  | value_false, value_false => result_some value_true
-  | value_number n1, value_number n2 => result_some (bool_to_value (_number_eq_bool n1 n2))
-  | value_object ptr1, value_object ptr2 => result_some (bool_to_value (beq_nat ptr1 ptr2))
+  | value_bool true, value_bool true => result_some value_true
+  | value_bool false, value_bool false => result_some value_true
+  | value_number n1, value_number n2 => result_some (value_bool (_number_eq_bool n1 n2))
+  | value_object ptr1, value_object ptr2 => result_some (value_bool (beq_nat ptr1 ptr2))
   | _, _ => result_some value_false
   end
 .
@@ -257,21 +242,21 @@ Definition stx_eq store v1 v2 :=
 Definition abs_eq store v1 v2 :=
   match v1, v2 with
   | value_empty, value_empty => result_some value_true
-  | value_string s1, value_string s2 => result_some (bool_to_value (decide(s1 = s2)))
+  | value_string s1, value_string s2 => result_some (value_bool (decide(s1 = s2)))
   | value_null, value_null => result_some value_true
   | value_undefined, value_undefined => result_some value_true
-  | value_true, value_true => result_some value_true
-  | value_false, value_false => result_some value_true
-  | value_number n1, value_number n2 => result_some (bool_to_value (_number_eq_bool n1 n2))
-  | value_object ptr1, value_object ptr2 => result_some (bool_to_value (beq_nat ptr1 ptr2))
+  | value_bool true, value_bool true => result_some value_true
+  | value_bool false, value_bool false => result_some value_true
+  | value_number n1, value_number n2 => result_some (value_bool (_number_eq_bool n1 n2))
+  | value_object ptr1, value_object ptr2 => result_some (value_bool (beq_nat ptr1 ptr2))
   | value_null, value_undefined => result_some value_true
   | value_undefined, value_null => result_some value_true
   | value_number n, value_string s
-  | value_string s, value_number n => result_some (bool_to_value (_number_eq_bool (JsNumber.from_string s) n))
-  | value_true, value_number n
-  | value_number n, value_true => result_some (bool_to_value (_number_eq_bool (JsNumber.of_int 1) n))
-  | value_false, value_number n
-  | value_number n, value_false => result_some (bool_to_value (_number_eq_bool (JsNumber.of_int 0) n))
+  | value_string s, value_number n => result_some (value_bool (_number_eq_bool (JsNumber.from_string s) n))
+  | value_bool true, value_number n
+  | value_number n, value_bool true => result_some (value_bool (_number_eq_bool (JsNumber.of_int 1) n))
+  | value_bool false, value_number n
+  | value_number n, value_bool false => result_some (value_bool (_number_eq_bool (JsNumber.of_int 0) n))
   | _, _ => result_some value_false
   end
 .
@@ -312,16 +297,16 @@ Definition prop_to_obj store v1 v2 :=
     assert_get_object_from_ptr store ptr (fun obj =>
       match (get_object_property obj s) with
       | Some (attributes_data_of (attributes_data_intro val writ enum config)) =>
-        let props := \{} \("configurable" := make_attr (bool_to_value config))
-                         \("enumerable" := make_attr (bool_to_value enum)) 
-                         \("writable" := make_attr (bool_to_value writ)) 
+        let props := \{} \("configurable" := make_attr (value_bool config))
+                         \("enumerable" := make_attr (value_bool enum)) 
+                         \("writable" := make_attr (value_bool writ)) 
                          \("value" := make_attr val) in
         let obj := object_intro (oattrs_intro value_undefined "Object" false value_undefined value_null) props in
         let (store, loc) := add_object store obj in
         result_some loc
       | Some (attributes_accessor_of (attributes_accessor_intro get set enum config)) =>
-        let props := \{} \("configurable" := make_attr (bool_to_value config)) 
-                         \("enumerable" := make_attr (bool_to_value enum)) 
+        let props := \{} \("configurable" := make_attr (value_bool config)) 
+                         \("enumerable" := make_attr (value_bool enum)) 
                          \("setter" := make_attr set) 
                          \("getter" := make_attr get) in
         let obj := object_intro (oattrs_intro value_undefined "Object" false value_undefined value_null) props in
@@ -374,7 +359,7 @@ Definition is_accessor store v1_loc v2 :=
 Parameter _same_value : value -> value -> bool.
 
 Definition same_value store v1 v2 :=
-  result_some (bool_to_value (_same_value v1 v2))
+  result_some (value_bool (_same_value v1 v2))
 .
 
 Definition arith (op : number -> number -> number) (v1 v2 : value) : resultof value :=
@@ -409,14 +394,14 @@ Parameter _string_lt_bool : string -> string -> bool.
 
 Definition string_lt v1 v2 : resultof value :=
   match v1, v2 with
-  | value_string s1, value_string s2 => result_some (bool_to_value (_string_lt_bool s1 s2))
+  | value_string s1, value_string s2 => result_some (value_bool (_string_lt_bool s1 s2))
   | _, _ => result_fail "string_lt"
   end
 .
 
 Definition locale_compare v1 v2 : resultof value :=
   match v1, v2 with
-  | value_string s1, value_string s2 => result_some (bool_to_value (_string_lt_bool s1 s2))
+  | value_string s1, value_string s2 => result_some (value_bool (_string_lt_bool s1 s2))
   | _, _ => result_fail "locale_compare"
   end
 .

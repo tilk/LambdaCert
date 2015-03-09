@@ -13,7 +13,7 @@ Require Import LjsMonads.
 Definition get_object_oattr obj (oa : oattr) : value :=
   match oa with
   | oattr_proto => object_proto obj
-  | oattr_extensible => bool_to_value (object_extensible obj)
+  | oattr_extensible => value_bool (object_extensible obj)
   | oattr_code => object_code obj
   | oattr_primval => object_prim_value obj
   | oattr_class => value_string (object_class obj)
@@ -51,12 +51,12 @@ Definition get_object_pattr obj s (pa : pattr) : resultof value :=
   | None => result_some value_undefined
   | Some prop =>
     match pa, prop with
-    | pattr_enum, _ => result_some (bool_to_value (attributes_enumerable prop))
+    | pattr_enum, _ => result_some (value_bool (attributes_enumerable prop))
 
-    | pattr_config, _ => result_some (bool_to_value (attributes_configurable prop))
+    | pattr_config, _ => result_some (value_bool (attributes_configurable prop))
 
     | pattr_writable, attributes_data_of data =>
-      result_some (bool_to_value (attributes_data_writable data))
+      result_some (value_bool (attributes_data_writable data))
     | pattr_writable, attributes_accessor_of _ =>
       result_fail "Access #writable of accessor."
 

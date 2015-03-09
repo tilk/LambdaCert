@@ -80,7 +80,7 @@ let translate_binary_op s = match s with
     | "isAccessor" -> Cs.Coq_binary_op_is_accessor
     | _ -> failwith "operator not implemented"
 
-let translate_bool b = if b then Cs.Coq_expr_true else Cs.Coq_expr_false
+let translate_bool b = Cs.Coq_expr_bool b 
 
 let rec translate_expr e = match e with
     | Ljs.Empty _ -> Cs.Coq_expr_empty
@@ -88,8 +88,8 @@ let rec translate_expr e = match e with
     | Ljs.Undefined _ -> Cs.Coq_expr_undefined
     | Ljs.String (_, s) -> Cs.Coq_expr_string (String.to_list s)
     | Ljs.Num (_, n) -> Cs.Coq_expr_number n
-    | Ljs.True _ -> Cs.Coq_expr_true
-    | Ljs.False _ -> Cs.Coq_expr_false
+    | Ljs.True _ -> Cs.Coq_expr_bool true
+    | Ljs.False _ -> Cs.Coq_expr_bool false
     | Ljs.Id (_, i) -> Cs.Coq_expr_id (String.to_list i)
     | Ljs.Object (_, a, l) -> Cs.Coq_expr_object (translate_attrs a, List.map (function (x, y) -> (String.to_list x, translate_prop y)) l)
     | Ljs.GetAttr (_, p, e1, e2) -> Cs.Coq_expr_get_attr (translate_pattr p, translate_expr e1, translate_expr e2)
