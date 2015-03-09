@@ -90,6 +90,15 @@ Definition out_of_ext_expr p := match p with
 | _ => None
 end.
 
+Inductive abort_intercepted_expr : ext_expr -> Prop := 
+| abort_intercepted_expr_label_1 : forall st i v,
+    abort_intercepted_expr (expr_label_1 i (out_ter st (res_break i v)))
+| abort_intercepted_expr_try_catch_1 : forall st e v,
+    abort_intercepted_expr (expr_try_catch_1 (out_ter st (res_exception v)) e)
+| abort_intercepted_expr_try_finally_1 : forall st r e,
+    abort_intercepted_expr (expr_try_finally_1 (out_ter st r) e)
+.
+
 Inductive res_is_value : res -> Prop :=
 | res_is_value_value : forall v, res_is_value (res_value v)
 .

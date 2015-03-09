@@ -53,7 +53,33 @@ Qed.
 
 (* Useful tactics and lemmas *)
 
+Lemma red_exprh_general_abort : forall k c st ee o,
+    out_of_ext_expr ee = Some o -> abort o -> ~abort_intercepted_expr ee ->
+    red_exprh k c st ee o. 
+Proof.
+    introv Ho Ha Hi.
+    destruct ee; (injects Ho || discriminate Ho); jauto; 
+    (inverts Ha as Hc; [|inverts Hc]).
+    eapply red_exprh_label_1; fequals.
+    eapply red_exprh_label_1; fequals.
+    destruct (classic (i = i0)). substs.
+    specializes Hi abort_intercepted_expr_label_1; false.
+    eapply red_exprh_label_1; fequals.
+    eapply red_exprh_try_catch_1; fequals.
+    specializes Hi abort_intercepted_expr_try_catch_1; false.
+    eapply red_exprh_try_catch_1; fequals.
+    eapply red_exprh_try_finally_1_div.
+    specializes Hi abort_intercepted_expr_try_finally_1; false.
+    specializes Hi abort_intercepted_expr_try_finally_1; false.
+Qed.
+
 Module Export Tactics.
+
+Ltac ljs_abort_false := match goal with
+    | H : abort (out_ter _ (res_value _)) |- _ => 
+        let H1 := fresh "H" in 
+        solve [invert H as H1; inverts H1]
+    end.
 
 Tactic Notation "ljs_out_redh_ter" "in" hyp(Hred) := ljs_out_red_ter in (red_expr_forget_h Hred).
 
@@ -62,3 +88,32 @@ Tactic Notation "ljs_out_redh_ter" := match goal with
     end.
 
 End Tactics.
+
+Local Ltac determine := 
+    match goal with
+    | H1 : ?a = _, H2 : ?a = _ |- _ => rewrite H1 in H2; injects H2
+    | H1 : _ = ?a, H2 : _ = ?a |- _ => rewrite <- H1 in H2; injects H2
+    end.
+
+Local Ltac inst_hyps_det := 
+    match goal with
+    | H1 : red_exprh _ ?c ?st ?e ?o1, H2 : forall k o, red_exprh k ?c ?st ?e o -> ?o2 = o |- _ =>
+        (not constr_eq o1 o2);
+        let H := fresh "H" in forwards H : H2 H1; subst o2
+    end.
+
+Local Ltac binds_determine :=
+    match goal with
+    | H1 : binds ?m ?k ?v1, H2 : binds ?m ?k ?v2 |- _ =>
+        (not constr_eq v1 v2); 
+        let H := fresh "H" in asserts H : (v1 = v2); [skip | subst v1] (* TODO remove skip! *)
+    end.
+
+Lemma red_exprh_deterministic : forall k k' c st ee o o',
+    red_exprh k c st ee o -> red_exprh k' c st ee o' -> o = o'.
+Proof.
+    introv Hr1. generalize k' o'.
+    induction Hr1; introv Hr2;
+    (inversions Hr2; repeat (determine || binds_determine || inst_hyps_det); eauto; try ljs_abort_false; tryfalse);
+    false; jauto.
+Qed.

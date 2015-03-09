@@ -262,10 +262,10 @@ Ltac ljs_abort := match goal with
     end.
 
 Ltac inv_ljs_in H :=
-    inverts H; try ljs_abort.
+    inversions H; try ljs_abort.
 
 Ltac inv_fwd_ljs_in H :=
-    (inverts H; try ljs_abort); [idtac].
+    (inversions H; try ljs_abort); [idtac].
  
 Ltac with_red_exprh T :=
     match goal with
@@ -291,6 +291,17 @@ Ltac inv_internal_ljs := with_internal_red_exprh inv_ljs_in.
 Ltac inv_fwd_ljs := with_red_exprh inv_fwd_ljs_in.
 
 Ltac inv_internal_fwd_ljs := with_internal_red_exprh inv_fwd_ljs_in.
+
+Ltac inv_literal_ljs := 
+    let H := match goal with
+    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_empty) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_true) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_false) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_null) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_undefined) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic (L.expr_number _)) _ |- _ => constr:H
+    | H : L.red_exprh _ _ _ (L.expr_basic (L.expr_string _)) _ |- _ => constr:H
+    end in inverts H.
 
 Ltac inv_res_related :=
     match goal with
@@ -572,18 +583,6 @@ Proof.
     inv_internal_ljs; jauto_js.
 Qed.
 
-(* TODO move *)
-Ltac inv_literal_ljs := 
-    let H := match goal with
-    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_empty) _ |- _ => constr:H
-    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_true) _ |- _ => constr:H
-    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_false) _ |- _ => constr:H
-    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_null) _ |- _ => constr:H
-    | H : L.red_exprh _ _ _ (L.expr_basic L.expr_undefined) _ |- _ => constr:H
-    | H : L.red_exprh _ _ _ (L.expr_basic (L.expr_number _)) _ |- _ => constr:H
-    | H : L.red_exprh _ _ _ (L.expr_basic (L.expr_string _)) _ |- _ => constr:H
-    end in inverts H.
-
 Lemma red_stat_if1_ok : forall k je jt,
     ih_stat k ->
     ih_expr k ->
@@ -625,7 +624,7 @@ Proof.
     introv IHe Hinv Hlred.
     inverts Hlred as Hlred'.
     ljs_out_redh_ter.
-    inverts Hlred'.
+    inversions Hlred'.
     repeat inv_fwd_ljs.
     ljs_out_redh_ter.
     apply_ih_expr.

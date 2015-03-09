@@ -94,6 +94,10 @@ Tactic Notation "injects" :=
     | H : _ = _ |- _ => injects H
     end.
 
+Tactic Notation "not" tactic(tac) := match True with _ => ((tac ; fail 1) || idtac) end.
+
+Tactic Notation "is_hyp" constr(t) := match goal with H : t |- _ => idtac end.
+
 (* TODO move to TLC *)
 Global Instance Exists_decidable : 
     forall `(l : list A) P (HD : forall a, Decidable (P a)), Decidable (Exists P l).
