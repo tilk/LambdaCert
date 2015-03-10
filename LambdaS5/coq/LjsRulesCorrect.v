@@ -23,6 +23,7 @@ Include LjsPrettyRulesIndexedAux.
 Include LjsPrettyInterm.
 Include LjsStore.
 Include LjsAuxiliary.
+Include LjsCommon.
 Include LjsValues.
 End L.
 
@@ -391,43 +392,22 @@ Proof.
     intros. unfolds. rewrite get_closure_aux_lemma. reflexivity.
 Qed. 
 
-Lemma ljs_to_bool_lemma : forall k BR jst jc c st st' r jv v,
-    state_invariant BR jst jc c st ->
-    value_related BR jv v -> 
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privToBoolean [v]) (L.out_ter st' r) ->
-    st = st' /\
-    exists b,
-    r = L.res_value (L.value_bool b) /\
-    J.red_expr jst jc (J.spec_to_boolean jv) 
-        (J.out_ter jst (J.res_val (J.value_prim (J.prim_bool b)))).
-Proof.
-    introv Hinv Hrel Hlred.
-    inverts Hlred.
+Tactic Notation "if" tactic(t1) "then" tactic(t2) := match True with _ => (try (t1; fail 1); fail 1) || t2 end.
 
-    unfold LjsInitEnv.privToBoolean in *.
-    rewrite get_closure_lemma in *.
-    injects.
-    simpl in H5.
-    unfolds in H5.
-    simpl in H5.
-    injects.
-    simpl in H7.
-    inverts H7.
-    inverts H4.
-    forwards Eq : (binds_update_same_inv _ _ _ _ H3).
-    substs. clear H3.
-    inverts H6.
-    splits. reflexivity.
-    inverts Hrel; try injects; jauto_js. 
-    cases_if; 
-    simpl; unfold J.convert_number_to_bool; cases_if; reflexivity.
-    cases_if; 
-    simpl; unfold J.convert_string_to_bool; cases_if; reflexivity.
-    destruct b; injects; reflexivity.
-    ljs_abort.
-Qed.
+Ltac ljs_apply := 
+    match goal with
+    | H1 : LjsCommon.get_closure _ ?e = L.result_some ?clo, H2 : L.closure_ctx ?clo _ = L.result_some _ |- _ =>
+        (try unfold e in H1); rewrite get_closure_lemma in H1; injects H1; injects H2
+    end.
 
-(* TODO should occur earlier *)
+Ltac binds_inv := 
+    match goal with
+    | H : binds (_ \(?x:=?v1)) ?x ?v2 |- _ => 
+        let He := fresh "H" in
+        forwards He : (binds_update_same_inv _ _ _ _ H);
+        subst v2; clear H
+    end.
+
 Lemma state_invariant_includes_init_ctx : forall BR jst jc c st i v v',
     state_invariant BR jst jc c st ->
     binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'.
@@ -462,6 +442,50 @@ Ltac ljs_get_builtin :=
         subst_hyp H1; subst_hyp H2 ]
     end.
 
+Lemma res_related_abort : forall BR jst jst' st jr r,
+    res_related BR jst st jr r ->
+    J.abort (J.out_ter jst' jr) ->
+    L.res_is_control r.
+Proof.
+    introv Hrel Hab.
+    inverts Hrel.
+    inverts Hab. unfold J.res_is_normal in *. simpls. false.
+    eapply L.res_is_control_exception.
+    eapply L.res_is_control_break.
+Qed.
+
+(* Lemmas about operators *)
+
+(* TODO *)
+
+(* Lemmas about the environment *)
+
+Lemma ljs_to_bool_lemma : forall k BR jst jc c st st' r jv v,
+    state_invariant BR jst jc c st ->
+    value_related BR jv v -> 
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privToBoolean [v]) (L.out_ter st' r) ->
+    st = st' /\
+    exists b,
+    r = L.res_value (L.value_bool b) /\
+    J.red_expr jst jc (J.spec_to_boolean jv) 
+        (J.out_ter jst (J.res_val (J.value_prim (J.prim_bool b)))).
+Proof.
+    introv Hinv Hrel Hlred.
+
+    inverts Hlred.
+    ljs_apply.
+    repeat inv_fwd_ljs.
+
+    binds_inv.
+
+    inverts Hrel; try injects; jauto_js. 
+    cases_if; 
+    simpl; unfold J.convert_number_to_bool; cases_if; reflexivity.
+    cases_if; 
+    simpl; unfold J.convert_string_to_bool; cases_if; reflexivity.
+    destruct b; injects; reflexivity.
+Qed.
+
 (* Expressions *)
 
 Lemma red_expr_literal_ok : forall k l,
@@ -495,23 +519,6 @@ Proof.
     apply_ih_expr.
     jauto_js.
 Qed.
-(*
-Lemma red_spec_get_value_ok : forall jst jc c st st' r je BR, 
-    ih_expr je ->
-    state_invariant BR jst jc c st ->
-    L.red_expr c st (js_expr_to_ljs je) (L.out_ter st' r) ->
-    concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
-       (fun jv => exists v, r = L.res_value v /\ value_related BR jv v).
-Proof.
-    introv IHe Hinv Hlred.
-    specializes IHe Hinv Hlred.
-    unfold_concl.
-    jauto_js. 
-    inverts H1. inverts H2. (* TODO *)
-    left.
-    jauto_js.
-Qed.
-*)
 
 Lemma red_spec_to_boolean_ok : forall k' k jst jc c st st' r je BR, 
     (k <= k')%nat ->
@@ -546,18 +553,6 @@ Proof.
     jauto_js.
 
     solve [repeat intuition jauto_js].
-Qed.
-
-Lemma res_related_abort : forall BR jst jst' st jr r,
-    res_related BR jst st jr r ->
-    J.abort (J.out_ter jst' jr) ->
-    L.res_is_control r.
-Proof.
-    introv Hrel Hab.
-    inverts Hrel.
-    inverts Hab. unfold J.res_is_normal in *. simpls. false.
-    eapply L.res_is_control_exception.
-    eapply L.res_is_control_break.
 Qed.
 
 Lemma red_stat_if2_ok : forall k je jt1 jt2,
