@@ -71,6 +71,8 @@ Fixpoint zipl_stream {A B : Type} (st : stream A) (l : list B) :=
 Definition number_list_from {A : Type} k (l : list A) := zipl_stream (id_stream_from k) l.
 
 (* this should go to TLC *)
+Hint Extern 0 (~ _) => solve [let H := fresh in intro H; inversion H].
+
 Tactic Notation "cases_match_option" "as" simple_intropattern(Eq) :=
   match goal with
   | |- context [match ?B with Some _ => _ | None => _ end] => case_if_on B as Eq
@@ -94,7 +96,7 @@ Tactic Notation "injects" :=
     | H : _ = _ |- _ => injects H
     end.
 
-Tactic Notation "not" tactic(tac) := match True with _ => ((tac ; fail 1) || idtac) end.
+Tactic Notation "not" tactic3(tac) := match True with _ => ((tac ; fail 1) || idtac) end.
 
 Tactic Notation "is_hyp" constr(t) := match goal with H : t |- _ => idtac end.
 
