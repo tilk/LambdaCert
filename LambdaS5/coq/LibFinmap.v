@@ -107,6 +107,18 @@ Class Fresh_index_eq `{BagIndex T A} `{BagFresh A T} :=
 Class Fresh_index `{BagIndex T A} `{BagFresh A T} :=
     { fresh_index : forall M, ~index M (fresh M) }.
 
+Class Incl_binds_eq `{BagIncl T} `{BagBinds A B T} :=
+    { incl_binds_eq : forall M1 M2, M1 \c M2 = (forall k x, binds M1 k x -> binds M2 k x) }.
+
+Class Incl_binds `{BagIncl T} `{BagBinds A B T} :=
+    { incl_binds : forall M1 M2 k x, M1 \c M2 -> binds M1 k x -> binds M2 k x }.
+
+Class Incl_binds_inv `{BagIncl T} `{BagBinds A B T} :=
+    { incl_binds_inv : forall M1 M2, (forall k x, binds M1 k x -> binds M2 k x) -> M1 \c M2 }.
+
+Class Update_nindex_incl `{BagIncl T} `{BagUpdate A B T} `{BagIndex T A} :=
+    { update_nindex_incl : forall M k x, ~index M k -> M \c M\(k := x) }.
+
 Instance read_option_binds_from_read_option_binds_eq : 
     forall `{BagReadOption A B T} `{BagBinds A B T},
     Read_option_binds_eq -> Read_option_binds.
@@ -238,6 +250,28 @@ Instance fresh_index_from_fresh_index_eq :
     Fresh_index_eq -> Fresh_index.
 Proof. constructor. introv. rewrite fresh_index_eq. auto. Qed.
 
+Instance incl_binds_from_incl_binds_eq :
+    forall `{BagIncl T} `{BagBinds A B T},
+    Incl_binds_eq -> Incl_binds.
+Proof. constructor. introv. rewrite incl_binds_eq. auto. Qed.
+
+Instance incl_binds_inv_from_incl_binds_eq : 
+    forall `{BagIncl T} `{BagBinds A B T},
+    Incl_binds_eq -> Incl_binds_inv.
+Proof. constructor. introv. rewrite incl_binds_eq. auto. Qed.
+
+Instance update_nindex_incl_inst :
+    forall `{BagIncl T} `{BagUpdate A B T} `{BagIndex T A} `{BagBinds A B T},
+    Index_binds_eq -> Incl_binds_eq -> Binds_update_eq -> Update_nindex_incl.
+Proof. 
+    constructor. introv. rewrite incl_binds_eq, index_binds_eq. 
+    rew_logic. intros.
+    rewrite binds_update_eq. 
+    right. split.
+    intro. substs. jauto.
+    auto.
+Qed.
+
 (* TODO this should get to TLC LibOrder *)
 Class Minimal A := { minimal : A }.
 Class PickGreater A := { pick_greater : A -> A }.
@@ -268,6 +302,7 @@ Parameter empty_impl : finmap A B.
 Parameter single_bind_impl : A -> B -> finmap A B.
 Parameter index_impl : finmap A B -> A -> Prop.
 Parameter binds_impl : finmap A B -> A -> B -> Prop.
+Parameter incl_impl : finmap A B -> finmap A B -> Prop.
 Parameter read_impl : Inhab B -> finmap A B -> A -> B.
 Parameter read_option_impl : finmap A B -> A -> option B.
 Parameter remove_impl : finmap A B -> finset A -> finmap A B.
@@ -275,6 +310,7 @@ Parameter update_impl : finmap A B -> A -> B -> finmap A B.
 Parameter card_impl : finmap A B -> nat.
 Parameter fresh_impl : Minimal A -> PickGreater A -> finmap A B -> A. (* TODO good typeclasses *)
 
+Parameter incl_binds_eq_impl : forall M1 M2, incl_impl M1 M2 = forall k x, binds_impl M1 k x -> binds_impl M2 k x.
 Parameter read_option_binds_eq_impl : forall M k x, (read_option_impl M k = Some x) = binds_impl M k x.
 Parameter binds_empty_eq_impl : forall k x, binds_impl empty_impl k x = False.
 Parameter binds_single_bind_eq_impl : forall k k' x x', 
@@ -346,6 +382,7 @@ Definition empty_impl : finmap := build_finmap finite_empty.
 Definition single_bind_impl k x : finmap := build_finmap (single_bind_finite k x).
 Definition index_impl M k : Prop := index (proj1_sig M) k.
 Definition binds_impl M k x : Prop := binds (proj1_sig M) k x.
+Definition incl_impl M1 M2 : Prop := forall k x, binds_impl M1 k x -> binds_impl M2 k x.
 Definition read_option_impl M k : option B := proj1_sig M k. (* TODO abstract it!!! change TLC *)
 Definition read_impl M k : B := proj1_sig M \(k).
 Definition remove_impl M (S : finset A) : finmap.
@@ -372,6 +409,8 @@ Lemma read_option_binds_eq_impl : forall M k x, (read_option_impl M k = Some x) 
 Proof.
 Admitted.
 
+Lemma incl_binds_eq_impl : forall M1 M2, incl_impl M1 M2 = forall k x, binds_impl M1 k x -> binds_impl M2 k x.
+Proof. unfold incl_impl. auto. Qed.
 Parameter binds_empty_eq_impl : forall k x, binds_impl empty_impl k x = False.
 Parameter binds_single_bind_eq_impl : forall k k' x x', 
     binds_impl (single_bind_impl k' x') k x = (k = k' /\ x = x').
@@ -412,6 +451,9 @@ Global Instance index_inst : BagIndex (finmap A B) A :=
 Global Instance binds_inst : BagBinds A B (finmap A B) :=
     { binds := @binds_impl _ _ }.
 
+Global Instance incl_inst : BagIncl (finmap A B) :=
+    { incl := @incl_impl _ _ }.
+
 Global Instance read_inst : BagRead A B (finmap A B) :=
     { read := @read_impl _ _ _ }.
 
@@ -429,6 +471,9 @@ Global Instance card_inst : BagCard (finmap A B) :=
 
 Global Instance fresh_inst : Minimal A -> PickGreater A -> BagFresh A (finmap A B) :=
     { fresh := @fresh_impl _ _ _ _ }.
+
+Global Instance incl_binds_eq_inst : Incl_binds_eq :=
+    { incl_binds_eq := @incl_binds_eq_impl _ _ }.
 
 Global Instance read_option_binds_eq_inst : Read_option_binds_eq :=
     { read_option_binds_eq := @read_option_binds_eq_impl _ _ }.
