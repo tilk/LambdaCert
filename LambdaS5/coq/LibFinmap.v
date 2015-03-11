@@ -101,6 +101,63 @@ Class Index_binds `{BagIndex T A} `{BagBinds A B T} :=
 Class Index_binds_inv `{BagIndex T A} `{BagBinds A B T} :=
     { index_binds_inv : forall M k x, binds M k x -> index M k }.
 
+Class Index_empty_eq `{BagIndex T A} `{BagEmpty T} :=
+    { index_empty_eq : forall k, index \{} k = False }.
+
+Class Index_empty `{BagIndex T A} `{BagEmpty T} :=
+    { index_empty : forall k, ~index \{} k }.
+
+Class Index_single_bind_eq `{BagIndex T A} `{BagSingleBind A B T} :=
+    { index_single_bind_eq : forall k k' x', index (k' \:= x') k = (k = k') }.
+
+Class Index_single_bind_same_eq `{BagIndex T A} `{BagSingleBind A B T} :=
+    { index_single_bind_same_eq : forall k x, index (k \:= x) k = True }.
+
+Class Index_single_bind_same `{BagIndex T A} `{BagSingleBind A B T} :=
+    { index_single_bind_same : forall k x, index (k \:= x) k }.
+
+Class Index_single_bind_diff_eq `{BagIndex T A} `{BagSingleBind A B T} :=
+    { index_single_bind_diff_eq : forall k k' x', k <> k' -> index (k' \:= x') k = False }. 
+
+Class Index_single_bind_diff `{BagIndex T A} `{BagSingleBind A B T} :=
+    { index_single_bind_diff : forall k k' x', k <> k' -> ~index (k' \:= x') k }. 
+
+Class Index_remove_eq `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1} :=
+    { index_remove_eq : forall M S k, index (M \- S) k = (index M k /\ k \notin S) }.
+
+Class Index_remove_in_eq `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1} :=
+    { index_remove_in_eq : forall M S k, k \in S -> index (M \- S) k = False }.
+
+Class Index_remove_in `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1} :=
+    { index_remove_in : forall M S k, k \in S -> ~index (M \- S) k }.
+
+Class Index_remove_notin_eq `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1} :=
+    { index_remove_notin_eq : forall M S k, k \notin S -> index (M \- S) k = index M k }.
+
+Class Index_remove_notin `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1} :=
+    { index_remove_notin : forall M S k, k \notin S -> index M k -> index (M \- S) k }.
+
+Class Index_remove_notin_inv `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1} :=
+    { index_remove_notin_inv : forall M S k, k \notin S -> index (M \- S) k -> index M k }.
+
+Class Index_update_eq `{BagIndex T A} `{BagUpdate A B T} :=
+    { index_update_eq : forall M k k' x', index (M \(k' := x')) k = (index M k \/ k = k') }.
+
+Class Index_update_same_eq `{BagIndex T A} `{BagUpdate A B T} :=
+    { index_update_same_eq : forall M k x, index (M \(k := x)) k = True }.
+
+Class Index_update_same `{BagIndex T A} `{BagUpdate A B T} :=
+    { index_update_same : forall M k x, index (M \(k := x)) k }.
+
+Class Index_update_diff_eq `{BagIndex T A} `{BagUpdate A B T} :=
+    { index_update_diff_eq : forall M k k' x', k <> k' -> index (M \(k' := x')) k = index M k }.
+
+Class Index_update_diff `{BagIndex T A} `{BagUpdate A B T} :=
+    { index_update_diff : forall M k k' x', k <> k' -> index M k -> index (M \(k' := x')) k }.
+
+Class Index_update_diff_inv `{BagIndex T A} `{BagUpdate A B T} :=
+    { index_update_diff_inv : forall M k k' x', k <> k' -> index (M \(k' := x')) k -> index M k }.
+
 Class Fresh_index_eq `{BagIndex T A} `{BagFresh A T} :=
     { fresh_index_eq : forall M, index M (fresh M) = False }.
 
@@ -165,14 +222,6 @@ Instance binds_single_bind_diff_from_binds_single_bind_diff_eq :
     Binds_single_bind_diff_eq -> Binds_single_bind_diff. 
 Proof. constructor. introv Hd. rewrite binds_single_bind_diff_eq; auto. Qed.
 
-Instance binds_update_same_eq_from_binds_update_eq :
-    forall `{BagBinds A B T} `{BagUpdate A B T},
-    Binds_update_eq -> Binds_update_same_eq.
-Proof. 
-    constructor. intros. rewrite binds_update_eq. rew_logic. 
-    apply iff_intro; iauto.
-Qed.
-
 Instance binds_remove_notin_eq_from_binds_remove_eq :
     forall `{BagBinds A B T} `{BagIn A T1} `{BagRemove T T1},
     Binds_remove_eq -> Binds_remove_notin_eq.
@@ -206,6 +255,14 @@ Instance binds_remove_inv_from_binds_remove_eq :
     forall `{BagBinds A B T} `{BagIn A T1} `{BagRemove T T1},
     Binds_remove_eq -> Binds_remove_inv.
 Proof. constructor. introv Hb. rewrite binds_remove_eq in Hb. auto. Qed.
+
+Instance binds_update_same_eq_from_binds_update_eq :
+    forall `{BagBinds A B T} `{BagUpdate A B T},
+    Binds_update_eq -> Binds_update_same_eq.
+Proof. 
+    constructor. intros. rewrite binds_update_eq. rew_logic. 
+    apply iff_intro; iauto.
+Qed.
 
 Instance binds_update_same_from_binds_update_same_eq :
     forall `{BagBinds A B T} `{BagUpdate A B T},
@@ -245,6 +302,90 @@ Instance index_binds_inv_from_index_binds_eq :
     Index_binds_eq -> Index_binds_inv.
 Proof. constructor. introv I. rewrite index_binds_eq. eauto. Qed.
 
+Instance index_empty_from_index_empty_eq :
+    forall `{BagIndex T A} `{BagEmpty T},
+    Index_empty_eq -> Index_empty.
+Proof. constructor. introv. rewrite index_empty_eq. auto. Qed. 
+
+Instance index_single_bind_same_eq_from_index_single_bind_eq :
+    forall `{BagIndex T A} `{BagSingleBind A B T},
+    Index_single_bind_eq -> Index_single_bind_same_eq.
+Proof. constructor. introv. rewrite index_single_bind_eq. auto. Qed.
+
+Instance index_single_bind_same_from_index_single_bind_same_eq :
+    forall `{BagIndex T A} `{BagSingleBind A B T},
+    Index_single_bind_same_eq -> Index_single_bind_same.
+Proof. constructor. introv. rewrite index_single_bind_same_eq. auto. Qed.
+
+Instance index_single_bind_diff_eq_from_index_single_bind_eq :
+    forall `{BagIndex T A} `{BagSingleBind A B T},
+    Index_single_bind_eq -> Index_single_bind_diff_eq.
+Proof. constructor. introv. rewrite index_single_bind_eq. auto. Qed.
+
+Instance index_single_bind_diff_from_index_single_bind_diff_eq :
+    forall `{BagIndex T A} `{BagSingleBind A B T},
+    Index_single_bind_diff_eq -> Index_single_bind_diff.
+Proof. constructor. introv Hd. rewrite index_single_bind_diff_eq; auto. Qed.
+
+Instance index_remove_in_eq_from_index_remove_eq :
+    forall `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1},
+    Index_remove_eq -> Index_remove_in_eq.
+Proof. 
+    constructor. introv I. rewrite index_remove_eq. rew_logic. 
+    apply iff_intro; intro; jauto; tryfalse.
+Qed.
+
+Instance index_remove_in_from_index_remove_in_eq :
+    forall `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1},
+    Index_remove_in_eq -> Index_remove_in.
+Proof. constructor. introv Hi. rewrite index_remove_in_eq; auto. Qed.
+
+Instance index_remove_notin_eq_from_index_remove_eq :
+    forall `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1},
+    Index_remove_eq -> Index_remove_notin_eq.
+Proof. 
+    constructor. introv I. rewrite index_remove_eq. rew_logic. 
+    apply iff_intro; intro; jauto; tryfalse.
+Qed.
+
+Instance index_remove_notin_from_index_remove_notin_eq :
+    forall `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1},
+    Index_remove_notin_eq -> Index_remove_notin.
+Proof. constructor. introv Hi. rewrite index_remove_notin_eq; auto. Qed.
+
+Instance index_remove_notin_inv_from_index_remove_notin_eq :
+    forall `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1},
+    Index_remove_notin_eq -> Index_remove_notin_inv.
+Proof. constructor. introv Hi. rewrite index_remove_notin_eq; auto. Qed.
+
+Instance index_update_same_eq_from_index_update_eq : 
+    forall `{BagIndex T A} `{BagUpdate A B T},
+    Index_update_eq -> Index_update_same_eq.
+Proof. constructor. introv. rewrite index_update_eq. auto. Qed.
+
+Instance index_update_same_from_index_update_same_eq :
+    forall `{BagIndex T A} `{BagUpdate A B T},
+    Index_update_same_eq -> Index_update_same.
+Proof. constructor. introv. rewrite index_update_same_eq. auto. Qed.
+
+Instance index_update_diff_eq_from_index_update_eq : 
+    forall `{BagIndex T A} `{BagUpdate A B T},
+    Index_update_eq -> Index_update_diff_eq.
+Proof. 
+    constructor. introv Hd. rewrite index_update_eq. rew_logic.
+    apply iff_intro; intro; intuition jauto.
+Qed.
+
+Instance index_update_diff_from_index_update_diff_eq :
+    forall `{BagIndex T A} `{BagUpdate A B T},
+    Index_update_diff_eq -> Index_update_diff.
+Proof. constructor. introv Hd. rewrite index_update_diff_eq; auto. Qed.
+
+Instance index_update_diff_inv_from_index_update_diff_eq :
+    forall `{BagIndex T A} `{BagUpdate A B T},
+    Index_update_diff_eq -> Index_update_diff_inv.
+Proof. constructor. introv Hd. rewrite index_update_diff_eq; auto. Qed.
+
 Instance fresh_index_from_fresh_index_eq : 
     forall `{BagIndex T A} `{BagFresh A T}, 
     Fresh_index_eq -> Fresh_index.
@@ -260,16 +401,92 @@ Instance incl_binds_inv_from_incl_binds_eq :
     Incl_binds_eq -> Incl_binds_inv.
 Proof. constructor. introv. rewrite incl_binds_eq. auto. Qed.
 
+Create HintDb bag.
+
+Hint Resolve @binds_empty @binds_single_bind_same @binds_single_bind_diff
+    @binds_remove_in @binds_remove_notin
+    @binds_update_same @binds_update_diff 
+    @index_binds_inv @fresh_index 
+    @incl_binds @update_nindex_incl 
+    @index_empty @index_single_bind_same @index_single_bind_diff
+    @index_remove_in @index_remove_notin
+    @index_update_same @index_update_diff
+: bag.
+
+Tactic Notation "prove_bag" :=
+    solve [ eauto with bag ].
+
+(* TODO why doesn't this work?
+Hint Rewrite @binds_empty_eq @binds_single_bind_eq @binds_remove_eq 
+    @binds_update_eq @incl_binds_eq @index_binds_eq : rew_binds_eq.
+
+Tactic Notation "rew_binds_eq" :=
+    autorewrite with rew_binds_eq.
+Tactic Notation "rew_binds_eq" "in" hyp(H) :=
+    autorewrite with rew_binds_eq in H.
+Tactic Notation "rew_binds_eq" "in" "*" :=
+    autorewrite with rew_binds_eq in *.
+
+Tactic Notation "rew_binds_eq" "~" :=
+    rew_binds_eq; auto_tilde.
+Tactic Notation "rew_binds_eq" "*" :=
+    rew_binds_eq; auto_star.
+Tactic Notation "rew_binds_eq" "~" "in" hyp(H) :=
+    rew_binds_eq in H; auto_tilde.
+Tactic Notation "rew_binds_eq" "*" "in" hyp(H) :=
+    rew_binds_eq in H; auto_star.
+*)
+
 Instance update_nindex_incl_inst :
     forall `{BagIncl T} `{BagUpdate A B T} `{BagIndex T A} `{BagBinds A B T},
     Index_binds_eq -> Incl_binds_eq -> Binds_update_eq -> Update_nindex_incl.
-Proof. 
+Proof.
     constructor. introv. rewrite incl_binds_eq, index_binds_eq. 
     rew_logic. intros.
     rewrite binds_update_eq. 
     right. split.
     intro. substs. jauto.
     auto.
+Qed.
+
+Instance index_empty_eq_inst : 
+    forall `{BagIndex T A} `{BagBinds A B T} `{BagEmpty T},
+    Index_binds_eq -> Binds_empty_eq -> Index_empty_eq.
+Proof.
+    constructor. introv. rewrite index_binds_eq. 
+    rew_logic; apply iff_intro; intro. 
+    jauto_set. rewrites binds_empty_eq in *. trivial.
+    tryfalse.
+Qed.
+
+Instance index_single_bind_eq_inst :
+    forall `{BagIndex T A} `{BagBinds A B T} `{BagSingleBind A B T},
+    Index_binds_eq -> Binds_single_bind_eq -> Index_single_bind_eq. 
+Proof.
+    constructor. introv. rewrite index_binds_eq. 
+    rew_logic; apply iff_intro; 
+    jauto_set; rewrites binds_single_bind_eq in *; jauto.
+Qed.
+
+Instance index_remove_eq_inst :
+    forall `{BagIndex T A} `{BagBinds A B T} `{BagIn A T1} `{BagRemove T T1},
+    Index_binds_eq -> Binds_remove_eq -> Index_remove_eq.
+Proof.
+    constructor. introv. rewrite_all index_binds_eq.
+    rew_logic; apply iff_intro; 
+    jauto_set; rewrites binds_remove_eq in *; jauto.
+Qed.
+
+Instance index_update_eq_inst :
+    forall `{BagIndex T A} `{BagBinds A B T} `{BagUpdate A B T},
+    Index_binds_eq -> Binds_update_eq -> Index_update_eq.
+Proof.
+    constructor. introv. rewrite_all index_binds_eq.
+        rew_logic; apply iff_intro.
+    jauto_set; rewrites binds_update_eq in *; intuition jauto.
+    introv Hyp.
+    apply case_classic_r in Hyp.
+    destruct Hyp; jauto_set; rewrites binds_update_eq in *; intuition jauto.
 Qed.
 
 (* TODO this should get to TLC LibOrder *)
