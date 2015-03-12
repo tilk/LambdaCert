@@ -402,7 +402,7 @@ Ltac solve_ijauto_js := solve [ijauto_js].
 
 (* Lemmas about invariants *)
 
-Hint Extern 1 (?x <> _) => solve [intro; subst x; false].
+Hint Extern 1 (?x <> _) => solve [intro; subst x; false]. (* TODO move *)
 
 Lemma heaps_bisim_nindex_preserved : forall BR jst st ptr obj,
     ~index st ptr ->
@@ -559,6 +559,23 @@ Ltac ljs_propagate_abort :=
 
 Ltac ljs_handle_abort := progress (repeat (ljs_propagate_abort || ljs_abort_from_js)); solve_ijauto_js.
 
+Ltac specialize_th_spec H :=
+    match type of H with
+    | th_spec _ ?e _ _ => 
+    match goal with
+    | H1 : L.red_exprh _ ?c ?st (L.expr_basic ?e') _, H2 : state_invariant _ _ _ ?c ?st |- _ => 
+        unify e e';
+        specializes H H2 H1;
+        clear H2; clear H1
+    end
+    end.
+
+Ltac forwards_th Hth := let H := fresh "H" in 
+    (forwards H : Hth;
+    first [is_var H; specialize_th_spec H | idtac];
+    try (eapply ih_expr_leq; try eassumption; omega)); 
+    [idtac].
+    
 (* Lemmas about operators *)
 
 (* TODO *)
@@ -628,7 +645,7 @@ Proof.
     introv.
     unfolds.
     introv Hinv Hlred.
-    destruct l as [ | [ | ] | | ]; inverts Hlred; jauto_js; solve [intuition jauto_js].
+    destruct l as [ | [ | ] | | ]; inverts Hlred; ijauto_js.
 Qed.
 
 Lemma red_expr_identifier_ok : forall k i,
@@ -644,6 +661,156 @@ Proof.
     skip.
 Qed.
 
+Hint Extern 11 => match goal with |- context [If _ then _ else _] => case_if end : js_ljs.
+
+Lemma red_expr_conditional_ok : forall k je1 je2 je3,
+    ih_expr k ->
+    th_expr k (J.expr_conditional je1 je2 je3).
+Proof.
+    introv IHe Hinv Hlred.
+    inv_fwd_ljs.
+    ljs_out_redh_ter.
+
+    forwards_th red_spec_to_boolean_ok. 
+
+    destr_concl.
+    destruct b.
+    (* true *)
+    inv_internal_fwd_ljs.
+    apply_ih_expr.
+    repeat destr_concl; unfold_concl.
+    jauto_set.
+    jauto_js.
+    left.
+    jauto_set.
+    econstructor;
+    jauto_js.
+    jauto_js.
+    jauto_js.
+
+    jauto_set.
+    jauto_js.
+    right.
+    jauto_set.
+    eapply J.red_spec_expr_get_value.
+    eapply J.red_expr_conditional.
+    eassumption.
+    eapply J.red_expr_conditional_1.
+    reflexivity.
+    jauto_js.
+    econstructor; ijauto_js.
+    false_invert.
+    eapply J.red_spec_abort.
+    reflexivity.
+    assumption. 
+    ijauto_js.    
+    ijauto_js.
+    ijauto_js.
+    (* false *)
+    inv_internal_fwd_ljs.
+    apply_ih_expr.
+    repeat destr_concl; unfold_concl.
+    jauto_set.
+    jauto_js.
+    left.
+    jauto_set.
+    econstructor;
+    jauto_js.
+    jauto_js.
+    jauto_js.
+
+    jauto_set.
+    jauto_js.
+    right.
+    jauto_set.
+    eapply J.red_spec_expr_get_value.
+    eapply J.red_expr_conditional.
+    eassumption.
+    eapply J.red_expr_conditional_1.
+    reflexivity.
+    jauto_js.
+    econstructor; ijauto_js.
+    false_invert.
+    eapply J.red_spec_abort.
+    reflexivity.
+    assumption. 
+    ijauto_js.    
+    ijauto_js.
+    ijauto_js.
+    (* abort *)
+    ljs_abort_from_js.
+    ljs_propagate_abort.
+    unfold_concl.
+    jauto_set.
+    eassumption.
+    right.
+    jauto_set.
+    eapply J.red_spec_expr_get_value.
+    eapply J.red_expr_conditional.
+    eassumption.
+    eapply J.red_expr_abort.
+    reflexivity.
+    eassumption.
+    trivial.
+    eapply J.red_spec_abort.
+    reflexivity.
+    eassumption.
+    trivial.
+    eassumption.
+    eassumption.
+Qed.
+
+Lemma red_expr_assign0_ok : forall k je1 je2,
+    ih_expr k ->
+    th_expr k (J.expr_assign je1 None je2).
+Proof.
+Admitted.
+
+Lemma red_expr_unary_op_not_ok : forall k je,
+    ih_expr k ->
+    th_expr k (J.expr_unary_op J.unary_op_not je).
+Proof.
+    introv IHe Hinv Hlred.
+    inv_fwd_ljs.
+    ljs_out_redh_ter.
+(* TODO better lemma about to_bool *)
+    (* abort *)
+(*
+    repeat (ljs_propagate_abort || ljs_abort_from_js).
+    inverts H2. skip.
+    jauto_js.
+    right; jauto_js.
+    eapply J.red_spec_expr_get_value.
+    eapply J.red_expr_unary_op.
+    jauto_js.
+    eapply H9.
+    inverts H9. skip.
+    eapply J.red_expr_unary_op_1.
+    jauto_js.
+    eapply J.red_expr_unary_op_not. *)
+    skip.
+Qed.
+
+Lemma red_expr_unary_op_ok : forall op k je,
+    ih_expr k ->
+    th_expr k (J.expr_unary_op op je).
+Proof.
+    destruct op.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    apply red_expr_unary_op_not_ok.
+Qed.
+
+(* Statements *)
+
 Lemma red_stat_expr_ok : forall k je, 
     ih_expr k ->
     th_stat k (J.stat_expr je).
@@ -654,23 +821,6 @@ Proof.
     jauto_js.
 Qed.
 
-Ltac specialize_th_spec H :=
-    match type of H with
-    | th_spec _ ?e _ _ => 
-    match goal with
-    | H1 : L.red_exprh _ ?c ?st (L.expr_basic ?e') _, H2 : state_invariant _ _ _ ?c ?st |- _ => 
-        unify e e';
-        specializes H H2 H1;
-        clear H2; clear H1
-    end
-    end.
-
-Ltac forwards_th Hth := let H := fresh "H" in 
-    (forwards H : Hth;
-    first [is_var H; specialize_th_spec H | idtac];
-    try (eapply ih_expr_leq; try eassumption; omega)); 
-    [idtac].
-    
 Lemma red_stat_if2_ok : forall k je jt1 jt2,
     ih_stat k ->
     ih_expr k ->
@@ -748,48 +898,6 @@ Proof.
     jauto_js.
 Qed.
 
-Lemma red_expr_unary_op_not_ok : forall k je,
-    ih_expr k ->
-    th_expr k (J.expr_unary_op J.unary_op_not je).
-Proof.
-    introv IHe Hinv Hlred.
-    inv_fwd_ljs.
-    ljs_out_redh_ter.
-(* TODO better lemma about to_bool *)
-    (* abort *)
-(*
-    repeat (ljs_propagate_abort || ljs_abort_from_js).
-    inverts H2. skip.
-    jauto_js.
-    right; jauto_js.
-    eapply J.red_spec_expr_get_value.
-    eapply J.red_expr_unary_op.
-    jauto_js.
-    eapply H9.
-    inverts H9. skip.
-    eapply J.red_expr_unary_op_1.
-    jauto_js.
-    eapply J.red_expr_unary_op_not. *)
-    skip.
-Qed.
-
-Lemma red_expr_unary_op_ok : forall op k je,
-    ih_expr k ->
-    th_expr k (J.expr_unary_op op je).
-Proof.
-    destruct op.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    apply red_expr_unary_op_not_ok.
-Qed.
 
 Lemma red_stat_return_ok : forall k oje,
     ih_expr k ->
@@ -885,7 +993,7 @@ Proof.
     (* expr_binary_op *)
     skip.
     (* expr_conditional *)
-    skip.
+    applys red_expr_conditional_ok; eassumption.
     (* expr_assign *)
     skip.
 Qed.
