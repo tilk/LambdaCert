@@ -5,7 +5,6 @@ Require Import JsNumber.
 Require Import Utils.
 Require Import LjsSyntax.
 Require Import LjsPrettyInterm LjsPrettyRules LjsPrettyRulesIndexed.
-Require Import LjsCompleteness.
 
 Implicit Type A B : Type.
 Implicit Type st : store.

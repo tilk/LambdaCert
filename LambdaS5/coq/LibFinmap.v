@@ -149,6 +149,9 @@ Class Index_update_same_eq `{BagIndex T A} `{BagUpdate A B T} :=
 Class Index_update_same `{BagIndex T A} `{BagUpdate A B T} :=
     { index_update_same : forall M k x, index (M \(k := x)) k }.
 
+Class Index_update_index `{BagIndex T A} `{BagUpdate A B T} :=
+    { index_update_index : forall M k k' x', index M k -> index (M \(k' := x')) k }.
+
 Class Index_update_diff_eq `{BagIndex T A} `{BagUpdate A B T} :=
     { index_update_diff_eq : forall M k k' x', k <> k' -> index (M \(k' := x')) k = index M k }.
 
@@ -368,6 +371,11 @@ Instance index_update_same_from_index_update_same_eq :
     Index_update_same_eq -> Index_update_same.
 Proof. constructor. introv. rewrite index_update_same_eq. auto. Qed.
 
+Instance index_update_index_from_index_update_eq : 
+    forall `{BagIndex T A} `{BagUpdate A B T},
+    Index_update_eq -> Index_update_index.
+Proof. constructor. introv. rewrite index_update_eq. auto. Qed.
+
 Instance index_update_diff_eq_from_index_update_eq : 
     forall `{BagIndex T A} `{BagUpdate A B T},
     Index_update_eq -> Index_update_diff_eq.
@@ -379,7 +387,7 @@ Qed.
 Instance index_update_diff_from_index_update_diff_eq :
     forall `{BagIndex T A} `{BagUpdate A B T},
     Index_update_diff_eq -> Index_update_diff.
-Proof. constructor. introv Hd. rewrite index_update_diff_eq; auto. Qed.
+Proof. constructor. introv Hd. rewrite index_update_diff_eq; eauto. Qed.
 
 Instance index_update_diff_inv_from_index_update_diff_eq :
     forall `{BagIndex T A} `{BagUpdate A B T},
@@ -401,7 +409,7 @@ Instance incl_binds_inv_from_incl_binds_eq :
     Incl_binds_eq -> Incl_binds_inv.
 Proof. constructor. introv. rewrite incl_binds_eq. auto. Qed.
 
-Create HintDb bag.
+Create HintDb bag discriminated.
 
 Hint Resolve @binds_empty @binds_single_bind_same @binds_single_bind_diff
     @binds_remove_in @binds_remove_notin
@@ -410,11 +418,11 @@ Hint Resolve @binds_empty @binds_single_bind_same @binds_single_bind_diff
     @incl_binds @update_nindex_incl 
     @index_empty @index_single_bind_same @index_single_bind_diff
     @index_remove_in @index_remove_notin
-    @index_update_same @index_update_diff
+    @index_update_same @index_update_index @index_update_diff
 : bag.
 
 Tactic Notation "prove_bag" :=
-    solve [ eauto with bag ].
+    solve [ eauto with bag typeclass_instances ].
 
 (* TODO why doesn't this work?
 Hint Rewrite @binds_empty_eq @binds_single_bind_eq @binds_remove_eq 

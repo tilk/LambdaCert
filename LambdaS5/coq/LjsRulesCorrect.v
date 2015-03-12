@@ -112,28 +112,6 @@ Inductive attributes_related BR : J.attributes -> L.attributes -> Prop :=
     attributes_related BR (J.attributes_accessor_of jacc) (L.attributes_accessor_of acc)
 .
 
-Definition object_bisim_lfun BR :=
-    forall jptr ptr1 ptr2, BR jptr ptr1 -> BR jptr ptr2 -> ptr1 = ptr2.
-
-Definition object_bisim_rfun BR :=
-    forall jptr1 jptr2 ptr, BR jptr1 ptr -> BR jptr2 ptr -> jptr1 = jptr2.
-
-Definition object_bisim_ltotal jst BR :=
-    forall jptr, J.object_indom jst jptr -> exists ptr, BR jptr ptr.
-
-Definition object_bisim_lnoghost jst BR :=
-    forall jptr ptr, BR jptr ptr -> J.object_indom jst jptr.
-
-Definition object_bisim_rnoghost st BR :=
-    forall jptr ptr, BR jptr ptr -> index st ptr.
-
-Definition object_bisim_consistent jst st BR :=
-    object_bisim_lfun BR /\
-    object_bisim_rfun BR /\
-    object_bisim_ltotal jst BR /\
-    object_bisim_lnoghost jst BR /\
-    object_bisim_rnoghost st BR.
-
 Definition object_attributes_related BR jobj obj := forall s, 
     ~J.Heap.indom (J.object_properties_ jobj) s /\ ~index (L.object_properties obj) s \/
     exists jptr ptr, 
@@ -148,11 +126,35 @@ Definition object_related BR jobj obj :=
     object_prim_related BR jobj obj /\
     object_attributes_related BR jobj obj.
 
+Definition heaps_bisim_lfun BR :=
+    forall jptr ptr1 ptr2, BR jptr ptr1 -> BR jptr ptr2 -> ptr1 = ptr2.
+
+Definition heaps_bisim_rfun BR :=
+    forall jptr1 jptr2 ptr, BR jptr1 ptr -> BR jptr2 ptr -> jptr1 = jptr2.
+
+Definition heaps_bisim_ltotal BR jst :=
+    forall jptr, J.object_indom jst jptr -> exists ptr, BR jptr ptr.
+
+Definition heaps_bisim_lnoghost BR jst :=
+    forall jptr ptr, BR jptr ptr -> J.object_indom jst jptr.
+
+Definition heaps_bisim_rnoghost BR st :=
+    forall jptr ptr, BR jptr ptr -> index st ptr.
+
 Definition heaps_bisim BR jst st := forall jptr ptr jobj obj, 
      BR jptr ptr -> 
      J.object_binds jst jptr jobj ->
      binds st ptr obj ->
      object_related BR jobj obj.
+
+Record heaps_bisim_consistent BR jst st : Prop := {
+    heaps_bisim_consistent_bisim : heaps_bisim BR jst st;
+    heaps_bisim_consistent_lfun : heaps_bisim_lfun BR;
+    heaps_bisim_consistent_rfun : heaps_bisim_rfun BR;
+    heaps_bisim_consistent_ltotal : heaps_bisim_ltotal BR jst;
+    heaps_bisim_consistent_lnoghost : heaps_bisim_lnoghost BR jst;
+    heaps_bisim_consistent_rnoghost : heaps_bisim_rnoghost BR st
+}.
 
 Definition js_literal_to_ljs jl := E.ejs_to_ljs (E.js_literal_to_ejs jl).
 Definition js_expr_to_ljs je := E.ejs_to_ljs (E.js_expr_to_ejs je).
@@ -202,6 +204,8 @@ Hint Constructors resvalue_related : js_ljs.
 Hint Constructors res_related : js_ljs.
 (* Hint Constructors out_related : js_ljs. *)
 
+Hint Extern 4 (js_exn_object _ _) => unfold js_exn_object : js_ljs.
+
 Hint Constructors J.red_expr : js_ljs.
 Hint Constructors J.red_stat : js_ljs.
 Hint Constructors J.red_spec : js_ljs.
@@ -209,9 +213,10 @@ Hint Constructors J.red_spec : js_ljs.
 Definition includes_init_ctx c :=
     forall i v v', binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'. 
 
-Definition state_invariant BR jst jc c st :=
-    heaps_bisim BR jst st /\
-    includes_init_ctx c.
+Inductive state_invariant BR jst jc c st : Prop := {
+    state_invariant_heaps_bisim_consistent : heaps_bisim_consistent BR jst st;
+    state_invariant_includes_init_ctx : includes_init_ctx c
+}.
 
 Definition concl_expr_value BR jst jc c st st' r je :=
     exists jst' jr,
@@ -386,14 +391,57 @@ Ltac destr_concl := match goal with
         unfold_concl in H; destruct_hyp H
     end.
 
-Ltac jauto_js := repeat destr_concl; jauto_set; eauto with js_ljs; 
-    repeat (try unfold_concl; jauto_set; eauto with js_ljs).
+Ltac jauto_js := repeat destr_concl; jauto_set; eauto with js_ljs bag typeclass_instances; 
+    repeat (try unfold_concl; jauto_set; eauto with js_ljs bag typeclass_instances).
 
 Ltac ijauto_js := repeat intuition jauto_js.
 
 Ltac solve_ijauto_js := solve [ijauto_js].
 
 (* HERE START PROOFS *)
+
+(* Lemmas about invariants *)
+
+Hint Extern 1 (?x <> _) => solve [intro; subst x; false].
+
+Lemma heaps_bisim_nindex_preserved : forall BR jst st ptr obj,
+    ~index st ptr ->
+    heaps_bisim_consistent BR jst st ->
+    heaps_bisim_consistent BR jst (st \( ptr := obj)).
+Proof.
+    introv Hni Hbi.
+    inverts Hbi as Hbisim Hlfun Hrfun Hltotal Hlnoghost Hrnoghost.
+    constructor; auto.
+    unfolds heaps_bisim.
+    introv Hrel Hjb Hlb.
+    specializes Hrnoghost Hrel.
+    eapply Hbisim; try eassumption.
+    eapply binds_update_diff_inv; try eassumption; auto. 
+    unfolds heaps_bisim_rnoghost.
+    prove_bag.
+Qed.
+
+Lemma state_invariant_nindex_preserved : forall BR jst jc c st ptr obj,
+    ~index st ptr ->
+    state_invariant BR jst jc c st ->
+    state_invariant BR jst jc c (st \( ptr := obj )).
+Proof.
+    introv Hni Hinv.
+    inverts Hinv.
+    constructor.
+    apply heaps_bisim_nindex_preserved; auto.
+    assumption.
+Qed.
+
+Lemma state_invariant_fresh_preserved : forall BR jst jc c st obj,
+    state_invariant BR jst jc c st ->
+    state_invariant BR jst jc c (st \( fresh st := obj )).
+Proof.
+    introv Hinv.
+    apply state_invariant_nindex_preserved; prove_bag.
+Qed.
+
+Hint Resolve state_invariant_fresh_preserved : js_ljs.
 
 (* Prerequisites *)
 
@@ -436,12 +484,12 @@ Ltac binds_inv :=
         subst v2; clear H
     end.
 
-Lemma state_invariant_includes_init_ctx : forall BR jst jc c st i v v',
+Lemma state_invariant_includes_init_ctx_lemma : forall BR jst jc c st i v v',
     state_invariant BR jst jc c st ->
     binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'.
 Proof.
     introv Hinv.
-    unfold state_invariant, includes_init_ctx in Hinv.
+    inverts Hinv.
     jauto.
 Qed.
 
@@ -453,7 +501,7 @@ Lemma builtin_assoc : forall k BR jst jc c st st' i v r,
 Proof.
     introv Hinv Hlred Hmem.
     inverts Hlred.
-    forwards Hic : state_invariant_includes_init_ctx Hinv; eauto.
+    forwards Hic : state_invariant_includes_init_ctx_lemma Hinv; eauto.
     substs; eauto.
 Qed.
 
@@ -691,18 +739,13 @@ Proof.
     repeat inv_fwd_ljs.
     ljs_out_redh_ter.
     apply_ih_expr.
-    destr_concl. (* TODO seems like something to automate *)
-        repeat inv_internal_fwd_ljs.
-        jauto_js.
-        skip. (* TODO *)
-        skip. (* TODO *)
-    inv_internal_ljs.
+    destr_concl; try ljs_handle_abort.
+(* TODO seems like something to automate *)
+    repeat (ljs_out_redh_ter || inv_fwd_ljs).
+    repeat injects.
     jauto_js.
-    inv_internal_ljs.
+    eapply res_related_throw; (* TODO why auto doesn't fire on this? *)
     jauto_js.
-    (*
-    forwards H : res_related_abort IHe4 IHe1.
-    *)
 Qed.
 
 Lemma red_expr_unary_op_not_ok : forall k je,
@@ -712,17 +755,19 @@ Proof.
     introv IHe Hinv Hlred.
     inv_fwd_ljs.
     ljs_out_redh_ter.
-    forwards_th red_spec_to_boolean_ok. 
-    destr_concl.
-    skip.
+(* TODO better lemma about to_bool *)
     (* abort *)
 (*
     repeat (ljs_propagate_abort || ljs_abort_from_js).
+    inverts H2. skip.
     jauto_js.
     right; jauto_js.
     eapply J.red_spec_expr_get_value.
     eapply J.red_expr_unary_op.
     jauto_js.
+    eapply H9.
+    inverts H9. skip.
+    eapply J.red_expr_unary_op_1.
     jauto_js.
     eapply J.red_expr_unary_op_not. *)
     skip.
