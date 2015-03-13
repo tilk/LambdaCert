@@ -62,9 +62,4 @@ with switchbody : Type :=
 | switchbody_withdefault : list (expr * expr) -> expr -> list (expr * expr) -> switchbody
 .
 
-Fixpoint expr_seqs es :=
-    match es with
-    | nil => expr_undefined
-    | [e] => e
-    | e :: es' => expr_seq e (expr_seqs es')
-    end.
+Definition expr_seqs es := fold_left (fun e1 e2 => expr_seq e2 e1) expr_empty es.

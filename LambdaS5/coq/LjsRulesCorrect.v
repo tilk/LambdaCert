@@ -209,6 +209,7 @@ Hint Extern 4 (js_exn_object _ _) => unfold js_exn_object : js_ljs.
 Hint Constructors J.red_expr : js_ljs.
 Hint Constructors J.red_stat : js_ljs.
 Hint Constructors J.red_spec : js_ljs.
+Hint Constructors J.abort : js_ljs.
 
 Definition includes_init_ctx c :=
     forall i v v', binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'. 
@@ -243,12 +244,6 @@ Definition concl_expr_getvalue BR jst jc c st st' r je :=
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
        (fun jv => exists v, r = L.res_value v /\ value_related BR jv v).
 
-(*
-Definition ih_expr je := forall BR jst jc c st st' r, 
-    state_invariant BR jst jc c st ->
-    L.red_expr c st (L.expr_basic (js_expr_to_ljs je)) (L.out_ter st' r) ->
-    concl_expr BR jst jc c st st' r je.
-*)
 Definition th_expr k je := forall BR jst jc c st st' r, 
     state_invariant BR jst jc c st ->
     L.red_exprh k c st (L.expr_basic (js_expr_to_ljs je)) (L.out_ter st' r) ->
@@ -332,16 +327,13 @@ Ltac unfold_concl := unfold concl_expr_value, concl_expr_getvalue, concl_stat, c
 Tactic Notation "unfold_concl" "in" hyp(H) := 
     unfold concl_expr_value, concl_expr_getvalue, concl_stat, concl_spec in H.
 
-Ltac js_abort_intercepted := match goal with 
-    | |- ~ J.abort_intercepted_stat _ => let H := fresh "H" in intro H; solve [inverts H]
-    | |- ~ J.abort_intercepted_spec _ => let H := fresh "H" in intro H; solve [inverts H]
+Ltac js_ljs_false_invert := match goal with 
     | H : J.abort_intercepted_stat _ |- _ => solve [inverts H]
     | H : J.abort_intercepted_spec _ |- _ => solve [inverts H]
+    | H : J.res_is_normal _ |- _ => inverts H
     end.
 
-Hint Extern 1 (~ J.abort_intercepted_stat _) => js_abort_intercepted : js_ljs.
-Hint Extern 1 (~ J.abort_intercepted_spec _) => js_abort_intercepted : js_ljs.
-Hint Extern 10 => js_abort_intercepted : js_ljs.
+Hint Extern 10 => js_ljs_false_invert : js_ljs.
 
 Ltac js_abort_rel_contr := match goal with
     | Ha : J.abort (J.out_ter ?jst ?x), Hr : res_related _ ?jst _ ?x (L.res_value _) |- _ =>
@@ -355,14 +347,15 @@ Ltac apply_ih_expr := match goal with
     | H : ih_expr ?k', HS : state_invariant _ _ _ ?c ?st, 
       HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
         let Hle := fresh "Hle" in
-        asserts Hle : (k < k')%nat; [omega | specializes H Hle HS HR; clear Hle; clear HR]
+        let Hih := fresh "IH" in
+        asserts Hle : (k < k')%nat; [omega | lets Hih : H Hle HS HR; clear Hle; clear HR]
     end.
 
 Ltac apply_ih_stat := match goal with
     | H : ih_stat ?k', HS : state_invariant _ _ _ ?c ?st, 
       HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
         let Hle := fresh "Hle" in
-        asserts Hle : (k < k')%nat; [omega | specializes H HS HR; clear HR]
+        asserts Hle : (k < k')%nat; [omega | lets Hih : H Hle HS HR; clear Hle; clear HR]
     end.
 
 (* TODO move to utilities *)
@@ -455,6 +448,16 @@ Lemma ih_stat_leq : forall k k', (k' <= k)%nat -> ih_stat k -> ih_stat k'.
 Proof.
     introv Hle He Hlt.
     apply He. omega.
+Qed.
+
+Lemma ih_expr_S : forall k, ih_expr (S k) -> ih_expr k.
+Proof.
+    introv He. eapply ih_expr_leq; try eassumption; omega.
+Qed.
+
+Lemma ih_stat_S : forall k, ih_stat (S k) -> ih_stat k.
+Proof.
+    introv He. eapply ih_stat_leq; try eassumption; omega.
 Qed.
 
 (* TODO move this lemma! *)
@@ -570,12 +573,46 @@ Ltac specialize_th_spec H :=
     end
     end.
 
+Ltac specialize_th_stat H :=
+    match type of H with
+    | th_stat ?k ?jt => 
+    match goal with
+    | H1 : L.red_exprh k ?c ?st (L.expr_basic ?e') _, H2 : state_invariant _ _ _ ?c ?st |- _ => 
+        unify (js_stat_to_ljs jt) e';
+        specializes H H2 H1;
+        clear H2; clear H1 
+    end 
+    end.
+
 Ltac forwards_th Hth := let H := fresh "H" in 
     (forwards H : Hth;
-    first [is_var H; specialize_th_spec H | idtac];
+    first [is_var H; (specialize_th_spec H || specialize_th_stat H) | idtac];
     try (eapply ih_expr_leq; try eassumption; omega)); 
     [idtac].
-    
+
+Lemma res_related_invert_abort_lemma : forall BR jst st jr r,
+    res_related BR jst st jr r ->
+    (exists jrv v, 
+        jr = J.res_intro J.restype_normal jrv J.label_empty /\
+        r = L.res_value v /\ 
+        resvalue_related BR jrv v) \/
+    J.abort (J.out_ter jst jr) /\ L.abort (L.out_ter st r).
+Proof.
+    introv Hrel.
+    inverts Hrel; ijauto_js.
+Qed.
+
+Ltac res_related_abort :=
+    match goal with
+    | H : res_related _ ?jst ?st ?jr ?r |- _ =>
+        not is_hyp (J.abort (J.out_ter jst jr));
+        let Hr := fresh "H" in
+        forwards Hr : res_related_invert_abort_lemma H;
+        destruct_hyp Hr; [clear H | idtac]
+    end.
+
+Ltac destr_concl_auto := destr_concl; res_related_abort; try ljs_handle_abort.
+
 (* Lemmas about operators *)
 
 (* TODO *)
@@ -674,10 +711,10 @@ Proof.
     forwards_th red_spec_to_boolean_ok. 
 
     destr_concl.
-    destruct b.
-    (* true *)
-    inv_internal_fwd_ljs.
+    destruct b;
+    inv_internal_fwd_ljs;
     apply_ih_expr.
+    (* true *)
     repeat destr_concl; unfold_concl.
     jauto_set.
     jauto_js.
@@ -707,8 +744,6 @@ Proof.
     ijauto_js.
     ijauto_js.
     (* false *)
-    inv_internal_fwd_ljs.
-    apply_ih_expr.
     repeat destr_concl; unfold_concl.
     jauto_set.
     jauto_js.
@@ -810,6 +845,68 @@ Proof.
 Qed.
 
 (* Statements *)
+
+Lemma list_rev_ind
+     : forall (A : Type) (P : list A -> Prop),
+       P [] ->
+       (forall (a : A) (l : list A), P l -> P (l & a)) ->
+       forall l : list A, P l.
+Proof.
+    introv Hbase Hstep.
+    intro l.
+    asserts (l'&Heq) : (exists l', l = rev l').
+    exists (rev l). rew_rev. reflexivity.
+    gen l.
+    induction l'; intros; substs; rew_rev; auto.
+Qed.
+
+(* TODO move this lemma *)
+Lemma list_map_tlc : forall A B (f : A -> B) l, 
+    List.map f l = map f l.
+Proof.
+    induction l.
+    reflexivity.
+    simpl.
+    rewrite IHl.
+    reflexivity.
+Qed.
+
+Lemma stat_block_ejs_last_lemma : forall jts jt,
+    E.js_stat_to_ejs (J.stat_block (jts & jt)) = 
+        E.expr_seq (E.js_stat_to_ejs (J.stat_block jts)) (E.js_stat_to_ejs jt).
+Proof.
+    intros. 
+    unfolds E.js_stat_to_ejs. 
+    unfolds E.expr_seqs.
+    rewrite_all list_map_tlc.
+    rew_list.
+    reflexivity.
+Qed.
+
+Lemma red_stat_block_ok : forall jts k, 
+    ih_stat k -> 
+    th_stat k (J.stat_block jts).
+Proof.
+    induction jts using list_rev_ind;
+    introv IH Hinv Hlred.
+    inv_fwd_ljs.
+    jauto_js.
+    unfolds js_stat_to_ljs.
+    rewrite stat_block_ejs_last_lemma in *.
+    inv_fwd_ljs.
+    ljs_out_redh_ter.
+    specializes IHjts (ih_stat_S IH). 
+
+    specialize_th_stat IHjts.
+    destr_concl_auto. 
+    inv_fwd_ljs.
+    ljs_out_redh_ter.
+    apply_ih_stat.
+    destr_concl_auto.
+
+    skip.
+    skip.
+Qed.
 
 Lemma red_stat_expr_ok : forall k je, 
     ih_expr k ->

@@ -718,8 +718,6 @@ Global Instance binds_update_eq_inst : Binds_update_eq :=
 Global Instance index_binds_eq_inst : Index_binds_eq :=
     { index_binds_eq := @index_binds_eq_impl _ _ }.
 
-Check @fresh_index_eq_impl.
-
 Global Instance fresh_index_eq_inst : 
     forall (c1 : Minimal A) (c2 : PickGreater A), Fresh_index_eq (A := A) (T := finmap A B) :=
     { fresh_index_eq := fun x => @fresh_index_eq_impl _ _ x _ _ }.

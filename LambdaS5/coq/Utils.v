@@ -82,6 +82,15 @@ Tactic Notation "cases_match_option" "as" simple_intropattern(Eq) :=
 Tactic Notation "cases_match_option" :=
   let Eq := fresh in cases_match_option as Eq.
 
+Tactic Notation "cases_match_list" "as" simple_intropattern(Eq) :=
+  match goal with
+  | |- context [match ?B with _ :: _ => _ | nil => _ end] => case_if_on B as Eq
+  | K: context [match ?B with _ :: _ => _ | nil => _ end] |- _ => case_if_on B as Eq
+  end.
+
+Tactic Notation "cases_match_list" :=
+  let Eq := fresh in cases_match_list as Eq.
+
 Tactic Notation "cases_let" "as" simple_intropattern(Eq) :=
   match goal with
   | |- context [let '_ := ?B in _] => case_if_on B as Eq
