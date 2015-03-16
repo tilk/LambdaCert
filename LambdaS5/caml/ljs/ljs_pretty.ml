@@ -46,10 +46,8 @@ let string_of_unary_op s = match s with
     | Coq_unary_op_sin -> "sin"
     | Coq_unary_op_numstr_to_num -> "numstr->num"
     | Coq_unary_op_current_utc_millis -> "current-utc-millis"
-    | _ -> failwith "operator not implemented"
 
 let string_of_binary_op s = match s with
-    | Coq_binary_op_seq -> ";"
     | Coq_binary_op_add -> "+"
     | Coq_binary_op_sub -> "-"
     | Coq_binary_op_div -> "/"
@@ -92,8 +90,8 @@ let string_of_binary_op s = match s with
  *)
 let rec exp_helper exprec e = match e with
   | Coq_expr_empty -> text "empty"
-  | Coq_expr_null _ -> text "null"
-  | Coq_expr_undefined _ -> text "undefined"
+  | Coq_expr_null -> text "null"
+  | Coq_expr_undefined -> text "undefined"
   | Coq_expr_number n -> text (string_of_float n)
   | Coq_expr_string s -> text ("\"" ^ (String.escaped (String.of_list s)) ^ "\"")
   | Coq_expr_bool true -> text "true"
@@ -139,8 +137,10 @@ let rec exp_helper exprec e = match e with
 			   | _ -> braces (exprec e))]]
   | Coq_expr_app (f, args) ->
     squish [exprec f; parens (vert (vert_intersperse (text ",") (List.map exprec args)))]
-  | Coq_expr_seq (e1, e2) ->
+  | Coq_expr_seq (e1, e2) -> (* TODO precedence *)
     vert [squish [exprec e1; text ";"]; exprec e2]
+  | Coq_expr_jseq (e1, e2) ->
+    vert [squish [exprec e1; text ";;"]; exprec e2]
   | Coq_expr_let (x, e, body) ->
     braces (horz [text "let"; vert [parens (horz [text (String.of_list x); text "="; exprec e]);
                                     opt_braces exprec body]])

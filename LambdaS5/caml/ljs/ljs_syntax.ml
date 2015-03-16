@@ -64,6 +64,7 @@ type exp =
   | If of Pos.t * exp * exp * exp
   | App of Pos.t * exp * exp list
   | Seq of Pos.t * exp * exp
+  | JSeq of Pos.t * exp * exp
   | Let of Pos.t * id * exp * exp
   | Rec of Pos.t * id * exp * exp (** value bound must be an [ELambda] *)
   | Label of Pos.t * id * exp

@@ -104,13 +104,13 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         | J.label_empty => "%before"
         | J.label_string s => s
         end in 
-        E.expr_break s E.expr_undefined
+        E.expr_break s E.expr_empty
     | J.stat_continue lbl => (* TODO looks fishy! *)
         let s := match lbl with
         | J.label_empty => "%continue"
         | J.label_string s => s
         end in 
-        E.expr_break s E.expr_undefined
+        E.expr_break s E.expr_empty
     | J.stat_try st None None => E.expr_noop (js_stat_to_ejs st)
     | J.stat_try st (Some (s, st1)) None => E.expr_try_catch (js_stat_to_ejs st) s (js_stat_to_ejs st1)
     | J.stat_try st None (Some st2) => E.expr_try_finally (js_stat_to_ejs st) (js_stat_to_ejs st2)

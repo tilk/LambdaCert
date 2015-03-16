@@ -49,7 +49,6 @@ let translate_unary_op s = match s with
     | _ -> failwith "operator not implemented"
 
 let translate_binary_op s = match s with
-    | ";" -> Cs.Coq_binary_op_seq
     | "+" -> Cs.Coq_binary_op_add
     | "-" -> Cs.Coq_binary_op_sub
     | "/" -> Cs.Coq_binary_op_div
@@ -106,6 +105,7 @@ let rec translate_expr e = match e with
     | Ljs.If (_, e, e1, e2) -> Cs.Coq_expr_if (translate_expr e, translate_expr e1, translate_expr e2)
     | Ljs.App (_, e, es) -> Cs.Coq_expr_app (translate_expr e, List.map translate_expr es)
     | Ljs.Seq (_, e1, e2) -> Cs.Coq_expr_seq (translate_expr e1, translate_expr e2)
+    | Ljs.JSeq (_, e1, e2) -> Cs.Coq_expr_jseq (translate_expr e1, translate_expr e2)
     | Ljs.Let (_, i, e1, e2) -> Cs.Coq_expr_let (String.to_list i, translate_expr e1, translate_expr e2)
     | Ljs.Rec (_, i, e1, e2) -> Cs.Coq_expr_recc (String.to_list i, translate_expr e1, translate_expr e2)
     | Ljs.Label (_, i, e) -> Cs.Coq_expr_label (String.to_list i, translate_expr e)

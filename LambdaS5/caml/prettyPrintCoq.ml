@@ -82,7 +82,6 @@ let format_unary_op o = match o with
     | Coq_unary_op_current_utc_millis -> text "unary_op_current_utc_millis"
 
 let format_binary_op o = match o with
-    | Coq_binary_op_seq -> text "binary_op_seq"
     | Coq_binary_op_add -> text "binary_op_add"
     | Coq_binary_op_sub -> text "binary_op_sub"
     | Coq_binary_op_mul -> text "binary_op_mul"
@@ -154,6 +153,7 @@ let rec format_expr b e = match e with
     | Coq_expr_if (e1, e2, e3) -> coqconstr b "expr_if" [format_expr true e1; format_expr true e2; format_expr true e3]
     | Coq_expr_app (e, es) -> coqconstr b "expr_app" [format_expr true e; format_list (List.map (format_expr false) es)]
     | Coq_expr_seq (e1, e2) -> coqconstr b "expr_seq" [format_expr true e1; format_expr true e2]
+    | Coq_expr_seq (e1, e2) -> coqconstr b "expr_jseq" [format_expr true e1; format_expr true e2]
     | Coq_expr_let (i, e1, e2) -> coqconstr b "expr_let" [format_id i; format_expr true e1; format_expr true e2]
     | Coq_expr_recc (i, e1, e2) -> coqconstr b "expr_recc" [format_id i; format_expr true e1; format_expr true e2]
     | Coq_expr_label (i, e) -> coqconstr b "expr_label" [format_id i; format_expr true e]

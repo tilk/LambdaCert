@@ -8,6 +8,15 @@ Require Import LjsMonads.
 
 (* Utility functions useful for both the interpreter and the semantics. *)
 
+(* Overwriting empty *)
+
+Definition overwrite_value_if_empty v1 v2 :=
+  match v2 with
+  | value_empty => v1
+  | _ => v2
+  end
+.
+
 (* Get object attribute *)
 
 Definition get_object_oattr obj (oa : oattr) : value :=

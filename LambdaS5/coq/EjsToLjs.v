@@ -51,7 +51,7 @@ Definition with_error_dispatch e :=
 
 Definition prop_accessor_check e := make_app_builtin "%PropAccessorCheck" [e].
 
-Definition make_seq e1 e2 := L.expr_op2 L.binary_op_seq e1 e2.
+Definition make_seq e1 e2 := L.expr_jseq e1 e2.
 
 Definition make_get_field obj fld :=
     L.expr_get_field obj (to_string fld).

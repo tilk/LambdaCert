@@ -564,6 +564,31 @@ Proof.
     ljs_run_inv. intuition (eauto || tryfalse).
 Qed.
 
+Lemma eval_jseq_correct : forall runs c st e1 e2 o,
+    runs_type_correct runs ->
+    eval_jseq runs c st e1 e2 = result_some o -> 
+    is_some_value o (runs_type_eval runs c st e1) (fun st' v =>
+        is_some (runs_type_eval runs c st' e2) (fun o' =>
+            (exists st' v', o' = out_ter st' (res_value v') /\
+                o = out_ter st' (res_value (overwrite_value_if_empty v v'))) \/
+            (exists s st' v', o' = out_ter st' (res_break s v') /\
+                o = out_ter st' (res_break s (overwrite_value_if_empty v v'))) \/
+            (exists st' v', o' = out_ter st' (res_exception v') /\
+                o = out_ter st' (res_exception v')) \/
+            o = out_div /\ o' = out_div)).
+Proof. 
+    introv IH R. unfolds in R. 
+    ljs_run_push_post_auto; substs. 
+    eapply is_some_value_munch. eassumption. left. do 2 eexists.
+    split. reflexivity. eexists. split. eassumption.
+    destruct r; ljs_run_inv; intuition jauto.
+    destruct R; substs.
+    eapply is_some_value_munch. eassumption.
+    left. do 2 eexists. split. reflexivity.
+    do 2 eexists; intuition eauto.
+    ljs_run_inv. eauto.
+Qed.
+
 Lemma eval_lambda_correct : forall runs c st vs e o,
     runs_type_correct runs ->
     eval_lambda runs c st vs e = result_some o ->
@@ -1065,6 +1090,17 @@ Proof.
     ljs_pretty_advance red_expr_seq red_expr_seq_1_abort.
     eapply red_expr_seq_1.
     ljs_eval_ih.
+    (* jseq *)
+    lets H: eval_jseq_correct IH R.
+    ljs_pretty_advance red_expr_jseq red_expr_jseq_1_abort.
+    destruct H as (o'&Ho'&He).
+    eapply red_expr_jseq_1.
+    ljs_eval_ih.
+    destruct_hyp He.
+    eapply red_expr_jseq_2.
+    eapply red_expr_jseq_2_break.
+    eapply red_expr_jseq_2_exception.
+    eapply red_expr_jseq_2_div.
     (* let *)
     lets H: eval_let_correct IH R.
     ljs_pretty_advance red_expr_let red_expr_let_1_abort.

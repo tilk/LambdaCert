@@ -367,6 +367,30 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_seq_1 o e2) o
 
+(* jseq *)
+| red_expr_jseq : forall c st e1 e2 o o',
+    red_expr c st e1 o ->
+    red_expr c st (expr_jseq_1 o e2) o' ->
+    red_expr c st (expr_jseq e1 e2) o'
+| red_expr_jseq_1 : forall c st' st v e2 o o',
+    red_expr c st e2 o ->
+    red_expr c st (expr_jseq_2 v o) o' ->
+    red_expr c st' (expr_jseq_1 (out_ter st (res_value v)) e2) o'
+| red_expr_jseq_1_abort : forall c st e2 o,
+    abort o ->
+    red_expr c st (expr_jseq_1 o e2) o
+| red_expr_jseq_2 : forall c st st' v1 v2,
+    red_expr c st' (expr_jseq_2 v1 (out_ter st (res_value v2))) 
+        (out_ter st (res_value (overwrite_value_if_empty v1 v2)))
+| red_expr_jseq_2_exception : forall c st st' v1 v2,
+    red_expr c st' (expr_jseq_2 v1 (out_ter st (res_exception v2))) 
+        (out_ter st (res_exception v2))
+| red_expr_jseq_2_break : forall c st st' v1 v2 l,
+    red_expr c st' (expr_jseq_2 v1 (out_ter st (res_break l v2))) 
+       (out_ter st (res_break l (overwrite_value_if_empty v1 v2)))
+| red_expr_jseq_2_div : forall c st v1,
+    red_expr c st (expr_jseq_2 v1 out_div) out_div
+
 (* let *)
 | red_expr_let : forall c st i e1 e2 o o',
     red_expr c st e1 o ->

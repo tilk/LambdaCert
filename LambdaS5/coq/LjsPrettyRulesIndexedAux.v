@@ -60,6 +60,9 @@ Proof.
     introv Ho Ha Hi.
     destruct ee; (injects Ho || discriminate Ho); jauto; 
     (inverts Ha as Hc; [|inverts Hc]).
+    eapply red_exprh_jseq_2_div.
+    eapply red_exprh_jseq_2_exception.
+    specializes Hi abort_intercepted_expr_jseq_2; false.
     eapply red_exprh_label_1; fequals.
     eapply red_exprh_label_1; fequals.
     destruct (classic (i = i0)). substs.
@@ -114,6 +117,6 @@ Lemma red_exprh_deterministic : forall k k' c st ee o o',
 Proof.
     introv Hr1. generalize k' o'.
     induction Hr1; introv Hr2;
-    (inversions Hr2; repeat (determine || binds_determine || inst_hyps_det); eauto; try ljs_abort_false; tryfalse);
-    false; jauto.
+    try abstract (inversions Hr2; repeat (determine || binds_determine || inst_hyps_det); eauto; try ljs_abort_false; tryfalse;
+    false; jauto). 
 Qed.

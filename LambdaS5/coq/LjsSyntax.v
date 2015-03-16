@@ -48,7 +48,6 @@ Inductive unary_op : Type :=
 .
 
 Inductive binary_op : Type :=
-| binary_op_seq
 | binary_op_add
 | binary_op_sub
 | binary_op_mul
@@ -120,6 +119,7 @@ Inductive expr : Type :=
 | expr_if : expr -> expr -> expr -> expr
 | expr_app : expr -> list expr -> expr
 | expr_seq : expr -> expr -> expr
+| expr_jseq : expr -> expr -> expr (* JS-like sequence operator *)
 | expr_let : id -> expr -> expr -> expr
 | expr_recc : id -> expr -> expr -> expr (* Value bound must be lambda *)
 | expr_label : id -> expr -> expr
@@ -168,6 +168,7 @@ Fixpoint expr_fv e : finset id := match e with
 | expr_if e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
 | expr_app e es => expr_fv e \u List.fold_left (fun x y => x \u y) (List.map expr_fv es) \{} 
 | expr_seq e1 e2 => expr_fv e1 \u expr_fv e2
+| expr_jseq e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_let i e1 e2 => expr_fv e1 \u (expr_fv e2 \-- i)
 | expr_recc i e1 e2 => (expr_fv e1 \u expr_fv e2) \-- i
 | expr_label _ e => expr_fv e

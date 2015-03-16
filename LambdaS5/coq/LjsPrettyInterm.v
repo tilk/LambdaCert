@@ -38,6 +38,8 @@ Inductive ext_expr :=
 | expr_app_1 : out -> list expr -> ext_expr
 | expr_app_2 : value -> list value -> ext_expr
 | expr_seq_1 : out -> expr -> ext_expr
+| expr_jseq_1 : out -> expr -> ext_expr
+| expr_jseq_2 : value -> out -> ext_expr
 | expr_let_1 : id -> out -> expr -> ext_expr
 | expr_label_1 : id -> out -> ext_expr
 | expr_break_1 : id -> out -> ext_expr
@@ -76,6 +78,8 @@ Definition out_of_ext_expr p := match p with
 | expr_if_1 o _ _
 | expr_app_1 o _
 | expr_seq_1 o _
+| expr_jseq_1 o _
+| expr_jseq_2 _ o
 | expr_let_1 _ o _
 | expr_label_1 _ o
 | expr_break_1 _ o
@@ -91,6 +95,8 @@ Definition out_of_ext_expr p := match p with
 end.
 
 Inductive abort_intercepted_expr : ext_expr -> Prop := 
+| abort_intercepted_expr_jseq_2 : forall st i v v',
+    abort_intercepted_expr (expr_jseq_2 v (out_ter st (res_break i v')))
 | abort_intercepted_expr_label_1 : forall st i v,
     abort_intercepted_expr (expr_label_1 i (out_ter st (res_break i v)))
 | abort_intercepted_expr_try_catch_1 : forall st e v,

@@ -133,10 +133,18 @@ Definition eval_if runs c st (e_cond e_true e_false : expr) : result :=
 
 (* e1 ; e2.
 * Evaluate e1, then e2, and return the value location returned by e2. *)
-Definition eval_seq runs c st (e1 e2 : expr) : result :=
+Definition eval_seq runs c st e1 e2 : result :=
   if_eval_return runs c st e1 (fun st v => runs_type_eval runs c st e2 )
 .
 
+Definition eval_jseq runs c st e1 e2 :=
+  if_eval_return runs c st e1 (fun st v1 =>
+    if_eval_ter runs c st e2 (fun st r =>
+      match r with
+      | res_exception v2 => result_exception st v2
+      | res_value v2 => result_value st (overwrite_value_if_empty v1 v2)
+      | res_break l v2 => result_break st l (overwrite_value_if_empty v1 v2)
+      end)).
 
 (* Evaluates properties of object literals. *)
 Fixpoint eval_object_properties runs c st (l : list (string * property)) (acc : object) (cont : store -> object -> result) {struct l} : result :=
@@ -462,6 +470,7 @@ Definition eval runs c st (e : expr) : result :=
   | expr_id s => eval_id runs c st s
   | expr_if e_cond e_true e_false => eval_if runs c st e_cond e_true e_false
   | expr_seq e1 e2 => eval_seq runs c st e1 e2
+  | expr_jseq e1 e2 => eval_jseq runs c st e1 e2
   | expr_object attrs l => eval_object_decl runs c st attrs l
   | expr_get_field left_ right_ => eval_get_field runs c st left_ right_ 
   | expr_set_field left_ right_ new_val => eval_set_field runs c st left_ right_ new_val

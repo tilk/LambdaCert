@@ -57,6 +57,20 @@ Proof.
     introv H. unfolds. lets L : @eval_cont_lemma H. rewrite L. reflexivity.
 Qed.
 
+Lemma if_eval_ter_div_lemma : forall {runs c st e} cont, 
+    runs_type_eval runs c st e = result_some out_div ->
+    if_eval_ter runs c st e cont = result_some out_div.
+Proof.
+    introv H. unfolds. lets L : @eval_cont_lemma H. rewrite L. reflexivity.
+Qed.
+
+Lemma if_eval_ter_lemma : forall {runs c st st' e r} cont, 
+    runs_type_eval runs c st e = result_some (out_ter st' r) ->
+    if_eval_ter runs c st e cont = cont st' r.
+Proof.
+    introv H. unfolds. lets L : @eval_cont_lemma H. rewrite L. reflexivity.
+Qed.
+
 Lemma assert_get_object_ptr_lemma : forall {A ptr} cont, 
     @assert_get_object_ptr A (value_object ptr) cont = cont ptr.
 Proof.
@@ -134,7 +148,7 @@ Proof.
     inversion HC; reflexivity. 
 Qed.
 
-Lemma is_eval_return_abort_lemma : forall {runs c st e o} cont,
+Lemma if_eval_return_abort_lemma : forall {runs c st e o} cont,
     abort o ->
     runs_type_eval runs c st e = result_some o ->
     if_eval_return runs c st e cont = result_some o.
@@ -151,6 +165,8 @@ Ltac ljs_eval :=
     | H : runs_type_eval ?runs ?c ?st ?e = _ |- eval_cont ?runs ?c ?st ?e _ = _ => rewrite (eval_cont_lemma _ H)
     | H : runs_type_eval ?runs ?c ?st ?e = result_some (out_ter _ (res_value _)) 
         |- if_eval_return ?runs ?c ?st ?e _ = _ => rewrite (if_eval_return_lemma _ H)
+    | H : runs_type_eval ?runs ?c ?st ?e = result_some (out_ter _ _) 
+        |- if_eval_ter ?runs ?c ?st ?e _ = _ => rewrite (if_eval_ter_lemma _ H)
     | H : binds ?st ?ptr _ |- assert_get_object_from_ptr ?st ?ptr _ = _ => 
         rewrite (assert_get_object_from_ptr_lemma _ H)
     | H : binds ?st ?ptr _ |- assert_get_object ?st (value_object ?ptr) _ = _ => 
@@ -173,7 +189,9 @@ Ltac ljs_abort :=
     match goal with
     | H : abort ?o |- if_value (result_some ?o) _ = result_some ?o => apply (if_value_abort_lemma _ H)
     | H : abort ?o, H1 : runs_type_eval ?runs ?c ?st ?e = result_some ?o 
-        |- if_eval_return ?runs ?c ?st ?e ?cont = result_some ?o => apply (is_eval_return_abort_lemma _ H H1)
+        |- if_eval_return ?runs ?c ?st ?e ?cont = result_some ?o => apply (if_eval_return_abort_lemma _ H H1)
+    | H : runs_type_eval ?runs ?c ?st ?e = result_some out_div 
+        |- if_eval_return ?runs ?c ?st ?e ?cont = result_some ?o => apply (if_eval_ter_div_lemma _ H)
     end. 
 
 Lemma lazyruns_lemma : forall runs, suspend_runs (fun _ => runs) = runs.
@@ -377,6 +395,12 @@ Proof.
     (* seq *)
     unfolds.
     abstract (repeat ljs_eval_push).
+    (* jseq *)
+    unfolds.
+    repeat ljs_eval_push.
+    destruct o1 as [ | zz [ | | ] ]; 
+    ljs_inv_red_internal; 
+    repeat ljs_eval_push. skip.
     (* let *)
     unfolds.
     repeat ljs_eval_push.

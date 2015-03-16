@@ -367,6 +367,30 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_exprh k c st (expr_seq_1 o e2) o
 
+(* jseq *)
+| red_exprh_jseq : forall k c st e1 e2 o o',
+    red_exprh k c st e1 o ->
+    red_exprh k c st (expr_jseq_1 o e2) o' ->
+    red_exprh (S k) c st (expr_jseq e1 e2) o'
+| red_exprh_jseq_1 : forall k c st' st v e2 o o',
+    red_exprh k c st e2 o ->
+    red_exprh k c st (expr_jseq_2 v o) o' ->
+    red_exprh k c st' (expr_jseq_1 (out_ter st (res_value v)) e2) o'
+| red_exprh_jseq_1_abort : forall k c st e2 o,
+    abort o ->
+    red_exprh k c st (expr_jseq_1 o e2) o
+| red_exprh_jseq_2 : forall k c st st' v1 v2,
+    red_exprh k c st' (expr_jseq_2 v1 (out_ter st (res_value v2))) 
+        (out_ter st (res_value (overwrite_value_if_empty v1 v2)))
+| red_exprh_jseq_2_exception : forall k c st st' v1 v2,
+    red_exprh k c st' (expr_jseq_2 v1 (out_ter st (res_exception v2))) 
+        (out_ter st (res_exception v2))
+| red_exprh_jseq_2_break : forall k c st st' v1 v2 l,
+    red_exprh k c st' (expr_jseq_2 v1 (out_ter st (res_break l v2))) 
+       (out_ter st (res_break l (overwrite_value_if_empty v1 v2)))
+| red_exprh_jseq_2_div : forall k c st v1,
+    red_exprh k c st (expr_jseq_2 v1 out_div) out_div
+
 (* let *)
 | red_exprh_let : forall k c st i e1 e2 o o',
     red_exprh k c st e1 o ->

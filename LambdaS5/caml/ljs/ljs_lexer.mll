@@ -98,6 +98,7 @@ rule token = parse
    | "if" { IF }
    | "else" { ELSE }
    | ";" { SEMI }
+   | ";;" { JSEMI }
    | "label" { LABEL }
    | "break" { BREAK }
    | "try" { TRY }

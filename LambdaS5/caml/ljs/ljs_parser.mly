@@ -25,6 +25,7 @@ let with_pos exp pos = match exp with
   | If (_, test, trueBlock, falseBlock) -> If (pos, test, trueBlock, falseBlock)
   | App (_, func, args) -> App (pos, func, args)
   | Seq (_, left, right) -> Seq (pos, left, right)
+  | JSeq (_, left, right) -> Seq (pos, left, right)
   | Let (_, id, value, body) -> Let (pos, id, value, body)
   | Rec (_, id, value, body) -> Rec (pos, id, value, body)
   | Label (_, id, exp) -> Label (pos, id, exp)
@@ -45,7 +46,7 @@ let with_pos exp pos = match exp with
 %token <bool> BOOL
 %token <string> ID
 %token UNDEFINED EMPTY NULL FUNC LET DELETE LBRACE RBRACE LPAREN RPAREN LBRACK
-  RBRACK EQUALS COMMA DEREF REF COLON COLONEQ PRIM IF ELSE SEMI
+  RBRACK EQUALS COMMA DEREF REF COLON COLONEQ PRIM IF ELSE SEMI JSEMI
   LABEL BREAK TRY CATCH FINALLY THROW EQEQEQUALS TYPEOF
   AMPAMP PIPEPIPE RETURN BANGEQEQUALS FUNCTION REC WRITABLE GETTER SETTER
   CONFIG VALUE ENUM LT GT PROTO CODE EXTENSIBLE CLASS EVAL GETFIELDS PRIMVAL

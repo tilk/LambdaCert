@@ -406,16 +406,8 @@ Definition locale_compare v1 v2 : resultof value :=
   end
 .
 
-Definition seq_empty_op v1 v2 :=
-  match v2 with
-  | value_empty => result_some v1
-  | _ => result_some v2
-  end
-.
-
 Definition binary_operator (op : binary_op) store v1 v2 : resultof value :=
       match op with
-      | binary_op_seq => seq_empty_op v1 v2
       | binary_op_add => arith JsNumber.add v1 v2
       | binary_op_sub => arith JsNumber.sub v1 v2
       | binary_op_mul => arith JsNumber.mult v1 v2

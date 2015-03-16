@@ -109,6 +109,16 @@ Tactic Notation "not" tactic3(tac) := match True with _ => ((tac ; fail 1) || id
 
 Tactic Notation "is_hyp" constr(t) := match goal with H : t |- _ => idtac end.
 
+Ltac destruct_hyp H := match type of H with
+    | _ \/ _ => destruct H as [H|H]; try destruct_hyp H
+    | _ /\ _ => 
+        let H1 := fresh H in let H2 := fresh H in 
+        destruct H as (H1&H2); try destruct_hyp H1; try destruct_hyp H2
+    | exists v, _ => let v := fresh v in destruct H as (v&H); try destruct_hyp H
+    | ?x = _ => is_var x; subst x
+    | _ = ?x => is_var x; subst x
+    end.
+
 (* TODO move to TLC *)
 Global Instance Exists_decidable : 
     forall `(l : list A) P (HD : forall a, Decidable (P a)), Decidable (Exists P l).

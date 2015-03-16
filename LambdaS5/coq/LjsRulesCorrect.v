@@ -358,17 +358,6 @@ Ltac apply_ih_stat := match goal with
         asserts Hle : (k < k')%nat; [omega | lets Hih : H Hle HS HR; clear Hle; clear HR]
     end.
 
-(* TODO move to utilities *)
-Ltac destruct_hyp H := match type of H with
-    | _ \/ _ => destruct H as [H|H]; try destruct_hyp H
-    | _ /\ _ => 
-        let H1 := fresh H in let H2 := fresh H in 
-        destruct H as (H1&H2); try destruct_hyp H1; try destruct_hyp H2
-    | exists v, _ => let v := fresh v in destruct H as (v&H); try destruct_hyp H
-    | ?x = _ => is_var x; subst x
-    | _ = ?x => is_var x; subst x
-    end.
-
 Hint Extern 1 (J.regular_unary_op _) =>
     solve [let H := fresh "H" in intro H; unfolds in H; destruct_hyp H; inverts H] : js_ljs.
 
@@ -883,6 +872,28 @@ Proof.
     reflexivity.
 Qed.
 
+(* TODO move *)
+Lemma res_related_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2,
+    resvalue_related BR jrv1 v1 ->
+    resvalue_related BR jrv2 v2 ->
+    res_related BR jst st 
+        (J.res_overwrite_value_if_empty jrv1 (J.res_normal jrv2))
+        (L.res_value (L.overwrite_value_if_empty v1 v2)).
+Proof.
+    introv Hrel1 Hrel2.
+    unfold J.res_overwrite_value_if_empty.
+    cases_if; substs.
+    (* empty *)
+    inverts Hrel2.
+    eapply res_related_normal.
+    assumption.
+    (* nonempty *)
+    destruct jrv2;
+    inverts Hrel2 as Hvrel2; tryfalse.
+    inverts Hvrel2; jauto_js.
+Qed.
+    Hint Resolve res_related_overwrite_if_empty : js_ljs.
+
 Lemma red_stat_block_ok : forall jts k, 
     ih_stat k -> 
     th_stat k (J.stat_block jts).
@@ -904,8 +915,12 @@ Proof.
     apply_ih_stat.
     destr_concl_auto.
 
-    skip.
-    skip.
+    inv_fwd_ljs.
+    ijauto_js.
+    econstructor 3; ijauto_js. (* TODO why auto does not handle this? *)
+    econstructor 4; ijauto_js.
+
+    skip. (* TODO! TODO! *)
 Qed.
 
 Lemma red_stat_expr_ok : forall k je, 
