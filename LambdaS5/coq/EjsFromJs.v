@@ -5,7 +5,7 @@ Require Import JsNumber.
 Require Import Utils.
 Require LjsSyntax.
 Require EjsSyntax.
-Require JsSyntax.
+Require JsSyntax JsSyntaxInfos.
 Require JsPreliminary.
 Import ListNotations.
 Open Scope list_scope.
@@ -49,6 +49,15 @@ Definition is_strict es :=
 Definition is_element_stat e := match e with J.element_stat _ => true | _ => false end.
 Definition is_element_func_decl e := match e with J.element_func_decl _ _ _ => true | _ => false end.
 
+Definition js_label_to_ejs s l :=
+    match l with
+    | J.label_empty => s
+    | J.label_string s' => s ++ "_" ++ s'
+    end.
+
+Definition js_label_set_to_labels s (ls : J.label_set) e := 
+    fold_right E.expr_label e (map (js_label_to_ejs s) ls).
+
 Fixpoint js_expr_to_ejs (e : J.expr) : E.expr := 
     match e with
     | J.expr_this => E.expr_this
@@ -81,17 +90,18 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         end in
     match e with
     | J.stat_expr e => E.expr_noop (js_expr_to_ejs e)
-    | J.stat_label s st => E.expr_label ("%break_" ++ s) (js_stat_to_ejs st)
+    | J.stat_label s st => E.expr_label (js_label_to_ejs "%break" (J.label_string s)) (js_stat_to_ejs st)
     | J.stat_block sts => E.expr_seqs (List.map js_stat_to_ejs sts)
     | J.stat_var_decl l => E.expr_seq (E.expr_seqs (List.map js_vardecl_to_ejs l)) E.expr_empty
     | J.stat_if e st None => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) E.expr_empty
     | J.stat_if e st (Some st') => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) (js_stat_to_ejs st')
-    | J.stat_do_while nil st e => 
-        E.expr_label "%break" 
-            (E.expr_do_while (E.expr_label "%continue" (js_stat_to_ejs st)) (js_expr_to_ejs e)) 
-    | J.stat_while nil e st => 
-        E.expr_label "%break" 
-            (E.expr_while (E.expr_label "%continue" (js_expr_to_ejs e)) (js_stat_to_ejs st) E.expr_undefined)
+    | J.stat_do_while ls st e => 
+        js_label_set_to_labels "%break" ls
+            (E.expr_do_while (js_label_set_to_labels "%continue" ls (js_stat_to_ejs st)) (js_expr_to_ejs e)) 
+    | J.stat_while ls e st => 
+        js_label_set_to_labels "%break" ls
+            (E.expr_while (js_label_set_to_labels "%continue" ls (js_expr_to_ejs e)) 
+                (js_stat_to_ejs st) E.expr_undefined)
     | J.stat_with e st => E.expr_with (js_expr_to_ejs e) (js_stat_to_ejs st)
     | J.stat_throw e => E.expr_throw (js_expr_to_ejs e)
     | J.stat_return oe =>
@@ -101,23 +111,15 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         end in 
         E.expr_break "%ret" e 
     | J.stat_break lbl =>
-        let s := match lbl with
-        | J.label_empty => "%break"
-        | J.label_string s => "%break_" ++ s
-        end in 
-        E.expr_break s E.expr_empty
-    | J.stat_continue lbl => 
-        let s := match lbl with
-        | J.label_empty => "%continue"
-        | J.label_string s => "%continue_" ++ s
-        end in 
-        E.expr_break s E.expr_empty
+        E.expr_break (js_label_to_ejs "%break" lbl) E.expr_empty
+    | J.stat_continue lbl =>
+        E.expr_break (js_label_to_ejs "%continue" lbl) E.expr_empty
     | J.stat_try st None None => E.expr_noop (js_stat_to_ejs st)
     | J.stat_try st (Some (s, st1)) None => E.expr_try_catch (js_stat_to_ejs st) s (js_stat_to_ejs st1)
     | J.stat_try st None (Some st2) => E.expr_try_finally (js_stat_to_ejs st) (js_stat_to_ejs st2)
     | J.stat_try st (Some (s, st1)) (Some st2) => 
         E.expr_try_finally (E.expr_try_catch (js_stat_to_ejs st) s (js_stat_to_ejs st1)) (js_stat_to_ejs st2)
-    | J.stat_for nil oe1 oe2 oe3 st => 
+    | J.stat_for ls oe1 oe2 oe3 st => 
         let e1 := match oe1 with
         | None => E.expr_undefined
         | Some e => js_expr_to_ejs e
@@ -130,8 +132,9 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         | None => E.expr_undefined
         | Some e => js_expr_to_ejs e
         end in 
-        E.expr_seq e1 (E.expr_label "%break" (E.expr_while e2 (E.expr_label "%continue" (js_stat_to_ejs st)) e3))
-    | J.stat_for_var nil le1 oe2 oe3 st =>
+        E.expr_seq e1 (js_label_set_to_labels "%break" ls 
+            (E.expr_while e2 (js_label_set_to_labels "%continue" ls (js_stat_to_ejs st)) e3))
+    | J.stat_for_var ls le1 oe2 oe3 st =>
         let e2 := match oe2 with
         | None => E.expr_true
         | Some e => js_expr_to_ejs e
@@ -141,16 +144,17 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         | Some e => js_expr_to_ejs e
         end in
         E.expr_seq (E.expr_seqs (List.map js_vardecl_to_ejs le1)) 
-            (E.expr_label "%break" (E.expr_while e2 (E.expr_label "%continue" (js_stat_to_ejs st)) e3))
+            (js_label_set_to_labels "%break" ls 
+                (E.expr_while e2 (js_label_set_to_labels "%continue" ls (js_stat_to_ejs st)) e3))
 (* TODO for-in
     | J.stat_for_in nil lval e st => 
         E.expr_label "%break" (E.expr_for_in s (js_expr_to_ejs e) (js_stat_to_ejs st))
 *)
-    | J.stat_switch nil e (J.switchbody_nodefault cl) => 
-        E.expr_label "%break" (
+    | J.stat_switch ls e (J.switchbody_nodefault cl) => 
+        js_label_set_to_labels "%break" ls (
         E.expr_switch (js_expr_to_ejs e) (E.switchbody_nodefault (List.map js_switchclause_to_ejs cl)))
-    | J.stat_switch nil e (J.switchbody_withdefault cl1 sts cl2) =>
-        E.expr_label "%break" ( 
+    | J.stat_switch ls e (J.switchbody_withdefault cl1 sts cl2) =>
+        js_label_set_to_labels "%break" ls ( 
         E.expr_switch (js_expr_to_ejs e) (E.switchbody_withdefault
             (List.map js_switchclause_to_ejs cl1)
             (E.expr_seqs (List.map js_stat_to_ejs sts))
@@ -181,5 +185,6 @@ with js_prog_to_ejs p : E.prog :=
 Require EjsToLjs.
 
 Parameter parse_js_expr : string -> option JsSyntax.prog.
-Definition desugar_expr s := LibOption.map (fun e => EjsToLjs.ejs_prog_to_ljs (js_prog_to_ejs e)) (parse_js_expr s).
+Definition desugar_expr s := LibOption.map (fun e => EjsToLjs.ejs_prog_to_ljs (js_prog_to_ejs 
+    (JsSyntaxInfos.add_infos_prog J.strictness_false e))) (parse_js_expr s).
 
