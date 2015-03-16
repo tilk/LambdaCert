@@ -71,6 +71,7 @@ Implicit Type jptr : J.object_loc.
 Implicit Type jobj : J.object.
 Implicit Type jrv : J.resvalue.
 Implicit Type jref : J.ref.
+Implicit Type jl : J.label.
 
 Definition object_bisim := J.object_loc -> L.object_ptr -> Prop.
 
@@ -156,7 +157,7 @@ Record heaps_bisim_consistent BR jst st : Prop := {
     heaps_bisim_consistent_rnoghost : heaps_bisim_rnoghost BR st
 }.
 
-Definition js_literal_to_ljs jl := E.ejs_to_ljs (E.js_literal_to_ejs jl).
+Definition js_literal_to_ljs jli := E.ejs_to_ljs (E.js_literal_to_ejs jli).
 Definition js_expr_to_ljs je := E.ejs_to_ljs (E.js_expr_to_ejs je).
 Definition js_stat_to_ljs jt := E.ejs_to_ljs (E.js_stat_to_ejs jt).
 
@@ -175,15 +176,26 @@ Definition js_exn_object obj v :=
 Inductive res_related BR jst st : J.res -> L.res -> Prop :=
 | res_related_normal : forall jrv v,
     resvalue_related BR jrv v ->
-    res_related BR jst st (J.res_intro J.restype_normal jrv J.label_empty) (L.res_value v)
+    res_related BR jst st (J.res_intro J.restype_normal jrv J.label_empty) 
+        (L.res_value v)
 | res_related_throw : forall jrv ptr obj v,
     binds st ptr obj ->
     js_exn_object obj v ->
+    resvalue_related BR jrv v ->
     res_related BR jst st (J.res_intro J.restype_throw jrv J.label_empty) 
         (L.res_exception (L.value_object ptr))
 | res_related_return : forall jrv v,
     resvalue_related BR jrv v ->
-    res_related BR jst st (J.res_intro J.restype_return jrv J.label_empty) (L.res_break "%ret" v)
+    res_related BR jst st (J.res_intro J.restype_return jrv J.label_empty) 
+        (L.res_break "%ret" v)
+| res_related_break : forall jrv v jl,
+    resvalue_related BR jrv v ->
+    res_related BR jst st (J.res_intro J.restype_break jrv jl) 
+        (L.res_break (E.js_label_to_ejs "%break" jl) v)
+| res_related_continue : forall jrv v jl,
+    resvalue_related BR jrv v ->
+    res_related BR jst st (J.res_intro J.restype_continue jrv jl) 
+        (L.res_break (E.js_label_to_ejs "%continue" jl) v)
 .
 
 (*
@@ -519,6 +531,8 @@ Proof.
     inverts Hrel.
     inverts Hab. unfold J.res_is_normal in *. simpls. false.
     eapply L.res_is_control_exception.
+    eapply L.res_is_control_break.
+    eapply L.res_is_control_break.
     eapply L.res_is_control_break.
 Qed.
 
@@ -1032,6 +1046,42 @@ Proof.
     jauto_js.
 Qed.
 
+Lemma red_stat_break_ok : forall k jl,
+    th_stat k (J.stat_break jl).
+Proof.
+    introv Hinv Hlred.
+    repeat inv_fwd_ljs.
+    jauto_js.
+Qed.
+
+Lemma red_stat_continue_ok : forall k jl,
+    th_stat k (J.stat_continue jl).
+Proof.
+    introv Hinv Hlred.
+    repeat inv_fwd_ljs.
+    jauto_js.
+Qed.
+
+Lemma red_stat_label_ok : forall k s jt,
+    ih_stat k ->
+    th_stat k (J.stat_label s jt).
+Proof.
+    introv IHt Hinv Hlred.
+    repeat inv_fwd_ljs.
+    ljs_out_redh_ter.
+    apply_ih_stat.
+
+    destr_concl.
+    inverts Hih3; (* TODO tactic *)
+    repeat inv_fwd_ljs.
+    jauto_js.
+
+    skip. (* TODO cases, good tactics *)
+    skip.
+    skip.
+    skip.
+Qed.
+
 Lemma main_lemma : forall k, (forall jt, th_stat k jt) /\ (forall je, th_expr k je).
 Proof.
     intro k.
@@ -1045,9 +1095,9 @@ Proof.
     (* stat_expr *)
     applys red_stat_expr_ok; eassumption.
     (* stat_label *)
-    skip.
+    applys red_stat_label_ok; eassumption.
     (* stat_block *)
-    skip.
+    applys red_stat_block_ok; eassumption.
     (* stat_var_decl *)
     skip.
     (* stat_if *)
@@ -1063,9 +1113,9 @@ Proof.
     (* stat_return *)
     applys red_stat_return_ok; eassumption.
     (* stat_break *)
-    skip.
+    applys red_stat_break_ok.
     (* stat_continue *)
-    skip.
+    applys red_stat_continue_ok.
     (* stat_try *)
     skip.
     (* stat_for *)
