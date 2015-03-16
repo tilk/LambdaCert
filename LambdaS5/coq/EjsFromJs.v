@@ -81,16 +81,16 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         end in
     match e with
     | J.stat_expr e => E.expr_noop (js_expr_to_ejs e)
-    | J.stat_label s st => E.expr_label s (js_stat_to_ejs st)
+    | J.stat_label s st => E.expr_label ("%break_" ++ s) (js_stat_to_ejs st)
     | J.stat_block sts => E.expr_seqs (List.map js_stat_to_ejs sts)
     | J.stat_var_decl l => E.expr_seq (E.expr_seqs (List.map js_vardecl_to_ejs l)) E.expr_empty
     | J.stat_if e st None => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) E.expr_empty
     | J.stat_if e st (Some st') => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) (js_stat_to_ejs st')
 (* TODO select implementation strategy
-    | J.stat_do_while nil st e => E.expr_label "%before" (E.expr_do_while (js_stat_to_ejs st) (js_expr_to_ejs e)) 
+    | J.stat_do_while nil st e => E.expr_label "%break" (E.expr_do_while (js_stat_to_ejs st) (js_expr_to_ejs e)) 
 *)
     | J.stat_while nil e st => 
-        E.expr_label "%before" (E.expr_while (js_expr_to_ejs e) (js_stat_to_ejs st) E.expr_undefined)
+        E.expr_label "%break" (E.expr_while (js_expr_to_ejs e) (js_stat_to_ejs st) E.expr_undefined)
     | J.stat_with e st => E.expr_with (js_expr_to_ejs e) (js_stat_to_ejs st)
     | J.stat_throw e => E.expr_throw (js_expr_to_ejs e)
     | J.stat_return oe =>
@@ -101,14 +101,14 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         E.expr_break "%ret" e 
     | J.stat_break lbl =>
         let s := match lbl with
-        | J.label_empty => "%before"
-        | J.label_string s => s
+        | J.label_empty => "%break"
+        | J.label_string s => "%break_" ++ s
         end in 
         E.expr_break s E.expr_empty
-    | J.stat_continue lbl => (* TODO looks fishy! *)
+    | J.stat_continue lbl => 
         let s := match lbl with
         | J.label_empty => "%continue"
-        | J.label_string s => s
+        | J.label_string s => "%continue_" ++ s
         end in 
         E.expr_break s E.expr_empty
     | J.stat_try st None None => E.expr_noop (js_stat_to_ejs st)
@@ -122,36 +122,38 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         | Some e => js_expr_to_ejs e
         end in
         let e2 := match oe2 with
-        | None => E.expr_undefined
-        | Some e => js_expr_to_ejs e
-        end in 
-        let e3 := match oe3 with
         | None => E.expr_true
         | Some e => js_expr_to_ejs e
         end in 
-        E.expr_seq e1 (E.expr_label "%before" (E.expr_while e2 (js_stat_to_ejs st) e3))
+        let e3 := match oe3 with
+        | None => E.expr_undefined
+        | Some e => js_expr_to_ejs e
+        end in 
+        E.expr_seq e1 (E.expr_label "%break" (E.expr_while e2 (E.expr_label "%continue" (js_stat_to_ejs st)) e3))
     | J.stat_for_var nil le1 oe2 oe3 st =>
         let e2 := match oe2 with
-        | None => E.expr_undefined
+        | None => E.expr_true
         | Some e => js_expr_to_ejs e
         end in 
         let e3 := match oe3 with
-        | None => E.expr_true
+        | None => E.expr_undefined
         | Some e => js_expr_to_ejs e
         end in
         E.expr_seq (E.expr_seqs (List.map js_vardecl_to_ejs le1)) 
-            (E.expr_label "%before" (E.expr_while e2 (js_stat_to_ejs st) e3))
+            (E.expr_label "%break" (E.expr_while e2 (E.expr_label "%continue" (js_stat_to_ejs st)) e3))
 (* TODO for-in
     | J.stat_for_in nil lval e st => 
-        E.expr_label "%before" (E.expr_for_in s (js_expr_to_ejs e) (js_stat_to_ejs st))
+        E.expr_label "%break" (E.expr_for_in s (js_expr_to_ejs e) (js_stat_to_ejs st))
 *)
     | J.stat_switch nil e (J.switchbody_nodefault cl) => 
-        E.expr_switch (js_expr_to_ejs e) (E.switchbody_nodefault (List.map js_switchclause_to_ejs cl))
-    | J.stat_switch nil e (J.switchbody_withdefault cl1 sts cl2) => 
+        E.expr_label "%break" (
+        E.expr_switch (js_expr_to_ejs e) (E.switchbody_nodefault (List.map js_switchclause_to_ejs cl)))
+    | J.stat_switch nil e (J.switchbody_withdefault cl1 sts cl2) =>
+        E.expr_label "%break" ( 
         E.expr_switch (js_expr_to_ejs e) (E.switchbody_withdefault
             (List.map js_switchclause_to_ejs cl1)
             (E.expr_seqs (List.map js_stat_to_ejs sts))
-            (List.map js_switchclause_to_ejs cl2))
+            (List.map js_switchclause_to_ejs cl2)))
     | _ => E.expr_syntaxerror
     end
 with js_switchclause_to_ejs c := 

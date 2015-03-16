@@ -72,7 +72,13 @@ Definition make_getter e := make_app_builtin "%MakeGetter" [e].
 
 Definition make_setter e := make_app_builtin "%MakeSetter" [e].
 
-Definition make_while (tst bdy after : L.expr) := L.expr_undefined.
+Definition make_while (tst bdy after : L.expr) := 
+    L.expr_recc "%while_loop" 
+        (L.expr_lambda []
+            (L.expr_if (to_bool tst) 
+                (L.expr_jseq bdy (L.expr_seq after (L.expr_app (L.expr_id "%while_loop") [])))
+                L.expr_empty))
+        (L.expr_app (L.expr_id "%while_loop") []).
 
 Definition make_for_in s robj bdy := 
     let sv := L.expr_string s in
@@ -184,9 +190,10 @@ Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda [i] (
         store_parent_in (make_var_decl [(i, to_js_error (L.expr_id i))] catch))).
 
-Definition make_xfix s e :=
+Definition make_xfix s f e :=
     match e with
-    | L.expr_get_field obj fld => make_app_builtin s [obj; fld]
+    | E.expr_var_id fld => make_app_builtin s [context; L.expr_string fld]
+    | E.expr_get_field obj fld => make_app_builtin s [f obj; f fld]
     | _ => syntax_error "Illegal use of an prefix/postfix operator"
     end.
 
@@ -207,10 +214,10 @@ Definition make_delete f e :=
 Definition make_op1 f op e :=
     match op with
     | J.unary_op_delete => make_delete f e
-    | J.unary_op_post_incr => make_xfix "%PostIncrement" (f e)
-    | J.unary_op_post_decr => make_xfix "%PostDecrement" (f e)
-    | J.unary_op_pre_incr => make_xfix "%PrefixIncrement" (f e)
-    | J.unary_op_pre_decr => make_xfix "%PrefixDecrement" (f e)
+    | J.unary_op_post_incr => make_xfix "%PostIncrement" f e
+    | J.unary_op_post_decr => make_xfix "%PostDecrement" f e
+    | J.unary_op_pre_incr => make_xfix "%PrefixIncrement" f e
+    | J.unary_op_pre_decr => make_xfix "%PrefixDecrement" f e
     | J.unary_op_neg => make_app_builtin "%UnaryNeg" [f e]
     | J.unary_op_add => make_app_builtin "%UnaryPlus" [f e]
     | J.unary_op_bitwise_not => make_app_builtin "%BitwiseNot" [f e]
@@ -336,21 +343,19 @@ Definition make_case (tb : L.expr * L.expr) cont found := let (test, body) := tb
 Definition make_cases cls last := fold_right make_case last cls.
 
 Definition make_switch_nodefault e cls :=
-    L.expr_label "%before" (
     L.expr_let "%found" L.expr_false (
     L.expr_let "%disc" e (
-    make_cases cls (fun _ => L.expr_empty) "%found"))).
+    make_cases cls (fun _ => L.expr_empty) "%found")).
 
 Definition make_switch_withdefault e acls def bcls :=
     let last_case found := L.expr_if (L.expr_id found) L.expr_empty (L.expr_app (L.expr_id "%deflt") []) in
     let deflt_case cont found := 
         L.expr_seq (L.expr_if (L.expr_id found) (L.expr_app (L.expr_id "%deflt") []) L.expr_empty)
                    (cont found) in
-    L.expr_label "%before" (
     L.expr_let "%deflt" (L.expr_lambda [] def) (
     L.expr_let "%found" L.expr_false (
     L.expr_let "%disc" e (
-    make_cases acls (deflt_case (make_cases bcls last_case)) "%found")))).
+    make_cases acls (deflt_case (make_cases bcls last_case)) "%found"))).
 
 (* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
