@@ -37,9 +37,7 @@ Inductive expr : Type :=
 | expr_func_stmt : id -> list id -> prog -> expr (* TODO find way to remove it *)
 (* | expr_let : id -> expr -> expr -> expr *)
 | expr_seq : expr -> expr -> expr
-(*
 | expr_do_while : expr -> expr -> expr 
-*)
 | expr_while : expr -> expr -> expr -> expr (* test, body, after *) 
 | expr_label : id -> expr -> expr
 | expr_break : id -> expr -> expr

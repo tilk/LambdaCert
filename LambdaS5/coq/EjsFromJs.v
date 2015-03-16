@@ -86,11 +86,12 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
     | J.stat_var_decl l => E.expr_seq (E.expr_seqs (List.map js_vardecl_to_ejs l)) E.expr_empty
     | J.stat_if e st None => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) E.expr_empty
     | J.stat_if e st (Some st') => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) (js_stat_to_ejs st')
-(* TODO select implementation strategy
-    | J.stat_do_while nil st e => E.expr_label "%break" (E.expr_do_while (js_stat_to_ejs st) (js_expr_to_ejs e)) 
-*)
+    | J.stat_do_while nil st e => 
+        E.expr_label "%break" 
+            (E.expr_do_while (E.expr_label "%continue" (js_stat_to_ejs st)) (js_expr_to_ejs e)) 
     | J.stat_while nil e st => 
-        E.expr_label "%break" (E.expr_while (js_expr_to_ejs e) (js_stat_to_ejs st) E.expr_undefined)
+        E.expr_label "%break" 
+            (E.expr_while (E.expr_label "%continue" (js_expr_to_ejs e)) (js_stat_to_ejs st) E.expr_undefined)
     | J.stat_with e st => E.expr_with (js_expr_to_ejs e) (js_stat_to_ejs st)
     | J.stat_throw e => E.expr_throw (js_expr_to_ejs e)
     | J.stat_return oe =>

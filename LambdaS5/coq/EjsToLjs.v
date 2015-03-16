@@ -80,6 +80,15 @@ Definition make_while (tst bdy after : L.expr) :=
                 L.expr_empty))
         (L.expr_app (L.expr_id "%while_loop") []).
 
+Definition make_do_while (bdy tst : L.expr) :=
+    L.expr_recc "%do_while_loop" 
+        (L.expr_lambda []
+            (L.expr_jseq bdy 
+                (L.expr_if (to_bool tst) 
+                    (L.expr_app (L.expr_id "%do_while_loop") [])
+                     L.expr_empty)))
+        (L.expr_app (L.expr_id "%do_while_loop") []).
+    
 Definition make_for_in s robj bdy := 
     let sv := L.expr_string s in
     let tst := L.expr_op1 L.unary_op_not (undef_test (L.expr_get_field context sv)) in
@@ -387,6 +396,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_get_field e1 e2 => make_get_field (prop_accessor_check (ejs_to_ljs e1)) (ejs_to_ljs e2)
     | E.expr_for_in s e1 e2 => make_for_in s (ejs_to_ljs e1) (ejs_to_ljs e2) 
     | E.expr_while e1 e2 e3 => make_while (ejs_to_ljs e1) (ejs_to_ljs e2) (ejs_to_ljs e3) 
+    | E.expr_do_while e1 e2 => make_do_while (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_label s e => L.expr_label s (ejs_to_ljs e)
     | E.expr_break s e => L.expr_break s (ejs_to_ljs e)
     | E.expr_throw e => make_throw (ejs_to_ljs e)
