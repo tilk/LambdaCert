@@ -198,6 +198,8 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
         (L.res_break (E.js_label_to_ejs "%continue" jl) v)
 .
 
+
+
 (*
 Inductive out_related BR : J.out -> L.out -> Prop :=
 | out_related_ter : forall jst st jr r,
@@ -218,10 +220,27 @@ Hint Constructors res_related : js_ljs.
 
 Hint Extern 4 (js_exn_object _ _) => unfold js_exn_object : js_ljs.
 
+Hint Extern 4 (res_related _ _ _ (J.res_throw _) _) => unfold J.res_throw : js_ljs.
+
 Hint Constructors J.red_expr : js_ljs.
 Hint Constructors J.red_stat : js_ljs.
 Hint Constructors J.red_spec : js_ljs.
 Hint Constructors J.abort : js_ljs.
+
+Lemma res_related_break_hint : forall BR jst st jrv v jl s,
+    resvalue_related BR jrv v -> s = E.js_label_to_ejs "%break" jl ->
+    res_related BR jst st (J.res_intro J.restype_break jrv jl) 
+        (L.res_break s v). 
+Proof. intros. substs. eauto with js_ljs. Qed.
+
+Lemma res_related_continue_hint : forall BR jst st jrv v jl s,
+    resvalue_related BR jrv v -> s = E.js_label_to_ejs "%continue" jl ->
+    res_related BR jst st (J.res_intro J.restype_continue jrv jl) 
+        (L.res_break s v). 
+Proof. intros. substs. eauto with js_ljs. Qed.
+
+Hint Resolve res_related_break_hint : js_ljs.
+Hint Resolve res_related_continue_hint : js_ljs.
 
 Definition includes_init_ctx c :=
     forall i v v', binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'. 
@@ -283,10 +302,10 @@ Ltac ljs_abort := match goal with
     end.
 
 Ltac inv_ljs_in H :=
-    inversions H; try ljs_abort.
+    inversions H; try ljs_abort; tryfalse.
 
 Ltac inv_fwd_ljs_in H :=
-    (inversions H; try ljs_abort); [idtac].
+    (inversions H; try ljs_abort; tryfalse); [idtac].
  
 Ltac with_red_exprh T :=
     match goal with
@@ -342,6 +361,8 @@ Tactic Notation "unfold_concl" "in" hyp(H) :=
 Ltac js_ljs_false_invert := match goal with 
     | H : J.abort_intercepted_stat _ |- _ => solve [inverts H]
     | H : J.abort_intercepted_spec _ |- _ => solve [inverts H]
+    | H : J.abort_intercepted_stat (J.stat_label_1 _ _) |- _ => 
+        solve [let H' := fresh "H" in inverts H as H'; [discriminate H' || injects H']; tryfalse]
     | H : J.res_is_normal _ |- _ => inverts H
     end.
 
@@ -385,8 +406,12 @@ Ltac destr_concl := match goal with
         unfold_concl in H; destruct_hyp H
     end.
 
-Ltac jauto_js := repeat destr_concl; jauto_set; eauto with js_ljs bag typeclass_instances; 
-    repeat (try unfold_concl; jauto_set; eauto with js_ljs bag typeclass_instances).
+Tactic Notation "jauto_js" integer(k) := repeat destr_concl; jauto_set; eauto with js_ljs bag typeclass_instances; 
+    repeat (try unfold_concl; jauto_set; eauto k with js_ljs bag typeclass_instances).
+
+Tactic Notation "jauto_js" := jauto_js 5.
+
+Ltac solve_jauto_js := solve [jauto_js 50].
 
 Ltac ijauto_js := repeat intuition jauto_js.
 
@@ -1004,27 +1029,6 @@ Proof.
     applys red_stat_if1_ok; eassumption.
 Qed.
 
-Lemma red_stat_throw_ok : forall k je,
-    ih_expr k ->
-    th_stat k (J.stat_throw je).
-Proof.
-    introv IHe Hinv Hlred.
-    inverts Hlred as Hlred'.
-    ljs_out_redh_ter.
-    inversions Hlred'.
-    repeat inv_fwd_ljs.
-    ljs_out_redh_ter.
-    apply_ih_expr.
-    destr_concl; try ljs_handle_abort.
-(* TODO seems like something to automate *)
-    repeat (ljs_out_redh_ter || inv_fwd_ljs).
-    repeat injects.
-    jauto_js.
-    eapply res_related_throw; (* TODO why auto doesn't fire on this? *)
-    jauto_js.
-Qed.
-
-
 Lemma red_stat_return_ok : forall k oje,
     ih_expr k ->
     th_stat k (J.stat_return oje).
@@ -1072,14 +1076,35 @@ Proof.
     apply_ih_stat.
 
     destr_concl.
-    inverts Hih3; (* TODO tactic *)
-    repeat inv_fwd_ljs.
+    inverts keep Hih3; (* TODO tactic *)
+    repeat inv_fwd_ljs;
+    unfolds E.js_label_to_ejs;
+    repeat inv_fwd_ljs;
+    try solve [jauto_js].
+    destruct jl;
+    inv_internal_ljs; try injects;
     jauto_js.
+    destruct (classic (s = s0)).
+    substs. specializes H4 st' v. 
+    jauto_js.
+Qed.
 
-    skip. (* TODO cases, good tactics *)
-    skip.
-    skip.
-    skip.
+Lemma red_stat_throw_ok : forall k je,
+    ih_expr k ->
+    th_stat k (J.stat_throw je).
+Proof.
+    introv IHe Hinv Hlred.
+    inverts Hlred as Hlred'.
+    ljs_out_redh_ter.
+    inversions Hlred'.
+    repeat inv_fwd_ljs.
+    ljs_out_redh_ter.
+    apply_ih_expr.
+    destr_concl; try ljs_handle_abort.
+(* TODO seems like something to automate *)
+    repeat (ljs_out_redh_ter || inv_fwd_ljs).
+    repeat injects.
+    solve_jauto_js.
 Qed.
 
 Lemma main_lemma : forall k, (forall jt, th_stat k jt) /\ (forall je, th_expr k je).

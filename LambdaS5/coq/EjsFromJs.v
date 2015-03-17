@@ -49,10 +49,10 @@ Definition is_strict es :=
 Definition is_element_stat e := match e with J.element_stat _ => true | _ => false end.
 Definition is_element_func_decl e := match e with J.element_func_decl _ _ _ => true | _ => false end.
 
-Definition js_label_to_ejs s l :=
+Definition js_label_to_ejs s l := s ++
     match l with
-    | J.label_empty => s
-    | J.label_string s' => s ++ "_" ++ s'
+    | J.label_empty => ""
+    | J.label_string s' => "_" ++ s'
     end.
 
 Definition js_label_set_to_labels s (ls : J.label_set) e := 
