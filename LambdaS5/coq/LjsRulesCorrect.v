@@ -702,6 +702,109 @@ Proof.
     solve_ijauto_js.
 Qed.
 
+(* TODO move *)
+Lemma res_overwrite_value_if_empty_lemma : forall jrv jr,
+    J.res_overwrite_value_if_empty jrv jr = 
+        J.res_intro (J.res_type jr) (J.res_value (J.res_overwrite_value_if_empty jrv jr)) (J.res_label jr).
+Proof.
+    intros.
+    unfold J.res_overwrite_value_if_empty.
+    cases_if; substs; destruct jr;
+    reflexivity.    
+Qed.
+
+Lemma resvalue_related_overwrite_if_empty : forall BR jrv1 jrv2 v1 v2 jrt jl,
+    resvalue_related BR jrv1 v1 ->
+    resvalue_related BR jrv2 v2 ->
+    resvalue_related BR 
+        (J.res_value (J.res_overwrite_value_if_empty jrv1 (J.res_intro jrt jrv2 jl))) 
+        (L.overwrite_value_if_empty v1 v2).
+Proof.
+    introv Hrel1 Hrel2.
+    unfold J.res_overwrite_value_if_empty.
+    cases_if; substs. 
+    (* empty *)
+    inverts Hrel2.
+    assumption.
+    (* nonempty *)
+    destruct jrv2;
+    inverts Hrel2 as Hvrel2; tryfalse.
+    inverts Hvrel2; jauto_js.
+Qed.
+
+Lemma res_related_value_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2,
+    resvalue_related BR jrv1 v1 ->
+    resvalue_related BR jrv2 v2 ->
+    res_related BR jst st 
+        (J.res_overwrite_value_if_empty jrv1 (J.res_normal jrv2))
+        (L.res_value (L.overwrite_value_if_empty v1 v2)).
+Proof.
+    introv Hrel1 Hrel2. rewrite res_overwrite_value_if_empty_lemma.
+    eapply res_related_normal. 
+    eauto using resvalue_related_overwrite_if_empty.
+Qed.
+
+Lemma res_related_break_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2 s jl,
+    resvalue_related BR jrv1 v1 ->
+    resvalue_related BR jrv2 v2 ->
+    s = E.js_label_to_ejs "%break" jl ->
+    res_related BR jst st 
+        (J.res_overwrite_value_if_empty jrv1 (J.res_intro J.restype_break jrv2 jl))
+        (L.res_break s (L.overwrite_value_if_empty v1 v2)).
+Proof.
+    introv Hrel1 Hrel2 Hs. substs. rewrite res_overwrite_value_if_empty_lemma.
+    eapply res_related_break. 
+    eauto using resvalue_related_overwrite_if_empty.
+Qed.
+
+Lemma res_related_continue_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2 s jl,
+    resvalue_related BR jrv1 v1 ->
+    resvalue_related BR jrv2 v2 ->
+    s = E.js_label_to_ejs "%continue" jl ->
+    res_related BR jst st 
+        (J.res_overwrite_value_if_empty jrv1 (J.res_intro J.restype_continue jrv2 jl))
+        (L.res_break s (L.overwrite_value_if_empty v1 v2)).
+Proof.
+    introv Hrel1 Hrel2 Hs. substs. rewrite res_overwrite_value_if_empty_lemma.
+    eapply res_related_continue. 
+    eauto using resvalue_related_overwrite_if_empty.
+Qed.
+
+Lemma res_related_return_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2,
+    resvalue_related BR jrv1 v1 ->
+    resvalue_related BR jrv2 v2 ->
+    res_related BR jst st 
+        (J.res_overwrite_value_if_empty jrv1 (J.res_intro J.restype_return jrv2 J.label_empty))
+        (L.res_break "%ret" (L.overwrite_value_if_empty v1 v2)).
+Proof.
+    introv Hrel1 Hrel2. rewrite res_overwrite_value_if_empty_lemma.
+    eapply res_related_return. 
+    eauto using resvalue_related_overwrite_if_empty.
+Qed.
+
+Hint Resolve res_related_value_overwrite_if_empty : js_ljs.
+Hint Resolve res_related_break_overwrite_if_empty : js_ljs.
+Hint Resolve res_related_continue_overwrite_if_empty : js_ljs.
+Hint Resolve res_related_return_overwrite_if_empty : js_ljs.
+
+Ltac res_related_invert :=
+    match goal with
+    | H : res_related ?BR ?jst ?st ?jr ?r |- _ =>
+(*      match goal with H1 : resvalue_related BR jst st _ _ |- _ => fail 2 | _ => idtac end; *)
+        is_var jr; (* TODO better condition *)
+        inverts keep H
+    end.
+
+(* workaround *)
+Lemma stat_block_1_hint : forall (S0 S : JsSyntax.state) (C : JsSyntax.execution_ctx)
+         (t : JsSyntax.stat) jrv jo jo1,
+       J.red_stat S C (J.stat_basic t) jo1 ->
+       J.red_stat S C (J.stat_block_2 jrv jo1) jo ->
+       J.red_stat S0 C (J.stat_block_1
+            (J.out_ter S (J.res_intro J.restype_normal jrv J.label_empty)) t) jo.
+Proof. intros. fold (J.res_normal jrv). jauto_js. Qed.
+Hint Resolve stat_block_1_hint : js_ljs.
+
 (* Expressions *)
 
 Lemma red_expr_literal_ok : forall k l,
@@ -874,31 +977,6 @@ Qed.
 
 (* Statements *)
 
-Lemma list_rev_ind
-     : forall (A : Type) (P : list A -> Prop),
-       P [] ->
-       (forall (a : A) (l : list A), P l -> P (l & a)) ->
-       forall l : list A, P l.
-Proof.
-    introv Hbase Hstep.
-    intro l.
-    asserts (l'&Heq) : (exists l', l = rev l').
-    exists (rev l). rew_rev. reflexivity.
-    gen l.
-    induction l'; intros; substs; rew_rev; auto.
-Qed.
-
-(* TODO move this lemma *)
-Lemma list_map_tlc : forall A B (f : A -> B) l, 
-    List.map f l = map f l.
-Proof.
-    induction l.
-    reflexivity.
-    simpl.
-    rewrite IHl.
-    reflexivity.
-Qed.
-
 Lemma stat_block_ejs_last_lemma : forall jts jt,
     E.js_stat_to_ejs (J.stat_block (jts & jt)) = 
         E.expr_seq (E.js_stat_to_ejs (J.stat_block jts)) (E.js_stat_to_ejs jt).
@@ -910,28 +988,6 @@ Proof.
     rew_list.
     reflexivity.
 Qed.
-
-(* TODO move *)
-Lemma res_related_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2,
-    resvalue_related BR jrv1 v1 ->
-    resvalue_related BR jrv2 v2 ->
-    res_related BR jst st 
-        (J.res_overwrite_value_if_empty jrv1 (J.res_normal jrv2))
-        (L.res_value (L.overwrite_value_if_empty v1 v2)).
-Proof.
-    introv Hrel1 Hrel2.
-    unfold J.res_overwrite_value_if_empty.
-    cases_if; substs.
-    (* empty *)
-    inverts Hrel2.
-    eapply res_related_normal.
-    assumption.
-    (* nonempty *)
-    destruct jrv2;
-    inverts Hrel2 as Hvrel2; tryfalse.
-    inverts Hvrel2; jauto_js.
-Qed.
-    Hint Resolve res_related_overwrite_if_empty : js_ljs.
 
 Lemma red_stat_block_ok : forall jts k, 
     ih_stat k -> 
@@ -948,18 +1004,15 @@ Proof.
     specializes IHjts (ih_stat_S IH). 
 
     specialize_th_stat IHjts.
-    destr_concl_auto. 
-    inv_fwd_ljs.
-    ljs_out_redh_ter.
-    apply_ih_stat.
     destr_concl_auto.
 
     inv_fwd_ljs.
-    ijauto_js.
-    econstructor 3; ijauto_js. (* TODO why auto does not handle this? *)
-    econstructor 4; ijauto_js.
+    ljs_out_redh_ter.
+    apply_ih_stat.
 
-    skip. (* TODO! TODO! *)
+    destr_concl;
+    res_related_invert; repeat inv_fwd_ljs; 
+    ijauto_js.
 Qed.
 
 Lemma red_stat_expr_ok : forall k je, 
@@ -1076,7 +1129,7 @@ Proof.
     apply_ih_stat.
 
     destr_concl.
-    inverts keep Hih3; (* TODO tactic *)
+    res_related_invert;
     repeat inv_fwd_ljs;
     unfolds E.js_label_to_ejs;
     repeat inv_fwd_ljs;

@@ -119,6 +119,31 @@ Ltac destruct_hyp H := match type of H with
     | _ = ?x => is_var x; subst x
     end.
 
+Lemma list_rev_ind
+     : forall (A : Type) (P : list A -> Prop),
+       P nil ->
+       (forall (a : A) (l : list A), P l -> P (l & a)) ->
+       forall l : list A, P l.
+Proof.
+    introv Hbase Hstep.
+    intro l.
+    asserts (l'&Heq) : (exists l', l = rev l').
+    exists (rev l). rew_rev. reflexivity.
+    gen l.
+    induction l'; intros; substs; rew_rev; auto.
+Qed.
+
+(* TODO move this lemma *)
+Lemma list_map_tlc : forall A B (f : A -> B) l, 
+    List.map f l = LibList.map f l.
+Proof.
+    induction l.
+    reflexivity.
+    simpl.
+    rewrite IHl.
+    reflexivity.
+Qed.
+
 (* TODO move to TLC *)
 Global Instance Exists_decidable : 
     forall `(l : list A) P (HD : forall a, Decidable (P a)), Decidable (Exists P l).
