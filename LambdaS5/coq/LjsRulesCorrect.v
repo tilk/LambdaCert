@@ -365,6 +365,7 @@ Tactic Notation "unfold_concl" "in" hyp(H) :=
     unfold concl_expr_value, concl_expr_getvalue, concl_stat, concl_spec in H.
 
 Ltac js_ljs_false_invert := match goal with 
+    | H : J.abort_intercepted_expr _ |- _ => solve [inverts H]
     | H : J.abort_intercepted_stat _ |- _ => solve [inverts H]
     | H : J.abort_intercepted_spec _ |- _ => solve [inverts H]
     | H : J.abort_intercepted_stat (J.stat_label_1 _ _) |- _ => 
@@ -421,13 +422,11 @@ Ltac solve_jauto_js := solve [jauto_js 50].
 
 Ltac ijauto_js := repeat intuition jauto_js.
 
-Ltac solve_ijauto_js := solve [ijauto_js].
+Ltac solve_ijauto_js := solve [ijauto_js; solve_jauto_js].
 
 (* HERE START PROOFS *)
 
 (* Lemmas about invariants *)
-
-Hint Extern 1 (?x <> _) => solve [intro; subst x; false]. (* TODO move *)
 
 Lemma heaps_bisim_nindex_preserved : forall BR jst st ptr obj,
     ~index st ptr ->
@@ -872,6 +871,8 @@ Lemma stat_block_1_hint : forall (S0 S : JsSyntax.state) (C : JsSyntax.execution
 Proof. intros. fold (J.res_normal jrv). jauto_js. Qed.
 Hint Resolve stat_block_1_hint : js_ljs.
 
+Hint Extern 11 => match goal with |- context [If _ then _ else _] => case_if end : js_ljs.
+
 (* Expressions *)
 
 Lemma red_expr_literal_ok : forall k l,
@@ -896,8 +897,6 @@ Proof.
     skip.
 Qed.
 
-Hint Extern 11 => match goal with |- context [If _ then _ else _] => case_if end : js_ljs.
-
 Lemma red_expr_conditional_ok : forall k je1 je2 je3,
     ih_expr k ->
     th_expr k (J.expr_conditional je1 je2 je3).
@@ -920,19 +919,7 @@ Proof.
 
     jauto_js.
     right.
-    jauto_js.
-    eapply J.red_spec_expr_get_value.
-    eapply J.red_expr_conditional.
-    eassumption.
-    eapply J.red_expr_conditional_1.
-    reflexivity.
-    jauto_js.
-    econstructor; ijauto_js.
-    false_invert.
-    eapply J.red_spec_abort.
-    reflexivity.
-    assumption. 
-    ijauto_js.    
+    solve_jauto_js. 
     (* false *)
     repeat destr_concl; unfold_concl.
     jauto_js.
@@ -941,37 +928,12 @@ Proof.
 
     jauto_js.
     right.
-    jauto_js.
-    eapply J.red_spec_expr_get_value.
-    eapply J.red_expr_conditional.
-    eassumption.
-    eapply J.red_expr_conditional_1.
-    reflexivity.
-    jauto_js.
-    econstructor; ijauto_js.
-    false_invert.
-    eapply J.red_spec_abort.
-    reflexivity.
-    assumption. 
-    ijauto_js.
+    solve_jauto_js. 
     (* abort *)
     ljs_abort_from_js.
     ljs_propagate_abort.
     unfold_concl.
-    jauto_js.
-    right.
-    jauto_js.
-    eapply J.red_spec_expr_get_value.
-    eapply J.red_expr_conditional.
-    eassumption.
-    eapply J.red_expr_abort.
-    reflexivity.
-    eassumption.
-    trivial.
-    eapply J.red_spec_abort.
-    reflexivity.
-    eassumption.
-    trivial.
+    ijauto_js.
 Qed.
 
 Lemma red_expr_assign0_ok : forall k je1 je2,
@@ -1129,6 +1091,16 @@ Proof.
     applys red_stat_if2_ok; eassumption.
     applys red_stat_if1_ok; eassumption.
 Qed.
+
+
+
+Lemma red_stat_while_ok : forall k jls je jt,
+    ih_stat k ->
+    ih_expr k ->
+    th_stat k (J.stat_while jls je jt).
+Proof.
+    introv IHt IHe.
+Admitted.
 
 Lemma red_stat_return_ok : forall k oje,
     ih_expr k ->

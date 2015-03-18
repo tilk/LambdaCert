@@ -72,6 +72,8 @@ Definition number_list_from {A : Type} k (l : list A) := zipl_stream (id_stream_
 
 (* this should go to TLC *)
 Hint Extern 0 (~ _) => solve [let H := fresh in intro H; inversion H].
+Hint Extern 1 (?x <> _) => solve [intro; subst x; false]. 
+Hint Extern 1 (_ = _) => reflexivity. 
 
 Tactic Notation "cases_match_option" "as" simple_intropattern(Eq) :=
   match goal with

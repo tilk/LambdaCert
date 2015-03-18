@@ -822,7 +822,7 @@ Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
     cases_let.
-    ljs_run_inv. jauto.
+    ljs_run_inv. unfolds add_object. injects. jauto. 
 Qed.
 
 (* Help for proving the main lemma *)
