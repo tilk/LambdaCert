@@ -100,8 +100,8 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
             (E.expr_do_while (js_label_set_to_labels "%continue" ls (js_stat_to_ejs st)) (js_expr_to_ejs e)) 
     | J.stat_while ls e st => 
         js_label_set_to_labels "%break" ls
-            (E.expr_while (js_label_set_to_labels "%continue" ls (js_expr_to_ejs e)) 
-                (js_stat_to_ejs st) E.expr_undefined)
+            (E.expr_while (js_expr_to_ejs e)
+                (js_label_set_to_labels "%continue" ls (js_stat_to_ejs st)) E.expr_undefined)
     | J.stat_with e st => E.expr_with (js_expr_to_ejs e) (js_stat_to_ejs st)
     | J.stat_throw e => E.expr_throw (js_expr_to_ejs e)
     | J.stat_return oe =>
