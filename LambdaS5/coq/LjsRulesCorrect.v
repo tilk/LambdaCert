@@ -77,6 +77,8 @@ Definition object_bisim := J.object_loc -> L.object_ptr -> Prop.
 
 Implicit Type BR : object_bisim.
 
+Definition bisim_subset : binary object_bisim := fun BR1 BR2 => forall jptr ptr, BR1 jptr ptr -> BR2 jptr ptr.
+
 Inductive value_related BR : J.value -> L.value -> Prop :=
 | value_related_null : value_related BR (J.value_prim J.prim_null) L.value_null
 | value_related_undefined : value_related BR (J.value_prim J.prim_undef) L.value_undefined
@@ -251,29 +253,32 @@ Inductive state_invariant BR jst jc c st : Prop := {
 }.
 
 Definition concl_expr_value BR jst jc c st st' r je :=
-    exists jst' jr,
-    state_invariant BR jst' jc c st' /\
+    exists BR' jst' jr,
+    state_invariant BR' jst' jc c st' /\
+    bisim_subset BR BR' /\
     J.red_expr jst jc (J.expr_basic je) (J.out_ter jst' jr) /\ 
     res_related BR jst' st' jr r.
 
 Definition concl_stat BR jst jc c st st' r jt :=
-    exists jst' jr,
-    state_invariant BR jst' jc c st' /\
+    exists BR' jst' jr,
+    state_invariant BR' jst' jc c st' /\
+    bisim_subset BR BR' /\
     J.red_stat jst jc (J.stat_basic jt) (J.out_ter jst' jr) /\ 
-    res_related BR jst' st' jr r.
+    res_related BR' jst' st' jr r.
 
-Definition concl_spec {A : Type} BR jst jc c st st' r jes (P : A -> Prop) :=
-    exists jst',
-    state_invariant BR jst' jc c st' /\ 
-    ((exists x, J.red_spec jst jc jes (J.specret_val jst' x) /\ P x) \/
+Definition concl_spec {A : Type} BR jst jc c st st' r jes (P : object_bisim -> J.state -> A -> Prop) :=
+    exists BR' jst',
+    state_invariant BR' jst' jc c st' /\ 
+    bisim_subset BR BR' /\
+    ((exists x, J.red_spec jst jc jes (J.specret_val jst' x) /\ P BR' jst' x) \/
      (exists jr, 
         J.red_spec jst jc jes (@J.specret_out A (J.out_ter jst' jr)) /\ 
         J.abort (J.out_ter jst' jr) /\
-        res_related BR jst' st' jr r)).
+        res_related BR' jst' st' jr r)).
 
 Definition concl_expr_getvalue BR jst jc c st st' r je :=
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
-       (fun jv => exists v, r = L.res_value v /\ value_related BR jv v).
+       (fun BR' _ jv => exists v, r = L.res_value v /\ value_related BR' jv v).
 
 Definition th_expr k je := forall BR jst jc c st st' r, 
     state_invariant BR jst jc c st ->
@@ -285,11 +290,12 @@ Definition th_stat k jt := forall BR jst jc c st st' r,
     L.red_exprh k c st (L.expr_basic (js_stat_to_ljs jt)) (L.out_ter st' r) ->
     concl_stat BR jst jc c st st' r jt.
 
-Definition th_spec {A : Type} k e jes (P : L.ctx -> L.store -> L.res -> A -> Prop) := 
+Definition th_spec {A : Type} k e jes 
+    (P : object_bisim -> J.state -> J.execution_ctx -> L.ctx -> L.store -> L.res -> A -> Prop) := 
     forall BR jst jc c st st' r, 
     state_invariant BR jst jc c st ->
     L.red_exprh k c st (L.expr_basic e) (L.out_ter st' r) ->
-    concl_spec BR jst jc c st st' r jes (P c st' r).
+    concl_spec BR jst jc c st st' r jes (fun BR' jst' a => P BR' jst' jc c st' r a).
 
 Definition ih_expr k := forall je k', (k' < k)%nat -> th_expr k' je.
 
@@ -641,6 +647,49 @@ Ltac res_related_abort :=
 
 Ltac destr_concl_auto := destr_concl; res_related_abort; try ljs_handle_abort.
 
+(* Properties of bisim_subset *) 
+
+Lemma bisim_subset_refl : refl bisim_subset.
+Proof.
+    unfolds. intros. unfolds. auto.
+Qed.
+
+Lemma bisim_subset_trans : trans bisim_subset.
+Proof.
+    unfolds. introv S1 S2. unfolds bisim_subset. auto. 
+Qed.
+
+Hint Extern 0 (bisim_subset ?x ?x) => solve [apply bisim_subset_refl].
+Hint Extern 1 (bisim_subset ?A ?C) => 
+    match goal with
+    | H : bisim_subset A ?B |- _ => apply (@bisim_subset_trans B A C H)
+    | H : bisim_subset ?B C |- _ => apply ((fun bs1 bs2 => @bisim_subset_trans B A C bs2 bs1) H)
+    end : js_ljs.
+
+Lemma bisim_subset_preserves_value_related : forall BR1 BR2 jv v,
+    bisim_subset BR1 BR2 ->
+    value_related BR1 jv v ->
+    value_related BR2 jv v.
+Proof.
+    introv Hs Hrel.
+    unfolds in Hs.
+    inverts Hrel; jauto_js.
+Qed.
+
+Hint Resolve bisim_subset_preserves_value_related : js_ljs.
+
+Lemma bisim_subset_preserves_resvalue_related : forall BR1 BR2 jrv v,
+    bisim_subset BR1 BR2 ->
+    resvalue_related BR1 jrv v ->
+    resvalue_related BR2 jrv v.
+Proof.
+    introv Hs Hrel.
+    unfolds in Hs.
+    inverts Hrel; jauto_js.
+Qed.
+
+Hint Resolve bisim_subset_preserves_resvalue_related : js_ljs.
+
 (* Lemmas about operators *)
 
 (* TODO *)
@@ -679,7 +728,7 @@ Lemma red_spec_to_boolean_ok : forall k je,
     ih_expr k ->
     th_spec k (E.to_bool (js_expr_to_ljs je))
               (J.spec_expr_get_value_conv J.spec_to_boolean je) 
-              (fun _ _ r jv => exists b, jv = J.value_prim (J.prim_bool b) /\ 
+              (fun _ _ _ _ _ r jv => exists b, jv = J.value_prim (J.prim_bool b) /\ 
                   r = L.res_value (L.value_bool b)).
 Proof.
     introv IHe Hinv Hlred.
@@ -696,13 +745,31 @@ Proof.
     destr_concl; try ljs_handle_abort.
 
     repeat inv_internal_fwd_ljs.
-
     autoforwards Hbool : ljs_to_bool_lemma.
     destruct_hyp Hbool.
     solve_ijauto_js.
 Qed.
 
 (* TODO move *)
+Lemma overwrite_value_if_empty_assoc : forall v1 v2 v3,
+    L.overwrite_value_if_empty (L.overwrite_value_if_empty v1 v2) v3 = 
+        L.overwrite_value_if_empty v1 (L.overwrite_value_if_empty v2 v3).
+Proof.
+    destruct v3; reflexivity.
+Qed.
+
+Lemma overwrite_value_if_empty_left_empty : forall v,
+    L.overwrite_value_if_empty L.value_empty v = v.
+Proof.
+    destruct v; reflexivity.
+Qed.
+
+Lemma overwrite_value_if_empty_right_empty : forall v,
+    L.overwrite_value_if_empty v L.value_empty = v.
+Proof.
+    reflexivity.
+Qed.
+
 Lemma res_overwrite_value_if_empty_lemma : forall jrv jr,
     J.res_overwrite_value_if_empty jrv jr = 
         J.res_intro (J.res_type jr) (J.res_value (J.res_overwrite_value_if_empty jrv jr)) (J.res_label jr).
@@ -847,19 +914,13 @@ Proof.
     apply_ih_expr.
     (* true *)
     repeat destr_concl; unfold_concl.
-    jauto_set.
     jauto_js.
     left.
-    jauto_set.
-    econstructor;
-    jauto_js.
-    jauto_js.
-    jauto_js.
+    solve_jauto_js.
 
-    jauto_set.
     jauto_js.
     right.
-    jauto_set.
+    jauto_js.
     eapply J.red_spec_expr_get_value.
     eapply J.red_expr_conditional.
     eassumption.
@@ -872,23 +933,15 @@ Proof.
     reflexivity.
     assumption. 
     ijauto_js.    
-    ijauto_js.
-    ijauto_js.
     (* false *)
     repeat destr_concl; unfold_concl.
-    jauto_set.
     jauto_js.
     left.
-    jauto_set.
-    econstructor;
-    jauto_js.
-    jauto_js.
-    jauto_js.
+    solve_jauto_js.
 
-    jauto_set.
     jauto_js.
     right.
-    jauto_set.
+    jauto_js.
     eapply J.red_spec_expr_get_value.
     eapply J.red_expr_conditional.
     eassumption.
@@ -900,17 +953,14 @@ Proof.
     eapply J.red_spec_abort.
     reflexivity.
     assumption. 
-    ijauto_js.    
-    ijauto_js.
     ijauto_js.
     (* abort *)
     ljs_abort_from_js.
     ljs_propagate_abort.
     unfold_concl.
-    jauto_set.
-    eassumption.
+    jauto_js.
     right.
-    jauto_set.
+    jauto_js.
     eapply J.red_spec_expr_get_value.
     eapply J.red_expr_conditional.
     eassumption.
@@ -922,8 +972,6 @@ Proof.
     reflexivity.
     eassumption.
     trivial.
-    eassumption.
-    eassumption.
 Qed.
 
 Lemma red_expr_assign0_ok : forall k je1 je2,
