@@ -73,12 +73,21 @@ Implicit Type jrv : J.resvalue.
 Implicit Type jref : J.ref.
 Implicit Type jl : J.label.
 
+(* Desugaring for literals, expressions and statements. *)
+Definition js_literal_to_ljs jli := E.ejs_to_ljs (E.js_literal_to_ejs jli).
+Definition js_expr_to_ljs je := E.ejs_to_ljs (E.js_expr_to_ejs je).
+Definition js_stat_to_ljs jt := E.ejs_to_ljs (E.js_stat_to_ejs jt).
+
+(* Relates JS objects to LJS objects. 
+ * Properties it should satisfy will be defined later. *)
 Definition object_bisim := J.object_loc -> L.object_ptr -> Prop.
 
 Implicit Type BR : object_bisim.
 
 Definition bisim_subset : binary object_bisim := fun BR1 BR2 => forall jptr ptr, BR1 jptr ptr -> BR2 jptr ptr.
 
+(* Relates JS values to LJS values.
+ * Note that this implies that LJS lambdas and empty are never seen directly by JS code. *)
 Inductive value_related BR : J.value -> L.value -> Prop :=
 | value_related_null : value_related BR (J.value_prim J.prim_null) L.value_null
 | value_related_undefined : value_related BR (J.value_prim J.prim_undef) L.value_undefined
@@ -89,6 +98,7 @@ Inductive value_related BR : J.value -> L.value -> Prop :=
     BR jptr ptr -> value_related BR (J.value_object jptr) (L.value_object ptr) 
 .
 
+(* Relates JS object attributes to LJS object attributes. *)
 Inductive attributes_data_related BR : J.attributes_data -> L.attributes_data -> Prop := 
 | attributes_data_related_intro : forall jv v b1 b2 b3, 
     value_related BR jv v ->
@@ -115,20 +125,26 @@ Inductive attributes_related BR : J.attributes -> L.attributes -> Prop :=
     attributes_related BR (J.attributes_accessor_of jacc) (L.attributes_accessor_of acc)
 .
 
+(* Relates attributes of JS objects to LJS.
+ * States that for every attribute name, the attribute is undefined in both JS and LJS objects,
+ * or it's defined in both and related. *)
 Definition object_attributes_related BR jobj obj := forall s, 
     ~J.Heap.indom (J.object_properties_ jobj) s /\ ~index (L.object_properties obj) s \/
     exists jptr ptr, 
         J.Heap.binds (J.object_properties_ jobj) s jptr /\ binds (L.object_properties obj) s ptr /\
         attributes_related BR jptr ptr.
 
+(* Relates internal fields of JS objects to JLS. *)
 Definition object_prim_related BR jobj obj := 
     J.object_class_ jobj = L.object_class obj /\
     J.object_extensible_ jobj = L.object_extensible obj.
 
+(* Relates JS objects to LJS objects. *)
 Definition object_related BR jobj obj :=
     object_prim_related BR jobj obj /\
     object_attributes_related BR jobj obj.
 
+(* Properties that must hold for heap bisimulations. *)
 Definition heaps_bisim_lfun BR :=
     forall jptr ptr1 ptr2, BR jptr ptr1 -> BR jptr ptr2 -> ptr1 = ptr2.
 
@@ -159,10 +175,8 @@ Record heaps_bisim_consistent BR jst st : Prop := {
     heaps_bisim_consistent_rnoghost : heaps_bisim_rnoghost BR st
 }.
 
-Definition js_literal_to_ljs jli := E.ejs_to_ljs (E.js_literal_to_ejs jli).
-Definition js_expr_to_ljs je := E.ejs_to_ljs (E.js_expr_to_ejs je).
-Definition js_stat_to_ljs jt := E.ejs_to_ljs (E.js_stat_to_ejs jt).
-
+(* Relates JS resvalues ("maybe values") to LJS values. 
+ * Resvalues are the results of statements. *)
 Inductive resvalue_related BR : J.resvalue -> L.value -> Prop :=
 | resvalue_related_empty :  
     resvalue_related BR J.resvalue_empty L.value_empty
@@ -175,6 +189,7 @@ Definition js_exn_object obj v :=
     binds (L.object_properties obj) "%js-exn" 
         (L.attributes_data_of (L.attributes_data_intro v false false false)).
 
+(* Relates JS results to LJS results. *)
 Inductive res_related BR jst st : J.res -> L.res -> Prop :=
 | res_related_normal : forall jrv v,
     resvalue_related BR jrv v ->
@@ -200,55 +215,23 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
         (L.res_break (E.js_label_to_ejs "%continue" jl) v)
 .
 
-
-
-(*
-Inductive out_related BR : J.out -> L.out -> Prop :=
-| out_related_ter : forall jst st jr r,
-    res_related BR jr r ->
-    out_related BR (J.out_ter jst jr) (L.out_ter st r)
-.
-*)
-
-Create HintDb js_ljs discriminated.
-
-Hint Constructors attributes_data_related : js_ljs.
-Hint Constructors attributes_accessor_related : js_ljs. 
-Hint Constructors attributes_related : js_ljs.
-Hint Constructors value_related : js_ljs.
-Hint Constructors resvalue_related : js_ljs.
-Hint Constructors res_related : js_ljs.
-(* Hint Constructors out_related : js_ljs. *)
-
-Hint Extern 4 (js_exn_object _ _) => unfold js_exn_object : js_ljs.
-
-Hint Extern 4 (res_related _ _ _ (J.res_throw _) _) => unfold J.res_throw : js_ljs.
-
-Hint Constructors J.red_expr : js_ljs.
-Hint Constructors J.red_stat : js_ljs.
-Hint Constructors J.red_spec : js_ljs.
-Hint Constructors J.abort : js_ljs.
-
-Lemma res_related_break_hint : forall BR jst st jrv v jl s,
-    resvalue_related BR jrv v -> s = E.js_label_to_ejs "%break" jl ->
-    res_related BR jst st (J.res_intro J.restype_break jrv jl) 
-        (L.res_break s v). 
-Proof. intros. substs. eauto with js_ljs. Qed.
-
-Lemma res_related_continue_hint : forall BR jst st jrv v jl s,
-    resvalue_related BR jrv v -> s = E.js_label_to_ejs "%continue" jl ->
-    res_related BR jst st (J.res_intro J.restype_continue jrv jl) 
-        (L.res_break s v). 
-Proof. intros. substs. eauto with js_ljs. Qed.
-
-Hint Resolve res_related_break_hint : js_ljs.
-Hint Resolve res_related_continue_hint : js_ljs.
-
+(* States that the initial LJS context ("the environment") can always be accessed
+ * (and thus is never shadowed) *)
 Definition includes_init_ctx c :=
     forall i v v', binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'. 
 
-Inductive state_invariant BR jst jc c st : Prop := {
+(* Relates the lexical contexts *)
+Record execution_ctx_related BR jc c st := {
+    execution_ctx_related_this_binding : 
+        value_related BR (J.execution_ctx_this_binding jc) (c \("%this"));
+    execution_ctx_related_strictness_flag : 
+        L.value_to_bool (c \("#strict")) = Some (J.execution_ctx_strict jc)
+}.
+
+(* The complete set of invariants. *)
+Record state_invariant BR jst jc c st : Prop := {
     state_invariant_heaps_bisim_consistent : heaps_bisim_consistent BR jst st;
+    state_invariant_execution_ctx_related : execution_ctx_related BR jc c st;
     state_invariant_includes_init_ctx : includes_init_ctx c
 }.
 
@@ -297,9 +280,46 @@ Definition th_spec {A : Type} k e jes
     L.red_exprh k c st (L.expr_basic e) (L.out_ter st' r) ->
     concl_spec BR jst jc c st st' r jes (fun BR' jst' a => P BR' jst' jc c st' r a).
 
+(* The form of the induction hypotheses. Height induction is used to make proofs simpler. *)
+
 Definition ih_expr k := forall je k', (k' < k)%nat -> th_expr k' je.
 
 Definition ih_stat k := forall jt k', (k' < k)%nat -> th_stat k' jt.
+
+(* Automation *)
+
+Create HintDb js_ljs discriminated.
+
+Hint Constructors attributes_data_related : js_ljs.
+Hint Constructors attributes_accessor_related : js_ljs. 
+Hint Constructors attributes_related : js_ljs.
+Hint Constructors value_related : js_ljs.
+Hint Constructors resvalue_related : js_ljs.
+Hint Constructors res_related : js_ljs.
+
+Hint Extern 4 (js_exn_object _ _) => unfold js_exn_object : js_ljs.
+
+Hint Extern 4 (res_related _ _ _ (J.res_throw _) _) => unfold J.res_throw : js_ljs.
+
+Hint Constructors J.red_expr : js_ljs.
+Hint Constructors J.red_stat : js_ljs.
+Hint Constructors J.red_spec : js_ljs.
+Hint Constructors J.abort : js_ljs.
+
+Lemma res_related_break_hint : forall BR jst st jrv v jl s,
+    resvalue_related BR jrv v -> s = E.js_label_to_ejs "%break" jl ->
+    res_related BR jst st (J.res_intro J.restype_break jrv jl) 
+        (L.res_break s v). 
+Proof. intros. substs. eauto with js_ljs. Qed.
+
+Lemma res_related_continue_hint : forall BR jst st jrv v jl s,
+    resvalue_related BR jrv v -> s = E.js_label_to_ejs "%continue" jl ->
+    res_related BR jst st (J.res_intro J.restype_continue jrv jl) 
+        (L.res_break s v). 
+Proof. intros. substs. eauto with js_ljs. Qed.
+
+Hint Resolve res_related_break_hint : js_ljs.
+Hint Resolve res_related_continue_hint : js_ljs.
 
 Ltac ljs_abort := match goal with
     | H : L.abort (L.out_ter _ (L.res_value _)) |- _ => 
@@ -440,9 +460,18 @@ Proof.
     introv Hrel Hjb Hlb.
     specializes Hrnoghost Hrel.
     eapply Hbisim; try eassumption.
-    eapply binds_update_diff_inv; try eassumption; auto. 
+    eapply binds_update_diff_inv; try eassumption; auto.
     unfolds heaps_bisim_rnoghost.
     prove_bag.
+Qed.
+
+Lemma execution_ctx_nindex_preserved : forall BR jc c st ptr obj,
+    ~index st ptr ->
+    execution_ctx_related BR jc c st ->
+    execution_ctx_related BR jc c (st \( ptr := obj)).
+Proof.
+    introv Hni Hbi.
+    inverts Hbi; constructor; auto.
 Qed.
 
 Lemma state_invariant_nindex_preserved : forall BR jst jc c st ptr obj,
@@ -454,6 +483,7 @@ Proof.
     inverts Hinv.
     constructor.
     apply heaps_bisim_nindex_preserved; auto.
+    apply execution_ctx_nindex_preserved; auto.
     assumption.
 Qed.
 
@@ -932,8 +962,7 @@ Proof.
     (* abort *)
     ljs_abort_from_js.
     ljs_propagate_abort.
-    unfold_concl.
-    ijauto_js.
+    ijauto_js. (* TODO think if jauto_js can be used instead *)
 Qed.
 
 Lemma red_expr_assign0_ok : forall k je1 je2,
@@ -1092,14 +1121,161 @@ Proof.
     applys red_stat_if1_ok; eassumption.
 Qed.
 
+(* TODO move *)
+Lemma string_append_right_empty : forall s, s ++ "" = s.
+Proof.
+    induction s. auto. simpl. rewrite IHs. reflexivity.
+Qed.
 
+Lemma string_append_right_injective : forall s1 s2 s, s ++ s1 = s ++ s2 -> s1 = s2.
+Proof.
+    induction s. auto. introv Heq. injects. auto.
+Qed.
+
+(* TODO move *)
+Lemma js_label_to_ejs_injective_label : forall s jl1 jl2,
+    E.js_label_to_ejs s jl1 = E.js_label_to_ejs s jl2 -> jl1 = jl2.
+Proof.
+    introv Heq.
+    destruct jl1; destruct jl2; unfolds E.js_label_to_ejs; 
+    apply string_append_right_injective in Heq; auto; tryfalse. 
+    injects. reflexivity.
+Qed.
+
+Lemma label_set_invert_lemma : forall jls k c st0 s ee st r,
+    L.red_exprh k c st0 (L.expr_basic (E.ejs_to_ljs (E.js_label_set_to_labels s jls ee))) (L.out_ter st r) ->
+    exists k' r',
+    L.red_exprh k' c st0 (L.expr_basic (E.ejs_to_ljs ee)) (L.out_ter st r') /\
+    (k' <= k)%nat /\
+    (forall jl v, r' = L.res_break (E.js_label_to_ejs s jl) v -> Mem jl jls -> r = L.res_value v) /\
+    ((forall jl v, r' <> L.res_break (E.js_label_to_ejs s jl) v \/ ~Mem jl jls) -> r = r').
+Proof.
+    induction jls;
+    introv Hlred.
+    jauto_set; eauto.
+    false_invert. 
+    inverts Hlred as Hlred' Hlred''.
+    ljs_out_redh_ter.
+    specializes IHjls Hlred'. clear Hlred'.
+    destruct IHjls as (k'&r'&IHred&IHleq&IH1&IH2).
+    do 2 eexists. splits.
+    inverts Hlred''; eassumption. 
+    omega.
+
+    introv Hr Hmem.
+    substs. 
+    rewrite Mem_cons_eq in Hmem.
+    apply case_classic_r in Hmem.
+    destruct_hyp Hmem.
+    specializes IH1 Hmem. reflexivity. substs. inverts Hlred''. reflexivity.
+    specializes IH2 ___. introv.
+    destruct (classic (jl = a)) as [Haeq|Haneq]. 
+    substs. iauto.
+    left. intro Heq. injects Heq.
+    apply js_label_to_ejs_injective_label in H. substs. tryfalse.
+    substs. inverts Hlred'' as Hnobreak.
+    specializes Hnobreak st v.
+    reflexivity.
+
+    introv Hr.
+    specializes IH2 ___.
+    introv.
+    specializes Hr jl v.
+    destruct Hr. 
+    iauto.
+    right. intro Hmem. apply H. 
+    apply Mem_next. assumption.
+    substs.
+    inverts Hlred''.
+    reflexivity.
+    specializes Hr a v.
+    destruct Hr as [Hr|Hr]; false.
+    apply Hr. apply Mem_here. 
+Qed.
+
+(* TODO move *)
+Fixpoint list_pairs {A:Type} (l : list A) :=
+    match l with
+    | h1::t1 =>
+        match t1 with
+        | h2::t2 => (h1,h2)::list_pairs t1
+        | _ => []
+        end
+    | _ => []
+    end.
+
+Fixpoint init {A : Type} (l : list A) :=
+    match l with
+    | [] => []
+    | [h] => []
+    | h :: t => h :: init t
+    end.
+
+Inductive First {A : Type} : list A -> A -> Prop :=
+    | First_here : forall a t, First (a :: t) a.
+
+Inductive Last {A : Type} : list A -> A -> Prop :=
+    | Last_here : forall a, Last [a] a
+    | Last_next : forall a h1 h2 t, Last (h1 :: h2 :: t) a -> Last (h2 :: t) a.
+
+Definition while_step k c e1 e2 e3 (p1 p2 : L.value * L.store) := 
+    let '(v1, st1) := p1 in let '(v2, st2) := p2 in 
+    exists st' st'' v v',
+    L.red_exprh k c st1 (L.expr_basic e1) (L.out_ter st' (L.res_value L.value_true)) /\
+    L.red_exprh k c st' (L.expr_basic e2) (L.out_ter st'' (L.res_value v)) /\
+    L.red_exprh k c st'' (L.expr_basic e3) (L.out_ter st2 (L.res_value v')) /\
+    v2 = L.overwrite_value_if_empty v1 v.
+
+Definition while_final k c e1 e2 e3 v st' st r := 
+    L.red_exprh k c st' (L.expr_basic e1) (L.out_ter st r) /\ L.abort (L.out_ter st r) \/
+    L.red_exprh k c st' (L.expr_basic e1) (L.out_ter st (L.res_value L.value_false)) /\
+        r = L.res_value v \/
+    exists st'',
+    L.red_exprh k c st' (L.expr_basic e1) (L.out_ter st'' (L.res_value L.value_true)) /\ (
+    (exists v', L.red_exprh k c st'' (L.expr_basic e2) (L.out_ter st r) /\ 
+        r = L.res_exception v') \/
+    (exists s v', L.red_exprh k c st'' (L.expr_basic e2) (L.out_ter st (L.res_break s v')) /\ 
+        r = L.res_break s (L.overwrite_value_if_empty v v')) \/
+    exists st''' v', 
+    L.red_exprh k c st'' (L.expr_basic e2) (L.out_ter st''' (L.res_value v')) /\ (
+    (exists v'', L.red_exprh k c st''' (L.expr_basic e3) (L.out_ter st r) /\ 
+        r = L.res_exception v'') \/
+    (exists s v'', L.red_exprh k c st''' (L.expr_basic e3) (L.out_ter st (L.res_break s v'')) /\
+        r = L.res_break s (L.overwrite_value_if_empty v (L.overwrite_value_if_empty v' v''))))). 
+
+Lemma exprjs_while_lemma : forall k c st0 ee1 ee2 ee3 st r,
+    L.red_exprh k c st0 (L.expr_basic (E.ejs_to_ljs (E.expr_while ee1 ee2 ee3))) (L.out_ter st r) ->
+    exists l v st' k',
+    First l (L.value_empty, st0) /\
+    Forall2 (while_step k c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)) (init l) (tail l) /\
+    Last l (v, st') /\
+    while_final k' c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) v st' st r /\
+    (k' <= k) % nat.
+Proof.
+    introv Hlred.
+    inv_fwd_ljs.
+    gen st0.
+    induction_wf IH : lt_wf k0.
+    introv Hlred.
+    repeat inv_fwd_ljs.
+    binds_inv.
+    match goal with 
+    H : context[@update ?t1 ?t2 ?t3 ?inst c "%while_loop" ?x] |- _ => 
+        sets c' : (@update t1 t2 t3 inst c "%while_loop" x) 
+    end.
+    inverts H6.
+    (* TODO *)
+Admitted.
 
 Lemma red_stat_while_ok : forall k jls je jt,
     ih_stat k ->
     ih_expr k ->
     th_stat k (J.stat_while jls je jt).
 Proof.
-    introv IHt IHe.
+    introv IHt IHe Hinv Hlred.
+    unfolds js_stat_to_ljs. simpls. 
+    apply label_set_invert_lemma in Hlred.
+    destruct_hyp Hlred.
 Admitted.
 
 Lemma red_stat_return_ok : forall k oje,
