@@ -1243,20 +1243,24 @@ Definition while_final k c e1 e2 e3 v st' st r :=
     (exists s v'', L.red_exprh k c st''' (L.expr_basic e3) (L.out_ter st (L.res_break s v'')) /\
         r = L.res_break s (L.overwrite_value_if_empty v (L.overwrite_value_if_empty v' v''))))). 
 
-Lemma exprjs_while_lemma : forall k c st0 ee1 ee2 ee3 st r,
-    L.red_exprh k c st0 (L.expr_basic (E.ejs_to_ljs (E.expr_while ee1 ee2 ee3))) (L.out_ter st r) ->
-    exists l v st' k',
+Definition while_unroll k c st0 ee1 ee2 ee3 st r :=
+    exists l v st',
     First l (L.value_empty, st0) /\
     Forall2 (while_step k c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)) (init l) (tail l) /\
     Last l (v, st') /\
-    while_final k' c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) v st' st r /\
-    (k' <= k) % nat.
+    while_final k c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) v st' st r.
+
+Lemma exprjs_while_lemma : forall k c st0 ee1 ee2 ee3 st r,
+    L.red_exprh k c st0 (L.expr_basic (E.ejs_to_ljs (E.expr_while ee1 ee2 ee3))) (L.out_ter st r) ->
+    exists k', (k' < k) % nat /\ while_unroll k' c st0 ee1 ee2 ee3 st r.
 Proof.
     introv Hlred.
     inv_fwd_ljs.
+(*
     gen st0.
     induction_wf IH : lt_wf k0.
     introv Hlred.
+*)
     repeat inv_fwd_ljs.
     binds_inv.
     match goal with 
@@ -1264,6 +1268,17 @@ Proof.
         sets c' : (@update t1 t2 t3 inst c "%while_loop" x) 
     end.
     inverts H6.
+(*    exists k0. split. omega. *)
+(* TODO try to abstract away from the actual context in question... 
+   Maybe define in terms of subset relation? \c
+Lemma get_add_closure_nonrec_lemma : forall st c l e,
+    L.get_closure st (L.add_closure c None l e) = L.result_some (L.closure_intro _ 
+*)
+    unfolds L.add_closure.
+    rewrite get_closure_lemma in *.
+    injects.
+    simpl in H8.
+    cbv in H5.
     (* TODO *)
 Admitted.
 

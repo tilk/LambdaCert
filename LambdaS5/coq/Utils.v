@@ -3,8 +3,8 @@ Generalizable All Variables.
 Require Import List.
 Require Import Ascii.
 Require Import String.
-Require Import LjsShared.
 Require Import JsNumber.
+Require Import LjsShared.
 Require Import Coq.Numbers.Natural.Peano.NPeano.
 Require LibStream.
 Open Scope list_scope.
@@ -20,7 +20,7 @@ Fixpoint concat_list_heap {X Y : Type} {LT : Lt X} (front : list (X * Y)) (back 
 .
 
 Definition concat_heaps {X Y : Type} {LT : Lt X} (front back : finmap X Y) :=
-  concat_list_heap (FinmapImpl.to_list front) back
+  concat_list_heap (to_list front) back
 .
 
 Fixpoint zip_aux {X Y : Type} (lx : list X) (ly : list Y) (acc : list (X * Y)) : option (list (X * Y)) :=

@@ -16,6 +16,31 @@ Class BagFresh A T := { fresh : T -> A }.
 Notation "m \( x ?)" := (read_option m x)
   (at level 33, format "m \( x ?)") : container_scope.
 
+Class Binds_double_eq `{BagBinds A B T} :=
+    { binds_double_eq : forall E F, (forall k x, binds E k x = binds F k x) -> E = F }.
+
+Class Binds_double `{BagBinds A B T} :=
+    { binds_double : forall E F, (forall k x, binds E k x <-> binds F k x) -> E = F }.
+
+Class From_list_binds_eq `{BagFromList (A * B) T} `{BagBinds A B T} := 
+    { from_list_binds_eq : forall L k x, binds (from_list L) k x = Assoc k x L }.
+
+Class From_list_binds `{BagFromList (A * B) T} `{BagBinds A B T} := 
+    { from_list_binds : forall L k x, binds (from_list L) k x -> Assoc k x L }.
+
+Class From_list_binds_inv `{BagFromList (A * B) T} `{BagBinds A B T} := 
+    { from_list_binds_inv : forall L k x, Assoc k x L -> binds (from_list L) k x }.
+
+Class To_list_binds_eq `{BagToList (A * B) T} `{BagBinds A B T} := 
+    { to_list_binds_eq : forall S k x, Assoc k x (to_list S) = binds S k x }.
+
+Class To_list_binds `{BagToList (A * B) T} `{BagBinds A B T} := 
+    { to_list_binds : forall S k x, Assoc k x (to_list S) -> binds S k x }.
+
+Class To_list_binds_inv `{BagToList (A * B) T} `{BagBinds A B T} := 
+    { to_list_binds_inv : forall S k x, binds S k x -> Assoc k x (to_list S) }.
+(* TODO instances for above classes *)
+
 Class Read_option_binds_eq `{BagReadOption A B T} `{BagBinds A B T} :=
     { read_option_binds_eq : forall M k x, (M \(k?) = Some x) = binds M k x }.
 
@@ -176,8 +201,45 @@ Class Incl_binds `{BagIncl T} `{BagBinds A B T} :=
 Class Incl_binds_inv `{BagIncl T} `{BagBinds A B T} :=
     { incl_binds_inv : forall M1 M2, (forall k x, binds M1 k x -> binds M2 k x) -> M1 \c M2 }.
 
+Class Incl_index `{BagIncl T} `{BagIndex T A} :=
+    { incl_index : forall M1 M2 k, M1 \c M2 -> index M1 k -> index M2 k }.
+
 Class Update_nindex_incl `{BagIncl T} `{BagUpdate A B T} `{BagIndex T A} :=
     { update_nindex_incl : forall M k x, ~index M k -> M \c M\(k := x) }.
+
+Instance Binds_double_eq_from_binds_double :
+    forall `{BagBinds A B T},
+    Binds_double -> Binds_double_eq.
+Proof. constructor. introv I. apply binds_double. intros. rewrite I. iauto. Qed.
+
+Instance From_list_binds_from_from_list_binds_eq :
+    forall `{BagFromList (A * B) T} `{BagBinds A B T},
+    From_list_binds_eq -> From_list_binds.
+Proof. constructor. introv. rewrite from_list_binds_eq. auto. Qed.
+
+Instance From_list_binds_inv_from_from_list_binds_eq :
+    forall `{BagFromList (A * B) T} `{BagBinds A B T},
+    From_list_binds_eq -> From_list_binds_inv.
+Proof. constructor. introv. rewrite from_list_binds_eq. auto. Qed.
+
+Instance To_list_binds_from_to_list_binds_eq :
+    forall `{BagToList (A * B) T} `{BagBinds A B T},
+    To_list_binds_eq -> To_list_binds.
+Proof. constructor. introv. rewrite to_list_binds_eq. auto. Qed.
+
+Instance To_list_binds_inv_from_to_list_binds_eq :
+    forall `{BagToList (A * B) T} `{BagBinds A B T},
+    To_list_binds_eq -> To_list_binds_inv.
+Proof. constructor. introv. rewrite to_list_binds_eq. auto. Qed.
+
+Instance From_to_list_id_from_from_to_list_binds :
+    forall `{BagFromList (A * B) T} `{BagToList (A * B) T} `{BagBinds A B T},
+    Binds_double -> From_list_binds_eq -> To_list_binds_eq -> From_to_list_id.
+Proof.
+    constructor. intros. apply binds_double. intros.
+    rewrite from_list_binds_eq. rewrite to_list_binds_eq.
+    iauto.
+Qed.
 
 Instance read_option_binds_from_read_option_binds_eq : 
     forall `{BagReadOption A B T} `{BagBinds A B T},
@@ -409,6 +471,14 @@ Instance incl_binds_inv_from_incl_binds_eq :
     Incl_binds_eq -> Incl_binds_inv.
 Proof. constructor. introv. rewrite incl_binds_eq. auto. Qed.
 
+Instance incl_index_from_incl_binds :
+    forall `{BagIncl T} `{BagIndex T A} `{BagBinds A B T},
+    Index_binds_eq -> Incl_binds -> Incl_index.
+Proof. 
+    constructor. introv. rewrite_all index_binds_eq.
+    hint incl_binds. introv Hincl (x&Hbinds). iauto.
+Qed.
+
 Create HintDb bag discriminated.
 
 Hint Resolve @binds_empty @binds_single_bind_same @binds_single_bind_diff
@@ -520,8 +590,8 @@ Parameter finmap : forall (A B : Type), Type.
 
 Set Implicit Arguments.
 
-Parameter from_list : list (A * B) -> finmap A B.
-Parameter to_list : finmap A B -> list (A * B).
+Parameter from_list_impl : list (A * B) -> finmap A B.
+Parameter to_list_impl : finmap A B -> list (A * B).
 
 Parameter empty_impl : finmap A B.
 Parameter single_bind_impl : A -> B -> finmap A B.
@@ -535,6 +605,8 @@ Parameter update_impl : finmap A B -> A -> B -> finmap A B.
 Parameter card_impl : finmap A B -> nat.
 Parameter fresh_impl : Minimal A -> PickGreater A -> finmap A B -> A. (* TODO good typeclasses *)
 
+Parameter binds_double_impl : forall M M', (forall k x, binds_impl M k x <-> binds_impl M' k x) -> M = M'.
+
 Parameter incl_binds_eq_impl : forall M1 M2, incl_impl M1 M2 = forall k x, binds_impl M1 k x -> binds_impl M2 k x.
 Parameter read_option_binds_eq_impl : forall M k x, (read_option_impl M k = Some x) = binds_impl M k x.
 Parameter binds_empty_eq_impl : forall k x, binds_impl empty_impl k x = False.
@@ -546,6 +618,9 @@ Parameter binds_update_eq_impl : forall M k k' x x',
     binds_impl (update_impl M k' x') k x = (k = k' /\ x = x' \/ k <> k' /\ binds_impl M k x).
 Parameter index_binds_eq_impl : forall M k, index_impl M k = exists x, binds_impl M k x.
 Parameter fresh_index_eq_impl : forall M c1 c2, index_impl M (fresh_impl c1 c2 M) = False.
+
+Parameter from_list_binds_eq_impl : forall L k x, binds_impl (from_list_impl L) k x = Assoc k x L.
+Parameter to_list_binds_eq_impl : forall M k x, Assoc k x (to_list_impl M) = binds_impl M k x.
 
 End Definitions.
 End FinmapSig.
@@ -573,6 +648,9 @@ Implicit Types x : B.
 Implicit Types M : finmap.
 
 Definition build_finmap `(F:finite U) : finmap := exist finite U F.
+
+(* TODO: most properties should follow from finset and map properties.
+   Nice prerequisite: lib-bag-ize LibMap. *)
 
 Lemma finite_empty : finite \{}.
 Proof.
@@ -616,6 +694,9 @@ Definition update_impl M k x : finmap := build_finmap (update_finite k x (proj2_
 Definition fresh_impl : Minimal A -> PickGreater A -> finmap -> A.
 Admitted.
 
+Definition binds_double_impl : forall M M', (forall k x, binds_impl M k x <-> binds_impl M' k x) -> M = M'.
+Admitted.
+
 Definition listish (U : map A B) := 
   exists L, forall k x, binds U k x = Mem (k, x) L.
 
@@ -623,12 +704,12 @@ Lemma finite_listish : forall U, finite U -> listish U.
 Proof.
 Admitted.
 
-Definition from_list (L : list (A * B)) : finmap := 
+Definition from_list_impl (L : list (A * B)) : finmap := 
   fold_right (fun p acc => let '(k, x) := p in update_impl acc k x) empty_impl L.
 
-Definition to_list M := proj1_sig (indefinite_description (finite_listish (proj2_sig M))).
+Definition to_list_impl M := proj1_sig (indefinite_description (finite_listish (proj2_sig M))).
 
-Definition card_impl M := length (to_list M).
+Definition card_impl M := length (to_list_impl M).
 
 Lemma read_option_binds_eq_impl : forall M k x, (read_option_impl M k = Some x) = binds_impl M k x.
 Proof.
@@ -653,6 +734,9 @@ Admitted.
 
 Parameter index_binds_eq_impl : forall M k, index_impl M k = exists x, binds_impl M k x.
 Parameter fresh_index_eq_impl : forall M c1 c2, index_impl M (fresh_impl c1 c2 M) = False.
+
+Parameter from_list_binds_eq_impl : forall L k x, binds_impl (from_list_impl L) k x = Assoc k x L.
+Parameter to_list_binds_eq_impl : forall M k x, Assoc k x (to_list_impl M) = binds_impl M k x.
 
 End Definitions.
 End FinmapImpl.
@@ -694,8 +778,17 @@ Global Instance update_inst : BagUpdate A B (finmap A B) :=
 Global Instance card_inst : BagCard (finmap A B) :=
     { card := @card_impl _ _ }.
 
+Global Instance from_list_inst : BagFromList (A * B) (finmap A B) :=
+    { from_list := @from_list_impl _ _ }.
+
+Global Instance to_list_inst : BagToList (A * B) (finmap A B) :=
+    { to_list := @to_list_impl _ _ }.
+
 Global Instance fresh_inst : Minimal A -> PickGreater A -> BagFresh A (finmap A B) :=
     { fresh := @fresh_impl _ _ _ _ }.
+
+Global Instance binds_double_inst : Binds_double :=
+    { binds_double := @binds_double_impl _ _ }.
 
 Global Instance incl_binds_eq_inst : Incl_binds_eq :=
     { incl_binds_eq := @incl_binds_eq_impl _ _ }.
@@ -722,6 +815,12 @@ Global Instance fresh_index_eq_inst :
     forall (c1 : Minimal A) (c2 : PickGreater A), Fresh_index_eq (A := A) (T := finmap A B) :=
     { fresh_index_eq := fun x => @fresh_index_eq_impl _ _ x _ _ }.
 
+Global Instance from_list_binds_eq_impl : From_list_binds_eq :=
+    { from_list_binds_eq := @from_list_binds_eq_impl _ _ }.
+
+Global Instance to_list_binds_eq_impl : To_list_binds_eq :=
+    { to_list_binds_eq := @to_list_binds_eq_impl _ _ }.
+
 End Instances.
 
 Global Opaque empty_inst single_bind_inst in_inst binds_inst read_inst
@@ -732,14 +831,14 @@ Global Opaque empty_inst single_bind_inst in_inst binds_inst read_inst
 Extraction Language Ocaml.
 
 Extract Constant FinmapImpl.finmap "'A" "'B" => "('A, 'B) BatMap.t". 
-Extract Constant FinmapImpl.from_list => "fun l -> BatMap.of_enum (BatList.enum l)".
-Extract Constant FinmapImpl.to_list => "fun m -> BatMap.bindings m".
+Extract Constant FinmapImpl.from_list_impl => "fun l -> BatMap.of_enum (BatList.enum l)".
+Extract Constant FinmapImpl.to_list_impl => "fun m -> BatMap.bindings m".
 Extract Constant FinmapImpl.empty_impl => "BatMap.empty".
 Extract Constant FinmapImpl.single_bind_impl => "fun k x -> BatMap.singleton k x".
 Extract Constant FinmapImpl.read_impl => "fun m k -> BatMap.find k m".
 Extract Constant FinmapImpl.read_option_impl => "fun m k -> try Some (BatMap.find k m) with Not_found -> None".
 (* Extract Constant FinmapImpl.remove_impl => "fun m k -> BatMap.remove k m". *)
- Extract Constant FinmapImpl.remove_impl => "fun m s -> BatList.fold_right (BatMap.remove) (FinsetImpl.to_list s) m". 
+Extract Constant FinmapImpl.remove_impl => "fun m s -> BatList.fold_right (BatMap.remove) (FinsetImpl.to_list_impl s) m". 
 Extract Constant FinmapImpl.update_impl => "fun m k x -> BatMap.add k x m".
 Extract Constant FinmapImpl.card_impl => "fun m -> BatMap.cardinal m".
 Extract Constant FinmapImpl.fresh_impl => "fun mm pg m -> if BatMap.is_empty m then mm else pg (fst (BatMap.max_binding m))".

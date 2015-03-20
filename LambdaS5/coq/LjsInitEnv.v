@@ -8433,7 +8433,7 @@ Definition store_items := [
         oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
-      FinmapImpl.from_list [("make", 
+      from_list [("make", 
                      attributes_accessor_of {|attributes_accessor_get :=
                                               value_closure
                                               (closure_intro
@@ -11582,7 +11582,7 @@ Definition store_items := [
         oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
-      FinmapImpl.from_list [("constructor", 
+      from_list [("constructor", 
                      attributes_data_of {|attributes_data_value :=
                                           value_object 36;
                                           attributes_data_writable := true;
@@ -11638,7 +11638,7 @@ Definition store_items := [
         oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
-      FinmapImpl.from_list [("Array", 
+      from_list [("Array", 
                      attributes_data_of {|attributes_data_value :=
                                           value_object 108;
                                           attributes_data_writable := true;
@@ -11875,7 +11875,7 @@ Definition store_items := [
         oattrs_extensible := true;
         oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
-      object_properties := FinmapImpl.from_list []|});
+      object_properties := from_list []|});
 (5, {|object_attrs :=
       {|oattrs_proto := value_object 2;
         oattrs_class := "Function";
@@ -11883,7 +11883,7 @@ Definition store_items := [
         oattrs_prim_value := value_undefined;
         oattrs_code := objCode1|};
       object_properties :=
-      FinmapImpl.from_list [("apply", 
+      from_list [("apply", 
                      attributes_data_of {|attributes_data_value :=
                                           value_object 20;
                                           attributes_data_writable := true;
@@ -11932,7 +11932,7 @@ Definition store_items := [
         oattrs_prim_value := value_undefined;
         oattrs_code := privfunctionToStringlambda|};
       object_properties :=
-      FinmapImpl.from_list [("length", 
+      from_list [("length", 
                      attributes_data_of {|attributes_data_value :=
                                           value_number (JsNumber.of_int 0);
                                           attributes_data_writable := false;
@@ -11946,7 +11946,7 @@ Definition store_items := [
         oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
-      FinmapImpl.from_list [("constructor", 
+      from_list [("constructor", 
                      attributes_data_of {|attributes_data_value :=
                                           value_object 24;
                                           attributes_data_writable := true;
@@ -11967,7 +11967,7 @@ Definition store_items := [
         oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
-      FinmapImpl.from_list [("constructor", 
+      from_list [("constructor", 
                      attributes_data_of {|attributes_data_value :=
                                           value_object 56;
                                           attributes_data_writable := true;
@@ -11988,7 +11988,7 @@ Definition store_items := [
         oattrs_prim_value := value_undefined;
         oattrs_code := privThrowTypeErrorFun|};
       object_properties :=
-      FinmapImpl.from_list [("length", 
+      from_list [("length", 
                      attributes_data_of {|attributes_data_value :=
                                           value_number (JsNumber.of_int 0);
                                           attributes_data_writable := false;
@@ -12002,7 +12002,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("constructor", 
+       from_list [("constructor", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 54;
                                            attributes_data_writable := true;
@@ -12024,7 +12024,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("constructor", 
+       from_list [("constructor", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 49;
                                            attributes_data_writable := true;
@@ -12046,7 +12046,7 @@ Definition store_items := [
          oattrs_prim_value := value_false;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("constructor", 
+       from_list [("constructor", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 34;
                                            attributes_data_writable := true;
@@ -12076,7 +12076,7 @@ Definition store_items := [
          oattrs_prim_value := value_number (JsNumber.of_int 0);
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("constructor", 
+       from_list [("constructor", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 27;
                                            attributes_data_writable := true;
@@ -12138,7 +12138,7 @@ Definition store_items := [
          oattrs_prim_value := value_string "";
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("charAt", 
+       from_list [("charAt", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 110;
                                            attributes_data_writable := false;
@@ -12278,42 +12278,42 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode2|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (16, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := false;
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode3|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (17, {|object_attrs :=
        {|oattrs_proto := value_object 5;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privprintlambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (18, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privdefinePropertylambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (19, {|object_attrs :=
        {|oattrs_proto := value_object 5;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privcalllambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (20, {|object_attrs :=
        {|oattrs_proto := value_object 5;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privapplylambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (21, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -12321,7 +12321,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -12352,7 +12352,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -12382,7 +12382,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privisNaNlambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (24, {|object_attrs :=
        {|oattrs_proto := value_object 5;
          oattrs_class := "Object";
@@ -12390,7 +12390,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privErrorConstructor|};
        object_properties :=
-       FinmapImpl.from_list [("prototype", 
+       from_list [("prototype", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 7;
                                            attributes_data_writable := false;
@@ -12404,7 +12404,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privetslambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (26, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -12412,7 +12412,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -12435,7 +12435,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privNumberConstructor|};
        object_properties :=
-       FinmapImpl.from_list [("MAX_VALUE", 
+       from_list [("MAX_VALUE", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 0);
                                            attributes_data_writable := false;
@@ -12498,7 +12498,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privdateValueOfLambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 0);
                                            attributes_data_writable := false;
@@ -12513,7 +12513,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -12544,7 +12544,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privStringConstructor|};
        object_properties :=
-       FinmapImpl.from_list [("fromCharCode", 
+       from_list [("fromCharCode", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 81;
                                            attributes_data_writable := true;
@@ -12575,7 +12575,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privbooleanToStringlambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 0);
                                            attributes_data_writable := false;
@@ -12590,7 +12590,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_false;
                                            attributes_data_writable := true;
@@ -12629,7 +12629,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -12668,7 +12668,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privBooleanConstructor|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 1);
                                            attributes_data_writable := true;
@@ -12690,7 +12690,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_false;
                                            attributes_data_writable := true;
@@ -12713,7 +12713,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privObjectConstructor|};
        object_properties :=
-       FinmapImpl.from_list [("create", 
+       from_list [("create", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 65;
                                            attributes_data_writable := false;
@@ -12839,7 +12839,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privgpoLambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (38, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -12847,7 +12847,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -12869,7 +12869,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privgopdLambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (40, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -12877,7 +12877,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -12900,7 +12900,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privobjectToStringlambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 0);
                                            attributes_data_writable := false;
@@ -12915,7 +12915,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privpropEnumlambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 1);
                                            attributes_data_writable := false;
@@ -12930,7 +12930,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privtoLocaleStringlambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 0);
                                            attributes_data_writable := false;
@@ -12945,7 +12945,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privvalueOflambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 0);
                                            attributes_data_writable := false;
@@ -12960,7 +12960,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privhasOwnPropertylambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 1);
                                            attributes_data_writable := false;
@@ -12975,7 +12975,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privIsPrototypeOflambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 1);
                                            attributes_data_writable := false;
@@ -12990,7 +12990,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("constructor", 
+       from_list [("constructor", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 50;
                                            attributes_data_writable := true;
@@ -13012,7 +13012,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13035,7 +13035,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privSyntaxErrorConstructor|};
        object_properties :=
-       FinmapImpl.from_list [("prototype", 
+       from_list [("prototype", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 11;
                                            attributes_data_writable := false;
@@ -13050,7 +13050,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privEvalErrorConstructor|};
        object_properties :=
-       FinmapImpl.from_list [("prototype", 
+       from_list [("prototype", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 47;
                                            attributes_data_writable := false;
@@ -13065,7 +13065,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("constructor", 
+       from_list [("constructor", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 52;
                                            attributes_data_writable := true;
@@ -13087,7 +13087,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privRangeErrorConstructor|};
        object_properties :=
-       FinmapImpl.from_list [("prototype", 
+       from_list [("prototype", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 51;
                                            attributes_data_writable := false;
@@ -13102,7 +13102,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13125,7 +13125,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privReferenceErrorConstructor|};
        object_properties :=
-       FinmapImpl.from_list [("prototype", 
+       from_list [("prototype", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 10;
                                            attributes_data_writable := false;
@@ -13140,7 +13140,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13163,7 +13163,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privTypeErrorConstructor|};
        object_properties :=
-       FinmapImpl.from_list [("prototype", 
+       from_list [("prototype", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 8;
                                            attributes_data_writable := false;
@@ -13178,7 +13178,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("constructor", 
+       from_list [("constructor", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 58;
                                            attributes_data_writable := true;
@@ -13200,7 +13200,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privURIErrorConstructor|};
        object_properties :=
-       FinmapImpl.from_list [("prototype", 
+       from_list [("prototype", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 57;
                                            attributes_data_writable := false;
@@ -13215,7 +13215,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("concat", 
+       from_list [("concat", 
                       attributes_data_of {|attributes_data_value :=
                                            value_object 102;
                                            attributes_data_writable := false;
@@ -13405,7 +13405,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privgopnLambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (61, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -13413,7 +13413,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13452,7 +13452,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13490,7 +13490,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privdefinePropertiesLambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (64, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -13498,7 +13498,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13520,7 +13520,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privcreateLambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (66, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -13528,7 +13528,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13550,7 +13550,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privsealLambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (68, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -13558,7 +13558,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13596,7 +13596,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privfreezelambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (70, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -13604,7 +13604,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13642,7 +13642,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privpreventExtensionsLambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (72, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -13650,7 +13650,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13688,7 +13688,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privisFrozenLambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (74, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -13696,7 +13696,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13734,7 +13734,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privisSealedLambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (76, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -13742,7 +13742,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13780,7 +13780,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privisExtensibleLambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (78, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -13788,7 +13788,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13826,7 +13826,7 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privkeysLambda|};
-       object_properties := FinmapImpl.from_list []|});
+       object_properties := from_list []|});
 (80, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -13834,7 +13834,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13857,7 +13857,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privfromcclambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 1);
                                            attributes_data_writable := false;
@@ -13872,7 +13872,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -13903,7 +13903,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privjoinlambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 1);
                                            attributes_data_writable := false;
@@ -13918,7 +13918,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_false;
                                            attributes_data_writable := true;
@@ -13949,7 +13949,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privpoplambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 0);
                                            attributes_data_writable := false;
@@ -13964,7 +13964,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_false;
                                            attributes_data_writable := true;
@@ -13987,7 +13987,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -14010,7 +14010,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privpushlambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 1);
                                            attributes_data_writable := false;
@@ -14025,7 +14025,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_false;
                                            attributes_data_writable := true;
@@ -14048,7 +14048,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -14071,7 +14071,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privreverselambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 0);
                                            attributes_data_writable := false;
@@ -14086,7 +14086,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_false;
                                            attributes_data_writable := true;
@@ -14109,7 +14109,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -14132,7 +14132,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privshiftlambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 0);
                                            attributes_data_writable := false;
@@ -14147,7 +14147,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_false;
                                            attributes_data_writable := true;
@@ -14170,7 +14170,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -14193,7 +14193,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := privarrayToStringlambda|};
        object_properties :=
-       FinmapImpl.from_list [("length", 
+       from_list [("length", 
                       attributes_data_of {|attributes_data_value :=
                                            value_number (JsNumber.of_int 0);
                                            attributes_data_writable := false;
@@ -14208,7 +14208,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -14239,7 +14239,7 @@ Definition store_items := [
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
-       FinmapImpl.from_list [("configurable", 
+       from_list [("configurable", 
                       attributes_data_of {|attributes_data_value :=
                                            value_true;
                                            attributes_data_writable := true;
@@ -14262,7 +14262,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privarrayTLSlambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 0);
                                             attributes_data_writable := false;
@@ -14277,7 +14277,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -14300,7 +14300,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privconcatLambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -14315,7 +14315,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -14338,7 +14338,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("value", 
+        from_list [("value", 
                        attributes_data_of {|attributes_data_value :=
                                             value_object 102;
                                             attributes_data_writable := true;
@@ -14353,7 +14353,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privsortlambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -14368,7 +14368,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -14391,7 +14391,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -14430,7 +14430,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privArrayConstructor|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := true;
@@ -14461,7 +14461,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -14492,7 +14492,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privcharatlambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -14507,7 +14507,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -14530,7 +14530,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -14553,7 +14553,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privcharcodeatlambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -14568,7 +14568,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -14591,7 +14591,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -14614,7 +14614,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privstrconcatlambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -14629,7 +14629,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -14652,7 +14652,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -14675,7 +14675,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privsubstringlambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 2);
                                             attributes_data_writable := false;
@@ -14690,7 +14690,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -14713,7 +14713,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -14736,7 +14736,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privsplicelambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 2);
                                             attributes_data_writable := false;
@@ -14751,7 +14751,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -14774,7 +14774,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -14797,7 +14797,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privunshiftlambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -14812,7 +14812,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -14835,7 +14835,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -14858,7 +14858,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privaiolambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -14873,7 +14873,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -14896,7 +14896,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -14919,7 +14919,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privaliolambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -14934,7 +14934,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -14957,7 +14957,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -14980,7 +14980,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privforeachlambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -14995,7 +14995,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -15018,7 +15018,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -15057,7 +15057,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privmaplambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -15072,7 +15072,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -15095,7 +15095,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -15117,7 +15117,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privfilterlambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (141, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -15125,7 +15125,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -15148,7 +15148,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privreducelambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -15163,7 +15163,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -15186,7 +15186,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -15209,7 +15209,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := priveverylambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -15224,7 +15224,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -15247,7 +15247,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -15270,7 +15270,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privsomelambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -15285,7 +15285,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -15308,7 +15308,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -15331,7 +15331,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privreduceRightLambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -15346,7 +15346,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("enumerable", 
+        from_list [("enumerable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -15369,7 +15369,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -15392,7 +15392,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privslicelambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 2);
                                             attributes_data_writable := false;
@@ -15407,7 +15407,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -15430,7 +15430,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -15453,7 +15453,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privbindLambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -15468,7 +15468,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -15491,7 +15491,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -15530,7 +15530,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privnumberToStringlambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -15545,7 +15545,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -15584,7 +15584,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -15623,7 +15623,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privStringIndexOflambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -15637,7 +15637,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privreplacelambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (165, {|object_attrs :=
         {|oattrs_proto := value_object 5;
           oattrs_class := "Object";
@@ -15645,7 +15645,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privsliolambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -15660,7 +15660,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privlocaleCompareLambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := false;
@@ -15675,7 +15675,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privstringSliceLambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 2);
                                             attributes_data_writable := false;
@@ -15689,21 +15689,21 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtlclambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (169, {|object_attrs :=
         {|oattrs_proto := value_object 5;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtuclambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (170, {|object_attrs :=
         {|oattrs_proto := value_object 5;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privsplitLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (171, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -15711,7 +15711,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -15733,14 +15733,14 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privgetYearlambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (173, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privgetMonthlambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (174, {|object_attrs :=
         {|oattrs_proto := value_object 2;
           oattrs_class := "Date";
@@ -15748,7 +15748,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("getDate", 
+        from_list [("getDate", 
                        attributes_data_of {|attributes_data_value :=
                                             value_object 183;
                                             attributes_data_writable := true;
@@ -16066,7 +16066,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdateToStringLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (176, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16074,7 +16074,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16112,7 +16112,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdateValueOfLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (178, {|object_attrs :=
         {|oattrs_proto := value_object 5;
           oattrs_class := "Object";
@@ -16120,7 +16120,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privDateConstructor|};
         object_properties :=
-        FinmapImpl.from_list [("UTC", 
+        from_list [("UTC", 
                        attributes_data_of {|attributes_data_value :=
                                             value_object 187;
                                             attributes_data_writable := true;
@@ -16150,7 +16150,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdateGetTimezoneOffsetLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (180, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16158,7 +16158,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16196,7 +16196,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdategetDayLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (182, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16204,7 +16204,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16242,7 +16242,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdategetDateLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (184, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16250,7 +16250,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16288,7 +16288,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode4|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (186, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16296,7 +16296,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16334,7 +16334,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode5|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (188, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16342,7 +16342,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16380,7 +16380,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode6|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (190, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16388,7 +16388,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16426,7 +16426,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode7|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (192, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16434,7 +16434,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16472,7 +16472,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode8|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (194, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16480,7 +16480,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16518,7 +16518,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode9|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (196, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16526,7 +16526,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16564,7 +16564,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode10|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (198, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16572,7 +16572,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16610,7 +16610,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode11|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (200, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16618,7 +16618,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16656,7 +16656,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode12|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (202, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16664,7 +16664,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16702,7 +16702,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode13|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (204, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16710,7 +16710,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16748,7 +16748,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode14|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (206, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16756,7 +16756,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16794,7 +16794,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode15|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (208, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16802,7 +16802,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16840,7 +16840,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode16|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (210, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16848,7 +16848,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16886,7 +16886,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode17|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (212, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16894,7 +16894,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16932,7 +16932,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode18|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (214, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16940,7 +16940,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -16978,7 +16978,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode19|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (216, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16986,7 +16986,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17024,7 +17024,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode20|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (218, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17032,7 +17032,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17070,7 +17070,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode21|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (220, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17078,7 +17078,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17116,7 +17116,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode22|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (222, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17124,7 +17124,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17162,7 +17162,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode23|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (224, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17170,7 +17170,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17208,7 +17208,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode24|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (226, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17216,7 +17216,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17254,7 +17254,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode25|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (228, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17262,7 +17262,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17300,7 +17300,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode26|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (230, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17308,7 +17308,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17346,7 +17346,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode27|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (232, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17354,7 +17354,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17392,7 +17392,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode28|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (234, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17400,7 +17400,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17438,7 +17438,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode29|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (236, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17446,7 +17446,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17484,7 +17484,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode30|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (238, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17492,7 +17492,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17530,7 +17530,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode31|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (240, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17538,7 +17538,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17576,7 +17576,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode32|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (242, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17584,7 +17584,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17622,7 +17622,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode33|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (244, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17630,7 +17630,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17668,7 +17668,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode34|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (246, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17676,7 +17676,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17714,7 +17714,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode35|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (248, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17722,7 +17722,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17760,7 +17760,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode36|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (250, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17768,7 +17768,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17806,7 +17806,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode37|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (252, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17814,7 +17814,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -17852,7 +17852,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtestlambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (254, {|object_attrs :=
         {|oattrs_proto := value_object 2;
           oattrs_class := "Object";
@@ -17860,7 +17860,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("constructor", 
+        from_list [("constructor", 
                        attributes_data_of {|attributes_data_value :=
                                             value_object 255;
                                             attributes_data_writable := true;
@@ -17883,7 +17883,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privRegExpConstructor|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 2);
                                             attributes_data_writable := false;
@@ -17905,42 +17905,42 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privparseIntlambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (257, {|object_attrs :=
         {|oattrs_proto := value_object 5;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdecodeURILambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (258, {|object_attrs :=
         {|oattrs_proto := value_object 5;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdecodeURIComponentLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (259, {|object_attrs :=
         {|oattrs_proto := value_object 5;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privencodeURILambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (260, {|object_attrs :=
         {|oattrs_proto := value_object 5;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privencodeURIComponentLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (261, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privexplambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (262, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -17948,7 +17948,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("E", 
+        from_list [("E", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 2);
                                             attributes_data_writable := false;
@@ -18163,7 +18163,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathMinLambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 2);
                                             attributes_data_writable := false;
@@ -18178,7 +18178,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -18209,7 +18209,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18232,7 +18232,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathMaxLambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 2);
                                             attributes_data_writable := false;
@@ -18247,7 +18247,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_false;
                                             attributes_data_writable := true;
@@ -18278,7 +18278,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18300,7 +18300,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathAbsLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (270, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18308,7 +18308,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18330,7 +18330,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privacosLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (272, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18338,7 +18338,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18360,7 +18360,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privasinLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (274, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18368,7 +18368,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18390,7 +18390,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privatanLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (276, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18398,7 +18398,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18420,7 +18420,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privatan2Lambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (278, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18428,7 +18428,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18450,7 +18450,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privcosLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (280, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18458,7 +18458,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18480,7 +18480,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privrandomLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (282, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18488,7 +18488,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18510,7 +18510,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privroundLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (284, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18518,7 +18518,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18540,7 +18540,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privsinLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (286, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18548,7 +18548,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18570,7 +18570,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privsqrtLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (288, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18578,7 +18578,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18600,7 +18600,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtanLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (290, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18608,7 +18608,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18630,7 +18630,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathLogLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (292, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18638,7 +18638,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18660,7 +18660,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathCeilLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (294, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18668,7 +18668,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18690,7 +18690,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathFloorLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (296, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18698,7 +18698,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18720,7 +18720,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathPowLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (298, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18728,7 +18728,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18750,7 +18750,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode38|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (300, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18758,7 +18758,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18788,7 +18788,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode39|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (302, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18796,7 +18796,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18826,7 +18826,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode40|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (304, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18834,7 +18834,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18865,7 +18865,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privtoFixedLambda|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 1);
                                             attributes_data_writable := true;
@@ -18880,7 +18880,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18911,7 +18911,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18941,7 +18941,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privnumTLSLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (309, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18949,7 +18949,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -18979,7 +18979,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtoExponentialLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (311, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -18987,7 +18987,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -19017,7 +19017,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtoPrecisionLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (313, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -19025,7 +19025,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -19055,7 +19055,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privlogLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (315, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -19063,7 +19063,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("error", 
+        from_list [("error", 
                        attributes_data_of {|attributes_data_value :=
                                             value_object 314;
                                             attributes_data_writable := false;
@@ -19101,7 +19101,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privevallambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (317, {|object_attrs :=
         {|oattrs_proto := value_object 5;
           oattrs_class := "Object";
@@ -19109,7 +19109,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := privFunctionConstructor|};
         object_properties :=
-        FinmapImpl.from_list [("length", 
+        from_list [("length", 
                        attributes_data_of {|attributes_data_value :=
                                             value_number (JsNumber.of_int 0);
                                             attributes_data_writable := false;
@@ -19131,7 +19131,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privisFiniteLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (319, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -19139,7 +19139,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -19177,7 +19177,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privparseFloatLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (321, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -19185,7 +19185,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -19223,7 +19223,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privescapeLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (323, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -19231,7 +19231,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;
@@ -19269,7 +19269,7 @@ Definition store_items := [
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privunescapeLambda|};
-        object_properties := FinmapImpl.from_list []|});
+        object_properties := from_list []|});
 (325, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -19277,7 +19277,7 @@ Definition store_items := [
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
-        FinmapImpl.from_list [("configurable", 
+        from_list [("configurable", 
                        attributes_data_of {|attributes_data_value :=
                                             value_true;
                                             attributes_data_writable := true;

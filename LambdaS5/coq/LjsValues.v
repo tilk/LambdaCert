@@ -62,7 +62,7 @@ Definition make_prop_list_aux (left : nat * object_props) (val : string) : nat *
   end
 .
 Definition make_prop_list obj : object :=
-  match List.fold_left make_prop_list_aux (List.map fst (FinmapImpl.to_list (object_properties obj))) (0, \{}) with
+  match List.fold_left make_prop_list_aux (List.map fst (to_list (object_properties obj))) (0, \{}) with
   | (nb_entries, attrs) =>
     let length := value_number (JsNumber.of_int nb_entries) in
     let length_attr := attributes_data_of (attributes_data_intro length false false false) in

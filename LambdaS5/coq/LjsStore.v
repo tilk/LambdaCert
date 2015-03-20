@@ -13,7 +13,7 @@ Implicit Type obj : object.
 
 (* LambdaJS environment storage. *)
 Definition narrow_ctx c s := 
-  List.fold_left (fun cc (i : string) => cc \( i := c \( i ))) (FinsetImpl.to_list s) \{}.
+  List.fold_left (fun cc (i : string) => cc \( i := c \( i ))) (to_list s) \{}.
 
 Definition add_object st obj : (store * value) := 
   let ptr := fresh st in (st \(fresh st := obj), value_object ptr).
@@ -23,7 +23,7 @@ Definition add_closure c recid args body : value :=
     | Some i => expr_fv (expr_lambda args body) \-- i
     | None => expr_fv (expr_lambda args body) 
     end in
-  value_closure (closure_intro (FinmapImpl.to_list (narrow_ctx c si)) recid args body)
+  value_closure (closure_intro (to_list (narrow_ctx c si)) recid args body)
 .
 
 (* Adds function arguments to the lexical environment *)
@@ -57,5 +57,5 @@ Definition ctx_of_obj_aux (o : option ctx) (p : string * attributes) : option ct
 .
 
 Definition ctx_of_obj obj : option ctx :=
-  List.fold_left ctx_of_obj_aux (FinmapImpl.to_list (object_properties obj)) (Some create_ctx)
+  List.fold_left ctx_of_obj_aux (to_list (object_properties obj)) (Some create_ctx)
 .

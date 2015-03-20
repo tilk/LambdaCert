@@ -5,8 +5,192 @@
 
 Set Implicit Arguments.
 Require Import LibTactics LibList.
-Require Import LibSet LibLogic LibEqual LibReflect LibOrder.
-Generalizable Variables A U.
+Require Import LibSet LibLogic LibEqual LibReflect LibOrder LibOperation.
+Generalizable Variables A T U.
+
+(* TODO MOVE!!!! to LibList later *)
+Section PropProperties.
+
+Hint Constructors Forall Mem Filters.
+
+Lemma Filters_exists : forall A (P : A -> Prop) L, exists L', Filters P L L'.
+Proof.
+    introv. induction L. 
+    eexists; eauto.
+    destruct IHL.
+    destruct (classic (P a));
+    eexists; eauto.
+Qed.
+
+Lemma Filters_Forall : forall A (P : A -> Prop) L L', Filters P L L' -> Forall P L'.
+Proof.
+    introv Hfilt.
+    induction Hfilt; auto.
+Qed.
+
+Lemma Filters_Mem : forall A (P : A -> Prop) L L', Filters P L L' -> forall x, P x -> Mem x L -> Mem x L'.
+Proof.
+    introv Hfilt.
+    induction Hfilt; introv Hp Hmem; inverts Hmem; eauto; tryfalse.
+Qed.
+
+Lemma Filters_Mem_inv : forall A (P : A -> Prop) L L', Filters P L L' -> forall x, Mem x L' -> Mem x L.
+Proof.
+    introv Hfilt.
+    induction Hfilt; introv Hmem; inverts Hmem; eauto.
+Qed.
+
+Lemma Forall_Mem : forall A (P : A -> Prop) L, Forall P L -> forall x, Mem x L -> P x.
+Proof.
+    introv Hforall Hmem.
+    induction Hforall; inverts Hmem; auto.
+Qed.
+
+End PropProperties.
+
+(* TODO should go to LibBag later *)
+Class BagFromList A T := { from_list : list A -> T }.
+Class BagToList A T := { to_list : T -> list A }.
+
+Class From_list_in_eq `{BagFromList A T} `{BagIn A T} := 
+    { from_list_in_eq : forall L x, x \in from_list L = Mem x L }.
+
+Class From_list_in `{BagFromList A T} `{BagIn A T} := 
+    { from_list_in : forall L x, x \in from_list L -> Mem x L }.
+
+Class From_list_in_inv `{BagFromList A T} `{BagIn A T} := 
+    { from_list_in_inv : forall L x, Mem x L -> x \in from_list L }.
+
+Class To_list_in_eq `{BagToList A T} `{BagIn A T} := 
+    { to_list_in_eq : forall S x, Mem x (to_list S) = x \in S }.
+
+Class To_list_in `{BagToList A T} `{BagIn A T} := 
+    { to_list_in : forall S x, Mem x (to_list S) -> x \in S }.
+
+Class To_list_in_inv `{BagToList A T} `{BagIn A T} := 
+    { to_list_in_inv : forall S x, x \in S -> Mem x (to_list S) }.
+
+Class From_to_list_id `{BagFromList A T} `{BagToList A T} :=
+    { from_to_list_id : forall S, from_list (to_list S) = S }.
+
+Class Remove_empty_l `{BagEmpty T} `{BagRemove T T} :=
+    { remove_empty_l : absorb_l remove empty }.
+
+Class Remove_empty_r `{BagEmpty T} `{BagRemove T T} :=
+    { remove_empty_r : neutral_r remove empty }.
+
+Class Union_inter_distrib_l `{BagUnion T} `{BagInter T} :=
+    { union_inter_distrib_l : distrib_l union inter }.
+
+Class Union_inter_distrib_r `{BagUnion T} `{BagInter T} :=
+    { union_inter_distrib_r : distrib_r union inter }.
+
+Class Inter_union_distrib_l `{BagUnion T} `{BagInter T} :=
+    { inter_union_distrib_l : distrib_l inter union }.
+
+Class Inter_union_distrib_r `{BagUnion T} `{BagInter T} :=
+    { inter_union_distrib_r : distrib_r inter union }.
+
+Class Remove_union_distrib_r `{BagUnion T} `{BagRemove T T} :=
+    { remove_union_distrib_r : distrib_r remove union }.
+
+Class Remove_inter_distrib_r `{BagInter T} `{BagRemove T T} :=
+    { remove_inter_distrib_r : distrib_r remove inter }.
+
+Hint Rewrite @in_remove_eq : rew_in_eq.
+
+Global Instance from_list_in_from_from_list_in_eq :
+    forall `{BagFromList A U} `{BagIn A U},
+    From_list_in_eq -> From_list_in.
+Proof. constructor. introv. rewrite from_list_in_eq. auto. Qed.
+
+Global Instance from_list_inv_in_from_from_list_in_eq :
+    forall `{BagFromList A U} `{BagIn A U},
+    From_list_in_eq -> From_list_in_inv.
+Proof. constructor. introv. rewrite <- from_list_in_eq. auto. Qed.
+
+Global Instance to_list_in_from_to_list_in_eq :
+    forall `{BagToList A U} `{BagIn A U},
+    To_list_in_eq -> To_list_in.
+Proof. constructor. introv. rewrite to_list_in_eq. auto. Qed.
+
+Global Instance to_list_inv_in_from_to_list_in_eq :
+    forall `{BagToList A U} `{BagIn A U},
+    To_list_in_eq -> To_list_in_inv.
+Proof. constructor. introv. rewrite <- to_list_in_eq. auto. Qed.
+
+Global Instance From_to_list_id_from_from_to_list_in :
+    forall `{BagFromList A U} `{BagToList A U} `{BagIn A U},
+    In_double -> From_list_in_eq -> To_list_in_eq -> From_to_list_id.
+Proof. 
+    constructor. intros_all. apply in_double. intros.
+    rewrite from_list_in_eq. rewrite to_list_in_eq.
+    iauto.
+Qed.
+
+Section RemoveDouble.
+Context `{BagIn A U} `{BagRemove U U}.
+
+Global Instance remove_empty_l_from_in_remove :
+    forall `{BagEmpty U},
+    In_double -> In_empty_eq -> In_remove_eq -> Remove_empty_l.
+Proof. constructor. contain_by_in_double. Qed.
+
+Global Instance remove_empty_r_from_in_remove :
+    forall `{BagEmpty U},
+    In_double -> In_empty_eq -> In_remove_eq -> Remove_empty_r.
+Proof. constructor. contain_by_in_double. unfold notin. autorewrite with rew_in_eq; auto.  Qed. 
+(* TODO fix contain_by_in_double *)
+
+End RemoveDouble.
+
+Section UnionInterDouble.
+Context `{BagIn A U} `{BagUnion U} `{BagInter U}.
+
+Global Instance union_inter_distrib_l_from_in_union_inter :
+    In_double -> In_union_eq -> In_inter_eq -> Union_inter_distrib_l.
+Proof. constructor. contain_by_in_double. Qed.
+
+Global Instance union_inter_distrib_r_from_in_union_inter :
+    In_double -> In_union_eq -> In_inter_eq -> Union_inter_distrib_r.
+Proof. constructor. contain_by_in_double. Qed.
+
+Global Instance inter_union_distrib_l_from_in_union_inter :
+    In_double -> In_union_eq -> In_inter_eq -> Inter_union_distrib_l.
+Proof. constructor. contain_by_in_double. Qed.
+
+Global Instance inter_union_distrib_r_from_in_union_inter :
+    In_double -> In_union_eq -> In_inter_eq -> Inter_union_distrib_r.
+Proof. constructor. contain_by_in_double. Qed.
+
+End UnionInterDouble.
+
+Section RemoveUnionDouble.
+Context `{BagIn A U} `{BagUnion U} `{BagRemove U U}.
+
+Global Instance remove_union_distrib_r_from_in_union_remove :
+    In_double -> In_union_eq -> In_remove_eq -> Remove_union_distrib_r.
+Proof. constructor. contain_by_in_double. Qed.
+
+End RemoveUnionDouble.
+
+Section RemoveInterDouble.
+Context `{BagIn A U} `{BagInter U} `{BagRemove U U}.
+
+Global Instance remove_inter_distrib_r_from_in_union_remove :
+    In_double -> In_inter_eq -> In_remove_eq -> Remove_inter_distrib_r.
+Proof. constructor. contain_by_in_double. Qed.
+
+End RemoveInterDouble.
+
+Hint Rewrite @union_inter_distrib_l @union_inter_distrib_r
+    @inter_union_distrib_l @inter_union_distrib_r
+    @remove_union_distrib_r
+    @remove_inter_distrib_r
+    @union_assoc @inter_assoc
+    @union_empty_l @union_empty_r
+    @inter_empty_l @inter_empty_r
+    @remove_empty_l @remove_empty_r : rew_bag_simpl.
 
 (** DISCLAIMER: for the time being, this file only contains the
     operations for type fset, but not yet all the typeclasses 
@@ -25,8 +209,8 @@ Variables (A:Type).
 
 Parameter finset : Type -> Type.
 
-Parameter to_list : finset A -> list A.
-Parameter from_list : list A -> finset A.
+Parameter to_list_impl : finset A -> list A.
+Parameter from_list_impl : list A -> finset A.
 
 Parameter in_impl : A -> finset A -> Prop.
 Parameter empty_impl : finset A.
@@ -40,8 +224,11 @@ Parameter card_impl : finset A -> nat.
 
 (** Extensionality *)
 
+(*
 Parameter extens_impl : forall E E', 
   incl_impl E E' -> incl_impl E' E -> E = E'.
+*)
+Parameter in_double_impl : forall E E', (forall x, in_impl x E <-> in_impl x E') -> E = E'.
 
 (** Semantics of basic operations *)
 
@@ -50,6 +237,9 @@ Parameter in_single_eq_impl : forall x y, in_impl x (single_impl y) = (x = y).
 Parameter in_union_eq_impl : forall x E1 E2, in_impl x (union_impl E1 E2) = (in_impl x E1 \/ in_impl x E2).
 Parameter in_inter_eq_impl : forall x E1 E2, in_impl x (inter_impl E1 E2) = (in_impl x E1 /\ in_impl x E2).
 Parameter in_remove_eq_impl : forall x E1 E2, in_impl x (remove_impl E1 E2) = (in_impl x E1 /\ ~in_impl x E2).
+
+Parameter from_list_in_eq_impl : forall L x, in_impl x (from_list_impl L) = Mem x L.
+Parameter to_list_in_eq_impl : forall E x, Mem x (to_list_impl E) = in_impl x E.
 
 Parameter mem_decidable : forall (s : finset A) x, Decidable (in_impl x s).
 
@@ -115,21 +305,32 @@ Definition incl_impl E E' := forall x, in_impl x E -> in_impl x E'.
 Definition disjoint_impl E E' := inter_impl E E' = empty_impl.
 
 Definition listish (U : set A) :=
-  exists L, forall x, is_in x U = Mem x L.
+  exists L, forall x, Mem x L = is_in x U.
 
 Lemma finite_listish : forall U, finite U -> listish U.
 Proof.
-Admitted.
+    unfolds finite, listish.
+    introv (L&Hl).
+    lets (L'&Hl') : Filters_exists A (fun x => x \in U) L.
+    exists L'.
+    intro.
+    rew_logic.
+    apply iff_intro; intro H.
+    clear Hl.
+    apply Filters_Forall in Hl'.
+    applys Forall_Mem Hl'; auto.
+    applys Filters_Mem; eauto.
+Qed.
 
-Definition from_list (L : list A) : finset := 
+Definition from_list_impl (L : list A) : finset := 
   fold_right (fun x acc => union_impl (single_impl x) acc) empty_impl L.
 
-Definition to_list E : list A := 
+Definition to_list_impl E : list A := 
   proj1_sig (indefinite_description (finite_listish (proj2_sig E))).
 
-Definition card_impl E := length (to_list E).
+Definition card_impl E := length (to_list_impl E).
 
-Lemma extens_eq_impl : forall E F,
+Lemma in_double_eq_impl : forall E F,
   (forall x, in_impl x E = in_impl x F) -> E = F.
 Proof.
   unfold mem. intros [U FU] [V FV] H. simpls.
@@ -138,7 +339,10 @@ Qed.
 
 Lemma extens_impl : forall E F,
   incl_impl E F -> incl_impl F E -> E = F.
-Proof. intros. apply extens_eq_impl. extens*. Qed.
+Proof. intros. apply in_double_eq_impl. extens*. Qed.
+
+Lemma in_double_impl : forall E E', (forall x, in_impl x E <-> in_impl x E') -> E = E'.
+Proof. intros. apply in_double_eq_impl. intros. rew_logic. auto. Qed.
 
 Lemma in_empty_eq_impl : forall x, in_impl x empty_impl = False.
 Proof. unfold in_impl, empty_impl. simpl. intros. rewrite in_empty_eq. auto*. Qed.
@@ -154,6 +358,23 @@ Proof. unfold in_impl, inter_impl. simpl. intros. rewrite in_inter_eq. auto*. Qe
 
 Lemma in_remove_eq_impl : forall x E1 E2, in_impl x (remove_impl E1 E2) = (in_impl x E1 /\ ~in_impl x E2).
 Proof. unfold in_impl, remove_impl. simpl. intros. rewrite in_remove_eq. auto*. Qed.
+
+Lemma from_list_in_eq_impl : forall L x, in_impl x (from_list_impl L) = Mem x L.
+Proof. 
+  unfold from_list_impl.
+  intros. rew_logic. 
+  apply iff_intro;
+  induction L;
+  simpl; (rewrite in_empty_eq_impl, Mem_nil_eq || rewrite in_union_eq_impl, Mem_cons_eq); iauto.
+Qed.
+
+Lemma to_list_in_eq_impl : forall E x, Mem x (to_list_impl E) = in_impl x E.
+Proof. 
+  unfold to_list_impl, in_impl.
+  intro E.
+  sets_eq L : (indefinite_description (finite_listish (proj2_sig E))).
+  exact (proj2_sig L).
+Qed.
 
 Lemma mem_decidable : forall E x,
    Decidable (in_impl x E).
@@ -191,6 +412,12 @@ Global Instance disjoint_inst : BagDisjoint (finset A) :=
 Global Instance card_inst : BagCard (finset A) :=  
   { card := @FinsetImpl.card_impl _ }.
 
+Global Instance from_list_inst : BagFromList A (finset A) :=
+  { from_list := @FinsetImpl.from_list_impl _ }.
+
+Global Instance to_list_inst : BagToList A (finset A) :=
+  { to_list := @FinsetImpl.to_list_impl _ }.
+
 Global Instance in_empty_eq_inst : In_empty_eq (T := finset A) :=
   { in_empty_eq := @FinsetImpl.in_empty_eq_impl _ }.
 
@@ -206,14 +433,23 @@ Global Instance in_inter_eq_inst : In_inter_eq (T := finset A) :=
 Global Instance in_remove_eq_inst : In_remove_eq (T := finset A) :=
   { in_remove_eq := @FinsetImpl.in_remove_eq_impl _ }.
 
+Global Instance in_double_inst : In_double (T := finset A) :=
+  { in_double := @FinsetImpl.in_double_impl _ }.
+
+Global Instance from_list_in_eq_inst : From_list_in_eq (T := finset A) :=
+  { from_list_in_eq := @FinsetImpl.from_list_in_eq_impl _ }.
+
+Global Instance to_list_in_eq_inst : To_list_in_eq (T := finset A) :=
+  { to_list_in_eq := @FinsetImpl.to_list_in_eq_impl _ }.
+
 Global Opaque union_inst inter_inst remove_inst empty_inst in_inst
     single_inst incl_inst disjoint_inst.
 
 Extraction Language Ocaml.
 
 Extract Constant FinsetImpl.finset "'A" => "'A BatSet.t". 
-Extract Constant FinsetImpl.from_list => "fun l -> BatSet.of_list l".
-Extract Constant FinsetImpl.to_list => "fun s -> BatSet.to_list s".
+Extract Constant FinsetImpl.from_list_impl => "fun l -> BatSet.of_list l".
+Extract Constant FinsetImpl.to_list_impl => "fun s -> BatSet.to_list s".
 Extract Constant FinsetImpl.empty_impl => "BatSet.empty".
 Extract Constant FinsetImpl.single_impl => "fun x -> BatSet.singleton x".
 Extract Constant FinsetImpl.union_impl => "fun s1 s2 -> BatSet.union s1 s2".
@@ -229,16 +465,6 @@ Section Properties.
 Variables A : Type.
 Implicit Types x : A.
 Implicit Types E : fset A.
-
-(** Properties of [in] *)
-
-Lemma in_empty_elim : forall x,
-  x \in \{} -> False.
-Proof. introv H. rewrite~ in_empty in H. Qed.
-
-Lemma in_singleton_self : forall x,
-  x \in \{x}.
-Proof. intros. rewrite~ in_singleton. Qed.
 
 (** Properties of [union] *)
 
