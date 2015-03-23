@@ -73,6 +73,12 @@ Class To_list_in_inv `{BagToList A T} `{BagIn A T} :=
 Class From_to_list_id `{BagFromList A T} `{BagToList A T} :=
     { from_to_list_id : forall S, from_list (to_list S) = S }.
 
+Class Incl_in_eq `{BagIn A T, BagIncl T} :=
+    { incl_in_eq : forall E F, E \c F = (forall x, x \in E -> x \in F) }.
+
+Class Incl_in_inv `{BagIn A T, BagIncl T} :=
+    { incl_in_inv : forall E F, (forall x, x \in E -> x \in F) -> E \c F }.
+
 Class Remove_empty_l `{BagEmpty T} `{BagRemove T T} :=
     { remove_empty_l : absorb_l remove empty }.
 
@@ -127,6 +133,36 @@ Proof.
     rewrite from_list_in_eq. rewrite to_list_in_eq.
     iauto.
 Qed.
+
+Global Instance incl_in_from_incl_in_eq :
+    forall `{BagIn A T, BagIncl T},
+    Incl_in_eq -> Incl_in.
+Proof. constructor. introv. rewrite incl_in_eq. auto. Qed.
+
+Global Instance incl_in_inv_from_incl_in_eq :
+    forall `{BagIn A T, BagIncl T},
+    Incl_in_eq -> Incl_in_inv.
+Proof. constructor. introv. rewrite incl_in_eq. auto. Qed.
+
+Section InclDouble.
+Context `{BagIn A U} `{BagIncl U}.
+
+Global Instance empty_incl_from_incl_in :
+    forall `{BagEmpty U},
+    In_empty_eq -> Incl_in_eq -> Empty_incl.
+Proof. constructor. intro. rewrite incl_in_eq. intro. rewrite in_empty_eq. iauto. Qed.
+
+Global Instance incl_empty_from_incl_in :
+    forall `{BagEmpty U},
+    In_double -> In_empty_eq -> Incl_in_eq -> Incl_empty.
+Proof. 
+    constructor. intro. rewrite incl_in_eq. 
+    rew_logic. apply iff_intro.
+    introv He. apply in_double. intro. apply iff_intro. auto. rewrite in_empty_eq. iauto.
+    intros. substs. auto.
+Qed.
+
+End InclDouble.
 
 Section RemoveDouble.
 Context `{BagIn A U} `{BagRemove U U}.
@@ -237,6 +273,8 @@ Parameter in_single_eq_impl : forall x y, in_impl x (single_impl y) = (x = y).
 Parameter in_union_eq_impl : forall x E1 E2, in_impl x (union_impl E1 E2) = (in_impl x E1 \/ in_impl x E2).
 Parameter in_inter_eq_impl : forall x E1 E2, in_impl x (inter_impl E1 E2) = (in_impl x E1 /\ in_impl x E2).
 Parameter in_remove_eq_impl : forall x E1 E2, in_impl x (remove_impl E1 E2) = (in_impl x E1 /\ ~in_impl x E2).
+
+Parameter incl_in_eq_impl : forall E1 E2, incl_impl E1 E2 = (forall x, in_impl x E1 -> in_impl x E2).
 
 Parameter from_list_in_eq_impl : forall L x, in_impl x (from_list_impl L) = Mem x L.
 Parameter to_list_in_eq_impl : forall E x, Mem x (to_list_impl E) = in_impl x E.
@@ -359,6 +397,9 @@ Proof. unfold in_impl, inter_impl. simpl. intros. rewrite in_inter_eq. auto*. Qe
 Lemma in_remove_eq_impl : forall x E1 E2, in_impl x (remove_impl E1 E2) = (in_impl x E1 /\ ~in_impl x E2).
 Proof. unfold in_impl, remove_impl. simpl. intros. rewrite in_remove_eq. auto*. Qed.
 
+Lemma incl_in_eq_impl : forall E1 E2, incl_impl E1 E2 = (forall x, in_impl x E1 -> in_impl x E2).
+Proof. auto. Qed.
+
 Lemma from_list_in_eq_impl : forall L x, in_impl x (from_list_impl L) = Mem x L.
 Proof. 
   unfold from_list_impl.
@@ -435,6 +476,9 @@ Global Instance in_remove_eq_inst : In_remove_eq (T := finset A) :=
 
 Global Instance in_double_inst : In_double (T := finset A) :=
   { in_double := @FinsetImpl.in_double_impl _ }.
+
+Global Instance incl_in_eq_inst : Incl_in_eq (T := finset A) :=
+  { incl_in_eq := @FinsetImpl.incl_in_eq_impl _ }.
 
 Global Instance from_list_in_eq_inst : From_list_in_eq (T := finset A) :=
   { from_list_in_eq := @FinsetImpl.from_list_in_eq_impl _ }.

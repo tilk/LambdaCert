@@ -16,12 +16,14 @@ Class BagFresh A T := { fresh : T -> A }.
 Notation "m \( x ?)" := (read_option m x)
   (at level 33, format "m \( x ?)") : container_scope.
 
+(* Extensionality for maps *)
 Class Binds_double_eq `{BagBinds A B T} :=
     { binds_double_eq : forall E F, (forall k x, binds E k x = binds F k x) -> E = F }.
 
 Class Binds_double `{BagBinds A B T} :=
     { binds_double : forall E F, (forall k x, binds E k x <-> binds F k x) -> E = F }.
 
+(* from_list *)
 Class From_list_binds_eq `{BagFromList (A * B) T} `{BagBinds A B T} := 
     { from_list_binds_eq : forall L k x, binds (from_list L) k x = Assoc k x L }.
 
@@ -31,6 +33,7 @@ Class From_list_binds `{BagFromList (A * B) T} `{BagBinds A B T} :=
 Class From_list_binds_inv `{BagFromList (A * B) T} `{BagBinds A B T} := 
     { from_list_binds_inv : forall L k x, Assoc k x L -> binds (from_list L) k x }.
 
+(* to_list *)
 Class To_list_binds_eq `{BagToList (A * B) T} `{BagBinds A B T} := 
     { to_list_binds_eq : forall S k x, Assoc k x (to_list S) = binds S k x }.
 
@@ -39,8 +42,8 @@ Class To_list_binds `{BagToList (A * B) T} `{BagBinds A B T} :=
 
 Class To_list_binds_inv `{BagToList (A * B) T} `{BagBinds A B T} := 
     { to_list_binds_inv : forall S k x, binds S k x -> Assoc k x (to_list S) }.
-(* TODO instances for above classes *)
 
+(* read_option *)
 Class Read_option_binds_eq `{BagReadOption A B T} `{BagBinds A B T} :=
     { read_option_binds_eq : forall M k x, (M \(k?) = Some x) = binds M k x }.
 
@@ -50,12 +53,14 @@ Class Read_option_binds `{BagReadOption A B T} `{BagBinds A B T} :=
 Class Read_option_binds_inv `{BagReadOption A B T} `{BagBinds A B T} :=
     { read_option_binds_inv : forall M k x, binds M k x -> M \(k?) = Some x }.
 
+(* empty *)
 Class Binds_empty_eq `{BagBinds A B T} `{BagEmpty T} :=
     { binds_empty_eq : forall k x, binds \{} k x = False }.
 
 Class Binds_empty `{BagBinds A B T} `{BagEmpty T} :=
     { binds_empty : forall k x, ~binds \{} k x }.
 
+(* single_bind *)
 Class Binds_single_bind_eq `{BagBinds A B T} `{BagSingleBind A B T} :=
     { binds_single_bind_eq : forall k k' x x', binds (k' \:= x') k x = (k = k' /\ x = x') }.
 
@@ -74,6 +79,7 @@ Class Binds_single_bind_diff_eq `{BagBinds A B T} `{BagSingleBind A B T} :=
 Class Binds_single_bind_diff `{BagBinds A B T} `{BagSingleBind A B T} :=
     { binds_single_bind_diff : forall k k' x x', k <> k' -> ~binds (k' \:= x') k x }.
 
+(* remove *)
 Class Binds_remove_eq `{BagBinds A B T} `{BagIn A T1} `{BagRemove T T1} :=
     { binds_remove_eq : forall M S k x, binds (M \- S) k x = (binds M k x /\ k \notin S) }.
 
@@ -95,6 +101,29 @@ Class Binds_remove_in `{BagBinds A B T} `{BagIn A T1} `{BagRemove T T1} :=
 Class Binds_remove_inv `{BagBinds A B T} `{BagIn A T1} `{BagRemove T T1} :=
     { binds_remove_inv : forall M S k x, binds (M \- S) k x -> binds M k x /\ k \notin S }.
 
+(* restrict *)
+Class Binds_restrict_eq `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1} :=
+    { binds_restrict_eq : forall M S k x, binds (M \| S) k x = (binds M k x /\ k \in S) }.
+
+Class Binds_restrict_in_eq `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1} :=
+    { binds_restrict_in_eq : forall M S k x, k \in S -> binds (M \| S) k x = binds M k x }.
+
+Class Binds_restrict_in `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1} :=
+    { binds_restrict_in : forall M S k x, k \in S -> binds M k x -> binds (M \| S) k x }.
+
+Class Binds_restrict_in_inv `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1} :=
+    { binds_restrict_in_inv : forall M S k x, k \in S -> binds (M \| S) k x -> binds M k x }.
+
+Class Binds_restrict_notin_eq `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1} :=
+    { binds_restrict_notin_eq : forall M S k x, k \notin S -> binds (M \| S) k x = False }.
+
+Class Binds_restrict_notin `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1} :=
+    { binds_restrict_notin : forall M S k x, k \notin S -> ~binds (M \| S) k x }.
+
+Class Binds_restrict_inv `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1} :=
+    { binds_restrict_inv : forall M S k x, binds (M \| S) k x -> binds M k x /\ k \in S }.
+
+(* update *)
 Class Binds_update_eq `{BagBinds A B T} `{BagUpdate A B T} := 
     { binds_update_eq : forall M k k' x x', 
         binds (M \(k' := x')) k x = (k = k' /\ x = x' \/ k <> k' /\ binds M k x) }.
@@ -117,6 +146,7 @@ Class Binds_update_diff `{BagBinds A B T} `{BagUpdate A B T} :=
 Class Binds_update_diff_inv `{BagBinds A B T} `{BagUpdate A B T} := 
     { binds_update_diff_inv : forall M k k' x x', k <> k' -> binds (M \(k' := x')) k x -> binds M k x }.
 
+(* index *)
 Class Index_binds_eq `{BagIndex T A} `{BagBinds A B T} :=
     { index_binds_eq : forall M k, index M k = exists x, binds M k x }.
 
@@ -126,12 +156,14 @@ Class Index_binds `{BagIndex T A} `{BagBinds A B T} :=
 Class Index_binds_inv `{BagIndex T A} `{BagBinds A B T} :=
     { index_binds_inv : forall M k x, binds M k x -> index M k }.
 
+(* empty *)
 Class Index_empty_eq `{BagIndex T A} `{BagEmpty T} :=
     { index_empty_eq : forall k, index \{} k = False }.
 
 Class Index_empty `{BagIndex T A} `{BagEmpty T} :=
     { index_empty : forall k, ~index \{} k }.
 
+(* single *)
 Class Index_single_bind_eq `{BagIndex T A} `{BagSingleBind A B T} :=
     { index_single_bind_eq : forall k k' x', index (k' \:= x') k = (k = k') }.
 
@@ -147,6 +179,7 @@ Class Index_single_bind_diff_eq `{BagIndex T A} `{BagSingleBind A B T} :=
 Class Index_single_bind_diff `{BagIndex T A} `{BagSingleBind A B T} :=
     { index_single_bind_diff : forall k k' x', k <> k' -> ~index (k' \:= x') k }. 
 
+(* remove *)
 Class Index_remove_eq `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1} :=
     { index_remove_eq : forall M S k, index (M \- S) k = (index M k /\ k \notin S) }.
 
@@ -165,6 +198,26 @@ Class Index_remove_notin `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1} :=
 Class Index_remove_notin_inv `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1} :=
     { index_remove_notin_inv : forall M S k, k \notin S -> index (M \- S) k -> index M k }.
 
+(* restrict *)
+Class Index_restrict_eq `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1} :=
+    { index_restrict_eq : forall M S k, index (M \| S) k = (index M k /\ k \in S) }.
+
+Class Index_restrict_in_eq `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1} :=
+    { index_restrict_in_eq : forall M S k, k \in S -> index (M \| S) k = index M k }.
+
+Class Index_restrict_in `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1} :=
+    { index_restrict_in : forall M S k, k \in S -> index M k -> index (M \| S) k }.
+
+Class Index_restrict_in_inv `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1} :=
+    { index_restrict_in_inv : forall M S k, k \in S -> index (M \| S) k -> index M k }.
+
+Class Index_restrict_notin_eq `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1} :=
+    { index_restrict_notin_eq : forall M S k, k \notin S -> index (M \| S) k = False }.
+
+Class Index_restrict_notin `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1} :=
+    { index_restrict_notin : forall M S k, k \notin S -> ~index (M \| S) k }.
+
+(* update *)
 Class Index_update_eq `{BagIndex T A} `{BagUpdate A B T} :=
     { index_update_eq : forall M k k' x', index (M \(k' := x')) k = (index M k \/ k = k') }.
 
@@ -186,12 +239,14 @@ Class Index_update_diff `{BagIndex T A} `{BagUpdate A B T} :=
 Class Index_update_diff_inv `{BagIndex T A} `{BagUpdate A B T} :=
     { index_update_diff_inv : forall M k k' x', k <> k' -> index (M \(k' := x')) k -> index M k }.
 
+(* fresh *)
 Class Fresh_index_eq `{BagIndex T A} `{BagFresh A T} :=
     { fresh_index_eq : forall M, index M (fresh M) = False }.
 
 Class Fresh_index `{BagIndex T A} `{BagFresh A T} :=
     { fresh_index : forall M, ~index M (fresh M) }.
 
+(* incl *)
 Class Incl_binds_eq `{BagIncl T} `{BagBinds A B T} :=
     { incl_binds_eq : forall M1 M2, M1 \c M2 = (forall k x, binds M1 k x -> binds M2 k x) }.
 
@@ -206,6 +261,12 @@ Class Incl_index `{BagIncl T} `{BagIndex T A} :=
 
 Class Update_nindex_incl `{BagIncl T} `{BagUpdate A B T} `{BagIndex T A} :=
     { update_nindex_incl : forall M k x, ~index M k -> M \c M\(k := x) }.
+
+Class Remove_incl `{BagIncl T} `{BagRemove T T1} :=
+    { remove_incl : forall M S, M \- S \c M }.
+
+Class Restrict_incl `{BagIncl T} `{BagRestrict T T1} :=
+    { restrict_incl : forall M S, M \| S \c M }.
 
 Instance Binds_double_eq_from_binds_double :
     forall `{BagBinds A B T},
@@ -287,6 +348,7 @@ Instance binds_single_bind_diff_from_binds_single_bind_diff_eq :
     Binds_single_bind_diff_eq -> Binds_single_bind_diff. 
 Proof. constructor. introv Hd. rewrite binds_single_bind_diff_eq; auto. Qed.
 
+(* remove *)
 Instance binds_remove_notin_eq_from_binds_remove_eq :
     forall `{BagBinds A B T} `{BagIn A T1} `{BagRemove T T1},
     Binds_remove_eq -> Binds_remove_notin_eq.
@@ -296,12 +358,12 @@ Qed.
 
 Instance binds_remove_notin_from_binds_remove_notin_eq :
     forall `{BagBinds A B T} `{BagIn A T1} `{BagRemove T T1},
-    Binds_remove_eq -> Binds_remove_notin.
+    Binds_remove_notin_eq -> Binds_remove_notin.
 Proof. constructor. introv Hin I. rewrite binds_remove_notin_eq; auto. Qed.
 
 Instance binds_remove_notin_inv_from_binds_remove_notin_eq :
     forall `{BagBinds A B T} `{BagIn A T1} `{BagRemove T T1},
-    Binds_remove_eq -> Binds_remove_notin_inv.
+    Binds_remove_notin_eq -> Binds_remove_notin_inv.
 Proof. constructor. introv Hin I. rewrite binds_remove_notin_eq in I; auto. Qed.
 
 Instance binds_remove_in_eq_from_binds_remove_eq :
@@ -321,6 +383,42 @@ Instance binds_remove_inv_from_binds_remove_eq :
     Binds_remove_eq -> Binds_remove_inv.
 Proof. constructor. introv Hb. rewrite binds_remove_eq in Hb. auto. Qed.
 
+(* restrict *)
+Instance binds_restrict_in_eq_from_binds_restrict_eq :
+    forall `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1},
+    Binds_restrict_eq -> Binds_restrict_in_eq.
+Proof. constructor. introv Hin. rewrite binds_restrict_eq. rew_logic. 
+    apply iff_intro; iauto.
+Qed.
+
+Instance binds_restrict_in_from_binds_restrict_in_eq :
+    forall `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1},
+    Binds_restrict_in_eq -> Binds_restrict_in.
+Proof. constructor. introv Hin I. rewrite binds_restrict_in_eq; auto. Qed.
+
+Instance binds_restrict_in_inv_from_binds_restrict_in_eq :
+    forall `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1},
+    Binds_restrict_in_eq -> Binds_restrict_in_inv.
+Proof. constructor. introv Hin I. rewrite binds_restrict_in_eq in I; auto. Qed.
+
+Instance binds_restrict_notin_eq_from_binds_restrict_eq :
+    forall `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1},
+    Binds_restrict_eq -> Binds_restrict_notin_eq.
+Proof. constructor. introv Hin. rewrite binds_restrict_eq. rew_logic. 
+    apply iff_intro; iauto.
+Qed.
+
+Instance binds_restrict_notin_from_binds_restrict_notin_eq :
+    forall `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1},
+    Binds_restrict_notin_eq -> Binds_restrict_notin.
+Proof. constructor. introv Hin.  rewrite binds_restrict_notin_eq; auto. Qed.
+
+Instance binds_restrict_inv_from_binds_restrict_eq :
+    forall `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1},
+    Binds_restrict_eq -> Binds_restrict_inv.
+Proof. constructor. introv Hb. rewrite binds_restrict_eq in Hb. auto. Qed.
+
+(* update *)
 Instance binds_update_same_eq_from_binds_update_eq :
     forall `{BagBinds A B T} `{BagUpdate A B T},
     Binds_update_eq -> Binds_update_same_eq.
@@ -367,11 +465,13 @@ Instance index_binds_inv_from_index_binds_eq :
     Index_binds_eq -> Index_binds_inv.
 Proof. constructor. introv I. rewrite index_binds_eq. eauto. Qed.
 
+(* empty *)
 Instance index_empty_from_index_empty_eq :
     forall `{BagIndex T A} `{BagEmpty T},
     Index_empty_eq -> Index_empty.
 Proof. constructor. introv. rewrite index_empty_eq. auto. Qed. 
 
+(* single_bind *)
 Instance index_single_bind_same_eq_from_index_single_bind_eq :
     forall `{BagIndex T A} `{BagSingleBind A B T},
     Index_single_bind_eq -> Index_single_bind_same_eq.
@@ -392,6 +492,7 @@ Instance index_single_bind_diff_from_index_single_bind_diff_eq :
     Index_single_bind_diff_eq -> Index_single_bind_diff.
 Proof. constructor. introv Hd. rewrite index_single_bind_diff_eq; auto. Qed.
 
+(* remove *)
 Instance index_remove_in_eq_from_index_remove_eq :
     forall `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1},
     Index_remove_eq -> Index_remove_in_eq.
@@ -423,6 +524,39 @@ Instance index_remove_notin_inv_from_index_remove_notin_eq :
     Index_remove_notin_eq -> Index_remove_notin_inv.
 Proof. constructor. introv Hi. rewrite index_remove_notin_eq; auto. Qed.
 
+(* restrict *)
+Instance index_restrict_notin_eq_from_index_restrict_eq :
+    forall `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1},
+    Index_restrict_eq -> Index_restrict_notin_eq.
+Proof. 
+    constructor. introv I. rewrite index_restrict_eq. rew_logic. 
+    apply iff_intro; intro; jauto; tryfalse.
+Qed.
+
+Instance index_restrict_notin_from_index_restrict_notin_eq :
+    forall `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1},
+    Index_restrict_notin_eq -> Index_restrict_notin.
+Proof. constructor. introv Hi. rewrite index_restrict_notin_eq; auto. Qed.
+
+Instance index_restrict_in_eq_from_index_restrict_eq :
+    forall `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1},
+    Index_restrict_eq -> Index_restrict_in_eq.
+Proof. 
+    constructor. introv I. rewrite index_restrict_eq. rew_logic. 
+    apply iff_intro; intro; jauto; tryfalse.
+Qed.
+
+Instance index_restrict_in_from_index_restrict_in_eq :
+    forall `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1},
+    Index_restrict_in_eq -> Index_restrict_in.
+Proof. constructor. introv Hi. rewrite index_restrict_in_eq; auto. Qed.
+
+Instance index_restrict_in_inv_from_index_restrict_in_eq :
+    forall `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1},
+    Index_restrict_in_eq -> Index_restrict_in_inv.
+Proof. constructor. introv Hi. rewrite index_restrict_in_eq; auto. Qed.
+
+(* update *)
 Instance index_update_same_eq_from_index_update_eq : 
     forall `{BagIndex T A} `{BagUpdate A B T},
     Index_update_eq -> Index_update_same_eq.
@@ -479,15 +613,32 @@ Proof.
     hint incl_binds. introv Hincl (x&Hbinds). iauto.
 Qed.
 
+Instance empty_incl_from_incl_binds :
+    forall `{BagIncl T} `{BagEmpty T} `{BagBinds A B T},
+    Binds_empty_eq -> Incl_binds_eq -> Empty_incl.
+Proof. constructor. intro. rewrite incl_binds_eq. introv. rewrite binds_empty_eq. iauto. Qed.
+
+Instance incl_empty_from_incl_binds :
+    forall `{BagIncl T} `{BagEmpty T} `{BagBinds A B T},
+    Binds_double -> Binds_empty_eq -> Incl_binds_eq -> Incl_empty.
+Proof. 
+    constructor. intro. rewrite incl_binds_eq.
+    rew_logic. apply iff_intro.
+    introv He. apply binds_double. introv. apply iff_intro. auto. rewrite binds_empty_eq. iauto.
+    intros. substs. auto.
+Qed.
+
 Create HintDb bag discriminated.
 
 Hint Resolve @binds_empty @binds_single_bind_same @binds_single_bind_diff
     @binds_remove_in @binds_remove_notin
+    @binds_restrict_in @binds_restrict_notin
     @binds_update_same @binds_update_diff 
     @index_binds_inv @fresh_index 
     @incl_binds @update_nindex_incl 
     @index_empty @index_single_bind_same @index_single_bind_diff
     @index_remove_in @index_remove_notin
+    @index_restrict_in @index_restrict_notin
     @index_update_same @index_update_index @index_update_diff
 : bag.
 
@@ -519,12 +670,33 @@ Instance update_nindex_incl_inst :
     forall `{BagIncl T} `{BagUpdate A B T} `{BagIndex T A} `{BagBinds A B T},
     Index_binds_eq -> Incl_binds_eq -> Binds_update_eq -> Update_nindex_incl.
 Proof.
-    constructor. introv. rewrite incl_binds_eq, index_binds_eq. 
+    constructor. introv. 
+    rewrite incl_binds_eq, index_binds_eq. 
     rew_logic. intros.
     rewrite binds_update_eq. 
     right. split.
     intro. substs. jauto.
     auto.
+Qed.
+
+Instance remove_incl_inst :
+    forall `{BagIncl T} `{BagRemove T T1} `{BagIn A T1} `{BagBinds A B T},
+    Binds_remove_eq -> Incl_binds_eq -> Remove_incl.
+Proof.
+    constructor. introv.
+    rewrite incl_binds_eq. introv.
+    rewrite binds_remove_eq.
+    iauto.
+Qed.
+
+Instance restrict_incl_inst :
+    forall `{BagIncl T} `{BagRestrict T T1} `{BagIn A T1} `{BagBinds A B T},
+    Binds_restrict_eq -> Incl_binds_eq -> Restrict_incl.
+Proof.
+    constructor. introv.
+    rewrite incl_binds_eq. introv.
+    rewrite binds_restrict_eq.
+    iauto.
 Qed.
 
 Instance index_empty_eq_inst : 
@@ -601,6 +773,7 @@ Parameter incl_impl : finmap A B -> finmap A B -> Prop.
 Parameter read_impl : Inhab B -> finmap A B -> A -> B.
 Parameter read_option_impl : finmap A B -> A -> option B.
 Parameter remove_impl : finmap A B -> finset A -> finmap A B.
+Parameter restrict_impl : finmap A B -> finset A -> finmap A B.
 Parameter update_impl : finmap A B -> A -> B -> finmap A B.
 Parameter card_impl : finmap A B -> nat.
 Parameter fresh_impl : Minimal A -> PickGreater A -> finmap A B -> A. (* TODO good typeclasses *)
@@ -614,6 +787,8 @@ Parameter binds_single_bind_eq_impl : forall k k' x x',
     binds_impl (single_bind_impl k' x') k x = (k = k' /\ x = x').
 Parameter binds_remove_eq_impl : forall M S k x,
     binds_impl (remove_impl M S) k x = (binds_impl M k x /\ k \notin S).
+Parameter binds_restrict_eq_impl : forall M S k x,
+    binds_impl (restrict_impl M S) k x = (binds_impl M k x /\ k \in S).
 Parameter binds_update_eq_impl : forall M k k' x x', 
     binds_impl (update_impl M k' x') k x = (k = k' /\ x = x' \/ k <> k' /\ binds_impl M k x).
 Parameter index_binds_eq_impl : forall M k, index_impl M k = exists x, binds_impl M k x.
@@ -690,6 +865,8 @@ Definition read_option_impl M k : option B := proj1_sig M k. (* TODO abstract it
 Definition read_impl M k : B := proj1_sig M \(k).
 Definition remove_impl M (S : finset A) : finmap.
 Admitted.
+Definition restrict_impl M (S : finset A) : finmap.
+Admitted.
 Definition update_impl M k x : finmap := build_finmap (update_finite k x (proj2_sig M)).
 Definition fresh_impl : Minimal A -> PickGreater A -> finmap -> A.
 Admitted.
@@ -722,6 +899,8 @@ Parameter binds_single_bind_eq_impl : forall k k' x x',
     binds_impl (single_bind_impl k' x') k x = (k = k' /\ x = x').
 Parameter binds_remove_eq_impl : forall M S k x,
     binds_impl (remove_impl M S) k x = (binds_impl M k x /\ k \notin S).
+Parameter binds_restrict_eq_impl : forall M S k x,
+    binds_impl (restrict_impl M S) k x = (binds_impl M k x /\ k \in S).
 
 Lemma binds_update_eq_impl : forall M k k' x x', 
     binds_impl (update_impl M k' x') k x = (k = k' /\ x = x' \/ k <> k' /\ binds_impl M k x).
@@ -772,6 +951,9 @@ Global Instance read_option_inst : BagReadOption A B (finmap A B) :=
 Global Instance remove_inst : BagRemove (finmap A B) (finset A) :=
     { remove := @remove_impl _ _ }.
 
+Global Instance restrict_inst : BagRestrict (finmap A B) (finset A) :=
+    { restrict := @restrict_impl _ _ }.
+
 Global Instance update_inst : BagUpdate A B (finmap A B) :=
     { update := @update_impl _ _ }.
 
@@ -804,6 +986,9 @@ Global Instance binds_single_bind_eq_inst : Binds_single_bind_eq :=
 
 Global Instance binds_remove_eq_inst : Binds_remove_eq :=
     { binds_remove_eq := @binds_remove_eq_impl _ _ }.
+
+Global Instance binds_restrict_eq_inst : Binds_restrict_eq :=
+    { binds_restrict_eq := @binds_restrict_eq_impl _ _ }.
 
 Global Instance binds_update_eq_inst : Binds_update_eq :=
     { binds_update_eq := @binds_update_eq_impl _ _ }.
@@ -839,6 +1024,7 @@ Extract Constant FinmapImpl.read_impl => "fun m k -> BatMap.find k m".
 Extract Constant FinmapImpl.read_option_impl => "fun m k -> try Some (BatMap.find k m) with Not_found -> None".
 (* Extract Constant FinmapImpl.remove_impl => "fun m k -> BatMap.remove k m". *)
 Extract Constant FinmapImpl.remove_impl => "fun m s -> BatList.fold_right (BatMap.remove) (FinsetImpl.to_list_impl s) m". 
+Extract Constant FinmapImpl.restrict_impl => "fun m s -> BatList.fold_left (fun cc i -> BatMap.add i (BatMap.find i m) cc) BatMap.empty (FinsetImpl.to_list_impl s)".
 Extract Constant FinmapImpl.update_impl => "fun m k x -> BatMap.add k x m".
 Extract Constant FinmapImpl.card_impl => "fun m -> BatMap.cardinal m".
 Extract Constant FinmapImpl.fresh_impl => "fun mm pg m -> if BatMap.is_empty m then mm else pg (fst (BatMap.max_binding m))".
