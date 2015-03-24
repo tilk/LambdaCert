@@ -1,7 +1,7 @@
 Generalizable All Variables.
 Set Implicit Arguments.
-Require Import LjsShared.
 Require Import JsNumber.
+Require Import LjsShared.
 Require Import Utils.
 Require LjsSyntax LjsPrettyRules LjsPrettyRulesAux LjsPrettyRulesIndexed LjsPrettyRulesIndexedAux
     LjsPrettyInterm LjsStore LjsAuxiliary.
@@ -222,10 +222,12 @@ Definition includes_init_ctx c :=
 
 (* Relates the lexical contexts *)
 Record execution_ctx_related BR jc c st := {
-    execution_ctx_related_this_binding : 
-        value_related BR (J.execution_ctx_this_binding jc) (c \("%this"));
-    execution_ctx_related_strictness_flag : 
-        L.value_to_bool (c \("#strict")) = Some (J.execution_ctx_strict jc)
+    execution_ctx_related_this_binding : forall v,
+        binds c "%this" v ->
+        value_related BR (J.execution_ctx_this_binding jc) v;
+    execution_ctx_related_strictness_flag : forall v, 
+        binds c "#strict" v ->
+        v = L.value_bool (J.execution_ctx_strict jc)
 }.
 
 (* The complete set of invariants. *)
@@ -496,6 +498,40 @@ Proof.
 Qed.
 
 Hint Resolve state_invariant_fresh_preserved : js_ljs.
+
+Lemma includes_init_ctx_incl_preserved : forall c c',
+    c' \c c ->
+    includes_init_ctx c ->
+    includes_init_ctx c'.
+Proof.
+    unfolds includes_init_ctx.
+    prove_bag.
+Qed.
+
+Lemma execution_ctx_related_incl_preserved : forall BR jc c c' st,
+    c' \c c ->
+    execution_ctx_related BR jc c st ->
+    execution_ctx_related BR jc c' st.
+Proof.
+    introv Hincl Hrel.
+    inverts Hrel.
+    constructor; prove_bag.
+Qed.
+
+Lemma state_invariant_ctx_incl_preserved : forall BR jst jc c c' st,
+    c' \c c ->
+    state_invariant BR jst jc c st ->
+    state_invariant BR jst jc c' st.
+Proof.
+    introv Hincl Hinv.
+    inverts Hinv.
+    constructor.
+    assumption.
+    eapply execution_ctx_related_incl_preserved; eassumption.
+    eapply includes_init_ctx_incl_preserved; eassumption.
+Qed.
+
+Hint Resolve state_invariant_ctx_incl_preserved : js_ljs.
 
 (* Prerequisites *)
 
@@ -1250,6 +1286,7 @@ Definition while_unroll k c st0 ee1 ee2 ee3 st r :=
     Last l (v, st') /\
     while_final k c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) v st' st r.
 
+(* TODO state additional lemma in terms of while_body, think about contexts *)
 Lemma exprjs_while_lemma : forall k c st0 ee1 ee2 ee3 st r,
     L.red_exprh k c st0 (L.expr_basic (E.ejs_to_ljs (E.expr_while ee1 ee2 ee3))) (L.out_ter st r) ->
     exists k', (k' < k) % nat /\ while_unroll k' c st0 ee1 ee2 ee3 st r.
@@ -1269,14 +1306,27 @@ Proof.
     end.
     inverts H6.
 (*    exists k0. split. omega. *)
-(* TODO try to abstract away from the actual context in question... 
-   Maybe define in terms of subset relation? \c
-Lemma get_add_closure_nonrec_lemma : forall st c l e,
-    L.get_closure st (L.add_closure c None l e) = L.result_some (L.closure_intro _ 
-*)
-    unfolds L.add_closure.
+(* TODO move! S5-only theorem *)
+Lemma add_closure_lemma : forall c oi l e, exists c', 
+    L.add_closure c oi l e = L.value_closure (L.closure_intro (to_list c') oi l e) /\ c' \c c.
+Proof.
+    introv.
+    destruct oi;
+    eexists;
+    eauto using restrict_incl.
+Qed.
+
+Ltac ljs_add_closure := 
+    match goal with
+    | H : context [ L.add_closure ?c ?oi ?l ?e ] |- _ =>
+      let H' := fresh "H" in let Hc := fresh "Hc" in let c' := fresh "c" in
+      destruct (add_closure_lemma c oi l e) as (c'&H'&Hc); rewrite H' in H; clear H'
+    end.
+    ljs_add_closure. (* TODO combined tactic? *)
     rewrite get_closure_lemma in *.
     injects.
+
+
     simpl in H8.
     cbv in H5.
     (* TODO *)

@@ -1,6 +1,7 @@
 Require Import LibTactics LibList LibListSorted.
 Require Import LibSet LibMap LibLogic LibEqual LibReflect LibOrder LibRelation.
 Require Import LibFinset.
+Require Import Utils.
 Generalizable Variable A R U B T.
 
 Import ListNotations.
@@ -22,6 +23,9 @@ Class Binds_double_eq `{BagBinds A B T} :=
 
 Class Binds_double `{BagBinds A B T} :=
     { binds_double : forall E F, (forall k x, binds E k x <-> binds F k x) -> E = F }.
+
+Class Binds_deterministic `{BagBinds A B T} :=
+    { binds_deterministic : forall E k x y, binds E k x -> binds E k y -> x = y }.
 
 (* from_list *)
 Class From_list_binds_eq `{BagFromList (A * B) T} `{BagBinds A B T} := 
@@ -298,6 +302,17 @@ Instance Binds_double_eq_from_binds_double :
     forall `{BagBinds A B T},
     Binds_double -> Binds_double_eq.
 Proof. constructor. introv I. apply binds_double. intros. rewrite I. iauto. Qed.
+
+Instance Binds_deterministic_from_read_option_binds :
+    forall `{BagBinds A B T} `{BagReadOption A B T},
+    Read_option_binds_eq -> Binds_deterministic.
+Proof. 
+    constructor. introv. rewrite_all <- read_option_binds_eq.
+    introv Hx Hy.
+    rewrite Hx in Hy.
+    injects Hy.
+    reflexivity.
+Qed.
 
 Instance From_list_binds_from_from_list_binds_eq :
     forall `{BagFromList (A * B) T} `{BagBinds A B T},
@@ -742,6 +757,14 @@ Tactic Notation "rew_binds_eq" "~" "in" hyp(H) :=
     rew_binds_eq in H; auto_tilde.
 Tactic Notation "rew_binds_eq" "*" "in" hyp(H) :=
     rew_binds_eq in H; auto_star.
+
+Ltac binds_determine :=
+    match goal with
+    | H1 : binds ?m ?k ?v1, H2 : binds ?m ?k ?v2 |- _ =>
+        not constr_eq v1 v2; 
+        not is_hyp (v1 = v2);
+        let H := fresh "H" in asserts H : (v1 = v2); [eauto using binds_deterministic | idtac]
+    end.
 
 Instance update_nindex_incl_inst :
     forall `{BagIncl T} `{BagUpdate A B T} `{BagIndex T A} `{BagBinds A B T},

@@ -34,8 +34,44 @@ Proof.
     unfolds in Hout;
     inverts Hred; tryfalse; injects; jauto.
 Qed.
- 
+
+Lemma value_to_closure_deterministic : forall st v clo clo',
+    value_to_closure st v clo -> value_to_closure st v clo' -> clo = clo'.
+Proof.
+    introv Hc1.
+    induction Hc1; introv Hc2; inverts Hc2.
+    reflexivity.
+    binds_determine.
+    substs.
+    auto.
+Qed.
+
+Lemma closure_ctx_deterministic : forall clo lv c c',
+    closure_ctx clo lv c -> closure_ctx clo lv c' -> c = c'.
+Proof.
+    introv Hc1.
+    induction Hc1; introv Hc2; inverts Hc2;
+    repeat match goal with H : Zip _ _ _ |- _ => apply Zip_zip in H end;
+    rewrite H in *; injects; reflexivity.
+Qed.
+
 Module Export Tactics.
+
+Ltac value_to_closure_determine :=
+    match goal with
+    | H1 : value_to_closure ?st ?v ?clo1, H2 : value_to_closure ?st ?v ?clo2 |- _ =>
+        not constr_eq clo1 clo2; 
+        not is_hyp (clo1 = clo2);
+        let H := fresh "H" in asserts H : (clo1 = clo2); [eauto using value_to_closure_deterministic | idtac]
+    end.
+
+Ltac closure_ctx_determine :=
+    match goal with
+    | H1 : closure_ctx ?clo ?lv ?c1, H2 : closure_ctx ?clo ?lv ?c2 |- _ =>
+        not constr_eq c1 c2; 
+        not is_hyp (c1 = c2);
+        let H := fresh "H" in asserts H : (c1 = c2); [eauto using closure_ctx_deterministic | idtac]
+    end.
 
 Ltac ljs_out_red_ter Hred :=
     let H := fresh in

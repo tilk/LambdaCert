@@ -1,8 +1,20 @@
 Set Implicit Arguments.
+Require Import Utils.
+Require Import LjsShared.
 Require Import LjsSyntax.
 Require Import LjsCommon.
 Require Import LjsValues.
 Require Import Coq.Strings.String.
+
+Implicit Type st : store.
+Implicit Type e : expr.
+Implicit Type v : value.
+Implicit Type s : string.
+Implicit Type i : id.
+Implicit Type o : out.
+Implicit Type c : ctx.
+Implicit Type ptr : object_ptr.
+Implicit Type obj : object.
 
 Inductive ext_expr :=
 | expr_basic : expr -> ext_expr
@@ -125,3 +137,18 @@ Inductive abort : out -> Prop :=
 
 Hint Constructors abort.
 
+Inductive value_to_closure st : value -> closure -> Prop :=
+| value_to_closure_closure : forall clo, value_to_closure st (value_closure clo) clo
+| value_to_closure_code : forall ptr obj clo,
+    binds st ptr obj ->
+    value_to_closure st (object_code obj) clo ->
+    value_to_closure st (value_object ptr) clo.
+
+Inductive closure_ctx : closure -> list value -> ctx -> Prop :=
+| closure_ctx_nonrec : forall args_n args_v args lc body,
+    Zip args_n args_v args ->
+    closure_ctx (closure_intro lc None args_n body) args_v (from_list args \u from_list lc)
+| closure_ctx_rec : forall s args_n args_v args lc body,
+    Zip args_n args_v args ->
+    closure_ctx (closure_intro lc (Some s) args_n body) args_v 
+        (from_list args \u (from_list lc \(s := value_closure (closure_intro lc (Some s) args_n body)))).

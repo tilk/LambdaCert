@@ -350,8 +350,8 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_expr c st (expr_app_1 o el) o
 | red_expr_app_2 : forall c c' st v clo vl o,
-    get_closure st v = result_some clo ->
-    closure_ctx clo vl = result_some c' ->
+    value_to_closure st v clo ->
+    closure_ctx clo vl c' ->
     red_expr c' st (closure_body clo) o ->
     red_expr c st (expr_app_2 v vl) o 
 

@@ -157,10 +157,28 @@ Proof.
     applys @if_value_abort_lemma HA.
 Qed.
 
+(* Utility lemmas *)
+
+Lemma get_closure_from_value_to_closure : forall st v clo,
+    value_to_closure st v clo -> get_closure st v = result_some clo.
+Proof.
+    introv Hc. (* TODO! *)
+    skip.
+Qed.
+
+Lemma get_closure_ctx_from_closure_ctx : forall clo sl c,
+    closure_ctx clo sl c -> get_closure_ctx clo sl = result_some c.
+Proof.
+    introv Hc.
+    skip. (* TODO *)
+Qed.
+
 (* Useful tactics *)
 
 Ltac ljs_eval :=
     match goal with
+    | H : value_to_closure _ _ _ |- _ => apply get_closure_from_value_to_closure in H
+    | H : closure_ctx _ _ _ |- _ => apply get_closure_ctx_from_closure_ctx in H
     | H : binds ?c ?i _ |- assert_deref ?c ?i _ = _ => rewrite (assert_deref_lemma _ H)
     | H : runs_type_eval ?runs ?c ?st ?e = _ |- eval_cont ?runs ?c ?st ?e _ = _ => rewrite (eval_cont_lemma _ H)
     | H : runs_type_eval ?runs ?c ?st ?e = result_some (out_ter _ (res_value _)) 

@@ -104,7 +104,7 @@ Definition eval_arg_list runs c st (args_expr : list expr) (cont : store -> list
 
 Definition apply runs c st (f_loc : value) (args : list value) : result :=
   if_result_some (get_closure st f_loc) (fun clo =>
-    if_result_some (closure_ctx clo args) (fun vh =>
+    if_result_some (get_closure_ctx clo args) (fun vh =>
       runs_type_eval runs vh st (closure_body clo))
   )
 .

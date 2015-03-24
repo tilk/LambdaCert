@@ -32,7 +32,7 @@ Definition add_parameters (closure_env : ctx) (args_name : list id) (args : list
   end
 .
 
-Definition closure_ctx clo args :=
+Definition get_closure_ctx clo args :=
   let 'closure_intro c rid args_name _ := clo in
   let c' := match rid with
     | Some i => from_list c \( i := value_closure clo)

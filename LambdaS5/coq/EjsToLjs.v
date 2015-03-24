@@ -72,12 +72,14 @@ Definition make_getter e := make_app_builtin "%MakeGetter" [e].
 
 Definition make_setter e := make_app_builtin "%MakeSetter" [e].
 
+Definition while_body (tst bdy after : L.expr) := 
+    (L.expr_if (to_bool tst) 
+        (L.expr_jseq bdy (L.expr_seq after (L.expr_app (L.expr_id "%while_loop") [])))
+        L.expr_empty).
+
 Definition make_while (tst bdy after : L.expr) := 
     L.expr_recc "%while_loop" 
-        (L.expr_lambda []
-            (L.expr_if (to_bool tst) 
-                (L.expr_jseq bdy (L.expr_seq after (L.expr_app (L.expr_id "%while_loop") [])))
-                L.expr_empty))
+        (L.expr_lambda [] (while_body tst bdy after))
         (L.expr_app (L.expr_id "%while_loop") []).
 
 Definition make_do_while (bdy tst : L.expr) :=

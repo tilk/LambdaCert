@@ -6,6 +6,16 @@ Require Import LjsValues.
 Require Import LjsStore.
 Require Import LjsMonads.
 
+Implicit Type st : store.
+Implicit Type e : expr.
+Implicit Type v : value.
+Implicit Type s : string.
+Implicit Type i : id.
+Implicit Type o : out.
+Implicit Type c : ctx.
+Implicit Type ptr : object_ptr.
+Implicit Type obj : object.
+
 (* Utility functions useful for both the interpreter and the semantics. *)
 
 (* Overwriting empty *)
@@ -90,7 +100,7 @@ Definition get_object_pattr obj s (pa : pattr) : resultof value :=
 (* Set object attribute *)
 (* May fail because of permission issues *)
 
-Definition pattr_okupdate (attr : attributes) (pa : pattr) (v : value) : bool := 
+Definition pattr_okupdate (attr : attributes) (pa : pattr) v : bool := 
   match attr, pa with
   | attributes_accessor_of {| attributes_accessor_configurable := true |}, _ => true
   | attributes_data_of {| attributes_data_configurable := true |}, _ => true
@@ -161,17 +171,17 @@ Parameter desugar_expr : string -> option expr.
 
 (* Gets a property recursively (the recursion limit is the size of the store) *)
 
-Fixpoint get_property_aux limit store (ptr : object_ptr) (name : prop_name) : resultof (option attributes) :=
+Fixpoint get_property_aux limit st ptr (name : prop_name) : resultof (option attributes) :=
   match limit with
   | 0 => result_bottom
   | S limit' =>
-    assert_get_object_from_ptr store ptr (fun obj =>
+    assert_get_object_from_ptr st ptr (fun obj =>
       match get_object_property obj name with
       | Some prop => result_some (Some prop)
       | None => 
         match object_proto obj with
         | value_object ptr =>
-          get_property_aux limit' store ptr name
+          get_property_aux limit' st ptr name
         | _ => result_some None
         end
       end
@@ -179,25 +189,25 @@ Fixpoint get_property_aux limit store (ptr : object_ptr) (name : prop_name) : re
   end
 .
 
-Definition get_property store (ptr : object_ptr) (name : prop_name) : resultof (option attributes) :=
+Definition get_property store ptr (name : prop_name) : resultof (option attributes) :=
   get_property_aux (card store) store ptr name. 
 
 (* Finds a closure for a function call *)
 
-Fixpoint get_closure_aux limit store (v : value) : resultof closure :=
+Fixpoint get_closure_aux limit st v : resultof closure :=
   match v with
   | value_closure clo => result_some clo
   | value_object ptr =>
     match limit with
     | 0 => result_bottom
     | S limit' =>
-      assert_get_object_from_ptr store ptr (fun obj =>
-        get_closure_aux limit' store (object_code obj)
+      assert_get_object_from_ptr st ptr (fun obj =>
+        get_closure_aux limit' st (object_code obj)
       )
     end
   | _ => result_fail "Applied non-function."
   end
 .
 
-Definition get_closure store (v : value) : resultof closure :=
-  get_closure_aux (card store) store v.
+Definition get_closure st v : resultof closure :=
+  get_closure_aux (card st) st v.

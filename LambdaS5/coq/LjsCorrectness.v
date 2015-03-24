@@ -134,9 +134,9 @@ Proof.
     introv E. destruct* v; tryfalse.
 Qed.
 
-Lemma assert_get_object_from_ptr_out : forall st ptr o cont,
-    assert_get_object_from_ptr st ptr cont = result_some o ->
-    exists obj, st \(ptr?) = Some obj /\ cont obj = result_some o.
+Lemma assert_get_object_from_ptr_out : forall A (a : A) st ptr cont,
+    assert_get_object_from_ptr st ptr cont = result_some a ->
+    exists obj, st \(ptr?) = Some obj /\ cont obj = result_some a.
 Proof.
     introv E. unfold assert_get_object_from_ptr in E.
     cases_match_option; eauto.
@@ -182,6 +182,40 @@ Lemma if_eval_return_out : forall runs c st e cont o,
 Proof. 
     auto using if_value_out.
 Qed.
+
+(* Utility lemmas *)
+
+Lemma value_to_closure_from_get_closure : forall st v clo,
+    get_closure st v = result_some clo -> value_to_closure st v clo.
+Proof.
+    unfolds get_closure.
+    introv. gen v.
+    induction (card st); introv Hgc;
+    destruct v; tryfalse.
+    injects.
+    apply value_to_closure_closure.
+    simpl in Hgc.
+    apply assert_get_object_from_ptr_out in Hgc.
+    destruct_hyp Hgc.
+    eapply value_to_closure_code;
+    eauto using read_option_binds.
+    injects.
+    apply value_to_closure_closure.
+Qed.
+
+Lemma closure_ctx_from_get_closure_ctx : forall clo sl c,
+    get_closure_ctx clo sl = result_some c -> closure_ctx clo sl c.
+Proof.
+    introv Hgc;
+    destruct clo as (cl&os);
+    destruct os; simpls;
+    unfolds add_parameters;
+    cases_match_option;
+    injects Hgc;
+    eauto using closure_ctx_rec, closure_ctx_nonrec, zip_Zip.
+Qed.
+
+Hint Resolve value_to_closure_from_get_closure closure_ctx_from_get_closure_ctx.
 
 (* Tactics *)
 
@@ -328,7 +362,7 @@ Qed.
 
 Definition apply_post runs c st v vs o := exists clo c', 
     get_closure st v = result_some clo /\ 
-    closure_ctx clo vs = result_some c' /\
+    get_closure_ctx clo vs = result_some c' /\
     runs_type_eval runs c' st (closure_body clo) = result_some o.
 
 Lemma apply_correct : forall runs c st v vs o,

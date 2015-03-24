@@ -4,24 +4,12 @@ Require Import List.
 Require Import Ascii.
 Require Import String.
 Require Import JsNumber.
-Require Import LjsShared.
 Require Import Coq.Numbers.Natural.Peano.NPeano.
 Require LibStream.
 Open Scope list_scope.
 Open Scope string_scope.
 Open Scope char_scope.
 Open Scope container_scope.
-
-Fixpoint concat_list_heap {X Y : Type} {LT : Lt X} (front : list (X * Y)) (back : finmap X Y) : finmap X Y :=
-  match front with
-  | nil => back
-  | (key, val) :: tail => concat_list_heap tail (back \( key := val ))
-  end
-.
-
-Definition concat_heaps {X Y : Type} {LT : Lt X} (front back : finmap X Y) :=
-  concat_list_heap (to_list front) back
-.
 
 Fixpoint zipWith {X Y Z : Type} (f : X -> Y -> Z) (lx : list X) (ly : list Y) : option (list Z) :=
   match lx with
@@ -47,6 +35,39 @@ Inductive ZipWith {X Y Z : Type} (f : X -> Y -> Z) : list X -> list Y -> list Z 
       ZipWith f (x1 :: l1) (x2 :: l2) (f x1 x2 :: l3).
 
 Definition Zip {X Y : Type} := ZipWith (fun (x : X) (y : Y) => (x,y)).
+
+Lemma zipWith_ZipWith : forall X Y Z (f : X -> Y -> Z) lx ly lz, 
+  zipWith f lx ly = Some lz -> ZipWith f lx ly lz.
+Proof.
+  induction lx; introv Hz;
+  destruct ly;
+  simpls;
+  tryfalse.
+  injects Hz.
+  apply ZipWith_nil.
+  sets_eq l : (zipWith f lx ly).
+  destruct l; tryfalse.
+  injects Hz.
+  apply ZipWith_cons.
+  auto.
+Qed.
+
+Lemma ZipWith_zipWith : forall X Y Z (f : X -> Y -> Z) lx ly lz, 
+  ZipWith f lx ly lz -> zipWith f lx ly = Some lz.
+Proof.
+  introv Hz.
+  induction Hz.
+  reflexivity.
+  simpl.
+  rewrite IHHz.
+  reflexivity.
+Qed.
+
+Lemma zip_Zip : forall X Y (lx : list X) (ly : list Y) lz, zip lx ly = Some lz -> Zip lx ly lz.
+Proof. introv. apply zipWith_ZipWith. Qed.
+
+Lemma Zip_zip : forall X Y (lx : list X) (ly : list Y) lz, Zip lx ly lz -> zip lx ly = Some lz.
+Proof. introv. apply ZipWith_zipWith. Qed.
 
 Definition ascii_of_nat (a : nat) : ascii :=
   match (a mod 10) with

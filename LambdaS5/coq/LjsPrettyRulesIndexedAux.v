@@ -105,11 +105,11 @@ Local Ltac inst_hyps_det :=
         let H := fresh "H" in forwards H : H2 H1; subst o2
     end.
 
-Local Ltac binds_determine :=
+Local Ltac pred_determine :=
     match goal with
     | H1 : binds ?m ?k ?v1, H2 : binds ?m ?k ?v2 |- _ =>
         (not constr_eq v1 v2); 
-        let H := fresh "H" in asserts H : (v1 = v2); [skip | subst v1] (* TODO remove skip! *)
+        let H := fresh "H" in asserts H : (v1 = v2); [eauto using binds_deterministic | subst v1]
     end.
 
 Lemma red_exprh_deterministic : forall k k' c st ee o o',
@@ -117,6 +117,9 @@ Lemma red_exprh_deterministic : forall k k' c st ee o o',
 Proof.
     introv Hr1. generalize k' o'.
     induction Hr1; introv Hr2;
-    try abstract (inversions Hr2; repeat (determine || binds_determine || inst_hyps_det); eauto; try ljs_abort_false; tryfalse;
+    try abstract (
+        inversions Hr2; 
+        repeat (determine || (progress substs) || inst_hyps_det || binds_determine || value_to_closure_determine || closure_ctx_determine); 
+        eauto; try ljs_abort_false; tryfalse;
     false; jauto). 
 Qed.
