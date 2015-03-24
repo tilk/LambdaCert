@@ -12,9 +12,6 @@ Implicit Type ptr : object_ptr.
 Implicit Type obj : object.
 
 (* LambdaJS environment storage. *)
-Definition narrow_ctx c s := 
-  List.fold_left (fun cc (i : string) => cc \( i := c \( i ))) (to_list s) \{}.
-
 Definition add_object st obj : (store * value) := 
   let ptr := fresh st in (st \(fresh st := obj), value_object ptr).
 
@@ -23,26 +20,25 @@ Definition add_closure c recid args body : value :=
     | Some i => expr_fv (expr_lambda args body) \-- i
     | None => expr_fv (expr_lambda args body) 
     end in
-  value_closure (closure_intro (to_list (narrow_ctx c si)) recid args body)
+  value_closure (closure_intro (to_list (c \| si)) recid args body)
 .
 
 (* Adds function arguments to the lexical environment *)
 
 Definition add_parameters (closure_env : ctx) (args_name : list id) (args : list value) : resultof ctx :=
-  match Utils.zip_left args_name args with
-  | Some args_heap => result_some (Utils.concat_list_heap args_heap closure_env)
+  match Utils.zip args_name args with
+  | Some args_heap => result_some (from_list args_heap \u closure_env)
   | None => result_fail "Arity mismatch"
   end
 .
 
 Definition closure_ctx clo args :=
   let 'closure_intro c rid args_name _ := clo in
-  let c' := fold_left (fun (p : string * value) h => let (s, v) := p in h \( s := v )) \{} c in
-  let c'' := match rid with
-    | Some i => c' \( i := value_closure clo)
-    | None => c'
+  let c' := match rid with
+    | Some i => from_list c \( i := value_closure clo)
+    | None => from_list c
     end in
-  add_parameters c'' args_name args.
+  add_parameters c' args_name args.
 
 Definition ctx_of_obj_aux (o : option ctx) (p : string * attributes) : option ctx  :=
   match o with

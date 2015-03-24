@@ -23,23 +23,30 @@ Definition concat_heaps {X Y : Type} {LT : Lt X} (front back : finmap X Y) :=
   concat_list_heap (to_list front) back
 .
 
-Fixpoint zip_aux {X Y : Type} (lx : list X) (ly : list Y) (acc : list (X * Y)) : option (list (X * Y)) :=
+Fixpoint zipWith {X Y Z : Type} (f : X -> Y -> Z) (lx : list X) (ly : list Y) : option (list Z) :=
   match lx with
   | nil =>
       match ly with
-      | nil => Some acc
+      | nil => Some nil
       | _ => None
       end
   | x_head :: x_tail =>
       match ly with
       | nil => None
-      | y_head :: y_tail => zip_aux x_tail y_tail ((x_head, y_head) :: acc)
+      | y_head :: y_tail => LibOption.map (fun l => f x_head y_head :: l) (zipWith f x_tail y_tail)
       end
   end
 .
-Definition zip_left {X Y : Type} (lx : list X) (ly : list Y) : option (list (X * Y)) :=
-  zip_aux lx ly nil
-.
+
+Definition zip {X Y : Type} := zipWith (fun (x : X) (y : Y) => (x,y)).
+
+Inductive ZipWith {X Y Z : Type} (f : X -> Y -> Z) : list X -> list Y -> list Z -> Prop :=
+  | ZipWith_nil : ZipWith f nil nil nil
+  | ZipWith_cons : forall l1 l2 l3 x1 x2,
+      ZipWith f l1 l2 l3 ->
+      ZipWith f (x1 :: l1) (x2 :: l2) (f x1 x2 :: l3).
+
+Definition Zip {X Y : Type} := ZipWith (fun (x : X) (y : Y) => (x,y)).
 
 Definition ascii_of_nat (a : nat) : ascii :=
   match (a mod 10) with
