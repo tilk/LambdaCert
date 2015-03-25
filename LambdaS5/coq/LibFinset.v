@@ -6,7 +6,7 @@
 Set Implicit Arguments.
 Require Import LibTactics LibList.
 Require Import LibSet LibLogic LibEqual LibReflect LibOrder LibOperation.
-Generalizable Variables A T U.
+Generalizable Variables A B T U.
 
 (* TODO MOVE!!!! to LibList later *)
 Section PropProperties.
@@ -51,6 +51,15 @@ End PropProperties.
 (* TODO should go to LibBag later *)
 Class BagFromList A T := { from_list : list A -> T }.
 Class BagToList A T := { to_list : T -> list A }.
+
+Class From_list_empty `{BagFromList A T} `{BagEmpty T} :=
+    { from_list_empty : from_list nil = \{} }.
+
+Class From_list_single `{BagFromList A T} `{BagUnion T} `{BagSingle A T} :=
+    { from_list_single : forall L x, from_list (x :: L) = \{x} \u from_list L }.
+
+Class From_list_update `{BagFromList (A * B) T} `{BagUpdate A B T} :=
+    { from_list_update : forall L k x, from_list ((k, x) :: L) = from_list L \(k := x) }.
 
 Class From_list_in_eq `{BagFromList A T} `{BagIn A T} := 
     { from_list_in_eq : forall L x, x \in from_list L = Mem x L }.
@@ -103,7 +112,75 @@ Class Remove_union_distrib_r `{BagUnion T} `{BagRemove T T} :=
 Class Remove_inter_distrib_r `{BagInter T} `{BagRemove T T} :=
     { remove_inter_distrib_r : distrib_r remove inter }.
 
-Hint Rewrite @in_remove_eq : rew_in_eq.
+Hint Rewrite 
+    @in_empty_eq @in_single_eq @in_union_eq @in_inter_eq
+    @in_remove_eq @from_list_in_eq @to_list_in_eq
+    using (eauto with typeclass_instances) : rew_in_eq.
+
+Tactic Notation "rew_in_eq" :=
+    autorewrite with rew_in_eq.
+Tactic Notation "rew_in_eq" "in" hyp(H) :=
+    autorewrite with rew_in_eq in H.
+Tactic Notation "rew_in_eq" "in" "*" :=
+    autorewrite with rew_in_eq in *.
+
+Tactic Notation "rew_in_eq" "~" :=
+    rew_in_eq; auto_tilde.
+Tactic Notation "rew_in_eq" "*" :=
+    rew_in_eq; auto_star.
+Tactic Notation "rew_in_eq" "~" "in" hyp(H) :=
+    rew_in_eq in H; auto_tilde.
+Tactic Notation "rew_in_eq" "*" "in" hyp(H) :=
+    rew_in_eq in H; auto_star.
+
+Hint Rewrite 
+    @from_to_list_id
+    @from_list_empty @from_list_update @from_list_single
+    @union_inter_distrib_l @union_inter_distrib_r
+    @inter_union_distrib_l @inter_union_distrib_r
+    @remove_union_distrib_r
+    @remove_inter_distrib_r
+    @union_assoc @inter_assoc
+    @union_empty_l @union_empty_r
+    @inter_empty_l @inter_empty_r
+    @remove_empty_l @remove_empty_r 
+    using (eauto with typeclass_instances) : rew_bag_simpl.
+
+Tactic Notation "rew_bag_simpl" :=
+    autorewrite with rew_bag_simpl.
+Tactic Notation "rew_bag_simpl" "in" hyp(H) :=
+    autorewrite with rew_bag_simpl in H.
+Tactic Notation "rew_bag_simpl" "in" "*" :=
+    autorewrite with rew_bag_simpl in *.
+
+Tactic Notation "rew_bag_simpl" "~" :=
+    rew_bag_simpl; auto_tilde.
+Tactic Notation "rew_bag_simpl" "*" :=
+    rew_bag_simpl; auto_star.
+Tactic Notation "rew_bag_simpl" "~" "in" hyp(H) :=
+    rew_bag_simpl in H; auto_tilde.
+Tactic Notation "rew_bag_simpl" "*" "in" hyp(H) :=
+    rew_bag_simpl in H; auto_star.
+
+Global Instance from_list_empty_from_from_list_in_eq :
+    forall `{BagFromList A T} `{BagEmpty T} `{BagIn A T},
+    In_double -> From_list_in_eq -> In_empty_eq -> From_list_empty.
+Proof.
+    constructor. apply in_double. intros. rew_in_eq. 
+    split; introv Hx; inverts Hx.
+Qed.
+
+Global Instance from_list_single_from_from_list_in_eq :
+    forall `{BagFromList A T} `{BagSingle A T} `{BagUnion T} `{BagIn A T},
+    In_double -> From_list_in_eq -> In_single_eq -> In_union_eq -> From_list_single.
+Proof.
+    constructor. intros. apply in_double. intros. rew_in_eq. 
+    split; introv Hx.
+    inverts Hx; iauto.
+    inverts Hx.
+    apply Mem_here.
+    apply Mem_next; assumption.
+Qed.
 
 Global Instance from_list_in_from_from_list_in_eq :
     forall `{BagFromList A U} `{BagIn A U},
@@ -164,6 +241,26 @@ Qed.
 
 End InclDouble.
 
+Section UnionDouble.
+Context `{BagIn A U} `{BagUnion U}.
+
+Global Instance union_empty_l_from_in_union :
+    forall `{BagEmpty U},
+    In_double -> In_empty_eq -> In_union_eq -> Union_empty_l.
+Proof. constructor. contain_by_in_double. Qed.
+
+End UnionDouble.
+
+Section InterDouble.
+Context `{BagIn A U} `{BagInter U}.
+
+Global Instance inter_empty_l_from_in_union :
+    forall `{BagEmpty U},
+    In_double -> In_empty_eq -> In_inter_eq -> Inter_empty_l.
+Proof. constructor. contain_by_in_double. Qed.
+
+End InterDouble.
+
 Section RemoveDouble.
 Context `{BagIn A U} `{BagRemove U U}.
 
@@ -218,15 +315,6 @@ Global Instance remove_inter_distrib_r_from_in_union_remove :
 Proof. constructor. contain_by_in_double. Qed.
 
 End RemoveInterDouble.
-
-Hint Rewrite @union_inter_distrib_l @union_inter_distrib_r
-    @inter_union_distrib_l @inter_union_distrib_r
-    @remove_union_distrib_r
-    @remove_inter_distrib_r
-    @union_assoc @inter_assoc
-    @union_empty_l @union_empty_r
-    @inter_empty_l @inter_empty_r
-    @remove_empty_l @remove_empty_r : rew_bag_simpl.
 
 (** DISCLAIMER: for the time being, this file only contains the
     operations for type fset, but not yet all the typeclasses 

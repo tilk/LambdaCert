@@ -462,7 +462,7 @@ Proof.
     introv Hrel Hjb Hlb.
     specializes Hrnoghost Hrel.
     eapply Hbisim; try eassumption.
-    eapply binds_update_diff_inv; try eassumption; auto.
+    eapply binds_update_diff_inv; try eassumption; auto. 
     unfolds heaps_bisim_rnoghost.
     prove_bag.
 Qed.
@@ -557,24 +557,26 @@ Proof.
     introv He. eapply ih_stat_leq; try eassumption; omega.
 Qed.
 
-(* TODO move this lemma! *)
-Lemma get_closure_aux_lemma : forall k st clo, LjsCommon.get_closure_aux k st (L.value_closure clo) = L.result_some clo.
-Proof.
-    destruct k; reflexivity.
-Qed.
-
-Lemma get_closure_lemma : forall st clo, LjsCommon.get_closure st (L.value_closure clo) = L.result_some clo.
-Proof.
-    intros. unfolds. rewrite get_closure_aux_lemma. reflexivity.
-Qed. 
-
+(* TODO move utility tactic! *)
 Tactic Notation "if" tactic(t1) "then" tactic(t2) := match True with _ => (try (t1; fail 1); fail 1) || t2 end.
 
-Ltac ljs_apply := 
+(* TODO move S5-only tactics! *)
+Ltac ljs_inv_value_to_closure :=
     match goal with
-    | H1 : LjsCommon.get_closure _ ?e = L.result_some ?clo, H2 : L.closure_ctx ?clo _ = L.result_some _ |- _ =>
-        (try unfold e in H1); rewrite get_closure_lemma in H1; injects H1; injects H2
+    | H : L.value_to_closure _ ?v _ |- _ => 
+        unfold v in H; ljs_inv_value_to_closure 
+    | H : L.value_to_closure _ (L.value_closure _) _ |- _ =>
+        inverts H
     end.
+
+Ltac ljs_inv_closure_ctx :=
+    match goal with
+    | H : L.closure_ctx (L.closure_intro _ _ _ _) _ _ |- _ =>
+        let Hz := fresh "H" in
+        inverts H as Hz; repeat (inverts Hz as Hz) (* crunching Zip *)
+    end.
+
+Ltac ljs_apply := repeat (ljs_inv_value_to_closure || ljs_inv_closure_ctx).
 
 Ltac binds_inv := 
     match goal with
@@ -776,7 +778,10 @@ Proof.
     inverts Hlred.
     ljs_apply.
     repeat inv_fwd_ljs.
-
+    rewrite from_list_update in H3.
+    repeat rewrite from_list_empty in H3.
+    rew_bag_simpl in H3.
+(*    rew_bag_simpl in H3. *)
     binds_inv.
 
     inverts Hrel; try injects; jauto_js. 
@@ -1263,11 +1268,11 @@ Definition while_step k c e1 e2 e3 (p1 p2 : L.value * L.store) :=
     v2 = L.overwrite_value_if_empty v1 v.
 
 Definition while_final k c e1 e2 e3 v st' st r := 
-    L.red_exprh k c st' (L.expr_basic e1) (L.out_ter st r) /\ L.abort (L.out_ter st r) \/
-    L.red_exprh k c st' (L.expr_basic e1) (L.out_ter st (L.res_value L.value_false)) /\
+    L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st r) /\ L.abort (L.out_ter st r) \/
+    L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st (L.res_value L.value_false)) /\
         r = L.res_value v \/
     exists st'',
-    L.red_exprh k c st' (L.expr_basic e1) (L.out_ter st'' (L.res_value L.value_true)) /\ (
+    L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st'' (L.res_value L.value_true)) /\ (
     (exists v', L.red_exprh k c st'' (L.expr_basic e2) (L.out_ter st r) /\ 
         r = L.res_exception v') \/
     (exists s v', L.red_exprh k c st'' (L.expr_basic e2) (L.out_ter st (L.res_break s v')) /\ 
@@ -1286,26 +1291,6 @@ Definition while_unroll k c st0 ee1 ee2 ee3 st r :=
     Last l (v, st') /\
     while_final k c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) v st' st r.
 
-(* TODO state additional lemma in terms of while_body, think about contexts *)
-Lemma exprjs_while_lemma : forall k c st0 ee1 ee2 ee3 st r,
-    L.red_exprh k c st0 (L.expr_basic (E.ejs_to_ljs (E.expr_while ee1 ee2 ee3))) (L.out_ter st r) ->
-    exists k', (k' < k) % nat /\ while_unroll k' c st0 ee1 ee2 ee3 st r.
-Proof.
-    introv Hlred.
-    inv_fwd_ljs.
-(*
-    gen st0.
-    induction_wf IH : lt_wf k0.
-    introv Hlred.
-*)
-    repeat inv_fwd_ljs.
-    binds_inv.
-    match goal with 
-    H : context[@update ?t1 ?t2 ?t3 ?inst c "%while_loop" ?x] |- _ => 
-        sets c' : (@update t1 t2 t3 inst c "%while_loop" x) 
-    end.
-    inverts H6.
-(*    exists k0. split. omega. *)
 (* TODO move! S5-only theorem *)
 Lemma add_closure_lemma : forall c oi l e, exists c', 
     L.add_closure c oi l e = L.value_closure (L.closure_intro (to_list c') oi l e) /\ c' \c c.
@@ -1322,15 +1307,53 @@ Ltac ljs_add_closure :=
       let H' := fresh "H" in let Hc := fresh "Hc" in let c' := fresh "c" in
       destruct (add_closure_lemma c oi l e) as (c'&H'&Hc); rewrite H' in H; clear H'
     end.
-    ljs_add_closure. (* TODO combined tactic? *)
-    rewrite get_closure_lemma in *.
-    injects.
 
-
-    simpl in H8.
-    cbv in H5.
-    (* TODO *)
+Lemma ejs_while_body_lemma : forall k c c' st0 ee1 ee2 ee3 st r,
+    c' = (c \("%while_loop" := L.value_closure 
+        (L.closure_intro (to_list c) (Some "%while_loop") [] 
+            (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3))))) ->
+    L.red_exprh k c' st0 (L.expr_basic (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)))
+        (L.out_ter st r) ->
+    while_unroll k c st0 ee1 ee2 ee3 st r.
+Proof.
+    introv Heq Hlred.
+    inv_fwd_ljs.
+    ljs_out_redh_ter.
 Admitted.
+
+(*
+    gen st0.
+    induction_wf IH : lt_wf k0.
+    introv Hlred.
+*)
+
+(* TODO state additional lemma in terms of while_body, think about contexts *)
+Lemma exprjs_while_lemma : forall k c st0 ee1 ee2 ee3 st r,
+    L.red_exprh k c st0 (L.expr_basic (E.ejs_to_ljs (E.expr_while ee1 ee2 ee3))) (L.out_ter st r) ->
+    exists k', while_unroll k' c st0 ee1 ee2 ee3 st r /\ (k' < k) % nat.
+Proof.
+    introv Hlred.
+    repeat inv_fwd_ljs.
+    binds_inv.
+(*
+    match goal with 
+    H : context[@update ?t1 ?t2 ?t3 ?inst c "%while_loop" ?x] |- _ => 
+        sets c' : (@update t1 t2 t3 inst c "%while_loop" x) 
+    end.
+*)
+    inverts H6.
+(*    exists k0. split. omega. *)
+
+    ljs_add_closure. (* TODO combined tactic? *)
+Opaque to_list. (* TODO what to do? *)
+    ljs_apply.
+    rewrite from_list_empty in H8.
+    rew_bag_simpl in H8.
+    eexists. split.
+    eapply ejs_while_body_lemma. reflexivity. eapply L.red_exprh_weaken; try eassumption.
+    skip.
+    omega.
+Qed.
 
 Lemma red_stat_while_ok : forall k jls je jt,
     ih_stat k ->
@@ -1341,6 +1364,12 @@ Proof.
     unfolds js_stat_to_ljs. simpls. 
     apply label_set_invert_lemma in Hlred.
     destruct_hyp Hlred.
+    apply exprjs_while_lemma in Hlred0.
+    unfolds while_unroll.
+    destruct_hyp Hlred0.
+    destruct l;
+    inverts Hlred0.
+    induction l.
 Admitted.
 
 Lemma red_stat_return_ok : forall k oje,

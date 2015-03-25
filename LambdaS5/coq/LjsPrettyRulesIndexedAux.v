@@ -1,5 +1,6 @@
 Generalizable All Variables.
 Set Implicit Arguments.
+Require Import JsNumber.
 Require Import Utils.
 Require Import LjsShared.
 Require Import LjsSyntax.
@@ -12,7 +13,6 @@ Require Import LjsCommon.
 Require Import LjsValues.
 Require Import LjsOperators.
 Require Import LjsMonads.
-Require Import JsNumber.
 Require Import Coq.Strings.String.
 Import List.ListNotations.
 
@@ -91,6 +91,17 @@ Tactic Notation "ljs_out_redh_ter" := match goal with
     end.
 
 End Tactics.
+
+(***** WEAKENING *****)
+
+Lemma red_exprh_weaken : forall k c c' st ee o, 
+    c \c c' ->
+    red_exprh k c st ee o ->
+    red_exprh k c' st ee o.
+Proof.
+Admitted. (* TODO *)
+
+(***** DETERMINISM *****)
 
 Local Ltac determine := 
     match goal with

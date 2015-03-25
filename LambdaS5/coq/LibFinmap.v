@@ -27,6 +27,8 @@ Class Binds_double `{BagBinds A B T} :=
 Class Binds_deterministic `{BagBinds A B T} :=
     { binds_deterministic : forall E k x y, binds E k x -> binds E k y -> x = y }.
 
+(***** PROPERTIES RELATED TO BINDS *****)
+
 (* from_list *)
 Class From_list_binds_eq `{BagFromList (A * B) T} `{BagBinds A B T} := 
     { from_list_binds_eq : forall L k x, binds (from_list L) k x = Assoc k x L }.
@@ -163,6 +165,8 @@ Class Binds_update_diff `{BagBinds A B T} `{BagUpdate A B T} :=
 Class Binds_update_diff_inv `{BagBinds A B T} `{BagUpdate A B T} := 
     { binds_update_diff_inv : forall M k k' x x', k <> k' -> binds (M \(k' := x')) k x -> binds M k x }.
 
+(***** PROPERTIES RELATED TO INDEX *****)
+
 (* index *)
 Class Index_binds_eq `{BagIndex T A} `{BagBinds A B T} :=
     { index_binds_eq : forall M k, index M k = exists x, binds M k x }.
@@ -298,12 +302,12 @@ Class Remove_incl `{BagIncl T} `{BagRemove T T1} :=
 Class Restrict_incl `{BagIncl T} `{BagRestrict T T1} :=
     { restrict_incl : forall M S, M \| S \c M }.
 
-Instance Binds_double_eq_from_binds_double :
+Global Instance Binds_double_eq_from_binds_double :
     forall `{BagBinds A B T},
     Binds_double -> Binds_double_eq.
 Proof. constructor. introv I. apply binds_double. intros. rewrite I. iauto. Qed.
 
-Instance Binds_deterministic_from_read_option_binds :
+Global Instance Binds_deterministic_from_read_option_binds :
     forall `{BagBinds A B T} `{BagReadOption A B T},
     Read_option_binds_eq -> Binds_deterministic.
 Proof. 
@@ -314,27 +318,27 @@ Proof.
     reflexivity.
 Qed.
 
-Instance From_list_binds_from_from_list_binds_eq :
+Global Instance From_list_binds_from_from_list_binds_eq :
     forall `{BagFromList (A * B) T} `{BagBinds A B T},
     From_list_binds_eq -> From_list_binds.
 Proof. constructor. introv. rewrite from_list_binds_eq. auto. Qed.
 
-Instance From_list_binds_inv_from_from_list_binds_eq :
+Global Instance From_list_binds_inv_from_from_list_binds_eq :
     forall `{BagFromList (A * B) T} `{BagBinds A B T},
     From_list_binds_eq -> From_list_binds_inv.
 Proof. constructor. introv. rewrite from_list_binds_eq. auto. Qed.
 
-Instance To_list_binds_from_to_list_binds_eq :
+Global Instance To_list_binds_from_to_list_binds_eq :
     forall `{BagToList (A * B) T} `{BagBinds A B T},
     To_list_binds_eq -> To_list_binds.
 Proof. constructor. introv. rewrite to_list_binds_eq. auto. Qed.
 
-Instance To_list_binds_inv_from_to_list_binds_eq :
+Global Instance To_list_binds_inv_from_to_list_binds_eq :
     forall `{BagToList (A * B) T} `{BagBinds A B T},
     To_list_binds_eq -> To_list_binds_inv.
 Proof. constructor. introv. rewrite to_list_binds_eq. auto. Qed.
 
-Instance From_to_list_id_from_from_to_list_binds :
+Global Instance From_to_list_id_from_from_to_list_binds :
     forall `{BagFromList (A * B) T} `{BagToList (A * B) T} `{BagBinds A B T},
     Binds_double -> From_list_binds_eq -> To_list_binds_eq -> From_to_list_id.
 Proof.
@@ -343,12 +347,12 @@ Proof.
     iauto.
 Qed.
 
-Instance read_option_binds_from_read_option_binds_eq : 
+Global Instance read_option_binds_from_read_option_binds_eq : 
     forall `{BagReadOption A B T} `{BagBinds A B T},
     Read_option_binds_eq -> Read_option_binds.
 Proof. constructor. introv I. rewrite <- read_option_binds_eq. assumption. Qed.
 
-Instance read_option_binds_inv_from_read_option_binds_eq : 
+Global Instance read_option_binds_inv_from_read_option_binds_eq : 
     forall `{BagReadOption A B T} `{BagBinds A B T},
     Read_option_binds_eq -> Read_option_binds_inv.
 Proof. constructor. introv I. rewrite read_option_binds_eq. assumption. Qed.
@@ -357,7 +361,7 @@ Proof. constructor. introv I. rewrite read_option_binds_eq. assumption. Qed.
 Section BindsEmpty.
 Context `{BagBinds A B T} `{BagEmpty T}.
 
-Instance binds_empty_from_binds_empty_eq :
+Global Instance binds_empty_from_binds_empty_eq :
     Binds_empty_eq -> Binds_empty.
 Proof. constructor. introv. rewrite binds_empty_eq. auto. Qed.
 
@@ -367,29 +371,29 @@ End BindsEmpty.
 Section BindsSingleBind.
 Context `{BagBinds A B T} `{BagSingleBind A B T}.
 
-Instance binds_single_bind_same_eq_from_binds_single_bind_eq :
+Global Instance binds_single_bind_same_eq_from_binds_single_bind_eq :
     Binds_single_bind_eq -> Binds_single_bind_same_eq. 
 Proof. 
     constructor. intros. rewrite binds_single_bind_eq. rew_logic. 
     apply iff_intro; iauto.
 Qed.
 
-Instance binds_single_bind_same_from_binds_single_bind_same_eq :
+Global Instance binds_single_bind_same_from_binds_single_bind_same_eq :
     Binds_single_bind_same_eq -> Binds_single_bind_same. 
 Proof. constructor. intros. rewrite binds_single_bind_same_eq. reflexivity. Qed.
 
-Instance binds_single_bind_same_inv_from_binds_single_bind_same_eq :
+Global Instance binds_single_bind_same_inv_from_binds_single_bind_same_eq :
     Binds_single_bind_same_eq -> Binds_single_bind_same_inv. 
 Proof. constructor. introv I. rewrite binds_single_bind_same_eq in I. assumption. Qed.
 
-Instance binds_single_bind_diff_eq_from_binds_single_bind_eq :
+Global Instance binds_single_bind_diff_eq_from_binds_single_bind_eq :
     Binds_single_bind_eq -> Binds_single_bind_diff_eq. 
 Proof. 
     constructor. intros. rewrite binds_single_bind_eq. rew_logic. 
     apply iff_intro; iauto.
 Qed.
 
-Instance binds_single_bind_diff_from_binds_single_bind_diff_eq :
+Global Instance binds_single_bind_diff_from_binds_single_bind_diff_eq :
     Binds_single_bind_diff_eq -> Binds_single_bind_diff. 
 Proof. constructor. introv Hd. rewrite binds_single_bind_diff_eq; auto. Qed.
 
@@ -399,15 +403,15 @@ End BindsSingleBind.
 Section BindsUnion.
 Context `{BagBinds A B T} `{BagIndex T A} `{BagUnion T}.
 
-Instance binds_union_l_from_binds_union_eq :
+Global Instance binds_union_l_from_binds_union_eq :
     Binds_union_eq -> Binds_union_l.
 Proof. constructor. introv. rewrite binds_union_eq. auto. Qed.
 
-Instance binds_union_r_from_binds_union_eq :
+Global Instance binds_union_r_from_binds_union_eq :
     Binds_union_eq -> Binds_union_r.
 Proof. constructor. introv. rewrite binds_union_eq. auto. Qed.
 
-Instance binds_union_inv_from_binds_union_eq :
+Global Instance binds_union_inv_from_binds_union_eq :
     Binds_union_eq -> Binds_union_inv.
 Proof. constructor. introv. rewrite binds_union_eq. auto. Qed.
 
@@ -417,31 +421,31 @@ End BindsUnion.
 Section BindsRemove.
 Context `{BagBinds A B T} `{BagIn A T1} `{BagRemove T T1}.
 
-Instance binds_remove_notin_eq_from_binds_remove_eq :
+Global Instance binds_remove_notin_eq_from_binds_remove_eq :
     Binds_remove_eq -> Binds_remove_notin_eq.
 Proof. constructor. introv Hin. rewrite binds_remove_eq. rew_logic. 
     apply iff_intro; iauto.
 Qed.
 
-Instance binds_remove_notin_from_binds_remove_notin_eq :
+Global Instance binds_remove_notin_from_binds_remove_notin_eq :
     Binds_remove_notin_eq -> Binds_remove_notin.
 Proof. constructor. introv Hin I. rewrite binds_remove_notin_eq; auto. Qed.
 
-Instance binds_remove_notin_inv_from_binds_remove_notin_eq :
+Global Instance binds_remove_notin_inv_from_binds_remove_notin_eq :
     Binds_remove_notin_eq -> Binds_remove_notin_inv.
 Proof. constructor. introv Hin I. rewrite binds_remove_notin_eq in I; auto. Qed.
 
-Instance binds_remove_in_eq_from_binds_remove_eq :
+Global Instance binds_remove_in_eq_from_binds_remove_eq :
     Binds_remove_eq -> Binds_remove_in_eq.
 Proof. constructor. introv Hin. rewrite binds_remove_eq. rew_logic. 
     apply iff_intro; iauto.
 Qed.
 
-Instance binds_remove_in_from_binds_remove_in_eq :
+Global Instance binds_remove_in_from_binds_remove_in_eq :
     Binds_remove_in_eq -> Binds_remove_in.
 Proof. constructor. introv Hin.  rewrite binds_remove_in_eq; auto. Qed.
 
-Instance binds_remove_inv_from_binds_remove_eq :
+Global Instance binds_remove_inv_from_binds_remove_eq :
     Binds_remove_eq -> Binds_remove_inv.
 Proof. constructor. introv Hb. rewrite binds_remove_eq in Hb. auto. Qed.
 
@@ -451,31 +455,31 @@ End BindsRemove.
 Section BindsRestrict.
 Context `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1}.
 
-Instance binds_restrict_in_eq_from_binds_restrict_eq :
+Global Instance binds_restrict_in_eq_from_binds_restrict_eq :
     Binds_restrict_eq -> Binds_restrict_in_eq.
 Proof. constructor. introv Hin. rewrite binds_restrict_eq. rew_logic. 
     apply iff_intro; iauto.
 Qed.
 
-Instance binds_restrict_in_from_binds_restrict_in_eq :
+Global Instance binds_restrict_in_from_binds_restrict_in_eq :
     Binds_restrict_in_eq -> Binds_restrict_in.
 Proof. constructor. introv Hin I. rewrite binds_restrict_in_eq; auto. Qed.
 
-Instance binds_restrict_in_inv_from_binds_restrict_in_eq :
+Global Instance binds_restrict_in_inv_from_binds_restrict_in_eq :
     Binds_restrict_in_eq -> Binds_restrict_in_inv.
 Proof. constructor. introv Hin I. rewrite binds_restrict_in_eq in I; auto. Qed.
 
-Instance binds_restrict_notin_eq_from_binds_restrict_eq :
+Global Instance binds_restrict_notin_eq_from_binds_restrict_eq :
     Binds_restrict_eq -> Binds_restrict_notin_eq.
 Proof. constructor. introv Hin. rewrite binds_restrict_eq. rew_logic. 
     apply iff_intro; iauto.
 Qed.
 
-Instance binds_restrict_notin_from_binds_restrict_notin_eq :
+Global Instance binds_restrict_notin_from_binds_restrict_notin_eq :
     Binds_restrict_notin_eq -> Binds_restrict_notin.
 Proof. constructor. introv Hin.  rewrite binds_restrict_notin_eq; auto. Qed.
 
-Instance binds_restrict_inv_from_binds_restrict_eq :
+Global Instance binds_restrict_inv_from_binds_restrict_eq :
     Binds_restrict_eq -> Binds_restrict_inv.
 Proof. constructor. introv Hb. rewrite binds_restrict_eq in Hb. auto. Qed.
 
@@ -485,33 +489,33 @@ End BindsRestrict.
 Section BindsUpdate.
 Context `{BagBinds A B T} `{BagUpdate A B T}.
 
-Instance binds_update_same_eq_from_binds_update_eq :
+Global Instance binds_update_same_eq_from_binds_update_eq :
     Binds_update_eq -> Binds_update_same_eq.
 Proof. 
     constructor. intros. rewrite binds_update_eq. rew_logic. 
     apply iff_intro; iauto.
 Qed.
 
-Instance binds_update_same_from_binds_update_same_eq :
+Global Instance binds_update_same_from_binds_update_same_eq :
     Binds_update_same_eq -> Binds_update_same.
 Proof. constructor. intros. rewrite binds_update_same_eq. reflexivity. Qed.
 
-Instance binds_update_same_inv_from_binds_update_same_eq :
+Global Instance binds_update_same_inv_from_binds_update_same_eq :
     Binds_update_same_eq -> Binds_update_same_inv.
 Proof. constructor. introv I. rewrite binds_update_same_eq in I. assumption. Qed.
 
-Instance binds_update_diff_eq_from_binds_update_eq :
+Global Instance binds_update_diff_eq_from_binds_update_eq :
     Binds_update_eq -> Binds_update_diff_eq.
 Proof. 
     constructor. intros. rewrite binds_update_eq. rew_logic. 
     apply iff_intro; iauto.
 Qed.
 
-Instance binds_update_diff_from_binds_update_diff_eq :
+Global Instance binds_update_diff_from_binds_update_diff_eq :
     Binds_update_diff_eq -> Binds_update_diff.
 Proof. constructor. intros. rewrite binds_update_diff_eq; assumption. Qed.
 
-Instance binds_update_diff_inv_from_binds_update_diff_eq :
+Global Instance binds_update_diff_inv_from_binds_update_diff_eq :
     Binds_update_diff_eq -> Binds_update_diff_inv.
 Proof. constructor. introv Hd I. rewrite binds_update_diff_eq in I; assumption. Qed.
 
@@ -521,11 +525,11 @@ End BindsUpdate.
 Section IndexBinds.
 Context `{BagIndex T A} `{BagBinds A B T}.
 
-Instance index_binds_from_index_binds_eq :
+Global Instance index_binds_from_index_binds_eq :
     Index_binds_eq -> Index_binds.
 Proof. constructor. introv I. rewrite index_binds_eq in I. assumption. Qed.
 
-Instance index_binds_inv_from_index_binds_eq :
+Global Instance index_binds_inv_from_index_binds_eq :
     Index_binds_eq -> Index_binds_inv.
 Proof. constructor. introv I. rewrite index_binds_eq. eauto. Qed.
 
@@ -535,7 +539,7 @@ End IndexBinds.
 Section IndexEmpty.
 Context `{BagIndex T A} `{BagEmpty T}.
 
-Instance index_empty_from_index_empty_eq :
+Global Instance index_empty_from_index_empty_eq :
     Index_empty_eq -> Index_empty.
 Proof. constructor. introv. rewrite index_empty_eq. auto. Qed. 
 
@@ -545,19 +549,19 @@ End IndexEmpty.
 Section IndexSingleBind.
 Context `{BagIndex T A} `{BagSingleBind A B T}.
 
-Instance index_single_bind_same_eq_from_index_single_bind_eq :
+Global Instance index_single_bind_same_eq_from_index_single_bind_eq :
     Index_single_bind_eq -> Index_single_bind_same_eq.
 Proof. constructor. introv. rewrite index_single_bind_eq. auto. Qed.
 
-Instance index_single_bind_same_from_index_single_bind_same_eq :
+Global Instance index_single_bind_same_from_index_single_bind_same_eq :
     Index_single_bind_same_eq -> Index_single_bind_same.
 Proof. constructor. introv. rewrite index_single_bind_same_eq. auto. Qed.
 
-Instance index_single_bind_diff_eq_from_index_single_bind_eq :
+Global Instance index_single_bind_diff_eq_from_index_single_bind_eq :
     Index_single_bind_eq -> Index_single_bind_diff_eq.
 Proof. constructor. introv. rewrite index_single_bind_eq. auto. Qed.
 
-Instance index_single_bind_diff_from_index_single_bind_diff_eq :
+Global Instance index_single_bind_diff_from_index_single_bind_diff_eq :
     Index_single_bind_diff_eq -> Index_single_bind_diff.
 Proof. constructor. introv Hd. rewrite index_single_bind_diff_eq; auto. Qed.
 
@@ -567,15 +571,15 @@ End IndexSingleBind.
 Section IndexUnion.
 Context `{BagIndex T A} `{BagUnion T}.
 
-Instance index_union_l_from_index_union_eq :
+Global Instance index_union_l_from_index_union_eq :
     Index_union_eq -> Index_union_l.
 Proof. constructor. introv. rewrite index_union_eq. auto. Qed.
 
-Instance index_union_r_from_index_union_eq :
+Global Instance index_union_r_from_index_union_eq :
     Index_union_eq -> Index_union_inv.
 Proof. constructor. introv. rewrite index_union_eq. auto. Qed.
 
-Instance index_union_inv_from_index_union_eq :
+Global Instance index_union_inv_from_index_union_eq :
     Index_union_eq -> Index_union_inv.
 Proof. constructor. introv. rewrite index_union_eq. auto. Qed.
 
@@ -585,29 +589,29 @@ End IndexUnion.
 Section IndexRemove.
 Context `{BagIndex T A} `{BagIn A T1} `{BagRemove T T1}.
 
-Instance index_remove_in_eq_from_index_remove_eq :
+Global Instance index_remove_in_eq_from_index_remove_eq :
     Index_remove_eq -> Index_remove_in_eq.
 Proof. 
     constructor. introv I. rewrite index_remove_eq. rew_logic. 
     apply iff_intro; intro; jauto; tryfalse.
 Qed.
 
-Instance index_remove_in_from_index_remove_in_eq :
+Global Instance index_remove_in_from_index_remove_in_eq :
     Index_remove_in_eq -> Index_remove_in.
 Proof. constructor. introv Hi. rewrite index_remove_in_eq; auto. Qed.
 
-Instance index_remove_notin_eq_from_index_remove_eq :
+Global Instance index_remove_notin_eq_from_index_remove_eq :
     Index_remove_eq -> Index_remove_notin_eq.
 Proof. 
     constructor. introv I. rewrite index_remove_eq. rew_logic. 
     apply iff_intro; intro; jauto; tryfalse.
 Qed.
 
-Instance index_remove_notin_from_index_remove_notin_eq :
+Global Instance index_remove_notin_from_index_remove_notin_eq :
     Index_remove_notin_eq -> Index_remove_notin.
 Proof. constructor. introv Hi. rewrite index_remove_notin_eq; auto. Qed.
 
-Instance index_remove_notin_inv_from_index_remove_notin_eq :
+Global Instance index_remove_notin_inv_from_index_remove_notin_eq :
     Index_remove_notin_eq -> Index_remove_notin_inv.
 Proof. constructor. introv Hi. rewrite index_remove_notin_eq; auto. Qed.
 
@@ -617,29 +621,29 @@ End IndexRemove.
 Section IndexRestrict.
 Context `{BagIndex T A} `{BagIn A T1} `{BagRestrict T T1}.
 
-Instance index_restrict_notin_eq_from_index_restrict_eq :
+Global Instance index_restrict_notin_eq_from_index_restrict_eq :
     Index_restrict_eq -> Index_restrict_notin_eq.
 Proof. 
     constructor. introv I. rewrite index_restrict_eq. rew_logic. 
     apply iff_intro; intro; jauto; tryfalse.
 Qed.
 
-Instance index_restrict_notin_from_index_restrict_notin_eq :
+Global Instance index_restrict_notin_from_index_restrict_notin_eq :
     Index_restrict_notin_eq -> Index_restrict_notin.
 Proof. constructor. introv Hi. rewrite index_restrict_notin_eq; auto. Qed.
 
-Instance index_restrict_in_eq_from_index_restrict_eq :
+Global Instance index_restrict_in_eq_from_index_restrict_eq :
     Index_restrict_eq -> Index_restrict_in_eq.
 Proof. 
     constructor. introv I. rewrite index_restrict_eq. rew_logic. 
     apply iff_intro; intro; jauto; tryfalse.
 Qed.
 
-Instance index_restrict_in_from_index_restrict_in_eq :
+Global Instance index_restrict_in_from_index_restrict_in_eq :
     Index_restrict_in_eq -> Index_restrict_in.
 Proof. constructor. introv Hi. rewrite index_restrict_in_eq; auto. Qed.
 
-Instance index_restrict_in_inv_from_index_restrict_in_eq :
+Global Instance index_restrict_in_inv_from_index_restrict_in_eq :
     Index_restrict_in_eq -> Index_restrict_in_inv.
 Proof. constructor. introv Hi. rewrite index_restrict_in_eq; auto. Qed.
 
@@ -649,51 +653,51 @@ End IndexRestrict.
 Section IndexUpdate.
 Context `{BagIndex T A} `{BagUpdate A B T}.
 
-Instance index_update_same_eq_from_index_update_eq : 
+Global Instance index_update_same_eq_from_index_update_eq : 
     Index_update_eq -> Index_update_same_eq.
 Proof. constructor. introv. rewrite index_update_eq. auto. Qed.
 
-Instance index_update_same_from_index_update_same_eq :
+Global Instance index_update_same_from_index_update_same_eq :
     Index_update_same_eq -> Index_update_same.
 Proof. constructor. introv. rewrite index_update_same_eq. auto. Qed.
 
-Instance index_update_index_from_index_update_eq : 
+Global Instance index_update_index_from_index_update_eq : 
     Index_update_eq -> Index_update_index.
 Proof. constructor. introv. rewrite index_update_eq. auto. Qed.
 
-Instance index_update_diff_eq_from_index_update_eq : 
+Global Instance index_update_diff_eq_from_index_update_eq : 
     Index_update_eq -> Index_update_diff_eq.
 Proof. 
     constructor. introv Hd. rewrite index_update_eq. rew_logic.
     apply iff_intro; intro; intuition jauto.
 Qed.
 
-Instance index_update_diff_from_index_update_diff_eq :
+Global Instance index_update_diff_from_index_update_diff_eq :
     Index_update_diff_eq -> Index_update_diff.
 Proof. constructor. introv Hd. rewrite index_update_diff_eq; eauto. Qed.
 
-Instance index_update_diff_inv_from_index_update_diff_eq :
+Global Instance index_update_diff_inv_from_index_update_diff_eq :
     Index_update_diff_eq -> Index_update_diff_inv.
 Proof. constructor. introv Hd. rewrite index_update_diff_eq; auto. Qed.
 
 End IndexUpdate.
 
-Instance fresh_index_from_fresh_index_eq : 
+Global Instance fresh_index_from_fresh_index_eq : 
     forall `{BagIndex T A} `{BagFresh A T}, 
     Fresh_index_eq -> Fresh_index.
 Proof. constructor. introv. rewrite fresh_index_eq. auto. Qed.
 
-Instance incl_binds_from_incl_binds_eq :
+Global Instance incl_binds_from_incl_binds_eq :
     forall `{BagIncl T} `{BagBinds A B T},
     Incl_binds_eq -> Incl_binds.
 Proof. constructor. introv. rewrite incl_binds_eq. auto. Qed.
 
-Instance incl_binds_inv_from_incl_binds_eq : 
+Global Instance incl_binds_inv_from_incl_binds_eq : 
     forall `{BagIncl T} `{BagBinds A B T},
     Incl_binds_eq -> Incl_binds_inv.
 Proof. constructor. introv. rewrite incl_binds_eq. auto. Qed.
 
-Instance incl_index_from_incl_binds :
+Global Instance incl_index_from_incl_binds :
     forall `{BagIncl T} `{BagIndex T A} `{BagBinds A B T},
     Index_binds_eq -> Incl_binds -> Incl_index.
 Proof. 
@@ -701,12 +705,12 @@ Proof.
     hint incl_binds. introv Hincl (x&Hbinds). iauto.
 Qed.
 
-Instance empty_incl_from_incl_binds :
+Global Instance empty_incl_from_incl_binds :
     forall `{BagIncl T} `{BagEmpty T} `{BagBinds A B T},
     Binds_empty_eq -> Incl_binds_eq -> Empty_incl.
 Proof. constructor. intro. rewrite incl_binds_eq. introv. rewrite binds_empty_eq. iauto. Qed.
 
-Instance incl_empty_from_incl_binds :
+Global Instance incl_empty_from_incl_binds :
     forall `{BagIncl T} `{BagEmpty T} `{BagBinds A B T},
     Binds_double -> Binds_empty_eq -> Incl_binds_eq -> Incl_empty.
 Proof. 
@@ -737,9 +741,11 @@ Hint Resolve
 Tactic Notation "prove_bag" :=
     solve [ eauto with bag typeclass_instances ].
 
-Hint Rewrite @binds_empty_eq @binds_single_bind_eq @binds_union_eq
+Hint Rewrite 
+    @binds_empty_eq @binds_single_bind_eq @binds_union_eq
     @binds_remove_eq @binds_restrict_eq
     @binds_update_eq @incl_binds_eq @index_binds_eq  
+    @from_list_binds_eq @to_list_binds_eq
     using (eauto with typeclass_instances) : rew_binds_eq.
 
 Tactic Notation "rew_binds_eq" :=
@@ -766,7 +772,44 @@ Ltac binds_determine :=
         let H := fresh "H" in asserts H : (v1 = v2); [eauto using binds_deterministic | idtac]
     end.
 
-Instance update_nindex_incl_inst :
+Global Instance from_list_empty_from_from_list_binds_eq :
+    forall `{BagFromList (A * B) T} `{BagEmpty T} `{BagBinds A B T},
+    Binds_double -> From_list_binds_eq -> Binds_empty_eq -> From_list_empty.
+Proof.
+    constructor. apply binds_double. intros. rew_binds_eq. 
+    split; introv Hx; inverts Hx.
+Qed.
+
+Global Instance from_list_update_from_from_list_binds_eq :
+    forall `{BagFromList (A * B) T} `{BagUpdate A B T} `{BagBinds A B T},
+    Binds_double -> From_list_binds_eq -> Binds_update_eq -> From_list_update.
+Proof.
+    constructor. intros. apply binds_double. intros. rew_binds_eq. 
+    split; introv Hx.
+    inverts Hx; iauto.
+    destruct Hx as [(Hx1&Hx2)|(Hx1&Hx2)].
+    substs.
+    apply Assoc_here.
+    apply Assoc_next; assumption.
+Qed.
+
+Global Instance union_empty_l_from_binds_union :
+    forall `{BagBinds A B T} `{BagIndex T A} `{BagUnion T} `{BagEmpty T},
+    Binds_double -> Index_empty_eq -> Binds_empty_eq -> Binds_union_eq -> Union_empty_l.
+Proof.
+    constructor. unfolds. intros. eapply binds_double. intros. 
+    rewrite binds_union_eq, index_empty_eq. rew_binds_eq. rew_logic. iauto.
+Qed. 
+
+Global Instance union_empty_r_from_binds_union :
+    forall `{BagBinds A B T} `{BagIndex T A} `{BagUnion T} `{BagEmpty T},
+    Binds_double -> Index_empty_eq -> Binds_empty_eq -> Binds_union_eq -> Union_empty_r.
+Proof.
+    constructor. unfolds. intros. eapply binds_double. intros. 
+    rewrite binds_union_eq. rew_binds_eq. rew_logic. iauto.
+Qed. 
+
+Global Instance update_nindex_incl_inst :
     forall `{BagIncl T} `{BagUpdate A B T} `{BagIndex T A} `{BagBinds A B T},
     Index_binds_eq -> Incl_binds_eq -> Binds_update_eq -> Update_nindex_incl.
 Proof.
@@ -779,7 +822,7 @@ Proof.
     auto. 
 Qed.
 
-Instance remove_incl_inst :
+Global Instance remove_incl_inst :
     forall `{BagIncl T} `{BagRemove T T1} `{BagIn A T1} `{BagBinds A B T},
     Binds_remove_eq -> Incl_binds_eq -> Remove_incl.
 Proof.
@@ -789,7 +832,7 @@ Proof.
     iauto.
 Qed.
 
-Instance restrict_incl_inst :
+Global Instance restrict_incl_inst :
     forall `{BagIncl T} `{BagRestrict T T1} `{BagIn A T1} `{BagBinds A B T},
     Binds_restrict_eq -> Incl_binds_eq -> Restrict_incl.
 Proof.
@@ -799,7 +842,7 @@ Proof.
     iauto.
 Qed.
 
-Instance index_empty_eq_inst : 
+Global Instance index_empty_eq_inst : 
     forall `{BagIndex T A} `{BagBinds A B T} `{BagEmpty T},
     Index_binds_eq -> Binds_empty_eq -> Index_empty_eq.
 Proof.
@@ -809,7 +852,7 @@ Proof.
     tryfalse.
 Qed.
 
-Instance index_single_bind_eq_inst :
+Global Instance index_single_bind_eq_inst :
     forall `{BagIndex T A} `{BagBinds A B T} `{BagSingleBind A B T},
     Index_binds_eq -> Binds_single_bind_eq -> Index_single_bind_eq. 
 Proof.
@@ -818,7 +861,7 @@ Proof.
     jauto_set; rew_binds_eq in *; jauto.
 Qed.
 
-Instance index_union_eq_inst :
+Global Instance index_union_eq_inst :
     forall `{BagIndex T A} `{BagBinds A B T} `{BagUnion T},
     Index_binds_eq -> Binds_union_eq -> Index_union_eq.
 Proof.
@@ -829,7 +872,7 @@ Proof.
     destruct Hi; jauto_set; rewrites binds_union_eq; rewrites index_binds_eq; iauto.
 Qed.
 
-Instance index_remove_eq_inst :
+Global Instance index_remove_eq_inst :
     forall `{BagIndex T A} `{BagBinds A B T} `{BagIn A T1} `{BagRemove T T1},
     Index_binds_eq -> Binds_remove_eq -> Index_remove_eq.
 Proof.
@@ -838,7 +881,7 @@ Proof.
     jauto_set; rewrites binds_remove_eq in *; jauto.
 Qed.
 
-Instance index_restrict_eq_inst :
+Global Instance index_restrict_eq_inst :
     forall `{BagIndex T A} `{BagBinds A B T} `{BagIn A T1} `{BagRestrict T T1},
     Index_binds_eq -> Binds_restrict_eq -> Index_restrict_eq.
 Proof.
@@ -847,7 +890,7 @@ Proof.
     jauto_set; rewrites binds_restrict_eq in *; jauto.
 Qed.
 
-Instance index_update_eq_inst :
+Global Instance index_update_eq_inst :
     forall `{BagIndex T A} `{BagBinds A B T} `{BagUpdate A B T},
     Index_binds_eq -> Binds_update_eq -> Index_update_eq.
 Proof.
@@ -866,9 +909,9 @@ Class PickGreater A := { pick_greater : A -> A }.
 Class Minimal_lt `{Lt A} `{Minimal A} := { minimal_lt : forall a, lt minimal a }.
 Class PickGreater_lt `{Lt A} `{PickGreater A} := { pick_greater_lt : forall a, lt a (pick_greater a) }.
 
-Instance minimal_inst_nat : Minimal nat := 
+Global Instance minimal_inst_nat : Minimal nat := 
     { minimal := 0 }.
-Instance pick_greater_inst_nat : PickGreater nat := 
+Global Instance pick_greater_inst_nat : PickGreater nat := 
     { pick_greater := S }.
 
 (* Map signature (for hiding the implementation *)
