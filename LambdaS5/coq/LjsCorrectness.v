@@ -11,7 +11,6 @@ Require Import LjsOperators.
 Require Import LjsMonads.
 Require Import LjsInterpreter.
 Require Import JsNumber.
-Require Import Coq.Strings.String.
 
 Import ListNotations.
 
@@ -185,22 +184,61 @@ Qed.
 
 (* Utility lemmas *)
 
-Lemma value_to_closure_from_get_closure : forall st v clo,
-    get_closure st v = result_some clo -> value_to_closure st v clo.
+Lemma get_object_property_some_lemma : forall obj name attr,
+    get_object_property obj name = Some attr ->
+    binds (object_properties obj) name attr.
+Proof.
+    introv Hgop.
+    unfolds get_object_property.
+    eauto using read_option_binds.
+Qed.
+
+Lemma get_object_property_none_lemma : forall obj name,
+    get_object_property obj name = None ->
+    ~index (object_properties obj) name.
+Proof.
+    introv Hgop.
+    unfolds get_object_property.
+    eauto using read_option_not_index.
+Qed.
+
+Lemma object_property_is_from_get_property : forall st obj name oattr,
+    get_property st obj name = result_some oattr -> 
+    object_property_is st obj name oattr.
+Proof.
+    unfolds get_property.
+    introv. gen obj.
+    induction (card st); introv Hgp;
+    simpls;
+    (cases_match_option as Heq;
+    [apply get_object_property_some_lemma in Heq; injects; apply object_property_is_own; assumption | apply get_object_property_none_lemma in Heq]);
+    sets_eq v : (object_proto obj);
+    destruct v; tryfalse.
+    injects.
+    apply object_property_is_none; auto.
+    injects.
+    apply object_property_is_none; auto.
+    apply assert_get_object_from_ptr_out in Hgp.
+    destruct_hyp Hgp.
+    eapply object_property_is_proto; eauto using read_option_binds.
+Qed.
+
+Lemma value_is_closure_from_get_closure : forall st v clo,
+    get_closure st v = result_some clo -> value_is_closure st v clo.
 Proof.
     unfolds get_closure.
     introv. gen v.
     induction (card st); introv Hgc;
     destruct v; tryfalse.
     injects.
-    apply value_to_closure_closure.
+    apply value_is_closure_closure.
     simpl in Hgc.
     apply assert_get_object_from_ptr_out in Hgc.
     destruct_hyp Hgc.
-    eapply value_to_closure_code;
+    eapply value_is_closure_code;
     eauto using read_option_binds.
     injects.
-    apply value_to_closure_closure.
+    apply value_is_closure_closure.
 Qed.
 
 Lemma closure_ctx_from_get_closure_ctx : forall clo sl c,
@@ -215,7 +253,10 @@ Proof.
     eauto using closure_ctx_rec, closure_ctx_nonrec, zip_Zip.
 Qed.
 
-Hint Resolve value_to_closure_from_get_closure closure_ctx_from_get_closure_ctx.
+Hint Resolve 
+    object_property_is_from_get_property
+    value_is_closure_from_get_closure 
+    closure_ctx_from_get_closure_ctx.
 
 (* Tactics *)
 
@@ -749,9 +790,10 @@ Lemma eval_get_field_correct : forall runs c st e1 e2 o,
     eval_get_field runs c st e1 e2 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
-            exists ptr s oattrs, v1 = value_object ptr /\
+            exists ptr obj s oattrs, v1 = value_object ptr /\
                 v2 = value_string s /\
-                get_property st'' ptr s = result_some oattrs /\
+                st'' \(ptr?) = Some obj /\
+                get_property st'' obj s = result_some oattrs /\
                 ((oattrs = None /\ o = out_ter st'' (res_value value_undefined)) \/
                  (exists data, oattrs = Some (attributes_data_of data) /\
                     o = out_ter st'' (res_value (attributes_data_value data))) \/
@@ -764,7 +806,7 @@ Proof.
     cases_match_option;
     [cases_match_attributes | ];
     ljs_run_inv; jauto.
-    lets HR: apply_correct IH R.
+    lets HR: apply_correct IH R0.
     match goal with H : _ = value_object _ |- _ => inverts H end.
     intuition jauto.
 Qed.
@@ -778,7 +820,7 @@ Lemma eval_set_field_correct : forall runs c st e1 e2 e3 o,
                 exists ptr obj s oattrs, v1 = value_object ptr /\
                     st''' \(ptr?) = Some obj /\
                     v2 = value_string s /\
-                    get_property st''' ptr s = result_some oattrs /\
+                    get_property st''' obj s = result_some oattrs /\
                     ((oattrs = None /\ object_extensible obj = true /\
                         o = out_ter (st''' \(ptr := set_object_property obj s 
                             (attributes_data_of (attributes_data_intro v3 true true true)))) (res_value v3)) \/
@@ -1043,10 +1085,8 @@ Proof.
     lets H: eval_get_field_correct IH R.
     ljs_pretty_advance red_expr_get_field red_expr_get_field_1_abort.
     ljs_pretty_advance red_expr_get_field_1 red_expr_get_field_2_abort.
-    destruct H as (ptr&s&oattrs&Ho&Hs&Hp&H).
-    substs.
-    eapply red_expr_get_field_2; try eassumption.
-    branches H; repeat destruct_exists H; destructs H; substs.
+    destruct_hyp H;
+    eapply red_expr_get_field_2; try eauto using read_option_binds.
     eapply red_expr_get_field_3_no_field.
     eapply red_expr_get_field_3_get_field.
     eapply red_expr_get_field_3_getter; try eassumption.
@@ -1056,12 +1096,8 @@ Proof.
     ljs_pretty_advance red_expr_set_field red_expr_set_field_1_abort.
     ljs_pretty_advance red_expr_set_field_1 red_expr_set_field_2_abort.
     ljs_pretty_advance red_expr_set_field_2 red_expr_set_field_3_abort.
-    destruct H as (ptr&obj&s&oattrs&Hv&Ho&Hs&Hp&H).
-    rewrite read_option_binds_eq in Ho. 
-    substs.
-    eapply red_expr_set_field_3; try eassumption.
-    repeat destruct_or H; repeat destruct_exists H; destructs H; try subst o;
-    match goal with H : oattrs = _ |- _ => inverts H end.
+    destruct_hyp H;
+    eapply red_expr_set_field_3; try eauto using read_option_binds.
     eapply red_expr_set_field_4_add_field; eauto.
     eapply red_expr_set_field_4_unextensible_add; eauto. 
     eapply red_expr_set_field_4_unwritable; eauto. 

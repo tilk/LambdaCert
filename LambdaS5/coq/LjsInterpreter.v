@@ -220,10 +220,9 @@ Definition eval_object_decl runs c st (attrs : objattrs) (l : list (string * pro
 Definition eval_get_field runs c st (left_expr right_expr  : expr) : result :=
   if_eval_return runs c st left_expr (fun st left_loc =>
     if_eval_return runs c st right_expr (fun st right_loc =>
-      assert_get_object_ptr left_loc (fun ptr =>
+      assert_get_object st left_loc (fun obj =>
         assert_get_string right_loc (fun name =>
-          let res := get_property st ptr name in
-          if_result_some res (fun ret =>
+          if_result_some (get_property st obj name) (fun ret =>
             match ret with
             | Some (attributes_data_of data) => result_value st (attributes_data_value data)
             | Some (attributes_accessor_of acc) =>
@@ -247,7 +246,7 @@ Definition eval_set_field runs c st (left_expr right_expr new_val_expr : expr) :
         assert_get_object_ptr left_loc (fun left_ptr =>
           assert_get_string right_loc (fun name =>
             assert_get_object_from_ptr st left_ptr (fun object =>
-              if_result_some (get_property st left_ptr name) (fun ret =>
+              if_result_some (get_property st object name) (fun ret =>
                 match ret with
                 | Some (attributes_data_of data) =>
                   if attributes_data_writable data

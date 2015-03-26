@@ -265,13 +265,13 @@ Definition has_property store v1_loc v2 :=
   assert_get_object_ptr v1_loc (fun ptr =>
     match v2 with
     | value_string s =>
-      let res := get_property store ptr s in
-      if_result_some res (fun ret =>
-        match ret with
-        | Some _ => result_some value_true
-        | None => result_some value_false
-        end
-      )
+      assert_get_object_from_ptr store ptr (fun obj =>
+        if_result_some (get_property store obj s) (fun ret =>
+          match ret with
+          | Some _ => result_some value_true
+          | None => result_some value_false
+          end
+      ))
     | _ => result_fail "hasProperty expected a string."
     end
   )
@@ -343,14 +343,14 @@ Definition is_accessor store v1_loc v2 :=
   assert_get_object_ptr v1_loc (fun ptr =>
     match v2 with
     | value_string s =>
-      let res := get_property store ptr s in
-      if_result_some res (fun ret =>
-        match ret with
-        | Some (attributes_data_of _) => result_some value_false
-        | Some (attributes_accessor_of _) => result_some value_true
-        | None => result_fail "isAccessor topped out."
-        end
-      )
+      assert_get_object_from_ptr store ptr (fun obj =>
+        if_result_some (get_property store obj s) (fun ret =>
+          match ret with
+          | Some (attributes_data_of _) => result_some value_false
+          | Some (attributes_accessor_of _) => result_some value_true
+          | None => result_fail "isAccessor topped out."
+          end
+      ))
     | _ => result_fail "isAccessor expected an object and a string."
     end
   )

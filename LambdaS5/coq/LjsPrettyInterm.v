@@ -4,7 +4,6 @@ Require Import LjsShared.
 Require Import LjsSyntax.
 Require Import LjsCommon.
 Require Import LjsValues.
-Require Import Coq.Strings.String.
 
 Implicit Type st : store.
 Implicit Type e : expr.
@@ -137,12 +136,28 @@ Inductive abort : out -> Prop :=
 
 Hint Constructors abort.
 
-Inductive value_to_closure st : value -> closure -> Prop :=
-| value_to_closure_closure : forall clo, value_to_closure st (value_closure clo) clo
-| value_to_closure_code : forall ptr obj clo,
+Inductive object_property_is st : object -> prop_name -> option attributes -> Prop :=
+| object_property_is_own : forall obj name attr, 
+    binds (object_properties obj) name attr -> 
+    object_property_is st obj name (Some attr)
+| object_property_is_none : forall obj name,
+    ~index (object_properties obj) name ->
+    object_proto obj = value_null ->
+    object_property_is st obj name None
+| object_property_is_proto : forall obj obj' ptr name oattr,
+    ~index (object_properties obj) name ->
+    object_proto obj = value_object ptr ->
+    binds st ptr obj' ->
+    object_property_is st obj' name oattr ->
+    object_property_is st obj name oattr.
+
+Inductive value_is_closure st : value -> closure -> Prop :=
+| value_is_closure_closure : forall clo, 
+    value_is_closure st (value_closure clo) clo
+| value_is_closure_code : forall ptr obj clo,
     binds st ptr obj ->
-    value_to_closure st (object_code obj) clo ->
-    value_to_closure st (value_object ptr) clo.
+    value_is_closure st (object_code obj) clo ->
+    value_is_closure st (value_object ptr) clo.
 
 Inductive closure_ctx : closure -> list value -> ctx -> Prop :=
 | closure_ctx_nonrec : forall args_n args_v args lc body,

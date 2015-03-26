@@ -171,26 +171,27 @@ Parameter desugar_expr : string -> option expr.
 
 (* Gets a property recursively (the recursion limit is the size of the store) *)
 
-Fixpoint get_property_aux limit st ptr (name : prop_name) : resultof (option attributes) :=
-  match limit with
-  | 0 => result_bottom
-  | S limit' =>
-    assert_get_object_from_ptr st ptr (fun obj =>
-      match get_object_property obj name with
-      | Some prop => result_some (Some prop)
-      | None => 
-        match object_proto obj with
-        | value_object ptr =>
-          get_property_aux limit' st ptr name
-        | _ => result_some None
-        end
+Fixpoint get_property_aux limit st obj (name : prop_name) : resultof (option attributes) :=
+  match get_object_property obj name with
+  | Some prop => result_some (Some prop)
+  | None => 
+    match object_proto obj with
+    | value_object ptr =>
+      match limit with
+      | 0 => result_bottom
+      | S limit' =>
+        assert_get_object_from_ptr st ptr (fun obj =>
+          get_property_aux limit' st obj name
+        )
       end
-    )
+    | value_null => result_some None
+    | _ => result_fail "Invalid prototype chain."
+    end
   end
 .
 
-Definition get_property store ptr (name : prop_name) : resultof (option attributes) :=
-  get_property_aux (card store) store ptr name. 
+Definition get_property store obj (name : prop_name) : resultof (option attributes) :=
+  get_property_aux (card store) store obj name. 
 
 (* Finds a closure for a function call *)
 

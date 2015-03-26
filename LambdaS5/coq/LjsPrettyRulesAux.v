@@ -11,7 +11,6 @@ Require Import LjsValues.
 Require Import LjsOperators.
 Require Import LjsMonads.
 Require Import JsNumber.
-Require Import Coq.Strings.String.
 Import List.ListNotations.
 
 Open Scope list_scope.
@@ -35,8 +34,20 @@ Proof.
     inverts Hred; tryfalse; injects; jauto.
 Qed.
 
-Lemma value_to_closure_deterministic : forall st v clo clo',
-    value_to_closure st v clo -> value_to_closure st v clo' -> clo = clo'.
+Lemma object_property_is_deterministic : forall st obj name oattr oattr',
+    object_property_is st obj name oattr -> object_property_is st obj name oattr' -> oattr = oattr'.
+Proof.
+    introv Ho1.
+    induction Ho1; introv Ho2; inverts Ho2; 
+    repeat binds_determine; substs; tryfalse; try reflexivity; try (false; prove_bag).
+    rewrite H0 in H3.
+    injects.
+    binds_determine; substs.
+    auto.
+Qed.
+
+Lemma value_is_closure_deterministic : forall st v clo clo',
+    value_is_closure st v clo -> value_is_closure st v clo' -> clo = clo'.
 Proof.
     introv Hc1.
     induction Hc1; introv Hc2; inverts Hc2.
@@ -57,12 +68,20 @@ Qed.
 
 Module Export Tactics.
 
-Ltac value_to_closure_determine :=
+Ltac object_property_is_determine :=
     match goal with
-    | H1 : value_to_closure ?st ?v ?clo1, H2 : value_to_closure ?st ?v ?clo2 |- _ =>
+    | H1 : object_property_is ?st ?obj ?name ?oattr1, H2 : object_property_is ?st ?obj ?name ?oattr2 |- _ =>
+        not constr_eq oattr1 oattr2; 
+        not is_hyp (oattr1 = oattr2);
+        let H := fresh "H" in asserts H : (oattr1 = oattr2); [eauto using object_property_is_deterministic | idtac]
+    end.
+
+Ltac value_is_closure_determine :=
+    match goal with
+    | H1 : value_is_closure ?st ?v ?clo1, H2 : value_is_closure ?st ?v ?clo2 |- _ =>
         not constr_eq clo1 clo2; 
         not is_hyp (clo1 = clo2);
-        let H := fresh "H" in asserts H : (clo1 = clo2); [eauto using value_to_closure_deterministic | idtac]
+        let H := fresh "H" in asserts H : (clo1 = clo2); [eauto using value_is_closure_deterministic | idtac]
     end.
 
 Ltac closure_ctx_determine :=

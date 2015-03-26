@@ -59,6 +59,15 @@ Class Read_option_binds `{BagReadOption A B T} `{BagBinds A B T} :=
 Class Read_option_binds_inv `{BagReadOption A B T} `{BagBinds A B T} :=
     { read_option_binds_inv : forall M k x, binds M k x -> M \(k?) = Some x }.
 
+Class Read_option_not_index_eq `{BagReadOption A B T} `{BagIndex T A} :=
+    { read_option_not_index_eq : forall M k, (M \(k?) = None) = ~index M k }.
+
+Class Read_option_not_index `{BagReadOption A B T} `{BagIndex T A} :=
+    { read_option_not_index : forall M k, M \(k?) = None -> ~index M k }.
+
+Class Read_option_not_index_inv `{BagReadOption A B T} `{BagIndex T A} :=
+    { read_option_not_index_inv : forall M k, ~index M k -> M \(k?) = None }.
+
 (* empty *)
 Class Binds_empty_eq `{BagBinds A B T} `{BagEmpty T} :=
     { binds_empty_eq : forall k x, binds \{} k x = False }.
@@ -356,6 +365,34 @@ Global Instance read_option_binds_inv_from_read_option_binds_eq :
     forall `{BagReadOption A B T} `{BagBinds A B T},
     Read_option_binds_eq -> Read_option_binds_inv.
 Proof. constructor. introv I. rewrite read_option_binds_eq. assumption. Qed.
+
+Global Instance read_option_not_index_eq_from_read_option_binds_eq : 
+    forall `{BagReadOption A B T} `{BagBinds A B T} `{BagIndex T A},
+    Read_option_binds_eq -> Index_binds_eq -> Read_option_not_index_eq.
+Proof. 
+    constructor. introv.
+    rewrite index_binds_eq.
+    rew_logic.
+    split; introv I.
+    intros. rewrite <- read_option_binds_eq. intro Heq. rewrite Heq in I. tryfalse.
+    apply not_not_elim.
+    intro.
+    sets_eq o : (M\(k?)).
+    destruct o; tryfalse.
+    applys I b.
+    rewrite <- read_option_binds_eq.
+    auto.
+Qed.
+
+Global Instance read_option_not_index_from_read_option_not_index_eq :
+    forall `{BagReadOption A B T} `{BagIndex T A},
+    Read_option_not_index_eq -> Read_option_not_index.
+Proof. constructor. introv I. rewrite <- read_option_not_index_eq. assumption. Qed.
+
+Global Instance read_option_not_index_inv_from_read_option_not_index_eq :
+    forall `{BagReadOption A B T} `{BagIndex T A},
+    Read_option_not_index_eq -> Read_option_not_index_inv.
+Proof. constructor. introv I. rewrite read_option_not_index_eq. assumption. Qed.
 
 (* empty *)
 Section BindsEmpty.

@@ -1,7 +1,8 @@
 Generalizable All Variables.
 Set Implicit Arguments.
-Require Import LjsShared.
+Require Import JsNumber.
 Require Import Utils.
+Require Import LjsShared.
 Require Import LjsSyntax.
 Require Import LjsPrettyInterm.
 Require Import LjsPrettyRules.
@@ -13,8 +14,7 @@ Require Import LjsValues.
 Require Import LjsOperators.
 Require Import LjsMonads.
 Require Import LjsInterpreter.
-Require Import JsNumber.
-Require Import Coq.Strings.String.
+(* Require Import Coq.Strings.String. *)
 
 Import ListNotations.
 
@@ -159,25 +159,35 @@ Qed.
 
 (* Utility lemmas *)
 
-Lemma get_closure_from_value_to_closure : forall st v clo,
-    value_to_closure st v clo -> get_closure st v = result_some clo.
+Lemma get_property_from_object_property_is : forall st obj name oattr,
+    object_property_is st obj name oattr -> get_property st obj name = result_some oattr.
 Proof.
-    introv Hc. (* TODO! *)
-    skip.
-Qed.
+Admitted. (* TODO *)
+
+Lemma get_closure_from_value_is_closure : forall st v clo,
+    value_is_closure st v clo -> get_closure st v = result_some clo.
+Proof.
+Admitted. (* TODO *)
 
 Lemma get_closure_ctx_from_closure_ctx : forall clo sl c,
     closure_ctx clo sl c -> get_closure_ctx clo sl = result_some c.
 Proof.
     introv Hc.
-    skip. (* TODO *)
+    inverts Hc as Hzip;
+    simpl;
+    unfold add_parameters;
+    cases_match_option;
+    rewrite (Zip_zip Hzip) in *; tryfalse;
+    injects;
+    reflexivity.
 Qed.
 
 (* Useful tactics *)
 
 Ltac ljs_eval :=
     match goal with
-    | H : value_to_closure _ _ _ |- _ => apply get_closure_from_value_to_closure in H
+    | H : value_is_closure _ _ _ |- _ => apply get_closure_from_value_is_closure in H
+    | H : object_property_is _ _ _ _ |- _ => apply get_property_from_object_property_is in H
     | H : closure_ctx _ _ _ |- _ => apply get_closure_ctx_from_closure_ctx in H
     | H : binds ?c ?i _ |- assert_deref ?c ?i _ = _ => rewrite (assert_deref_lemma _ H)
     | H : runs_type_eval ?runs ?c ?st ?e = _ |- eval_cont ?runs ?c ?st ?e _ = _ => rewrite (eval_cont_lemma _ H)

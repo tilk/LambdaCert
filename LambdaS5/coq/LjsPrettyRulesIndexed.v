@@ -177,8 +177,9 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_get_field_1_abort : forall k c st e2 o,
     abort o ->
     red_exprh k c st (expr_get_field_1 o e2) o
-| red_exprh_get_field_2 : forall k c st' st ptr s oattr o,
-    get_property st ptr s = result_some oattr ->
+| red_exprh_get_field_2 : forall k c st' st ptr obj s oattr o,
+    binds st ptr obj ->
+    object_property_is st obj s oattr ->
     red_exprh k c st (expr_get_field_3 ptr oattr) o ->
     red_exprh k c st' (expr_get_field_2 (value_object ptr) (out_ter st (res_value (value_string s)))) o
 | red_exprh_get_field_2_abort : forall k c st v1 o,
@@ -212,8 +213,8 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_exprh k c st (expr_set_field_2 v1 o e3) o
 | red_exprh_set_field_3 : forall k c st' st ptr obj oattr s v3 v4 o,
-    get_property st ptr s = result_some oattr ->
     binds st ptr obj ->
+    object_property_is st obj s oattr ->
     red_exprh k c st (expr_set_field_4 ptr obj oattr s v3) o ->
     red_exprh k c st' (expr_set_field_3 (value_object ptr) (value_string s) (out_ter st (res_value v3))) o
 | red_exprh_set_field_3_abort : forall k c st v1 v2 o,
@@ -350,7 +351,7 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_exprh k c st (expr_app_1 o el) o
 | red_exprh_app_2 : forall k c c' st v clo vl o,
-    value_to_closure st v clo ->
+    value_is_closure st v clo ->
     closure_ctx clo vl c' ->
     red_exprh k c' st (closure_body clo) o ->
     red_exprh k c st (expr_app_2 v vl) o 

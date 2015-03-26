@@ -561,11 +561,11 @@ Qed.
 Tactic Notation "if" tactic(t1) "then" tactic(t2) := match True with _ => (try (t1; fail 1); fail 1) || t2 end.
 
 (* TODO move S5-only tactics! *)
-Ltac ljs_inv_value_to_closure :=
+Ltac ljs_inv_value_is_closure :=
     match goal with
-    | H : L.value_to_closure _ ?v _ |- _ => 
-        unfold v in H; ljs_inv_value_to_closure 
-    | H : L.value_to_closure _ (L.value_closure _) _ |- _ =>
+    | H : L.value_is_closure _ ?v _ |- _ => 
+        unfold v in H; ljs_inv_value_is_closure 
+    | H : L.value_is_closure _ (L.value_closure _) _ |- _ =>
         inverts H
     end.
 
@@ -576,7 +576,7 @@ Ltac ljs_inv_closure_ctx :=
         inverts H as Hz; repeat (inverts Hz as Hz) (* crunching Zip *)
     end.
 
-Ltac ljs_apply := repeat (ljs_inv_value_to_closure || ljs_inv_closure_ctx).
+Ltac ljs_apply := repeat (ljs_inv_value_is_closure || ljs_inv_closure_ctx).
 
 Ltac binds_inv := 
     match goal with
