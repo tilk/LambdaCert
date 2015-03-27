@@ -5,7 +5,7 @@
 
 Set Implicit Arguments.
 Require Import LibTactics LibList.
-Require Import LibSet LibLogic LibEqual LibReflect LibOrder LibOperation.
+Require Import LibRelation LibSet LibLogic LibEqual LibReflect LibOrder.
 Generalizable Variables A B T U.
 
 (* TODO MOVE!!!! to LibList later *)
@@ -51,6 +51,11 @@ End PropProperties.
 (* TODO should go to LibBag later *)
 Class BagFromList A T := { from_list : list A -> T }.
 Class BagToList A T := { to_list : T -> list A }.
+
+(* I wish!
+Notation "x '\notin' E" := (~x \in E) 
+     (at level 39) : container_scope.
+*)
 
 Class From_list_empty `{BagFromList A T} `{BagEmpty T} :=
     { from_list_empty : from_list nil = \{} }.
@@ -111,6 +116,27 @@ Class Remove_union_distrib_r `{BagUnion T} `{BagRemove T T} :=
 
 Class Remove_inter_distrib_r `{BagInter T} `{BagRemove T T} :=
     { remove_inter_distrib_r : distrib_r remove inter }.
+
+Class Disjoint_inter_eq `{BagDisjoint T} `{BagInter T} `{BagEmpty T} :=
+    { disjoint_inter_eq : forall E F, E \# F = (E \n F = \{}) }.
+
+Class Disjoint_inter `{BagDisjoint T} `{BagInter T} `{BagEmpty T} :=
+    { disjoint_inter : forall E F, E \# F -> E \n F = \{} }.
+
+Class Disjoint_inter_inv `{BagDisjoint T} `{BagInter T} `{BagEmpty T} :=
+    { disjoint_inter_inv : forall E F, E \n F = \{} -> E \# F }.
+
+Class Disjoint_in_eq `{BagDisjoint T} `{BagIn A T} :=
+    { disjoint_in_eq : forall E F, E \# F = (forall x, x \in E -> x \notin F) }.
+
+Class Disjoint_in `{BagDisjoint T} `{BagIn A T} :=
+    { disjoint_in : forall E F x, E \# F -> x \in E -> x \notin F }.
+
+Class Disjoint_in_inv `{BagDisjoint T} `{BagIn A T} :=
+    { disjoint_in_inv : forall E F, (forall x, x \in E -> x \notin F) -> E \# F }.
+
+Class Disjoint_sym `{BagDisjoint T} :=
+    { disjoint_sym : sym disjoint }.
 
 Hint Rewrite 
     @in_empty_eq @in_single_eq @in_union_eq @in_inter_eq
@@ -211,18 +237,16 @@ Proof.
     iauto.
 Qed.
 
+Section InclDouble.
+Context `{BagIn A U} `{BagIncl U}.
+
 Global Instance incl_in_from_incl_in_eq :
-    forall `{BagIn A T, BagIncl T},
     Incl_in_eq -> Incl_in.
 Proof. constructor. introv. rewrite incl_in_eq. auto. Qed.
 
 Global Instance incl_in_inv_from_incl_in_eq :
-    forall `{BagIn A T, BagIncl T},
     Incl_in_eq -> Incl_in_inv.
 Proof. constructor. introv. rewrite incl_in_eq. auto. Qed.
-
-Section InclDouble.
-Context `{BagIn A U} `{BagIncl U}.
 
 Global Instance empty_incl_from_incl_in :
     forall `{BagEmpty U},
@@ -240,6 +264,49 @@ Proof.
 Qed.
 
 End InclDouble.
+
+Section DisjointDouble.
+Context `{BagIn A U} `{BagDisjoint U}.
+
+Global Instance disjoint_in_from_disjoint_in_eq :
+    Disjoint_in_eq -> Disjoint_in.
+Proof. constructor. introv. rewrite disjoint_in_eq. auto. Qed.
+
+Global Instance disjoint_in_inv_from_disjoint_in_eq :
+    Disjoint_in_eq -> Disjoint_in_inv.
+Proof. constructor. introv. rewrite disjoint_in_eq. auto. Qed.
+
+Global Instance disjoint_inter_eq_from_disjoint_in_eq :
+    forall `{BagInter U} `{BagEmpty U},
+    In_double -> In_inter_eq -> In_empty_eq -> Disjoint_in_eq -> Disjoint_inter_eq.
+Proof.
+    constructor. introv. 
+    rewrite disjoint_in_eq. rew_logic. split; introv Hs.
+    apply in_double. intro. rew_in_eq. split; introv Hr. 
+    applys Hs; jauto.
+    iauto.
+    introv He Hf.
+    erewrite <- in_empty_eq.
+    rewrite <- Hs.
+    rew_in_eq.
+    iauto.
+Qed.
+
+Global Instance disjoint_inter_from_disjoint_inter_eq :
+    forall `{BagInter U} `{BagEmpty U},
+    Disjoint_inter_eq -> Disjoint_inter.
+Proof. constructor. introv. rewrite disjoint_inter_eq. auto. Qed.    
+
+Global Instance disjoint_inter_inv_from_disjoint_inter_eq :
+    forall `{BagInter U} `{BagEmpty U},
+    Disjoint_inter_eq -> Disjoint_inter_inv.
+Proof. constructor. introv. rewrite disjoint_inter_eq. auto. Qed.    
+
+Global Instance Disjoint_sym_from_disjoint_in_eq :
+    Disjoint_in_eq -> Disjoint_sym. 
+Proof. constructor. unfolds. introv. rewrite_all disjoint_in_eq. unfold notin. iauto. Qed.
+
+End DisjointDouble.
 
 Section UnionDouble.
 Context `{BagIn A U} `{BagUnion U}.
@@ -363,6 +430,7 @@ Parameter in_inter_eq_impl : forall x E1 E2, in_impl x (inter_impl E1 E2) = (in_
 Parameter in_remove_eq_impl : forall x E1 E2, in_impl x (remove_impl E1 E2) = (in_impl x E1 /\ ~in_impl x E2).
 
 Parameter incl_in_eq_impl : forall E1 E2, incl_impl E1 E2 = (forall x, in_impl x E1 -> in_impl x E2).
+Parameter disjoint_in_eq_impl : forall E1 E2, disjoint_impl E1 E2 = (forall x, in_impl x E1 -> ~in_impl x E2).
 
 Parameter from_list_in_eq_impl : forall L x, in_impl x (from_list_impl L) = Mem x L.
 Parameter to_list_in_eq_impl : forall E x, Mem x (to_list_impl E) = in_impl x E.
@@ -428,7 +496,7 @@ Definition union_impl E E' := build_fset (union_finite (proj2_sig E) (proj2_sig 
 Definition inter_impl E E' := build_fset (inter_finite (proj2_sig E) (proj2_sig E')).
 Definition remove_impl E E' := build_fset (remove_finite (proj2_sig E) (proj2_sig E')).
 Definition incl_impl E E' := forall x, in_impl x E -> in_impl x E'.
-Definition disjoint_impl E E' := inter_impl E E' = empty_impl.
+Definition disjoint_impl E E' := forall x, in_impl x E -> ~in_impl x E'.
 
 Definition listish (U : set A) :=
   exists L, forall x, Mem x L = is_in x U.
@@ -486,6 +554,9 @@ Lemma in_remove_eq_impl : forall x E1 E2, in_impl x (remove_impl E1 E2) = (in_im
 Proof. unfold in_impl, remove_impl. simpl. intros. rewrite in_remove_eq. auto*. Qed.
 
 Lemma incl_in_eq_impl : forall E1 E2, incl_impl E1 E2 = (forall x, in_impl x E1 -> in_impl x E2).
+Proof. auto. Qed.
+
+Lemma disjoint_in_eq_impl : forall E1 E2, disjoint_impl E1 E2 = (forall x, in_impl x E1 -> ~in_impl x E2).
 Proof. auto. Qed.
 
 Lemma from_list_in_eq_impl : forall L x, in_impl x (from_list_impl L) = Mem x L.
@@ -567,6 +638,9 @@ Global Instance in_double_inst : In_double (T := finset A) :=
 
 Global Instance incl_in_eq_inst : Incl_in_eq (T := finset A) :=
   { incl_in_eq := @FinsetImpl.incl_in_eq_impl _ }.
+
+Global Instance disjoint_in_eq_inst : Disjoint_in_eq (T := finset A) :=
+  { disjoint_in_eq := @FinsetImpl.disjoint_in_eq_impl _ }.
 
 Global Instance from_list_in_eq_inst : From_list_in_eq (T := finset A) :=
   { from_list_in_eq := @FinsetImpl.from_list_in_eq_impl _ }.

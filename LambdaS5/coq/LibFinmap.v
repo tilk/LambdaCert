@@ -174,6 +174,17 @@ Class Binds_update_diff `{BagBinds A B T} `{BagUpdate A B T} :=
 Class Binds_update_diff_inv `{BagBinds A B T} `{BagUpdate A B T} := 
     { binds_update_diff_inv : forall M k k' x x', k <> k' -> binds (M \(k' := x')) k x -> binds M k x }.
 
+(* disjoint *)
+
+Class Disjoint_binds_eq `{BagDisjoint T} `{BagBinds A B T} :=
+    { disjoint_binds_eq : forall E F, E \# F = (forall k x x', binds E k x -> ~binds F k x') }.
+
+Class Disjoint_binds `{BagDisjoint T} `{BagBinds A B T} :=
+    { disjoint_binds : forall E F k x x', E \# F -> binds E k x -> ~binds F k x' }.
+
+Class Disjoint_binds_inv `{BagDisjoint T} `{BagBinds A B T} :=
+    { disjoint_binds_inv : forall E F, (forall k x x', binds E k x -> ~binds F k x') -> E \# F }.
+
 (***** PROPERTIES RELATED TO INDEX *****)
 
 (* index *)
@@ -281,6 +292,17 @@ Class Index_update_diff `{BagIndex T A} `{BagUpdate A B T} :=
 
 Class Index_update_diff_inv `{BagIndex T A} `{BagUpdate A B T} :=
     { index_update_diff_inv : forall M k k' x', k <> k' -> index (M \(k' := x')) k -> index M k }.
+
+(* disjoint *)
+
+Class Disjoint_index_eq `{BagDisjoint T} `{BagIndex T A} :=
+    { disjoint_index_eq : forall E F, disjoint E F = (forall x, index E x -> ~index F x) }.
+
+Class Disjoint_index `{BagDisjoint T} `{BagIndex T A} :=
+    { disjoint_index : forall E F x, disjoint E F -> index E x -> ~index F x }.
+
+Class Disjoint_index_inv `{BagDisjoint T} `{BagIndex T A} :=
+    { disjoint_index_inv : forall E F, (forall x, index E x -> ~index F x) -> disjoint E F }.
 
 (* fresh *)
 Class Fresh_index_eq `{BagIndex T A} `{BagFresh A T} :=
@@ -724,18 +746,19 @@ Global Instance fresh_index_from_fresh_index_eq :
     Fresh_index_eq -> Fresh_index.
 Proof. constructor. introv. rewrite fresh_index_eq. auto. Qed.
 
+Section InclBinds.
+Context `{BagIncl T} `{BagBinds A B T}.
+
 Global Instance incl_binds_from_incl_binds_eq :
-    forall `{BagIncl T} `{BagBinds A B T},
     Incl_binds_eq -> Incl_binds.
 Proof. constructor. introv. rewrite incl_binds_eq. auto. Qed.
 
 Global Instance incl_binds_inv_from_incl_binds_eq : 
-    forall `{BagIncl T} `{BagBinds A B T},
     Incl_binds_eq -> Incl_binds_inv.
 Proof. constructor. introv. rewrite incl_binds_eq. auto. Qed.
 
 Global Instance incl_index_from_incl_binds :
-    forall `{BagIncl T} `{BagIndex T A} `{BagBinds A B T},
+    forall `{BagIndex T A},
     Index_binds_eq -> Incl_binds -> Incl_index.
 Proof. 
     constructor. introv. rewrite_all index_binds_eq.
@@ -743,12 +766,12 @@ Proof.
 Qed.
 
 Global Instance empty_incl_from_incl_binds :
-    forall `{BagIncl T} `{BagEmpty T} `{BagBinds A B T},
+    forall `{BagEmpty T},
     Binds_empty_eq -> Incl_binds_eq -> Empty_incl.
 Proof. constructor. intro. rewrite incl_binds_eq. introv. rewrite binds_empty_eq. iauto. Qed.
 
 Global Instance incl_empty_from_incl_binds :
-    forall `{BagIncl T} `{BagEmpty T} `{BagBinds A B T},
+    forall `{BagEmpty T},
     Binds_double -> Binds_empty_eq -> Incl_binds_eq -> Incl_empty.
 Proof. 
     constructor. intro. rewrite incl_binds_eq.
@@ -757,22 +780,70 @@ Proof.
     intros. substs. auto.
 Qed.
 
+End InclBinds.
+
+Section DisjointBinds.
+Context `{BagDisjoint T} `{BagBinds A B T}.
+
+Global Instance disjoint_binds_from_disjoint_binds_eq :
+    Disjoint_binds_eq -> Disjoint_binds.
+Proof. constructor. introv. rewrite disjoint_binds_eq. eauto. Qed.
+
+Global Instance disjoint_binds_inv_from_disjoint_binds_eq :
+    Disjoint_binds_eq -> Disjoint_binds_inv.
+Proof. constructor. introv. rewrite disjoint_binds_eq. eauto. Qed.
+
+Global Instance disjoint_index_eq_from_disjoint_binds_eq :
+    forall `{BagIndex T A},
+    Disjoint_binds_eq -> Index_binds_eq -> Disjoint_index_eq.
+Proof. 
+    constructor. introv. rewrite disjoint_binds_eq. 
+    rew_logic. split; introv Hb; introv.
+    rewrite_all index_binds_eq. rew_logic. jauto.
+    specializes Hb k.
+    rewrite_all index_binds_eq in Hb.
+    jauto.
+Qed.
+
+Global Instance Disjoint_sym_from_disjoint_binds_eq :
+    Disjoint_binds_eq -> Disjoint_sym. 
+Proof. constructor. unfolds. introv. rewrite_all disjoint_binds_eq. iauto. Qed.
+
+End DisjointBinds.
+
+Section DisjointIndex.
+Context `{BagDisjoint T} `{BagIndex T A}.
+
+Global Instance disjoint_index_from_disjoint_index_eq :
+    Disjoint_index_eq -> Disjoint_index.
+Proof. constructor. introv. rewrite disjoint_index_eq. eauto. Qed.
+
+Global Instance disjoint_binds_inv_from_disjoint_index_eq :
+    Disjoint_index_eq -> Disjoint_index_inv.
+Proof. constructor. introv. rewrite disjoint_index_eq. eauto. Qed.
+
+End DisjointIndex.
+
 Create HintDb bag discriminated.
 
 Hint Resolve 
+    @in_empty @in_single_self
+    @in_union_l @in_union_r
+    @in_inter
     @binds_empty @binds_single_bind_same @binds_single_bind_diff
     @binds_union_l @binds_union_r
     @binds_remove_in @binds_remove_notin
     @binds_restrict_in @binds_restrict_notin
     @binds_update_same @binds_update_diff 
-    @index_binds_inv @fresh_index 
-    @incl_binds @update_nindex_incl 
-    @remove_incl @restrict_incl
     @index_empty @index_single_bind_same @index_single_bind_diff
     @index_union_l @index_union_r
     @index_remove_in @index_remove_notin
     @index_restrict_in @index_restrict_notin
     @index_update_same @index_update_index @index_update_diff
+    @index_binds_inv @fresh_index 
+    @incl_in @incl_index @incl_binds 
+    @update_nindex_incl @remove_incl @restrict_incl
+    @disjoint_in @disjoint_index @disjoint_binds
 : bag.
 
 Tactic Notation "prove_bag" :=
@@ -970,6 +1041,7 @@ Parameter single_bind_impl : A -> B -> finmap A B.
 Parameter index_impl : finmap A B -> A -> Prop.
 Parameter binds_impl : finmap A B -> A -> B -> Prop.
 Parameter incl_impl : finmap A B -> finmap A B -> Prop.
+Parameter disjoint_impl : finmap A B -> finmap A B -> Prop.
 Parameter read_impl : Inhab B -> finmap A B -> A -> B.
 Parameter read_option_impl : finmap A B -> A -> option B.
 Parameter union_impl : finmap A B -> finmap A B -> finmap A B.
@@ -982,6 +1054,8 @@ Parameter fresh_impl : Minimal A -> PickGreater A -> finmap A B -> A. (* TODO go
 Parameter binds_double_impl : forall M M', (forall k x, binds_impl M k x <-> binds_impl M' k x) -> M = M'.
 
 Parameter incl_binds_eq_impl : forall M1 M2, incl_impl M1 M2 = forall k x, binds_impl M1 k x -> binds_impl M2 k x.
+Parameter disjoint_binds_eq_impl : forall M1 M2, 
+    disjoint_impl M1 M2 = forall k x x', binds_impl M1 k x -> ~binds_impl M2 k x'.
 Parameter read_option_binds_eq_impl : forall M k x, (read_option_impl M k = Some x) = binds_impl M k x.
 Parameter binds_empty_eq_impl : forall k x, binds_impl empty_impl k x = False.
 Parameter binds_single_bind_eq_impl : forall k k' x x', 
@@ -1064,6 +1138,7 @@ Definition single_bind_impl k x : finmap := build_finmap (single_bind_finite k x
 Definition index_impl M k : Prop := index (proj1_sig M) k.
 Definition binds_impl M k x : Prop := binds (proj1_sig M) k x.
 Definition incl_impl M1 M2 : Prop := forall k x, binds_impl M1 k x -> binds_impl M2 k x.
+Definition disjoint_impl M1 M2 : Prop := forall k x x', binds_impl M1 k x -> ~binds_impl M2 k x'.
 Definition read_option_impl M k : option B := proj1_sig M k. (* TODO abstract it!!! change TLC *)
 Definition read_impl M k : B := proj1_sig M \(k).
 Definition union_impl M1 M2 : finmap := build_finmap (union_finite (proj2_sig M1) (proj2_sig M2)).
@@ -1098,6 +1173,9 @@ Admitted.
 
 Lemma incl_binds_eq_impl : forall M1 M2, incl_impl M1 M2 = forall k x, binds_impl M1 k x -> binds_impl M2 k x.
 Proof. unfold incl_impl. auto. Qed.
+Lemma disjoint_binds_eq_impl : forall M1 M2, 
+    disjoint_impl M1 M2 = forall k x x', binds_impl M1 k x -> ~binds_impl M2 k x'.
+Proof. unfold disjoint_impl. auto. Qed.
 Parameter binds_empty_eq_impl : forall k x, binds_impl empty_impl k x = False.
 Parameter binds_single_bind_eq_impl : forall k k' x x', 
     binds_impl (single_bind_impl k' x') k x = (k = k' /\ x = x').
@@ -1148,6 +1226,9 @@ Global Instance binds_inst : BagBinds A B (finmap A B) :=
 Global Instance incl_inst : BagIncl (finmap A B) :=
     { incl := @incl_impl _ _ }.
 
+Global Instance disjoint_inst : BagDisjoint (finmap A B) :=
+    { disjoint := @disjoint_impl _ _ }.
+
 Global Instance read_inst : BagRead A B (finmap A B) :=
     { read := @read_impl _ _ _ }.
 
@@ -1183,6 +1264,9 @@ Global Instance binds_double_inst : Binds_double :=
 
 Global Instance incl_binds_eq_inst : Incl_binds_eq :=
     { incl_binds_eq := @incl_binds_eq_impl _ _ }.
+
+Global Instance disjoint_binds_eq_inst : Disjoint_binds_eq :=
+    { disjoint_binds_eq := @disjoint_binds_eq_impl _ _ }.
 
 Global Instance read_option_binds_eq_inst : Read_option_binds_eq :=
     { read_option_binds_eq := @read_option_binds_eq_impl _ _ }.
