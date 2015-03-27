@@ -56,6 +56,7 @@ Implicit Type ptr : L.object_ptr.
 Implicit Type obj : L.object.
 Implicit Type re : L.result.
 Implicit Type r : L.res.
+Implicit Type props : L.object_props.
 
 Implicit Type jst : J.state.
 Implicit Type je : J.expr.
@@ -72,6 +73,9 @@ Implicit Type jobj : J.object.
 Implicit Type jrv : J.resvalue.
 Implicit Type jref : J.ref.
 Implicit Type jl : J.label.
+Implicit Type jer : J.env_record.
+Implicit Type jder : J.decl_env_record.
+Implicit Type jprops : J.object_properties_type.
 
 (* Desugaring for literals, expressions and statements. *)
 Definition js_literal_to_ljs jli := E.ejs_to_ljs (E.js_literal_to_ejs jli).
@@ -128,10 +132,10 @@ Inductive attributes_related BR : J.attributes -> L.attributes -> Prop :=
 (* Relates attributes of JS objects to LJS.
  * States that for every attribute name, the attribute is undefined in both JS and LJS objects,
  * or it's defined in both and related. *)
-Definition object_attributes_related BR jobj obj := forall s, 
-    ~J.Heap.indom (J.object_properties_ jobj) s /\ ~index (L.object_properties obj) s \/
+Definition object_properties_related BR jprops props := forall s, 
+    ~J.Heap.indom jprops s /\ ~index props s \/
     exists jptr ptr, 
-        J.Heap.binds (J.object_properties_ jobj) s jptr /\ binds (L.object_properties obj) s ptr /\
+        J.Heap.binds jprops s jptr /\ binds props s ptr /\
         attributes_related BR jptr ptr.
 
 (* Relates internal fields of JS objects to JLS. *)
@@ -142,15 +146,9 @@ Definition object_prim_related BR jobj obj :=
 (* Relates JS objects to LJS objects. *)
 Definition object_related BR jobj obj :=
     object_prim_related BR jobj obj /\
-    object_attributes_related BR jobj obj.
+    object_properties_related BR (J.object_properties_ jobj) (L.object_properties obj).
 
 (* Properties that must hold for heap bisimulations. *)
-Definition heaps_bisim_lfun BR :=
-    forall jptr ptr1 ptr2, BR jptr ptr1 -> BR jptr ptr2 -> ptr1 = ptr2.
-
-Definition heaps_bisim_rfun BR :=
-    forall jptr1 jptr2 ptr, BR jptr1 ptr -> BR jptr2 ptr -> jptr1 = jptr2.
-
 Definition heaps_bisim_ltotal BR jst :=
     forall jptr, J.object_indom jst jptr -> exists ptr, BR jptr ptr.
 
@@ -168,8 +166,8 @@ Definition heaps_bisim BR jst st := forall jptr ptr jobj obj,
 
 Record heaps_bisim_consistent BR jst st : Prop := {
     heaps_bisim_consistent_bisim : heaps_bisim BR jst st;
-    heaps_bisim_consistent_lfun : heaps_bisim_lfun BR;
-    heaps_bisim_consistent_rfun : heaps_bisim_rfun BR;
+    heaps_bisim_consistent_lfun : functional BR;
+    heaps_bisim_consistent_rfun : functional (flip BR);
     heaps_bisim_consistent_ltotal : heaps_bisim_ltotal BR jst;
     heaps_bisim_consistent_lnoghost : heaps_bisim_lnoghost BR jst;
     heaps_bisim_consistent_rnoghost : heaps_bisim_rnoghost BR st
@@ -220,21 +218,64 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
 Definition includes_init_ctx c :=
     forall i v v', binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'. 
 
+(* Relates declarative environment records *)
+Definition decl_env_record_related BR jder props := forall s,
+    ~J.Heap.indom jder s /\ ~index props s \/
+    exists jmut jv acc, 
+        J.Heap.binds jder s (jmut, jv) /\ 
+        binds props s (L.attributes_accessor_of acc) /\
+        True. (* TODO *)
+
+(* Relates environment records *)
+Inductive env_record_related BR : J.env_record -> L.object -> Prop :=
+| env_record_related_decl : forall jder obj,
+    decl_env_record_related BR jder (L.object_properties obj) ->
+    env_record_related BR (J.env_record_decl jder) obj
+(*
+| env_record_related_object :
+*)
+.
+
+(* Relates the lexical environment *)
+Inductive lexical_env_related BR jst jc c st : J.lexical_env -> L.value -> Prop :=
+| lexical_env_related_global : forall v,
+    binds c "%globalContext" v ->
+    lexical_env_related BR jst jc c st [J.env_loc_global_env_record] v
+| lexical_env_related_cons : forall jeptr jlenv jer ptr obj,
+    J.Heap.binds (J.state_env_record_heap jst) jeptr jer ->
+    binds st ptr obj ->
+    env_record_related BR jer obj ->
+    lexical_env_related BR jst jc c st jlenv (L.object_proto obj) ->
+    lexical_env_related BR jst jc c st (jeptr::jlenv) (L.value_object ptr)
+.
+
 (* Relates the lexical contexts *)
-Record execution_ctx_related BR jc c st := {
+Record execution_ctx_related BR jst jc c st := {
     execution_ctx_related_this_binding : forall v,
         binds c "%this" v ->
         value_related BR (J.execution_ctx_this_binding jc) v;
     execution_ctx_related_strictness_flag : forall v, 
         binds c "#strict" v ->
-        v = L.value_bool (J.execution_ctx_strict jc)
+        v = L.value_bool (J.execution_ctx_strict jc);
+    execution_ctx_related_lexical_env : forall v ptr obj,
+        binds c "%context" v ->
+        lexical_env_related BR jst jc c st (J.execution_ctx_lexical_env jc) v
+}.
+
+(* States that the variable environment and lexical environment exist *)
+Record env_records_exist jst jc := { 
+    env_record_exist_variable_env : 
+        Forall (J.Heap.indom (J.state_env_record_heap jst)) (J.execution_ctx_variable_env jc);
+    env_record_exist_lexical_env : 
+        Forall (J.Heap.indom (J.state_env_record_heap jst)) (J.execution_ctx_lexical_env jc)
 }.
 
 (* The complete set of invariants. *)
 Record state_invariant BR jst jc c st : Prop := {
     state_invariant_heaps_bisim_consistent : heaps_bisim_consistent BR jst st;
-    state_invariant_execution_ctx_related : execution_ctx_related BR jc c st;
-    state_invariant_includes_init_ctx : includes_init_ctx c
+    state_invariant_execution_ctx_related : execution_ctx_related BR jst jc c st;
+    state_invariant_includes_init_ctx : includes_init_ctx c;
+    state_invariant_env_records_exist : env_records_exist jst jc
 }.
 
 Definition concl_expr_value BR jst jc c st st' r je :=
@@ -450,7 +491,7 @@ Ltac solve_ijauto_js := solve [ijauto_js; solve_jauto_js].
 
 (* Lemmas about invariants *)
 
-Lemma heaps_bisim_nindex_preserved : forall BR jst st ptr obj,
+Lemma heaps_bisim_consistent_nindex_preserved : forall BR jst st ptr obj,
     ~index st ptr ->
     heaps_bisim_consistent BR jst st ->
     heaps_bisim_consistent BR jst (st \( ptr := obj)).
@@ -467,13 +508,23 @@ Proof.
     prove_bag.
 Qed.
 
-Lemma execution_ctx_nindex_preserved : forall BR jc c st ptr obj,
+Lemma lexical_env_related_nindex_preserved : forall BR jst jc c st ptr obj jle v,
     ~index st ptr ->
-    execution_ctx_related BR jc c st ->
-    execution_ctx_related BR jc c (st \( ptr := obj)).
+    lexical_env_related BR jst jc c st jle v ->
+    lexical_env_related BR jst jc c (st \( ptr := obj )) jle v.
+Proof.
+Admitted.
+
+Lemma execution_ctx_related_nindex_preserved : forall BR jst jc c st ptr obj,
+    ~index st ptr ->
+    execution_ctx_related BR jst jc c st ->
+    execution_ctx_related BR jst jc c (st \( ptr := obj)).
 Proof.
     introv Hni Hbi.
-    inverts Hbi; constructor; auto.
+    inverts Hbi; constructor.
+    auto.
+    auto.
+    intros. apply lexical_env_related_nindex_preserved; auto.
 Qed.
 
 Lemma state_invariant_nindex_preserved : forall BR jst jc c st ptr obj,
@@ -484,8 +535,9 @@ Proof.
     introv Hni Hinv.
     inverts Hinv.
     constructor.
-    apply heaps_bisim_nindex_preserved; auto.
-    apply execution_ctx_nindex_preserved; auto.
+    apply heaps_bisim_consistent_nindex_preserved; auto.
+    apply execution_ctx_related_nindex_preserved; auto.
+    assumption.
     assumption.
 Qed.
 
@@ -508,14 +560,24 @@ Proof.
     prove_bag.
 Qed.
 
-Lemma execution_ctx_related_incl_preserved : forall BR jc c c' st,
+Lemma lexical_env_related_incl_preserved : forall BR jst jc c c' st jle v,
     c' \c c ->
-    execution_ctx_related BR jc c st ->
-    execution_ctx_related BR jc c' st.
+    lexical_env_related BR jst jc c st jle v ->
+    lexical_env_related BR jst jc c' st jle v.
+Proof.
+Admitted.
+
+Lemma execution_ctx_related_incl_preserved : forall BR jst jc c c' st,
+    c' \c c ->
+    execution_ctx_related BR jst jc c st ->
+    execution_ctx_related BR jst jc c' st.
 Proof.
     introv Hincl Hrel.
     inverts Hrel.
-    constructor; prove_bag.
+    constructor.
+    prove_bag.
+    prove_bag.
+    intros; eapply lexical_env_related_incl_preserved; prove_bag.
 Qed.
 
 Lemma state_invariant_ctx_incl_preserved : forall BR jst jc c c' st,
@@ -529,6 +591,7 @@ Proof.
     assumption.
     eapply execution_ctx_related_incl_preserved; eassumption.
     eapply includes_init_ctx_incl_preserved; eassumption.
+    assumption.
 Qed.
 
 Hint Resolve state_invariant_ctx_incl_preserved : js_ljs.

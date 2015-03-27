@@ -2,8 +2,10 @@
 EjsFromJs.v
 EjsSyntax.v
 EjsToLjs.v
+LibBagExt.v
 LibFinmap.v
 LibFinset.v
+LibRel.v
 LjsAuxiliary.v
 LjsCommon.v
 LjsCompleteness.v
