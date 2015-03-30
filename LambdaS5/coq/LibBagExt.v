@@ -370,6 +370,35 @@ Class Index_update_diff `{BagIndex T A} `{BagUpdate A B T} :=
 Class Index_update_diff_inv `{BagIndex T A} `{BagUpdate A B T} :=
     { index_update_diff_inv : forall M k k' x', k <> k' -> index (M \(k' := x')) k -> index M k }.
 
+(* dom *)
+
+Class Dom_index_eq `{BagIndex T A} `{BagDom T T1} `{BagIn A T1} :=
+    { dom_index_eq : forall M x, x \in dom M = index M x }.
+
+Class Dom_index `{BagIndex T A} `{BagDom T T1} `{BagIn A T1} :=
+    { dom_index : forall M x, x \in dom M -> index M x }.
+
+Class Dom_index_inv `{BagIndex T A} `{BagDom T T1} `{BagIn A T1} :=
+    { dom_index_inv : forall M x, index M x -> x \in dom M }.
+
+Class Dom_empty `{BagEmpty T} `{BagEmpty T1} `{BagDom T T1} :=
+    { dom_empty : dom \{} = \{} }.
+
+Class Dom_single_bind `{BagSingleBind A B T} `{BagSingle A T1} `{BagDom T T1} :=
+    { dom_single_bind : forall k v, dom (k \:= v) = \{k} }.
+
+Class Dom_union `{BagUnion T} `{BagUnion T1} `{BagDom T T1} :=
+    { dom_union : forall M1 M2, dom (M1 \u M2) = dom M1 \u dom M2 }.
+
+Class Dom_remove `{BagRemove T T1} `{BagRemove T1 T1} `{BagDom T T1} :=
+    { dom_remove : forall M S, dom (M \- S) = dom M \- S }.
+
+Class Dom_restrict `{BagRestrict T T1} `{BagInter T1} `{BagDom T T1} :=
+    { dom_restrict : forall M S, dom (M \| S) = dom M \n S }.
+
+Class Dom_update `{BagUpdate A B T} `{BagSingle A T1} `{BagUnion T1} `{BagDom T T1} :=
+    { dom_update : forall M k v, dom (M \(k := v)) = \{k} \u dom M }.
+
 (* disjoint *)
 
 Class Disjoint_index_eq `{BagDisjoint T} `{BagIndex T A} :=
@@ -432,6 +461,27 @@ Tactic Notation "rew_in_eq" "*" "in" hyp(H) :=
     rew_in_eq in H; auto_star.
 
 Hint Rewrite 
+    @index_empty_eq @index_single_bind_eq @index_union_eq 
+    @index_remove_eq @index_restrict_eq @index_update_eq
+    using (eauto with typeclass_instances) : rew_index_eq.
+
+Tactic Notation "rew_index_eq" :=
+    autorewrite with rew_index_eq.
+Tactic Notation "rew_index_eq" "in" hyp(H) :=
+    autorewrite with rew_index_eq in H.
+Tactic Notation "rew_index_eq" "in" "*" :=
+    autorewrite with rew_index_eq in *.
+
+Tactic Notation "rew_index_eq" "~" :=
+    rew_index_eq; auto_tilde.
+Tactic Notation "rew_index_eq" "*" :=
+    rew_index_eq; auto_star.
+Tactic Notation "rew_index_eq" "~" "in" hyp(H) :=
+    rew_index_eq in H; auto_tilde.
+Tactic Notation "rew_index_eq" "*" "in" hyp(H) :=
+    rew_index_eq in H; auto_star.
+
+Hint Rewrite 
     @from_to_list_id
     @from_list_empty @from_list_update @from_list_single
     @union_inter_distrib_l @union_inter_distrib_r
@@ -442,6 +492,7 @@ Hint Rewrite
     @union_empty_l @union_empty_r
     @inter_empty_l @inter_empty_r
     @remove_empty_l @remove_empty_r 
+    @dom_empty @dom_single_bind @dom_union @dom_remove @dom_restrict @dom_update
     using (eauto with typeclass_instances) : rew_bag_simpl.
 
 Tactic Notation "rew_bag_simpl" :=
@@ -511,6 +562,16 @@ Qed.
 
 Section InclDouble.
 Context `{BagIn A U} `{BagIncl U}.
+
+Global Instance incl_order_from_incl_in :
+    In_double -> Incl_in_eq -> Incl_order.
+Proof.
+    constructor. constructor; repeat unfolds.
+    introv. rewrite incl_in_eq. auto.
+    introv Hi1 Hi2. rewrites incl_in_eq in *. auto.
+    introv Hi1 Hi2. rewrites incl_in_eq in *.
+    apply in_double. iauto.
+Qed.
 
 Global Instance incl_in_from_incl_in_eq :
     Incl_in_eq -> Incl_in.
@@ -1071,6 +1132,16 @@ Proof. constructor. introv. rewrite fresh_index_eq. auto. Qed.
 Section InclBinds.
 Context `{BagIncl T} `{BagBinds A B T}.
 
+Global Instance incl_order_from_incl_binds :
+    Binds_double -> Incl_binds_eq -> Incl_order.
+Proof.
+    constructor. constructor; repeat unfolds.
+    introv. rewrite incl_binds_eq. auto.
+    introv Hi1 Hi2. rewrites incl_binds_eq in *. auto.
+    introv Hi1 Hi2. rewrites incl_binds_eq in *.
+    apply binds_double. iauto.
+Qed.
+
 Global Instance incl_binds_from_incl_binds_eq :
     Incl_binds_eq -> Incl_binds.
 Proof. constructor. introv. rewrite incl_binds_eq. auto. Qed.
@@ -1146,6 +1217,67 @@ Proof. constructor. introv. rewrite disjoint_index_eq. eauto. Qed.
 
 End DisjointIndex.
 
+Section DomIndex.
+Context `{BagDom T T1} `{BagIndex T A} `{BagIn A T1}.
+
+Global Instance dom_index_from_dom_index_eq :
+    Dom_index_eq -> Dom_index.
+Proof. constructor. introv. rewrite dom_index_eq. auto. Qed.
+
+Global Instance dom_index_inv_from_dom_index_eq :
+    Dom_index_eq -> Dom_index_inv.
+Proof. constructor. introv. rewrite dom_index_eq. auto. Qed.
+
+Global Instance dom_empty_from_dom_index :
+    forall `{BagEmpty T} `{BagEmpty T1},
+    In_double -> Dom_index_eq -> In_empty_eq -> Index_empty_eq -> Dom_empty.
+Proof. 
+    constructor. apply in_double. intros. 
+    rew_in_eq. rewrite_all dom_index_eq. rew_index_eq. iauto.
+Qed.
+
+Global Instance dom_union_from_dom_index :
+    forall `{BagUnion T} `{BagUnion T1},
+    In_double -> Dom_index_eq -> In_union_eq -> Index_union_eq -> Dom_union. 
+Proof.
+    constructor. intros. apply in_double. intros.
+    rew_in_eq. rewrite_all dom_index_eq. rew_index_eq. iauto.
+Qed.
+
+Global Instance dom_remove_from_dom_index :
+    forall `{BagRemove T T1} `{BagRemove T1 T1},
+    In_double -> Dom_index_eq -> In_remove_eq -> Index_remove_eq -> Dom_remove. 
+Proof.
+    constructor. intros. apply in_double. intros.
+    rew_in_eq. unfolds notin. rewrite_all dom_index_eq. rewrite index_remove_eq. iauto.
+Qed.
+
+Global Instance dom_restrict_from_dom_index :
+    forall `{BagRestrict T T1} `{BagInter T1},
+    In_double -> Dom_index_eq -> In_inter_eq -> Index_restrict_eq -> Dom_restrict. 
+Proof.
+    constructor. intros. apply in_double. intros.
+    rew_in_eq. rewrite_all dom_index_eq. rewrite index_restrict_eq. iauto.
+Qed.
+
+Global Instance dom_single_bind_from_dom_index :
+    forall `{BagSingleBind A B T} `{BagSingle A T1},
+    In_double -> Dom_index_eq -> In_single_eq -> Index_single_bind_eq -> Dom_single_bind. 
+Proof.
+    constructor. intros. apply in_double. intros.
+    rew_in_eq. rewrite_all dom_index_eq. rew_index_eq. iauto.
+Qed.
+
+Global Instance dom_update_from_dom_index :
+    forall `{BagUpdate A B T} `{BagUnion T1} `{BagSingle A T1},
+    In_double -> Dom_index_eq -> In_union_eq -> In_single_eq -> Index_update_eq -> Dom_update. 
+Proof.
+    constructor. intros. apply in_double. intros.
+    rew_in_eq. rewrite_all dom_index_eq. rew_index_eq. iauto.
+Qed.
+
+End DomIndex.
+
 Create HintDb bag discriminated.
 
 Hint Resolve 
@@ -1167,6 +1299,13 @@ Hint Resolve
     @update_nindex_incl @remove_incl @restrict_incl
     @disjoint_in @disjoint_index @disjoint_binds
 : bag.
+
+Hint Extern 0 (?x \c ?x) => solve [apply incl_refl] : bag.
+Hint Extern 0 (?A \c ?C) => 
+    match goal with
+    | H : A \c ?B |- _ => apply (@incl_trans _ _ _ B A C H) 
+    | H : ?B \c C |- _ => apply ((fun bs1 bs2 => @incl_trans _ _ _ B A C bs2 bs1) H) 
+    end : bag. 
 
 Tactic Notation "prove_bag" :=
     solve [ eauto with bag typeclass_instances ].

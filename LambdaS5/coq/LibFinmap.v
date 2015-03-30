@@ -1,6 +1,6 @@
 Require Import LibTactics LibList LibListSorted.
 Require Import LibSet LibMap LibLogic LibEqual LibReflect LibOrder LibRelation.
-Require Import LibFinset LibBagExt.
+Require Import LibMapExt LibFinset LibBagExt.
 Require Import Utils.
 Generalizable Variable A R U B T.
 
@@ -90,7 +90,6 @@ Context {IA : Inhab A}.
 Context {IB : Inhab B}.
 Context {MMA : Minimal A}.
 Context {PGA : PickGreater A}.
-Context {ST : Lt_strict_total_order }.
 
 Definition finite (M : map A B) :=
   exists (S : finset A), forall x, index M x -> x \in S.
@@ -110,20 +109,22 @@ Set Implicit Arguments.
 
 Lemma finite_empty : finite \{}.
 Proof.
-  exists (\{} : finset A). 
-Admitted.
+  exists (\{} : finset A).
+  introv. rew_index_eq. iauto.
+Qed. 
 
 Lemma single_bind_finite : forall k x, finite (k \:= x).
 Proof.
   intros. exists \{k}. intros y. 
-Admitted.
+  rew_index_eq. rew_in_eq. auto.
+Qed.
 
 Lemma union_finite : forall U V : map A B,
   finite U -> finite V -> finite (U \u V).
 Proof.
   introv [S1 E1] [S2 E2]. exists (S1 \u S2). intros x.
-  rewrite in_union_eq. 
-Admitted.
+  rew_index_eq. rew_in_eq. iauto.
+Qed.
 
 Lemma remove_finite : forall U {S : set A}, finite U -> finite (U \- S).
 Proof.

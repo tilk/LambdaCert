@@ -88,8 +88,6 @@ Definition object_bisim := J.object_loc -> L.object_ptr -> Prop.
 
 Implicit Type BR : object_bisim.
 
-Definition bisim_subset : binary object_bisim := fun BR1 BR2 => forall jptr ptr, BR1 jptr ptr -> BR2 jptr ptr.
-
 (* Relates JS values to LJS values.
  * Note that this implies that LJS lambdas and empty are never seen directly by JS code. *)
 Inductive value_related BR : J.value -> L.value -> Prop :=
@@ -99,7 +97,7 @@ Inductive value_related BR : J.value -> L.value -> Prop :=
 | value_related_string : forall s, value_related BR (J.value_prim (J.prim_string s)) (L.value_string s)
 | value_related_bool : forall b, value_related BR (J.value_prim (J.prim_bool b)) (L.value_bool b)
 | value_related_object : forall jptr ptr, 
-    BR jptr ptr -> value_related BR (J.value_object jptr) (L.value_object ptr) 
+    (jptr, ptr) \in BR -> value_related BR (J.value_object jptr) (L.value_object ptr) 
 .
 
 (* Relates JS object attributes to LJS object attributes. *)
@@ -159,7 +157,7 @@ Definition heaps_bisim_rnoghost BR st :=
     forall jptr ptr, BR jptr ptr -> index st ptr.
 
 Definition heaps_bisim BR jst st := forall jptr ptr jobj obj, 
-     BR jptr ptr -> 
+     (jptr, ptr) \in BR -> 
      J.object_binds jst jptr jobj ->
      binds st ptr obj ->
      object_related BR jobj obj.
@@ -169,6 +167,7 @@ Record heaps_bisim_consistent BR jst st : Prop := {
     heaps_bisim_consistent_lfun : functional BR;
     heaps_bisim_consistent_rfun : functional (flip BR);
     heaps_bisim_consistent_ltotal : heaps_bisim_ltotal BR jst;
+(*    heaps_bisim_consistent_rtotal : heaps_bisim_rtotal BR st; TODO *)
     heaps_bisim_consistent_lnoghost : heaps_bisim_lnoghost BR jst;
     heaps_bisim_consistent_rnoghost : heaps_bisim_rnoghost BR st
 }.
@@ -281,21 +280,21 @@ Record state_invariant BR jst jc c st : Prop := {
 Definition concl_expr_value BR jst jc c st st' r je :=
     exists BR' jst' jr,
     state_invariant BR' jst' jc c st' /\
-    bisim_subset BR BR' /\
+    BR \c BR' /\
     J.red_expr jst jc (J.expr_basic je) (J.out_ter jst' jr) /\ 
     res_related BR jst' st' jr r.
 
 Definition concl_stat BR jst jc c st st' r jt :=
     exists BR' jst' jr,
     state_invariant BR' jst' jc c st' /\
-    bisim_subset BR BR' /\
+    BR \c BR' /\
     J.red_stat jst jc (J.stat_basic jt) (J.out_ter jst' jr) /\ 
     res_related BR' jst' st' jr r.
 
 Definition concl_spec {A : Type} BR jst jc c st st' r jes (P : object_bisim -> J.state -> A -> Prop) :=
     exists BR' jst',
     state_invariant BR' jst' jc c st' /\ 
-    bisim_subset BR BR' /\
+    BR \c BR' /\
     ((exists x, J.red_spec jst jc jes (J.specret_val jst' x) /\ P BR' jst' x) \/
      (exists jr, 
         J.red_spec jst jc jes (@J.specret_out A (J.out_ter jst' jr)) /\ 
@@ -596,6 +595,28 @@ Qed.
 
 Hint Resolve state_invariant_ctx_incl_preserved : js_ljs.
 
+Lemma value_related_bisim_incl_preserved : forall BR1 BR2 jv v,
+    BR1 \c BR2 ->
+    value_related BR1 jv v ->
+    value_related BR2 jv v.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel; jauto_js. 
+Qed.
+
+Hint Resolve value_related_bisim_incl_preserved : js_ljs.
+
+Lemma resvalue_related_bisim_incl_preserved : forall BR1 BR2 jrv v,
+    BR1 \c BR2 ->
+    resvalue_related BR1 jrv v ->
+    resvalue_related BR2 jrv v.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel; jauto_js.
+Qed.
+
+Hint Resolve resvalue_related_bisim_incl_preserved : js_ljs.
+
 (* Prerequisites *)
 
 Lemma ih_expr_leq : forall k k', (k' <= k)%nat -> ih_expr k -> ih_expr k'.
@@ -776,49 +797,6 @@ Ltac res_related_abort :=
     end.
 
 Ltac destr_concl_auto := destr_concl; res_related_abort; try ljs_handle_abort.
-
-(* Properties of bisim_subset *) 
-
-Lemma bisim_subset_refl : refl bisim_subset.
-Proof.
-    unfolds. intros. unfolds. auto.
-Qed.
-
-Lemma bisim_subset_trans : trans bisim_subset.
-Proof.
-    unfolds. introv S1 S2. unfolds bisim_subset. auto. 
-Qed.
-
-Hint Extern 0 (bisim_subset ?x ?x) => solve [apply bisim_subset_refl].
-Hint Extern 1 (bisim_subset ?A ?C) => 
-    match goal with
-    | H : bisim_subset A ?B |- _ => apply (@bisim_subset_trans B A C H)
-    | H : bisim_subset ?B C |- _ => apply ((fun bs1 bs2 => @bisim_subset_trans B A C bs2 bs1) H)
-    end : js_ljs.
-
-Lemma bisim_subset_preserves_value_related : forall BR1 BR2 jv v,
-    bisim_subset BR1 BR2 ->
-    value_related BR1 jv v ->
-    value_related BR2 jv v.
-Proof.
-    introv Hs Hrel.
-    unfolds in Hs.
-    inverts Hrel; jauto_js.
-Qed.
-
-Hint Resolve bisim_subset_preserves_value_related : js_ljs.
-
-Lemma bisim_subset_preserves_resvalue_related : forall BR1 BR2 jrv v,
-    bisim_subset BR1 BR2 ->
-    resvalue_related BR1 jrv v ->
-    resvalue_related BR2 jrv v.
-Proof.
-    introv Hs Hrel.
-    unfolds in Hs.
-    inverts Hrel; jauto_js.
-Qed.
-
-Hint Resolve bisim_subset_preserves_resvalue_related : js_ljs.
 
 (* Lemmas about operators *)
 

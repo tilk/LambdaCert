@@ -2,7 +2,7 @@
 
 Set Implicit Arguments.
 Require Import Utils.
-Require Import LibTactics LibLogic LibBool LibLogic LibProd LibSum LibBagExt.
+Require Import LibTactics LibLogic LibBool LibLogic LibProd LibSum LibSet LibBagExt.
 Require Export LibOperation.
 Generalizable Variables A B R.
 
@@ -31,7 +31,7 @@ Definition sequence {A B C} (R1 : rel A B) (R2 : rel B C) : rel A C := fun x y =
     exists z, R1 x z /\ R2 z y.
 
 Section Constructions2.
-Variable (A B : Type).
+Variables (A B : Type).
 Implicit Types R : rel A B.
 Implicit Types a : A.
 Implicit Types b : B.
@@ -63,13 +63,16 @@ Definition defined R :=
 Definition functional R :=
   forall a b b', R a b -> R a b' -> b = b'.
 
+Definition has_dom R (S1 : set A) (S2 : set B) :=
+  forall a b, R a b -> a \in S1 /\ b \in S2.
+
 End Constructions2.
 
 (* ---------------------------------------------------------------------- *)
 (** ** More on binary relations (to TLC? ) *)  
 
 Section Binary.
-Variable (A : Type).
+Variables (A : Type).
 Implicit Types R : rel A A.
 Implicit Types x y z : A.
 
@@ -136,3 +139,7 @@ Proof.
 Qed.    
 
 Global Opaque union_inst inter_inst empty_inst in_inst single_inst incl_inst.
+
+Lemma in_implies_rel : forall {A B} (R : rel A B) a b, (a, b) \in R -> R a b.
+Proof. auto. Qed.
+
