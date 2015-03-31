@@ -374,12 +374,17 @@ Ltac inv_ljs_in H :=
 
 Ltac inv_fwd_ljs_in H :=
     (inversions H; try ljs_abort; tryfalse); [idtac].
+
+Inductive inv_ljs_stop : L.ext_expr -> Prop := red_exprh_no_invert_intro : forall ee, inv_ljs_stop ee.
+
+Ltac inv_ljs_stop ee := let STOP := fresh "STOP" in lets STOP : red_exprh_no_invert_intro ee.
  
 Ltac with_red_exprh T :=
     match goal with
     | H	: L.red_exprh _ _ _ ?ee _ |- _ => 
         match ee with 
         | L.expr_app_2 _ _ => fail 1 (* so that lemmas can be easily applied *)
+        | _ => is_hyp (inv_ljs_stop ee); fail 1
         | _ => T H
         end
     end.
@@ -390,6 +395,7 @@ Ltac with_internal_red_exprh T :=
         match ee with 
         | L.expr_basic _ => fail 1
         | L.expr_app_2 _ _ => fail 1 (* so that lemmas can be easily applied *) 
+        | _ => is_hyp (inv_ljs_stop ee); fail 1
         | _ => T H
         end
     end.
@@ -660,7 +666,7 @@ Ltac ljs_inv_closure_ctx :=
         inverts H as Hz; repeat (inverts Hz as Hz) (* crunching Zip *)
     end.
 
-Ltac ljs_apply := repeat (ljs_inv_value_is_closure || ljs_inv_closure_ctx).
+Ltac ljs_apply := progress repeat (ljs_inv_value_is_closure || ljs_inv_closure_ctx).
 
 Ltac binds_inv := 
     match goal with
@@ -862,23 +868,21 @@ Proof.
 Qed.
 
 (* TODO move *)
-Lemma overwrite_value_if_empty_assoc : forall v1 v2 v3,
-    L.overwrite_value_if_empty (L.overwrite_value_if_empty v1 v2) v3 = 
-        L.overwrite_value_if_empty v1 (L.overwrite_value_if_empty v2 v3).
+Lemma overwrite_value_if_empty_assoc : assoc L.overwrite_value_if_empty.
 Proof.
-    destruct v3; reflexivity.
+    intros v1 v2 v3. destruct v3; reflexivity.
 Qed.
 
-Lemma overwrite_value_if_empty_left_empty : forall v,
-    L.overwrite_value_if_empty L.value_empty v = v.
+Lemma overwrite_value_if_empty_left_empty : 
+    neutral_l L.overwrite_value_if_empty L.value_empty.
 Proof.
-    destruct v; reflexivity.
+    intros v. destruct v; reflexivity.
 Qed.
 
-Lemma overwrite_value_if_empty_right_empty : forall v,
-    L.overwrite_value_if_empty v L.value_empty = v.
+Lemma overwrite_value_if_empty_right_empty : 
+    neutral_r L.overwrite_value_if_empty L.value_empty.
 Proof.
-    reflexivity.
+    intros v. reflexivity.
 Qed.
 
 Lemma res_overwrite_value_if_empty_lemma : forall jrv jr,
@@ -1224,55 +1228,67 @@ Proof.
     injects. reflexivity.
 Qed.
 
+Lemma red_exprh_le : forall k k' c st ee o, L.red_exprh k c st ee o -> (k <= k')%nat -> L.red_exprh k' c st ee o.
+Proof.
+    introv.
+    destruct (classic (k = k')).
+    subst. auto.
+    intros. 
+    asserts Hlt : (k < k')%nat. omega. 
+    eauto using L.red_exprh_lt.
+Qed.
+
+Inductive label_set_hyp jls s : L.res -> L.res -> Prop := 
+| label_set_hyp_break : forall jl v, 
+    Mem jl jls -> 
+    label_set_hyp jls s (L.res_break (E.js_label_to_ejs s jl) v) (L.res_value v)
+| label_set_hyp_nomatch : forall jl v,
+    ~Mem jl jls -> 
+    label_set_hyp jls s (L.res_break (E.js_label_to_ejs s jl) v) (L.res_break (E.js_label_to_ejs s jl) v)
+| label_set_hyp_fallthru : forall r,
+    (forall jl v, r <> L.res_break (E.js_label_to_ejs s jl) v) ->
+    label_set_hyp jls s r r.
+
 Lemma label_set_invert_lemma : forall jls k c st0 s ee st r,
     L.red_exprh k c st0 (L.expr_basic (E.ejs_to_ljs (E.js_label_set_to_labels s jls ee))) (L.out_ter st r) ->
-    exists k' r',
-    L.red_exprh k' c st0 (L.expr_basic (E.ejs_to_ljs ee)) (L.out_ter st r') /\
-    (k' <= k)%nat /\
-    (forall jl v, r' = L.res_break (E.js_label_to_ejs s jl) v -> Mem jl jls -> r = L.res_value v) /\
-    ((forall jl v, r' <> L.res_break (E.js_label_to_ejs s jl) v \/ ~Mem jl jls) -> r = r').
+    exists r',
+    L.red_exprh k c st0 (L.expr_basic (E.ejs_to_ljs ee)) (L.out_ter st r') /\
+    label_set_hyp jls s r' r.
 Proof.
     induction jls;
     introv Hlred.
-    jauto_set; eauto.
-    false_invert. 
+    jauto_set. eassumption. 
+    destruct (classic (forall jl v, r <> L.res_break (E.js_label_to_ejs s jl) v)).
+    eapply label_set_hyp_fallthru; auto.
+    rew_logic in H. destruct H as (jl&H).
+    rew_logic in H. destruct H as (v&H).
+    rew_logic in H. substs. 
+    eapply label_set_hyp_nomatch. trivial. 
+
     inverts Hlred as Hlred' Hlred''.
     ljs_out_redh_ter.
     specializes IHjls Hlred'. clear Hlred'.
-    destruct IHjls as (k'&r'&IHred&IHleq&IH1&IH2).
-    do 2 eexists. splits.
-    inverts Hlred''; eassumption. 
-    omega.
+    destruct IHjls as (r'&IHred&IHjls).
+    eexists.
+    splits.
+    inverts Hlred'';
+    (eapply red_exprh_le; [eassumption | omega]).
 
-    introv Hr Hmem.
-    substs. 
-    rewrite Mem_cons_eq in Hmem.
-    apply case_classic_r in Hmem.
-    destruct_hyp Hmem.
-    specializes IH1 Hmem. reflexivity. substs. inverts Hlred''. reflexivity.
-    specializes IH2 ___. introv.
-    destruct (classic (jl = a)) as [Haeq|Haneq]. 
-    substs. iauto.
-    left. intro Heq. injects Heq.
-    apply js_label_to_ejs_injective_label in H. substs. tryfalse.
-    substs. inverts Hlred'' as Hnobreak.
-    specializes Hnobreak st v.
-    reflexivity.
+    clear IHred.
+    inverts IHjls as HypIH; inverts Hlred'' as Hfff.
 
-    introv Hr.
-    specializes IH2 ___.
-    introv.
-    specializes Hr jl v.
-    destruct Hr. 
-    iauto.
-    right. intro Hmem. apply H. 
-    apply Mem_next. assumption.
-    substs.
-    inverts Hlred''.
-    reflexivity.
-    specializes Hr a v.
-    destruct Hr as [Hr|Hr]; false.
-    apply Hr. apply Mem_here. 
+    eapply label_set_hyp_break. apply Mem_next. assumption.
+    
+    eapply label_set_hyp_nomatch. intro Hmem.
+    inverts Hmem. eapply Hfff. reflexivity. tryfalse.
+
+    apply js_label_to_ejs_injective_label in Hfff. substs. 
+    eapply label_set_hyp_break. apply Mem_here.
+
+    apply label_set_hyp_fallthru.
+    introv Hr. substs. eapply HypIH. reflexivity.
+
+    false. eapply HypIH. reflexivity.
 Qed.
 
 (* TODO move *)
@@ -1293,23 +1309,32 @@ Fixpoint init {A : Type} (l : list A) :=
     | h :: t => h :: init t
     end.
 
+Lemma init_lemma : forall A l (a a' : A), 
+    init (a :: a' :: l) = a :: init (a' :: l).
+Proof. auto. Qed.
+
 Inductive First {A : Type} : list A -> A -> Prop :=
     | First_here : forall a t, First (a :: t) a.
 
 Inductive Last {A : Type} : list A -> A -> Prop :=
     | Last_here : forall a, Last [a] a
-    | Last_next : forall a h1 h2 t, Last (h1 :: h2 :: t) a -> Last (h2 :: t) a.
+    | Last_next : forall a h1 h2 t, Last (h2 :: t) a -> Last (h1 :: h2 :: t) a.
 
-Definition while_step k c e1 e2 e3 (p1 p2 : L.value * L.store) := 
-    let '(v1, st1) := p1 in let '(v2, st2) := p2 in 
+Definition while_step k c e1 e2 e3 st2 v2 st1 v1 : Prop := 
     exists st' st'' v v',
-    L.red_exprh k c st1 (L.expr_basic e1) (L.out_ter st' (L.res_value L.value_true)) /\
+    L.red_exprh k c st1 (L.expr_basic (E.to_bool e1)) (L.out_ter st' (L.res_value L.value_true)) /\
     L.red_exprh k c st' (L.expr_basic e2) (L.out_ter st'' (L.res_value v)) /\
     L.red_exprh k c st'' (L.expr_basic e3) (L.out_ter st2 (L.res_value v')) /\
     v2 = L.overwrite_value_if_empty v1 v.
 
-Definition while_final k c e1 e2 e3 v st' st r := 
+Definition while_final k c e1 e2 e3 st r st' v : Prop := 
+(*
     L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st r) /\ L.abort (L.out_ter st r) \/
+*)
+    (exists v', L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st r) /\
+        r = L.res_exception v') \/
+    (exists s v', L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st (L.res_break s v')) /\
+        r = L.res_break s (L.overwrite_value_if_empty v v')) \/
     L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st (L.res_value L.value_false)) /\
         r = L.res_value v \/
     exists st'',
@@ -1325,21 +1350,48 @@ Definition while_final k c e1 e2 e3 v st' st r :=
     (exists s v'', L.red_exprh k c st''' (L.expr_basic e3) (L.out_ter st (L.res_break s v'')) /\
         r = L.res_break s (L.overwrite_value_if_empty v (L.overwrite_value_if_empty v' v''))))). 
 
-Definition while_unroll k c st0 ee1 ee2 ee3 st r :=
-    exists l v st',
-    First l (L.value_empty, st0) /\
-    Forall2 (while_step k c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)) (init l) (tail l) /\
-    Last l (v, st') /\
-    while_final k c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) v st' st r.
+Inductive while_unroll k c e1 e2 e3 st r : L.store -> L.value -> Prop :=
+| while_unroll_final : forall st0 v0, 
+    while_final k c e1 e2 e3 st r st0 v0 -> 
+    while_unroll k c e1 e2 e3 st r st0 v0
+| while_unroll_step : forall st0 v0 st' v',
+    while_step k c e1 e2 e3 st' v' st0 v0 ->
+    while_unroll k c e1 e2 e3 st r st' v' ->
+    while_unroll k c e1 e2 e3 st r st0 v0.
+
+(*
+Definition while_unroll k c st0 e1 e2 e3 v st r : Prop :=
+    exists l v' st',
+    First l (v, st0) /\
+    Forall2 (while_step k c e1 e2 e3) (init l) (tail l) /\
+    Last l (v', st') /\
+    while_final k c st' e1 e2 e3 v' st r.
+
+Lemma while_ind : forall (P : L.value -> L.store -> Prop),
+    (forall k c st0 e1 e2 e3 v st r, while_final k c st0 e1 e2 e3 v st r -> P v st0) ->  
+    (forall k c e1 e2 e3 v1 st1 v2 st2, while_step k c e1 e2 e3 (v1, st1) (v2, st2) -> P v1 st1 -> P v2 st2) ->
+    forall k c st0 e1 e2 e3 v st r,
+    while_unroll k c st0 e1 e2 e3 v st r ->
+    P v st0.
+Proof.
+    introv Hbase Hstep Hwhile.
+    unfolds in Hwhile.
+    destruct Hwhile as (l&Hwhile).
+    gen st0. induction l; introv Hwhile;
+    destruct Hwhile as (v'&st1&Hfirst&Hforall&Hlast&Hfinal).
+    inverts Hfirst.
+    destruct l. inverts Hfirst. inverts Hlast. eexists. eauto.
+    inverts Hfirst. inverts Hlast as Hlast. inverts Hforall.
+    destruct p as (v'', st'').
+Qed.
+*)
 
 (* TODO move! S5-only theorem *)
-Lemma add_closure_lemma : forall c oi l e, exists c', 
-    L.add_closure c oi l e = L.value_closure (L.closure_intro (to_list c') oi l e) /\ c' \c c.
+(*
+Lemma add_closure_lemma : forall c oi l e, 
+    L.add_closure c oi l e = L.value_closure (L.closure_intro (to_list c') oi l e).
 Proof.
-    introv.
-    destruct oi;
-    eexists;
-    eauto using restrict_incl.
+    introv. eexists. reflexivity.
 Qed.
 
 Ltac ljs_add_closure := 
@@ -1348,51 +1400,295 @@ Ltac ljs_add_closure :=
       let H' := fresh "H" in let Hc := fresh "Hc" in let c' := fresh "c" in
       destruct (add_closure_lemma c oi l e) as (c'&H'&Hc); rewrite H' in H; clear H'
     end.
+*)
+
+Hint Extern 4 (L.red_exprh _ ?c ?st ?e ?r) =>
+    match goal with
+    | H : L.red_exprh _ c st e _ |- _ => 
+        eapply red_exprh_le; [eapply H | omega]
+    end.
+
+Lemma ljs_out_ter_cases : forall st r, (exists v, r = L.res_value v) \/ L.abort (L.out_ter st r).
+Proof. intros. destruct r; iauto. Qed.
+Ltac ljs_cases_res ee := 
+    match goal with
+    | H : L.red_exprh _ _ _ ee (L.out_ter ?st ?r) |- _ =>
+        is_var r;
+        let H := fresh "H" in let v := fresh "v" in
+        destruct (ljs_out_ter_cases st r) as [(v&H)|H]; [subst r | idtac] 
+    end.
+
+Ltac ljs_abort_inv := 
+    match goal with
+    | H : L.abort (L.out_ter _ _ ) |- _ => 
+        let H' := fresh "H" in
+        inverts H as H'; inverts H'
+    end.
+
+Lemma while_step_overwrite_lemma : forall k c e1 e2 e3 st v st0 v0 v',
+    while_step k c e1 e2 e3 st v st0 v0 ->
+    while_step k c e1 e2 e3 st (L.overwrite_value_if_empty v' v) st0 (L.overwrite_value_if_empty v' v0).
+Proof.
+    introv Hstep.
+    unfolds while_step.
+    destruct_hyp Hstep.
+    repeat eexists; eauto.
+    rewrite overwrite_value_if_empty_assoc. reflexivity.
+Qed.
+
+Lemma while_final_overwrite_value_lemma : forall k c e1 e2 e3 st st0 v v0 v',
+    while_final k c e1 e2 e3 st (L.res_value v) st0 v0 ->
+    while_final k c e1 e2 e3 st (L.res_value (L.overwrite_value_if_empty v' v)) 
+        st0 (L.overwrite_value_if_empty v' v0).
+Proof.
+    introv Hfinal.
+    unfolds while_final.
+    destruct_hyp Hfinal; repeat injects; tryfalse; iauto.
+Qed.
+
+Lemma while_unroll_overwrite_value_lemma : forall k c e1 e2 e3 st st0 v v0 v',
+    while_unroll k c e1 e2 e3 st (L.res_value v) st0 v0 ->
+    while_unroll k c e1 e2 e3 st (L.res_value (L.overwrite_value_if_empty v' v)) 
+        st0 (L.overwrite_value_if_empty v' v0).
+Proof.
+    introv Hwhile. 
+    inductions Hwhile.
+    (* final *)
+    eapply while_unroll_final.
+    eauto using while_final_overwrite_value_lemma.
+    (* step *)
+    eapply while_unroll_step.
+    eauto using while_step_overwrite_lemma.
+    assumption.
+Qed.
+
+Lemma while_final_overwrite_break_lemma : forall k c e1 e2 e3 st st0 v v0 v' s,
+    while_final k c e1 e2 e3 st (L.res_break s v) st0 v0 ->
+    while_final k c e1 e2 e3 st (L.res_break s (L.overwrite_value_if_empty v' v)) 
+        st0 (L.overwrite_value_if_empty v' v0).
+Proof. 
+    introv Hfinal.
+    unfolds while_final.
+    destruct_hyp Hfinal; repeat injects; tryfalse.
+    right. left. do 2 eexists. split. eassumption. rewrite overwrite_value_if_empty_assoc. reflexivity.
+    right. right. right. eexists. split. eassumption. 
+        right. left. do 2 eexists. split. eassumption. rewrite overwrite_value_if_empty_assoc. reflexivity.
+    right. right. right. eexists. split. eassumption. right. right. do 2 eexists. split. eassumption.
+        right. do 2 eexists. split. eassumption. rewrite overwrite_value_if_empty_assoc. reflexivity.
+Qed.
+
+Lemma while_unroll_overwrite_break_lemma : forall k c e1 e2 e3 st st0 v v0 v' s,
+    while_unroll k c e1 e2 e3 st (L.res_break s v) st0 v0 ->
+    while_unroll k c e1 e2 e3 st (L.res_break s (L.overwrite_value_if_empty v' v)) 
+        st0 (L.overwrite_value_if_empty v' v0).
+Proof.
+    introv Hwhile. 
+    inductions Hwhile.
+    (* final *)
+    eapply while_unroll_final.
+    eauto using while_final_overwrite_break_lemma.
+    (* step *)
+    eapply while_unroll_step.
+    eauto using while_step_overwrite_lemma.
+    assumption.
+Qed.
+
+Lemma while_final_exception_lemma : forall k c e1 e2 e3 st st0 v v0 v1,
+    while_final k c e1 e2 e3 st (L.res_exception v) st0 v0 ->
+    while_final k c e1 e2 e3 st (L.res_exception v) st0 v1.
+Proof.
+    introv Hfinal.
+    unfolds while_final.
+    destruct_hyp Hfinal; repeat injects; tryfalse.
+    iauto.
+    right. right. right. eexists. split. eassumption. left. iauto.
+    right. right. right. eexists. split. eassumption. 
+        right. right. do 2 eexists. split. eassumption. left. iauto. 
+Qed.
+
+Lemma while_step_exception_lemma : forall k c e1 e2 e3 st v st0 v0 v0',
+    while_step k c e1 e2 e3 st v st0 v0 -> exists v',
+    while_step k c e1 e2 e3 st v' st0 v0'.
+Proof.
+    introv Hstep.
+    unfolds while_step.
+    destruct_hyp Hstep.
+    repeat eexists; eauto. 
+Qed.
+
+Lemma while_unroll_exception_lemma : forall k c e1 e2 e3 st st0 v v0 v1,
+    while_unroll k c e1 e2 e3 st (L.res_exception v) st0 v0 ->
+    while_unroll k c e1 e2 e3 st (L.res_exception v) st0 v1.
+Proof.
+    introv Hwhile.
+    gen v1.
+    inductions Hwhile; intros.
+    (* final *)
+    eapply while_unroll_final.
+    eauto using while_final_exception_lemma.
+    (* step *)
+    forwards Hl : while_step_exception_lemma. eassumption.
+    destruct Hl as (v_arb&Hl).
+    eapply while_unroll_step; [apply Hl | eapply IHHwhile].
+Qed.
+
+Lemma while_final_leq_lemma : forall k k' c e1 e2 e3 st r st0 v0,
+    while_final k c e1 e2 e3 st r st0 v0 ->
+    (k' >= k)%nat -> 
+    while_final k' c e1 e2 e3 st r st0 v0.
+Proof.
+    introv Hfinal Hleq.
+    unfolds while_final.
+    destruct_hyp Hfinal; repeat (eexists || iauto || right).
+Qed.
+
+Lemma while_step_leq_lemma : forall k k' c e1 e2 e3 st v st0 v0,
+    while_step k c e1 e2 e3 st v st0 v0 ->
+    (k' >= k)%nat -> 
+    while_step k' c e1 e2 e3 st v st0 v0.
+Proof.
+    introv Hstep Hleq.
+    unfolds while_step.
+    destruct_hyp Hstep; repeat eexists; iauto.
+Qed.
+
+Lemma while_unroll_leq_lemma : forall k k' c e1 e2 e3 st r st0 v0,
+    while_unroll k c e1 e2 e3 st r st0 v0 ->
+    (k' >= k)%nat -> 
+    while_unroll k' c e1 e2 e3 st r st0 v0.
+Proof.
+    introv Hwhile Hleq.
+    inductions Hwhile.
+    (* final *)
+    eapply while_unroll_final.
+    eapply while_final_leq_lemma. eassumption. omega.
+    (* step *)
+    eapply while_unroll_step.
+    eapply while_step_leq_lemma. eassumption. omega.
+    eauto.
+Qed.
+
+(* TODO: move to utils *)
+Definition freeze (P : Prop) : Prop := P.
+Lemma freeze_intro : forall (P : Prop), P -> freeze P. Proof. auto. Qed. 
+Lemma freeze_elim : forall (P : Prop), freeze P -> P. Proof. auto. Qed.
+
+Opaque freeze. 
+
+Ltac freeze E := apply freeze_intro in E.
+Ltac unfreeze E := apply freeze_elim in E.
 
 Lemma ejs_while_body_lemma : forall k c c' st0 ee1 ee2 ee3 st r,
-    c' = (c \("%while_loop" := L.value_closure 
-        (L.closure_intro (to_list c) (Some "%while_loop") [] 
-            (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3))))) ->
-    L.red_exprh k c' st0 (L.expr_basic (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)))
+    c = (c' \("%while_loop" := L.value_closure
+        (L.closure_intro (to_list c') (Some "%while_loop") []
+        (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3))))) ->
+(*
+    binds c "%while_loop" (L.value_closure 
+        (L.closure_intro (to_list c') (Some "%while_loop") [] 
+            (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)))) ->
+*)
+    L.red_exprh k c st0 (L.expr_basic (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)))
         (L.out_ter st r) ->
-    while_unroll k c st0 ee1 ee2 ee3 st r.
+    while_unroll k c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) st r st0 L.value_empty.
 Proof.
-    introv Heq Hlred.
+    introv Hctx Heq.
+    asserts Hbinds : (binds c "%while_loop" (L.value_closure 
+        (L.closure_intro (to_list c') (Some "%while_loop") [] 
+            (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3))))).
+    substs. prove_bag.
+    freeze Hctx. 
+    inv_ljs_stop (L.expr_basic (E.to_bool (E.ejs_to_ljs ee1))).
+    inv_ljs_stop (L.expr_basic (E.ejs_to_ljs ee1)).
+    inv_ljs_stop (L.expr_basic (E.ejs_to_ljs ee2)).
+    gen st0 st r.
+    induction_wf IH : lt_wf k.
+    introv Hlred.
     inv_fwd_ljs.
     ljs_out_redh_ter.
-Admitted.
-
+    inv_internal_ljs. 
+    (* condition true *)
+    inv_fwd_ljs.
+    ljs_out_redh_ter.
+    inv_internal_ljs.
+    (* body returns a value *)
+    inv_fwd_ljs.
+    repeat ljs_out_redh_ter.
+    ljs_cases_res (L.expr_basic (E.ejs_to_ljs ee3)).
+    (* after returns a value *)
+    repeat inv_fwd_ljs.
+    binds_determine. substs.
+    inverts H9. (* TODO! *)
+    ljs_apply.
+    rewrite from_list_empty in H13.
+    repeat rew_bag_simpl in H13.
+    unfreeze Hctx.
+    rewrite <- Hctx in H13.
+    freeze Hctx.
+(* TODO REMAKE *)
 (*
-    gen st0.
-    induction_wf IH : lt_wf k0.
-    introv Hlred.
+    asserts Hmakeshift : (c\("%while_loop":=LjsSyntax.value_closure
+                             (LjsSyntax.closure_intro (to_list c)
+                                (Some "%while_loop") []
+                                (E.while_body (E.ejs_to_ljs ee1)
+                                   (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)))) = c). skip.
+    rewrite Hmakeshift in H13.
+    clear Hmakeshift.
 *)
+(* END REMAKE *)
+    specializes IH H13. omega.
+    eapply while_unroll_step.
+    repeat eexists. eauto. eauto. eauto.
+    inv_internal_ljs. 
+    rewrite overwrite_value_if_empty_left_empty.
+    eapply while_unroll_overwrite_value_lemma in IH.
+    rewrite overwrite_value_if_empty_right_empty in IH.
+    eapply while_unroll_leq_lemma. eassumption. omega.
+    eapply while_unroll_exception_lemma in IH.
+    eapply while_unroll_leq_lemma. eassumption. omega.
+    rewrite overwrite_value_if_empty_left_empty.
+    eapply while_unroll_overwrite_break_lemma in IH.
+    rewrite overwrite_value_if_empty_right_empty in IH.
+    eapply while_unroll_leq_lemma. eassumption. omega.    
+    (* after aborted *)
+    apply while_unroll_final. right. right. right. eexists. split. eauto. right. right. do 2 eexists. split. eauto.
+    ljs_abort_inv; repeat inv_fwd_ljs.
+    iauto.
+    right. do 2 eexists. rewrite overwrite_value_if_empty_left_empty. eauto.
+    (* body aborted *)
+    apply while_unroll_final. right. right. right. eexists. split. eauto.
+    ljs_abort_inv.
+    left. eexists. eauto.
+    right. left. do 2 eexists. rewrite overwrite_value_if_empty_left_empty. eauto. 
+    (* condition false *)
+    inv_fwd_ljs.
+    apply while_unroll_final. unfolds. iauto. 
+    (* condition aborted *)
+    apply while_unroll_final.
+    ljs_abort_inv.
+    left. iauto.
+    right. left. do 2 eexists. rewrite overwrite_value_if_empty_left_empty. eauto.
+Qed.
 
-(* TODO state additional lemma in terms of while_body, think about contexts *)
-Lemma exprjs_while_lemma : forall k c st0 ee1 ee2 ee3 st r,
-    L.red_exprh k c st0 (L.expr_basic (E.ejs_to_ljs (E.expr_while ee1 ee2 ee3))) (L.out_ter st r) ->
-    exists k', while_unroll k' c st0 ee1 ee2 ee3 st r /\ (k' < k) % nat.
+Lemma exprjs_while_lemma : forall k c c' st0 ee1 ee2 ee3 st r,
+    c = c'\("%while_loop":=LjsSyntax.value_closure (LjsSyntax.closure_intro (to_list c')
+        (Some "%while_loop") [] (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)))) ->
+    L.red_exprh k c' st0 (L.expr_basic (E.ejs_to_ljs (E.expr_while ee1 ee2 ee3))) (L.out_ter st r) ->
+    exists k', 
+    while_unroll k' c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) st r st0 L.value_empty /\ 
+    (k' < k) % nat.
 Proof.
-    introv Hlred.
+    introv Hctx Hlred.
+    substs.
     repeat inv_fwd_ljs.
     binds_inv.
-(*
-    match goal with 
-    H : context[@update ?t1 ?t2 ?t3 ?inst c "%while_loop" ?x] |- _ => 
-        sets c' : (@update t1 t2 t3 inst c "%while_loop" x) 
-    end.
-*)
-    inverts H6.
-(*    exists k0. split. omega. *)
+    inverts H6. (* TODO *)
 
-    ljs_add_closure. (* TODO combined tactic? *)
-Opaque to_list. (* TODO what to do? *)
+    unfolds L.add_closure.
     ljs_apply.
-    rewrite from_list_empty in H8.
+    rewrite from_list_empty in H8. (* TODO *)
     rew_bag_simpl in H8.
     eexists. split.
-    eapply ejs_while_body_lemma. reflexivity. eapply L.red_exprh_weaken; try eassumption.
-    skip.
+    eapply ejs_while_body_lemma. reflexivity. eassumption.
     omega.
 Qed.
 
@@ -1401,16 +1697,53 @@ Lemma red_stat_while_ok : forall k jls je jt,
     ih_expr k ->
     th_stat k (J.stat_while jls je jt).
 Proof.
+(*
     introv IHt IHe Hinv Hlred.
     unfolds js_stat_to_ljs. simpls. 
     apply label_set_invert_lemma in Hlred.
-    destruct_hyp Hlred.
-    apply exprjs_while_lemma in Hlred0.
+    destruct Hlred as (r'&Hlred&Hlabel).
+    apply (exprjs_while_lemma eq_refl) in Hlred.
+    sets_eq c' : (c\("%while_loop":=LjsSyntax.value_closure (LjsSyntax.closure_intro (to_list c)
+        (Some "%while_loop") [] (E.while_body (E.ejs_to_ljs (E.js_expr_to_ejs je)) 
+            (E.ejs_to_ljs (E.js_label_set_to_labels "%continue" jls (E.js_stat_to_ejs jt))) 
+            (E.ejs_to_ljs E.expr_undefined))))).
+    asserts Hinv' : (state_invariant BR jst jc c' st). skip. (* TODO *)
+    freeze EQc'.
+    destruct Hlred as (k'&Hwhile&Hk).
+    inductions Hwhile. (* as [st v Hfinal | st v st1 v1 Hstep Hwhile]. *)
+    unfolds while_final.
+    destruct_hyp H. (* TODO destruct step-by-step *)
+    (* Condition throws *)
+    skip.
+    (* Condition breaks *) 
+    skip. (* TODO EXPRESSIONS NEVER BREAK *)
+    (* Condition false *)
+    forwards_th red_spec_to_boolean_ok.
+    inverts Hlabel.
+    jauto_js.
+    injects. (* TODO extend jauto_js to handle this *)
+    jauto_js.
+    (* Condition true *)
+    (* Body throws *)
+    apply label_set_invert_lemma in H2.
+    destruct H2 as (r''&Hlred&Hlabel'). (* TODO add tactic *)
+    skip.
+    (* Body breaks *)
+    skip.
+    (* Body returns a value *)
+    (* After throws - impossible *)
+    false_invert.
+    (* After breaks - impossible *)
+    false_invert.
+    (* Induction step *)
+*)
+(*
     unfolds while_unroll.
     destruct_hyp Hlred0.
     destruct l;
     inverts Hlred0.
     induction l.
+*)
 Admitted.
 
 Lemma red_stat_return_ok : forall k oje,
