@@ -35,6 +35,7 @@ End E.
 
 Module J.
 Include JsSyntax.
+Include JsSyntaxAux.
 Include JsPreliminary.
 Include JsPrettyInterm.
 Include JsPrettyRules.
@@ -399,6 +400,8 @@ Ltac with_internal_red_exprh T :=
         | _ => T H
         end
     end.
+
+Ltac inv_ljs := with_red_exprh inv_ljs_in.
 
 Ltac inv_internal_ljs := with_internal_red_exprh inv_ljs_in.
 
@@ -895,15 +898,40 @@ Proof.
     reflexivity.    
 Qed.
 
-Lemma resvalue_related_overwrite_if_empty : forall BR jrv1 jrv2 v1 v2 jrt jl,
+Definition resvalue_overwrite_value_if_empty jrv1 jrv2 :=
+    ifb jrv2 = J.resvalue_empty then jrv1 else jrv2.
+
+Lemma resvalue_overwrite_value_if_empty_lemma : forall jrv1 jrv2 jrt jl,
+    J.res_value (J.res_overwrite_value_if_empty jrv1 (J.res_intro jrt jrv2 jl)) =
+        resvalue_overwrite_value_if_empty jrv1 jrv2.
+Proof.
+    introv. 
+    unfold J.res_overwrite_value_if_empty.
+    cases_if; substs; unfold resvalue_overwrite_value_if_empty; cases_if; reflexivity.
+Qed.
+
+Lemma resvalue_overwrite_value_if_empty_hint1 : forall jr jrv,
+    (If J.res_value jr <> J.resvalue_empty then J.res_value jr else jrv) =
+        J.res_value (J.res_overwrite_value_if_empty jrv jr).
+Proof.
+    intros. unfolds J.res_overwrite_value_if_empty. 
+    repeat cases_if; destruct jr; reflexivity. 
+Qed.
+
+Hint Rewrite resvalue_overwrite_value_if_empty_lemma : js_ljs.
+Hint Rewrite resvalue_overwrite_value_if_empty_hint1 : js_ljs.
+
+Hint Extern 20 => progress autorewrite with js_ljs.
+
+Lemma resvalue_related_overwrite_if_empty : forall BR jrv1 jrv2 v1 v2,
     resvalue_related BR jrv1 v1 ->
     resvalue_related BR jrv2 v2 ->
     resvalue_related BR 
-        (J.res_value (J.res_overwrite_value_if_empty jrv1 (J.res_intro jrt jrv2 jl))) 
+        (resvalue_overwrite_value_if_empty jrv1 jrv2) 
         (L.overwrite_value_if_empty v1 v2).
 Proof.
     introv Hrel1 Hrel2.
-    unfold J.res_overwrite_value_if_empty.
+    unfold resvalue_overwrite_value_if_empty.
     cases_if; substs. 
     (* empty *)
     inverts Hrel2.
@@ -912,6 +940,18 @@ Proof.
     destruct jrv2;
     inverts Hrel2 as Hvrel2; tryfalse.
     inverts Hvrel2; jauto_js.
+Qed.
+
+Lemma resvalue_related_res_overwrite_if_empty : forall BR jrv1 jrv2 v1 v2 jrt jl,
+    resvalue_related BR jrv1 v1 ->
+    resvalue_related BR jrv2 v2 ->
+    resvalue_related BR 
+        (J.res_value (J.res_overwrite_value_if_empty jrv1 (J.res_intro jrt jrv2 jl))) 
+        (L.overwrite_value_if_empty v1 v2).
+Proof.
+    introv Hrel1 Hrel2.
+    rewrite resvalue_overwrite_value_if_empty_lemma.
+    eauto using resvalue_related_overwrite_if_empty.
 Qed.
 
 Lemma res_related_value_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2,
@@ -923,7 +963,7 @@ Lemma res_related_value_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2,
 Proof.
     introv Hrel1 Hrel2. rewrite res_overwrite_value_if_empty_lemma.
     eapply res_related_normal. 
-    eauto using resvalue_related_overwrite_if_empty.
+    eauto using resvalue_related_res_overwrite_if_empty.
 Qed.
 
 Lemma res_related_break_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2 s jl,
@@ -936,7 +976,7 @@ Lemma res_related_break_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2 s 
 Proof.
     introv Hrel1 Hrel2 Hs. substs. rewrite res_overwrite_value_if_empty_lemma.
     eapply res_related_break. 
-    eauto using resvalue_related_overwrite_if_empty.
+    eauto using resvalue_related_res_overwrite_if_empty.
 Qed.
 
 Lemma res_related_continue_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2 s jl,
@@ -949,7 +989,7 @@ Lemma res_related_continue_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2
 Proof.
     introv Hrel1 Hrel2 Hs. substs. rewrite res_overwrite_value_if_empty_lemma.
     eapply res_related_continue. 
-    eauto using resvalue_related_overwrite_if_empty.
+    eauto using resvalue_related_res_overwrite_if_empty.
 Qed.
 
 Lemma res_related_return_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2,
@@ -961,21 +1001,48 @@ Lemma res_related_return_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2,
 Proof.
     introv Hrel1 Hrel2. rewrite res_overwrite_value_if_empty_lemma.
     eapply res_related_return. 
-    eauto using resvalue_related_overwrite_if_empty.
+    eauto using resvalue_related_res_overwrite_if_empty.
 Qed.
 
+Hint Resolve resvalue_related_overwrite_if_empty : js_ljs.
 Hint Resolve res_related_value_overwrite_if_empty : js_ljs.
 Hint Resolve res_related_break_overwrite_if_empty : js_ljs.
 Hint Resolve res_related_continue_overwrite_if_empty : js_ljs.
 Hint Resolve res_related_return_overwrite_if_empty : js_ljs.
+
+Lemma res_related_invert_continue : forall BR jst st jr jl v,
+    res_related BR jst st jr (L.res_break (E.js_label_to_ejs "%continue" jl) v) ->
+    exists jrv,
+    jr = J.res_intro J.restype_continue jrv jl /\
+    resvalue_related BR jrv v.
+Proof.
+    introv Hrel.
+    inverts Hrel.
+    destruct jl; destruct jl0; repeat injects; tryfalse; eauto.
+Qed.
+
+Lemma res_related_invert_break : forall BR jst st jr jl v,
+    res_related BR jst st jr (L.res_break (E.js_label_to_ejs "%break" jl) v) ->
+    exists jrv,
+    jr = J.res_intro J.restype_break jrv jl /\
+    resvalue_related BR jrv v.
+Proof.
+    introv Hrel.
+    inverts Hrel.
+    destruct jl; destruct jl0; repeat injects; tryfalse; eauto.
+Qed.
 
 Ltac res_related_invert :=
     match goal with
     | H : res_related ?BR ?jst ?st ?jr ?r |- _ =>
 (*      match goal with H1 : resvalue_related BR jst st _ _ |- _ => fail 2 | _ => idtac end; *)
         is_var jr; (* TODO better condition *)
-        inverts keep H
-    end.
+        match r with
+        | L.res_break (E.js_label_to_ejs "%continue" _) _ => 
+            lets (?jrv&?H1&?H2) : (res_related_invert_continue H); subst jr
+        | _ => inverts keep H 
+        end
+    end. 
 
 (* workaround *)
 Lemma stat_block_1_hint : forall (S0 S : JsSyntax.state) (C : JsSyntax.execution_ctx)
@@ -988,6 +1055,24 @@ Proof. intros. fold (J.res_normal jrv). jauto_js. Qed.
 Hint Resolve stat_block_1_hint : js_ljs.
 
 Hint Extern 11 => match goal with |- context [If _ then _ else _] => case_if end : js_ljs.
+
+Lemma label_set_mem_lemma : forall jl jls, Mem jl jls -> J.label_set_mem jl jls.
+Proof.
+    introv Hmem.
+    unfolds.
+    rew_refl.
+    assumption.
+Qed.
+
+Lemma res_label_in_lemma : forall jl jrv jls, 
+    Mem jl jls -> J.res_label_in (J.res_intro J.restype_continue jrv jl) jls.
+Proof.
+    introv Hmem.
+    unfolds.
+    auto using label_set_mem_lemma.
+Qed.
+
+Hint Resolve res_label_in_lemma : js_ljs.
 
 (* Expressions *)
 
@@ -1322,23 +1407,20 @@ Inductive Last {A : Type} : list A -> A -> Prop :=
 
 Definition while_step k c e1 e2 e3 st2 v2 st1 v1 : Prop := 
     exists st' st'' v v',
-    L.red_exprh k c st1 (L.expr_basic (E.to_bool e1)) (L.out_ter st' (L.res_value L.value_true)) /\
+    L.red_exprh k c st1 (L.expr_basic e1) (L.out_ter st' (L.res_value L.value_true)) /\
     L.red_exprh k c st' (L.expr_basic e2) (L.out_ter st'' (L.res_value v)) /\
     L.red_exprh k c st'' (L.expr_basic e3) (L.out_ter st2 (L.res_value v')) /\
     v2 = L.overwrite_value_if_empty v1 v.
 
 Definition while_final k c e1 e2 e3 st r st' v : Prop := 
-(*
-    L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st r) /\ L.abort (L.out_ter st r) \/
-*)
-    (exists v', L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st r) /\
+    (exists v', L.red_exprh k c st' (L.expr_basic e1) (L.out_ter st r) /\
         r = L.res_exception v') \/
-    (exists s v', L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st (L.res_break s v')) /\
+    (exists s v', L.red_exprh k c st' (L.expr_basic e1) (L.out_ter st (L.res_break s v')) /\
         r = L.res_break s (L.overwrite_value_if_empty v v')) \/
-    L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st (L.res_value L.value_false)) /\
+    L.red_exprh k c st' (L.expr_basic e1) (L.out_ter st (L.res_value L.value_false)) /\
         r = L.res_value v \/
     exists st'',
-    L.red_exprh k c st' (L.expr_basic (E.to_bool e1)) (L.out_ter st'' (L.res_value L.value_true)) /\ (
+    L.red_exprh k c st' (L.expr_basic e1) (L.out_ter st'' (L.res_value L.value_true)) /\ (
     (exists v', L.red_exprh k c st'' (L.expr_basic e2) (L.out_ter st r) /\ 
         r = L.res_exception v') \/
     (exists s v', L.red_exprh k c st'' (L.expr_basic e2) (L.out_ter st (L.res_break s v')) /\ 
@@ -1358,49 +1440,6 @@ Inductive while_unroll k c e1 e2 e3 st r : L.store -> L.value -> Prop :=
     while_step k c e1 e2 e3 st' v' st0 v0 ->
     while_unroll k c e1 e2 e3 st r st' v' ->
     while_unroll k c e1 e2 e3 st r st0 v0.
-
-(*
-Definition while_unroll k c st0 e1 e2 e3 v st r : Prop :=
-    exists l v' st',
-    First l (v, st0) /\
-    Forall2 (while_step k c e1 e2 e3) (init l) (tail l) /\
-    Last l (v', st') /\
-    while_final k c st' e1 e2 e3 v' st r.
-
-Lemma while_ind : forall (P : L.value -> L.store -> Prop),
-    (forall k c st0 e1 e2 e3 v st r, while_final k c st0 e1 e2 e3 v st r -> P v st0) ->  
-    (forall k c e1 e2 e3 v1 st1 v2 st2, while_step k c e1 e2 e3 (v1, st1) (v2, st2) -> P v1 st1 -> P v2 st2) ->
-    forall k c st0 e1 e2 e3 v st r,
-    while_unroll k c st0 e1 e2 e3 v st r ->
-    P v st0.
-Proof.
-    introv Hbase Hstep Hwhile.
-    unfolds in Hwhile.
-    destruct Hwhile as (l&Hwhile).
-    gen st0. induction l; introv Hwhile;
-    destruct Hwhile as (v'&st1&Hfirst&Hforall&Hlast&Hfinal).
-    inverts Hfirst.
-    destruct l. inverts Hfirst. inverts Hlast. eexists. eauto.
-    inverts Hfirst. inverts Hlast as Hlast. inverts Hforall.
-    destruct p as (v'', st'').
-Qed.
-*)
-
-(* TODO move! S5-only theorem *)
-(*
-Lemma add_closure_lemma : forall c oi l e, 
-    L.add_closure c oi l e = L.value_closure (L.closure_intro (to_list c') oi l e).
-Proof.
-    introv. eexists. reflexivity.
-Qed.
-
-Ltac ljs_add_closure := 
-    match goal with
-    | H : context [ L.add_closure ?c ?oi ?l ?e ] |- _ =>
-      let H' := fresh "H" in let Hc := fresh "Hc" in let c' := fresh "c" in
-      destruct (add_closure_lemma c oi l e) as (c'&H'&Hc); rewrite H' in H; clear H'
-    end.
-*)
 
 Hint Extern 4 (L.red_exprh _ ?c ?st ?e ?r) =>
     match goal with
@@ -1578,24 +1617,20 @@ Opaque freeze.
 Ltac freeze E := apply freeze_intro in E.
 Ltac unfreeze E := apply freeze_elim in E.
 
+Definition ejs_while_body_closure c ee1 ee2 ee3 := L.value_closure 
+        (L.closure_intro (to_list c) (Some "%while_loop") [] 
+            (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3))).
+
 Lemma ejs_while_body_lemma : forall k c c' st0 ee1 ee2 ee3 st r,
-    c = (c' \("%while_loop" := L.value_closure
-        (L.closure_intro (to_list c') (Some "%while_loop") []
-        (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3))))) ->
-(*
-    binds c "%while_loop" (L.value_closure 
-        (L.closure_intro (to_list c') (Some "%while_loop") [] 
-            (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)))) ->
-*)
+    c = (c' \("%while_loop" := ejs_while_body_closure c' ee1 ee2 ee3)) ->
     L.red_exprh k c st0 (L.expr_basic (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)))
         (L.out_ter st r) ->
-    while_unroll k c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) st r st0 L.value_empty.
+    while_unroll k c (E.to_bool (E.ejs_to_ljs ee1)) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) st r st0 L.value_empty.
 Proof.
     introv Hctx Heq.
-    asserts Hbinds : (binds c "%while_loop" (L.value_closure 
-        (L.closure_intro (to_list c') (Some "%while_loop") [] 
-            (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3))))).
+    asserts Hbinds : (binds c "%while_loop" (ejs_while_body_closure c' ee1 ee2 ee3)).
     substs. prove_bag.
+    unfolds ejs_while_body_closure.
     freeze Hctx. 
     inv_ljs_stop (L.expr_basic (E.to_bool (E.ejs_to_ljs ee1))).
     inv_ljs_stop (L.expr_basic (E.ejs_to_ljs ee1)).
@@ -1624,17 +1659,6 @@ Proof.
     unfreeze Hctx.
     rewrite <- Hctx in H13.
     freeze Hctx.
-(* TODO REMAKE *)
-(*
-    asserts Hmakeshift : (c\("%while_loop":=LjsSyntax.value_closure
-                             (LjsSyntax.closure_intro (to_list c)
-                                (Some "%while_loop") []
-                                (E.while_body (E.ejs_to_ljs ee1)
-                                   (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)))) = c). skip.
-    rewrite Hmakeshift in H13.
-    clear Hmakeshift.
-*)
-(* END REMAKE *)
     specializes IH H13. omega.
     eapply while_unroll_step.
     repeat eexists. eauto. eauto. eauto.
@@ -1670,11 +1694,10 @@ Proof.
 Qed.
 
 Lemma exprjs_while_lemma : forall k c c' st0 ee1 ee2 ee3 st r,
-    c = c'\("%while_loop":=LjsSyntax.value_closure (LjsSyntax.closure_intro (to_list c')
-        (Some "%while_loop") [] (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)))) ->
+    c = c'\("%while_loop" := ejs_while_body_closure c' ee1 ee2 ee3) ->
     L.red_exprh k c' st0 (L.expr_basic (E.ejs_to_ljs (E.expr_while ee1 ee2 ee3))) (L.out_ter st r) ->
     exists k', 
-    while_unroll k' c (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) st r st0 L.value_empty /\ 
+    while_unroll k' c (E.to_bool (E.ejs_to_ljs ee1)) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) st r st0 L.value_empty /\ 
     (k' < k) % nat.
 Proof.
     introv Hctx Hlred.
@@ -1692,60 +1715,148 @@ Proof.
     omega.
 Qed.
 
+Definition while_body_closure c je jt := ejs_while_body_closure c (E.js_expr_to_ejs je) (E.js_stat_to_ejs jt).
+
+Definition js_labelset_stat_to_ljs jls jt :=
+    E.ejs_to_ljs (E.js_label_set_to_labels "%continue" jls (E.js_stat_to_ejs jt)).
+
+Definition js_expr_to_bool_ljs je := E.to_bool (js_expr_to_ljs je).
+
+Lemma red_stat_while_lemma : forall k k' jls je jt v jrv,
+    ih_stat k ->
+    ih_expr k ->
+    (k' < k)%nat ->
+    forall BR jst jc c st st' r r', 
+    while_unroll k' c (js_expr_to_bool_ljs je) (js_labelset_stat_to_ljs jls jt) L.expr_undefined st' r' st v ->
+    label_set_hyp jls "%break" r' r ->
+    resvalue_related BR jrv v ->
+    state_invariant BR jst jc c st ->
+    exists BR' jst' jr,
+    state_invariant BR' jst' jc c st' /\
+    BR \c BR' /\
+    J.red_stat jst jc (J.stat_while_1 jls je jt jrv) (J.out_ter jst' jr) /\ 
+    res_related BR' jst' st' jr r.
+Proof.
+    introv IHt IHe Hlt Hwhile.
+    inductions Hwhile gen jrv jst BR;
+    introv Hlabel_brk Haccum Hinv.
+    (* final *)
+    destruct H as [Hwf|[Hwf|[Hwf|(?st&Hcond&Hwf1)]]]; try destruct_hyp Hwf.
+    (* condition throws *)
+    forwards_th red_spec_to_boolean_ok.
+    inverts Hlabel_brk. 
+    destr_concl. tryfalse.
+    jauto_js.
+    (* condition breaks, IMPOSSIBLE *)
+    skip. (* TODO *)
+    (* condition false *)
+    forwards_th red_spec_to_boolean_ok.
+    inverts Hlabel_brk.
+    destr_concl.   
+    injects.
+    jauto_js. 
+    eauto with js_ljs. (* jauto_js. EXISTENTIAL VARIABLES *) 
+    (* condition true *)
+    forwards_th red_spec_to_boolean_ok.
+    destr_concl; try js_abort_rel_contr; [idtac].
+    injects.
+    destruct Hwf1 as [Hwf|[Hwf|(?st&?v&Hstat&Hwf1)]]; try destruct_hyp Hwf.
+    (* statement throws *) 
+    apply label_set_invert_lemma in Hwf0.
+    destruct Hwf0 as (r''&Hlred&Hlabel_cont). (* TODO add tactic *)
+    apply_ih_stat.
+    destr_concl. 
+    inverts Hlabel_brk.
+    inverts Hlabel_cont.
+    res_related_invert. 
+    jauto_js.
+    eapply J.red_stat_while_1. eassumption.
+    eapply J.red_stat_while_2_true. eassumption.
+    eapply J.red_stat_while_3. reflexivity.
+    eapply J.red_stat_while_4_not_continue. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
+    eapply J.red_stat_while_5_not_break. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
+    eapply J.red_stat_while_6_abort. eauto with js_ljs. (* TODO: try trivial first in jauto_js *) 
+    (* statement breaks *)
+    apply label_set_invert_lemma in Hwf0.
+    destruct Hwf0 as (r''&Hlred&Hlabel_cont). (* TODO add tactic *)
+    apply_ih_stat.
+    destr_concl.
+    inverts Hlabel_cont. 
+    (* continue with wrong label *)
+    inverts Hlabel_brk.
+    skip. (* TODO *)
+    (* not continue *)
+    inverts Hlabel_brk.
+    (* actual break *)
+    skip.
+    (* break with wrong label *)
+    skip.
+    (* not break; fall through *)
+    skip. (* TODO *) 
+    (* statement returns a value *)
+    apply label_set_invert_lemma in Hstat.
+    destruct Hstat as (r''&Hlred&Hlabel_cont). (* TODO add tactic *) 
+    apply_ih_stat. 
+    destr_concl. 
+    inverts Hlabel_cont. 
+    (* statement continued *)
+    destruct_hyp Hwf1; inv_ljs.
+    (* statement not continued *)
+    destruct_hyp Hwf1; inv_ljs.
+    (* step *)
+    destruct H as (?st&?st&?v&?v&Hcond&Hstat&Hafter&EQv').
+    substs.
+    inverts Hafter. 
+    apply label_set_invert_lemma in Hstat.
+    destruct Hstat as (?r&Hstat&Hlabel_cont).
+    forwards_th red_spec_to_boolean_ok.
+    destr_concl.
+    injects.
+    apply_ih_stat.
+    destr_concl.
+    inverts Hlabel_cont.
+    (* statement continued *)
+    res_related_invert.
+    specializes IHHwhile Hlabel_brk ___.
+    jauto_js.
+    jauto_js 8.
+    (* statement not continued *)
+    res_related_invert.
+    specializes IHHwhile Hlabel_brk ___.
+    jauto_js.
+    jauto_js.
+    eapply J.red_stat_while_1. eassumption.
+    eapply J.red_stat_while_2_true. eassumption.
+    eapply J.red_stat_while_3. reflexivity.
+    eapply J.red_stat_while_4_not_continue. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
+    eapply J.red_stat_while_5_not_break. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
+    eapply J.red_stat_while_6_normal. reflexivity. autorewrite with js_ljs. jauto_js. (* TODO! *)
+
+    res_related_invert. eauto with js_ljs. (* TODO *)
+Qed.
+
 Lemma red_stat_while_ok : forall k jls je jt,
     ih_stat k ->
     ih_expr k ->
     th_stat k (J.stat_while jls je jt).
 Proof.
-(*
     introv IHt IHe Hinv Hlred.
     unfolds js_stat_to_ljs. simpls. 
     apply label_set_invert_lemma in Hlred.
     destruct Hlred as (r'&Hlred&Hlabel).
     apply (exprjs_while_lemma eq_refl) in Hlred.
-    sets_eq c' : (c\("%while_loop":=LjsSyntax.value_closure (LjsSyntax.closure_intro (to_list c)
-        (Some "%while_loop") [] (E.while_body (E.ejs_to_ljs (E.js_expr_to_ejs je)) 
-            (E.ejs_to_ljs (E.js_label_set_to_labels "%continue" jls (E.js_stat_to_ejs jt))) 
-            (E.ejs_to_ljs E.expr_undefined))))).
-    asserts Hinv' : (state_invariant BR jst jc c' st). skip. (* TODO *)
+    sets_eq c' : (c\("%while_loop" := ejs_while_body_closure c (E.js_expr_to_ejs je)
+        (E.js_label_set_to_labels "%continue" jls (E.js_stat_to_ejs jt)) E.expr_undefined)). 
+    asserts Hinv' : (state_invariant BR jst jc c' st). skip. (* TODO state invariant lemma *)
     freeze EQc'.
     destruct Hlred as (k'&Hwhile&Hk).
-    inductions Hwhile. (* as [st v Hfinal | st v st1 v1 Hstep Hwhile]. *)
-    unfolds while_final.
-    destruct_hyp H. (* TODO destruct step-by-step *)
-    (* Condition throws *)
-    skip.
-    (* Condition breaks *) 
-    skip. (* TODO EXPRESSIONS NEVER BREAK *)
-    (* Condition false *)
-    forwards_th red_spec_to_boolean_ok.
-    inverts Hlabel.
+    lets Hlemma : red_stat_while_lemma IHt IHe Hk Hwhile Hlabel.
+    specializes Hlemma resvalue_related_empty Hinv'. (* TODO TLC lets too small ;) *)
+    destruct_hyp Hlemma.
     jauto_js.
-    injects. (* TODO extend jauto_js to handle this *)
-    jauto_js.
-    (* Condition true *)
-    (* Body throws *)
-    apply label_set_invert_lemma in H2.
-    destruct H2 as (r''&Hlred&Hlabel'). (* TODO add tactic *)
-    skip.
-    (* Body breaks *)
-    skip.
-    (* Body returns a value *)
-    (* After throws - impossible *)
-    false_invert.
-    (* After breaks - impossible *)
-    false_invert.
-    (* Induction step *)
-*)
-(*
-    unfolds while_unroll.
-    destruct_hyp Hlred0.
-    destruct l;
-    inverts Hlred0.
-    induction l.
-*)
-Admitted.
-
+    skip. (* TODO state invariant lemma *)
+Qed.
+    
 Lemma red_stat_return_ok : forall k oje,
     ih_expr k ->
     th_stat k (J.stat_return oje).
