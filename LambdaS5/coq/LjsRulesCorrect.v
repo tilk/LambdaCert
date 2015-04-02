@@ -199,9 +199,9 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
     resvalue_related BR jrv v ->
     res_related BR jst st (J.res_intro J.restype_throw jrv J.label_empty) 
         (L.res_exception (L.value_object ptr))
-| res_related_return : forall jrv v,
-    resvalue_related BR jrv v ->
-    res_related BR jst st (J.res_intro J.restype_return jrv J.label_empty) 
+| res_related_return : forall jv v,
+    value_related BR jv v ->
+    res_related BR jst st (J.res_intro J.restype_return (J.resvalue_value jv) J.label_empty) 
         (L.res_break "%ret" v)
 | res_related_break : forall jrv v jl,
     resvalue_related BR jrv v ->
@@ -299,7 +299,7 @@ Definition concl_spec {A : Type} BR jst jc c st st' r jes (P : object_bisim -> J
     ((exists x, J.red_spec jst jc jes (J.specret_val jst' x) /\ P BR' jst' x) \/
      (exists jr, 
         J.red_spec jst jc jes (@J.specret_out A (J.out_ter jst' jr)) /\ 
-        J.abort (J.out_ter jst' jr) /\
+        J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw /\
         res_related BR' jst' st' jr r)).
 
 Definition concl_expr_getvalue BR jst jc c st st' r je :=
@@ -992,16 +992,27 @@ Proof.
     eauto using resvalue_related_res_overwrite_if_empty.
 Qed.
 
-Lemma res_related_return_overwrite_if_empty : forall BR jst st jrv1 jrv2 v1 v2,
-    resvalue_related BR jrv1 v1 ->
-    resvalue_related BR jrv2 v2 ->
+Lemma js_res_overwrite_value_if_empty_lemma : forall jrv jrt jv jl,
+    J.res_overwrite_value_if_empty jrv (J.res_intro jrt (J.resvalue_value jv) jl) = 
+        (J.res_intro jrt (J.resvalue_value jv) jl).
+Proof.
+    introv.
+    unfold J.res_overwrite_value_if_empty. cases_if. reflexivity.
+Qed.
+
+Hint Rewrite js_res_overwrite_value_if_empty_lemma : js_ljs.
+
+Lemma res_related_return_overwrite_if_empty : forall BR jst st jv2 v1 v2,
+    value_related BR jv2 v2 ->
     res_related BR jst st 
-        (J.res_overwrite_value_if_empty jrv1 (J.res_intro J.restype_return jrv2 J.label_empty))
+        (J.res_intro J.restype_return (J.resvalue_value jv2) J.label_empty)
         (L.res_break "%ret" (L.overwrite_value_if_empty v1 v2)).
 Proof.
-    introv Hrel1 Hrel2. rewrite res_overwrite_value_if_empty_lemma.
-    eapply res_related_return. 
-    eauto using resvalue_related_res_overwrite_if_empty.
+    introv Hrel2. 
+    eapply res_related_return.
+    inverts Hrel2; 
+    unfolds L.overwrite_value_if_empty;
+    jauto_js.
 Qed.
 
 Hint Resolve resvalue_related_overwrite_if_empty : js_ljs.
@@ -1082,8 +1093,8 @@ Proof.
     assumption.
 Qed.
 
-Lemma res_label_in_inv_lemma : forall jl jrv jls,
-    J.res_label_in (J.res_intro J.restype_continue jrv jl) jls -> Mem jl jls.
+Lemma res_label_in_inv_lemma : forall jl jrt jrv jls,
+    J.res_label_in (J.res_intro jrt jrv jl) jls -> Mem jl jls.
 Proof.
     introv Hmem.
     unfolds in Hmem.
@@ -1767,7 +1778,9 @@ Proof.
     destr_concl. tryfalse.
     jauto_js.
     (* condition breaks, IMPOSSIBLE *)
-    skip. (* TODO *)
+    forwards_th red_spec_to_boolean_ok.
+    destr_concl. tryfalse.
+    res_related_invert; tryfalse.
     (* condition false *)
     forwards_th red_spec_to_boolean_ok.
     inverts Hlabel_brk.
@@ -1830,12 +1843,20 @@ Proof.
     eapply J.red_stat_while_2_true. eassumption.
     eapply J.red_stat_while_3. reflexivity.
     eapply J.red_stat_while_4_not_continue. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
-    eapply J.red_stat_while_5_not_break. jauto_js. 
+    eapply J.red_stat_while_5_not_break. jauto_js. (* intro. jauto_set. apply H6. eauto with js_ljs. *)
     autorewrite with js_ljs.
     skip. (* eapply J.red_stat_while_6_abort. *) (* TODO SPECIFICATION PROBLEM! ASK ALAN *)
     (* only return remains *)
     (* TODO: add to res_related that returning empty is not possible! *)
-    skip. (* TODO *) 
+    res_related_invert; tryfalse.
+    jauto_js.
+    eapply J.red_stat_while_1. eassumption.
+    eapply J.red_stat_while_2_true. eassumption.
+    eapply J.red_stat_while_3. reflexivity.
+    eapply J.red_stat_while_4_not_continue. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
+    eapply J.red_stat_while_5_not_break. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
+    autorewrite with js_ljs.
+    eapply J.red_stat_while_6_abort. trivial.
     (* statement returns a value *)
     apply label_set_invert_lemma in Hstat.
     destruct Hstat as (r''&Hlred&Hlabel_cont). (* TODO add tactic *) 
