@@ -1040,6 +1040,8 @@ Ltac res_related_invert :=
         match r with
         | L.res_break (E.js_label_to_ejs "%continue" _) _ => 
             lets (?jrv&?H1&?H2) : (res_related_invert_continue H); subst jr
+        | L.res_break (E.js_label_to_ejs "%break" _) _ => 
+            lets (?jrv&?H1&?H2) : (res_related_invert_break H); subst jr
         | _ => inverts keep H 
         end
     end. 
@@ -1064,14 +1066,31 @@ Proof.
     assumption.
 Qed.
 
-Lemma res_label_in_lemma : forall jl jrv jls, 
-    Mem jl jls -> J.res_label_in (J.res_intro J.restype_continue jrv jl) jls.
+Lemma res_label_in_lemma : forall jl jrt jrv jls, 
+    Mem jl jls -> J.res_label_in (J.res_intro jrt jrv jl) jls.
 Proof.
     introv Hmem.
     unfolds.
     auto using label_set_mem_lemma.
 Qed.
 
+Lemma label_set_mem_inv_lemma : forall jl jls, J.label_set_mem jl jls -> Mem jl jls.
+Proof.
+    introv Hjls.
+    unfolds in Hjls.
+    rew_refl in Hjls.
+    assumption.
+Qed.
+
+Lemma res_label_in_inv_lemma : forall jl jrv jls,
+    J.res_label_in (J.res_intro J.restype_continue jrv jl) jls -> Mem jl jls.
+Proof.
+    introv Hmem.
+    unfolds in Hmem.
+    auto using label_set_mem_inv_lemma.
+Qed.
+
+Hint Resolve res_label_in_inv_lemma : js_ljs.
 Hint Resolve res_label_in_lemma : js_ljs.
 
 (* Expressions *)
@@ -1784,14 +1803,38 @@ Proof.
     inverts Hlabel_cont. 
     (* continue with wrong label *)
     inverts Hlabel_brk.
-    skip. (* TODO *)
+    res_related_invert.
+    jauto_js.
+    eapply J.red_stat_while_1. eassumption.
+    eapply J.red_stat_while_2_true. eassumption.
+    eapply J.red_stat_while_3. reflexivity.
+    eapply J.red_stat_while_4_not_continue. jauto_js.
+    eapply J.red_stat_while_5_not_break. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
+    autorewrite with js_ljs.
+    skip. (* eapply J.red_stat_while_6_abort. *) (* TODO SPECIFICATION PROBLEM! ASK ALAN *)
     (* not continue *)
     inverts Hlabel_brk.
     (* actual break *)
-    skip.
+    res_related_invert.
+    jauto_js. 
+    eapply J.red_stat_while_1. eassumption.
+    eapply J.red_stat_while_2_true. eassumption.
+    eapply J.red_stat_while_3. reflexivity.
+    eapply J.red_stat_while_4_not_continue. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
+    autorewrite with js_ljs.
+    eapply J.red_stat_while_5_break. jauto_js.
     (* break with wrong label *)
-    skip.
-    (* not break; fall through *)
+    res_related_invert.
+    jauto_js.
+    eapply J.red_stat_while_1. eassumption.
+    eapply J.red_stat_while_2_true. eassumption.
+    eapply J.red_stat_while_3. reflexivity.
+    eapply J.red_stat_while_4_not_continue. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
+    eapply J.red_stat_while_5_not_break. jauto_js. 
+    autorewrite with js_ljs.
+    skip. (* eapply J.red_stat_while_6_abort. *) (* TODO SPECIFICATION PROBLEM! ASK ALAN *)
+    (* only return remains *)
+    (* TODO: add to res_related that returning empty is not possible! *)
     skip. (* TODO *) 
     (* statement returns a value *)
     apply label_set_invert_lemma in Hstat.
