@@ -15,6 +15,9 @@ Open Scope string_scope.
 
 Global Coercion JsNumber.of_int : Z >-> JsNumber.number.
 
+(** ** Shorthand module names 
+    These are used to refer to the different languages: S5, ExprJS and JS. *)
+
 Module L. 
 Include LjsSyntax.
 Include LjsPrettyRules.
@@ -43,6 +46,9 @@ End J.
 
 Export LjsPrettyRulesAux.Tactics.
 Export LjsPrettyRulesIndexedAux.Tactics.
+
+(** ** Implicit Type declarations 
+    They are common for all LjsRulesCorrect* libraries. *)
 
 Implicit Type A B : Type.
 Implicit Type s : string.
@@ -78,19 +84,27 @@ Implicit Type jer : J.env_record.
 Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 
-(* Desugaring for literals, expressions and statements. *)
+(** ** Composite desugaring functions 
+    Desugaring for literals, expressions and statements. *)
+
 Definition js_literal_to_ljs jli := E.ejs_to_ljs (E.js_literal_to_ejs jli).
 Definition js_expr_to_ljs je := E.ejs_to_ljs (E.js_expr_to_ejs je).
 Definition js_stat_to_ljs jt := E.ejs_to_ljs (E.js_stat_to_ejs jt).
 
-(* Relates JS objects to LJS objects. 
- * Properties it should satisfy will be defined later. *)
+(** ** Relating JS and S5 *)
+
+(** *** Heap bisimulations 
+    They relate JS objects to LJS objects. 
+    Properties they should satisfy will be defined later. *)
+
 Definition object_bisim := J.object_loc -> L.object_ptr -> Prop.
 
 Implicit Type BR : object_bisim.
 
-(* Relates JS values to LJS values.
- * Note that this implies that LJS lambdas and empty are never seen directly by JS code. *)
+(** *** Relating values
+    Note that this definition implies that LJS lambdas and empty are never seen directly by JS code. 
+    Also, relating objects is delegated to the bisimulation relation. *)
+
 Inductive value_related BR : J.value -> L.value -> Prop :=
 | value_related_null : value_related BR (J.value_prim J.prim_null) L.value_null
 | value_related_undefined : value_related BR (J.value_prim J.prim_undef) L.value_undefined
@@ -101,7 +115,9 @@ Inductive value_related BR : J.value -> L.value -> Prop :=
     (jptr, ptr) \in BR -> value_related BR (J.value_object jptr) (L.value_object ptr) 
 .
 
-(* Relates JS object attributes to LJS object attributes. *)
+(** *** Relating object properties
+    Individual properties are related in a natural way. *)
+
 Inductive attributes_data_related BR : J.attributes_data -> L.attributes_data -> Prop := 
 | attributes_data_related_intro : forall jv v b1 b2 b3, 
     value_related BR jv v ->
@@ -128,26 +144,33 @@ Inductive attributes_related BR : J.attributes -> L.attributes -> Prop :=
     attributes_related BR (J.attributes_accessor_of jacc) (L.attributes_accessor_of acc)
 .
 
-(* Relates attributes of JS objects to LJS.
- * States that for every attribute name, the attribute is undefined in both JS and LJS objects,
- * or it's defined in both and related. *)
+(** Property sets are related so that for every property name, 
+    either the attribute is undefined in both JS and LJS objects,
+    or it's defined in both and related. *)
+
 Definition object_properties_related BR jprops props := forall s, 
     ~J.Heap.indom jprops s /\ ~index props s \/
     exists jptr ptr, 
         J.Heap.binds jprops s jptr /\ binds props s ptr /\
         attributes_related BR jptr ptr.
 
-(* Relates internal fields of JS objects to JLS. *)
+(** *** Relating objects
+    To be related, objects must have related property sets and internal properties. *)
+
 Definition object_prim_related BR jobj obj := 
     J.object_class_ jobj = L.object_class obj /\
     J.object_extensible_ jobj = L.object_extensible obj.
 
-(* Relates JS objects to LJS objects. *)
 Definition object_related BR jobj obj :=
     object_prim_related BR jobj obj /\
     object_properties_related BR (J.object_properties_ jobj) (L.object_properties obj).
 
-(* Properties that must hold for heap bisimulations. *)
+(** *** Properties of heap bisimulations
+    Heap bisimulations must satisfy several properties in order to be useful
+    in the proof:
+    - They must be injective - every JS object has an unique corresponding S5 object.
+    - The mapped adresses must actually correspond to some object in JS and S5 heaps. *)
+
 Definition heaps_bisim_ltotal BR jst :=
     forall jptr, J.object_indom jst jptr -> exists ptr, BR jptr ptr.
 
@@ -168,13 +191,14 @@ Record heaps_bisim_consistent BR jst st : Prop := {
     heaps_bisim_consistent_lfun : functional BR;
     heaps_bisim_consistent_rfun : functional (flip BR);
     heaps_bisim_consistent_ltotal : heaps_bisim_ltotal BR jst;
-(*    heaps_bisim_consistent_rtotal : heaps_bisim_rtotal BR st; TODO *)
     heaps_bisim_consistent_lnoghost : heaps_bisim_lnoghost BR jst;
     heaps_bisim_consistent_rnoghost : heaps_bisim_rnoghost BR st
 }.
 
-(* Relates JS resvalues ("maybe values") to LJS values. 
- * Resvalues are the results of statements. *)
+(** *** Relating result values
+    Result values are the JavaScript's "maybe values",
+    they are the results of evaluating statements. *)
+
 Inductive resvalue_related BR : J.resvalue -> L.value -> Prop :=
 | resvalue_related_empty :  
     resvalue_related BR J.resvalue_empty L.value_empty
@@ -183,11 +207,24 @@ Inductive resvalue_related BR : J.resvalue -> L.value -> Prop :=
     resvalue_related BR (J.resvalue_value jv) v
 .
 
+(** *** Relating results
+    Results are the ways a given statement can terminate. They correspond to
+    completion types in the specification. *)
+
+(** JavaScript exceptions are wrapped in a S5 object, to be distinguished
+    from internal S5 exceptions. *)
+
 Definition js_exn_object obj v := 
     binds (L.object_properties obj) "%js-exn" 
         (L.attributes_data_of (L.attributes_data_intro v false false false)).
 
-(* Relates JS results to LJS results. *)
+(** The relationship is as follows:
+    - Normal results in JS map to normal results in S5.
+    - Throws in JS translate to throws with a wrapper in S5.
+    - Returns in JS translate to S5 breaks to a special label "%%ret".
+    - Breaks in JS translate to S5 breaks, the label is tagged with "%%break".
+    - Continues in JS translate to S5 breaks, the label is tagged with "%%continue". *)
+
 Inductive res_related BR jst st : J.res -> L.res -> Prop :=
 | res_related_normal : forall jrv v,
     resvalue_related BR jrv v ->
@@ -213,12 +250,20 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
         (L.res_break (E.js_label_to_ejs "%continue" jl) v)
 .
 
-(* States that the initial LJS context ("the environment") can always be accessed
- * (and thus is never shadowed) *)
+(** ** Invariants 
+    To relate JS and S5 programs, certain invariants must hold at all times. *)
+
+(** *** S5 environment presence invariant 
+    States that the initial LJS context ("the environment") can always be accessed
+    (and thus is never shadowed). *)
+
 Definition includes_init_ctx c :=
     forall i v v', binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'. 
 
+(** *** Relating lexical environments *)
+
 (* Relates declarative environment records *)
+
 Definition decl_env_record_related BR jder props := forall s,
     ~J.Heap.indom jder s /\ ~index props s \/
     exists jmut jv acc, 
@@ -270,13 +315,21 @@ Record env_records_exist jst jc := {
         Forall (J.Heap.indom (J.state_env_record_heap jst)) (J.execution_ctx_lexical_env jc)
 }.
 
-(* The complete set of invariants. *)
+(** *** Invariant predicate
+    The complete set of invariants, combined in one predicate to make proofs simpler. *)
+
 Record state_invariant BR jst jc c st : Prop := {
     state_invariant_heaps_bisim_consistent : heaps_bisim_consistent BR jst st;
     state_invariant_execution_ctx_related : execution_ctx_related BR jst jc c st;
     state_invariant_includes_init_ctx : includes_init_ctx c;
     state_invariant_env_records_exist : env_records_exist jst jc
 }.
+
+(** ** Theorem statement  
+    Factored out, because it is used in many lemmas. *)
+
+(** *** Theorem conclusions
+    They state what must hold if the preconditions are satisfied. *)
 
 Definition concl_expr_value BR jst jc c st st' r je :=
     exists BR' jst' jr,
@@ -306,6 +359,8 @@ Definition concl_expr_getvalue BR jst jc c st st' r je :=
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
        (fun BR' _ jv => exists v, r = L.res_value v /\ value_related BR' jv v).
 
+(** *** Theorem statements *)
+
 Definition th_expr k je := forall BR jst jc c st st' r, 
     state_invariant BR jst jc c st ->
     L.red_exprh k c st (L.expr_basic (js_expr_to_ljs je)) (L.out_ter st' r) ->
@@ -323,7 +378,9 @@ Definition th_spec {A : Type} k e jes
     L.red_exprh k c st (L.expr_basic e) (L.out_ter st' r) ->
     concl_spec BR jst jc c st st' r jes (fun BR' jst' a => P BR' jst' jc c st' r a).
 
-(* The form of the induction hypotheses. Height induction is used to make proofs simpler. *)
+(** *** Inductive hypotheses 
+    The form of the induction hypotheses, as used in the proof. 
+    Height induction is used to make proofs simpler. *)
 
 Definition ih_expr k := forall je k', (k' < k)%nat -> th_expr k' je.
 

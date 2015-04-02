@@ -1,6 +1,9 @@
 
 all: configure coq interpreter snapshot
 
+doc: configure
+	make -C coq/ gallinahtml
+
 configure: coq/configure coq/*.v
 	cd coq;	./configure
 

@@ -5,6 +5,13 @@ Require Export LibBag.
 Generalizable Variables A B T U.
 
 (* TODO should go to LibBag later *)
+(** printing \c #⊆# *)
+(** printing \u #∪# *)
+(** printing \n #∩# *)
+(** printing \{} #Ø# *)
+(** printing \in #∈# *)
+(** printing \notin #∉# *)
+
 Class BagFromList A T := { from_list : list A -> T }.
 Class BagToList A T := { to_list : T -> list A }.
 Class BagReadOption A B T := { read_option : T -> A -> option B }. 

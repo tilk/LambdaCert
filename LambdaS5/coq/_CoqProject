@@ -5,6 +5,7 @@ EjsToLjs.v
 LibBagExt.v
 LibFinmap.v
 LibFinset.v
+LibMapExt.v
 LibRel.v
 LjsAuxiliary.v
 LjsCommon.v
@@ -20,6 +21,10 @@ LjsPrettyRulesAux.v
 LjsPrettyRulesIndexedAux.v
 LjsPrettyRulesIndexed.v
 LjsPrettyRules.v
+LjsRulesCorrectCommon.v
+LjsRulesCorrectDefinitions.v
+LjsRulesCorrectExpressions.v
+LjsRulesCorrectStatements.v
 LjsRulesCorrect.v
 LjsShared.v
 LjsStore.v

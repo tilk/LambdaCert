@@ -8,6 +8,9 @@ Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
 
+(** ** Implicit Type declarations 
+    They are common for all LjsRulesCorrect* libraries. *)
+
 Implicit Type A B : Type.
 Implicit Type s : string.
 Implicit Type n : number.
@@ -42,9 +45,13 @@ Implicit Type jer : J.env_record.
 Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 
-(* Automation *)
+(** ** Tactics and proof automation *)
+
+(** The hint database [js_ljs] is used for automated proving of conclusions. *)
 
 Create HintDb js_ljs discriminated.
+
+(** The constructors for relating JS to S5 are used as hints. *)
 
 Hint Constructors attributes_data_related : js_ljs.
 Hint Constructors attributes_accessor_related : js_ljs. 
@@ -53,14 +60,25 @@ Hint Constructors value_related : js_ljs.
 Hint Constructors resvalue_related : js_ljs.
 Hint Constructors res_related : js_ljs.
 
-Hint Extern 4 (js_exn_object _ _) => unfold js_exn_object : js_ljs.
-
-Hint Extern 4 (res_related _ _ _ (J.res_throw _) _) => unfold J.res_throw : js_ljs.
+(** The constructors of JSCert are used as hints, for automated building of
+    the derivation trees for the semantics judgment. *)
 
 Hint Constructors J.red_expr : js_ljs.
 Hint Constructors J.red_stat : js_ljs.
 Hint Constructors J.red_spec : js_ljs.
 Hint Constructors J.abort : js_ljs.
+
+(** Unfolding hints *)
+
+Hint Extern 4 (js_exn_object _ _) => unfold js_exn_object : js_ljs.
+Hint Extern 4 (res_related _ _ _ (J.res_throw _) _) => unfold J.res_throw : js_ljs.
+
+(** Automatic deconstructing of ifs in goals *)
+
+Hint Extern 11 => match goal with |- context [If _ then _ else _] => case_if end : js_ljs.
+
+(** Pre-substitution hints *)
+(* TODO are they necessary? *)
 
 Lemma res_related_break_hint : forall BR jst st jrv v jl s,
     resvalue_related BR jrv v -> s = E.js_label_to_ejs "%break" jl ->
@@ -779,8 +797,6 @@ Lemma stat_block_1_hint : forall (S0 S : JsSyntax.state) (C : JsSyntax.execution
             (J.out_ter S (J.res_intro J.restype_normal jrv J.label_empty)) t) jo.
 Proof. intros. fold (J.res_normal jrv). jauto_js. Qed.
 Hint Resolve stat_block_1_hint : js_ljs.
-
-Hint Extern 11 => match goal with |- context [If _ then _ else _] => case_if end : js_ljs.
 
 Lemma label_set_mem_lemma : forall jl jls, Mem jl jls -> J.label_set_mem jl jls.
 Proof.
