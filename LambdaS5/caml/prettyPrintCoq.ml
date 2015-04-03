@@ -11,6 +11,8 @@ let used_names = ref Set.empty
 
 let ordered_vals = ref []
 
+let named_exprs = ref Map.empty
+
 let rfun c = match c with
     | '%' -> "priv" 
     | '-' -> "_"
@@ -36,6 +38,19 @@ let named_val i v =
     vals_store := Map.add v ii vst; 
     ordered_vals := (ii,i,v) :: !ordered_vals;
     ii
+
+let named_expr i e =
+    let ii' = "ex_" ^ String.replace_chars rfun i in
+    let est = !named_exprs in
+    if not (Map.mem ii' est)
+    then (named_exprs := Map.add ii' e est; ii')
+    else
+    let rec f k =
+        let ii'' = ii' ^ string_of_int k in
+        if not (Map.mem ii'' est)
+        then (named_exprs := Map.add ii'' e est; ii'')
+        else f (k+1)
+    in f 1
 
 let format_id i = text ("\"" ^ String.of_list i ^ "\"") (* TODO escaping *)
 
@@ -183,9 +198,18 @@ let format_option b f o = match o with
     | Some x -> coqconstr b "Some" [f x]
     | None -> coqconstr b "None" []
 
-let rec format_named_val i v = format_value v; text (named_val i v)
+let rec format_named_val i v = force_value v; text (named_val i v)
 
-and format_value v = match v with
+and force_value v = match v with
+    | Coq_value_closure (Coq_closure_intro (c, rid, is, e)) -> 
+        let is' = match rid with Some i -> i::is | None -> is in
+        let fvs = expr_fv (Coq_expr_lambda (is', e)) in
+        let c' = LibFinmap.FinmapImpl.to_list_impl (LibFinmap.FinmapImpl.restrict_impl (LibFinmap.FinmapImpl.from_list_impl c) fvs) in
+        List.iter (fun (i, v) -> ignore (format_named_val i v)) c'
+    | _ -> ()
+    
+
+let format_value i0 v = match v with
     | Coq_value_empty -> text "value_empty"
     | Coq_value_null -> text "value_null"
     | Coq_value_undefined -> text "value_undefined"
@@ -195,13 +219,16 @@ and format_value v = match v with
     | Coq_value_bool false -> text "value_false"
     | Coq_value_object n -> coqconstr false "value_object" [int n]
     | Coq_value_closure (Coq_closure_intro (c, rid, is, e)) -> 
+        let is' = match rid with Some i -> i::is | None -> is in
+        let fvs = expr_fv (Coq_expr_lambda (is', e)) in
+        let c' = LibFinmap.FinmapImpl.to_list_impl (LibFinmap.FinmapImpl.restrict_impl (LibFinmap.FinmapImpl.from_list_impl c) fvs) in
         let format_ctx_item (i, v) = parens (squish [format_id i; text ", "; format_named_val i v]) in
-        coqconstr false "value_closure" [coqconstr true "closure_intro" [format_list (List.map format_ctx_item c); format_option true format_id rid; format_id_list is; format_expr true e]]
+        coqconstr false "value_closure" [coqconstr true "closure_intro" [format_list (List.map format_ctx_item c'); format_option true format_id rid; format_id_list is; text (named_expr i0 e)]]
 
 let format_attributes a = match a with
     | Coq_attributes_data_of d ->
         let l = [
-            "attributes_data_value", format_value d.attributes_data_value;
+            "attributes_data_value", format_value "dataval" d.attributes_data_value;
             "attributes_data_writable", bool d.attributes_data_writable;
             "attributes_data_enumerable", bool d.attributes_data_enumerable;
             "attributes_data_configurable", bool d.attributes_data_configurable
@@ -209,8 +236,8 @@ let format_attributes a = match a with
         horz [text "attributes_data_of"; coqrecord l]
     | Coq_attributes_accessor_of d ->
         let l = [
-            "attributes_accessor_get", format_value d.attributes_accessor_get;
-            "attributes_accessor_set", format_value d.attributes_accessor_set;
+            "attributes_accessor_get", format_value "getter" d.attributes_accessor_get;
+            "attributes_accessor_set", format_value "setter" d.attributes_accessor_set;
             "attributes_accessor_enumerable", bool d.attributes_accessor_enumerable;
             "attributes_accessor_configurable", bool d.attributes_accessor_configurable
         ] in
@@ -222,10 +249,10 @@ let format_object_properties vh =
 
 let format_object o = 
     let l1 = [
-        "oattrs_proto", format_value (object_proto o);
+        "oattrs_proto", format_value "proto" (object_proto o);
         "oattrs_class", format_id (object_class o);
         "oattrs_extensible", bool (object_extensible o);
-        "oattrs_prim_value", format_value (object_prim_value o);
+        "oattrs_prim_value", format_value "primval" (object_prim_value o);
         "oattrs_code", format_named_val (String.to_list "objCode") (object_code o)
     ] in
     let l = [
@@ -245,9 +272,13 @@ let format_store (st : store) =
     let format_store_object_item (l, o) = parens (squish [format_ptr l; text ", "; format_object o]) in
     vert ([text "Definition store_items := ["] @ vert_intersperse (text ";") (List.map format_store_object_item (LibFinmap.FinmapImpl.to_list_impl st)) @ [text "]."])
 
+let format_named_exprs () =
+    let f (i, e) = horzOrVert [text ("Definition " ^ i ^ " := "); format_expr false e; text "."]
+    in vert (List.map f (Map.bindings !named_exprs))
+
 let format_named_vals () = 
     let f (ii, i, v) = vert [
-        horzOrVert [text ("Definition " ^ ii ^ " := "); format_value v; text "."];
+        horzOrVert [text ("Definition " ^ ii ^ " := "); format_value ii v; text "."];
         horz [text ("Definition name_" ^ ii ^ " := "); format_id i ; text "."]]
     in vert (List.map f (List.rev !ordered_vals))
 
@@ -271,7 +302,8 @@ let header () = vert (List.map text [
 let format_ctx_store (c, st) = 
     let fst = format_store st in
     let fctx = format_ctx_def c in
-    vert [header(); format_named_vals (); fctx; (* format_ctx_mems c;*) fst]
+    let fnv = format_named_vals () in
+    vert [header(); format_named_exprs(); fnv; fctx; (* format_ctx_mems c;*) fst]
 
 let ctx_store_to_output o c st = 
     Format.set_margin 200;
