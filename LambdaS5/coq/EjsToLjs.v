@@ -63,10 +63,10 @@ Definition make_set_field obj fld v :=
     with_error_dispatch (make_app_builtin "%set-property" [to_object obj; to_string fld; v]).
 
 Definition make_var_set fld v :=
-    make_app_builtin "%EnvCheckAssign" [L.expr_id "%context"; L.expr_string fld; v; L.expr_id "#strict"].
+    make_app_builtin "%EnvCheckAssign" [L.expr_id "%context"; L.expr_string fld; v; L.expr_id "%strict"].
 
 Definition make_var_id i :=    
-    make_app_builtin "%EnvGet" [L.expr_id "%context"; L.expr_string i; L.expr_id "#strict"].
+    make_app_builtin "%EnvGet" [L.expr_id "%context"; L.expr_string i; L.expr_id "%strict"].
 
 Definition make_getter e := make_app_builtin "%MakeGetter" [e].
 
@@ -74,13 +74,13 @@ Definition make_setter e := make_app_builtin "%MakeSetter" [e].
 
 Definition while_body (tst bdy after : L.expr) := 
     (L.expr_if (to_bool tst) 
-        (L.expr_jseq bdy (L.expr_seq after (L.expr_app (L.expr_id "%while_loop") [])))
+        (L.expr_jseq bdy (L.expr_seq after (L.expr_app (L.expr_id "#while_loop") [])))
         L.expr_empty).
 
 Definition make_while (tst bdy after : L.expr) := 
-    L.expr_recc "%while_loop" 
+    L.expr_recc "#while_loop" 
         (L.expr_lambda [] (while_body tst bdy after))
-        (L.expr_app (L.expr_id "%while_loop") []).
+        (L.expr_app (L.expr_id "#while_loop") []).
 
 Definition make_do_while (bdy tst : L.expr) :=
     L.expr_recc "%do_while_loop" 
@@ -119,7 +119,7 @@ Definition make_throw e :=
 Definition make_with e1 e2 := 
     L.expr_let "%context" (make_app_builtin "%makeWithContext" [context; e1]) e2.
 
-Definition if_strict e1 e2 := L.expr_if (L.expr_id "#strict") e1 e2.
+Definition if_strict e1 e2 := L.expr_if (L.expr_id "%strict") e1 e2.
 
 Definition syntax_error s := make_app_builtin "%SyntaxError" [L.expr_string s].
 
@@ -292,7 +292,7 @@ Definition make_app f (e : E.expr) es :=
     let args_obj := make_args_obj false es in 
     match e with
     | E.expr_var_id "eval" =>
-        make_app_builtin "%maybeDirectEval" [L.expr_id "%this"; L.expr_id "%context"; args_obj; L.expr_id "#strict"]
+        make_app_builtin "%maybeDirectEval" [L.expr_id "%this"; L.expr_id "%context"; args_obj; L.expr_id "%strict"]
     | E.expr_get_field obj fld =>
         L.expr_let "%obj" (f obj) (L.expr_let "%fun" (make_get_field (to_object (L.expr_id "%obj")) (f fld)) 
             (L.expr_app (L.expr_id "%fun") [to_object (L.expr_id "%obj"); args_obj]))

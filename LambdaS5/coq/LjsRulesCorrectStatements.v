@@ -476,17 +476,17 @@ Ltac freeze E := apply freeze_intro in E.
 Ltac unfreeze E := apply freeze_elim in E.
 
 Definition ejs_while_body_closure c ee1 ee2 ee3 := L.value_closure 
-        (L.closure_intro (to_list c) (Some "%while_loop") [] 
+        (L.closure_intro (to_list c) (Some "#while_loop") [] 
             (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3))).
 
 Lemma ejs_while_body_lemma : forall k c c' st0 ee1 ee2 ee3 st r,
-    c = (c' \("%while_loop" := ejs_while_body_closure c' ee1 ee2 ee3)) ->
+    c = (c' \("#while_loop" := ejs_while_body_closure c' ee1 ee2 ee3)) ->
     L.red_exprh k c st0 (L.expr_basic (E.while_body (E.ejs_to_ljs ee1) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3)))
         (L.out_ter st r) ->
     while_unroll k c (E.to_bool (E.ejs_to_ljs ee1)) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) st r st0 L.value_empty.
 Proof.
     introv Hctx Heq.
-    asserts Hbinds : (binds c "%while_loop" (ejs_while_body_closure c' ee1 ee2 ee3)).
+    asserts Hbinds : (binds c "#while_loop" (ejs_while_body_closure c' ee1 ee2 ee3)).
     substs. prove_bag.
     unfolds ejs_while_body_closure.
     freeze Hctx. 
@@ -552,7 +552,7 @@ Proof.
 Qed.
 
 Lemma exprjs_while_lemma : forall k c c' st0 ee1 ee2 ee3 st r,
-    c = c'\("%while_loop" := ejs_while_body_closure c' ee1 ee2 ee3) ->
+    c = c'\("#while_loop" := ejs_while_body_closure c' ee1 ee2 ee3) ->
     L.red_exprh k c' st0 (L.expr_basic (E.ejs_to_ljs (E.expr_while ee1 ee2 ee3))) (L.out_ter st r) ->
     exists k', 
     while_unroll k' c (E.to_bool (E.ejs_to_ljs ee1)) (E.ejs_to_ljs ee2) (E.ejs_to_ljs ee3) st r st0 L.value_empty /\ 
@@ -629,13 +629,7 @@ Proof.
     inverts Hlabel_brk.
     inverts Hlabel_cont.
     res_related_invert. 
-    jauto_js.
-    eapply J.red_stat_while_1. eassumption.
-    eapply J.red_stat_while_2_true. eassumption.
-    eapply J.red_stat_while_3. reflexivity.
-    eapply J.red_stat_while_4_not_continue. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
-    eapply J.red_stat_while_5_not_break. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
-    eapply J.red_stat_while_6_abort. eauto with js_ljs. (* TODO: try trivial first in jauto_js *) 
+    jauto_js 15.
     (* statement breaks *)
     apply label_set_invert_lemma in Hwf0.
     destruct Hwf0 as (r''&Hlred&Hlabel_cont). (* TODO add tactic *)
@@ -657,13 +651,7 @@ Proof.
     inverts Hlabel_brk.
     (* actual break *)
     res_related_invert.
-    jauto_js. 
-    eapply J.red_stat_while_1. eassumption.
-    eapply J.red_stat_while_2_true. eassumption.
-    eapply J.red_stat_while_3. reflexivity.
-    eapply J.red_stat_while_4_not_continue. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
-    autorewrite with js_ljs.
-    eapply J.red_stat_while_5_break. jauto_js.
+    jauto_js 15. 
     (* break with wrong label *)
     res_related_invert.
     jauto_js.
@@ -675,16 +663,8 @@ Proof.
     autorewrite with js_ljs.
     skip. (* eapply J.red_stat_while_6_abort. *) (* TODO SPECIFICATION PROBLEM! ASK ALAN *)
     (* only return remains *)
-    (* TODO: add to res_related that returning empty is not possible! *)
     res_related_invert; tryfalse.
-    jauto_js.
-    eapply J.red_stat_while_1. eassumption.
-    eapply J.red_stat_while_2_true. eassumption.
-    eapply J.red_stat_while_3. reflexivity.
-    eapply J.red_stat_while_4_not_continue. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
-    eapply J.red_stat_while_5_not_break. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
-    autorewrite with js_ljs.
-    eapply J.red_stat_while_6_abort. trivial.
+    jauto_js 15.
     (* statement returns a value *)
     apply label_set_invert_lemma in Hstat.
     destruct Hstat as (r''&Hlred&Hlabel_cont). (* TODO add tactic *) 
@@ -716,14 +696,7 @@ Proof.
     res_related_invert.
     specializes IHHwhile Hlabel_brk ___.
     jauto_js.
-    jauto_js.
-    eapply J.red_stat_while_1. eassumption.
-    eapply J.red_stat_while_2_true. eassumption.
-    eapply J.red_stat_while_3. reflexivity.
-    eapply J.red_stat_while_4_not_continue. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
-    eapply J.red_stat_while_5_not_break. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
-    eapply J.red_stat_while_6_normal. reflexivity. autorewrite with js_ljs. jauto_js. (* TODO! *)
-
+    jauto_js 15.
     res_related_invert. eauto with js_ljs. (* TODO *)
 Qed.
 
@@ -737,16 +710,15 @@ Proof.
     apply label_set_invert_lemma in Hlred.
     destruct Hlred as (r'&Hlred&Hlabel).
     apply (exprjs_while_lemma eq_refl) in Hlred.
-    sets_eq c' : (c\("%while_loop" := ejs_while_body_closure c (E.js_expr_to_ejs je)
+    sets_eq c' : (c\("#while_loop" := ejs_while_body_closure c (E.js_expr_to_ejs je)
         (E.js_label_set_to_labels "%continue" jls (E.js_stat_to_ejs jt)) E.expr_undefined)). 
-    asserts Hinv' : (state_invariant BR jst jc c' st). skip. (* TODO state invariant lemma *)
-    freeze EQc'.
+    asserts Hinv' : (state_invariant BR jst jc c' st). substs. jauto_js. 
     destruct Hlred as (k'&Hwhile&Hk).
     lets Hlemma : red_stat_while_lemma IHt IHe Hk Hwhile Hlabel.
     specializes Hlemma resvalue_related_empty Hinv'. (* TODO TLC lets too small ;) *)
     destruct_hyp Hlemma.
+    substs.
     jauto_js.
-    skip. (* TODO state invariant lemma *)
 Qed.
     
 Lemma red_stat_return_ok : forall k oje,

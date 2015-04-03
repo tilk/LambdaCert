@@ -137,6 +137,8 @@ Tactic Notation "injects" :=
 
 Tactic Notation "not" tactic3(tac) := match True with _ => ((tac ; fail 1) || idtac) end.
 
+Tactic Notation "if" tactic(t1) "then" tactic(t2) := match True with _ => (try (t1; fail 1); fail 1) || t2 end.
+
 Tactic Notation "is_hyp" constr(t) := match goal with H : t |- _ => idtac end.
 
 Ltac destruct_hyp H := match type of H with

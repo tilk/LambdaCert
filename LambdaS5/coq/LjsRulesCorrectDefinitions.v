@@ -300,9 +300,9 @@ Record execution_ctx_related BR jst jc c st := {
         binds c "%this" v ->
         value_related BR (J.execution_ctx_this_binding jc) v;
     execution_ctx_related_strictness_flag : forall v, 
-        binds c "#strict" v ->
+        binds c "%strict" v ->
         v = L.value_bool (J.execution_ctx_strict jc);
-    execution_ctx_related_lexical_env : forall v ptr obj,
+    execution_ctx_related_lexical_env : forall v,
         binds c "%context" v ->
         lexical_env_related BR jst jc c st (J.execution_ctx_lexical_env jc) v
 }.
