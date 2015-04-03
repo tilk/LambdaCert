@@ -79,8 +79,6 @@ Hint Extern 11 => match goal with |- context [If _ then _ else _] => case_if end
 
 (* TODO logical hints - move? different database? *)
 
-Hint Extern 8 (_ \/ _) => left.
-Hint Extern 8 (_ \/ _) => right.
 Hint Extern 1 (~(_ /\ _)) => rew_logic.
 
 (** Pre-substitution hints *)
@@ -573,6 +571,8 @@ Qed.
 
 Hint Resolve state_invariant_ctx_incl_preserved : js_ljs.
 
+Hint Extern 1 (_ <> _) => solve [let H := fresh in intro H; injects H; false]. 
+
 Section prefixes.
 
 Local Open Scope char_scope.
@@ -587,84 +587,91 @@ Proof.
     skip.
 Qed.
 
-Lemma lexical_env_related_add_hash_id_preserved : forall BR jst jc c st s v jle v0,
+Lemma lexical_env_related_add_nopercent_id_preserved : forall BR jst jc c st s v jle v0 ch,
+    ch <> "%" ->
     lexical_env_related BR jst jc c st jle v0 ->
-    lexical_env_related BR jst jc (c \(String "#" s := v)) st jle v0.
+    lexical_env_related BR jst jc (c \(String ch s := v)) st jle v0.
 Proof.
-    introv Hrel.
+    introv Hdif Hrel.
     inductions Hrel.
     constructor.
     prove_bag.
     econstructor; eassumption.
 Qed.
 
-Lemma execution_ctx_related_add_hash_id_preserved : forall BR jst jc c st s v,
+Lemma execution_ctx_related_add_nopercent_id_preserved : forall BR jst jc c st s v ch,
+    ch <> "%" ->
     execution_ctx_related BR jst jc c st ->
-    execution_ctx_related BR jst jc (c \(String "#" s := v)) st.
+    execution_ctx_related BR jst jc (c \(String ch s := v)) st.
 Proof.
-    introv Hrel.
+    introv Hdif Hrel.
     inverts Hrel.
     constructor;
     introv Hbinds; 
     rew_binds_eq in Hbinds;
-    destruct_hyp Hbinds; tryfalse; eauto using lexical_env_related_add_hash_id_preserved.
+    destruct_hyp Hbinds; tryfalse; eauto using lexical_env_related_add_nopercent_id_preserved.
 Qed.
 
-Lemma includes_init_ctx_add_hash_id_preserved : forall c s v,
+Lemma includes_init_ctx_add_nopercent_id_preserved : forall c s v ch,
+    ch <> "%" ->
     includes_init_ctx c ->
-    includes_init_ctx (c \(String "#" s := v)).
+    includes_init_ctx (c \(String ch s := v)).
 Proof. 
     unfolds includes_init_ctx.
-    introv Hii Hbinds Hmem.
+    introv Hdif Hii Hbinds Hmem.
     lets (s'&EQs') : init_ctx_percent_prefix Hmem.
     substs.
     rew_binds_eq in Hbinds.
     destruct_hyp Hbinds; tryfalse; eauto.
 Qed.
 
-Lemma state_invariant_add_hash_id_preserved : forall BR jst jc c st s v,
+Lemma state_invariant_add_nopercent_id_preserved : forall BR jst jc c st s v ch,
     state_invariant BR jst jc c st ->
-    state_invariant BR jst jc (c \(String "#" s := v)) st.
+    ch <> "%" ->
+    state_invariant BR jst jc (c \(String ch s := v)) st.
 Proof.
-    introv Hinv.
+    introv Hinv Hdif.
     inverts Hinv.
     constructor.
     assumption.
-    eapply execution_ctx_related_add_hash_id_preserved. eassumption.
-    eapply includes_init_ctx_add_hash_id_preserved. eassumption.
+    eapply execution_ctx_related_add_nopercent_id_preserved; eassumption.
+    eapply includes_init_ctx_add_nopercent_id_preserved; eassumption.
     assumption.
 Qed.
 
-Lemma lexical_env_related_unadd_hash_id_preserved : forall BR jst jc c st s v jle v0,
-    lexical_env_related BR jst jc (c \(String "#" s := v)) st jle v0 ->
+Lemma lexical_env_related_unadd_nopercent_id_preserved : forall BR jst jc c st s v jle v0 ch,
+    ch <> "%" ->
+    lexical_env_related BR jst jc (c \(String ch s := v)) st jle v0 ->
     lexical_env_related BR jst jc c st jle v0.
 Proof.
-    introv Hrel.
+    introv Hdif Hrel.
     inductions Hrel.
     constructor.
     rew_binds_eq in H. destruct_hyp H; tryfalse. assumption.
     econstructor; eassumption.
 Qed.
 
-Lemma execution_ctx_related_unadd_hash_id_preserved : forall BR jst jc c st s v,
-    execution_ctx_related BR jst jc (c \(String "#" s := v)) st ->
+Lemma execution_ctx_related_unadd_nopercent_id_preserved : forall BR jst jc c st s v ch,
+    ch <> "%" ->
+    execution_ctx_related BR jst jc (c \(String ch s := v)) st ->
     execution_ctx_related BR jst jc c st.
 Proof.
-    introv Hrel.
+    introv Hdif Hrel.
     inverts Hrel.
     constructor;
     introv Hbinds.
     prove_bag. 
     prove_bag. 
-    eapply lexical_env_related_unadd_hash_id_preserved. prove_bag.
+    eapply lexical_env_related_unadd_nopercent_id_preserved; prove_bag.
 Qed.
 
-Lemma includes_init_ctx_unadd_hash_id_preserved : forall c s v,
-    includes_init_ctx (c \(String "#" s := v)) ->
+Lemma includes_init_ctx_unadd_nopercent_id_preserved : forall c s v ch,
+    ch <> "%" ->
+    includes_init_ctx (c \(String ch s := v)) ->
     includes_init_ctx c.
 Proof. 
     unfolds includes_init_ctx.
-    introv Hii Hbinds Hmem.
+    introv Hdif Hii Hbinds Hmem.
     lets (s'&EQs') : init_ctx_percent_prefix Hmem.
     substs.
     eapply Hii; [idtac | eapply Hmem].
@@ -672,23 +679,24 @@ Proof.
     eauto.
 Qed.
 
-Lemma state_invariant_unadd_hash_id_preserved : forall BR jst jc c st s v,
-    state_invariant BR jst jc (c \(String "#" s := v)) st ->
+Lemma state_invariant_unadd_nopercent_id_preserved : forall BR jst jc c st s v ch,
+    state_invariant BR jst jc (c \(String ch s := v)) st ->
+    ch <> "%" ->
     state_invariant BR jst jc c st.
 Proof.
-    introv Hinv.
+    introv Hinv Hdif.
     inverts Hinv.
     constructor.
     assumption.
-    eapply execution_ctx_related_unadd_hash_id_preserved. eassumption.
-    eapply includes_init_ctx_unadd_hash_id_preserved. eassumption.
+    eapply execution_ctx_related_unadd_nopercent_id_preserved; eassumption.
+    eapply includes_init_ctx_unadd_nopercent_id_preserved; eassumption.
     assumption.
 Qed.
 
 End prefixes.
 
-Hint Resolve state_invariant_add_hash_id_preserved : js_ljs.
-Hint Resolve state_invariant_unadd_hash_id_preserved : js_ljs.
+Hint Resolve state_invariant_add_nopercent_id_preserved : js_ljs.
+Hint Resolve state_invariant_unadd_nopercent_id_preserved : js_ljs.
 
 Lemma value_related_bisim_incl_preserved : forall BR1 BR2 jv v,
     BR1 \c BR2 ->
@@ -926,11 +934,30 @@ Proof.
     destruct b; injects; reflexivity.
 Qed.
 
+Lemma ljs_to_number_lemma : forall k BR jst jc c st st' r jv v,
+    state_invariant BR jst jc c st ->
+    value_related BR jv v -> 
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privToNumber [v]) (L.out_ter st' r) ->
+    st = st' /\
+    exists n,
+    r = L.res_value (L.value_number n) /\
+    J.red_expr jst jc (J.spec_to_number jv) 
+        (J.out_ter jst (J.res_val (J.value_prim (J.prim_number n)))).
+Proof.
+    introv Hinv Hrel Hlred.
+    
+    inverts Hlred.
+    ljs_apply.
+(*    repeat inv_fwd_ljs. *)
+    skip. 
+Qed.
+
 (** ** Lemmas about specification functions *)
 
 (** *** spec_expr_get_value_conv spec_to_boolean 
     It corresponds to [to_bool] in the desugaring. *)
 
+(* TODO create a lemma more helpful for proving operators *)
 Lemma red_spec_to_boolean_ok : forall k je, 
     ih_expr k ->
     th_spec k (E.to_bool (js_expr_to_ljs je))

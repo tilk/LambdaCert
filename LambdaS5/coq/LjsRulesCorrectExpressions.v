@@ -83,22 +83,12 @@ Proof.
     apply_ih_expr.
     (* true *)
     repeat destr_concl; unfold_concl.
-    jauto_js.
-    left.
-    solve_jauto_js.
-
-    jauto_js.
-    right.
-    solve_jauto_js. 
+    jauto_js 11.
+    jauto_js 18.
     (* false *)
     repeat destr_concl; unfold_concl.
-    jauto_js.
-    left.
-    solve_jauto_js.
-
-    jauto_js.
-    right.
-    solve_jauto_js. 
+    jauto_js 11.
+    jauto_js 18. 
     (* abort *)
     ljs_abort_from_js.
     ljs_propagate_abort.
@@ -118,22 +108,25 @@ Proof.
     introv IHe Hinv Hlred.
     inv_fwd_ljs.
     ljs_out_redh_ter.
-(* TODO better lemma about to_bool *)
-    (* abort *)
-(*
-    repeat (ljs_propagate_abort || ljs_abort_from_js).
-    inverts H2. skip.
+    forwards_th red_spec_to_boolean_ok.
+    destr_concl.
+    inverts H1. inverts H9. inverts H10. (* TODO *)
+    inverts H6; try ljs_abort.
     jauto_js.
-    right; jauto_js.
-    eapply J.red_spec_expr_get_value.
-    eapply J.red_expr_unary_op.
+    left.
+    destruct b; injects H5; (* TODO *)
+    jauto_js 10.
+
+    inverts H6. res_related_invert. tryfalse.
     jauto_js.
-    eapply H9.
-    inverts H9. skip.
-    eapply J.red_expr_unary_op_1.
+    right.     
     jauto_js.
-    eapply J.red_expr_unary_op_not. *)
-    skip.
+
+    inverts H1. jauto_js.
+    inverts H12. jauto_js.
+    inverts H13. 
+    injects.
+    jauto_js 10.
 Qed.
 
 Lemma red_expr_unary_op_ok : forall op k je,
