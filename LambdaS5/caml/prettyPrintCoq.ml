@@ -146,6 +146,7 @@ let format_number n =
     if n == nan then text "JsNumber.nan"
     else parens (squish [text "JsNumber.of_int "; int (Float.to_int n)])
 
+(* TODO modify to give letrecs own identifiers! *)
 let rec format_expr b e = match e with
     | Coq_expr_null -> text "expr_null"
     | Coq_expr_undefined -> text "expr_undefined"

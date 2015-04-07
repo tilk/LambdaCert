@@ -123,8 +123,7 @@ Definition prim_to_bool store (v : value) :=
 
 Definition nnot store (v : value) :=
   match v with
-  | value_bool true => result_some value_false
-  | value_bool false => result_some value_true
+  | value_bool b => result_some (value_bool (!b))
   | _ => result_fail "negation with non-boolean"
   end
 .

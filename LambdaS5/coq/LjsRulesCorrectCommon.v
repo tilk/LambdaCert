@@ -165,10 +165,13 @@ Ltac inv_resvalue_related :=
     | H : resvalue_related _ _ _ |- _ => inverts H
     end.
 
-Ltac unfold_concl := unfold concl_expr_value, concl_expr_getvalue, concl_stat, concl_spec.
+Ltac unfold_concl := 
+    unfold concl_ext_expr_value, concl_expr_value, concl_expr_getvalue_then, concl_expr_getvalue, 
+        concl_stat, concl_spec, concl_ext_expr_unary.
  
 Tactic Notation "unfold_concl" "in" hyp(H) := 
-    unfold concl_expr_value, concl_expr_getvalue, concl_stat, concl_spec in H.
+    unfold concl_ext_expr_value, concl_expr_value, concl_expr_getvalue_then, concl_expr_getvalue, 
+        concl_stat, concl_spec, concl_ext_expr_unary in H. 
 
 Ltac js_ljs_false_invert := match goal with 
     | H : J.abort_intercepted_expr _ |- _ => solve [inverts H]
@@ -211,11 +214,15 @@ Tactic Notation "autoforwards" simple_intropattern(I) ":" constr(E) :=
     (forwards I : E; try eassumption; try omega); [idtac].
 
 Ltac destr_concl := match goal with
-    | H : concl_spec _ _ _ _ _ _ _ _ _ |- _ =>
+    | H : concl_spec _ _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_stat _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_expr_getvalue _ _ _ _ _ _ _ _ |- _ =>
+        unfold_concl in H; destruct_hyp H
+    | H : concl_expr_getvalue_then _ _ _ _ _ _ _ _ _ _ |- _ =>
+        unfold_concl in H; destruct_hyp H
+    | H : concl_ext_expr_unary _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     end.
 
@@ -847,6 +854,17 @@ Ltac ljs_propagate_abort :=
 
 Ltac ljs_handle_abort := progress (repeat (ljs_propagate_abort || ljs_abort_from_js)); solve_ijauto_js.
 
+Ltac specialize_th_ext_expr_unary H :=
+    match type of H with
+    | th_ext_expr_unary _ ?e _ _ =>
+    match goal with
+    | H1 : L.red_exprh _ ?c ?st (L.expr_basic ?e') _, H2 : state_invariant _ _ _ ?c ?st |- _ => 
+        unify e e';
+        specializes H H2 H1;
+        clear H2; clear H1
+    end
+    end.
+
 Ltac specialize_th_spec H :=
     match type of H with
     | th_spec _ ?e _ _ => 
@@ -871,7 +889,7 @@ Ltac specialize_th_stat H :=
 
 Ltac forwards_th Hth := let H := fresh "H" in 
     (forwards H : Hth;
-    first [is_var H; (specialize_th_spec H || specialize_th_stat H) | idtac];
+    first [is_var H; (specialize_th_spec H || specialize_th_stat H || specialize_th_ext_expr_unary H) | idtac];
     try (eapply ih_expr_leq; try eassumption; omega)); 
     [idtac].
 
@@ -956,6 +974,35 @@ Qed.
 
 (** *** spec_expr_get_value_conv spec_to_boolean 
     It corresponds to [to_bool] in the desugaring. *)
+
+Lemma red_spec_to_boolean_unary_ok : forall k je,
+    ih_expr k ->
+    th_ext_expr_unary k (E.to_bool (js_expr_to_ljs je)) J.spec_to_boolean je.
+Proof.
+    introv IHe Hinv Hlred.
+    inverts Hlred.
+    ljs_out_redh_ter.
+    ljs_get_builtin.
+
+    repeat inv_internal_fwd_ljs.
+    ljs_out_redh_ter.
+
+    apply_ih_expr.
+
+    destr_concl; try ljs_handle_abort. 
+
+    repeat inv_internal_fwd_ljs.
+    autoforwards Hbool : ljs_to_bool_lemma.
+    destruct_hyp Hbool.
+
+    jauto_js 18.
+Qed.
+
+Lemma red_spec_to_number_unary_ok : forall k je,
+    ih_expr k ->
+    th_ext_expr_unary k (E.make_app_builtin "%ToNumber" [js_expr_to_ljs je]) J.spec_to_number je.
+Proof.
+Admitted.
 
 (* TODO create a lemma more helpful for proving operators *)
 Lemma red_spec_to_boolean_ok : forall k je, 

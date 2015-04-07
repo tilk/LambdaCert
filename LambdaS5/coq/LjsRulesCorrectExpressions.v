@@ -90,9 +90,7 @@ Proof.
     jauto_js 11.
     jauto_js 18. 
     (* abort *)
-    ljs_abort_from_js.
-    ljs_propagate_abort.
-    ijauto_js. (* TODO think if jauto_js can be used instead *)
+    ljs_handle_abort.
 Qed.
 
 Lemma red_expr_assign0_ok : forall k je1 je2,
@@ -108,26 +106,52 @@ Proof.
     introv IHe Hinv Hlred.
     inv_fwd_ljs.
     ljs_out_redh_ter.
-    forwards_th red_spec_to_boolean_ok.
-    destr_concl.
-    inverts H1. inverts H9. inverts H10. (* TODO *)
-    inverts H6; try ljs_abort.
+    forwards_th red_spec_to_boolean_unary_ok.
+    repeat destr_concl.
+    inverts keep H7; tryfalse.
+    inverts keep H9. (* TODO res_related_invert *)
+    inv_fwd_ljs.
+    destruct v0;
+    simpl in H13; tryfalse. 
+    inverts H8. (* resvalue_related_invert. *)
+    inverts H6. (* value_related_invert *)
+    injects.
+   
     jauto_js.
     left.
-    destruct b; injects H5; (* TODO *)
     jauto_js 10.
 
-    inverts H6. res_related_invert. tryfalse.
-    jauto_js.
-    right.     
-    jauto_js.
-
-    inverts H1. jauto_js.
-    inverts H12. jauto_js.
-    inverts H13. 
-    injects.
-    jauto_js 10.
+    ljs_handle_abort.
 Qed.
+
+(*
+(* TODO delete *)
+Axiom red_spec_to_number_unary_ok : forall k je,
+    ih_expr k ->
+    th_ext_expr_unary k (E.make_app_builtin "%ToNumber" [js_expr_to_ljs je]) J.spec_to_number je.
+
+Lemma red_expr_unary_op_add_ok : forall k je,
+    ih_expr k ->
+    th_expr k (J.expr_unary_op J.unary_op_add je).
+Proof.
+    introv IHe Hinv Hlred.
+    inverts Hlred.
+    ljs_out_redh_ter.
+    ljs_get_builtin.
+    repeat inv_fwd_ljs.
+    ljs_out_redh_ter.
+    apply_ih_expr.
+    destr_concl; try ljs_handle_abort. 
+    repeat inv_fwd_ljs.
+    inverts H5. (* TODO *)
+    ljs_apply.
+    simpl in H8. unfold LjsInitEnv.ex_privUnaryPlus in H8.
+    asserts Hinv' : (state_invariant BR' jst' jc (from_list [("expr", v)] \u
+        from_list [("%ToNumber", LjsInitEnv.privToNumber)]) st). skip. (* TODO *)
+    lets Zupa : red_spec_to_number_unary_ok IHe Hinv'. unfold E.make_app_builtin in Zupa.
+    forwards_th red_spec_to_number_unary_ok.
+Qed.
+*)
 
 Lemma red_expr_unary_op_ok : forall op k je,
     ih_expr k ->

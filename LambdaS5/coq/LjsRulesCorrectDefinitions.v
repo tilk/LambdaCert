@@ -331,12 +331,15 @@ Record state_invariant BR jst jc c st : Prop := {
 (** *** Theorem conclusions
     They state what must hold if the preconditions are satisfied. *)
 
-Definition concl_expr_value BR jst jc c st st' r je :=
+Definition concl_ext_expr_value BR jst jc c st st' r jee :=
     exists BR' jst' jr,
     state_invariant BR' jst' jc c st' /\
     BR \c BR' /\
-    J.red_expr jst jc (J.expr_basic je) (J.out_ter jst' jr) /\ 
+    J.red_expr jst jc jee (J.out_ter jst' jr) /\ 
     res_related BR jst' st' jr r.
+
+Definition concl_expr_value BR jst jc c st st' r je :=  
+    concl_ext_expr_value BR jst jc c st st' r (J.expr_basic je).
 
 Definition concl_stat BR jst jc c st st' r jt :=
     exists BR' jst' jr,
@@ -345,7 +348,8 @@ Definition concl_stat BR jst jc c st st' r jt :=
     J.red_stat jst jc (J.stat_basic jt) (J.out_ter jst' jr) /\ 
     res_related BR' jst' st' jr r.
 
-Definition concl_spec {A : Type} BR jst jc c st st' r jes (P : object_bisim -> J.state -> A -> Prop) :=
+Definition concl_spec {A : Type} BR jst jc c st st' r jes 
+    (P : object_bisim -> J.state -> A -> Prop) (Q : object_bisim -> J.state -> J.res -> Prop) :=
     exists BR' jst',
     state_invariant BR' jst' jc c st' /\ 
     BR \c BR' /\
@@ -353,11 +357,36 @@ Definition concl_spec {A : Type} BR jst jc c st st' r jes (P : object_bisim -> J
      (exists jr, 
         J.red_spec jst jc jes (@J.specret_out A (J.out_ter jst' jr)) /\ 
         J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw /\
-        res_related BR' jst' st' jr r)).
+        res_related BR' jst' st' jr r /\ Q BR' jst' jr)).
 
-Definition concl_expr_getvalue BR jst jc c st st' r je :=
+Definition concl_expr_getvalue_then BR jst jc c st st' r je (P : object_bisim -> J.state -> J.value -> Prop) Q :=
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
-       (fun BR' _ jv => exists v, r = L.res_value v /\ value_related BR' jv v).
+       (fun BR' jst' jv => exists r' v, r' = L.res_value v /\ value_related BR' jv v /\ P BR' jst' jv) Q.
+
+Definition concl_expr_getvalue BR jst jc c st st' r je := (* TODO using getvalue_then *)
+    concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
+       (fun BR' _ jv => exists v, r = L.res_value v /\ value_related BR' jv v) (fun _ _ _ => True).
+(*
+Definition concl_spec_unary {A : Type} BR jst jc c st st' r jesf je (P : object_bisim -> J.state -> A -> Prop) :=
+    exists st'' r'',
+    concl_expr_getvalue_then BR jst jc c st st'' r'' je
+       (fun BR'' jst'' jv => concl_spec BR'' jst'' jc c st'' st' r (jesf jv) P).
+*)
+Definition concl_ext_expr_unary BR jst jc c st st' r jef je :=
+(*
+    exists BR' jst',
+    state_invariant BR' jst' jc c st' /\ 
+    BR \c BR' /\
+    ((exists (x : J.value), J.red_spec jst jc (J.spec_expr_get_value je) (J.specret_val jst' x) /\ True) \/
+     (exists jr, 
+        J.red_spec jst jc (J.spec_expr_get_value je) (@J.specret_out J.value (J.out_ter jst' jr)) /\ 
+        J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw /\
+        res_related BR' jst' st' jr r)).
+*)  
+    exists st'',
+    concl_expr_getvalue_then BR jst jc c st st'' r je
+       (fun BR'' jst'' jv => concl_ext_expr_value BR'' jst'' jc c st'' st' r (jef jv))
+       (fun BR'' jst'' jr => st'' = st' ).
 
 (** *** Theorem statements *)
 
@@ -376,7 +405,20 @@ Definition th_spec {A : Type} k e jes
     forall BR jst jc c st st' r, 
     state_invariant BR jst jc c st ->
     L.red_exprh k c st (L.expr_basic e) (L.out_ter st' r) ->
-    concl_spec BR jst jc c st st' r jes (fun BR' jst' a => P BR' jst' jc c st' r a).
+    concl_spec BR jst jc c st st' r jes (fun BR' jst' a => P BR' jst' jc c st' r a) (fun _ _ _ => True).
+(*
+Definition th_spec_unary {A : Type} k e jesf je
+    (P : object_bisim -> J.state -> J.execution_ctx -> L.ctx -> L.store -> L.res -> A -> Prop) := 
+    forall BR jst jc c st st' r, 
+    state_invariant BR jst jc c st ->
+    L.red_exprh k c st (L.expr_basic e) (L.out_ter st' r) ->
+    concl_spec_unary BR jst jc c st st' r jesf je (fun BR' jst' a => P BR' jst' jc c st' r a).
+*)
+Definition th_ext_expr_unary k e jef je := 
+    forall BR jst jc c st st' r, 
+    state_invariant BR jst jc c st ->
+    L.red_exprh k c st (L.expr_basic e) (L.out_ter st' r) ->
+    concl_ext_expr_unary BR jst jc c st st' r jef je.
 
 (** *** Inductive hypotheses 
     The form of the induction hypotheses, as used in the proof. 
