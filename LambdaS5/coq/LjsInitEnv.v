@@ -330,6 +330,8 @@ expr_object
  ("%StringProto", property_data
                   (data_intro (expr_id "%StringProto") expr_true expr_false
                    expr_false));
+ ("%StxEq", property_data
+            (data_intro (expr_id "%StxEq") expr_true expr_false expr_false));
  ("%SyntaxError", property_data
                   (data_intro (expr_id "%SyntaxError") expr_true expr_false
                    expr_false));
@@ -2761,6 +2763,9 @@ expr_let "len" (expr_op1 unary_op_strlen (expr_id "s"))
      [expr_op2 binary_op_add (expr_id "i") (expr_number (JsNumber.of_int 1))]))
    expr_undefined))
  (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)]))
+.
+Definition ex_privStxEq := 
+expr_op2 binary_op_stx_eq (expr_id "x1") (expr_id "x2")
 .
 Definition ex_privSyntaxError := 
 expr_throw
@@ -8142,6 +8147,10 @@ value_closure
 Definition name_privStringIndexOflambda :=  "%StringIndexOflambda" .
 Definition privStringLastIndexOf :=  value_object 164 .
 Definition name_privStringLastIndexOf :=  "%StringLastIndexOf" .
+Definition privStxEq := 
+value_closure (closure_intro [] None ["x1"; "x2"] ex_privStxEq)
+.
+Definition name_privStxEq :=  "%StxEq" .
 Definition privSyntaxErrorProto :=  value_object 10 .
 Definition name_privSyntaxErrorProto :=  "%SyntaxErrorProto" .
 Definition privSyntaxError := 
@@ -9730,6 +9739,7 @@ Definition ctx_items :=
  (name_privStringIndices, privStringIndices);
  (name_privStringLastIndexOf, privStringLastIndexOf);
  (name_privStringProto, privStringProto);
+ (name_privStxEq, privStxEq);
  (name_privSyntaxError, privSyntaxError);
  (name_privSyntaxErrorConstructor, privSyntaxErrorConstructor);
  (name_privSyntaxErrorGlobalFuncObj, privSyntaxErrorGlobalFuncObj);
@@ -10139,6 +10149,7 @@ Definition store_items := [
                                              ("%StringIndices", privStringIndices);
                                              ("%StringLastIndexOf", privStringLastIndexOf);
                                              ("%StringProto", privStringProto);
+                                             ("%StxEq", privStxEq);
                                              ("%SyntaxError", privSyntaxError);
                                              ("%SyntaxErrorConstructor", privSyntaxErrorConstructor);
                                              ("%SyntaxErrorGlobalFuncObj", privSyntaxErrorGlobalFuncObj);

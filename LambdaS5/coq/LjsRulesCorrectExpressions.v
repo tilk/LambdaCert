@@ -131,12 +131,7 @@ Lemma red_expr_unary_op_not_ok : forall k je,
     th_expr k (J.expr_unary_op J.unary_op_not je).
 Proof.
     introv IHe Hinv Hlred.
-    inv_fwd_ljs.
-    ljs_out_redh_ter.
-    ljs_get_builtin.
-    repeat inv_fwd_ljs.
-    ljs_out_redh_ter.
-    apply_ih_expr.
+    repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
     forwards_th red_expr_unary_op_2_not_ok.
@@ -163,12 +158,7 @@ Lemma red_expr_unary_op_add_ok : forall k je,
     th_expr k (J.expr_unary_op J.unary_op_add je).
 Proof.
     introv IHe Hinv Hlred.
-    inv_fwd_ljs.
-    ljs_out_redh_ter.
-    ljs_get_builtin.
-    repeat inv_fwd_ljs.
-    ljs_out_redh_ter.
-    apply_ih_expr.
+    repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
     forwards_th red_expr_unary_op_2_add_ok.
@@ -192,8 +182,83 @@ Proof.
     skip.
     skip.
     skip.
-    skip.
+    apply red_expr_unary_op_add_ok.
     skip.
     skip.
     apply red_expr_unary_op_not_ok.
+Qed.
+
+Lemma red_expr_binary_op_3_strict_equal_ok : forall k,
+    ih_expr k ->
+    th_ext_expr_binary k LjsInitEnv.privStxEq (J.expr_binary_op_3 J.binary_op_strict_equal).
+Proof.
+Admitted.
+
+Lemma red_expr_binary_op_strict_equal_ok : forall k je1 je2,
+    ih_expr k ->
+    th_expr k (J.expr_binary_op je1 J.binary_op_strict_equal je2).
+Proof.
+    introv IHe Hinv Hlred.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat inv_fwd_ljs.
+    asserts Hlol : (value_related BR'0 x v). jauto_js. (* TODO *)
+    forwards_th red_expr_binary_op_3_strict_equal_ok.
+    repeat destr_concl.
+    js_red_expr_invert.
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js. left. jauto_js 8.
+Qed.
+
+Lemma red_expr_binary_op_3_equal_ok : forall k,
+    ih_expr k ->
+    th_ext_expr_binary k LjsInitEnv.privEqEq (J.expr_binary_op_3 J.binary_op_equal).
+Proof.
+Admitted.
+
+Lemma red_expr_binary_op_equal_ok : forall k je1 je2,
+    ih_expr k ->
+    th_expr k (J.expr_binary_op je1 J.binary_op_equal je2).
+Proof.
+    introv IHe Hinv Hlred.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat inv_fwd_ljs.
+    skip. (* TODO *)
+Qed.
+
+Lemma red_expr_binary_op_ok : forall op k je1 je2,
+    ih_expr k ->
+    th_expr k (J.expr_binary_op je1 op je2).
+Proof.
+    destruct op.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    apply red_expr_binary_op_equal_ok.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
 Qed.

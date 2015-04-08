@@ -266,9 +266,9 @@ Definition make_op2 op e1 e2 :=
     | J.binary_op_instanceof => make_app_builtin "%instanceof" [e1; e2] 
     | J.binary_op_in => make_app_builtin "%in" [e1; e2] 
     | J.binary_op_equal => make_app_builtin "%EqEq" [e1; e2] 
-    | J.binary_op_strict_equal => L.expr_op2 L.binary_op_stx_eq e1 e2 
+    | J.binary_op_strict_equal => make_app_builtin "%StxEq" [e1; e2] 
     | J.binary_op_disequal => L.expr_op1 L.unary_op_not (make_app_builtin "%EqEq" [e1; e2])
-    | J.binary_op_strict_disequal => L.expr_op1 L.unary_op_not (L.expr_op2 L.binary_op_stx_eq e1 e2)
+    | J.binary_op_strict_disequal => L.expr_op1 L.unary_op_not (make_app_builtin "%StxEq" [e1; e2])
     end.
 
 Definition make_array es :=

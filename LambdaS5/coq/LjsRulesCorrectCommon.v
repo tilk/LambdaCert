@@ -72,6 +72,7 @@ Hint Constructors J.abort : js_ljs.
 
 Hint Extern 4 (js_exn_object _ _) => unfold js_exn_object : js_ljs.
 Hint Extern 4 (res_related _ _ _ (J.res_throw _) _) => unfold J.res_throw : js_ljs.
+Hint Extern 4 (JsPreliminary.regular_binary_op _) => unfold JsPreliminary.regular_binary_op : js_ljs.
 
 (** Automatic deconstructing of ifs in goals *)
 
@@ -156,11 +157,11 @@ Ltac inv_literal_ljs :=
     end in inverts H.
 
 Ltac unfold_concl := 
-    unfold concl_ext_expr_value, concl_expr_value, concl_expr_getvalue_then, concl_expr_getvalue, 
+    unfold concl_ext_expr_value, concl_expr_value, concl_expr_getvalue, 
         concl_stat, concl_spec.
  
 Tactic Notation "unfold_concl" "in" hyp(H) := 
-    unfold concl_ext_expr_value, concl_expr_value, concl_expr_getvalue_then, concl_expr_getvalue, 
+    unfold concl_ext_expr_value, concl_expr_value, concl_expr_getvalue, 
         concl_stat, concl_spec in H. 
 
 Ltac js_ljs_false_invert := match goal with 
@@ -211,8 +212,6 @@ Ltac destr_concl := match goal with
     | H : concl_ext_expr_value _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_expr_getvalue _ _ _ _ _ _ _ _ |- _ =>
-        unfold_concl in H; destruct_hyp H
-    | H : concl_expr_getvalue_then _ _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     end.
 
@@ -809,6 +808,12 @@ Qed.
 
 Ltac ljs_get_builtin :=
     match goal with
+    | Hbinds : binds ?c _ ?v, Hinv : state_invariant _ _ _ ?c ?st |- _ =>
+        let H1 := fresh in
+        forwards H1 : state_invariant_includes_init_ctx_lemma Hinv Hbinds; [
+        unfold LjsInitEnv.ctx_items;
+        solve [repeat (eapply Mem_here || apply Mem_next)] | 
+        subst_hyp H1 ]
     | Hinv : state_invariant _ _ _ ?c ?st,
       H : L.red_exprh _ ?c ?st (L.expr_basic (E.make_builtin _)) _ |- _ =>
         let H1 := fresh in
@@ -874,6 +879,17 @@ Ltac specialize_th_ext_expr_unary H :=
     end
     end.
 
+Ltac specialize_th_ext_expr_binary H :=
+    match type of H with
+    | th_ext_expr_binary _ ?e _ =>
+    match goal with
+    | H1 : state_invariant ?BR _ _ ?c ?st, H2 : value_related ?BR ?jv1 ?v1, H3 : value_related ?BR ?jv2 ?v2,
+      H4 : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
+        unify e e'; unify [v1; v2] vl;
+        specializes H H1 H2 H3 H4 (*___; [eapply (L.red_exprh_le H3); omega | idtac] *)
+    end
+    end.
+
 Ltac specialize_th_spec H :=
     match type of H with
     | th_spec _ ?e _ _ => 
@@ -904,7 +920,8 @@ Ltac ih_expr_leq :=
 
 Ltac forwards_th Hth := let H := fresh "H" in 
     (forwards H : Hth;
-    first [is_var H; (specialize_th_spec H || specialize_th_stat H || specialize_th_ext_expr_unary H) | idtac];
+    first [is_var H; (specialize_th_spec H || specialize_th_stat H || 
+           specialize_th_ext_expr_unary H || specialize_th_ext_expr_binary H) | idtac];
     try ih_expr_leq); 
     [idtac].
 
@@ -930,6 +947,15 @@ Ltac res_related_abort :=
     end.
 
 Ltac destr_concl_auto := destr_concl; res_related_abort; try ljs_handle_abort.
+
+Lemma js_red_expr_binary_op_strict_equal_invert_lemma : forall jst jc jv1 jv2 jst' jr,
+    J.red_expr jst jc (J.expr_binary_op_3 J.binary_op_strict_equal jv1 jv2) (J.out_ter jst' jr) ->
+    exists b, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_bool b))).
+Proof.
+    introv Hred.
+    inverts Hred; tryfalse. 
+    inverts H4. inverts H2. inverts H5. eauto. inverts H4. (* TODO *)
+Qed.
 
 Lemma js_red_expr_spec_to_number_invert_lemma : forall jst jc jv jst' jr,
     J.red_expr jst jc (J.spec_to_number jv) (J.out_ter jst' jr) ->
@@ -982,10 +1008,14 @@ Ltac js_red_expr_invert :=
         | J.spec_to_number _ => constr:js_red_expr_spec_to_number_invert_lemma
         | J.expr_unary_op_2 J.unary_op_not _ => constr:js_red_expr_unary_op_not_invert_lemma
         | J.expr_unary_op_2 J.unary_op_add _ => constr:js_red_expr_unary_op_add_invert_lemma
+        | J.expr_binary_op_3 J.binary_op_strict_equal _ _ => constr:js_red_expr_binary_op_strict_equal_invert_lemma
         end in
         let H1 := fresh in 
         lets H1 : lem H; destruct_hyp H1
     end.
+
+Ltac ljs_autoforward :=
+    ljs_get_builtin || inv_fwd_ljs || ljs_out_redh_ter || apply_ih_expr.
 
 (** ** Lemmas about operators *)
 

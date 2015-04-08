@@ -786,5 +786,5 @@ Proof.
 (* TODO seems like something to automate *)
     repeat (ljs_out_redh_ter || inv_fwd_ljs).
     repeat injects.
-    solve_jauto_js.
+    jauto_js 12.
 Qed.
