@@ -232,7 +232,7 @@ Definition make_op1 f op e :=
     | J.unary_op_neg => make_app_builtin "%UnaryNeg" [f e]
     | J.unary_op_add => make_app_builtin "%UnaryPlus" [f e]
     | J.unary_op_bitwise_not => make_app_builtin "%BitwiseNot" [f e]
-    | J.unary_op_not => L.expr_op1 L.unary_op_not (to_bool (f e))
+    | J.unary_op_not => make_app_builtin "%UnaryNot" [f e]
     | J.unary_op_typeof => make_typeof f e
     | J.unary_op_void => L.expr_op1 L.unary_op_void (f e)
     end.

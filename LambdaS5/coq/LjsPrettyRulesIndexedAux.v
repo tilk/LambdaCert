@@ -51,6 +51,16 @@ Proof.
     hint red_exprh_lt. introv H. induction H; induct_height. 
 Qed.
 
+Lemma red_exprh_le : forall k k' c st ee o, red_exprh k c st ee o -> (k <= k')%nat -> red_exprh k' c st ee o.
+Proof.
+    introv.
+    destruct (classic (k = k')).
+    subst. auto.
+    intros. 
+    asserts Hlt : (k < k')%nat. omega. 
+    eauto using red_exprh_lt.
+Qed.
+
 (* Useful tactics and lemmas *)
 
 Lemma red_exprh_general_abort : forall k c st ee o,
@@ -94,12 +104,14 @@ End Tactics.
 
 (***** WEAKENING *****)
 
+(* Does not hold.
 Lemma red_exprh_weaken : forall k c c' st ee o, 
     c \c c' ->
     red_exprh k c st ee o ->
     red_exprh k c' st ee o.
 Proof.
 Admitted. (* TODO *)
+*)
 
 (***** DETERMINISM *****)
 

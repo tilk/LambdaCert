@@ -99,6 +99,33 @@ Lemma red_expr_assign0_ok : forall k je1 je2,
 Proof.
 Admitted.
 
+Lemma red_expr_unary_op_2_not_ok : forall k,
+    ih_expr k ->
+    th_ext_expr_unary k LjsInitEnv.privUnaryNot (J.expr_unary_op_2 J.unary_op_not).
+Proof.
+    introv IHe Hinv Hvrel Hlred.
+    inverts Hlred. 
+    ljs_apply.
+    simpls.  
+    repeat inv_fwd_ljs.
+    ljs_out_redh_ter.
+(* TODO *)
+    match goal with H : binds ?c _ _ |- _ => sets_eq c' : c end.
+    asserts Hinv' : (state_invariant BR jst jc c' st). skip.
+    asserts_rewrite (v = LjsInitEnv.privToBoolean) in *. skip. (* TODO *)
+    asserts_rewrite (v0 = v1) in *. skip. (* TODO *)
+    forwards_th red_spec_to_boolean_unary_ok. 
+    destr_concl.
+    js_red_expr_invert.
+    res_related_invert.
+    resvalue_related_invert.
+    repeat inv_fwd_ljs.
+    asserts_rewrite (v2 = L.value_bool b) in *. skip. (* TODO *)
+    injects.
+    jauto_js.
+    skip. (* TODO *)
+Qed.
+
 Lemma red_expr_unary_op_not_ok : forall k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_not je).
@@ -106,52 +133,52 @@ Proof.
     introv IHe Hinv Hlred.
     inv_fwd_ljs.
     ljs_out_redh_ter.
-    forwards_th red_spec_to_boolean_unary_ok.
+    ljs_get_builtin.
+    repeat inv_fwd_ljs.
+    ljs_out_redh_ter.
+    apply_ih_expr.
+    destr_concl; try ljs_handle_abort.
+    repeat inv_fwd_ljs.
+    forwards_th red_expr_unary_op_2_not_ok.
     repeat destr_concl.
-    inverts keep H7; tryfalse.
-    inverts keep H9. (* TODO res_related_invert *)
-    inv_fwd_ljs.
-    destruct v0;
-    simpl in H13; tryfalse. 
-    inverts H8. (* resvalue_related_invert. *)
-    inverts H6. (* value_related_invert *)
-    injects.
-   
-    jauto_js.
-    left.
-    jauto_js 10.
-
-    ljs_handle_abort.
+    js_red_expr_invert.
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js. left. jauto_js.
 Qed.
 
-(*
-(* TODO delete *)
-Axiom red_spec_to_number_unary_ok : forall k je,
+Lemma red_expr_unary_op_2_add_ok : forall k,
     ih_expr k ->
-    th_ext_expr_unary k (E.make_app_builtin "%ToNumber" [js_expr_to_ljs je]) J.spec_to_number je.
+    th_ext_expr_unary k LjsInitEnv.privUnaryPlus (J.expr_unary_op_2 J.unary_op_add).
+Proof.
+    introv IHe Hinv Hvrel Hlred.
+    inverts Hlred. 
+    ljs_apply.
+    simpls.  
+    repeat inv_fwd_ljs.
+Admitted.
 
 Lemma red_expr_unary_op_add_ok : forall k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_add je).
 Proof.
     introv IHe Hinv Hlred.
-    inverts Hlred.
+    inv_fwd_ljs.
     ljs_out_redh_ter.
     ljs_get_builtin.
     repeat inv_fwd_ljs.
     ljs_out_redh_ter.
     apply_ih_expr.
-    destr_concl; try ljs_handle_abort. 
+    destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    inverts H5. (* TODO *)
-    ljs_apply.
-    simpl in H8. unfold LjsInitEnv.ex_privUnaryPlus in H8.
-    asserts Hinv' : (state_invariant BR' jst' jc (from_list [("expr", v)] \u
-        from_list [("%ToNumber", LjsInitEnv.privToNumber)]) st). skip. (* TODO *)
-    lets Zupa : red_spec_to_number_unary_ok IHe Hinv'. unfold E.make_app_builtin in Zupa.
-    forwards_th red_spec_to_number_unary_ok.
+    forwards_th red_expr_unary_op_2_add_ok.
+    repeat destr_concl.
+    js_red_expr_invert.
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js. left. jauto_js.
+    jauto_js. right. jauto_js.
 Qed.
-*)
 
 Lemma red_expr_unary_op_ok : forall op k je,
     ih_expr k ->

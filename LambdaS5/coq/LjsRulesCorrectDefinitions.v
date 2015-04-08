@@ -282,16 +282,15 @@ Inductive env_record_related BR : J.env_record -> L.object -> Prop :=
 .
 
 (* Relates the lexical environment *)
-Inductive lexical_env_related BR jst jc c st : J.lexical_env -> L.value -> Prop :=
+Inductive lexical_env_related BR jst st v' : J.lexical_env -> L.value -> Prop :=
 | lexical_env_related_global : forall v,
-    binds c "%globalContext" v ->
-    lexical_env_related BR jst jc c st [J.env_loc_global_env_record] v
+    lexical_env_related BR jst st v' [J.env_loc_global_env_record] v'
 | lexical_env_related_cons : forall jeptr jlenv jer ptr obj,
     J.Heap.binds (J.state_env_record_heap jst) jeptr jer ->
     binds st ptr obj ->
     env_record_related BR jer obj ->
-    lexical_env_related BR jst jc c st jlenv (L.object_proto obj) ->
-    lexical_env_related BR jst jc c st (jeptr::jlenv) (L.value_object ptr)
+    lexical_env_related BR jst st v' jlenv (L.object_proto obj) ->
+    lexical_env_related BR jst st v' (jeptr::jlenv) (L.value_object ptr)
 .
 
 (* Relates the lexical contexts *)
@@ -302,9 +301,10 @@ Record execution_ctx_related BR jst jc c st := {
     execution_ctx_related_strictness_flag : forall v, 
         binds c "%strict" v ->
         v = L.value_bool (J.execution_ctx_strict jc);
-    execution_ctx_related_lexical_env : forall v,
+    execution_ctx_related_lexical_env : forall v v',
         binds c "%context" v ->
-        lexical_env_related BR jst jc c st (J.execution_ctx_lexical_env jc) v
+        binds c "%globalContext" v' ->
+        lexical_env_related BR jst st v' (J.execution_ctx_lexical_env jc) v
 }.
 
 (* States that the variable environment and lexical environment exist *)
@@ -366,6 +366,8 @@ Definition concl_expr_getvalue_then BR jst jc c st st' r je (P : object_bisim ->
 Definition concl_expr_getvalue BR jst jc c st st' r je := (* TODO using getvalue_then *)
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
        (fun BR' _ jv => exists v, r = L.res_value v /\ value_related BR' jv v) (fun _ _ _ => True).
+
+(*
 (*
 Definition concl_spec_unary {A : Type} BR jst jc c st st' r jesf je (P : object_bisim -> J.state -> A -> Prop) :=
     exists st'' r'',
@@ -387,7 +389,7 @@ Definition concl_ext_expr_unary BR jst jc c st st' r jef je :=
     concl_expr_getvalue_then BR jst jc c st st'' r je
        (fun BR'' jst'' jv => concl_ext_expr_value BR'' jst'' jc c st'' st' r (jef jv))
        (fun BR'' jst'' jr => st'' = st' ).
-
+*)
 (** *** Theorem statements *)
 
 Definition th_expr k je := forall BR jst jc c st st' r, 
@@ -414,12 +416,19 @@ Definition th_spec_unary {A : Type} k e jesf je
     L.red_exprh k c st (L.expr_basic e) (L.out_ter st' r) ->
     concl_spec_unary BR jst jc c st st' r jesf je (fun BR' jst' a => P BR' jst' jc c st' r a).
 *)
+Definition th_ext_expr_unary k v jeef :=
+    forall BR jst jc c st st' r v1 jv1, 
+    state_invariant BR jst jc c st ->
+    value_related BR jv1 v1 -> 
+    L.red_exprh k c st (L.expr_app_2 v [v1]) (L.out_ter st' r) ->
+    concl_ext_expr_value BR jst jc c st st' r (jeef jv1).
+(*
 Definition th_ext_expr_unary k e jef je := 
     forall BR jst jc c st st' r, 
     state_invariant BR jst jc c st ->
     L.red_exprh k c st (L.expr_basic e) (L.out_ter st' r) ->
     concl_ext_expr_unary BR jst jc c st st' r jef je.
-
+*)
 (** *** Inductive hypotheses 
     The form of the induction hypotheses, as used in the proof. 
     Height induction is used to make proofs simpler. *)

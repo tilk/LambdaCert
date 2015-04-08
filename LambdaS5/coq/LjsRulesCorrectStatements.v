@@ -171,16 +171,6 @@ Proof.
     injects. reflexivity.
 Qed.
 
-Lemma red_exprh_le : forall k k' c st ee o, L.red_exprh k c st ee o -> (k <= k')%nat -> L.red_exprh k' c st ee o.
-Proof.
-    introv.
-    destruct (classic (k = k')).
-    subst. auto.
-    intros. 
-    asserts Hlt : (k < k')%nat. omega. 
-    eauto using L.red_exprh_lt.
-Qed.
-
 Inductive label_set_hyp jls s : L.res -> L.res -> Prop := 
 | label_set_hyp_break : forall jl v, 
     Mem jl jls -> 
@@ -215,7 +205,7 @@ Proof.
     eexists.
     splits.
     inverts Hlred'';
-    (eapply red_exprh_le; [eassumption | omega]).
+    (eapply L.red_exprh_le; [eassumption | omega]).
 
     clear IHred.
     inverts IHjls as HypIH; inverts Hlred'' as Hfff.
@@ -302,7 +292,7 @@ Inductive while_unroll k c e1 e2 e3 st r : L.store -> L.value -> Prop :=
 Hint Extern 4 (L.red_exprh _ ?c ?st ?e ?r) =>
     match goal with
     | H : L.red_exprh _ c st e _ |- _ => 
-        eapply red_exprh_le; [eapply H | omega]
+        eapply L.red_exprh_le; [eapply H | omega]
     end.
 
 Lemma ljs_out_ter_cases : forall st r, (exists v, r = L.res_value v) \/ L.abort (L.out_ter st r).

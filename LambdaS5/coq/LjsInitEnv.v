@@ -433,6 +433,9 @@ expr_object
  ("%UnaryNeg", property_data
                (data_intro (expr_id "%UnaryNeg") expr_true expr_false
                 expr_false));
+ ("%UnaryNot", property_data
+               (data_intro (expr_id "%UnaryNot") expr_true expr_false
+                expr_false));
  ("%UnaryPlus", property_data
                 (data_intro (expr_id "%UnaryPlus") expr_true expr_false
                  expr_false));
@@ -3124,6 +3127,10 @@ expr_let "oldValue" (expr_app (expr_id "%ToNumber") [expr_id "expr"])
   (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
    (expr_number (JsNumber.of_int 1)))
   (expr_op2 binary_op_mul (expr_id "oldValue") (expr_id "negOne"))))
+.
+Definition ex_privUnaryNot := 
+expr_let "oldValue" (expr_app (expr_id "%ToBoolean") [expr_id "expr"])
+(expr_op1 unary_op_not (expr_id "oldValue"))
 .
 Definition ex_privUnaryPlus := 
 expr_app (expr_id "%ToNumber") [expr_id "expr"]
@@ -8202,6 +8209,11 @@ value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["expr"] ex_privUnaryNeg)
 .
 Definition name_privUnaryNeg :=  "%UnaryNeg" .
+Definition privUnaryNot := 
+value_closure
+(closure_intro [("%ToBoolean", privToBoolean)] None ["expr"] ex_privUnaryNot)
+.
+Definition name_privUnaryNot :=  "%UnaryNot" .
 Definition privUnaryPlus := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["expr"] ex_privUnaryPlus)
@@ -9753,6 +9765,7 @@ Definition ctx_items :=
  (name_proto1, proto1);
  (name_privUTC, privUTC);
  (name_privUnaryNeg, privUnaryNeg);
+ (name_privUnaryNot, privUnaryNot);
  (name_privUnaryPlus, privUnaryPlus);
  (name_privUnboundId, privUnboundId);
  (name_privUnsignedRightShift, privUnsignedRightShift);
@@ -10161,6 +10174,7 @@ Definition store_items := [
                                              ("%URIErrorProto", proto1);
                                              ("%UTC", privUTC);
                                              ("%UnaryNeg", privUnaryNeg);
+                                             ("%UnaryNot", privUnaryNot);
                                              ("%UnaryPlus", privUnaryPlus);
                                              ("%UnboundId", privUnboundId);
                                              ("%UnsignedRightShift", privUnsignedRightShift);

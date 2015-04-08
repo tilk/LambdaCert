@@ -119,7 +119,7 @@ Ltac with_red_exprh T :=
     match goal with
     | H	: L.red_exprh _ _ _ ?ee _ |- _ => 
         match ee with 
-        | L.expr_app_2 _ _ => fail 1 (* so that lemmas can be easily applied *)
+        | L.expr_app_2 _ _ => fail 1 (* so that lemmas can be easily applied *) 
         | _ => is_hyp (inv_ljs_stop ee); fail 1
         | _ => T H
         end
@@ -130,7 +130,7 @@ Ltac with_internal_red_exprh T :=
     | H	: L.red_exprh _ _ _ ?ee _ |- _ => 
         match ee with 
         | L.expr_basic _ => fail 1
-        | L.expr_app_2 _ _ => fail 1 (* so that lemmas can be easily applied *) 
+        | L.expr_app_2 _ _ => fail 1 (* so that lemmas can be easily applied *)  
         | _ => is_hyp (inv_ljs_stop ee); fail 1
         | _ => T H
         end
@@ -155,23 +155,13 @@ Ltac inv_literal_ljs :=
     | H : L.red_exprh _ _ _ (L.expr_basic (L.expr_string _)) _ |- _ => constr:H
     end in inverts H.
 
-Ltac inv_res_related :=
-    match goal with
-    | H : res_related _ _ _ |- _ => inverts H
-    end.
-
-Ltac inv_resvalue_related :=
-    match goal with
-    | H : resvalue_related _ _ _ |- _ => inverts H
-    end.
-
 Ltac unfold_concl := 
     unfold concl_ext_expr_value, concl_expr_value, concl_expr_getvalue_then, concl_expr_getvalue, 
-        concl_stat, concl_spec, concl_ext_expr_unary.
+        concl_stat, concl_spec.
  
 Tactic Notation "unfold_concl" "in" hyp(H) := 
     unfold concl_ext_expr_value, concl_expr_value, concl_expr_getvalue_then, concl_expr_getvalue, 
-        concl_stat, concl_spec, concl_ext_expr_unary in H. 
+        concl_stat, concl_spec in H. 
 
 Ltac js_ljs_false_invert := match goal with 
     | H : J.abort_intercepted_expr _ |- _ => solve [inverts H]
@@ -218,11 +208,11 @@ Ltac destr_concl := match goal with
         unfold_concl in H; destruct_hyp H
     | H : concl_stat _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
+    | H : concl_ext_expr_value _ _ _ _ _ _ _ _ |- _ =>
+        unfold_concl in H; destruct_hyp H
     | H : concl_expr_getvalue _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_expr_getvalue_then _ _ _ _ _ _ _ _ _ _ |- _ =>
-        unfold_concl in H; destruct_hyp H
-    | H : concl_ext_expr_unary _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     end.
 
@@ -422,7 +412,16 @@ Ltac res_related_invert :=
             lets (?jrv&?H1&?H2) : (res_related_invert_break H); subst jr
         | _ => inverts keep H 
         end
+    | H : res_related ?BR ?jst ?st ?jr ?r |- _ =>
+        is_var r; inverts keep H
     end. 
+
+Ltac resvalue_related_invert :=
+    match goal with
+    | H : resvalue_related _ ?jrv ?v |- _ =>
+        let H1 := fresh "H" in
+        (is_var jrv || is_var v); inverts keep H as H1; inverts keep H1
+    end.
 
 (* workaround *)
 Lemma stat_block_1_hint : forall (S0 S : JsSyntax.state) (C : JsSyntax.execution_ctx)
@@ -490,10 +489,10 @@ Proof.
     prove_bag.
 Qed.
 
-Lemma lexical_env_related_nindex_preserved : forall BR jst jc c st ptr obj jle v,
+Lemma lexical_env_related_nindex_preserved : forall BR jst st ptr obj jle v v',
     ~index st ptr ->
-    lexical_env_related BR jst jc c st jle v ->
-    lexical_env_related BR jst jc c (st \( ptr := obj )) jle v.
+    lexical_env_related BR jst st v' jle v ->
+    lexical_env_related BR jst (st \( ptr := obj )) v' jle v.
 Proof.
 Admitted.
 
@@ -542,13 +541,6 @@ Proof.
     prove_bag.
 Qed.
 
-Lemma lexical_env_related_incl_preserved : forall BR jst jc c c' st jle v,
-    c' \c c ->
-    lexical_env_related BR jst jc c st jle v ->
-    lexical_env_related BR jst jc c' st jle v.
-Proof.
-Admitted.
-
 Lemma execution_ctx_related_incl_preserved : forall BR jst jc c c' st,
     c' \c c ->
     execution_ctx_related BR jst jc c st ->
@@ -559,7 +551,8 @@ Proof.
     constructor.
     prove_bag.
     prove_bag.
-    intros; eapply lexical_env_related_incl_preserved; prove_bag.
+    intros.
+    eapply execution_ctx_related_lexical_env. prove_bag. prove_bag. (* TODO auto depth for prove_bag *)
 Qed.
 
 Lemma state_invariant_ctx_incl_preserved : forall BR jst jc c c' st,
@@ -594,18 +587,6 @@ Proof.
     skip.
 Qed.
 
-Lemma lexical_env_related_add_nopercent_id_preserved : forall BR jst jc c st s v jle v0 ch,
-    ch <> "%" ->
-    lexical_env_related BR jst jc c st jle v0 ->
-    lexical_env_related BR jst jc (c \(String ch s := v)) st jle v0.
-Proof.
-    introv Hdif Hrel.
-    inductions Hrel.
-    constructor.
-    prove_bag.
-    econstructor; eassumption.
-Qed.
-
 Lemma execution_ctx_related_add_nopercent_id_preserved : forall BR jst jc c st s v ch,
     ch <> "%" ->
     execution_ctx_related BR jst jc c st ->
@@ -614,9 +595,9 @@ Proof.
     introv Hdif Hrel.
     inverts Hrel.
     constructor;
-    introv Hbinds; 
-    rew_binds_eq in Hbinds;
-    destruct_hyp Hbinds; tryfalse; eauto using lexical_env_related_add_nopercent_id_preserved.
+    introv Hbinds; rew_binds_eq in Hbinds; destruct_hyp Hbinds; 
+    try (introv Hbinds'; rew_binds_eq in Hbinds'; destruct_hyp Hbinds');
+    tryfalse; eauto.
 Qed.
 
 Lemma includes_init_ctx_add_nopercent_id_preserved : forall c s v ch,
@@ -646,18 +627,6 @@ Proof.
     assumption.
 Qed.
 
-Lemma lexical_env_related_unadd_nopercent_id_preserved : forall BR jst jc c st s v jle v0 ch,
-    ch <> "%" ->
-    lexical_env_related BR jst jc (c \(String ch s := v)) st jle v0 ->
-    lexical_env_related BR jst jc c st jle v0.
-Proof.
-    introv Hdif Hrel.
-    inductions Hrel.
-    constructor.
-    rew_binds_eq in H. destruct_hyp H; tryfalse. assumption.
-    econstructor; eassumption.
-Qed.
-
 Lemma execution_ctx_related_unadd_nopercent_id_preserved : forall BR jst jc c st s v ch,
     ch <> "%" ->
     execution_ctx_related BR jst jc (c \(String ch s := v)) st ->
@@ -669,7 +638,8 @@ Proof.
     introv Hbinds.
     prove_bag. 
     prove_bag. 
-    eapply lexical_env_related_unadd_nopercent_id_preserved; prove_bag.
+    introv Hbinds'. 
+    eapply execution_ctx_related_lexical_env. prove_bag. prove_bag. (* TODO auto depth for prove_bag *)
 Qed.
 
 Lemma includes_init_ctx_unadd_nopercent_id_preserved : forall c s v ch,
@@ -705,6 +675,34 @@ End prefixes.
 Hint Resolve state_invariant_add_nopercent_id_preserved : js_ljs.
 Hint Resolve state_invariant_unadd_nopercent_id_preserved : js_ljs.
 
+(* TODO ? 
+Lemma execution_ctx_related_union_preserved : forall BR jst jc c c' st,
+    execution_ctx_related BR jst jc c st ->
+    execution_ctx_related BR jst jc c' st ->
+    execution_ctx_related BR jst jc (c \u c') st.
+Proof.
+    introv Hrel1 Hrel2.
+    inverts Hrel1.
+    inverts Hrel2.
+    constructor.
+    introv Hbinds.
+    rewrite binds_union_eq in Hbinds.
+    destruct_hyp Hbinds; eauto.
+    introv Hbinds.
+    rewrite binds_union_eq in Hbinds.
+    destruct_hyp Hbinds; eauto.
+    introv Hbinds;
+    rewrite binds_union_eq in Hbinds;
+    destruct_hyp Hbinds;
+    introv Hbinds';
+    rewrite binds_union_eq in Hbinds';
+    destruct_hyp Hbinds'.
+    eauto.
+    eauto.
+    eapply lexical_env_related_union_preserved. eauto. eauto.
+Qed.
+*)
+
 Lemma value_related_bisim_incl_preserved : forall BR1 BR2 jv v,
     BR1 \c BR2 ->
     value_related BR1 jv v ->
@@ -726,6 +724,17 @@ Proof.
 Qed.
 
 Hint Resolve resvalue_related_bisim_incl_preserved : js_ljs.
+
+Lemma res_related_bisim_incl_preserved : forall BR1 BR2 jst st jr r,
+    BR1 \c BR2 ->
+    res_related BR1 jst st jr r ->
+    res_related BR2 jst st jr r.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel; jauto_js.
+Qed.
+
+Hint Resolve res_related_bisim_incl_preserved : js_ljs.
 
 (* Prerequisites *)
 
@@ -856,12 +865,12 @@ Ltac ljs_handle_abort := progress (repeat (ljs_propagate_abort || ljs_abort_from
 
 Ltac specialize_th_ext_expr_unary H :=
     match type of H with
-    | th_ext_expr_unary _ ?e _ _ =>
+    | th_ext_expr_unary _ ?e _ =>
     match goal with
-    | H1 : L.red_exprh _ ?c ?st (L.expr_basic ?e') _, H2 : state_invariant _ _ _ ?c ?st |- _ => 
-        unify e e';
-        specializes H H2 H1;
-        clear H2; clear H1
+    | H1 : state_invariant ?BR _ _ ?c ?st, H2 : value_related ?BR ?jv ?v,
+      H3 : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
+        unify e e'; unify [v] vl;
+        specializes H H1 H2 H3 (*___; [eapply (L.red_exprh_le H3); omega | idtac] *)
     end
     end.
 
@@ -887,10 +896,16 @@ Ltac specialize_th_stat H :=
     end 
     end.
 
+Ltac ih_expr_leq :=
+    match goal with
+    | H : ih_expr ?k |- ih_expr ?k' => is_evar k'; eapply H
+    | H : ih_expr ?k |- ih_expr ?k' => eapply ih_expr_leq; try eapply H; omega
+    end.
+
 Ltac forwards_th Hth := let H := fresh "H" in 
     (forwards H : Hth;
     first [is_var H; (specialize_th_spec H || specialize_th_stat H || specialize_th_ext_expr_unary H) | idtac];
-    try (eapply ih_expr_leq; try eassumption; omega)); 
+    try ih_expr_leq); 
     [idtac].
 
 Lemma res_related_invert_abort_lemma : forall BR jst st jr r,
@@ -916,95 +931,104 @@ Ltac res_related_abort :=
 
 Ltac destr_concl_auto := destr_concl; res_related_abort; try ljs_handle_abort.
 
+Lemma js_red_expr_spec_to_number_invert_lemma : forall jst jc jv jst' jr,
+    J.red_expr jst jc (J.spec_to_number jv) (J.out_ter jst' jr) ->
+    (exists n, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_number n)))) \/
+    (J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw).
+Proof.
+    introv Hred.
+    inverts Hred; tryfalse.
+    eauto. 
+    inverts H3. injects. skip. (* TODO *)
+    eauto.
+Qed.
+
+Lemma js_red_expr_unary_op_add_invert_lemma : forall jst jc jv jst' jr,
+    J.red_expr jst jc (J.expr_unary_op_2 J.unary_op_add jv) (J.out_ter jst' jr) ->
+    (exists n, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_number n)))) \/
+    (J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw).
+Proof.
+    introv Hred.
+    inverts Hred; tryfalse.
+    eapply js_red_expr_spec_to_number_invert_lemma. eassumption.
+Qed.
+
+Lemma js_red_expr_spec_to_boolean_invert_lemma : forall jst jc jv jst' jr,
+    J.red_expr jst jc (J.spec_to_boolean jv) (J.out_ter jst' jr) ->
+    exists b, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_bool b))).
+Proof.
+    introv Hred.
+    inverts Hred; tryfalse.
+    eauto.
+Qed.
+
+Lemma js_red_expr_unary_op_not_invert_lemma : forall jst jc jv jst' jr,
+    J.red_expr jst jc (J.expr_unary_op_2 J.unary_op_not jv) (J.out_ter jst' jr) ->
+    exists b, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_bool b))).
+Proof.
+    introv Hred.
+    inverts Hred. tryfalse.
+    inverts H0. tryfalse. (* TODO nicer proof *)
+    inverts H3. injects. inverts H0. false. apply H2. unfolds. reflexivity.
+    eauto.
+Qed.
+
+Ltac js_red_expr_invert :=
+    match goal with
+    | H : J.red_expr _ _ ?ee (J.out_ter _ ?r) |- _ => 
+        is_var r;
+        let lem := match ee with
+        | J.spec_to_boolean _ => constr:js_red_expr_spec_to_boolean_invert_lemma
+        | J.spec_to_number _ => constr:js_red_expr_spec_to_number_invert_lemma
+        | J.expr_unary_op_2 J.unary_op_not _ => constr:js_red_expr_unary_op_not_invert_lemma
+        | J.expr_unary_op_2 J.unary_op_add _ => constr:js_red_expr_unary_op_add_invert_lemma
+        end in
+        let H1 := fresh in 
+        lets H1 : lem H; destruct_hyp H1
+    end.
+
 (** ** Lemmas about operators *)
 
 (* TODO *)
 
 (** ** Lemmas about the environment *)
 
-(** *** ToBoolean *)
-
-Lemma ljs_to_bool_lemma : forall k BR jst jc c st st' r jv v,
-    state_invariant BR jst jc c st ->
-    value_related BR jv v -> 
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privToBoolean [v]) (L.out_ter st' r) ->
-    st = st' /\
-    exists b,
-    r = L.res_value (L.value_bool b) /\
-    J.red_expr jst jc (J.spec_to_boolean jv) 
-        (J.out_ter jst (J.res_val (J.value_prim (J.prim_bool b)))).
-Proof.
-    introv Hinv Hrel Hlred.
-
-    inverts Hlred.
-    ljs_apply.
-    repeat inv_fwd_ljs.
-    rewrite from_list_update in H3. (* TODO *)
-    repeat rewrite from_list_empty in H3.
-    rew_bag_simpl in H3.
-    binds_inv.
-
-    inverts Hrel; try injects; jauto_js. 
-    cases_if; 
-    simpl; unfold J.convert_number_to_bool; cases_if; reflexivity.
-    cases_if; 
-    simpl; unfold J.convert_string_to_bool; cases_if; reflexivity.
-    destruct b; injects; reflexivity.
-Qed.
-
-Lemma ljs_to_number_lemma : forall k BR jst jc c st st' r jv v,
-    state_invariant BR jst jc c st ->
-    value_related BR jv v -> 
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privToNumber [v]) (L.out_ter st' r) ->
-    st = st' /\
-    exists n,
-    r = L.res_value (L.value_number n) /\
-    J.red_expr jst jc (J.spec_to_number jv) 
-        (J.out_ter jst (J.res_val (J.value_prim (J.prim_number n)))).
-Proof.
-    introv Hinv Hrel Hlred.
-    
-    inverts Hlred.
-    ljs_apply.
-(*    repeat inv_fwd_ljs. *)
-    skip. 
-Qed.
+(* TODO *)
 
 (** ** Lemmas about specification functions *)
 
 (** *** spec_expr_get_value_conv spec_to_boolean 
     It corresponds to [to_bool] in the desugaring. *)
 
-Lemma red_spec_to_boolean_unary_ok : forall k je,
+Lemma red_spec_to_boolean_unary_ok : forall k,
     ih_expr k ->
-    th_ext_expr_unary k (E.to_bool (js_expr_to_ljs je)) J.spec_to_boolean je.
+    th_ext_expr_unary k LjsInitEnv.privToBoolean J.spec_to_boolean.
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hinv Hvrel Hlred.
     inverts Hlred.
-    ljs_out_redh_ter.
-    ljs_get_builtin.
+    ljs_apply.
 
-    repeat inv_internal_fwd_ljs.
-    ljs_out_redh_ter.
+    rewrite from_list_update in H7.
+    repeat rewrite from_list_empty in H7. (* TODO *)
+    rew_bag_simpl in H7.
 
-    apply_ih_expr.
+    repeat inv_fwd_ljs.
+    binds_inv.
 
-    destr_concl; try ljs_handle_abort. 
-
-    repeat inv_internal_fwd_ljs.
-    autoforwards Hbool : ljs_to_bool_lemma.
-    destruct_hyp Hbool.
-
-    jauto_js 18.
+    inverts Hvrel; try injects; jauto_js.
+    cases_if; 
+    simpl; unfold J.convert_number_to_bool; cases_if; jauto_js.
+    cases_if; 
+    simpl; unfold J.convert_string_to_bool; cases_if; jauto_js.
+    destruct b; injects; jauto_js.
 Qed.
 
-Lemma red_spec_to_number_unary_ok : forall k je,
+Lemma red_spec_to_number_unary_ok : forall k,
     ih_expr k ->
-    th_ext_expr_unary k (E.make_app_builtin "%ToNumber" [js_expr_to_ljs je]) J.spec_to_number je.
+    th_ext_expr_unary k LjsInitEnv.privToNumber J.spec_to_number.
 Proof.
 Admitted.
 
-(* TODO create a lemma more helpful for proving operators *)
 Lemma red_spec_to_boolean_ok : forall k je, 
     ih_expr k ->
     th_spec k (E.to_bool (js_expr_to_ljs je))
@@ -1026,7 +1050,12 @@ Proof.
     destr_concl; try ljs_handle_abort.
 
     repeat inv_internal_fwd_ljs.
-    autoforwards Hbool : ljs_to_bool_lemma.
-    destruct_hyp Hbool.
-    solve_ijauto_js.
+    forwards_th red_spec_to_boolean_unary_ok.
+
+    destr_concl.
+
+    js_red_expr_invert. 
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js. left. jauto_js.
 Qed.
