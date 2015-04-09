@@ -111,16 +111,19 @@ Proof.
     ljs_out_redh_ter.
 (* TODO *)
     match goal with H : binds ?c _ _ |- _ => sets_eq c' : c end.
+    repeat rewrite from_list_update, from_list_empty in EQc'. (* TODO *)
+    rew_bag_simpl in EQc'. rewrite update_empty in EQc'. (* TODO *) 
     asserts Hinv' : (state_invariant BR jst jc c' st). skip.
-    asserts_rewrite (v = LjsInitEnv.privToBoolean) in *. skip. (* TODO *)
-    asserts_rewrite (v0 = v1) in *. skip. (* TODO *)
+    subst c'.
+
+    repeat binds_inv.
     forwards_th red_spec_to_boolean_unary_ok. 
     destr_concl.
     js_red_expr_invert.
     res_related_invert.
     resvalue_related_invert.
     repeat inv_fwd_ljs.
-    asserts_rewrite (v2 = L.value_bool b) in *. skip. (* TODO *)
+    binds_inv.
     injects.
     jauto_js.
     skip. (* TODO *)

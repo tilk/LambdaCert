@@ -56,6 +56,15 @@ Class Incl_in_eq `{BagIn A T, BagIncl T} :=
 Class Incl_in_inv `{BagIn A T, BagIncl T} :=
     { incl_in_inv : forall E F, (forall x, x \in E -> x \in F) -> E \c F }.
 
+Class Update_empty `{BagEmpty T} `{BagUpdate A B T} `{BagSingleBind A B T} := 
+    { update_empty : forall k x, \{} \(k := x) = (k \:= x) }.
+
+Class Update_union_assoc `{BagUpdate A B T} `{BagUnion T} :=
+    { update_union_assoc : forall M1 M2 k x, M1 \(k := x) \u M2 = (M1 \u M2) \(k := x) }.
+
+Class Single_bind_union `{BagSingleBind A B T} `{BagUpdate A B T} `{BagUnion T} :=
+    { single_bind_union : forall M k x, (k \:= x) \u M = M \(k := x) }.
+
 Class Remove_empty_l `{BagEmpty T} `{BagRemove T T} :=
     { remove_empty_l : absorb_l remove empty }.
 
@@ -499,6 +508,7 @@ Hint Rewrite
     @union_empty_l @union_empty_r
     @inter_empty_l @inter_empty_r
     @remove_empty_l @remove_empty_r 
+    @update_empty @update_union_assoc @single_bind_union
     @dom_empty @dom_single_bind @dom_union @dom_remove @dom_restrict @dom_update
     using (eauto with typeclass_instances) : rew_bag_simpl.
 
@@ -1322,7 +1332,7 @@ Hint Rewrite
     @binds_remove_eq @binds_restrict_eq
     @binds_update_eq @incl_binds_eq @index_binds_eq  
     @from_list_binds_eq @to_list_binds_eq
-    using (eauto with typeclass_instances) : rew_binds_eq.
+    using (eauto 10 with typeclass_instances) : rew_binds_eq.
 
 Tactic Notation "rew_binds_eq" :=
     autorewrite with rew_binds_eq.
@@ -1367,6 +1377,33 @@ Proof.
     substs.
     apply Assoc_here.
     apply Assoc_next; assumption.
+Qed.
+
+Global Instance update_empty_from_binds_update :
+    forall `{BagBinds A B T} `{BagUpdate A B T} `{BagSingleBind A B T} `{BagEmpty T},
+    Binds_double -> Binds_update_eq -> Binds_empty_eq -> Binds_single_bind_eq -> Update_empty.
+Proof.
+    constructor. intros. apply binds_double. intros.
+    rew_binds_eq. rew_logic. iauto.
+Qed.
+
+Global Instance update_union_assoc_from_binds_union :
+    forall `{BagBinds A B T} `{BagIndex T A} `{BagUpdate A B T} `{BagUnion T},
+    Binds_double -> Binds_update_eq -> Index_update_eq -> Binds_union_eq -> Update_union_assoc.
+Proof.
+    constructor. intros. apply binds_double. intros.
+    rew_binds_eq. rewrite_all binds_union_eq. rew_binds_eq. rew_index_eq.
+    rew_logic. iauto.
+Qed.
+
+Global Instance single_bind_union_from_binds_union :
+    forall `{BagUpdate A B T} `{BagBinds A B T} `{BagIndex T A} `{BagSingleBind A B T} `{BagUnion T},
+    Binds_double -> Binds_update_eq -> Binds_union_eq -> Index_single_bind_eq -> Binds_single_bind_eq -> 
+    Single_bind_union.
+Proof.
+    constructor. intros. apply binds_double. intros.
+    rewrite binds_update_eq.
+    rew_binds_eq. rewrite_all binds_union_eq. rew_binds_eq. rew_index_eq. iauto. 
 Qed.
 
 Global Instance union_empty_l_from_binds_union :

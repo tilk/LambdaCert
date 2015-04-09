@@ -777,12 +777,31 @@ Ltac ljs_inv_closure_ctx :=
 
 Ltac ljs_apply := progress repeat (ljs_inv_value_is_closure || ljs_inv_closure_ctx).
 
-Ltac binds_inv := 
-    match goal with
-    | H : binds (_ \(?x:=?v1)) ?x ?v2 |- _ => 
+Ltac binds_inv H :=
+    match type of H with
+    | binds ?M ?x ?v2 =>
         let He := fresh "H" in
-        forwards He : (binds_update_same_inv _ _ _ _ H);
-        subst v2; clear H
+        match M with
+        | ?x' \:= ?v1 =>
+            lets He : (binds_single_bind_same_inv _ _ _ H);
+            subst v2; clear H    
+        | _ \(?x':=?v1) =>
+            lets He : (binds_update_same_inv _ _ _ _ H);
+            subst v2; clear H
+        | _ \(?x':=?v1) =>
+            let Ha := fresh "H" in
+            asserts Ha : (x <> x'); [eauto | 
+            lets He : (binds_update_diff_inv _ _ _ _ _ Ha H);
+            clear H; clear Ha;
+            binds_inv He]
+        end
+    end.
+
+Tactic Notation "binds_inv" hyp(H) := binds_inv H.
+
+Tactic Notation "binds_inv" := 
+    match goal with
+    | H : binds _ _ _ |- _ => binds_inv H
     end.
 
 Lemma state_invariant_includes_init_ctx_lemma : forall BR jst jc c st i v v',
@@ -951,53 +970,58 @@ Ltac destr_concl_auto := destr_concl; res_related_abort; try ljs_handle_abort.
 Lemma js_red_expr_binary_op_strict_equal_invert_lemma : forall jst jc jv1 jv2 jst' jr,
     J.red_expr jst jc (J.expr_binary_op_3 J.binary_op_strict_equal jv1 jv2) (J.out_ter jst' jr) ->
     exists b, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_bool b))).
+Admitted. (* SLOW
 Proof.
     introv Hred.
     inverts Hred; tryfalse. 
     inverts H4. inverts H2. inverts H5. eauto. inverts H4. (* TODO *)
-Qed.
+Qed. *)
 
 Lemma js_red_expr_spec_to_number_invert_lemma : forall jst jc jv jst' jr,
     J.red_expr jst jc (J.spec_to_number jv) (J.out_ter jst' jr) ->
     (exists n, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_number n)))) \/
     (J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw).
+Admitted. (* SLOW 
 Proof.
     introv Hred.
     inverts Hred; tryfalse.
     eauto. 
     inverts H3. injects. skip. (* TODO *)
     eauto.
-Qed.
+Qed. *)
 
 Lemma js_red_expr_unary_op_add_invert_lemma : forall jst jc jv jst' jr,
     J.red_expr jst jc (J.expr_unary_op_2 J.unary_op_add jv) (J.out_ter jst' jr) ->
     (exists n, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_number n)))) \/
     (J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw).
+Admitted. (* SLOW
 Proof.
     introv Hred.
     inverts Hred; tryfalse.
     eapply js_red_expr_spec_to_number_invert_lemma. eassumption.
-Qed.
+Qed. *)
 
 Lemma js_red_expr_spec_to_boolean_invert_lemma : forall jst jc jv jst' jr,
     J.red_expr jst jc (J.spec_to_boolean jv) (J.out_ter jst' jr) ->
     exists b, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_bool b))).
+Admitted. (* SLOW 
 Proof.
     introv Hred.
     inverts Hred; tryfalse.
     eauto.
-Qed.
+Qed. *)
 
 Lemma js_red_expr_unary_op_not_invert_lemma : forall jst jc jv jst' jr,
     J.red_expr jst jc (J.expr_unary_op_2 J.unary_op_not jv) (J.out_ter jst' jr) ->
     exists b, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_bool b))).
+Admitted. (* SLOW 
 Proof.
     introv Hred.
     inverts Hred. tryfalse.
     inverts H0. tryfalse. (* TODO nicer proof *)
     inverts H3. injects. inverts H0. false. apply H2. unfolds. reflexivity.
     eauto.
-Qed.
+Qed. *)
 
 Ltac js_red_expr_invert :=
     match goal with
@@ -1015,7 +1039,7 @@ Ltac js_red_expr_invert :=
     end.
 
 Ltac ljs_autoforward :=
-    ljs_get_builtin || inv_fwd_ljs || ljs_out_redh_ter || apply_ih_expr.
+    inv_fwd_ljs || ljs_out_redh_ter || ljs_get_builtin || apply_ih_expr.
 
 (** ** Lemmas about operators *)
 

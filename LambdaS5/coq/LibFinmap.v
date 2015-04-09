@@ -217,7 +217,7 @@ Context {ST : Lt_strict_total_order }.
 Global Instance empty_inst : BagEmpty (finmap A B) :=
     { empty := @empty_impl _ _ }.
 
-Global Instance single_bind_inst : Lt_strict_total_order -> BagSingleBind A B (finmap A B) :=
+Global Instance single_bind_inst : BagSingleBind A B (finmap A B) :=
     { single_bind := @single_bind_impl _ _ }.
 
 Global Instance index_inst : BagIndex (finmap A B) A :=
