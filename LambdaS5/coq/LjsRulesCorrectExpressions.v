@@ -207,7 +207,6 @@ Proof.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    asserts Hlol : (value_related BR'0 x v). jauto_js. (* TODO *)
     forwards_th red_expr_binary_op_3_strict_equal_ok.
     repeat destr_concl.
     js_red_expr_invert.
@@ -216,11 +215,21 @@ Proof.
     jauto_js. left. jauto_js 8.
 Qed.
 
+Lemma red_spec_equal_ok : forall k,
+    ih_expr k ->
+    th_ext_expr_binary k LjsInitEnv.privEqEq J.spec_equal.
+Proof.
+Admitted.
+
 Lemma red_expr_binary_op_3_equal_ok : forall k,
     ih_expr k ->
     th_ext_expr_binary k LjsInitEnv.privEqEq (J.expr_binary_op_3 J.binary_op_equal).
 Proof.
-Admitted.
+    introv IHe Hinv Hvrel1 Hvrel2 Hlred.
+    forwards_th red_spec_equal_ok.
+    destr_concl.
+    jauto_js.
+Qed.
 
 Lemma red_expr_binary_op_equal_ok : forall k je1 je2,
     ih_expr k ->
@@ -232,7 +241,12 @@ Proof.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    skip. (* TODO *)
+    forwards_th red_expr_binary_op_3_equal_ok.
+    repeat destr_concl.
+    js_red_expr_invert.
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js. left. jauto_js 8.
 Qed.
 
 Lemma red_expr_binary_op_ok : forall op k je1 je2,
@@ -256,7 +270,7 @@ Proof.
     skip.
     apply red_expr_binary_op_equal_ok.
     skip.
-    skip.
+    apply red_expr_binary_op_strict_equal_ok.
     skip.
     skip.
     skip.
