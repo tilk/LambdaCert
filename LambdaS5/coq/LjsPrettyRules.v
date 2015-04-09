@@ -59,30 +59,24 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_object : forall c st e1 e2 e3 e4 e5 a o,
     red_expr c st (expr_eval_many_1 [e1; e2; e3; e4; e5] nil (expr_object_1 a)) o ->
     red_expr c st (expr_object (objattrs_intro e1 e2 e3 e4 e5) a) o
-| red_expr_object_1 : forall c st class extv ext proto code prim a o,
-    value_to_bool extv = Some ext ->
+| red_expr_object_1 : forall c st class ext proto code prim a o,
     red_expr c st (expr_object_2 (object_intro (oattrs_intro proto class ext prim code) \{}) a) o ->
-    red_expr c st (expr_object_1 a [value_string class; extv; proto; code; prim]) o
+    red_expr c st (expr_object_1 a [value_string class; value_bool ext; proto; code; prim]) o
 | red_expr_object_2 : forall c st st1 obj v,
     (st1, v) = add_object st obj ->
     red_expr c st (expr_object_2 obj nil) (out_ter st1 (res_value v))
 | red_expr_object_2_data : forall c st obj s e1 e2 e3 e4 a o,
     red_expr c st (expr_eval_many_1 [e1; e2; e3; e4] nil (expr_object_data_1 obj a s)) o ->
     red_expr c st (expr_object_2 obj ((s, property_data (data_intro e3 e4 e2 e1)) :: a)) o
-| red_expr_object_data_1 : forall c st obj a s v1 v2 v3 v4 b1 b2 b4 o,
-    value_to_bool v1 = Some b1 ->
-    value_to_bool v2 = Some b2 ->
-    value_to_bool v4 = Some b4 ->
+| red_expr_object_data_1 : forall c st obj a s v3 b1 b2 b4 o,
     red_expr c st (expr_object_2 (set_object_property obj s (attributes_data_of (attributes_data_intro v3 b4 b2 b1))) a) o ->
-    red_expr c st (expr_object_data_1 obj a s [v1; v2; v3; v4]) o
+    red_expr c st (expr_object_data_1 obj a s [value_bool b1; value_bool b2; v3; value_bool b4]) o
 | red_expr_object_2_accessor : forall c st obj s e1 e2 e3 e4 a o,
     red_expr c st (expr_eval_many_1 [e1; e2; e3; e4] nil (expr_object_accessor_1 obj a s)) o ->
     red_expr c st (expr_object_2 obj ((s, property_accessor (accessor_intro e3 e4 e2 e1)) :: a)) o
 | red_expr_object_accessor_1 : forall c st obj a s v1 v2 v3 v4 b1 b2 o,
-    value_to_bool v1 = Some b1 ->
-    value_to_bool v2 = Some b2 ->
     red_expr c st (expr_object_2 (set_object_property obj s (attributes_accessor_of (attributes_accessor_intro v3 v4 b2 b1))) a) o ->
-    red_expr c st (expr_object_accessor_1 obj a s [v1; v2; v3; v4]) o
+    red_expr c st (expr_object_accessor_1 obj a s [value_bool b1; value_bool b2; v3; v4]) o
 
 (* get_attr *)
 | red_expr_get_attr : forall c st pa e1 e2 o,

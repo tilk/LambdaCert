@@ -976,6 +976,9 @@ Proof.
 Qed.
 *)
 
+Ltac value_to_bool := 
+    repeat match goal with H : value_to_bool ?v = Some _ |- _ => destruct v; tryfalse; injects H end.
+
 Lemma red_expr_object_2_lemma : forall runs c o (Pred : _ -> _ -> Prop),
     runs_type_correct runs ->
     (forall st obj, Pred st obj -> red_expr c st (expr_object_2 obj nil) o) ->
@@ -995,6 +998,7 @@ Proof.
             eapply red_expr_eval_many_2).
     eapply red_expr_eval_many_1.
     destruct R as (b1&b2&b3&Hb1&Hb2&Hb3&R).
+    value_to_bool.
     eapply red_expr_object_data_1; eauto. 
     destruct acc.
     unfolds in R.
@@ -1003,6 +1007,7 @@ Proof.
             eapply red_expr_eval_many_2).
     eapply red_expr_eval_many_1.
     destruct R as (b1&b2&Hb1&Hb2&R).
+    value_to_bool.
     eapply red_expr_object_accessor_1; eauto.
 Qed.
 
@@ -1043,6 +1048,7 @@ Proof.
     ljs_advance_eval_many.
     destruct H as (b&s&Hs&Hb&H).
     substs.
+    value_to_bool.
     eapply red_expr_object_1; try eassumption.
     applys red_expr_object_2_lemma IH; try eassumption.
     introv Ho.
