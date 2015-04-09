@@ -98,6 +98,25 @@ Fixpoint zipl_stream {A B : Type} (st : stream A) (l : list B) :=
 
 Definition number_list_from {A : Type} k (l : list A) := zipl_stream (id_stream_from k) l.
 
+(* for faster inverts *)
+
+Ltac inverts_tactic_general T H :=
+  let rec go :=
+    match goal with
+    | |- (ltac_Mark -> _) => intros _
+    | |- (?x = ?y -> _) => let H := fresh in intro H;
+                           first [ subst x | subst y ];
+                           go 
+    | |- (existT ?P ?p ?x = existT ?P ?p ?y -> _) =>
+         let H := fresh in intro H;
+         generalize (@inj_pair2 _ P p x y H);
+         clear H; go 
+    | |- (?P -> ?Q) => intro; go 
+    | |- (forall _, _) => intro; go 
+    end in
+  generalize ltac_mark; T H; go;
+  unfold eq' in *.
+
 (* this should go to TLC *)
 Hint Extern 0 (~ _) => solve [let H := fresh in intro H; inversion H].
 Hint Extern 1 (?x <> _) => solve [intro; subst x; false]. 

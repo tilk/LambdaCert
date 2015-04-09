@@ -19,6 +19,7 @@ LjsOperators.v
 LjsPrettyInterm.v
 LjsPrettyRulesAux.v
 LjsPrettyRulesIndexedAux.v
+LjsPrettyRulesIndexedInvert.v
 LjsPrettyRulesIndexed.v
 LjsPrettyRules.v
 LjsRulesCorrectCommon.v
