@@ -85,52 +85,23 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_object_accessor_1 obj a s [v1; v2; v3; v4]) o
 
 (* get_attr *)
-| red_expr_get_attr : forall c st pa e1 e2 o o',
-    red_expr c st e1 o ->
-    red_expr c st (expr_get_attr_1 pa o e2) o' ->
-    red_expr c st (expr_get_attr pa e1 e2) o'
-| red_expr_get_attr_1 : forall c st' st pa v1 e2 o o',
-    red_expr c st e2 o ->
-    red_expr c st (expr_get_attr_2 pa v1 o) o' ->
-    red_expr c st' (expr_get_attr_1 pa (out_ter st (res_value v1)) e2) o'
-| red_expr_get_attr_1_abort : forall c st pa e2 o,
-    abort o ->
-    red_expr c st (expr_get_attr_1 pa o e2) o
-| red_expr_get_attr_2 : forall c st' st pa s ptr obj v,
+| red_expr_get_attr : forall c st pa e1 e2 o,
+    red_expr c st (expr_eval_many_1 [e1; e2] nil (expr_get_attr_1 pa)) o ->
+    red_expr c st (expr_get_attr pa e1 e2) o
+| red_expr_get_attr_1 : forall c st st pa s ptr obj v,
     binds st ptr obj ->
     get_object_pattr obj s pa = result_some v ->
-    red_expr c st' (expr_get_attr_2 pa (value_object ptr) (out_ter st (res_value (value_string s)))) (out_ter st (res_value v))
-| red_expr_get_attr_2_abort : forall c st pa v1 o,
-    abort o ->
-    red_expr c st (expr_get_attr_2 pa v1 o) o
+    red_expr c st (expr_get_attr_1 pa [value_object ptr; value_string s]) (out_ter st (res_value v))
 
 (* set_attr *)
-| red_expr_set_attr : forall c st pa e1 e2 e3 o o',
-    red_expr c st e1 o ->
-    red_expr c st (expr_set_attr_1 pa o e2 e3) o' ->
-    red_expr c st (expr_set_attr pa e1 e2 e3) o'
-| red_expr_set_attr_1 : forall c st' st pa v1 e2 e3 o o',
-    red_expr c st e2 o ->
-    red_expr c st (expr_set_attr_2 pa v1 o e3) o' ->
-    red_expr c st' (expr_set_attr_1 pa (out_ter st (res_value v1)) e2 e3) o'
-| red_expr_set_attr_1_abort : forall c st pa e2 e3 o,
-    abort o ->
-    red_expr c st (expr_set_attr_1 pa o e2 e3) o
-| red_expr_set_attr_2 : forall c st' st pa v1 v2 e3 o o',
-    red_expr c st e3 o ->
-    red_expr c st (expr_set_attr_3 pa v1 v2 o) o' ->
-    red_expr c st' (expr_set_attr_2 pa v1 (out_ter st (res_value v2)) e3) o'
-| red_expr_set_attr_2_abort : forall c st pa v1 e3 o,
-    abort o ->
-    red_expr c st (expr_set_attr_2 pa v1 o e3) o
-| red_expr_set_attr_3 : forall c st' st st1 pa ptr obj obj' s v,
+| red_expr_set_attr : forall c st pa e1 e2 e3 o,
+    red_expr c st (expr_eval_many_1 [e1; e2; e3] nil (expr_set_attr_1 pa)) o ->
+    red_expr c st (expr_set_attr pa e1 e2 e3) o
+| red_expr_set_attr_1 : forall c st st1 pa ptr obj obj' s v,
     binds st ptr obj ->
     set_object_pattr obj s pa v = result_some obj' ->
     st1 = st \(ptr := obj') ->
-    red_expr c st' (expr_set_attr_3 pa (value_object ptr) (value_string s) (out_ter st (res_value v))) (out_ter st1 (res_value v))
-| red_expr_set_attr_3_abort : forall c st pa v1 v2 o,
-    abort o ->
-    red_expr c st (expr_set_attr_3 pa v1 v2 o) o
+    red_expr c st (expr_set_attr_1 pa [value_object ptr; value_string s; v]) (out_ter st1 (res_value v))
 
 (* get_obj_attr *)
 | red_expr_get_obj_attr : forall c st oa e1 o o',
@@ -145,140 +116,89 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_get_obj_attr_1 oa o) o
 
 (* set_obj_attr *)
-| red_expr_set_obj_attr : forall c st oa e1 e2 o o',
-    red_expr c st e1 o ->
-    red_expr c st (expr_set_obj_attr_1 oa o e2) o' ->
-    red_expr c st (expr_set_obj_attr oa e1 e2) o'
-| red_expr_set_obj_attr_1 : forall c st' st oa v1 e2 o o',
-    red_expr c st e2 o ->
-    red_expr c st (expr_set_obj_attr_2 oa v1 o) o' ->
-    red_expr c st' (expr_set_obj_attr_1 oa (out_ter st (res_value v1)) e2) o'
-| red_expr_set_obj_attr_1_abort : forall c st oa e2 o,
-    abort o ->
-    red_expr c st (expr_set_obj_attr_1 oa o e2) o
-| red_expr_set_obj_attr_2 : forall c st' st st1 oa ptr obj obj' v,
+| red_expr_set_obj_attr : forall c st oa e1 e2 o,
+    red_expr c st (expr_eval_many_1 [e1; e2] nil (expr_set_obj_attr_1 oa)) o ->
+    red_expr c st (expr_set_obj_attr oa e1 e2) o
+| red_expr_set_obj_attr_1 : forall c st st1 oa ptr obj obj' v,
     binds st ptr obj ->
     set_object_oattr obj oa v = result_some obj' ->
     st1 = st \(ptr := obj') ->
-    red_expr c st' (expr_set_obj_attr_2 oa (value_object ptr) (out_ter st (res_value v))) (out_ter st1 (res_value v))
-| red_expr_set_obj_attr_2_abort : forall c st oa v1 o,
-    abort o ->
-    red_expr c st (expr_set_obj_attr_2 oa v1 o) o
+    red_expr c st (expr_set_obj_attr_1 oa [value_object ptr; v]) (out_ter st1 (res_value v))
 
 (* get_field *)
-| red_expr_get_field : forall c st e1 e2 o o',
-    red_expr c st e1 o ->
-    red_expr c st (expr_get_field_1 o e2) o' ->
-    red_expr c st (expr_get_field e1 e2) o'
-| red_expr_get_field_1 : forall c st' st v1 e2 o o',
-    red_expr c st e2 o ->
-    red_expr c st (expr_get_field_2 v1 o) o' ->
-    red_expr c st' (expr_get_field_1 (out_ter st (res_value v1)) e2) o'
-| red_expr_get_field_1_abort : forall c st e2 o,
-    abort o ->
-    red_expr c st (expr_get_field_1 o e2) o
-| red_expr_get_field_2 : forall c st' st ptr obj s oattr o,
+| red_expr_get_field : forall c st e1 e2 o,
+    red_expr c st (expr_eval_many_1 [e1; e2] nil expr_get_field_1) o ->
+    red_expr c st (expr_get_field e1 e2) o
+| red_expr_get_field_1 : forall c st ptr obj s oattr o,
     binds st ptr obj ->
     object_property_is st obj s oattr ->
-    red_expr c st (expr_get_field_3 ptr oattr) o ->
-    red_expr c st' (expr_get_field_2 (value_object ptr) (out_ter st (res_value (value_string s)))) o
-| red_expr_get_field_2_abort : forall c st v1 o,
-    abort o ->
-    red_expr c st (expr_get_field_2 v1 o) o
-| red_expr_get_field_3_no_field : forall c st ptr,
-    red_expr c st (expr_get_field_3 ptr None) (out_ter st (res_value value_undefined))
-| red_expr_get_field_3_get_field : forall c st ptr data,
-    red_expr c st (expr_get_field_3 ptr (Some (attributes_data_of data))) (out_ter st (res_value (attributes_data_value data)))
-| red_expr_get_field_3_getter : forall c st ptr acc o,
+    red_expr c st (expr_get_field_2 ptr oattr) o ->
+    red_expr c st (expr_get_field_1 [value_object ptr; value_string s]) o
+| red_expr_get_field_2_no_field : forall c st ptr,
+    red_expr c st (expr_get_field_2 ptr None) (out_ter st (res_value value_undefined))
+| red_expr_get_field_2_get_field : forall c st ptr data,
+    red_expr c st (expr_get_field_2 ptr (Some (attributes_data_of data))) (out_ter st (res_value (attributes_data_value data)))
+| red_expr_get_field_2_getter : forall c st ptr acc o,
     red_expr c st (expr_app_2 (attributes_accessor_get acc) [value_object ptr]) o ->
-    red_expr c st (expr_get_field_3 ptr (Some (attributes_accessor_of acc))) o
+    red_expr c st (expr_get_field_2 ptr (Some (attributes_accessor_of acc))) o
 
 (* set_field *)
-| red_expr_set_field : forall c st e1 e2 e3 o o',
-    red_expr c st e1 o ->
-    red_expr c st (expr_set_field_1 o e2 e3) o' ->
-    red_expr c st (expr_set_field e1 e2 e3) o'
-| red_expr_set_field_1 : forall c st' st v1 e2 e3 o o',
-    red_expr c st e2 o ->
-    red_expr c st (expr_set_field_2 v1 o e3) o' ->
-    red_expr c st' (expr_set_field_1 (out_ter st (res_value v1)) e2 e3) o'
-| red_expr_set_field_1_abort : forall c st e2 e3 e4 o,
-    abort o ->
-    red_expr c st (expr_set_field_1 o e2 e3) o
-| red_expr_set_field_2 : forall c st' st v1 v2 e3 o o',
-    red_expr c st e3 o ->
-    red_expr c st (expr_set_field_3 v1 v2 o) o' ->
-    red_expr c st' (expr_set_field_2 v1 (out_ter st (res_value v2)) e3) o'
-| red_expr_set_field_2_abort : forall c st v1 e3 o,
-    abort o ->
-    red_expr c st (expr_set_field_2 v1 o e3) o
-| red_expr_set_field_3 : forall c st' st ptr obj oattr s v3 v4 o,
+| red_expr_set_field : forall c st e1 e2 e3 o,
+    red_expr c st (expr_eval_many_1 [e1; e2; e3] nil expr_set_field_1) o ->
+    red_expr c st (expr_set_field e1 e2 e3) o
+| red_expr_set_field_1 : forall c st ptr obj oattr s v3 v4 o,
     binds st ptr obj ->
     object_property_is st obj s oattr ->
-    red_expr c st (expr_set_field_4 ptr obj oattr s v3) o ->
-    red_expr c st' (expr_set_field_3 (value_object ptr) (value_string s) (out_ter st (res_value v3))) o
-| red_expr_set_field_3_abort : forall c st v1 v2 o,
-    abort o ->
-    red_expr c st (expr_set_field_3 v1 v2 o) o
-| red_expr_set_field_4_set_field : forall c st st1 ptr obj data s v3,
+    red_expr c st (expr_set_field_2 ptr obj oattr s v3) o ->
+    red_expr c st (expr_set_field_1 [value_object ptr; value_string s; v3]) o
+| red_expr_set_field_2_set_field : forall c st st1 ptr obj data s v3,
     get_object_property obj s <> None ->
     attributes_data_writable data = true ->
     st1 = st \(ptr := set_object_property obj s (attributes_data_of (attributes_data_value_update data v3))) ->
-    red_expr c st (expr_set_field_4 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st1 (res_value v3))
-| red_expr_set_field_4_shadow_field : forall c st st1 ptr obj data s v3,
+    red_expr c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st1 (res_value v3))
+| red_expr_set_field_2_shadow_field : forall c st st1 ptr obj data s v3,
     get_object_property obj s = None ->
     object_extensible obj = true ->
     attributes_data_writable data = true ->
     st1 = st \(ptr := set_object_property obj s (attributes_data_of (attributes_data_intro v3 true true true))) ->
-    red_expr c st (expr_set_field_4 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st1 (res_value v3))
-| red_expr_set_field_4_add_field : forall c st st1 ptr obj s v3,
+    red_expr c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st1 (res_value v3))
+| red_expr_set_field_2_add_field : forall c st st1 ptr obj s v3,
     object_extensible obj = true ->
     st1 = st \(ptr := set_object_property obj s (attributes_data_of (attributes_data_intro v3 true true true))) ->
-    red_expr c st (expr_set_field_4 ptr obj None s v3) (out_ter st1 (res_value v3))
-| red_expr_set_field_4_setter : forall c st ptr obj acc s v3 o,
+    red_expr c st (expr_set_field_2 ptr obj None s v3) (out_ter st1 (res_value v3))
+| red_expr_set_field_2_setter : forall c st ptr obj acc s v3 o,
     red_expr c st (expr_app_2 (attributes_accessor_set acc) [value_object ptr; v3]) o ->
-    red_expr c st (expr_set_field_4 ptr obj (Some (attributes_accessor_of acc)) s v3) o
-| red_expr_set_field_4_unwritable : forall c st ptr obj data s v3,
+    red_expr c st (expr_set_field_2 ptr obj (Some (attributes_accessor_of acc)) s v3) o
+| red_expr_set_field_2_unwritable : forall c st ptr obj data s v3,
     attributes_data_writable data = false ->
-    red_expr c st (expr_set_field_4 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st (res_exception (value_string "unwritable-field")))
-| red_expr_set_field_4_unextensible_add : forall c st ptr obj s v3,
+    red_expr c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st (res_exception (value_string "unwritable-field")))
+| red_expr_set_field_2_unextensible_add : forall c st ptr obj s v3,
     object_extensible obj = false ->
-    red_expr c st (expr_set_field_4 ptr obj None s v3) (out_ter st (res_exception (value_string "unextensible-set")))
-| red_expr_set_field_4_unextensible_shadow : forall c st ptr obj data s v3,
+    red_expr c st (expr_set_field_2 ptr obj None s v3) (out_ter st (res_exception (value_string "unextensible-set")))
+| red_expr_set_field_2_unextensible_shadow : forall c st ptr obj data s v3,
     attributes_data_writable data = true ->
     get_object_property obj s = None ->
     object_extensible obj = false ->
-    red_expr c st (expr_set_field_4 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st (res_exception (value_string "unextensible-shadow")))
+    red_expr c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st (res_exception (value_string "unextensible-shadow")))
 
 (* delete_field *)
-| red_expr_delete_field : forall c st e1 e2 o o',
-    red_expr c st e1 o ->
-    red_expr c st (expr_delete_field_1 o e2) o' ->
-    red_expr c st (expr_delete_field e1 e2) o'
-| red_expr_delete_field_1 : forall c st' st v1 e2 o o',
-    red_expr c st e2 o ->
-    red_expr c st (expr_delete_field_2 v1 o) o' ->
-    red_expr c st' (expr_delete_field_1 (out_ter st (res_value v1)) e2) o'
-| red_expr_delete_field_1_abort : forall c st e2 o,
-    abort o ->
-    red_expr c st (expr_delete_field_1 o e2) o
-| red_expr_delete_field_2 : forall c st' st ptr s obj oattr o,
+| red_expr_delete_field : forall c st e1 e2 o,
+    red_expr c st (expr_eval_many_1 [e1; e2] nil expr_delete_field_1) o ->
+    red_expr c st (expr_delete_field e1 e2) o
+| red_expr_delete_field_1 : forall c st ptr s obj oattr o,
     binds st ptr obj ->
     get_object_property obj s = oattr ->
-    red_expr c st (expr_delete_field_3 ptr obj oattr s) o ->
-    red_expr c st' (expr_delete_field_2 (value_object ptr) (out_ter st (res_value (value_string s)))) o
-| red_expr_delete_field_2_abort : forall c st v1 o,
-    abort o ->
-    red_expr c st (expr_delete_field_2 v1 o) o
-| red_expr_delete_field_3_not_found : forall c st ptr obj s,
-    red_expr c st (expr_delete_field_3 ptr obj None s) (out_ter st (res_value value_false))
-| red_expr_delete_field_3_unconfigurable : forall c st ptr obj attr s,
+    red_expr c st (expr_delete_field_2 ptr obj oattr s) o ->
+    red_expr c st (expr_delete_field_1 [value_object ptr; value_string s]) o
+| red_expr_delete_field_2_not_found : forall c st ptr obj s,
+    red_expr c st (expr_delete_field_2 ptr obj None s) (out_ter st (res_value value_false))
+| red_expr_delete_field_2_unconfigurable : forall c st ptr obj attr s,
     attributes_configurable attr = false ->
-    red_expr c st (expr_delete_field_3 ptr obj (Some attr) s) (out_ter st (res_exception (value_string "unconfigurable-delete")))
-| red_expr_delete_field_3_found : forall c st st1 ptr obj attr s,
+    red_expr c st (expr_delete_field_2 ptr obj (Some attr) s) (out_ter st (res_exception (value_string "unconfigurable-delete")))
+| red_expr_delete_field_2_found : forall c st st1 ptr obj attr s,
     attributes_configurable attr = true ->
     st1 = st \(ptr := delete_object_property obj s) ->
-    red_expr c st (expr_delete_field_3 ptr obj (Some attr) s) (out_ter st1 (res_value value_true))
+    red_expr c st (expr_delete_field_2 ptr obj (Some attr) s) (out_ter st1 (res_value value_true))
 
 (* own_field_names *)
 | red_expr_own_field_names : forall c st e o o',

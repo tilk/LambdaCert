@@ -23,24 +23,16 @@ Inductive ext_expr :=
 | expr_object_2 : object -> list (string * property) -> ext_expr
 | expr_object_data_1 : object -> list (string * property) -> string -> list value -> ext_expr
 | expr_object_accessor_1 : object -> list (string * property) -> string -> list value -> ext_expr
-| expr_get_attr_1 : pattr -> out -> expr -> ext_expr
-| expr_get_attr_2 : pattr -> value -> out -> ext_expr
-| expr_set_attr_1 : pattr -> out -> expr -> expr -> ext_expr
-| expr_set_attr_2 : pattr -> value -> out -> expr -> ext_expr
-| expr_set_attr_3 : pattr -> value -> value -> out -> ext_expr
+| expr_get_attr_1 : pattr -> list value -> ext_expr
+| expr_set_attr_1 : pattr -> list value -> ext_expr
 | expr_get_obj_attr_1 : oattr -> out -> ext_expr
-| expr_set_obj_attr_1 : oattr -> out -> expr -> ext_expr
-| expr_set_obj_attr_2 : oattr -> value -> out -> ext_expr
-| expr_get_field_1 : out -> expr -> ext_expr
-| expr_get_field_2 : value -> out -> ext_expr
-| expr_get_field_3 : object_ptr -> option attributes -> ext_expr
-| expr_set_field_1 : out -> expr -> expr -> ext_expr
-| expr_set_field_2 : value -> out -> expr -> ext_expr
-| expr_set_field_3 : value -> value -> out -> ext_expr
-| expr_set_field_4 : object_ptr -> object -> option attributes -> prop_name -> value -> ext_expr
-| expr_delete_field_1 : out -> expr -> ext_expr
-| expr_delete_field_2 : value -> out -> ext_expr
-| expr_delete_field_3 : object_ptr -> object -> option attributes -> prop_name -> ext_expr
+| expr_set_obj_attr_1 : oattr -> list value -> ext_expr
+| expr_get_field_1 : list value -> ext_expr
+| expr_get_field_2 : object_ptr -> option attributes -> ext_expr
+| expr_set_field_1 : list value -> ext_expr
+| expr_set_field_2 : object_ptr -> object -> option attributes -> prop_name -> value -> ext_expr
+| expr_delete_field_1 : list value -> ext_expr
+| expr_delete_field_2 : object_ptr -> object -> option attributes -> prop_name -> ext_expr
 | expr_own_field_names_1 : out -> ext_expr
 | expr_op1_1 : unary_op -> out -> ext_expr
 | expr_op2_1 : binary_op -> out -> expr -> ext_expr
@@ -67,21 +59,7 @@ Coercion expr_basic : expr >-> ext_expr.
 
 Definition out_of_ext_expr p := match p with
 | expr_eval_many_2 _ o _ _ 
-| expr_get_attr_1 _ o _ 
-| expr_get_attr_2 _ _ o 
-| expr_set_attr_1 _ o _ _ 
-| expr_set_attr_2 _ _ o _
-| expr_set_attr_3 _ _ _ o
 | expr_get_obj_attr_1 _ o
-| expr_set_obj_attr_1 _ o _
-| expr_set_obj_attr_2 _ _ o
-| expr_get_field_1 o _ 
-| expr_get_field_2 _ o 
-| expr_set_field_1 o _ _
-| expr_set_field_2 _ o _
-| expr_set_field_3 _ _ o 
-| expr_delete_field_1 o _ 
-| expr_delete_field_2 _ o 
 | expr_own_field_names_1 o
 | expr_op1_1 _ o
 | expr_op2_1 _ o _ 

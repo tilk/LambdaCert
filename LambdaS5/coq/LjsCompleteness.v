@@ -262,6 +262,12 @@ Ltac ljs_inv_red_inter :=
         | expr_object_1 _ _ => inverts H
         | expr_object_data_1 _ _ _ _ => inverts H
         | expr_object_accessor_1 _ _ _ _ => inverts H
+        | expr_get_attr_1 _ _ => inverts H
+        | expr_set_attr_1 _ _ => inverts H
+        | expr_set_obj_attr_1 _ _ => inverts H
+        | expr_get_field_1 _ => inverts H
+        | expr_set_field_1 _ => inverts H
+        | expr_delete_field_1 _ => inverts H
         end; [idtac]
     end.
 

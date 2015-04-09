@@ -1008,6 +1008,11 @@ Qed.
 
 (* Main lemma *)
 
+Ltac ljs_advance_eval_many :=
+    repeat (ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort;
+            eapply red_expr_eval_many_2);
+    eapply red_expr_eval_many_1.
+
 Lemma eval_correct : forall runs c st e o,
     runs_type_correct runs -> eval runs c st e = result_some o -> red_expr c st e o.
 Proof.
@@ -1035,9 +1040,7 @@ Proof.
     match goal with H : objattrs |- _ => destruct H end.
     unfolds in H.
     eapply red_expr_object. 
-    repeat (ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort;
-            eapply red_expr_eval_many_2).
-    eapply red_expr_eval_many_1.
+    ljs_advance_eval_many.
     destruct H as (b&s&Hs&Hb&H).
     substs.
     eapply red_expr_object_1; try eassumption.
@@ -1049,23 +1052,22 @@ Proof.
     eapply red_expr_object_2; eassumption.
     (* get_attr *)
     lets H: eval_get_attr_correct IH R.
-    ljs_pretty_advance red_expr_get_attr red_expr_get_attr_1_abort.
-    ljs_pretty_advance red_expr_get_attr_1 red_expr_get_attr_2_abort.
+    eapply red_expr_get_attr.
+    ljs_advance_eval_many.
     destruct H as (ptr&obj&s&v1&Hy1&Hy2&Hy3&Hy4&Hy5).
     inverts Hy1. inverts Hy2.
     inverts Hy5.
     rewrite read_option_binds_eq in Hy3. 
-    eapply red_expr_get_attr_2; eauto.
+    eapply red_expr_get_attr_1; eauto.
     (* set_attr *)
-    lets H: eval_set_attr_correct IH R.
-    ljs_pretty_advance red_expr_set_attr red_expr_set_attr_1_abort.
-    ljs_pretty_advance red_expr_set_attr_1 red_expr_set_attr_2_abort.
-    ljs_pretty_advance red_expr_set_attr_2 red_expr_set_attr_3_abort.
+    lets H: eval_set_attr_correct IH R. 
+    eapply red_expr_set_attr.
+    ljs_advance_eval_many.
     destruct H as (ptr&obj&obj'&s&Hy1&Hy2&Hy3&Hy4&Hy5).
     inverts Hy1. inverts Hy2.
     inverts Hy5.
     rewrite read_option_binds_eq in Hy3.  
-    eapply red_expr_set_attr_3; eauto.
+    eapply red_expr_set_attr_1; eauto.
     (* get_obj_attr *)
     lets H: eval_get_obj_attr_correct IH R.
     ljs_pretty_advance red_expr_get_obj_attr red_expr_get_obj_attr_1_abort.
@@ -1075,50 +1077,49 @@ Proof.
     eapply red_expr_get_obj_attr_1; eauto.
     (* set_obj_attr *)
     lets H: eval_set_obj_attr_correct IH R.
-    ljs_pretty_advance red_expr_set_obj_attr red_expr_set_obj_attr_1_abort.
-    ljs_pretty_advance red_expr_set_obj_attr_1 red_expr_set_obj_attr_2_abort.
+    eapply red_expr_set_obj_attr.
+    ljs_advance_eval_many.
     destruct H as (ptr&obj&obj'&Hy1&Hy2&Hy3&Hy4).
     inverts Hy1. inverts Hy4.
     rewrite read_option_binds_eq in Hy2. 
-    eapply red_expr_set_obj_attr_2; eauto.
+    eapply red_expr_set_obj_attr_1; eauto.
     (* get_field *)
     lets H: eval_get_field_correct IH R.
-    ljs_pretty_advance red_expr_get_field red_expr_get_field_1_abort.
-    ljs_pretty_advance red_expr_get_field_1 red_expr_get_field_2_abort.
+    eapply red_expr_get_field.
+    ljs_advance_eval_many.
     destruct_hyp H;
-    eapply red_expr_get_field_2; try eauto using read_option_binds.
-    eapply red_expr_get_field_3_no_field.
-    eapply red_expr_get_field_3_get_field.
-    eapply red_expr_get_field_3_getter; try eassumption.
+    eapply red_expr_get_field_1; try eauto using read_option_binds.
+    eapply red_expr_get_field_2_no_field.
+    eapply red_expr_get_field_2_get_field.
+    eapply red_expr_get_field_2_getter; try eassumption.
     eauto using red_expr_app_2_lemma. 
     (* set_field *)
     lets H: eval_set_field_correct IH R.
-    ljs_pretty_advance red_expr_set_field red_expr_set_field_1_abort.
-    ljs_pretty_advance red_expr_set_field_1 red_expr_set_field_2_abort.
-    ljs_pretty_advance red_expr_set_field_2 red_expr_set_field_3_abort.
+    eapply red_expr_set_field.
+    ljs_advance_eval_many.
     destruct_hyp H;
-    eapply red_expr_set_field_3; try eauto using read_option_binds.
-    eapply red_expr_set_field_4_add_field; eauto.
-    eapply red_expr_set_field_4_unextensible_add; eauto. 
-    eapply red_expr_set_field_4_unwritable; eauto. 
-    eapply red_expr_set_field_4_set_field; eauto.
-    eapply red_expr_set_field_4_shadow_field; eauto.
-    eapply red_expr_set_field_4_unextensible_shadow; eauto. 
-    eapply red_expr_set_field_4_setter; try eassumption.
+    eapply red_expr_set_field_1; try eauto using read_option_binds.
+    eapply red_expr_set_field_2_add_field; eauto.
+    eapply red_expr_set_field_2_unextensible_add; eauto. 
+    eapply red_expr_set_field_2_unwritable; eauto. 
+    eapply red_expr_set_field_2_set_field; eauto.
+    eapply red_expr_set_field_2_shadow_field; eauto.
+    eapply red_expr_set_field_2_unextensible_shadow; eauto. 
+    eapply red_expr_set_field_2_setter; try eassumption.
     eauto using red_expr_app_2_lemma. 
     (* delete_field *)
     lets H: eval_delete_field_correct IH R.
-    ljs_pretty_advance red_expr_delete_field red_expr_delete_field_1_abort.
-    ljs_pretty_advance red_expr_delete_field_1 red_expr_delete_field_2_abort.
+    eapply red_expr_delete_field.
+    ljs_advance_eval_many.
     destruct H as (ptr&obj&s&oattrs&Hv&Ho&Hs&Hp&H).
     rewrite read_option_binds_eq in Ho. 
     inverts Hv. inverts Hs.
-    eapply red_expr_delete_field_2; try eassumption.
+    eapply red_expr_delete_field_1; try eassumption.
     repeat destruct_or H; repeat destruct_exists H; destructs H; subst o;
     match goal with H : oattrs = _ |- _ => inverts H end.
-    eapply red_expr_delete_field_3_not_found.
-    eapply red_expr_delete_field_3_unconfigurable; eauto.
-    eapply red_expr_delete_field_3_found; eauto.
+    eapply red_expr_delete_field_2_not_found.
+    eapply red_expr_delete_field_2_unconfigurable; eauto.
+    eapply red_expr_delete_field_2_found; eauto.
     (* own_field_names *)
     lets H: eval_own_field_names_correct IH R.
     ljs_pretty_advance red_expr_own_field_names red_expr_own_field_names_1_abort.
