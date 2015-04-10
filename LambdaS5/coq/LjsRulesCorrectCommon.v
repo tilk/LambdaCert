@@ -4,6 +4,7 @@ Require Import JsNumber.
 Require Import LjsShared.
 Require Import Utils.
 Require Import LjsRulesCorrectDefinitions.
+Require Export LjsPrettyRulesIndexedInvert.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
@@ -107,10 +108,10 @@ Ltac ljs_abort := match goal with
     end.
 
 Ltac inv_ljs_in H :=
-    inversions H; try ljs_abort; tryfalse.
+    inverts red_exprh H; try ljs_abort; tryfalse.
 
 Ltac inv_fwd_ljs_in H :=
-    (inversions H; try ljs_abort; tryfalse); [idtac].
+    (inverts red_exprh H; try ljs_abort; tryfalse); [idtac].
 
 Inductive inv_ljs_stop : L.ext_expr -> Prop := red_exprh_no_invert_intro : forall ee, inv_ljs_stop ee.
 
@@ -119,6 +120,7 @@ Ltac inv_ljs_stop ee := let STOP := fresh "STOP" in lets STOP : red_exprh_no_inv
 Ltac with_red_exprh T :=
     match goal with
     | H	: L.red_exprh _ _ _ ?ee _ |- _ => 
+        unfold js_expr_to_ljs, js_stat_to_ljs in H; simpl in H;
         match ee with 
         | L.expr_app_2 _ _ => fail 1 (* so that lemmas can be easily applied *) 
         | _ => is_hyp (inv_ljs_stop ee); fail 1
@@ -129,6 +131,7 @@ Ltac with_red_exprh T :=
 Ltac with_internal_red_exprh T :=
     match goal with
     | H	: L.red_exprh _ _ _ ?ee _ |- _ => 
+        unfold js_expr_to_ljs, js_stat_to_ljs in H; simpl in H;
         match ee with 
         | L.expr_basic _ => fail 1
         | L.expr_app_2 _ _ => fail 1 (* so that lemmas can be easily applied *)  
@@ -154,7 +157,7 @@ Ltac inv_literal_ljs :=
     | H : L.red_exprh _ _ _ (L.expr_basic L.expr_undefined) _ |- _ => constr:H
     | H : L.red_exprh _ _ _ (L.expr_basic (L.expr_number _)) _ |- _ => constr:H
     | H : L.red_exprh _ _ _ (L.expr_basic (L.expr_string _)) _ |- _ => constr:H
-    end in inverts H.
+    end in inverts red_exprh H.
 
 Ltac unfold_concl := 
     unfold concl_ext_expr_value, concl_expr_value, concl_expr_getvalue, 
@@ -775,7 +778,13 @@ Ltac ljs_inv_closure_ctx :=
         inverts H as Hz; repeat (inverts Hz as Hz) (* crunching Zip *)
     end.
 
-Ltac ljs_apply := progress repeat (ljs_inv_value_is_closure || ljs_inv_closure_ctx).
+Ltac ljs_closure_body := 
+    match goal with
+    | H : L.red_exprh _ _ _ (L.expr_basic (L.closure_body (L.closure_intro _ _ _ ?e))) _ |- _ => 
+        unfold L.closure_body in H; try (unfold e in H)
+    end.
+
+Ltac ljs_apply := progress repeat (ljs_inv_value_is_closure || ljs_inv_closure_ctx || ljs_closure_body).
 
 Ltac binds_inv H :=
     match type of H with
@@ -1073,14 +1082,14 @@ Lemma red_spec_to_boolean_unary_ok : forall k,
     th_ext_expr_unary k LjsInitEnv.privToBoolean J.spec_to_boolean.
 Proof.
     introv IHe Hinv Hvrel Hlred.
-    inverts Hlred.
+    inverts red_exprh Hlred.
     ljs_apply.
 
-    rewrite from_list_update in H7.
-    repeat rewrite from_list_empty in H7. (* TODO *)
-    rew_bag_simpl in H7.
+    rewrite from_list_update in H8.
+    repeat rewrite from_list_empty in H8. (* TODO *)
+    rew_bag_simpl in H8. 
 
-    repeat inv_fwd_ljs.
+    repeat ljs_autoforward.
     binds_inv.
 
     inverts Hvrel; try injects; jauto_js.

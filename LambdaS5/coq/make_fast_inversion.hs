@@ -11,7 +11,14 @@ prefix = "Generalizable All Variables.\n\
          \Require Import LjsShared.\n\
          \Require Import LjsSyntax. \n\
          \Require Import LjsPrettyInterm.\n\
-         \Require Import LjsPrettyRulesIndexed.\n"
+         \Require Import LjsPrettyRulesIndexed.\n\
+         \Ltac red_exprh_hnf e := \n\
+         \    match eval hnf in e with\n\
+         \    | expr_basic ?e1 =>\n\
+         \        let e1' := eval hnf in e1 in\n\
+         \        constr:(expr_basic e1')\n\
+         \    | ?e1 => constr:e1\n\
+         \    end.\n"
 
 predicate_name = "red_exprh"
 patterns = [
@@ -21,6 +28,8 @@ patterns = [
     ("string", "expr_string ?s"),
     ("bool", "expr_bool ?b"),
     ("number", "expr_number ?n"),
+    ("id", "expr_id ?i"),
+    ("lambda", "expr_lambda ?args ?body"),
 {- TODO?
     ("many_1_nil", "expr_eval_many_1 nil ?vs ?E"),
     ("many_1_cons", "expr_eval_many_1 (cons ?e ?es) ?vs ?E"),
@@ -30,6 +39,8 @@ patterns = [
     ("object", "expr_object ?oa ?a"),
     ("object_1", "expr_object_1 ?a ?oal"),
     ("object_2", "expr_object_2 ?obj ?a"),
+    ("object_data_1", "expr_object_data_1 ?obj ?a ?s ?vs"),
+    ("object_accessor_1", "expr_object_accessor_1 ?obj ?a ?s ?vs"),
     ("op1", "expr_op1 ?op ?e"),
     ("op1_1", "expr_op1_1 ?op ?o"),
     ("op2", "expr_op2 ?op ?e1 ?e2"),
@@ -76,20 +87,19 @@ no_qmarks = filter (/= '?')
 
 inv_hyp_name n = "inv_" ++ predicate_name ++ "_" ++ n
 
-make_concl s = "red_exprh ?k ?c ?st (" ++ s ++ ") (out_ter ?st' ?r)"
+make_concl s = "red_exprh ?k ?c ?st (" ++ s ++ ") ?oo"
 
-make_inversion (n, p) = "Derive Inversion_clear " ++ inv_hyp_name n ++ " with (forall " ++ intercalate " " (vars_of c) ++ ",\n    " ++ no_qmarks c ++ ") Sort Prop.\n" 
+make_inversion (n, p) = "Derive Inversion " ++ inv_hyp_name n ++ " with (forall " ++ intercalate " " (vars_of c) ++ ",\n    " ++ no_qmarks c ++ ") Sort Prop.\n" 
     where c = make_concl p
 
-make_case (n, p) = "    | " ++ c ++ " =>\n        inversion H using " ++ inv_hyp_name n ++ "\n"
-    where c = make_concl (add_basic p)
+make_case (n, p) = "    | " ++ add_basic p ++ " =>\n        inversion H using " ++ inv_hyp_name n ++ "\n"
 
 main = do
     putStr prefix
     putStr $ concat $ map make_inversion patterns
-    putStr $ "Tactic Notation \"invert\" \"keep\" \"" ++ predicate_name ++ "\" hyp(H) := \n    match type of H with\n"
+    putStr $ "Tactic Notation \"invert\" \"keep\" \"" ++ predicate_name ++ "\" hyp(H) := \n    match type of H with\n    | " ++ make_concl "?e" ++ " => match red_exprh_hnf e with\n"
     putStr $ concat $ map make_case patterns
-    putStr $ "    end.\n"
+    putStr $ "    end end; clear H; intro H.\n"
     putStr $ "Tactic Notation \"inverts\" \"keep\" \"" ++ predicate_name ++ "\" hyp(H) := \n    inverts_tactic_general ltac:(fun H => invert keep " ++ predicate_name ++ " H) H.\n"
     putStr $ "Tactic Notation \"inverts\" \"" ++ predicate_name ++ "\" hyp(H) := \n    inverts keep " ++ predicate_name ++ " H; clear H.\n"
 

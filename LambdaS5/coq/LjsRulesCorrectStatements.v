@@ -500,14 +500,14 @@ Proof.
     (* after returns a value *)
     repeat inv_fwd_ljs.
     binds_determine. substs.
-    inverts H9. (* TODO! *)
+    inverts red_exprh H0. (* TODO! *)
     ljs_apply.
-    rewrite from_list_empty in H13.
-    repeat rew_bag_simpl in H13.
+    rewrite from_list_empty in H9.
+    repeat rew_bag_simpl in H9.
     unfreeze Hctx.
-    rewrite <- Hctx in H13.
+    rewrite <- Hctx in H9.
     freeze Hctx.
-    specializes IH H13. omega.
+    specializes IH H9. omega.
     eapply while_unroll_step.
     repeat eexists. eauto. eauto. eauto.
     inv_internal_ljs. 
@@ -552,12 +552,12 @@ Proof.
     substs.
     repeat inv_fwd_ljs.
     binds_inv.
-    inverts H6. (* TODO *)
+    inverts H7. (* TODO *)
 
     unfolds L.add_closure.
     ljs_apply.
-    rewrite from_list_empty in H8. (* TODO *)
-    rew_bag_simpl in H8.
+    rewrite from_list_empty in H9. (* TODO *)
+    rew_bag_simpl in H9.
     eexists. split.
     eapply ejs_while_body_lemma. reflexivity. eassumption.
     omega.
@@ -767,7 +767,7 @@ Proof.
     inv_internal_ljs; try injects;
     jauto_js.
     destruct (classic (s = s0)).
-    substs. specializes H4 st' v. 
+    substs. false. jauto_js. (* TODO *)
     jauto_js.
 Qed.
 
@@ -784,7 +784,7 @@ Proof.
     apply_ih_expr.
     destr_concl; try ljs_handle_abort.
 (* TODO seems like something to automate *)
-    repeat (ljs_out_redh_ter || inv_fwd_ljs).
+    repeat ljs_autoforward. 
     repeat injects.
     jauto_js 12.
 Qed.

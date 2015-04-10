@@ -51,7 +51,7 @@ Proof.
     introv.
     unfolds.
     introv Hinv Hlred.
-    destruct l as [ | [ | ] | | ]; inverts Hlred; ijauto_js.
+    destruct l as [ | [ | ] | | ]; inverts red_exprh Hlred; ijauto_js.
 Qed.
 
 Lemma red_expr_identifier_ok : forall k i,
@@ -107,8 +107,7 @@ Proof.
     inverts Hlred. 
     ljs_apply.
     simpls.  
-    repeat inv_fwd_ljs.
-    ljs_out_redh_ter.
+    repeat ljs_autoforward.
 (* TODO *)
     match goal with H : binds ?c _ _ |- _ => sets_eq c' : c end.
     repeat rewrite from_list_update, from_list_empty in EQc'. (* TODO *)
@@ -122,7 +121,7 @@ Proof.
     js_red_expr_invert.
     res_related_invert.
     resvalue_related_invert.
-    repeat inv_fwd_ljs.
+    repeat ljs_autoforward.
     binds_inv.
     injects.
     jauto_js.
