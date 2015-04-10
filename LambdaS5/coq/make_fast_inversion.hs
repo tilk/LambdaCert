@@ -30,7 +30,7 @@ patterns = [
     ("number", "expr_number ?n"),
     ("id", "expr_id ?i"),
     ("lambda", "expr_lambda ?args ?body"),
-{- TODO?
+{-
     ("many_1_nil", "expr_eval_many_1 nil ?vs ?E"),
     ("many_1_cons", "expr_eval_many_1 (cons ?e ?es) ?vs ?E"),
 -}
@@ -38,6 +38,10 @@ patterns = [
     ("many_2", "expr_eval_many_2 ?es ?o ?vs ?E"),
     ("object", "expr_object ?oa ?a"),
     ("object_1", "expr_object_1 ?a ?oal"),
+{-
+    ("object_2_nil", "expr_object_2 ?obj nil"),
+    ("object_2_cons", "expr_object_2 ?obj (cons ?oa ?oal)"),
+-}
     ("object_2", "expr_object_2 ?obj ?a"),
     ("object_data_1", "expr_object_data_1 ?obj ?a ?s ?vs"),
     ("object_accessor_1", "expr_object_accessor_1 ?obj ?a ?s ?vs"),
