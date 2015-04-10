@@ -331,16 +331,18 @@ Record state_invariant BR jst jc c st : Prop := {
 (** *** Theorem conclusions
     They state what must hold if the preconditions are satisfied. *)
 
-Definition concl_ext_expr_value BR jst jc c st st' r jee :=
+Definition concl_ext_expr_value BR jst jc c st st' r jee P :=
     exists BR' jst' jr,
     state_invariant BR' jst' jc c st' /\
     BR \c BR' /\
     J.red_expr jst jc jee (J.out_ter jst' jr) /\ 
-    res_related BR jst' st' jr r.
-
+    res_related BR jst' st' jr r /\
+    ((exists jv, jr = J.res_val jv /\ P jv) \/
+     J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw).
+(* unused
 Definition concl_expr_value BR jst jc c st st' r je :=  
     concl_ext_expr_value BR jst jc c st st' r (J.expr_basic je).
-
+*)
 Definition concl_stat BR jst jc c st st' r jt :=
     exists BR' jst' jr,
     state_invariant BR' jst' jc c st' /\
@@ -382,20 +384,20 @@ Definition th_spec {A : Type} k e jes
     L.red_exprh k c st (L.expr_basic e) (L.out_ter st' r) ->
     concl_spec BR jst jc c st st' r jes (fun BR' jst' a => P BR' jst' jc c st' r a) (fun _ _ _ => True).
 
-Definition th_ext_expr_unary k v jeef :=
+Definition th_ext_expr_unary k v jeef P :=
     forall BR jst jc c st st' r v1 jv1, 
     state_invariant BR jst jc c st ->
     value_related BR jv1 v1 -> 
     L.red_exprh k c st (L.expr_app_2 v [v1]) (L.out_ter st' r) ->
-    concl_ext_expr_value BR jst jc c st st' r (jeef jv1).
+    concl_ext_expr_value BR jst jc c st st' r (jeef jv1) P.
 
-Definition th_ext_expr_binary k v jeef :=
+Definition th_ext_expr_binary k v jeef P :=
     forall BR jst jc c st st' r v1 jv1 v2 jv2, 
     state_invariant BR jst jc c st ->
     value_related BR jv1 v1 -> 
     value_related BR jv2 v2 -> 
     L.red_exprh k c st (L.expr_app_2 v [v1; v2]) (L.out_ter st' r) ->
-    concl_ext_expr_value BR jst jc c st st' r (jeef jv1 jv2).
+    concl_ext_expr_value BR jst jc c st st' r (jeef jv1 jv2) P.
 
 (** *** Inductive hypotheses 
     The form of the induction hypotheses, as used in the proof. 

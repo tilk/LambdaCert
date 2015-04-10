@@ -101,7 +101,8 @@ Admitted.
 
 Lemma red_expr_unary_op_2_not_ok : forall k,
     ih_expr k ->
-    th_ext_expr_unary k LjsInitEnv.privUnaryNot (J.expr_unary_op_2 J.unary_op_not).
+    th_ext_expr_unary k LjsInitEnv.privUnaryNot (J.expr_unary_op_2 J.unary_op_not)
+        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
     introv IHe Hinv Hvrel Hlred.
     inverts Hlred. 
@@ -117,15 +118,15 @@ Proof.
 
     repeat binds_inv.
     forwards_th red_spec_to_boolean_unary_ok. 
-    destr_concl.
-    js_red_expr_invert.
+    destr_concl;
+    (asserts Hinv'' : (state_invariant BR' jst' jc c st0); [skip | idtac]); (* TODO *)
+    try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
     binds_inv.
     injects.
     jauto_js.
-    skip. (* TODO *)
 Qed.
 
 Lemma red_expr_unary_op_not_ok : forall k je,
@@ -138,22 +139,33 @@ Proof.
     repeat inv_fwd_ljs.
     forwards_th red_expr_unary_op_2_not_ok.
     repeat destr_concl.
-    js_red_expr_invert.
     res_related_invert.
     resvalue_related_invert.
     jauto_js. left. jauto_js.
+    jauto_js 15.
 Qed.
 
 Lemma red_expr_unary_op_2_add_ok : forall k,
     ih_expr k ->
-    th_ext_expr_unary k LjsInitEnv.privUnaryPlus (J.expr_unary_op_2 J.unary_op_add).
+    th_ext_expr_unary k LjsInitEnv.privUnaryPlus (J.expr_unary_op_2 J.unary_op_add)
+        (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
 Proof.
     introv IHe Hinv Hvrel Hlred.
     inverts Hlred. 
     ljs_apply.
-    simpls.  
-    repeat inv_fwd_ljs.
-Admitted.
+    repeat rewrite from_list_update, from_list_empty in H7. (* TODO *)
+    rew_bag_simpl in H7.
+    asserts Hinv' : (state_invariant BR jst jc ((\{}\("%ToNumber":=LjsInitEnv.privToNumber))\("expr":=v1)) st). skip.
+  
+    repeat ljs_autoforward.
+    repeat binds_inv.
+    forwards_th red_spec_to_number_unary_ok.
+    destr_concl.
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js. skip.
+    jauto_js. skip.
+Qed.
 
 Lemma red_expr_unary_op_add_ok : forall k je,
     ih_expr k ->
@@ -165,11 +177,33 @@ Proof.
     repeat inv_fwd_ljs.
     forwards_th red_expr_unary_op_2_add_ok.
     repeat destr_concl.
-    js_red_expr_invert.
     res_related_invert.
     resvalue_related_invert.
     jauto_js. left. jauto_js.
     jauto_js. right. jauto_js.
+Qed.
+
+Lemma red_expr_unary_op_2_neg_ok : forall k,
+    ih_expr k ->
+    th_ext_expr_unary k LjsInitEnv.privUnaryNeg (J.expr_unary_op_2 J.unary_op_neg)
+        (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
+Proof.
+Admitted.
+
+Lemma red_expr_unary_op_neg_ok : forall k je,
+    ih_expr k ->
+    th_expr k (J.expr_unary_op J.unary_op_neg je).
+Proof.
+    introv IHe Hinv Hlred.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat inv_fwd_ljs.
+    forwards_th red_expr_unary_op_2_neg_ok.
+    repeat destr_concl.
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js. left. jauto_js.
+    jauto_js 15.
 Qed.
 
 Lemma red_expr_unary_op_ok : forall op k je,
@@ -185,14 +219,15 @@ Proof.
     skip.
     skip.
     apply red_expr_unary_op_add_ok.
-    skip.
+    apply red_expr_unary_op_neg_ok.
     skip.
     apply red_expr_unary_op_not_ok.
 Qed.
 
 Lemma red_expr_binary_op_3_strict_equal_ok : forall k,
     ih_expr k ->
-    th_ext_expr_binary k LjsInitEnv.privStxEq (J.expr_binary_op_3 J.binary_op_strict_equal).
+    th_ext_expr_binary k LjsInitEnv.privStxEq (J.expr_binary_op_3 J.binary_op_strict_equal)
+        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
 Admitted.
 
@@ -208,26 +243,28 @@ Proof.
     repeat inv_fwd_ljs.
     forwards_th red_expr_binary_op_3_strict_equal_ok.
     repeat destr_concl.
-    js_red_expr_invert.
     res_related_invert.
     resvalue_related_invert.
     jauto_js. left. jauto_js 8.
+    jauto_js 15.
 Qed.
 
 Lemma red_spec_equal_ok : forall k,
     ih_expr k ->
-    th_ext_expr_binary k LjsInitEnv.privEqEq J.spec_equal.
+    th_ext_expr_binary k LjsInitEnv.privEqEq J.spec_equal
+        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
 Admitted.
 
 Lemma red_expr_binary_op_3_equal_ok : forall k,
     ih_expr k ->
-    th_ext_expr_binary k LjsInitEnv.privEqEq (J.expr_binary_op_3 J.binary_op_equal).
+    th_ext_expr_binary k LjsInitEnv.privEqEq (J.expr_binary_op_3 J.binary_op_equal)
+        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
     introv IHe Hinv Hvrel1 Hvrel2 Hlred.
     forwards_th red_spec_equal_ok.
-    destr_concl.
-    jauto_js.
+    destr_concl;
+    jauto_js. 
 Qed.
 
 Lemma red_expr_binary_op_equal_ok : forall k je1 je2,
@@ -242,10 +279,10 @@ Proof.
     repeat inv_fwd_ljs.
     forwards_th red_expr_binary_op_3_equal_ok.
     repeat destr_concl.
-    js_red_expr_invert.
     res_related_invert.
     resvalue_related_invert.
     jauto_js. left. jauto_js 8.
+    jauto_js 15.
 Qed.
 
 Lemma red_expr_binary_op_ok : forall op k je1 je2,

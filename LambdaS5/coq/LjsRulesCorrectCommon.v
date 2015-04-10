@@ -160,11 +160,11 @@ Ltac inv_literal_ljs :=
     end in inverts red_exprh H.
 
 Ltac unfold_concl := 
-    unfold concl_ext_expr_value, concl_expr_value, concl_expr_getvalue, 
+    unfold concl_ext_expr_value, concl_expr_getvalue, 
         concl_stat, concl_spec.
  
 Tactic Notation "unfold_concl" "in" hyp(H) := 
-    unfold concl_ext_expr_value, concl_expr_value, concl_expr_getvalue, 
+    unfold concl_ext_expr_value, concl_expr_getvalue, 
         concl_stat, concl_spec in H. 
 
 Ltac js_ljs_false_invert := match goal with 
@@ -212,7 +212,7 @@ Ltac destr_concl := match goal with
         unfold_concl in H; destruct_hyp H
     | H : concl_stat _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
-    | H : concl_ext_expr_value _ _ _ _ _ _ _ _ |- _ =>
+    | H : concl_ext_expr_value _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_expr_getvalue _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
@@ -898,7 +898,7 @@ Ltac ljs_handle_abort := progress (repeat (ljs_propagate_abort || ljs_abort_from
 
 Ltac specialize_th_ext_expr_unary H :=
     match type of H with
-    | th_ext_expr_unary _ ?e _ =>
+    | th_ext_expr_unary _ ?e _ _ =>
     match goal with
     | H1 : state_invariant ?BR _ _ ?c ?st, H2 : value_related ?BR1 ?jv ?v,
       H3 : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
@@ -912,7 +912,7 @@ Ltac specialize_th_ext_expr_unary H :=
 
 Ltac specialize_th_ext_expr_binary H :=
     match type of H with
-    | th_ext_expr_binary _ ?e _ =>
+    | th_ext_expr_binary _ ?e _ _ =>
     match goal with
     | H1 : state_invariant ?BR _ _ ?c ?st, H2 : value_related ?BR1 ?jv1 ?v1, H3 : value_related ?BR2 ?jv2 ?v2,
       H4 : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
@@ -984,83 +984,6 @@ Ltac res_related_abort :=
 
 Ltac destr_concl_auto := destr_concl; res_related_abort; try ljs_handle_abort.
 
-Lemma js_red_expr_binary_op_equal_invert_lemma : forall jst jc jv1 jv2 jst' jr,
-    J.red_expr jst jc (J.expr_binary_op_3 J.binary_op_equal jv1 jv2) (J.out_ter jst' jr) ->
-    exists b, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_bool b))).
-Admitted. (* TODO *)
-
-Lemma js_red_expr_binary_op_strict_equal_invert_lemma : forall jst jc jv1 jv2 jst' jr,
-    J.red_expr jst jc (J.expr_binary_op_3 J.binary_op_strict_equal jv1 jv2) (J.out_ter jst' jr) ->
-    exists b, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_bool b))).
-Admitted. (* SLOW
-Proof.
-    introv Hred.
-    inverts Hred; tryfalse. 
-    inverts H4. inverts H2. inverts H5. eauto. inverts H4. (* TODO *)
-Qed. *)
-
-Lemma js_red_expr_spec_to_number_invert_lemma : forall jst jc jv jst' jr,
-    J.red_expr jst jc (J.spec_to_number jv) (J.out_ter jst' jr) ->
-    (exists n, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_number n)))) \/
-    (J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw).
-Admitted. (* SLOW 
-Proof.
-    introv Hred.
-    inverts Hred; tryfalse.
-    eauto. 
-    inverts H3. injects. skip. (* TODO *)
-    eauto.
-Qed. *)
-
-Lemma js_red_expr_unary_op_add_invert_lemma : forall jst jc jv jst' jr,
-    J.red_expr jst jc (J.expr_unary_op_2 J.unary_op_add jv) (J.out_ter jst' jr) ->
-    (exists n, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_number n)))) \/
-    (J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw).
-Admitted. (* SLOW
-Proof.
-    introv Hred.
-    inverts Hred; tryfalse.
-    eapply js_red_expr_spec_to_number_invert_lemma. eassumption.
-Qed. *)
-
-Lemma js_red_expr_spec_to_boolean_invert_lemma : forall jst jc jv jst' jr,
-    J.red_expr jst jc (J.spec_to_boolean jv) (J.out_ter jst' jr) ->
-    exists b, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_bool b))).
-Admitted. (* SLOW 
-Proof.
-    introv Hred.
-    inverts Hred; tryfalse.
-    eauto.
-Qed. *)
-
-Lemma js_red_expr_unary_op_not_invert_lemma : forall jst jc jv jst' jr,
-    J.red_expr jst jc (J.expr_unary_op_2 J.unary_op_not jv) (J.out_ter jst' jr) ->
-    exists b, jr = J.res_normal (J.resvalue_value (J.value_prim (J.prim_bool b))).
-Admitted. (* SLOW 
-Proof.
-    introv Hred.
-    inverts Hred. tryfalse.
-    inverts H0. tryfalse. (* TODO nicer proof *)
-    inverts H3. injects. inverts H0. false. apply H2. unfolds. reflexivity.
-    eauto.
-Qed. *)
-
-Ltac js_red_expr_invert :=
-    match goal with
-    | H : J.red_expr _ _ ?ee (J.out_ter _ ?r) |- _ => 
-        is_var r;
-        let lem := match ee with
-        | J.spec_to_boolean _ => constr:js_red_expr_spec_to_boolean_invert_lemma
-        | J.spec_to_number _ => constr:js_red_expr_spec_to_number_invert_lemma
-        | J.expr_unary_op_2 J.unary_op_not _ => constr:js_red_expr_unary_op_not_invert_lemma
-        | J.expr_unary_op_2 J.unary_op_add _ => constr:js_red_expr_unary_op_add_invert_lemma
-        | J.expr_binary_op_3 J.binary_op_equal _ _ => constr:js_red_expr_binary_op_equal_invert_lemma
-        | J.expr_binary_op_3 J.binary_op_strict_equal _ _ => constr:js_red_expr_binary_op_strict_equal_invert_lemma
-        end in
-        let H1 := fresh in 
-        lets H1 : lem H; destruct_hyp H1
-    end.
-
 Ltac ljs_autoforward :=
     inv_fwd_ljs || ljs_out_redh_ter || ljs_get_builtin || apply_ih_expr.
 
@@ -1079,7 +1002,8 @@ Ltac ljs_autoforward :=
 
 Lemma red_spec_to_boolean_unary_ok : forall k,
     ih_expr k ->
-    th_ext_expr_unary k LjsInitEnv.privToBoolean J.spec_to_boolean.
+    th_ext_expr_unary k LjsInitEnv.privToBoolean J.spec_to_boolean 
+        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
     introv IHe Hinv Hvrel Hlred.
     inverts red_exprh Hlred.
@@ -1102,7 +1026,8 @@ Qed.
 
 Lemma red_spec_to_number_unary_ok : forall k,
     ih_expr k ->
-    th_ext_expr_unary k LjsInitEnv.privToNumber J.spec_to_number.
+    th_ext_expr_unary k LjsInitEnv.privToNumber J.spec_to_number
+        (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
 Proof.
 Admitted.
 
@@ -1130,9 +1055,8 @@ Proof.
     forwards_th red_spec_to_boolean_unary_ok.
 
     destr_concl.
-
-    js_red_expr_invert. 
     res_related_invert.
     resvalue_related_invert.
     jauto_js. left. jauto_js.
+    jauto_js. right. jauto_js.
 Qed.
