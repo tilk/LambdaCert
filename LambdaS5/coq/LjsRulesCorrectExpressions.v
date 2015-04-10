@@ -111,8 +111,6 @@ Proof.
     repeat ljs_autoforward.
 (* TODO *)
     match goal with H : binds ?c _ _ |- _ => sets_eq c' : c end.
-    repeat rewrite from_list_update, from_list_empty in EQc'. (* TODO *)
-    rew_bag_simpl in EQc'. rewrite update_empty in EQc'. (* TODO *) 
     asserts Hinv' : (state_invariant BR jst jc c' st). skip.
     subst c'.
 
@@ -152,12 +150,13 @@ Lemma red_expr_unary_op_2_add_ok : forall k,
 Proof.
     introv IHe Hinv Hvrel Hlred.
     inverts Hlred. 
-    ljs_apply.
-    repeat rewrite from_list_update, from_list_empty in H7. (* TODO *)
-    rew_bag_simpl in H7.
-    asserts Hinv' : (state_invariant BR jst jc ((\{}\("%ToNumber":=LjsInitEnv.privToNumber))\("expr":=v1)) st). skip.
-  
+    ljs_apply. 
     repeat ljs_autoforward.
+(* TODO *)
+    match goal with H : binds ?c _ _ |- _ => sets_eq c' : c end.
+    asserts Hinv' : (state_invariant BR jst jc c' st). skip.
+    subst c'.
+
     repeat binds_inv.
     forwards_th red_spec_to_number_unary_ok.
     destr_concl.
@@ -224,10 +223,14 @@ Proof.
     apply red_expr_unary_op_not_ok.
 Qed.
 
-Lemma red_expr_binary_op_3_strict_equal_ok : forall k,
-    ih_expr k ->
-    th_ext_expr_binary k LjsInitEnv.privStxEq (J.expr_binary_op_3 J.binary_op_strict_equal)
-        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
+Lemma strict_equality_test_lemma : forall BR jv1 v1 jv2 v2 k c st st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privStxEq [v1; v2]) (L.out_ter st' r) ->
+    value_related BR jv2 v2 ->
+    value_related BR jv1 v1 ->
+    exists b, 
+    b = J.strict_equality_test jv1 jv2 /\
+    r = L.res_value (L.value_bool b) /\
+    st = st'.
 Proof.
 Admitted.
 
@@ -241,27 +244,38 @@ Proof.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    forwards_th red_expr_binary_op_3_strict_equal_ok.
-    repeat destr_concl.
-    res_related_invert.
-    resvalue_related_invert.
+    forwards Heql : strict_equality_test_lemma.
+    jauto_js. jauto_js. jauto_js. destruct_hyp Heql.
     jauto_js. left. jauto_js 8.
-    jauto_js 15.
+Qed.
+
+Lemma red_expr_binary_op_strict_disequal_ok : forall k je1 je2,
+    ih_expr k ->
+    th_expr k (J.expr_binary_op je1 J.binary_op_strict_disequal je2).
+Proof.
+    introv IHe Hinv Hlred.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat inv_fwd_ljs.
+    forwards Heql : strict_equality_test_lemma.
+    jauto_js. jauto_js. jauto_js. destruct_hyp Heql. 
+    repeat ljs_autoforward. injects.
+    jauto_js. left. jauto_js 8.
 Qed.
 
 Lemma red_spec_equal_ok : forall k,
-    ih_expr k ->
     th_ext_expr_binary k LjsInitEnv.privEqEq J.spec_equal
         (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
 Admitted.
 
 Lemma red_expr_binary_op_3_equal_ok : forall k,
-    ih_expr k ->
     th_ext_expr_binary k LjsInitEnv.privEqEq (J.expr_binary_op_3 J.binary_op_equal)
         (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
-    introv IHe Hinv Hvrel1 Hvrel2 Hlred.
+    introv Hinv Hvrel1 Hvrel2 Hlred.
     forwards_th red_spec_equal_ok.
     destr_concl;
     jauto_js. 
@@ -285,6 +299,25 @@ Proof.
     jauto_js 15.
 Qed.
 
+Lemma red_expr_binary_op_disequal_ok : forall k je1 je2,
+    ih_expr k ->
+    th_expr k (J.expr_binary_op je1 J.binary_op_disequal je2).
+Proof.
+    introv IHe Hinv Hlred.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat inv_fwd_ljs.
+    forwards_th red_spec_equal_ok.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    inv_fwd_ljs.
+    injects.
+    jauto_js. left. jauto_js 15. 
+Qed.
+
 Lemma red_expr_binary_op_ok : forall op k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 op je2).
@@ -305,9 +338,9 @@ Proof.
     skip.
     skip.
     apply red_expr_binary_op_equal_ok.
-    skip.
+    apply red_expr_binary_op_disequal_ok.
     apply red_expr_binary_op_strict_equal_ok.
-    skip.
+    apply red_expr_binary_op_strict_disequal_ok.
     skip.
     skip.
     skip.

@@ -787,6 +787,8 @@ Ltac ljs_closure_body :=
 Ltac ljs_apply := progress repeat (ljs_inv_value_is_closure || ljs_inv_closure_ctx || ljs_closure_body).
 
 Ltac binds_inv H :=
+    repeat rewrite from_list_update, from_list_empty in H; (* TODO *)
+    rew_bag_simpl in H;
     match type of H with
     | binds ?M ?x ?v2 =>
         let He := fresh "H" in
@@ -1001,11 +1003,10 @@ Ltac ljs_autoforward :=
     It corresponds to [to_bool] in the desugaring. *)
 
 Lemma red_spec_to_boolean_unary_ok : forall k,
-    ih_expr k ->
     th_ext_expr_unary k LjsInitEnv.privToBoolean J.spec_to_boolean 
         (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
-    introv IHe Hinv Hvrel Hlred.
+    introv Hinv Hvrel Hlred.
     inverts red_exprh Hlred.
     ljs_apply.
 
@@ -1025,7 +1026,6 @@ Proof.
 Qed.
 
 Lemma red_spec_to_number_unary_ok : forall k,
-    ih_expr k ->
     th_ext_expr_unary k LjsInitEnv.privToNumber J.spec_to_number
         (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
 Proof.
