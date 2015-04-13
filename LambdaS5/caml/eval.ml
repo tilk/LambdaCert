@@ -59,7 +59,11 @@ let load_env filename =
 
 let coq_save_store filename = 
     let (c, st) = get_store () in
-    File.with_file_out filename (fun ch -> PrettyPrintCoq.ctx_store_to_output ch c st)
+    File.with_file_out filename (fun ch -> 
+        try PrettyPrintCoq.ctx_store_to_output ch c st
+        with e -> 
+            Printexc.print_backtrace stderr;
+            raise e)
 
 let desugar_s5 filename = Desugar.set_js_parser_s5 filename 
 

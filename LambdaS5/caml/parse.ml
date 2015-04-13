@@ -1,5 +1,7 @@
 open Batteries
 
+let sprintf_pos p = Printf.sprintf "row %d col %d" p.Lexing.pos_lnum p.Lexing.pos_bol
+
 let parse_es5 cin name =
   let lexbuf = Lexing.from_channel cin in
     try 
@@ -11,8 +13,8 @@ let parse_es5 cin name =
            failwith "lexical error"
       | Failure "utf8_of_point not implemented" ->
         failwith "Parser doesn't do some UTF8 encoding crap"
-      | _ -> failwith (Printf.sprintf "parse error; unexpected token %s"
-                       (Lexing.lexeme lexbuf))
+      | _ -> failwith (Printf.sprintf "parse error; unexpected token %s at %s"
+                       (Lexing.lexeme lexbuf) (sprintf_pos (Lexing.lexeme_start_p lexbuf)))
 
 let parse_es5_env cin name =
   let lexbuf = Lexing.from_channel cin in
@@ -25,8 +27,8 @@ let parse_es5_env cin name =
            failwith "lexical error"
       | Failure "utf8_of_point not implemented" ->
         failwith "Parser doesn't do some UTF8 encoding crap"
-      | _ -> failwith (Printf.sprintf "parse error; unexpected token %s"
-                       (Lexing.lexeme lexbuf))
+      | _ -> failwith (Printf.sprintf "parse error; unexpected token %s at %s"
+                       (Lexing.lexeme lexbuf) (sprintf_pos (Lexing.lexeme_start_p lexbuf)))
 
 
 
