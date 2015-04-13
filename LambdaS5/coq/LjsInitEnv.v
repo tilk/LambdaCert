@@ -16978,3 +16978,4 @@ Definition store_items := [
                                          attributes_data_configurable :=
                                          false|})]|})
 ].
+Definition init_ctx : ctx := from_list ctx_items.

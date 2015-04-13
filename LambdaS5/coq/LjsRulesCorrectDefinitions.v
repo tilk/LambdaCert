@@ -81,6 +81,7 @@ Implicit Type jrv : J.resvalue.
 Implicit Type jref : J.ref.
 Implicit Type jl : J.label.
 Implicit Type jer : J.env_record.
+Implicit Type jeptr : J.env_loc.
 Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 
@@ -97,7 +98,7 @@ Definition js_stat_to_ljs jt := E.ejs_to_ljs (E.js_stat_to_ejs jt).
     They relate JS objects to LJS objects. 
     Properties they should satisfy will be defined later. *)
 
-Definition object_bisim := J.object_loc -> L.object_ptr -> Prop.
+Definition object_bisim := J.object_loc + J.env_loc -> L.object_ptr -> Prop.
 
 Implicit Type BR : object_bisim.
 
@@ -112,7 +113,7 @@ Inductive value_related BR : J.value -> L.value -> Prop :=
 | value_related_string : forall s, value_related BR (J.value_prim (J.prim_string s)) (L.value_string s)
 | value_related_bool : forall b, value_related BR (J.value_prim (J.prim_bool b)) (L.value_bool b)
 | value_related_object : forall jptr ptr, 
-    (jptr, ptr) \in BR -> value_related BR (J.value_object jptr) (L.value_object ptr) 
+    (inl jptr, ptr) \in BR -> value_related BR (J.value_object jptr) (L.value_object ptr) 
 .
 
 (** *** Relating object properties
@@ -165,33 +166,69 @@ Definition object_related BR jobj obj :=
     object_prim_related BR jobj obj /\
     object_properties_related BR (J.object_properties_ jobj) (L.object_properties obj).
 
+(** *** Relating environment records *)
+
+(* Relates declarative environment records *)
+
+Definition decl_env_record_related BR jder props := forall s,
+    ~J.Heap.indom jder s /\ ~index props s \/
+    exists jmut jv acc, 
+        J.Heap.binds jder s (jmut, jv) /\ 
+        binds props s (L.attributes_accessor_of acc) /\
+        True. (* TODO *)
+
+(* Relates environment records *)
+Inductive env_record_related BR : J.env_record -> L.object -> Prop :=
+| env_record_related_decl : forall jder obj,
+    decl_env_record_related BR jder (L.object_properties obj) ->
+    env_record_related BR (J.env_record_decl jder) obj
+(*
+| env_record_related_object :
+*)
+.
+
 (** *** Properties of heap bisimulations
     Heap bisimulations must satisfy several properties in order to be useful
     in the proof:
     - They must be injective - every JS object has an unique corresponding S5 object.
     - The mapped adresses must actually correspond to some object in JS and S5 heaps. *)
 
-Definition heaps_bisim_ltotal BR jst :=
-    forall jptr, J.object_indom jst jptr -> exists ptr, BR jptr ptr.
+Definition heaps_bisim_ltotal_inl BR jst :=
+    forall jptr, J.Heap.indom (J.state_object_heap jst) jptr -> exists ptr, BR (inl jptr) ptr.
 
-Definition heaps_bisim_lnoghost BR jst :=
-    forall jptr ptr, BR jptr ptr -> J.object_indom jst jptr.
+Definition heaps_bisim_ltotal_inr BR jst :=
+    forall jeptr, J.Heap.indom (J.state_env_record_heap jst) jeptr -> exists ptr, BR (inr jeptr) ptr.
+
+Definition heaps_bisim_lnoghost_inl BR jst :=
+    forall jptr ptr, BR (inl jptr) ptr -> J.Heap.indom (J.state_object_heap jst) jptr.
+
+Definition heaps_bisim_lnoghost_inr BR jst :=
+    forall jeptr ptr, BR (inr jeptr) ptr -> J.Heap.indom (J.state_env_record_heap jst) jeptr.
 
 Definition heaps_bisim_rnoghost BR st :=
-    forall jptr ptr, BR jptr ptr -> index st ptr.
+    forall xptr ptr, BR xptr ptr -> index st ptr.
 
-Definition heaps_bisim BR jst st := forall jptr ptr jobj obj, 
-     (jptr, ptr) \in BR -> 
+Definition heaps_bisim_inl BR jst st := forall jptr ptr jobj obj, 
+     (inl jptr, ptr) \in BR -> 
      J.object_binds jst jptr jobj ->
      binds st ptr obj ->
      object_related BR jobj obj.
 
+Definition heaps_bisim_inr BR jst st := forall jeptr ptr jer obj, 
+     (inr jeptr, ptr) \in BR -> 
+     J.env_record_binds jst jeptr jer ->
+     binds st ptr obj ->
+     env_record_related BR jer obj.
+
 Record heaps_bisim_consistent BR jst st : Prop := {
-    heaps_bisim_consistent_bisim : heaps_bisim BR jst st;
+    heaps_bisim_consistent_bisim_inl : heaps_bisim_inl BR jst st;
+    heaps_bisim_consistent_bisim_inr : heaps_bisim_inr BR jst st;
     heaps_bisim_consistent_lfun : functional BR;
     heaps_bisim_consistent_rfun : functional (flip BR);
-    heaps_bisim_consistent_ltotal : heaps_bisim_ltotal BR jst;
-    heaps_bisim_consistent_lnoghost : heaps_bisim_lnoghost BR jst;
+    heaps_bisim_consistent_ltotal_inl : heaps_bisim_ltotal_inl BR jst;
+    heaps_bisim_consistent_ltotal_inr : heaps_bisim_ltotal_inr BR jst;
+    heaps_bisim_consistent_lnoghost_inl : heaps_bisim_lnoghost_inl BR jst;
+    heaps_bisim_consistent_lnoghost_inr : heaps_bisim_lnoghost_inr BR jst;
     heaps_bisim_consistent_rnoghost : heaps_bisim_rnoghost BR st
 }.
 
@@ -258,61 +295,44 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
     (and thus is never shadowed). *)
 
 Definition includes_init_ctx c :=
-    forall i v v', binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'. 
+    forall i v v', binds c i v -> binds LjsInitEnv.init_ctx i v' -> v = v'. 
 
 (** *** Relating lexical environments *)
 
-(* Relates declarative environment records *)
-
-Definition decl_env_record_related BR jder props := forall s,
-    ~J.Heap.indom jder s /\ ~index props s \/
-    exists jmut jv acc, 
-        J.Heap.binds jder s (jmut, jv) /\ 
-        binds props s (L.attributes_accessor_of acc) /\
-        True. (* TODO *)
-
-(* Relates environment records *)
-Inductive env_record_related BR : J.env_record -> L.object -> Prop :=
-| env_record_related_decl : forall jder obj,
-    decl_env_record_related BR jder (L.object_properties obj) ->
-    env_record_related BR (J.env_record_decl jder) obj
-(*
-| env_record_related_object :
-*)
-.
-
 (* Relates the lexical environment *)
-Inductive lexical_env_related BR jst st v' : J.lexical_env -> L.value -> Prop :=
-| lexical_env_related_global : forall v,
-    lexical_env_related BR jst st v' [J.env_loc_global_env_record] v'
-| lexical_env_related_cons : forall jeptr jlenv jer ptr obj,
-    J.Heap.binds (J.state_env_record_heap jst) jeptr jer ->
+Inductive lexical_env_related BR st : J.lexical_env -> L.value -> Prop :=
+| lexical_env_related_global : forall ptr,
+    lexical_env_related BR st [J.env_loc_global_env_record] (L.value_object ptr)
+| lexical_env_related_cons : forall jeptr jlenv ptr obj,
+    (inr jeptr, ptr) \in BR ->
     binds st ptr obj ->
-    env_record_related BR jer obj ->
-    lexical_env_related BR jst st v' jlenv (L.object_proto obj) ->
-    lexical_env_related BR jst st v' (jeptr::jlenv) (L.value_object ptr)
+    lexical_env_related BR st jlenv (L.object_proto obj) ->
+    lexical_env_related BR st (jeptr::jlenv) (L.value_object ptr)
 .
 
 (* Relates the lexical contexts *)
-Record execution_ctx_related BR jst jc c st := {
+Record execution_ctx_related BR jc c st := {
     execution_ctx_related_this_binding : forall v,
         binds c "%this" v ->
         value_related BR (J.execution_ctx_this_binding jc) v;
     execution_ctx_related_strictness_flag : forall v, 
         binds c "%strict" v ->
         v = L.value_bool (J.execution_ctx_strict jc);
-    execution_ctx_related_lexical_env : forall v v',
+    execution_ctx_related_lexical_env : forall v,
         binds c "%context" v ->
-        binds c "%globalContext" v' ->
-        lexical_env_related BR jst st v' (J.execution_ctx_lexical_env jc) v
+        lexical_env_related BR st (J.execution_ctx_lexical_env jc) v;
+    execution_ctx_related_global_context : forall v ptr,
+        binds c "%globalContext" v ->
+        v = L.value_object ptr /\
+        (inr J.env_loc_global_env_record, ptr) \in BR 
 }.
 
 (* States that the variable environment and lexical environment exist *)
-Record env_records_exist jst jc := { 
+Record env_records_exist BR jc := { 
     env_record_exist_variable_env : 
-        Forall (J.Heap.indom (J.state_env_record_heap jst)) (J.execution_ctx_variable_env jc);
+        Forall (fun jeptr => exists ptr, (inr jeptr, ptr) \in BR) (J.execution_ctx_variable_env jc);
     env_record_exist_lexical_env : 
-        Forall (J.Heap.indom (J.state_env_record_heap jst)) (J.execution_ctx_lexical_env jc)
+        Forall (fun jeptr => exists ptr, (inr jeptr, ptr) \in BR) (J.execution_ctx_lexical_env jc)
 }.
 
 (** *** Invariant predicate
@@ -320,9 +340,9 @@ Record env_records_exist jst jc := {
 
 Record state_invariant BR jst jc c st : Prop := {
     state_invariant_heaps_bisim_consistent : heaps_bisim_consistent BR jst st;
-    state_invariant_execution_ctx_related : execution_ctx_related BR jst jc c st;
+    state_invariant_execution_ctx_related : execution_ctx_related BR jc c st;
     state_invariant_includes_init_ctx : includes_init_ctx c;
-    state_invariant_env_records_exist : env_records_exist jst jc
+    state_invariant_env_records_exist : env_records_exist BR jc
 }.
 
 (** ** Theorem statement  

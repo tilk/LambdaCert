@@ -60,6 +60,7 @@ Hint Constructors attributes_related : js_ljs.
 Hint Constructors value_related : js_ljs.
 Hint Constructors resvalue_related : js_ljs.
 Hint Constructors res_related : js_ljs.
+Hint Constructors lexical_env_related : js_ljs.
 
 (** The constructors of JSCert are used as hints, for automated building of
     the derivation trees for the semantics judgment. *)
@@ -480,34 +481,43 @@ Lemma heaps_bisim_consistent_nindex_preserved : forall BR jst st ptr obj,
     heaps_bisim_consistent BR jst (st \( ptr := obj)).
 Proof.
     introv Hni Hbi.
-    inverts Hbi as Hbisim Hlfun Hrfun Hltotal Hlnoghost Hrnoghost.
+    inverts Hbi.
     constructor; auto.
-    unfolds heaps_bisim.
+    unfolds heaps_bisim_inl.
     introv Hrel Hjb Hlb.
-    specializes Hrnoghost Hrel.
-    eapply Hbisim; try eassumption.
+    specializes heaps_bisim_consistent_rnoghost Hrel.
+    eapply heaps_bisim_consistent_bisim_inl; try eassumption.
+    eapply binds_update_diff_inv; try eassumption; auto. 
+    introv Hrel Hjb Hlb.
+    specializes heaps_bisim_consistent_rnoghost Hrel.
+    eapply heaps_bisim_consistent_bisim_inr; try eassumption.
     eapply binds_update_diff_inv; try eassumption; auto. 
     unfolds heaps_bisim_rnoghost.
     prove_bag.
 Qed.
 
-Lemma lexical_env_related_nindex_preserved : forall BR jst st ptr obj jle v v',
+Lemma lexical_env_related_nindex_preserved : forall BR st ptr obj jle v,
     ~index st ptr ->
-    lexical_env_related BR jst st v' jle v ->
-    lexical_env_related BR jst (st \( ptr := obj )) v' jle v.
+    lexical_env_related BR st jle v ->
+    lexical_env_related BR (st \( ptr := obj )) jle v.
 Proof.
-Admitted.
+    introv Hni Hrel.
+    induction Hrel. 
+    eapply lexical_env_related_global. 
+    eapply lexical_env_related_cons; prove_bag.
+Qed.
 
-Lemma execution_ctx_related_nindex_preserved : forall BR jst jc c st ptr obj,
+Lemma execution_ctx_related_nindex_preserved : forall BR jc c st ptr obj,
     ~index st ptr ->
-    execution_ctx_related BR jst jc c st ->
-    execution_ctx_related BR jst jc c (st \( ptr := obj)).
+    execution_ctx_related BR jc c st ->
+    execution_ctx_related BR jc c (st \( ptr := obj)).
 Proof.
     introv Hni Hbi.
     inverts Hbi; constructor.
     auto.
     auto.
     intros. apply lexical_env_related_nindex_preserved; auto.
+    auto.
 Qed.
 
 Lemma state_invariant_nindex_preserved : forall BR jst jc c st ptr obj,
@@ -543,10 +553,10 @@ Proof.
     prove_bag.
 Qed.
 
-Lemma execution_ctx_related_incl_preserved : forall BR jst jc c c' st,
+Lemma execution_ctx_related_incl_preserved : forall BR jc c c' st,
     c' \c c ->
-    execution_ctx_related BR jst jc c st ->
-    execution_ctx_related BR jst jc c' st.
+    execution_ctx_related BR jc c st ->
+    execution_ctx_related BR jc c' st.
 Proof.
     introv Hincl Hrel.
     inverts Hrel.
@@ -580,7 +590,7 @@ Section prefixes.
 Local Open Scope char_scope.
 
 Lemma init_ctx_percent_prefix : forall v s,
-    Mem (s, v) LjsInitEnv.ctx_items -> exists s', s = String "%" s'.
+    binds LjsInitEnv.init_ctx s v -> exists s', s = String "%" s'.
 Proof.
     introv Hmem.
 (*
@@ -589,10 +599,10 @@ Proof.
     skip.
 Qed.
 
-Lemma execution_ctx_related_add_nopercent_id_preserved : forall BR jst jc c st s v ch,
+Lemma execution_ctx_related_add_nopercent_id_preserved : forall BR jc c st s v ch,
     ch <> "%" ->
-    execution_ctx_related BR jst jc c st ->
-    execution_ctx_related BR jst jc (c \(String ch s := v)) st.
+    execution_ctx_related BR jc c st ->
+    execution_ctx_related BR jc (c \(String ch s := v)) st.
 Proof.
     introv Hdif Hrel.
     inverts Hrel.
@@ -629,19 +639,16 @@ Proof.
     assumption.
 Qed.
 
-Lemma execution_ctx_related_unadd_nopercent_id_preserved : forall BR jst jc c st s v ch,
+Lemma execution_ctx_related_unadd_nopercent_id_preserved : forall BR jc c st s v ch,
     ch <> "%" ->
-    execution_ctx_related BR jst jc (c \(String ch s := v)) st ->
-    execution_ctx_related BR jst jc c st.
+    execution_ctx_related BR jc (c \(String ch s := v)) st ->
+    execution_ctx_related BR jc c st.
 Proof.
     introv Hdif Hrel.
     inverts Hrel.
     constructor;
-    introv Hbinds.
+    introv Hbinds;
     prove_bag. 
-    prove_bag. 
-    introv Hbinds'. 
-    eapply execution_ctx_related_lexical_env. prove_bag. prove_bag. (* TODO auto depth for prove_bag *)
 Qed.
 
 Lemma includes_init_ctx_unadd_nopercent_id_preserved : forall c s v ch,
@@ -677,33 +684,85 @@ End prefixes.
 Hint Resolve state_invariant_add_nopercent_id_preserved : js_ljs.
 Hint Resolve state_invariant_unadd_nopercent_id_preserved : js_ljs.
 
-(* TODO ? 
-Lemma execution_ctx_related_union_preserved : forall BR jst jc c c' st,
-    execution_ctx_related BR jst jc c st ->
-    execution_ctx_related BR jst jc c' st ->
-    execution_ctx_related BR jst jc (c \u c') st.
+Lemma execution_ctx_related_union_preserved : forall BR jc c c' st,
+    execution_ctx_related BR jc c st ->
+    execution_ctx_related BR jc c' st ->
+    execution_ctx_related BR jc (c \u c') st.
 Proof.
     introv Hrel1 Hrel2.
     inverts Hrel1.
     inverts Hrel2.
-    constructor.
-    introv Hbinds.
-    rewrite binds_union_eq in Hbinds.
-    destruct_hyp Hbinds; eauto.
-    introv Hbinds.
-    rewrite binds_union_eq in Hbinds.
-    destruct_hyp Hbinds; eauto.
+    constructor;
     introv Hbinds;
     rewrite binds_union_eq in Hbinds;
-    destruct_hyp Hbinds;
-    introv Hbinds';
-    rewrite binds_union_eq in Hbinds';
-    destruct_hyp Hbinds'.
-    eauto.
-    eauto.
-    eapply lexical_env_related_union_preserved. eauto. eauto.
+    destruct_hyp Hbinds; eauto.
 Qed.
-*)
+
+Hint Resolve execution_ctx_related_union_preserved : js_ljs.
+
+Lemma includes_init_ctx_union_preserved : forall c c',
+    includes_init_ctx c ->
+    includes_init_ctx c' -> 
+    includes_init_ctx (c \u c').
+Proof.
+    introv Hii1 Hii2.
+    unfolds includes_init_ctx.
+    introv Hbinds Hmem.
+    rewrite binds_union_eq in Hbinds.
+    destruct_hyp Hbinds;
+    prove_bag.
+Qed.
+
+Hint Resolve includes_init_ctx_union_preserved : js_ljs.
+
+Lemma state_invariant_union_preserved : forall BR jst jc c c' st,
+    state_invariant BR jst jc c st ->
+    state_invariant BR jst jc c' st ->
+    state_invariant BR jst jc (c \u c') st.
+Proof.
+    introv Hinv1 Hinv2.
+    inverts Hinv1.
+    inverts Hinv2.
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve state_invariant_union_preserved : js_ljs.
+
+Lemma includes_init_replace_ctx_sub_init : forall c,
+    c \c LjsInitEnv.init_ctx ->
+    includes_init_ctx c.
+Proof.
+    introv Hsub.
+    unfolds.
+    introv Hb1 Hb2.
+    eapply binds_deterministic; [idtac | eassumption]. prove_bag.
+Qed.
+
+Hint Resolve includes_init_replace_ctx_sub_init : js_ljs.
+
+Lemma execution_ctx_related_replace_ctx_sub_init : forall BR jc c c' st,
+    c' \c LjsInitEnv.init_ctx ->
+    execution_ctx_related BR jc c st ->
+    execution_ctx_related BR jc c' st.
+Proof.
+    introv Hsub Hrel.
+    destruct Hrel.
+    constructor.
+Admitted. (* TODO *)
+
+Hint Resolve execution_ctx_related_replace_ctx_sub_init : js_ljs.
+
+Lemma state_invariant_replace_ctx_sub_init : forall BR jst jc c c' st,
+    c' \c LjsInitEnv.init_ctx ->
+    state_invariant BR jst jc c st ->
+    state_invariant BR jst jc c' st.
+Proof.
+    introv Hii Hinv.
+    inverts Hinv.
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve state_invariant_replace_ctx_sub_init : js_ljs.
 
 Lemma value_related_bisim_incl_preserved : forall BR1 BR2 jv v,
     BR1 \c BR2 ->
@@ -817,7 +876,7 @@ Tactic Notation "binds_inv" :=
 
 Lemma state_invariant_includes_init_ctx_lemma : forall BR jst jc c st i v v',
     state_invariant BR jst jc c st ->
-    binds c i v -> Mem (i, v') LjsInitEnv.ctx_items -> v = v'.
+    binds c i v -> binds LjsInitEnv.init_ctx i v' -> v = v'.
 Proof.
     introv Hinv.
     inverts Hinv.
@@ -827,7 +886,7 @@ Qed.
 Lemma builtin_assoc : forall k BR jst jc c st st' i v r,
     state_invariant BR jst jc c st ->
     L.red_exprh k c st (L.expr_basic (L.expr_id i)) (L.out_ter st' r) ->
-    Mem (i, v) LjsInitEnv.ctx_items ->
+    binds LjsInitEnv.init_ctx i v ->
     st = st' /\ r = L.res_value v.
 Proof.
     introv Hinv Hlred Hmem.
@@ -836,11 +895,27 @@ Proof.
     substs; eauto.
 Qed.
 
+Lemma init_ctx_mem_assoc : forall i v,
+    Mem (i, v) LjsInitEnv.ctx_items ->
+    Assoc i v LjsInitEnv.ctx_items.
+Proof.
+Admitted. (* because they are all different *)
+
+Lemma init_ctx_mem_binds : forall i v,
+    Mem (i, v) LjsInitEnv.ctx_items ->
+    binds LjsInitEnv.init_ctx i v.
+Proof.
+    introv Hmem.
+    eapply from_list_binds_inv.
+    eapply init_ctx_mem_assoc. assumption.
+Qed.
+
 Ltac ljs_get_builtin :=
     match goal with
     | Hbinds : binds ?c _ ?v, Hinv : state_invariant _ _ _ ?c ?st |- _ =>
         let H1 := fresh in
         forwards H1 : state_invariant_includes_init_ctx_lemma Hinv Hbinds; [
+        eapply init_ctx_mem_binds;
         unfold LjsInitEnv.ctx_items;
         solve [repeat (eapply Mem_here || apply Mem_next)] | 
         subst_hyp H1 ]
@@ -849,6 +924,7 @@ Ltac ljs_get_builtin :=
         let H1 := fresh in
         let H2 := fresh in
         forwards (H1&H2) : builtin_assoc Hinv H; [
+        eapply init_ctx_mem_binds;
         unfold LjsInitEnv.ctx_items;
         solve [repeat (eapply Mem_here || apply Mem_next)] | 
         clear H;
