@@ -58,14 +58,11 @@ Lemma red_expr_identifier_ok : forall k i,
     th_expr k (J.expr_identifier i).
 Proof.
     introv Hinv Hlred.
-    inv_fwd_ljs.
-    ljs_out_redh_ter.
+    repeat ljs_autoforward.
 
-    ljs_get_builtin.
-
-    repeat inv_fwd_ljs.
     skip.
 Qed.
+
 
 Lemma red_expr_conditional_ok : forall k je1 je2 je3,
     ih_expr k ->

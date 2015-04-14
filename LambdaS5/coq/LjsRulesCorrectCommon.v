@@ -912,7 +912,10 @@ Qed.
 
 Ltac ljs_get_builtin :=
     match goal with
-    | Hbinds : binds ?c _ ?v, Hinv : state_invariant _ _ _ ?c ?st |- _ =>
+    | Hbinds : binds ?c (String (Ascii.Ascii true false true false false true false false) ?s) ?v, 
+      Hinv : state_invariant _ _ _ ?c ?st |- _ =>
+        is_var v;
+        not (first [constr_eq s "strict" | constr_eq s "this" | constr_eq s "context"]); 
         let H1 := fresh in
         forwards H1 : state_invariant_includes_init_ctx_lemma Hinv Hbinds; [
         eapply init_ctx_mem_binds;
@@ -1062,8 +1065,8 @@ Ltac res_related_abort :=
 
 Ltac destr_concl_auto := destr_concl; res_related_abort; try ljs_handle_abort.
 
-Ltac ljs_autoforward :=
-    inv_fwd_ljs || ljs_out_redh_ter || ljs_get_builtin || apply_ih_expr.
+Ltac ljs_autoforward := first [
+    inv_fwd_ljs | ljs_out_redh_ter | ljs_get_builtin | apply_ih_expr].
 
 (** ** Lemmas about operators *)
 
