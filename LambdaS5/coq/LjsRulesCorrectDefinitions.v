@@ -9,6 +9,7 @@ Require LjsInitEnv.
 Require EjsSyntax.
 Require JsSyntax JsPrettyInterm JsPrettyRules.
 Require EjsFromJs EjsToLjs.
+Require Import JsBagAdapter.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
@@ -151,9 +152,9 @@ Inductive attributes_related BR : J.attributes -> L.attributes -> Prop :=
     or it's defined in both and related. *)
 
 Definition object_properties_related BR jprops props := forall s, 
-    ~J.Heap.indom jprops s /\ ~index props s \/
+    ~index jprops s /\ ~index props s \/
     exists jptr ptr, 
-        J.Heap.binds jprops s jptr /\ binds props s ptr /\
+        binds jprops s jptr /\ binds props s ptr /\
         attributes_related BR jptr ptr.
 
 (** *** Relating objects
@@ -184,9 +185,9 @@ Definition mutability_configurable jmut :=
     end.
 
 Definition decl_env_record_related BR jder props := forall s,
-    ~J.Heap.indom jder s /\ ~index props s \/
+    ~index jder s /\ ~index props s \/
     exists jmut jv v, 
-        J.Heap.binds jder s (jmut, jv) /\ 
+        binds jder s (jmut, jv) /\ 
         binds props s (L.attributes_data_of (L.attributes_data_intro v 
             (mutability_writable jmut) true (mutability_configurable jmut))) /\
         value_related BR jv v.
@@ -217,29 +218,29 @@ Inductive env_record_related BR : J.env_record -> L.object -> Prop :=
     - The mapped adresses must actually correspond to some object in JS and S5 heaps. *)
 
 Definition heaps_bisim_ltotal_inl BR jst :=
-    forall jptr, J.Heap.indom (J.state_object_heap jst) jptr -> exists ptr, BR (inl jptr) ptr.
+    forall jptr, index (J.state_object_heap jst) jptr -> exists ptr, BR (inl jptr) ptr.
 
 Definition heaps_bisim_ltotal_inr BR jst :=
-    forall jeptr, J.Heap.indom (J.state_env_record_heap jst) jeptr -> exists ptr, BR (inr jeptr) ptr.
+    forall jeptr, index (J.state_env_record_heap jst) jeptr -> exists ptr, BR (inr jeptr) ptr.
 
 Definition heaps_bisim_lnoghost_inl BR jst :=
-    forall jptr ptr, BR (inl jptr) ptr -> J.Heap.indom (J.state_object_heap jst) jptr.
+    forall jptr ptr, BR (inl jptr) ptr -> index (J.state_object_heap jst) jptr.
 
 Definition heaps_bisim_lnoghost_inr BR jst :=
-    forall jeptr ptr, BR (inr jeptr) ptr -> J.Heap.indom (J.state_env_record_heap jst) jeptr.
+    forall jeptr ptr, BR (inr jeptr) ptr -> index (J.state_env_record_heap jst) jeptr.
 
 Definition heaps_bisim_rnoghost BR st :=
     forall xptr ptr, BR xptr ptr -> index st ptr.
 
 Definition heaps_bisim_inl BR jst st := forall jptr ptr jobj obj, 
      (inl jptr, ptr) \in BR -> 
-     J.object_binds jst jptr jobj ->
+     binds jst jptr jobj ->
      binds st ptr obj ->
      object_related BR jobj obj.
 
 Definition heaps_bisim_inr BR jst st := forall jeptr ptr jer obj, 
      (inr jeptr, ptr) \in BR -> 
-     J.env_record_binds jst jeptr jer ->
+     binds jst jeptr jer ->
      binds st ptr obj ->
      env_record_related BR jer obj.
 

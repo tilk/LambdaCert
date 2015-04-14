@@ -2,6 +2,7 @@
 EjsFromJs.v
 EjsSyntax.v
 EjsToLjs.v
+JsBagAdapter.v
 LibBagExt.v
 LibFinmap.v
 LibFinset.v
