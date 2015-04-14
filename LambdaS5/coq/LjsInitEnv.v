@@ -492,6 +492,8 @@ expr_object
  ("%asinLambda", property_data
                  (data_intro (expr_id "%asinLambda") expr_true expr_false
                   expr_false));
+ ("%assert", property_data
+             (data_intro (expr_id "%assert") expr_true expr_false expr_false));
  ("%atan", property_data
            (data_intro (expr_id "%atan") expr_true expr_false expr_false));
  ("%atan2", property_data
@@ -600,9 +602,9 @@ expr_object
  ("%define15Property", property_data
                        (data_intro (expr_id "%define15Property") expr_true
                         expr_false expr_false));
- ("%defineGlobalAccessors", property_data
-                            (data_intro (expr_id "%defineGlobalAccessors")
-                             expr_true expr_false expr_false));
+ ("%defineFunction", property_data
+                     (data_intro (expr_id "%defineFunction") expr_true
+                      expr_false expr_false));
  ("%defineGlobalVar", property_data
                       (data_intro (expr_id "%defineGlobalVar") expr_true
                        expr_false expr_false));
@@ -768,9 +770,6 @@ expr_object
  ("%isSealedLambda", property_data
                      (data_intro (expr_id "%isSealedLambda") expr_true
                       expr_false expr_false));
- ("%isUnbound", property_data
-                (data_intro (expr_id "%isUnbound") expr_true expr_false
-                 expr_false));
  ("%join", property_data
            (data_intro (expr_id "%join") expr_true expr_false expr_false));
  ("%joinlambda", property_data
@@ -794,21 +793,9 @@ expr_object
  ("%logLambda", property_data
                 (data_intro (expr_id "%logLambda") expr_true expr_false
                  expr_false));
- ("%makeContextVarDefiner", property_data
-                            (data_intro (expr_id "%makeContextVarDefiner")
-                             expr_true expr_false expr_false));
- ("%makeEnvGetter", property_data
-                    (data_intro (expr_id "%makeEnvGetter") expr_true
-                     expr_false expr_false));
- ("%makeEnvSetter", property_data
-                    (data_intro (expr_id "%makeEnvSetter") expr_true
-                     expr_false expr_false));
  ("%makeGlobalEnv", property_data
                     (data_intro (expr_id "%makeGlobalEnv") expr_true
                      expr_false expr_false));
- ("%makeWithContext", property_data
-                      (data_intro (expr_id "%makeWithContext") expr_true
-                       expr_false expr_false));
  ("%map", property_data
           (data_intro (expr_id "%map") expr_true expr_false expr_false));
  ("%maplambda", property_data
@@ -887,6 +874,9 @@ expr_object
  ("%msPerSecond", property_data
                   (data_intro (expr_id "%msPerSecond") expr_true expr_false
                    expr_false));
+ ("%newObjEnvRec", property_data
+                   (data_intro (expr_id "%newObjEnvRec") expr_true expr_false
+                    expr_false));
  ("%nonstrictContext", property_data
                        (data_intro (expr_id "%nonstrictContext") expr_true
                         expr_false expr_false));
@@ -1894,28 +1884,72 @@ expr_if
  (expr_number (JsNumber.of_int 365)))
 .
 Definition ex_privEnvCheckAssign := 
-expr_if
-(expr_if (expr_id "strict")
- (expr_app (expr_id "%isUnbound") [expr_id "context"; expr_id "id"])
- expr_false)
-(expr_throw
- (expr_app (expr_id "%JSError")
-  [expr_object
-   (objattrs_intro (expr_string "Object") expr_true
-    (expr_id "%ReferenceErrorProto") expr_null expr_undefined)
-   [("message", property_data
-                (data_intro (expr_id "id") expr_true expr_false expr_false))]]))
-(expr_try_catch
- (expr_app (expr_id "%set-property")
-  [expr_id "context"; expr_id "id"; expr_id "val"])
- (expr_app (expr_id "%UnwritableDispatch") [expr_id "id"]))
+expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
+(expr_if (expr_id "strict") (expr_app (expr_id "%UnboundId") [expr_id "id"])
+ (expr_let "$newVal" (expr_id "val")
+  (expr_set_field (expr_id "%global") (expr_id "id") (expr_id "$newVal"))))
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_obj_attr oattr_class (expr_id "context"))
+  (expr_string "DeclEnvRec"))
+ (expr_if
+  (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
+  (expr_try_catch
+   (expr_let "$newVal" (expr_id "val")
+    (expr_set_field (expr_id "context") (expr_id "id") (expr_id "$newVal")))
+   (expr_app (expr_id "%UnwritableDispatch") [expr_id "id"]))
+  (expr_app (expr_id "%EnvCheckAssign")
+   [expr_get_obj_attr oattr_primval (expr_id "context");
+    expr_id "id";
+    expr_id "val";
+    expr_id "strict"]))
+ (expr_if
+  (expr_op2 binary_op_stx_eq
+   (expr_get_obj_attr oattr_class (expr_id "context"))
+   (expr_string "ObjEnvRec"))
+  (expr_let "bindings"
+   (expr_get_field (expr_id "context") (expr_string "bindings"))
+   (expr_if
+    (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
+    (expr_app (expr_id "%set-property")
+     [expr_id "bindings"; expr_id "id"; expr_id "val"])
+    (expr_app (expr_id "%EnvCheckAssign")
+     [expr_get_obj_attr oattr_primval (expr_id "context");
+      expr_id "id";
+      expr_id "val";
+      expr_id "strict"])))
+  (expr_throw
+   (expr_string "[env] Context not well formed! In %EnvCheckAssign"))))
 .
 Definition ex_privEnvGet := 
-expr_if
-(expr_if (expr_id "strict")
- (expr_app (expr_id "%isUnbound") [expr_id "context"; expr_id "id"])
- expr_false) (expr_app (expr_id "%UnboundId") [expr_id "id"])
-(expr_get_field (expr_id "context") (expr_id "id"))
+expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
+(expr_if (expr_id "strict") (expr_app (expr_id "%UnboundId") [expr_id "id"])
+ expr_undefined)
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_obj_attr oattr_class (expr_id "context"))
+  (expr_string "DeclEnvRec"))
+ (expr_if
+  (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
+  (expr_get_field (expr_id "context") (expr_id "id"))
+  (expr_app (expr_id "%EnvGet")
+   [expr_get_obj_attr oattr_primval (expr_id "context");
+    expr_id "id";
+    expr_id "strict"]))
+ (expr_if
+  (expr_op2 binary_op_stx_eq
+   (expr_get_obj_attr oattr_class (expr_id "context"))
+   (expr_string "ObjEnvRec"))
+  (expr_let "bindings"
+   (expr_get_field (expr_id "context") (expr_string "bindings"))
+   (expr_if
+    (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
+    (expr_get_field (expr_id "bindings") (expr_id "id"))
+    (expr_app (expr_id "%EnvGet")
+     [expr_get_obj_attr oattr_primval (expr_id "context");
+      expr_id "id";
+      expr_id "strict"])))
+  (expr_throw (expr_string "[env] Context not well formed! In %EnvGet"))))
 .
 Definition ex_privEqEq := 
 expr_label "ret"
@@ -3445,6 +3479,9 @@ expr_let "array" (expr_app (expr_id "%ToObject") [expr_id "this"])
      expr_undefined) []])))
 .
 Definition ex_privasinLambda :=  expr_string "asin NYI" .
+Definition ex_privassert := 
+expr_if (expr_id "b") expr_true (expr_throw (expr_id "s"))
+.
 Definition ex_privatan2Lambda :=  expr_string "atan2 NYI" .
 Definition ex_privatanLambda :=  expr_string "atan NYI" .
 Definition ex_privbindLambda := 
@@ -3702,25 +3739,21 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
     (expr_set_field (expr_id "globalEnv") (expr_string "%this")
      (expr_id "$newVal")))
    (expr_seq
-    (expr_let "$newVal"
-     (expr_object
-      (objattrs_intro (expr_string "Object") expr_true
-       (expr_id "evalContext") expr_null expr_true) [])
-     (expr_set_field (expr_id "globalEnv") (expr_string "%strictContext")
+    (expr_let "$newVal" (expr_id "evalContext")
+     (expr_set_field (expr_id "globalEnv") (expr_string "%nonstrictContext")
       (expr_id "$newVal")))
     (expr_seq
-     (expr_let "$newVal" (expr_id "evalContext")
-      (expr_set_field (expr_id "globalEnv") (expr_string "%nonstrictContext")
+     (expr_let "$newVal"
+      (expr_object
+       (objattrs_intro (expr_string "DeclEnvRec") expr_true expr_null
+        expr_null (expr_id "evalContext")) [])
+      (expr_set_field (expr_id "globalEnv") (expr_string "%strictContext")
        (expr_id "$newVal")))
-     (expr_seq
-      (expr_let "$newVal" (expr_app (expr_id "%makeContextVarDefiner") [])
-       (expr_set_field (expr_id "globalEnv") (expr_string "%defineGlobalVar")
-        (expr_id "$newVal")))
-      (expr_if
-       (expr_op2 binary_op_stx_eq
-        (expr_op1 unary_op_typeof (expr_id "evalStr")) (expr_string "string"))
-       (expr_eval (expr_id "evalStr") (expr_id "globalEnv"))
-       (expr_id "evalStr"))))))))
+     (expr_if
+      (expr_op2 binary_op_stx_eq
+       (expr_op1 unary_op_typeof (expr_id "evalStr")) (expr_string "string"))
+      (expr_eval (expr_id "evalStr") (expr_id "globalEnv"))
+      (expr_id "evalStr")))))))
 .
 Definition ex_privcosLambda :=  expr_string "cos NYI" .
 Definition ex_privcreateLambda := 
@@ -3860,47 +3893,57 @@ expr_let "%mkPropObj"
    expr_app (expr_id "%mkPropObj")
    [expr_id "prop"; expr_true; expr_false; expr_true]]))
 .
-Definition ex_privdefineGlobalAccessors := 
+Definition ex_privdefineFunction := 
 expr_seq
-(expr_set_attr pattr_config (expr_id "%globalContext") (expr_id "id")
- expr_true)
-(expr_seq
- (expr_set_attr pattr_enum (expr_id "%globalContext") (expr_id "id")
-  expr_true)
- (expr_seq
-  (expr_set_attr pattr_getter (expr_id "%globalContext") (expr_id "id")
-   (expr_app (expr_id "%makeEnvGetter") [expr_id "%global"; expr_id "id"]))
-  (expr_set_attr pattr_setter (expr_id "%globalContext") (expr_id "id")
-   (expr_app (expr_id "%makeEnvSetter") [expr_id "%global"; expr_id "id"]))))
+(expr_app (expr_id "%defineGlobalVar") [expr_id "context"; expr_id "id"])
+(expr_app (expr_id "%EnvCheckAssign")
+ [expr_id "context"; expr_id "id"; expr_id "fo"; expr_true])
 .
 Definition ex_privdefineGlobalVar := 
-expr_if
-(expr_op1 unary_op_not
- (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id")))
-(expr_seq
- (expr_set_attr pattr_config (expr_id "%global") (expr_id "id") expr_true)
- (expr_seq
-  (expr_set_attr pattr_writable (expr_id "%global") (expr_id "id") expr_true)
+expr_let "configurableBindings" expr_false
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_obj_attr oattr_class (expr_id "context"))
+  (expr_string "DeclEnvRec"))
+ (expr_if
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id")))
   (expr_seq
-   (expr_set_attr pattr_value (expr_id "%global") (expr_id "id")
-    expr_undefined)
+   (expr_set_attr pattr_config (expr_id "context") (expr_id "id") expr_true)
    (expr_seq
-    (expr_set_attr pattr_enum (expr_id "%global") (expr_id "id") expr_true)
+    (expr_set_attr pattr_writable (expr_id "context") (expr_id "id")
+     expr_true)
     (expr_seq
-     (expr_set_attr pattr_config (expr_id "%global") (expr_id "id")
-      expr_false)
+     (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
+      expr_undefined)
      (expr_seq
+      (expr_set_attr pattr_enum (expr_id "context") (expr_id "id") expr_true)
       (expr_set_attr pattr_config (expr_id "context") (expr_id "id")
+       (expr_id "configurableBindings")))))) expr_undefined)
+ (expr_if
+  (expr_op2 binary_op_stx_eq
+   (expr_get_obj_attr oattr_class (expr_id "context"))
+   (expr_string "ObjEnvRec"))
+  (expr_let "bindings"
+   (expr_get_field (expr_id "context") (expr_string "bindings"))
+   (expr_if
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id")))
+    (expr_seq
+     (expr_set_attr pattr_config (expr_id "bindings") (expr_id "id")
+      expr_true)
+     (expr_seq
+      (expr_set_attr pattr_writable (expr_id "bindings") (expr_id "id")
        expr_true)
       (expr_seq
-       (expr_set_attr pattr_enum (expr_id "context") (expr_id "id") expr_true)
+       (expr_set_attr pattr_value (expr_id "bindings") (expr_id "id")
+        expr_undefined)
        (expr_seq
-        (expr_set_attr pattr_getter (expr_id "context") (expr_id "id")
-         (expr_app (expr_id "%makeEnvGetter")
-          [expr_id "%global"; expr_id "id"]))
-        (expr_set_attr pattr_setter (expr_id "context") (expr_id "id")
-         (expr_app (expr_id "%makeEnvSetter")
-          [expr_id "%global"; expr_id "id"])))))))))) expr_undefined
+        (expr_set_attr pattr_enum (expr_id "bindings") (expr_id "id")
+         expr_true)
+        (expr_set_attr pattr_config (expr_id "bindings") (expr_id "id")
+         (expr_id "configurableBindings")))))) expr_undefined))
+  (expr_throw (expr_string "[env] Context not well formed!"))))
 .
 Definition ex_privdefineNYIProperty := 
 expr_let "unimplFunc"
@@ -4936,10 +4979,6 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
          (expr_get_obj_attr oattr_extensible (expr_id "O")))))))
     (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])))))
 .
-Definition ex_privisUnbound := 
-expr_op1 unary_op_not
-(expr_op2 binary_op_has_property (expr_id "%global") (expr_id "id"))
-.
 Definition ex_privjoinlambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
@@ -5083,135 +5122,6 @@ expr_recc "loop"
     [expr_op2 binary_op_add (expr_id "i") (expr_number (JsNumber.of_int 1))]))
   expr_undefined))
 (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])
-.
-Definition ex_privmakeContextVarDefiner := 
-expr_let "envstore"
-(expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-  expr_undefined) [])
-(expr_lambda ["context"; "id"]
- (expr_let "envstore"
-  (expr_if
-   (expr_op2 binary_op_stx_eq (expr_id "context") (expr_id "%globalContext"))
-   (expr_id "%global") (expr_id "envstore"))
-  (expr_if
-   (expr_op2 binary_op_has_own_property (expr_id "context") (expr_id "id"))
-   (expr_seq
-    (expr_if
-     (expr_op1 unary_op_not
-      (expr_op2 binary_op_has_property (expr_id "envstore") (expr_id "id")))
-     (expr_let "$newVal" expr_undefined
-      (expr_set_field (expr_id "envstore") (expr_id "id") (expr_id "$newVal")))
-     expr_undefined) expr_undefined)
-   (expr_seq
-    (expr_let "$newVal" expr_undefined
-     (expr_set_field (expr_id "envstore") (expr_id "id") (expr_id "$newVal")))
-    (expr_let "%setter"
-     (expr_object
-      (objattrs_intro (expr_string "Object") expr_true expr_null
-       (expr_lambda ["this"; "args"]
-        (expr_if
-         (expr_op2 binary_op_has_property (expr_id "envstore") (expr_id "id"))
-         (expr_let "$newVal"
-          (expr_get_field (expr_id "args") (expr_string "0"))
-          (expr_set_field (expr_id "envstore") (expr_id "id")
-           (expr_id "$newVal")))
-         (expr_app (expr_id "%UnboundId") [expr_id "id"]))) expr_undefined)
-      [])
-     (expr_let "%getter"
-      (expr_object
-       (objattrs_intro (expr_string "Object") expr_true expr_null
-        (expr_lambda ["this"; "args"]
-         (expr_if
-          (expr_op2 binary_op_has_property (expr_id "envstore")
-           (expr_id "id"))
-          (expr_get_field (expr_id "envstore") (expr_id "id"))
-          (expr_app (expr_id "%UnboundId") [expr_id "id"]))) expr_undefined)
-       [])
-      (expr_app (expr_id "%defineOwnProperty")
-       [expr_id "context";
-        expr_id "id";
-        expr_object
-        (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-         expr_undefined)
-        [("get", property_data
-                 (data_intro (expr_id "%getter") expr_true expr_false
-                  expr_false));
-         ("set", property_data
-                 (data_intro (expr_id "%setter") expr_true expr_false
-                  expr_false))]])))))))
-.
-Definition ex_privmakeEnvGetter := 
-expr_object
-(objattrs_intro (expr_string "Object") expr_false (expr_id "%FunctionProto")
- (expr_lambda ["this"]
-  (expr_if
-   (expr_op2 binary_op_has_property (expr_id "object") (expr_id "id"))
-   (expr_get_field (expr_id "object") (expr_id "id"))
-   (expr_app (expr_id "%UnboundId") [expr_id "id"]))) expr_undefined) 
-[]
-.
-Definition ex_privmakeEnvSetter := 
-expr_object
-(objattrs_intro (expr_string "Object") expr_false (expr_id "%FunctionProto")
- (expr_lambda ["this"; "arg"]
-  (expr_try_catch
-   (expr_let "$newVal" (expr_id "arg")
-    (expr_set_field (expr_id "object") (expr_id "id") (expr_id "$newVal")))
-   (expr_app (expr_id "%UnwritableDispatch") [expr_id "id"]))) expr_undefined)
-[]
-.
-Definition ex_privmakeWithContext := 
-expr_let "names"
-(expr_app (expr_id "%propertyNames") [expr_id "object"; expr_true])
-(expr_let "mksetter"
- (expr_lambda ["id"]
-  (expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null
-    (expr_lambda ["this"; "args"]
-     (expr_if
-      (expr_op2 binary_op_has_property (expr_id "object") (expr_id "id"))
-      (expr_let "$newVal" (expr_get_field (expr_id "args") (expr_string "0"))
-       (expr_set_field (expr_id "object") (expr_id "id") (expr_id "$newVal")))
-      (expr_let "$newVal" (expr_get_field (expr_id "args") (expr_string "0"))
-       (expr_set_field (expr_id "context") (expr_id "id") (expr_id "$newVal")))))
-    expr_undefined) []))
- (expr_let "mkgetter"
-  (expr_lambda ["id"]
-   (expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null
-     (expr_lambda ["this"; "args"]
-      (expr_if
-       (expr_op2 binary_op_has_property (expr_id "object") (expr_id "id"))
-       (expr_get_field (expr_id "object") (expr_id "id"))
-       (expr_get_field (expr_id "context") (expr_id "id")))) expr_undefined)
-    []))
-  (expr_let "newcontext"
-   (expr_object
-    (objattrs_intro (expr_string "Object") expr_true (expr_id "context")
-     expr_null expr_undefined) [])
-   (expr_let "addBinding"
-    (expr_lambda ["id"]
-     (expr_app (expr_id "%defineOwnProperty")
-      [expr_id "newcontext";
-       expr_id "id";
-       expr_object
-       (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-        expr_undefined)
-       [("set", property_data
-                (data_intro (expr_app (expr_id "mksetter") [expr_id "id"])
-                 expr_true expr_false expr_false));
-        ("get", property_data
-                (data_intro (expr_app (expr_id "mkgetter") [expr_id "id"])
-                 expr_true expr_false expr_false));
-        ("configurable", property_data
-                         (data_intro expr_true expr_true expr_false
-                          expr_false));
-        ("enumerable", property_data
-                       (data_intro expr_true expr_true expr_false expr_false))]]))
-    (expr_seq
-     (expr_app (expr_id "%primEach") [expr_id "names"; expr_id "addBinding"])
-     (expr_id "newcontext"))))))
 .
 Definition ex_privmaplambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -5598,7 +5508,8 @@ expr_if (expr_op2 binary_op_le (expr_id "a") (expr_id "b")) (expr_id "b")
 .
 Definition ex_privmaybeDirectEval := 
 expr_let "contextEval"
-(expr_get_field (expr_id "theContext") (expr_string "eval"))
+(expr_app (expr_id "%EnvGet")
+ [expr_id "theContext"; expr_string "eval"; expr_false])
 (expr_if
  (expr_op2 binary_op_stx_eq (expr_id "contextEval") (expr_id "%eval"))
  (expr_app (expr_id "%configurableEval")
@@ -5728,6 +5639,15 @@ expr_let "argsObj" (expr_app (expr_id "%mkArgsObjBase") [expr_id "args"])
  (expr_seq
   (expr_set_attr pattr_writable (expr_id "argsObj") (expr_string "%new")
    expr_false) (expr_id "argsObj")))
+.
+Definition ex_privnewObjEnvRec := 
+expr_object
+(objattrs_intro (expr_string "ObjEnvRec") expr_true expr_null expr_null
+ (expr_id "parent"))
+[("bindings", property_data
+              (data_intro (expr_id "obj") expr_false expr_false expr_false));
+ ("provideThis", property_data
+                 (data_intro (expr_id "pt") expr_false expr_false expr_false))]
 .
 Definition ex_privnumTLSLambda := 
 expr_let "x"
@@ -7419,7 +7339,7 @@ Definition privJSError :=
 value_closure (closure_intro [] None ["err"] ex_privJSError)
 .
 Definition name_privJSError :=  "%JSError" .
-Definition privTypeErrorProto :=  value_object 7 .
+Definition privTypeErrorProto :=  value_object 6 .
 Definition name_privTypeErrorProto :=  "%TypeErrorProto" .
 Definition privMakeTypeError := 
 value_closure
@@ -7446,9 +7366,9 @@ value_closure
  ex_privAppExprCheck)
 .
 Definition name_privAppExprCheck :=  "%AppExprCheck" .
-Definition privArrayProto :=  value_object 58 .
+Definition privArrayProto :=  value_object 57 .
 Definition name_privArrayProto :=  "%ArrayProto" .
-Definition privRangeErrorProto :=  value_object 50 .
+Definition privRangeErrorProto :=  value_object 49 .
 Definition name_privRangeErrorProto :=  "%RangeErrorProto" .
 Definition privToPrimitiveNum := 
 value_closure
@@ -7556,7 +7476,7 @@ value_closure
  ex_privArrayConstructor)
 .
 Definition name_privArrayConstructor :=  "%ArrayConstructor" .
-Definition privArrayGlobalFuncObj :=  value_object 107 .
+Definition privArrayGlobalFuncObj :=  value_object 106 .
 Definition name_privArrayGlobalFuncObj :=  "%ArrayGlobalFuncObj" .
 Definition privArrayLengthChange := 
 value_closure
@@ -7585,7 +7505,7 @@ value_closure
 (closure_intro [("%ToInt32", privToInt32)] None ["expr"] ex_privBitwiseNot)
 .
 Definition name_privBitwiseNot :=  "%BitwiseNot" .
-Definition privBooleanProto :=  value_object 11 .
+Definition privBooleanProto :=  value_object 10 .
 Definition name_privBooleanProto :=  "%BooleanProto" .
 Definition privBooleanConstructor := 
 value_closure
@@ -7594,7 +7514,7 @@ value_closure
  None ["this"; "args"] ex_privBooleanConstructor)
 .
 Definition name_privBooleanConstructor :=  "%BooleanConstructor" .
-Definition privBooleanGlobalFuncObj :=  value_object 33 .
+Definition privBooleanGlobalFuncObj :=  value_object 32 .
 Definition name_privBooleanGlobalFuncObj :=  "%BooleanGlobalFuncObj" .
 Definition privCheckObjectCoercible := 
 value_closure
@@ -7609,7 +7529,7 @@ value_closure
  None ["l"; "r"; "LeftFirst"] ex_privCompareOp)
 .
 Definition name_privCompareOp :=  "%CompareOp" .
-Definition privDateProto :=  value_object 173 .
+Definition privDateProto :=  value_object 172 .
 Definition name_privDateProto :=  "%DateProto" .
 Definition privmsPerDay :=  value_number (JsNumber.of_int 86400000) .
 Definition name_privmsPerDay :=  "%msPerDay" .
@@ -7771,10 +7691,18 @@ value_closure
   ("%parse", privparse)] None ["this"; "args"] ex_privDateConstructor)
 .
 Definition name_privDateConstructor :=  "%DateConstructor" .
-Definition privDateGlobalFuncObj :=  value_object 177 .
+Definition privDateGlobalFuncObj :=  value_object 176 .
 Definition name_privDateGlobalFuncObj :=  "%DateGlobalFuncObj" .
-Definition privReferenceErrorProto :=  value_object 9 .
+Definition privReferenceErrorProto :=  value_object 8 .
 Definition name_privReferenceErrorProto :=  "%ReferenceErrorProto" .
+Definition privUnboundId := 
+value_closure
+(closure_intro
+ [("%JSError", privJSError);
+  ("%ReferenceErrorProto", privReferenceErrorProto)] None ["id"]
+ ex_privUnboundId)
+.
+Definition name_privUnboundId :=  "%UnboundId" .
 Definition privIsJSError := 
 value_closure (closure_intro [] None ["thing"] ex_privIsJSError)
 .
@@ -7794,19 +7722,13 @@ value_closure
 Definition name_privUnwritableDispatch :=  "%UnwritableDispatch" .
 Definition privglobal :=  value_object 2 .
 Definition name_privglobal :=  "%global" .
-Definition privisUnbound := 
-value_closure
-(closure_intro [("%global", privglobal)] None ["context"; "id"]
- ex_privisUnbound)
-.
-Definition name_privisUnbound :=  "%isUnbound" .
-Definition privNumberProto :=  value_object 12 .
+Definition privNumberProto :=  value_object 11 .
 Definition name_privNumberProto :=  "%NumberProto" .
 Definition privStringIndices := 
 value_closure (closure_intro [] None ["obj"; "s"] ex_privStringIndices)
 .
 Definition name_privStringIndices :=  "%StringIndices" .
-Definition privStringProto :=  value_object 13 .
+Definition privStringProto :=  value_object 12 .
 Definition name_privStringProto :=  "%StringProto" .
 Definition privToObject := 
 value_closure
@@ -7835,26 +7757,17 @@ Definition name_privset_property :=  "%set-property" .
 Definition privEnvCheckAssign := 
 value_closure
 (closure_intro
- [("%JSError", privJSError);
-  ("%ReferenceErrorProto", privReferenceErrorProto);
+ [("%UnboundId", privUnboundId);
   ("%UnwritableDispatch", privUnwritableDispatch);
-  ("%isUnbound", privisUnbound);
-  ("%set-property", privset_property)] None
+  ("%global", privglobal);
+  ("%set-property", privset_property)] (Some "%EnvCheckAssign")
  ["context"; "id"; "val"; "strict"] ex_privEnvCheckAssign)
 .
 Definition name_privEnvCheckAssign :=  "%EnvCheckAssign" .
-Definition privUnboundId := 
-value_closure
-(closure_intro
- [("%JSError", privJSError);
-  ("%ReferenceErrorProto", privReferenceErrorProto)] None ["id"]
- ex_privUnboundId)
-.
-Definition name_privUnboundId :=  "%UnboundId" .
 Definition privEnvGet := 
 value_closure
-(closure_intro [("%UnboundId", privUnboundId); ("%isUnbound", privisUnbound)]
- None ["context"; "id"; "strict"] ex_privEnvGet)
+(closure_intro [("%UnboundId", privUnboundId)] (Some "%EnvGet")
+ ["context"; "id"; "strict"] ex_privEnvGet)
 .
 Definition name_privEnvGet :=  "%EnvGet" .
 Definition privEqEq := 
@@ -7863,7 +7776,7 @@ value_closure
  ex_privEqEq)
 .
 Definition name_privEqEq :=  "%EqEq" .
-Definition privErrorProto :=  value_object 6 .
+Definition privErrorProto :=  value_object 5 .
 Definition name_privErrorProto :=  "%ErrorProto" .
 Definition privErrorConstructor := 
 value_closure
@@ -7871,9 +7784,9 @@ value_closure
  None ["this"; "args"] ex_privErrorConstructor)
 .
 Definition name_privErrorConstructor :=  "%ErrorConstructor" .
-Definition privErrorGlobalFuncObj :=  value_object 23 .
+Definition privErrorGlobalFuncObj :=  value_object 22 .
 Definition name_privErrorGlobalFuncObj :=  "%ErrorGlobalFuncObj" .
-Definition proto :=  value_object 46 .
+Definition proto :=  value_object 45 .
 Definition name_proto :=  "proto" .
 Definition privEvalErrorConstructor := 
 value_closure
@@ -7881,29 +7794,18 @@ value_closure
  ["this"; "args"] ex_privEvalErrorConstructor)
 .
 Definition name_privEvalErrorConstructor :=  "%EvalErrorConstructor" .
-Definition privEvalErrorGlobalFuncObj :=  value_object 49 .
+Definition privEvalErrorGlobalFuncObj :=  value_object 48 .
 Definition name_privEvalErrorGlobalFuncObj :=  "%EvalErrorGlobalFuncObj" .
-Definition privglobalContext :=  value_object 3 .
-Definition name_privglobalContext :=  "%globalContext" .
-Definition privmakeContextVarDefiner := 
-value_closure
-(closure_intro
- [("%UnboundId", privUnboundId);
-  ("%defineOwnProperty", privdefineOwnProperty);
-  ("%global", privglobal);
-  ("%globalContext", privglobalContext)] None [] ex_privmakeContextVarDefiner)
-.
-Definition name_privmakeContextVarDefiner :=  "%makeContextVarDefiner" .
 Definition privmakeGlobalEnv :=  value_object 0 .
 Definition name_privmakeGlobalEnv :=  "%makeGlobalEnv" .
 Definition privconfigurableEval := 
 value_closure
-(closure_intro
- [("%makeContextVarDefiner", privmakeContextVarDefiner);
-  ("%makeGlobalEnv", privmakeGlobalEnv)] None
+(closure_intro [("%makeGlobalEnv", privmakeGlobalEnv)] None
  ["evalThis"; "evalContext"; "useStrict"; "args"] ex_privconfigurableEval)
 .
 Definition name_privconfigurableEval :=  "%configurableEval" .
+Definition privglobalContext :=  value_object 312 .
+Definition name_privglobalContext :=  "%globalContext" .
 Definition privevallambda := 
 value_closure
 (closure_intro
@@ -7921,7 +7823,7 @@ value_closure
 Definition name_privFunctionConstructor :=  "%FunctionConstructor" .
 Definition privFunctionGlobalFuncObj :=  value_object 316 .
 Definition name_privFunctionGlobalFuncObj :=  "%FunctionGlobalFuncObj" .
-Definition privFunctionProto :=  value_object 4 .
+Definition privFunctionProto :=  value_object 3 .
 Definition name_privFunctionProto :=  "%FunctionProto" .
 Definition privGetterValue := 
 value_closure (closure_intro [] None ["o"] ex_privGetterValue)
@@ -7975,7 +7877,7 @@ Definition privLocalTime :=
 value_closure (closure_intro [] None ["t"] ex_privLocalTime)
 .
 Definition name_privLocalTime :=  "%LocalTime" .
-Definition privMath :=  value_object 261 .
+Definition privMath :=  value_object 260 .
 Definition name_privMath :=  "%Math" .
 Definition privNativeErrorConstructor := 
 value_closure
@@ -7990,7 +7892,7 @@ value_closure
  ["this"; "args"] ex_privNumberConstructor)
 .
 Definition name_privNumberConstructor :=  "%NumberConstructor" .
-Definition privNumberGlobalFuncObj :=  value_object 26 .
+Definition privNumberGlobalFuncObj :=  value_object 25 .
 Definition name_privNumberGlobalFuncObj :=  "%NumberGlobalFuncObj" .
 Definition privObjectProto :=  value_object 1 .
 Definition name_privObjectProto :=  "%ObjectProto" .
@@ -8001,7 +7903,7 @@ value_closure
  ["this"; "args"] ex_privObjectConstructor)
 .
 Definition name_privObjectConstructor :=  "%ObjectConstructor" .
-Definition privObjectGlobalFuncObj :=  value_object 35 .
+Definition privObjectGlobalFuncObj :=  value_object 34 .
 Definition name_privObjectGlobalFuncObj :=  "%ObjectGlobalFuncObj" .
 Definition privObjectTypeCheck := 
 value_closure
@@ -8084,7 +7986,7 @@ value_closure
  None ["this"; "args"] ex_privRangeErrorConstructor)
 .
 Definition name_privRangeErrorConstructor :=  "%RangeErrorConstructor" .
-Definition privRangeErrorGlobalFuncObj :=  value_object 51 .
+Definition privRangeErrorGlobalFuncObj :=  value_object 50 .
 Definition name_privRangeErrorGlobalFuncObj :=  "%RangeErrorGlobalFuncObj" .
 Definition privReferenceErrorConstructor := 
 value_closure
@@ -8093,9 +7995,9 @@ value_closure
  ["this"; "args"] ex_privReferenceErrorConstructor)
 .
 Definition name_privReferenceErrorConstructor :=  "%ReferenceErrorConstructor" .
-Definition privReferenceErrorGlobalFuncObj :=  value_object 53 .
+Definition privReferenceErrorGlobalFuncObj :=  value_object 52 .
 Definition name_privReferenceErrorGlobalFuncObj :=  "%ReferenceErrorGlobalFuncObj" .
-Definition privRegExpProto :=  value_object 253 .
+Definition privRegExpProto :=  value_object 252 .
 Definition name_privRegExpProto :=  "%RegExpProto" .
 Definition privRegExpConstructor := 
 value_closure
@@ -8103,7 +8005,7 @@ value_closure
  ex_privRegExpConstructor)
 .
 Definition name_privRegExpConstructor :=  "%RegExpConstructor" .
-Definition privRegExpGlobalFuncObj :=  value_object 254 .
+Definition privRegExpGlobalFuncObj :=  value_object 253 .
 Definition name_privRegExpGlobalFuncObj :=  "%RegExpGlobalFuncObj" .
 Definition privSetterValue := 
 value_closure (closure_intro [] None ["o"] ex_privSetterValue)
@@ -8123,9 +8025,9 @@ value_closure
   ("%ToString", privToString)] None ["this"; "args"] ex_privStringConstructor)
 .
 Definition name_privStringConstructor :=  "%StringConstructor" .
-Definition privStringGlobalFuncObj :=  value_object 29 .
+Definition privStringGlobalFuncObj :=  value_object 28 .
 Definition name_privStringGlobalFuncObj :=  "%StringGlobalFuncObj" .
-Definition privStringIndexOf :=  value_object 162 .
+Definition privStringIndexOf :=  value_object 161 .
 Definition name_privStringIndexOf :=  "%StringIndexOf" .
 Definition privmax := 
 value_closure (closure_intro [] None ["a"; "b"] ex_privmax)
@@ -8145,13 +8047,13 @@ value_closure
   ("%min", privmin)] None ["this"; "args"] ex_privStringIndexOflambda)
 .
 Definition name_privStringIndexOflambda :=  "%StringIndexOflambda" .
-Definition privStringLastIndexOf :=  value_object 164 .
+Definition privStringLastIndexOf :=  value_object 163 .
 Definition name_privStringLastIndexOf :=  "%StringLastIndexOf" .
 Definition privStxEq := 
 value_closure (closure_intro [] None ["x1"; "x2"] ex_privStxEq)
 .
 Definition name_privStxEq :=  "%StxEq" .
-Definition privSyntaxErrorProto :=  value_object 10 .
+Definition privSyntaxErrorProto :=  value_object 9 .
 Definition name_privSyntaxErrorProto :=  "%SyntaxErrorProto" .
 Definition privSyntaxError := 
 value_closure
@@ -8166,13 +8068,13 @@ value_closure
  None ["this"; "args"] ex_privSyntaxErrorConstructor)
 .
 Definition name_privSyntaxErrorConstructor :=  "%SyntaxErrorConstructor" .
-Definition privSyntaxErrorGlobalFuncObj :=  value_object 48 .
+Definition privSyntaxErrorGlobalFuncObj :=  value_object 47 .
 Definition name_privSyntaxErrorGlobalFuncObj :=  "%SyntaxErrorGlobalFuncObj" .
-Definition privThrowReferenceError :=  value_object 14 .
+Definition privThrowReferenceError :=  value_object 13 .
 Definition name_privThrowReferenceError :=  "%ThrowReferenceError" .
-Definition privThrowSyntaxError :=  value_object 15 .
+Definition privThrowSyntaxError :=  value_object 14 .
 Definition name_privThrowSyntaxError :=  "%ThrowSyntaxError" .
-Definition privThrowTypeError :=  value_object 8 .
+Definition privThrowTypeError :=  value_object 7 .
 Definition name_privThrowTypeError :=  "%ThrowTypeError" .
 Definition privTimeWithinDay := 
 value_closure
@@ -8197,13 +8099,13 @@ value_closure
  None ["this"; "args"] ex_privTypeErrorConstructor)
 .
 Definition name_privTypeErrorConstructor :=  "%TypeErrorConstructor" .
-Definition privTypeErrorGlobalFuncObj :=  value_object 55 .
+Definition privTypeErrorGlobalFuncObj :=  value_object 54 .
 Definition name_privTypeErrorGlobalFuncObj :=  "%TypeErrorGlobalFuncObj" .
 Definition privTypeof := 
 value_closure (closure_intro [] None ["context"; "id"] ex_privTypeof)
 .
 Definition name_privTypeof :=  "%Typeof" .
-Definition proto1 :=  value_object 56 .
+Definition proto1 :=  value_object 55 .
 Definition name_proto1 :=  "proto" .
 Definition privURIErrorConstructor := 
 value_closure
@@ -8211,7 +8113,7 @@ value_closure
  ["this"; "args"] ex_privURIErrorConstructor)
 .
 Definition name_privURIErrorConstructor :=  "%URIErrorConstructor" .
-Definition privURIErrorGlobalFuncObj :=  value_object 57 .
+Definition privURIErrorGlobalFuncObj :=  value_object 56 .
 Definition name_privURIErrorGlobalFuncObj :=  "%URIErrorGlobalFuncObj" .
 Definition privUnaryNeg := 
 value_closure
@@ -8234,7 +8136,7 @@ value_closure
  ex_privUnsignedRightShift)
 .
 Definition name_privUnsignedRightShift :=  "%UnsignedRightShift" .
-Definition privacos :=  value_object 270 .
+Definition privacos :=  value_object 269 .
 Definition name_privacos :=  "%acos" .
 Definition privacosLambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privacosLambda)
@@ -8260,7 +8162,7 @@ value_closure
   ("%min", privmin)] None ["this"; "args"] ex_privaliolambda)
 .
 Definition name_privaliolambda :=  "%aliolambda" .
-Definition privapply :=  value_object 19 .
+Definition privapply :=  value_object 18 .
 Definition name_privapply :=  "%apply" .
 Definition privmkArgsObjBase := 
 value_closure
@@ -8287,9 +8189,9 @@ value_closure
  None ["this"; "args"] ex_privapplylambda)
 .
 Definition name_privapplylambda :=  "%applylambda" .
-Definition privarrayIndexOf :=  value_object 127 .
+Definition privarrayIndexOf :=  value_object 126 .
 Definition name_privarrayIndexOf :=  "%arrayIndexOf" .
-Definition privarrayLastIndexOf :=  value_object 130 .
+Definition privarrayLastIndexOf :=  value_object 129 .
 Definition name_privarrayLastIndexOf :=  "%arrayLastIndexOf" .
 Definition privarrayTLSlambda := 
 value_closure
@@ -8302,9 +8204,9 @@ value_closure
  ex_privarrayTLSlambda)
 .
 Definition name_privarrayTLSlambda :=  "%arrayTLSlambda" .
-Definition privarrayToLocaleString :=  value_object 99 .
+Definition privarrayToLocaleString :=  value_object 98 .
 Definition name_privarrayToLocaleString :=  "%arrayToLocaleString" .
-Definition privarrayToString :=  value_object 96 .
+Definition privarrayToString :=  value_object 95 .
 Definition name_privarrayToString :=  "%arrayToString" .
 Definition privobjectToStringlambda := 
 value_closure
@@ -8320,15 +8222,19 @@ value_closure
  ex_privarrayToStringlambda)
 .
 Definition name_privarrayToStringlambda :=  "%arrayToStringlambda" .
-Definition privasin :=  value_object 272 .
+Definition privasin :=  value_object 271 .
 Definition name_privasin :=  "%asin" .
 Definition privasinLambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privasinLambda)
 .
 Definition name_privasinLambda :=  "%asinLambda" .
-Definition privatan :=  value_object 274 .
+Definition privassert := 
+value_closure (closure_intro [] None ["b"; "s"] ex_privassert)
+.
+Definition name_privassert :=  "%assert" .
+Definition privatan :=  value_object 273 .
 Definition name_privatan :=  "%atan" .
-Definition privatan2 :=  value_object 276 .
+Definition privatan2 :=  value_object 275 .
 Definition name_privatan2 :=  "%atan2" .
 Definition privatan2Lambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privatan2Lambda)
@@ -8338,7 +8244,7 @@ Definition privatanLambda :=
 value_closure (closure_intro [] None ["this"; "args"] ex_privatanLambda)
 .
 Definition name_privatanLambda :=  "%atanLambda" .
-Definition privbind :=  value_object 156 .
+Definition privbind :=  value_object 155 .
 Definition name_privbind :=  "%bind" .
 Definition privconcatLambda := 
 value_closure
@@ -8379,7 +8285,7 @@ value_closure
   ("%slicelambda", privslicelambda)] None ["this"; "args"] ex_privbindLambda)
 .
 Definition name_privbindLambda :=  "%bindLambda" .
-Definition privbooleanToString :=  value_object 30 .
+Definition privbooleanToString :=  value_object 29 .
 Definition name_privbooleanToString :=  "%booleanToString" .
 Definition privbooleanToStringlambda := 
 value_closure
@@ -8387,9 +8293,9 @@ value_closure
  ex_privbooleanToStringlambda)
 .
 Definition name_privbooleanToStringlambda :=  "%booleanToStringlambda" .
-Definition privbooleanValueOf :=  value_object 302 .
+Definition privbooleanValueOf :=  value_object 301 .
 Definition name_privbooleanValueOf :=  "%booleanValueOf" .
-Definition privcall :=  value_object 18 .
+Definition privcall :=  value_object 17 .
 Definition name_privcall :=  "%call" .
 Definition privlen := 
 value_closure (closure_intro [] None ["list"] ex_privlen)
@@ -8406,7 +8312,7 @@ value_closure
  None ["this"; "args"] ex_privcalllambda)
 .
 Definition name_privcalllambda :=  "%calllambda" .
-Definition privcharat :=  value_object 109 .
+Definition privcharat :=  value_object 108 .
 Definition name_privcharat :=  "%charat" .
 Definition privcharatlambda := 
 value_closure
@@ -8416,7 +8322,7 @@ value_closure
   ("%ToString", privToString)] None ["this"; "args"] ex_privcharatlambda)
 .
 Definition name_privcharatlambda :=  "%charatlambda" .
-Definition privcharcodeat :=  value_object 112 .
+Definition privcharcodeat :=  value_object 111 .
 Definition name_privcharcodeat :=  "%charcodeat" .
 Definition privcharcodeatlambda := 
 value_closure
@@ -8426,17 +8332,17 @@ value_closure
   ("%ToString", privToString)] None ["this"; "args"] ex_privcharcodeatlambda)
 .
 Definition name_privcharcodeatlambda :=  "%charcodeatlambda" .
-Definition privconcat :=  value_object 101 .
+Definition privconcat :=  value_object 100 .
 Definition name_privconcat :=  "%concat" .
 Definition privconsole :=  value_object 314 .
 Definition name_privconsole :=  "%console" .
-Definition privcos :=  value_object 278 .
+Definition privcos :=  value_object 277 .
 Definition name_privcos :=  "%cos" .
 Definition privcosLambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privcosLambda)
 .
 Definition name_privcosLambda :=  "%cosLambda" .
-Definition privcreate :=  value_object 64 .
+Definition privcreate :=  value_object 63 .
 Definition name_privcreate :=  "%create" .
 Definition privdefinePropertylambda := 
 value_closure
@@ -8467,23 +8373,23 @@ value_closure
  ["this"; "args"] ex_privcreateLambda)
 .
 Definition name_privcreateLambda :=  "%createLambda" .
-Definition privdateGetTimezoneOffset :=  value_object 178 .
+Definition privdateGetTimezoneOffset :=  value_object 177 .
 Definition name_privdateGetTimezoneOffset :=  "%dateGetTimezoneOffset" .
 Definition privdateGetTimezoneOffsetLambda := 
 value_closure
 (closure_intro [] None ["this"; "args"] ex_privdateGetTimezoneOffsetLambda)
 .
 Definition name_privdateGetTimezoneOffsetLambda :=  "%dateGetTimezoneOffsetLambda" .
-Definition privdateToString :=  value_object 174 .
+Definition privdateToString :=  value_object 173 .
 Definition name_privdateToString :=  "%dateToString" .
-Definition privdateValueOf :=  value_object 176 .
+Definition privdateValueOf :=  value_object 175 .
 Definition name_privdateValueOf :=  "%dateValueOf" .
 Definition privdateValueOfLambda := 
 value_closure
 (closure_intro [] None ["this"; "args"] ex_privdateValueOfLambda)
 .
 Definition name_privdateValueOfLambda :=  "%dateValueOfLambda" .
-Definition privdategetDate :=  value_object 182 .
+Definition privdategetDate :=  value_object 181 .
 Definition name_privdategetDate :=  "%dategetDate" .
 Definition privdategetDateLambda := 
 value_closure
@@ -8492,7 +8398,7 @@ value_closure
  None ["this"; "args"] ex_privdategetDateLambda)
 .
 Definition name_privdategetDateLambda :=  "%dategetDateLambda" .
-Definition privdategetDay :=  value_object 180 .
+Definition privdategetDay :=  value_object 179 .
 Definition name_privdategetDay :=  "%dategetDay" .
 Definition privdategetDayLambda := 
 value_closure
@@ -8500,9 +8406,9 @@ value_closure
  ex_privdategetDayLambda)
 .
 Definition name_privdategetDayLambda :=  "%dategetDayLambda" .
-Definition privdecodeURI :=  value_object 256 .
+Definition privdecodeURI :=  value_object 255 .
 Definition name_privdecodeURI :=  "%decodeURI" .
-Definition privdecodeURIComponent :=  value_object 257 .
+Definition privdecodeURIComponent :=  value_object 256 .
 Definition name_privdecodeURIComponent :=  "%decodeURIComponent" .
 Definition privdecodeURIComponentLambda := 
 value_closure
@@ -8519,40 +8425,19 @@ value_closure
  ["obj"; "field"; "prop"] ex_privdefine15Property)
 .
 Definition name_privdefine15Property :=  "%define15Property" .
-Definition privmakeEnvGetter := 
-value_closure
-(closure_intro
- [("%FunctionProto", privFunctionProto); ("%UnboundId", privUnboundId)] 
- None ["object"; "id"] ex_privmakeEnvGetter)
-.
-Definition name_privmakeEnvGetter :=  "%makeEnvGetter" .
-Definition privmakeEnvSetter := 
-value_closure
-(closure_intro
- [("%FunctionProto", privFunctionProto);
-  ("%UnwritableDispatch", privUnwritableDispatch)] None ["object"; "id"]
- ex_privmakeEnvSetter)
-.
-Definition name_privmakeEnvSetter :=  "%makeEnvSetter" .
-Definition privdefineGlobalAccessors := 
-value_closure
-(closure_intro
- [("%global", privglobal);
-  ("%globalContext", privglobalContext);
-  ("%makeEnvGetter", privmakeEnvGetter);
-  ("%makeEnvSetter", privmakeEnvSetter)] None ["context"; "id"]
- ex_privdefineGlobalAccessors)
-.
-Definition name_privdefineGlobalAccessors :=  "%defineGlobalAccessors" .
 Definition privdefineGlobalVar := 
 value_closure
-(closure_intro
- [("%global", privglobal);
-  ("%makeEnvGetter", privmakeEnvGetter);
-  ("%makeEnvSetter", privmakeEnvSetter)] None ["context"; "id"]
- ex_privdefineGlobalVar)
+(closure_intro [] None ["context"; "id"] ex_privdefineGlobalVar)
 .
 Definition name_privdefineGlobalVar :=  "%defineGlobalVar" .
+Definition privdefineFunction := 
+value_closure
+(closure_intro
+ [("%EnvCheckAssign", privEnvCheckAssign);
+  ("%defineGlobalVar", privdefineGlobalVar)] None ["context"; "id"; "fo"]
+ ex_privdefineFunction)
+.
+Definition name_privdefineFunction :=  "%defineFunction" .
 Definition privdefineNYIProperty := 
 value_closure
 (closure_intro
@@ -8562,13 +8447,13 @@ value_closure
  ex_privdefineNYIProperty)
 .
 Definition name_privdefineNYIProperty :=  "%defineNYIProperty" .
-Definition privdefineProperties :=  value_object 62 .
+Definition privdefineProperties :=  value_object 61 .
 Definition name_privdefineProperties :=  "%defineProperties" .
-Definition privdefineProperty :=  value_object 17 .
+Definition privdefineProperty :=  value_object 16 .
 Definition name_privdefineProperty :=  "%defineProperty" .
-Definition privencodeURI :=  value_object 258 .
+Definition privencodeURI :=  value_object 257 .
 Definition name_privencodeURI :=  "%encodeURI" .
-Definition privencodeURIComponent :=  value_object 259 .
+Definition privencodeURIComponent :=  value_object 258 .
 Definition name_privencodeURIComponent :=  "%encodeURIComponent" .
 Definition privencodeURIComponentLambda := 
 value_closure
@@ -8585,7 +8470,7 @@ Definition privescapeLambda :=
 value_closure (closure_intro [] None ["this"; "args"] ex_privescapeLambda)
 .
 Definition name_privescapeLambda :=  "%escapeLambda" .
-Definition privets :=  value_object 24 .
+Definition privets :=  value_object 23 .
 Definition name_privets :=  "%ets" .
 Definition privetslambda := 
 value_closure
@@ -8595,7 +8480,7 @@ value_closure
 Definition name_privetslambda :=  "%etslambda" .
 Definition priveval :=  value_object 315 .
 Definition name_priveval :=  "%eval" .
-Definition privevery :=  value_object 144 .
+Definition privevery :=  value_object 143 .
 Definition name_privevery :=  "%every" .
 Definition priveverylambda := 
 value_closure
@@ -8607,13 +8492,13 @@ value_closure
   ("%TypeError", privTypeError)] None ["this"; "args"] ex_priveverylambda)
 .
 Definition name_priveverylambda :=  "%everylambda" .
-Definition privexp :=  value_object 260 .
+Definition privexp :=  value_object 259 .
 Definition name_privexp :=  "%exp" .
 Definition privexplambda := 
 value_closure (closure_intro [] None [] ex_privexplambda)
 .
 Definition name_privexplambda :=  "%explambda" .
-Definition privfilter :=  value_object 139 .
+Definition privfilter :=  value_object 138 .
 Definition name_privfilter :=  "%filter" .
 Definition privfilterlambda := 
 value_closure
@@ -8628,7 +8513,7 @@ value_closure
  ex_privfilterlambda)
 .
 Definition name_privfilterlambda :=  "%filterlambda" .
-Definition privforeach :=  value_object 133 .
+Definition privforeach :=  value_object 132 .
 Definition name_privforeach :=  "%foreach" .
 Definition privforeachlambda := 
 value_closure
@@ -8639,7 +8524,7 @@ value_closure
   ("%TypeError", privTypeError)] None ["this"; "args"] ex_privforeachlambda)
 .
 Definition name_privforeachlambda :=  "%foreachlambda" .
-Definition privfreeze :=  value_object 68 .
+Definition privfreeze :=  value_object 67 .
 Definition name_privfreeze :=  "%freeze" .
 Definition privfreezelambda := 
 value_closure
@@ -8647,7 +8532,7 @@ value_closure
  ["this"; "args"] ex_privfreezelambda)
 .
 Definition name_privfreezelambda :=  "%freezelambda" .
-Definition privfromCharCode :=  value_object 80 .
+Definition privfromCharCode :=  value_object 79 .
 Definition name_privfromCharCode :=  "%fromCharCode" .
 Definition privfromcclambda := 
 value_closure
@@ -8655,26 +8540,26 @@ value_closure
  ex_privfromcclambda)
 .
 Definition name_privfromcclambda :=  "%fromcclambda" .
-Definition privfunctionToString :=  value_object 5 .
+Definition privfunctionToString :=  value_object 4 .
 Definition name_privfunctionToString :=  "%functionToString" .
 Definition privfunctionToStringlambda := 
 value_closure
 (closure_intro [] None ["this"; "args"] ex_privfunctionToStringlambda)
 .
 Definition name_privfunctionToStringlambda :=  "%functionToStringlambda" .
-Definition privgetMonth :=  value_object 172 .
+Definition privgetMonth :=  value_object 171 .
 Definition name_privgetMonth :=  "%getMonth" .
 Definition privgetMonthlambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privgetMonthlambda)
 .
 Definition name_privgetMonthlambda :=  "%getMonthlambda" .
-Definition privgetYear :=  value_object 171 .
+Definition privgetYear :=  value_object 170 .
 Definition name_privgetYear :=  "%getYear" .
 Definition privgetYearlambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privgetYearlambda)
 .
 Definition name_privgetYearlambda :=  "%getYearlambda" .
-Definition privgopd :=  value_object 38 .
+Definition privgopd :=  value_object 37 .
 Definition name_privgopd :=  "%gopd" .
 Definition privgopdLambda := 
 value_closure
@@ -8686,7 +8571,7 @@ value_closure
  ex_privgopdLambda)
 .
 Definition name_privgopdLambda :=  "%gopdLambda" .
-Definition privgopn :=  value_object 59 .
+Definition privgopn :=  value_object 58 .
 Definition name_privgopn :=  "%gopn" .
 Definition privgopnLambda := 
 value_closure
@@ -8695,7 +8580,7 @@ value_closure
  None ["this"; "args"] ex_privgopnLambda)
 .
 Definition name_privgopnLambda :=  "%gopnLambda" .
-Definition privgpo :=  value_object 36 .
+Definition privgpo :=  value_object 35 .
 Definition name_privgpo :=  "%gpo" .
 Definition privgpoLambda := 
 value_closure
@@ -8703,7 +8588,7 @@ value_closure
  ["this"; "args"] ex_privgpoLambda)
 .
 Definition name_privgpoLambda :=  "%gpoLambda" .
-Definition privhasOwnProperty :=  value_object 44 .
+Definition privhasOwnProperty :=  value_object 43 .
 Definition name_privhasOwnProperty :=  "%hasOwnProperty" .
 Definition privhasOwnPropertylambda := 
 value_closure
@@ -8722,7 +8607,7 @@ value_closure
  ex_privinstanceof)
 .
 Definition name_privinstanceof :=  "%instanceof" .
-Definition privisExtensible :=  value_object 76 .
+Definition privisExtensible :=  value_object 75 .
 Definition name_privisExtensible :=  "%isExtensible" .
 Definition privisExtensibleLambda := 
 value_closure
@@ -8738,7 +8623,7 @@ value_closure
  None ["this"; "args"] ex_privisFiniteLambda)
 .
 Definition name_privisFiniteLambda :=  "%isFiniteLambda" .
-Definition privisFrozen :=  value_object 72 .
+Definition privisFrozen :=  value_object 71 .
 Definition name_privisFrozen :=  "%isFrozen" .
 Definition privisFrozenLambda := 
 value_closure
@@ -8746,7 +8631,7 @@ value_closure
  ["this"; "args"] ex_privisFrozenLambda)
 .
 Definition name_privisFrozenLambda :=  "%isFrozenLambda" .
-Definition privisNaN :=  value_object 22 .
+Definition privisNaN :=  value_object 21 .
 Definition name_privisNaN :=  "%isNaN" .
 Definition privisNaNlambda := 
 value_closure
@@ -8754,9 +8639,9 @@ value_closure
  ex_privisNaNlambda)
 .
 Definition name_privisNaNlambda :=  "%isNaNlambda" .
-Definition privisPrototypeOf :=  value_object 45 .
+Definition privisPrototypeOf :=  value_object 44 .
 Definition name_privisPrototypeOf :=  "%isPrototypeOf" .
-Definition privisSealed :=  value_object 74 .
+Definition privisSealed :=  value_object 73 .
 Definition name_privisSealed :=  "%isSealed" .
 Definition privisSealedLambda := 
 value_closure
@@ -8764,7 +8649,7 @@ value_closure
  ["this"; "args"] ex_privisSealedLambda)
 .
 Definition name_privisSealedLambda :=  "%isSealedLambda" .
-Definition privjoin :=  value_object 82 .
+Definition privjoin :=  value_object 81 .
 Definition name_privjoin :=  "%join" .
 Definition privjoinlambda := 
 value_closure
@@ -8774,7 +8659,7 @@ value_closure
   ("%ToUint32", privToUint32)] None ["this"; "args"] ex_privjoinlambda)
 .
 Definition name_privjoinlambda :=  "%joinlambda" .
-Definition privkeys :=  value_object 78 .
+Definition privkeys :=  value_object 77 .
 Definition name_privkeys :=  "%keys" .
 Definition privkeysLambda := 
 value_closure
@@ -8785,7 +8670,7 @@ value_closure
  ex_privkeysLambda)
 .
 Definition name_privkeysLambda :=  "%keysLambda" .
-Definition privlocaleCompare :=  value_object 165 .
+Definition privlocaleCompare :=  value_object 164 .
 Definition name_privlocaleCompare :=  "%localeCompare" .
 Definition privlocaleCompareLambda := 
 value_closure
@@ -8801,27 +8686,7 @@ Definition privlogLambda :=
 value_closure (closure_intro [] None ["o"; "s"] ex_privlogLambda)
 .
 Definition name_privlogLambda :=  "%logLambda" .
-Definition privprimEach := 
-value_closure
-(closure_intro [("%ToString", privToString)] None ["arr"; "fn"]
- ex_privprimEach)
-.
-Definition name_privprimEach :=  "%primEach" .
-Definition privpropertyNames := 
-value_closure
-(closure_intro [] None ["obj"; "get-non-enumerable"] ex_privpropertyNames)
-.
-Definition name_privpropertyNames :=  "%propertyNames" .
-Definition privmakeWithContext := 
-value_closure
-(closure_intro
- [("%defineOwnProperty", privdefineOwnProperty);
-  ("%primEach", privprimEach);
-  ("%propertyNames", privpropertyNames)] None ["context"; "object"]
- ex_privmakeWithContext)
-.
-Definition name_privmakeWithContext :=  "%makeWithContext" .
-Definition privmap :=  value_object 136 .
+Definition privmap :=  value_object 135 .
 Definition name_privmap :=  "%map" .
 Definition privmaplambda := 
 value_closure
@@ -8835,7 +8700,7 @@ value_closure
  ex_privmaplambda)
 .
 Definition name_privmaplambda :=  "%maplambda" .
-Definition privmathAbs :=  value_object 268 .
+Definition privmathAbs :=  value_object 267 .
 Definition name_privmathAbs :=  "%mathAbs" .
 Definition privmathAbsLambda := 
 value_closure
@@ -8843,7 +8708,7 @@ value_closure
  ex_privmathAbsLambda)
 .
 Definition name_privmathAbsLambda :=  "%mathAbsLambda" .
-Definition privmathCeil :=  value_object 292 .
+Definition privmathCeil :=  value_object 291 .
 Definition name_privmathCeil :=  "%mathCeil" .
 Definition privmathCeilLambda := 
 value_closure
@@ -8851,7 +8716,7 @@ value_closure
  ex_privmathCeilLambda)
 .
 Definition name_privmathCeilLambda :=  "%mathCeilLambda" .
-Definition privmathFloor :=  value_object 294 .
+Definition privmathFloor :=  value_object 293 .
 Definition name_privmathFloor :=  "%mathFloor" .
 Definition privmathFloorLambda := 
 value_closure
@@ -8859,7 +8724,7 @@ value_closure
  ex_privmathFloorLambda)
 .
 Definition name_privmathFloorLambda :=  "%mathFloorLambda" .
-Definition privmathLog :=  value_object 290 .
+Definition privmathLog :=  value_object 289 .
 Definition name_privmathLog :=  "%mathLog" .
 Definition privmathLogLambda := 
 value_closure
@@ -8867,7 +8732,7 @@ value_closure
  ex_privmathLogLambda)
 .
 Definition name_privmathLogLambda :=  "%mathLogLambda" .
-Definition privmathMax :=  value_object 265 .
+Definition privmathMax :=  value_object 264 .
 Definition name_privmathMax :=  "%mathMax" .
 Definition privminMaxLambda := 
 value_closure
@@ -8881,7 +8746,7 @@ value_closure
  None ["this"; "args"] ex_privmathMaxLambda)
 .
 Definition name_privmathMaxLambda :=  "%mathMaxLambda" .
-Definition privmathMin :=  value_object 262 .
+Definition privmathMin :=  value_object 261 .
 Definition name_privmathMin :=  "%mathMin" .
 Definition privmathMinLambda := 
 value_closure
@@ -8889,7 +8754,7 @@ value_closure
  None ["this"; "args"] ex_privmathMinLambda)
 .
 Definition name_privmathMinLambda :=  "%mathMinLambda" .
-Definition privmathPow :=  value_object 296 .
+Definition privmathPow :=  value_object 295 .
 Definition name_privmathPow :=  "%mathPow" .
 Definition privmathPowLambda := 
 value_closure
@@ -8901,6 +8766,7 @@ Definition privmaybeDirectEval :=
 value_closure
 (closure_intro
  [("%AppExprCheck", privAppExprCheck);
+  ("%EnvGet", privEnvGet);
   ("%configurableEval", privconfigurableEval);
   ("%eval", priveval)] None ["theThis"; "theContext"; "args"; "strict"]
  ex_privmaybeDirectEval)
@@ -8912,7 +8778,12 @@ value_closure
  ex_privmkNewArgsObj)
 .
 Definition name_privmkNewArgsObj :=  "%mkNewArgsObj" .
-Definition privnumTLS :=  value_object 307 .
+Definition privnewObjEnvRec := 
+value_closure
+(closure_intro [] None ["parent"; "obj"; "pt"] ex_privnewObjEnvRec)
+.
+Definition name_privnewObjEnvRec :=  "%newObjEnvRec" .
+Definition privnumTLS :=  value_object 306 .
 Definition name_privnumTLS :=  "%numTLS" .
 Definition privtoLocaleStringlambda := 
 value_closure
@@ -8932,9 +8803,9 @@ Definition privnumToStringAbstract :=
 value_closure (closure_intro [] None ["n"; "r"] ex_privnumToStringAbstract)
 .
 Definition name_privnumToStringAbstract :=  "%numToStringAbstract" .
-Definition privnumValueOf :=  value_object 300 .
+Definition privnumValueOf :=  value_object 299 .
 Definition name_privnumValueOf :=  "%numValueOf" .
-Definition privnumberToString :=  value_object 159 .
+Definition privnumberToString :=  value_object 158 .
 Definition name_privnumberToString :=  "%numberToString" .
 Definition privnumberToStringlambda := 
 value_closure
@@ -8946,7 +8817,7 @@ value_closure
  ex_privnumberToStringlambda)
 .
 Definition name_privnumberToStringlambda :=  "%numberToStringlambda" .
-Definition privobjectToString :=  value_object 40 .
+Definition privobjectToString :=  value_object 39 .
 Definition name_privobjectToString :=  "%objectToString" .
 Definition privparseFloat :=  value_object 319 .
 Definition name_privparseFloat :=  "%parseFloat" .
@@ -8955,7 +8826,7 @@ value_closure
 (closure_intro [] None ["this"; "args"] ex_privparseFloatLambda)
 .
 Definition name_privparseFloatLambda :=  "%parseFloatLambda" .
-Definition privparseInt :=  value_object 255 .
+Definition privparseInt :=  value_object 254 .
 Definition name_privparseInt :=  "%parseInt" .
 Definition privparseIntlambda := 
 value_closure
@@ -8963,7 +8834,7 @@ value_closure
  ex_privparseIntlambda)
 .
 Definition name_privparseIntlambda :=  "%parseIntlambda" .
-Definition privpop :=  value_object 84 .
+Definition privpop :=  value_object 83 .
 Definition name_privpop :=  "%pop" .
 Definition privpoplambda := 
 value_closure
@@ -8974,7 +8845,7 @@ value_closure
   ("%ToUint32", privToUint32)] None ["this"; "args"] ex_privpoplambda)
 .
 Definition name_privpoplambda :=  "%poplambda" .
-Definition privpreventExtensions :=  value_object 70 .
+Definition privpreventExtensions :=  value_object 69 .
 Definition name_privpreventExtensions :=  "%preventExtensions" .
 Definition privpreventExtensionsLambda := 
 value_closure
@@ -8982,7 +8853,13 @@ value_closure
  ["this"; "args"] ex_privpreventExtensionsLambda)
 .
 Definition name_privpreventExtensionsLambda :=  "%preventExtensionsLambda" .
-Definition privprint :=  value_object 16 .
+Definition privprimEach := 
+value_closure
+(closure_intro [("%ToString", privToString)] None ["arr"; "fn"]
+ ex_privprimEach)
+.
+Definition name_privprimEach :=  "%primEach" .
+Definition privprint :=  value_object 15 .
 Definition name_privprint :=  "%print" .
 Definition privprintlambda := 
 value_closure
@@ -8996,15 +8873,20 @@ value_closure
  None ["this"; "args"] ex_privpropEnumlambda)
 .
 Definition name_privpropEnumlambda :=  "%propEnumlambda" .
-Definition privpropertyIsEnumerable :=  value_object 41 .
+Definition privpropertyIsEnumerable :=  value_object 40 .
 Definition name_privpropertyIsEnumerable :=  "%propertyIsEnumerable" .
+Definition privpropertyNames := 
+value_closure
+(closure_intro [] None ["obj"; "get-non-enumerable"] ex_privpropertyNames)
+.
+Definition name_privpropertyNames :=  "%propertyNames" .
 Definition privprotoOfField := 
 value_closure
 (closure_intro [] (Some "%protoOfField") ["object"; "fld"]
  ex_privprotoOfField)
 .
 Definition name_privprotoOfField :=  "%protoOfField" .
-Definition privpush :=  value_object 87 .
+Definition privpush :=  value_object 86 .
 Definition name_privpush :=  "%push" .
 Definition privpushlambda := 
 value_closure
@@ -9016,15 +8898,15 @@ value_closure
  ex_privpushlambda)
 .
 Definition name_privpushlambda :=  "%pushlambda" .
-Definition privrandom :=  value_object 280 .
+Definition privrandom :=  value_object 279 .
 Definition name_privrandom :=  "%random" .
 Definition privrandomLambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privrandomLambda)
 .
 Definition name_privrandomLambda :=  "%randomLambda" .
-Definition privreduce :=  value_object 141 .
+Definition privreduce :=  value_object 140 .
 Definition name_privreduce :=  "%reduce" .
-Definition privreduceRight :=  value_object 150 .
+Definition privreduceRight :=  value_object 149 .
 Definition name_privreduceRight :=  "%reduceRight" .
 Definition privreduceRightLambda := 
 value_closure
@@ -9045,7 +8927,7 @@ value_closure
   ("%TypeError", privTypeError)] None ["this"; "args"] ex_privreducelambda)
 .
 Definition name_privreducelambda :=  "%reducelambda" .
-Definition privreplace :=  value_object 163 .
+Definition privreplace :=  value_object 162 .
 Definition name_privreplace :=  "%replace" .
 Definition privsubstringlambda := 
 value_closure
@@ -9082,7 +8964,7 @@ value_closure
   ("%global", privglobal)] None ["strict"; "obj"] ex_privresolveThis)
 .
 Definition name_privresolveThis :=  "%resolveThis" .
-Definition privreverse :=  value_object 90 .
+Definition privreverse :=  value_object 89 .
 Definition name_privreverse :=  "%reverse" .
 Definition privreverselambda := 
 value_closure
@@ -9092,13 +8974,13 @@ value_closure
   ("%ToUint32", privToUint32)] None ["this"; "args"] ex_privreverselambda)
 .
 Definition name_privreverselambda :=  "%reverselambda" .
-Definition privround :=  value_object 282 .
+Definition privround :=  value_object 281 .
 Definition name_privround :=  "%round" .
 Definition privroundLambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privroundLambda)
 .
 Definition name_privroundLambda :=  "%roundLambda" .
-Definition privseal :=  value_object 66 .
+Definition privseal :=  value_object 65 .
 Definition name_privseal :=  "%seal" .
 Definition privsealLambda := 
 value_closure
@@ -9106,7 +8988,7 @@ value_closure
  ["this"; "args"] ex_privsealLambda)
 .
 Definition name_privsealLambda :=  "%sealLambda" .
-Definition privshift :=  value_object 93 .
+Definition privshift :=  value_object 92 .
 Definition name_privshift :=  "%shift" .
 Definition privshiftlambda := 
 value_closure
@@ -9116,7 +8998,7 @@ value_closure
   ("%ToUint32", privToUint32)] None ["this"; "args"] ex_privshiftlambda)
 .
 Definition name_privshiftlambda :=  "%shiftlambda" .
-Definition privsin :=  value_object 284 .
+Definition privsin :=  value_object 283 .
 Definition name_privsin :=  "%sin" .
 Definition privsinLambda := 
 value_closure
@@ -9124,7 +9006,7 @@ value_closure
  ex_privsinLambda)
 .
 Definition name_privsinLambda :=  "%sinLambda" .
-Definition privslice :=  value_object 153 .
+Definition privslice :=  value_object 152 .
 Definition name_privslice :=  "%slice" .
 Definition privsliolambda := 
 value_closure
@@ -9137,7 +9019,7 @@ value_closure
   ("%min", privmin)] None ["this"; "args"] ex_privsliolambda)
 .
 Definition name_privsliolambda :=  "%sliolambda" .
-Definition privsome :=  value_object 147 .
+Definition privsome :=  value_object 146 .
 Definition name_privsome :=  "%some" .
 Definition privsomelambda := 
 value_closure
@@ -9149,7 +9031,7 @@ value_closure
   ("%TypeError", privTypeError)] None ["this"; "args"] ex_privsomelambda)
 .
 Definition name_privsomelambda :=  "%somelambda" .
-Definition privsort :=  value_object 104 .
+Definition privsort :=  value_object 103 .
 Definition name_privsort :=  "%sort" .
 Definition privsortlambda := 
 value_closure
@@ -9161,7 +9043,7 @@ value_closure
  ex_privsortlambda)
 .
 Definition name_privsortlambda :=  "%sortlambda" .
-Definition privsplice :=  value_object 121 .
+Definition privsplice :=  value_object 120 .
 Definition name_privsplice :=  "%splice" .
 Definition privsplicelambda := 
 value_closure
@@ -9176,19 +9058,19 @@ value_closure
   ("%min", privmin)] None ["this"; "args"] ex_privsplicelambda)
 .
 Definition name_privsplicelambda :=  "%splicelambda" .
-Definition privsplit :=  value_object 169 .
+Definition privsplit :=  value_object 168 .
 Definition name_privsplit :=  "%split" .
 Definition privsplitLambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privsplitLambda)
 .
 Definition name_privsplitLambda :=  "%splitLambda" .
-Definition privsqrt :=  value_object 286 .
+Definition privsqrt :=  value_object 285 .
 Definition name_privsqrt :=  "%sqrt" .
 Definition privsqrtLambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privsqrtLambda)
 .
 Definition name_privsqrtLambda :=  "%sqrtLambda" .
-Definition privstrconcat :=  value_object 115 .
+Definition privstrconcat :=  value_object 114 .
 Definition name_privstrconcat :=  "%strconcat" .
 Definition privstrconcatlambda := 
 value_closure
@@ -9197,7 +9079,7 @@ value_closure
   ("%ToString", privToString)] None ["this"; "args"] ex_privstrconcatlambda)
 .
 Definition name_privstrconcatlambda :=  "%strconcatlambda" .
-Definition privstringSlice :=  value_object 166 .
+Definition privstringSlice :=  value_object 165 .
 Definition name_privstringSlice :=  "%stringSlice" .
 Definition privstringSliceLambda := 
 value_closure
@@ -9209,24 +9091,24 @@ value_closure
   ("%min", privmin)] None ["this"; "args"] ex_privstringSliceLambda)
 .
 Definition name_privstringSliceLambda :=  "%stringSliceLambda" .
-Definition privstringToString :=  value_object 27 .
+Definition privstringToString :=  value_object 26 .
 Definition name_privstringToString :=  "%stringToString" .
 Definition privstringToStringlambda := 
 value_closure
 (closure_intro [] None ["this"; "args"] ex_privstringToStringlambda)
 .
 Definition name_privstringToStringlambda :=  "%stringToStringlambda" .
-Definition privstringValueOf :=  value_object 298 .
+Definition privstringValueOf :=  value_object 297 .
 Definition name_privstringValueOf :=  "%stringValueOf" .
-Definition privsubstring :=  value_object 118 .
+Definition privsubstring :=  value_object 117 .
 Definition name_privsubstring :=  "%substring" .
-Definition privtan :=  value_object 288 .
+Definition privtan :=  value_object 287 .
 Definition name_privtan :=  "%tan" .
 Definition privtanLambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privtanLambda)
 .
 Definition name_privtanLambda :=  "%tanLambda" .
-Definition privtest :=  value_object 252 .
+Definition privtest :=  value_object 251 .
 Definition name_privtest :=  "%test" .
 Definition privtestlambda := 
 value_closure (closure_intro [] None ["this"; "args"] ex_privtestlambda)
@@ -9241,14 +9123,14 @@ value_closure
   ("%ToString", privToString)] None ["this"; "args"] ex_privtlclambda)
 .
 Definition name_privtlclambda :=  "%tlclambda" .
-Definition privtoExponential :=  value_object 309 .
+Definition privtoExponential :=  value_object 308 .
 Definition name_privtoExponential :=  "%toExponential" .
 Definition privtoExponentialLambda := 
 value_closure
 (closure_intro [] None ["this"; "args"] ex_privtoExponentialLambda)
 .
 Definition name_privtoExponentialLambda :=  "%toExponentialLambda" .
-Definition privtoFixed :=  value_object 304 .
+Definition privtoFixed :=  value_object 303 .
 Definition name_privtoFixed :=  "%toFixed" .
 Definition privtoFixedLambda := 
 value_closure
@@ -9259,18 +9141,18 @@ value_closure
   ("%ToString", privToString)] None ["this"; "args"] ex_privtoFixedLambda)
 .
 Definition name_privtoFixedLambda :=  "%toFixedLambda" .
-Definition privtoLocaleString :=  value_object 42 .
+Definition privtoLocaleString :=  value_object 41 .
 Definition name_privtoLocaleString :=  "%toLocaleString" .
-Definition privtoLowerCase :=  value_object 167 .
+Definition privtoLowerCase :=  value_object 166 .
 Definition name_privtoLowerCase :=  "%toLowerCase" .
-Definition privtoPrecision :=  value_object 311 .
+Definition privtoPrecision :=  value_object 310 .
 Definition name_privtoPrecision :=  "%toPrecision" .
 Definition privtoPrecisionLambda := 
 value_closure
 (closure_intro [] None ["this"; "args"] ex_privtoPrecisionLambda)
 .
 Definition name_privtoPrecisionLambda :=  "%toPrecisionLambda" .
-Definition privtoUpperCase :=  value_object 168 .
+Definition privtoUpperCase :=  value_object 167 .
 Definition name_privtoUpperCase :=  "%toUpperCase" .
 Definition privtuclambda := 
 value_closure
@@ -9285,7 +9167,7 @@ Definition privunescapeLambda :=
 value_closure (closure_intro [] None ["this"; "args"] ex_privunescapeLambda)
 .
 Definition name_privunescapeLambda :=  "%unescapeLambda" .
-Definition privunshift :=  value_object 124 .
+Definition privunshift :=  value_object 123 .
 Definition name_privunshift :=  "%unshift" .
 Definition privunshiftlambda := 
 value_closure
@@ -9295,7 +9177,7 @@ value_closure
   ("%ToUint32", privToUint32)] None ["this"; "args"] ex_privunshiftlambda)
 .
 Definition name_privunshiftlambda :=  "%unshiftlambda" .
-Definition privvalueOf :=  value_object 43 .
+Definition privvalueOf :=  value_object 42 .
 Definition name_privvalueOf :=  "%valueOf" .
 Definition privvalueOfLambda := 
 value_closure
@@ -9795,6 +9677,7 @@ Definition ctx_items :=
  (name_privarrayToStringlambda, privarrayToStringlambda);
  (name_privasin, privasin);
  (name_privasinLambda, privasinLambda);
+ (name_privassert, privassert);
  (name_privatan, privatan);
  (name_privatan2, privatan2);
  (name_privatan2Lambda, privatan2Lambda);
@@ -9833,7 +9716,7 @@ Definition ctx_items :=
  (name_privdecodeURIComponentLambda, privdecodeURIComponentLambda);
  (name_privdecodeURILambda, privdecodeURILambda);
  (name_privdefine15Property, privdefine15Property);
- (name_privdefineGlobalAccessors, privdefineGlobalAccessors);
+ (name_privdefineFunction, privdefineFunction);
  (name_privdefineGlobalVar, privdefineGlobalVar);
  (name_privdefineNYIProperty, privdefineNYIProperty);
  (name_privdefineOwnProperty, privdefineOwnProperty);
@@ -9893,7 +9776,6 @@ Definition ctx_items :=
  (name_privisPrototypeOf, privisPrototypeOf);
  (name_privisSealed, privisSealed);
  (name_privisSealedLambda, privisSealedLambda);
- (name_privisUnbound, privisUnbound);
  (name_privjoin, privjoin);
  (name_privjoinlambda, privjoinlambda);
  (name_privkeys, privkeys);
@@ -9903,11 +9785,7 @@ Definition ctx_items :=
  (name_privlocaleCompareLambda, privlocaleCompareLambda);
  (name_privlog, privlog);
  (name_privlogLambda, privlogLambda);
- (name_privmakeContextVarDefiner, privmakeContextVarDefiner);
- (name_privmakeEnvGetter, privmakeEnvGetter);
- (name_privmakeEnvSetter, privmakeEnvSetter);
  (name_privmakeGlobalEnv, privmakeGlobalEnv);
- (name_privmakeWithContext, privmakeWithContext);
  (name_privmap, privmap);
  (name_privmaplambda, privmaplambda);
  (name_privmathAbs, privmathAbs);
@@ -9935,6 +9813,7 @@ Definition ctx_items :=
  (name_privmsPerHour, privmsPerHour);
  (name_privmsPerMin, privmsPerMin);
  (name_privmsPerSecond, privmsPerSecond);
+ (name_privnewObjEnvRec, privnewObjEnvRec);
  (name_privglobalContext, privglobalContext);
  (name_privnumTLS, privnumTLS);
  (name_privnumTLSLambda, privnumTLSLambda);
@@ -10205,6 +10084,7 @@ Definition store_items := [
                                              ("%arrayToStringlambda", privarrayToStringlambda);
                                              ("%asin", privasin);
                                              ("%asinLambda", privasinLambda);
+                                             ("%assert", privassert);
                                              ("%atan", privatan);
                                              ("%atan2", privatan2);
                                              ("%atan2Lambda", privatan2Lambda);
@@ -10243,7 +10123,7 @@ Definition store_items := [
                                              ("%decodeURIComponentLambda", privdecodeURIComponentLambda);
                                              ("%decodeURILambda", privdecodeURILambda);
                                              ("%define15Property", privdefine15Property);
-                                             ("%defineGlobalAccessors", privdefineGlobalAccessors);
+                                             ("%defineFunction", privdefineFunction);
                                              ("%defineGlobalVar", privdefineGlobalVar);
                                              ("%defineNYIProperty", privdefineNYIProperty);
                                              ("%defineOwnProperty", privdefineOwnProperty);
@@ -10303,7 +10183,6 @@ Definition store_items := [
                                              ("%isPrototypeOf", privisPrototypeOf);
                                              ("%isSealed", privisSealed);
                                              ("%isSealedLambda", privisSealedLambda);
-                                             ("%isUnbound", privisUnbound);
                                              ("%join", privjoin);
                                              ("%joinlambda", privjoinlambda);
                                              ("%keys", privkeys);
@@ -10313,11 +10192,7 @@ Definition store_items := [
                                              ("%localeCompareLambda", privlocaleCompareLambda);
                                              ("%log", privlog);
                                              ("%logLambda", privlogLambda);
-                                             ("%makeContextVarDefiner", privmakeContextVarDefiner);
-                                             ("%makeEnvGetter", privmakeEnvGetter);
-                                             ("%makeEnvSetter", privmakeEnvSetter);
                                              ("%makeGlobalEnv", privmakeGlobalEnv);
-                                             ("%makeWithContext", privmakeWithContext);
                                              ("%map", privmap);
                                              ("%maplambda", privmaplambda);
                                              ("%mathAbs", privmathAbs);
@@ -10345,6 +10220,7 @@ Definition store_items := [
                                              ("%msPerHour", privmsPerHour);
                                              ("%msPerMin", privmsPerMin);
                                              ("%msPerSecond", privmsPerSecond);
+                                             ("%newObjEnvRec", privnewObjEnvRec);
                                              ("%nonstrictContext", privglobalContext);
                                              ("%numTLS", privnumTLS);
                                              ("%numTLSLambda", privnumTLSLambda);
@@ -10468,80 +10344,80 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 35;
+                                       value_object 34;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("hasOwnProperty", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 44;
+                                       value_object 43;
                                        attributes_data_writable := false;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("isPrototypeOf", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 45;
+                                       value_object 44;
                                        attributes_data_writable := false;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("propertyIsEnumerable", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 41;
+                                       value_object 40;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("toLocaleString", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 42;
+                                       value_object 41;
                                        attributes_data_writable := false;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("toString", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 40;
+                                       value_object 39;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("valueOf", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 43;
+                                       value_object 42;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})]|});
 (2, {|object_attrs :=
       {|oattrs_proto := value_object 1;
-        oattrs_class := "Object";
+        oattrs_class := "GlobalObject";
         oattrs_extensible := true;
         oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
       from_list [("Array", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 107;
+                                       value_object 106;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("Boolean", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 33;
+                                       value_object 32;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("Date", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 177;
+                                       value_object 176;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("Error", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 23;
+                                       value_object 22;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("EvalError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 49;
+                                       value_object 48;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -10559,7 +10435,7 @@ Definition store_items := [
                                        attributes_data_configurable := false|});
                  ("Math", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 261;
+                                       value_object 260;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -10571,55 +10447,55 @@ Definition store_items := [
                                        attributes_data_configurable := false|});
                  ("Number", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 26;
+                                       value_object 25;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("Object", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 35;
+                                       value_object 34;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("RangeError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 51;
+                                       value_object 50;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("ReferenceError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 53;
+                                       value_object 52;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("RegExp", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 254;
+                                       value_object 253;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("String", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 29;
+                                       value_object 28;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("SyntaxError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 48;
+                                       value_object 47;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("TypeError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 55;
+                                       value_object 54;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("URIError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 57;
+                                       value_object 56;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -10631,25 +10507,25 @@ Definition store_items := [
                                        attributes_data_configurable := true|});
                  ("decodeURI", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 256;
+                                       value_object 255;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("decodeURIComponent", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 257;
+                                       value_object 256;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("encodeURI", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 258;
+                                       value_object 257;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("encodeURIComponent", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 259;
+                                       value_object 258;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -10673,7 +10549,7 @@ Definition store_items := [
                                        attributes_data_configurable := true|});
                  ("isNaN", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 22;
+                                       value_object 21;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -10685,13 +10561,13 @@ Definition store_items := [
                                        attributes_data_configurable := true|});
                  ("parseInt", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 255;
+                                       value_object 254;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("print", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 16;
+                                       value_object 15;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := true;
                                        attributes_data_configurable := true|});
@@ -10714,13 +10590,6 @@ Definition store_items := [
                                        attributes_data_enumerable := true;
                                        attributes_data_configurable := true|})]|});
 (3, {|object_attrs :=
-      {|oattrs_proto := value_object 2;
-        oattrs_class := "Object";
-        oattrs_extensible := true;
-        oattrs_prim_value := value_undefined;
-        oattrs_code := objCode|};
-      object_properties := from_list []|});
-(4, {|object_attrs :=
       {|oattrs_proto := value_object 1;
         oattrs_class := "Function";
         oattrs_extensible := true;
@@ -10729,19 +10598,19 @@ Definition store_items := [
       object_properties :=
       from_list [("apply", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 19;
+                                       value_object 18;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("bind", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 156;
+                                       value_object 155;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("call", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 18;
+                                       value_object 17;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -10759,12 +10628,12 @@ Definition store_items := [
                                        attributes_data_configurable := false|});
                  ("toString", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 5;
+                                       value_object 4;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})]|});
-(5, {|object_attrs :=
-      {|oattrs_proto := value_object 4;
+(4, {|object_attrs :=
+      {|oattrs_proto := value_object 3;
         oattrs_class := "Function";
         oattrs_extensible := true;
         oattrs_prim_value := value_undefined;
@@ -10776,7 +10645,7 @@ Definition store_items := [
                                        attributes_data_writable := false;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := false|})]|});
-(6, {|object_attrs :=
+(5, {|object_attrs :=
       {|oattrs_proto := value_object 1;
         oattrs_class := "Error";
         oattrs_extensible := true;
@@ -10785,18 +10654,18 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 23;
+                                       value_object 22;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := true;
                                        attributes_data_configurable := true|});
                  ("toString", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 24;
+                                       value_object 23;
                                        attributes_data_writable := false;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})]|});
-(7, {|object_attrs :=
-      {|oattrs_proto := value_object 6;
+(6, {|object_attrs :=
+      {|oattrs_proto := value_object 5;
         oattrs_class := "Object";
         oattrs_extensible := true;
         oattrs_prim_value := value_undefined;
@@ -10804,7 +10673,7 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 55;
+                                       value_object 54;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := true;
                                        attributes_data_configurable := true|});
@@ -10814,8 +10683,8 @@ Definition store_items := [
                                        attributes_data_writable := false;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})]|});
-(8, {|object_attrs :=
-      {|oattrs_proto := value_object 4;
+(7, {|object_attrs :=
+      {|oattrs_proto := value_object 3;
         oattrs_class := "Function";
         oattrs_extensible := false;
         oattrs_prim_value := value_undefined;
@@ -10827,8 +10696,8 @@ Definition store_items := [
                                        attributes_data_writable := false;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := false|})]|});
-(9, {|object_attrs :=
-      {|oattrs_proto := value_object 6;
+(8, {|object_attrs :=
+      {|oattrs_proto := value_object 5;
         oattrs_class := "Object";
         oattrs_extensible := true;
         oattrs_prim_value := value_undefined;
@@ -10836,7 +10705,7 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 53;
+                                       value_object 52;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := true;
                                        attributes_data_configurable := true|});
@@ -10846,26 +10715,26 @@ Definition store_items := [
                                        attributes_data_writable := false;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})]|});
+(9, {|object_attrs :=
+      {|oattrs_proto := value_object 5;
+        oattrs_class := "Object";
+        oattrs_extensible := true;
+        oattrs_prim_value := value_undefined;
+        oattrs_code := objCode|};
+      object_properties :=
+      from_list [("constructor", 
+                  attributes_data_of {|attributes_data_value :=
+                                       value_object 47;
+                                       attributes_data_writable := true;
+                                       attributes_data_enumerable := true;
+                                       attributes_data_configurable := true|});
+                 ("name", 
+                  attributes_data_of {|attributes_data_value :=
+                                       value_string "SyntaxError";
+                                       attributes_data_writable := false;
+                                       attributes_data_enumerable := false;
+                                       attributes_data_configurable := true|})]|});
 (10, {|object_attrs :=
-       {|oattrs_proto := value_object 6;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("constructor", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 48;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
-                                        attributes_data_configurable := true|});
-                  ("name", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_string "SyntaxError";
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := true|})]|});
-(11, {|object_attrs :=
        {|oattrs_proto := value_object 1;
          oattrs_class := "Boolean";
          oattrs_extensible := true;
@@ -10874,23 +10743,23 @@ Definition store_items := [
        object_properties :=
        from_list [("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 33;
+                                        value_object 32;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toString", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 30;
+                                        value_object 29;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("valueOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 302;
+                                        value_object 301;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})]|});
-(12, {|object_attrs :=
+(11, {|object_attrs :=
        {|oattrs_proto := value_object 1;
          oattrs_class := "Number";
          oattrs_extensible := true;
@@ -10899,47 +10768,47 @@ Definition store_items := [
        object_properties :=
        from_list [("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 26;
+                                        value_object 25;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toExponential", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 309;
+                                        value_object 308;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toFixed", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 304;
+                                        value_object 303;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toLocaleString", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 307;
+                                        value_object 306;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toPrecision", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 311;
+                                        value_object 310;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toString", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 159;
+                                        value_object 158;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("valueOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 300;
+                                        value_object 299;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})]|});
-(13, {|object_attrs :=
+(12, {|object_attrs :=
        {|oattrs_proto := value_object 1;
          oattrs_class := "String";
          oattrs_extensible := true;
@@ -10948,37 +10817,37 @@ Definition store_items := [
        object_properties :=
        from_list [("charAt", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 109;
+                                        value_object 108;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("charCodeAt", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 112;
+                                        value_object 111;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("concat", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 115;
+                                        value_object 114;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 29;
+                                        value_object 28;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("indexOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 162;
+                                        value_object 161;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("lastIndexOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 164;
+                                        value_object 163;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
@@ -10990,112 +10859,135 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("localeCompare", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 165;
+                                        value_object 164;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("replace", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 163;
+                                        value_object 162;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("slice", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 166;
+                                        value_object 165;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("split", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 169;
+                                        value_object 168;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("substring", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 118;
+                                        value_object 117;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toLocaleLowerCase", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 167;
+                                        value_object 166;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toLocaleUpperCase", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 168;
+                                        value_object 167;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toLowerCase", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 167;
+                                        value_object 166;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toString", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 27;
+                                        value_object 26;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toUpperCase", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 168;
+                                        value_object 167;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("valueOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 298;
+                                        value_object 297;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})]|});
-(14, {|object_attrs :=
+(13, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode2|};
        object_properties := from_list []|});
-(15, {|object_attrs :=
+(14, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := false;
          oattrs_prim_value := value_undefined;
          oattrs_code := objCode3|};
        object_properties := from_list []|});
-(16, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(15, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privprintlambda|};
        object_properties := from_list []|});
-(17, {|object_attrs :=
+(16, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privdefinePropertylambda|};
        object_properties := from_list []|});
-(18, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(17, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privcalllambda|};
        object_properties := from_list []|});
-(19, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(18, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privapplylambda|};
        object_properties := from_list []|});
+(19, {|object_attrs :=
+       {|oattrs_proto := value_null;
+         oattrs_class := "Object";
+         oattrs_extensible := true;
+         oattrs_prim_value := value_undefined;
+         oattrs_code := objCode|};
+       object_properties :=
+       from_list [("configurable", 
+                   attributes_data_of {|attributes_data_value := value_true;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("value", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 17;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("writable", 
+                   attributes_data_of {|attributes_data_value := value_true;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})]|});
 (20, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -11120,37 +11012,14 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
 (21, {|object_attrs :=
-       {|oattrs_proto := value_null;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 19;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})]|});
-(22, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privisNaNlambda|};
        object_properties := from_list []|});
-(23, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(22, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11158,18 +11027,18 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 6;
+                                        value_object 5;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(24, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(23, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privetslambda|};
        object_properties := from_list []|});
-(25, {|object_attrs :=
+(24, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -11183,12 +11052,12 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 24;
+                                        value_object 23;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(26, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(25, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11232,12 +11101,12 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 12;
+                                        value_object 11;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(27, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(26, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11249,7 +11118,7 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(28, {|object_attrs :=
+(27, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -11263,7 +11132,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 27;
+                                        value_object 26;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -11272,8 +11141,8 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(29, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(28, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11281,7 +11150,7 @@ Definition store_items := [
        object_properties :=
        from_list [("fromCharCode", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 80;
+                                        value_object 79;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
@@ -11293,12 +11162,12 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 13;
+                                        value_object 12;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(30, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(29, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11310,7 +11179,7 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(31, {|object_attrs :=
+(30, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -11338,7 +11207,7 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(32, {|object_attrs :=
+(31, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -11357,7 +11226,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 30;
+                                        value_object 29;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -11366,8 +11235,8 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(33, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(32, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11381,11 +11250,11 @@ Definition store_items := [
                                         attributes_data_configurable := true|});
                   ("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 11;
+                                        value_object 10;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(34, {|object_attrs :=
+(33, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -11399,12 +11268,12 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 11;
+                                        value_object 10;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(35, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(34, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11412,67 +11281,67 @@ Definition store_items := [
        object_properties :=
        from_list [("create", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 64;
+                                        value_object 63;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("defineProperties", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 62;
+                                        value_object 61;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("defineProperty", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 17;
+                                        value_object 16;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("freeze", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 68;
+                                        value_object 67;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("getOwnPropertyDescriptor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 38;
+                                        value_object 37;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("getOwnPropertyNames", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 59;
+                                        value_object 58;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("getPrototypeOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 36;
+                                        value_object 35;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("isExtensible", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 76;
+                                        value_object 75;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("isFrozen", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 72;
+                                        value_object 71;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("isSealed", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 74;
+                                        value_object 73;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("keys", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 78;
+                                        value_object 77;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
@@ -11484,7 +11353,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("preventExtensions", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 70;
+                                        value_object 69;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
@@ -11496,18 +11365,18 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("seal", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 66;
+                                        value_object 65;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})]|});
-(36, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(35, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privgpoLambda|};
        object_properties := from_list []|});
-(37, {|object_attrs :=
+(36, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -11521,18 +11390,18 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 36;
+                                        value_object 35;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(38, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(37, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privgopdLambda|};
        object_properties := from_list []|});
-(39, {|object_attrs :=
+(38, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -11546,12 +11415,12 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 38;
+                                        value_object 37;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(40, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(39, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11563,8 +11432,8 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(41, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(40, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11576,8 +11445,8 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(42, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(41, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11589,8 +11458,8 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(43, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(42, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11602,8 +11471,8 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(44, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(43, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11615,8 +11484,8 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(45, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(44, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11628,8 +11497,8 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(46, {|object_attrs :=
-       {|oattrs_proto := value_object 6;
+(45, {|object_attrs :=
+       {|oattrs_proto := value_object 5;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11637,7 +11506,7 @@ Definition store_items := [
        object_properties :=
        from_list [("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 49;
+                                        value_object 48;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
@@ -11647,7 +11516,7 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(47, {|object_attrs :=
+(46, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -11665,8 +11534,8 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(48, {|object_attrs :=
-       {|oattrs_proto := value_object 10;
+(47, {|object_attrs :=
+       {|oattrs_proto := value_object 9;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11674,12 +11543,12 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 10;
+                                        value_object 9;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(49, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(48, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11687,12 +11556,12 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 46;
+                                        value_object 45;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(50, {|object_attrs :=
-       {|oattrs_proto := value_object 6;
+(49, {|object_attrs :=
+       {|oattrs_proto := value_object 5;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11700,7 +11569,7 @@ Definition store_items := [
        object_properties :=
        from_list [("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 51;
+                                        value_object 50;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
@@ -11710,8 +11579,8 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(51, {|object_attrs :=
-       {|oattrs_proto := value_object 50;
+(50, {|object_attrs :=
+       {|oattrs_proto := value_object 49;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11719,11 +11588,11 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 50;
+                                        value_object 49;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(52, {|object_attrs :=
+(51, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -11741,8 +11610,8 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(53, {|object_attrs :=
-       {|oattrs_proto := value_object 9;
+(52, {|object_attrs :=
+       {|oattrs_proto := value_object 8;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11750,11 +11619,11 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 9;
+                                        value_object 8;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(54, {|object_attrs :=
+(53, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -11772,8 +11641,8 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(55, {|object_attrs :=
-       {|oattrs_proto := value_object 7;
+(54, {|object_attrs :=
+       {|oattrs_proto := value_object 6;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11781,12 +11650,12 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 7;
+                                        value_object 6;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(56, {|object_attrs :=
-       {|oattrs_proto := value_object 6;
+(55, {|object_attrs :=
+       {|oattrs_proto := value_object 5;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11794,7 +11663,7 @@ Definition store_items := [
        object_properties :=
        from_list [("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 57;
+                                        value_object 56;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
@@ -11804,8 +11673,8 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(57, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(56, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -11813,11 +11682,11 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 56;
+                                        value_object 55;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(58, {|object_attrs :=
+(57, {|object_attrs :=
        {|oattrs_proto := value_object 1;
          oattrs_class := "Array";
          oattrs_extensible := true;
@@ -11826,49 +11695,49 @@ Definition store_items := [
        object_properties :=
        from_list [("concat", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 101;
+                                        value_object 100;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
                   ("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 107;
+                                        value_object 106;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("every", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 144;
+                                        value_object 143;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("filter", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 139;
+                                        value_object 138;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("forEach", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 133;
+                                        value_object 132;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("indexOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 127;
+                                        value_object 126;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("join", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 82;
+                                        value_object 81;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("lastIndexOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 130;
+                                        value_object 129;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
@@ -11880,95 +11749,123 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("map", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 136;
+                                        value_object 135;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("pop", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 84;
+                                        value_object 83;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("push", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 87;
+                                        value_object 86;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("reduce", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 141;
+                                        value_object 140;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("reduceRight", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 150;
+                                        value_object 149;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("reverse", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 90;
+                                        value_object 89;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("shift", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 93;
+                                        value_object 92;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("slice", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 153;
+                                        value_object 152;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("some", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 147;
+                                        value_object 146;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("sort", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 104;
+                                        value_object 103;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("splice", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 121;
+                                        value_object 120;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toLocaleString", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 99;
+                                        value_object 98;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toString", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 96;
+                                        value_object 95;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("unshift", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 124;
+                                        value_object 123;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})]|});
-(59, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(58, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privgopnLambda|};
        object_properties := from_list []|});
+(59, {|object_attrs :=
+       {|oattrs_proto := value_null;
+         oattrs_class := "Object";
+         oattrs_extensible := true;
+         oattrs_prim_value := value_undefined;
+         oattrs_code := objCode|};
+       object_properties :=
+       from_list [("configurable", 
+                   attributes_data_of {|attributes_data_value := value_true;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("enumerable", 
+                   attributes_data_of {|attributes_data_value := value_false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("value", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 58;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("writable", 
+                   attributes_data_of {|attributes_data_value := value_true;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})]|});
 (60, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -11988,7 +11885,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 59;
+                                        value_object 16;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -11998,41 +11895,13 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
 (61, {|object_attrs :=
-       {|oattrs_proto := value_null;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 17;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})]|});
-(62, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privdefinePropertiesLambda|};
        object_properties := from_list []|});
-(63, {|object_attrs :=
+(62, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12046,18 +11915,18 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 62;
+                                        value_object 61;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(64, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(63, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privcreateLambda|};
        object_properties := from_list []|});
-(65, {|object_attrs :=
+(64, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12071,18 +11940,18 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 64;
+                                        value_object 63;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(66, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(65, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privsealLambda|};
        object_properties := from_list []|});
-(67, {|object_attrs :=
+(66, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12101,7 +11970,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 66;
+                                        value_object 65;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -12110,14 +11979,14 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(68, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(67, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privfreezelambda|};
        object_properties := from_list []|});
-(69, {|object_attrs :=
+(68, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12136,7 +12005,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 68;
+                                        value_object 67;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -12145,14 +12014,14 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(70, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(69, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privpreventExtensionsLambda|};
        object_properties := from_list []|});
-(71, {|object_attrs :=
+(70, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12171,7 +12040,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 70;
+                                        value_object 69;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -12180,14 +12049,14 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(72, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(71, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privisFrozenLambda|};
        object_properties := from_list []|});
-(73, {|object_attrs :=
+(72, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12206,7 +12075,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 72;
+                                        value_object 71;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -12215,14 +12084,14 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(74, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(73, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privisSealedLambda|};
        object_properties := from_list []|});
-(75, {|object_attrs :=
+(74, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12241,7 +12110,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 74;
+                                        value_object 73;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -12250,14 +12119,14 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(76, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(75, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privisExtensibleLambda|};
        object_properties := from_list []|});
-(77, {|object_attrs :=
+(76, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12276,7 +12145,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 76;
+                                        value_object 75;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -12285,14 +12154,14 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(78, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(77, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
          oattrs_code := privkeysLambda|};
        object_properties := from_list []|});
-(79, {|object_attrs :=
+(78, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12306,12 +12175,12 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 78;
+                                        value_object 77;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(80, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(79, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -12323,7 +12192,7 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(81, {|object_attrs :=
+(80, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12337,7 +12206,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 80;
+                                        value_object 79;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -12346,8 +12215,8 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(82, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(81, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -12359,7 +12228,7 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(83, {|object_attrs :=
+(82, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12382,8 +12251,8 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(84, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(83, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -12395,7 +12264,7 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(85, {|object_attrs :=
+(84, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12413,7 +12282,7 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(86, {|object_attrs :=
+(85, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12427,12 +12296,12 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 84;
+                                        value_object 83;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(87, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(86, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -12444,7 +12313,7 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(88, {|object_attrs :=
+(87, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12462,7 +12331,7 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(89, {|object_attrs :=
+(88, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12476,12 +12345,12 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 87;
+                                        value_object 86;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(90, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(89, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -12493,7 +12362,7 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(91, {|object_attrs :=
+(90, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12511,7 +12380,7 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(92, {|object_attrs :=
+(91, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12525,12 +12394,12 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 90;
+                                        value_object 89;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(93, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(92, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -12542,7 +12411,7 @@ Definition store_items := [
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(94, {|object_attrs :=
+(93, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12560,7 +12429,7 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(95, {|object_attrs :=
+(94, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12574,12 +12443,12 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 93;
+                                        value_object 92;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(96, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
+(95, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
          oattrs_prim_value := value_undefined;
@@ -12589,6 +12458,29 @@ Definition store_items := [
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int 0);
                                         attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})]|});
+(96, {|object_attrs :=
+       {|oattrs_proto := value_null;
+         oattrs_class := "Object";
+         oattrs_extensible := true;
+         oattrs_prim_value := value_undefined;
+         oattrs_code := objCode|};
+       object_properties :=
+       from_list [("configurable", 
+                   attributes_data_of {|attributes_data_value := value_true;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("value", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 95;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("writable", 
+                   attributes_data_of {|attributes_data_value := value_true;
+                                        attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
 (97, {|object_attrs :=
@@ -12605,16 +12497,24 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 96;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
+                                        value_object 81;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
 (98, {|object_attrs :=
+       {|oattrs_proto := value_object 3;
+         oattrs_class := "Object";
+         oattrs_extensible := true;
+         oattrs_prim_value := value_undefined;
+         oattrs_code := privarrayTLSlambda|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int 0);
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})]|});
+(99, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -12628,45 +12528,12 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 82;
+                                        value_object 98;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
-(99, {|object_attrs :=
-       {|oattrs_proto := value_object 4;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
-         oattrs_code := privarrayTLSlambda|};
-       object_properties :=
-       from_list [("length", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})]|});
 (100, {|object_attrs :=
-        {|oattrs_proto := value_null;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 99;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})]|});
-(101, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -12679,7 +12546,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(102, {|object_attrs :=
+(101, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -12699,7 +12566,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(103, {|object_attrs :=
+(102, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -12708,13 +12575,13 @@ Definition store_items := [
         object_properties :=
         from_list [("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 101;
+                                         value_object 100;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(104, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(103, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -12727,7 +12594,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(105, {|object_attrs :=
+(104, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -12747,7 +12614,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(106, {|object_attrs :=
+(105, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -12768,7 +12635,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 104;
+                                         value_object 103;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12779,8 +12646,8 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(107, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(106, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -12795,18 +12662,18 @@ Definition store_items := [
                                          false|});
                    ("notinspec", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 68;
+                                         value_object 67;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("prototype", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 58;
+                                         value_object 57;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(108, {|object_attrs :=
+(107, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -12827,13 +12694,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 107;
+                                         value_object 106;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(109, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(108, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -12846,7 +12713,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(110, {|object_attrs :=
+(109, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -12866,7 +12733,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(111, {|object_attrs :=
+(110, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -12881,13 +12748,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 109;
+                                         value_object 108;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(112, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(111, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -12900,7 +12767,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(113, {|object_attrs :=
+(112, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -12920,7 +12787,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(114, {|object_attrs :=
+(113, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -12935,13 +12802,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 112;
+                                         value_object 111;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(115, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(114, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -12954,7 +12821,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(116, {|object_attrs :=
+(115, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -12974,7 +12841,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(117, {|object_attrs :=
+(116, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -12989,13 +12856,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 115;
+                                         value_object 114;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(118, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(117, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13008,7 +12875,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(119, {|object_attrs :=
+(118, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13028,7 +12895,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(120, {|object_attrs :=
+(119, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13043,13 +12910,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 118;
+                                         value_object 117;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(121, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(120, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13062,7 +12929,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(122, {|object_attrs :=
+(121, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13082,7 +12949,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(123, {|object_attrs :=
+(122, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13097,13 +12964,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 121;
+                                         value_object 120;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(124, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(123, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13116,7 +12983,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(125, {|object_attrs :=
+(124, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13136,7 +13003,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(126, {|object_attrs :=
+(125, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13151,13 +13018,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 124;
+                                         value_object 123;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(127, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(126, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13170,7 +13037,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(128, {|object_attrs :=
+(127, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13190,7 +13057,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(129, {|object_attrs :=
+(128, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13205,13 +13072,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 127;
+                                         value_object 126;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(130, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(129, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13224,7 +13091,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(131, {|object_attrs :=
+(130, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13244,7 +13111,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(132, {|object_attrs :=
+(131, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13259,13 +13126,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 130;
+                                         value_object 129;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(133, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(132, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13278,7 +13145,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(134, {|object_attrs :=
+(133, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13298,7 +13165,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(135, {|object_attrs :=
+(134, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13319,7 +13186,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 133;
+                                         value_object 132;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13330,8 +13197,8 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(136, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(135, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13344,7 +13211,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(137, {|object_attrs :=
+(136, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13364,7 +13231,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(138, {|object_attrs :=
+(137, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13379,19 +13246,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 136;
+                                         value_object 135;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(139, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(138, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privfilterlambda|};
         object_properties := from_list []|});
-(140, {|object_attrs :=
+(139, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13406,13 +13273,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 139;
+                                         value_object 138;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(141, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(140, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13425,7 +13292,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(142, {|object_attrs :=
+(141, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13445,7 +13312,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(143, {|object_attrs :=
+(142, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13460,13 +13327,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 141;
+                                         value_object 140;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(144, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(143, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13479,7 +13346,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(145, {|object_attrs :=
+(144, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13499,7 +13366,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(146, {|object_attrs :=
+(145, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13514,13 +13381,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 144;
+                                         value_object 143;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(147, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(146, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13533,7 +13400,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(148, {|object_attrs :=
+(147, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13553,7 +13420,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(149, {|object_attrs :=
+(148, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13568,13 +13435,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 147;
+                                         value_object 146;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(150, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(149, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13587,7 +13454,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(151, {|object_attrs :=
+(150, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13607,7 +13474,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(152, {|object_attrs :=
+(151, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13622,13 +13489,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 150;
+                                         value_object 149;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(153, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(152, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13641,7 +13508,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(154, {|object_attrs :=
+(153, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13661,7 +13528,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(155, {|object_attrs :=
+(154, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13676,13 +13543,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 153;
+                                         value_object 152;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(156, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(155, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13695,7 +13562,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(157, {|object_attrs :=
+(156, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13715,7 +13582,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(158, {|object_attrs :=
+(157, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13736,7 +13603,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 156;
+                                         value_object 155;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13747,8 +13614,8 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(159, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(158, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13761,7 +13628,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(160, {|object_attrs :=
+(159, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13793,7 +13660,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(161, {|object_attrs :=
+(160, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13814,7 +13681,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 159;
+                                         value_object 158;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13825,8 +13692,8 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(162, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(161, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13839,15 +13706,15 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(163, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(162, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privreplacelambda|};
         object_properties := from_list []|});
-(164, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(163, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13860,8 +13727,8 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(165, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(164, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13874,8 +13741,8 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(166, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(165, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -13888,28 +13755,28 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(167, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(166, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtlclambda|};
         object_properties := from_list []|});
-(168, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(167, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtuclambda|};
         object_properties := from_list []|});
-(169, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(168, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privsplitLambda|};
         object_properties := from_list []|});
-(170, {|object_attrs :=
+(169, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -13924,26 +13791,26 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 169;
+                                         value_object 168;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(171, {|object_attrs :=
+(170, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privgetYearlambda|};
         object_properties := from_list []|});
-(172, {|object_attrs :=
+(171, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privgetMonthlambda|};
         object_properties := from_list []|});
-(173, {|object_attrs :=
+(172, {|object_attrs :=
         {|oattrs_proto := value_object 1;
           oattrs_class := "Date";
           oattrs_extensible := true;
@@ -13952,248 +13819,248 @@ Definition store_items := [
         object_properties :=
         from_list [("getDate", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 182;
+                                         value_object 181;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("getDay", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 180;
+                                         value_object 179;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("getFullYear", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 190;
+                                         value_object 189;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("getHours", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 200;
+                                         value_object 199;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("getMilliseconds", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 212;
+                                         value_object 211;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("getMinutes", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 204;
+                                         value_object 203;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("getMonth", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 172;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("getSeconds", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 208;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getTime", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 188;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getTimezoneOffset", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 178;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCDate", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 196;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCDay", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 198;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCFullYear", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 192;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCHours", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 202;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCMilliseconds", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 214;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCMinutes", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 206;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCMonth", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 194;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCSeconds", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 210;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getYear", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 171;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
+                   ("getSeconds", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 207;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable := true|});
+                   ("getTime", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 187;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable := true|});
+                   ("getTimezoneOffset", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 177;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable := true|});
+                   ("getUTCDate", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 195;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable := true|});
+                   ("getUTCDay", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 197;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable := true|});
+                   ("getUTCFullYear", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 191;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable := true|});
+                   ("getUTCHours", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 201;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable := true|});
+                   ("getUTCMilliseconds", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 213;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable := true|});
+                   ("getUTCMinutes", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 205;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable := true|});
+                   ("getUTCMonth", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 193;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable := true|});
+                   ("getUTCSeconds", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 209;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable := true|});
+                   ("getYear", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 170;
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|});
                    ("setDate", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 234;
+                                         value_object 233;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setFullYear", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 242;
+                                         value_object 241;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setHours", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 230;
+                                         value_object 229;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setMilliseconds", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 218;
+                                         value_object 217;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setMinutes", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 226;
+                                         value_object 225;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setMonth", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 238;
+                                         value_object 237;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setSeconds", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 222;
+                                         value_object 221;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setTime", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 216;
+                                         value_object 215;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setUTCDate", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 236;
+                                         value_object 235;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setUTCFullYear", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 244;
+                                         value_object 243;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setUTCHours", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 232;
+                                         value_object 231;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setUTCMilliseconds", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 220;
+                                         value_object 219;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setUTCMinutes", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 228;
+                                         value_object 227;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setUTCMonth", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 240;
+                                         value_object 239;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setUTCSeconds", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 224;
+                                         value_object 223;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("setYear", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 250;
+                                         value_object 249;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("toGMTString", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 248;
+                                         value_object 247;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("toString", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 174;
+                                         value_object 173;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("toUTCString", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 246;
+                                         value_object 245;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("valueOf", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 176;
+                                         value_object 175;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := true;
                                          attributes_data_configurable := true|})]|});
-(174, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(173, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdateToStringLambda|};
         object_properties := from_list []|});
-(175, {|object_attrs :=
+(174, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14214,7 +14081,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 174;
+                                         value_object 173;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14225,15 +14092,15 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(176, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(175, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdateValueOfLambda|};
         object_properties := from_list []|});
-(177, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(176, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -14241,31 +14108,31 @@ Definition store_items := [
         object_properties :=
         from_list [("UTC", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 186;
+                                         value_object 185;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("parse", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 184;
+                                         value_object 183;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("prototype", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 173;
+                                         value_object 172;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(178, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(177, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdateGetTimezoneOffsetLambda|};
         object_properties := from_list []|});
-(179, {|object_attrs :=
+(178, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14286,7 +14153,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 178;
+                                         value_object 177;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14297,14 +14164,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(180, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(179, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdategetDayLambda|};
         object_properties := from_list []|});
-(181, {|object_attrs :=
+(180, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14325,7 +14192,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 180;
+                                         value_object 179;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14336,14 +14203,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(182, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(181, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdategetDateLambda|};
         object_properties := from_list []|});
-(183, {|object_attrs :=
+(182, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14364,7 +14231,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 182;
+                                         value_object 181;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14375,14 +14242,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(184, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(183, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode4|};
         object_properties := from_list []|});
-(185, {|object_attrs :=
+(184, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14403,7 +14270,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 184;
+                                         value_object 183;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14414,14 +14281,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(186, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(185, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode5|};
         object_properties := from_list []|});
-(187, {|object_attrs :=
+(186, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14442,7 +14309,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 186;
+                                         value_object 185;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14453,14 +14320,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(188, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(187, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode6|};
         object_properties := from_list []|});
-(189, {|object_attrs :=
+(188, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14481,7 +14348,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 188;
+                                         value_object 187;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14492,14 +14359,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(190, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(189, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode7|};
         object_properties := from_list []|});
-(191, {|object_attrs :=
+(190, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14520,7 +14387,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 190;
+                                         value_object 189;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14531,14 +14398,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(192, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(191, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode8|};
         object_properties := from_list []|});
-(193, {|object_attrs :=
+(192, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14559,7 +14426,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 192;
+                                         value_object 191;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14570,14 +14437,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(194, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(193, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode9|};
         object_properties := from_list []|});
-(195, {|object_attrs :=
+(194, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14598,7 +14465,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 194;
+                                         value_object 193;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14609,14 +14476,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(196, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(195, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode10|};
         object_properties := from_list []|});
-(197, {|object_attrs :=
+(196, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14637,7 +14504,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 196;
+                                         value_object 195;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14648,14 +14515,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(198, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(197, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode11|};
         object_properties := from_list []|});
-(199, {|object_attrs :=
+(198, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14676,7 +14543,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 198;
+                                         value_object 197;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14687,14 +14554,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(200, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(199, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode12|};
         object_properties := from_list []|});
-(201, {|object_attrs :=
+(200, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14715,7 +14582,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 200;
+                                         value_object 199;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14726,14 +14593,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(202, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(201, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode13|};
         object_properties := from_list []|});
-(203, {|object_attrs :=
+(202, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14754,7 +14621,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 202;
+                                         value_object 201;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14765,14 +14632,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(204, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(203, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode14|};
         object_properties := from_list []|});
-(205, {|object_attrs :=
+(204, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14793,7 +14660,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 204;
+                                         value_object 203;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14804,14 +14671,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(206, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(205, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode15|};
         object_properties := from_list []|});
-(207, {|object_attrs :=
+(206, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14832,7 +14699,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 206;
+                                         value_object 205;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14843,14 +14710,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(208, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(207, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode16|};
         object_properties := from_list []|});
-(209, {|object_attrs :=
+(208, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14871,7 +14738,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 208;
+                                         value_object 207;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14882,14 +14749,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(210, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(209, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode17|};
         object_properties := from_list []|});
-(211, {|object_attrs :=
+(210, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14910,7 +14777,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 210;
+                                         value_object 209;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14921,14 +14788,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(212, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(211, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode18|};
         object_properties := from_list []|});
-(213, {|object_attrs :=
+(212, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14949,7 +14816,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 212;
+                                         value_object 211;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14960,14 +14827,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(214, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(213, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode19|};
         object_properties := from_list []|});
-(215, {|object_attrs :=
+(214, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -14988,7 +14855,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 214;
+                                         value_object 213;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -14999,14 +14866,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(216, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(215, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode20|};
         object_properties := from_list []|});
-(217, {|object_attrs :=
+(216, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15027,7 +14894,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 216;
+                                         value_object 215;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15038,14 +14905,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(218, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(217, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode21|};
         object_properties := from_list []|});
-(219, {|object_attrs :=
+(218, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15066,7 +14933,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 218;
+                                         value_object 217;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15077,14 +14944,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(220, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(219, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode22|};
         object_properties := from_list []|});
-(221, {|object_attrs :=
+(220, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15105,7 +14972,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 220;
+                                         value_object 219;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15116,14 +14983,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(222, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(221, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode23|};
         object_properties := from_list []|});
-(223, {|object_attrs :=
+(222, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15144,7 +15011,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 222;
+                                         value_object 221;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15155,14 +15022,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(224, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(223, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode24|};
         object_properties := from_list []|});
-(225, {|object_attrs :=
+(224, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15183,7 +15050,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 224;
+                                         value_object 223;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15194,14 +15061,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(226, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(225, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode25|};
         object_properties := from_list []|});
-(227, {|object_attrs :=
+(226, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15222,7 +15089,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 226;
+                                         value_object 225;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15233,14 +15100,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(228, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(227, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode26|};
         object_properties := from_list []|});
-(229, {|object_attrs :=
+(228, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15261,7 +15128,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 228;
+                                         value_object 227;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15272,14 +15139,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(230, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(229, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode27|};
         object_properties := from_list []|});
-(231, {|object_attrs :=
+(230, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15300,7 +15167,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 230;
+                                         value_object 229;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15311,14 +15178,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(232, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(231, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode28|};
         object_properties := from_list []|});
-(233, {|object_attrs :=
+(232, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15339,7 +15206,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 232;
+                                         value_object 231;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15350,14 +15217,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(234, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(233, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode29|};
         object_properties := from_list []|});
-(235, {|object_attrs :=
+(234, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15378,7 +15245,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 234;
+                                         value_object 233;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15389,14 +15256,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(236, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(235, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode30|};
         object_properties := from_list []|});
-(237, {|object_attrs :=
+(236, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15417,7 +15284,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 236;
+                                         value_object 235;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15428,14 +15295,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(238, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(237, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode31|};
         object_properties := from_list []|});
-(239, {|object_attrs :=
+(238, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15456,7 +15323,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 238;
+                                         value_object 237;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15467,14 +15334,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(240, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(239, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode32|};
         object_properties := from_list []|});
-(241, {|object_attrs :=
+(240, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15495,7 +15362,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 240;
+                                         value_object 239;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15506,14 +15373,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(242, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(241, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode33|};
         object_properties := from_list []|});
-(243, {|object_attrs :=
+(242, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15534,7 +15401,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 242;
+                                         value_object 241;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15545,14 +15412,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(244, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(243, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode34|};
         object_properties := from_list []|});
-(245, {|object_attrs :=
+(244, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15573,7 +15440,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 244;
+                                         value_object 243;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15584,14 +15451,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(246, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(245, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode35|};
         object_properties := from_list []|});
-(247, {|object_attrs :=
+(246, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15612,7 +15479,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 246;
+                                         value_object 245;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15623,14 +15490,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(248, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(247, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode36|};
         object_properties := from_list []|});
-(249, {|object_attrs :=
+(248, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15651,7 +15518,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 248;
+                                         value_object 247;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15662,14 +15529,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(250, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(249, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode37|};
         object_properties := from_list []|});
-(251, {|object_attrs :=
+(250, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15690,7 +15557,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 250;
+                                         value_object 249;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15701,14 +15568,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(252, {|object_attrs :=
+(251, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtestlambda|};
         object_properties := from_list []|});
-(253, {|object_attrs :=
+(252, {|object_attrs :=
         {|oattrs_proto := value_object 1;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15717,19 +15584,19 @@ Definition store_items := [
         object_properties :=
         from_list [("constructor", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 254;
+                                         value_object 253;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("test", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 252;
+                                         value_object 251;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(254, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(253, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -15744,54 +15611,54 @@ Definition store_items := [
                                          false|});
                    ("prototype", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 253;
+                                         value_object 252;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(255, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(254, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privparseIntlambda|};
         object_properties := from_list []|});
-(256, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(255, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdecodeURILambda|};
         object_properties := from_list []|});
-(257, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(256, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privdecodeURIComponentLambda|};
         object_properties := from_list []|});
-(258, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(257, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privencodeURILambda|};
         object_properties := from_list []|});
-(259, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(258, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privencodeURIComponentLambda|};
         object_properties := from_list []|});
-(260, {|object_attrs :=
+(259, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privexplambda|};
         object_properties := from_list []|});
-(261, {|object_attrs :=
+(260, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -15856,115 +15723,115 @@ Definition store_items := [
                                          false|});
                    ("abs", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 268;
+                                         value_object 267;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("acos", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 270;
+                                         value_object 269;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("asin", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 272;
+                                         value_object 271;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("atan", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 274;
+                                         value_object 273;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("atan2", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 276;
+                                         value_object 275;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("ceil", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 292;
+                                         value_object 291;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("cos", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 278;
+                                         value_object 277;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("exp", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 260;
+                                         value_object 259;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("floor", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 294;
+                                         value_object 293;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("log", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 290;
+                                         value_object 289;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("max", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 265;
+                                         value_object 264;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("min", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 262;
+                                         value_object 261;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("pow", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 296;
+                                         value_object 295;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("random", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 280;
+                                         value_object 279;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("round", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 282;
+                                         value_object 281;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("sin", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 284;
+                                         value_object 283;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("sqrt", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 286;
+                                         value_object 285;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("tan", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 288;
+                                         value_object 287;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|})]|});
-(262, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(261, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -15977,7 +15844,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(263, {|object_attrs :=
+(262, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16003,7 +15870,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(264, {|object_attrs :=
+(263, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16018,13 +15885,13 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 262;
+                                         value_object 261;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(265, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(264, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -16037,7 +15904,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(266, {|object_attrs :=
+(265, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16063,7 +15930,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(267, {|object_attrs :=
+(266, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16078,19 +15945,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 265;
+                                         value_object 264;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(268, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(267, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathAbsLambda|};
         object_properties := from_list []|});
-(269, {|object_attrs :=
+(268, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16105,19 +15972,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 268;
+                                         value_object 267;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(270, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(269, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privacosLambda|};
         object_properties := from_list []|});
-(271, {|object_attrs :=
+(270, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16132,19 +15999,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 270;
+                                         value_object 269;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(272, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(271, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privasinLambda|};
         object_properties := from_list []|});
-(273, {|object_attrs :=
+(272, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16159,19 +16026,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 272;
+                                         value_object 271;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(274, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(273, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privatanLambda|};
         object_properties := from_list []|});
-(275, {|object_attrs :=
+(274, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16186,19 +16053,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 274;
+                                         value_object 273;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(276, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(275, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privatan2Lambda|};
         object_properties := from_list []|});
-(277, {|object_attrs :=
+(276, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16213,19 +16080,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 276;
+                                         value_object 275;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(278, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(277, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privcosLambda|};
         object_properties := from_list []|});
-(279, {|object_attrs :=
+(278, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16240,19 +16107,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 278;
+                                         value_object 277;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(280, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(279, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privrandomLambda|};
         object_properties := from_list []|});
-(281, {|object_attrs :=
+(280, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16267,19 +16134,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 280;
+                                         value_object 279;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(282, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(281, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privroundLambda|};
         object_properties := from_list []|});
-(283, {|object_attrs :=
+(282, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16294,19 +16161,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 282;
+                                         value_object 281;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(284, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(283, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privsinLambda|};
         object_properties := from_list []|});
-(285, {|object_attrs :=
+(284, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16321,19 +16188,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 284;
+                                         value_object 283;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(286, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(285, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privsqrtLambda|};
         object_properties := from_list []|});
-(287, {|object_attrs :=
+(286, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16348,19 +16215,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 286;
+                                         value_object 285;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(288, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(287, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtanLambda|};
         object_properties := from_list []|});
-(289, {|object_attrs :=
+(288, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16375,19 +16242,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 288;
+                                         value_object 287;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(290, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(289, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathLogLambda|};
         object_properties := from_list []|});
-(291, {|object_attrs :=
+(290, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16402,19 +16269,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 290;
+                                         value_object 289;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(292, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(291, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathCeilLambda|};
         object_properties := from_list []|});
-(293, {|object_attrs :=
+(292, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16429,19 +16296,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 292;
+                                         value_object 291;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(294, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(293, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathFloorLambda|};
         object_properties := from_list []|});
-(295, {|object_attrs :=
+(294, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16456,19 +16323,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 294;
+                                         value_object 293;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(296, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(295, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privmathPowLambda|};
         object_properties := from_list []|});
-(297, {|object_attrs :=
+(296, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16483,19 +16350,19 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 296;
+                                         value_object 295;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(298, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(297, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode38|};
         object_properties := from_list []|});
-(299, {|object_attrs :=
+(298, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16510,7 +16377,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 298;
+                                         value_object 297;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -16521,14 +16388,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(300, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(299, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode39|};
         object_properties := from_list []|});
-(301, {|object_attrs :=
+(300, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16543,7 +16410,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 300;
+                                         value_object 299;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -16554,14 +16421,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(302, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(301, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := objCode40|};
         object_properties := from_list []|});
-(303, {|object_attrs :=
+(302, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16576,7 +16443,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 302;
+                                         value_object 301;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -16587,8 +16454,8 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(304, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(303, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -16600,6 +16467,32 @@ Definition store_items := [
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|})]|});
+(304, {|object_attrs :=
+        {|oattrs_proto := value_null;
+          oattrs_class := "Object";
+          oattrs_extensible := true;
+          oattrs_prim_value := value_undefined;
+          oattrs_code := objCode|};
+        object_properties :=
+        from_list [("configurable", 
+                    attributes_data_of {|attributes_data_value := value_true;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|});
+                   ("value", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_number (JsNumber.of_int 1);
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|});
+                   ("writable", 
+                    attributes_data_of {|attributes_data_value := value_true;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|})]|});
 (305, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16615,7 +16508,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_object 303;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -16627,39 +16520,13 @@ Definition store_items := [
                                          attributes_data_configurable :=
                                          false|})]|});
 (306, {|object_attrs :=
-        {|oattrs_proto := value_null;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 304;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})]|});
-(307, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privnumTLSLambda|};
         object_properties := from_list []|});
-(308, {|object_attrs :=
+(307, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16674,7 +16541,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 307;
+                                         value_object 306;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -16685,14 +16552,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(309, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(308, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtoExponentialLambda|};
         object_properties := from_list []|});
-(310, {|object_attrs :=
+(309, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16707,7 +16574,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 309;
+                                         value_object 308;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -16718,14 +16585,14 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
-(311, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+(310, {|object_attrs :=
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
           oattrs_code := privtoPrecisionLambda|};
         object_properties := from_list []|});
-(312, {|object_attrs :=
+(311, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -16740,7 +16607,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 311;
+                                         value_object 310;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -16751,8 +16618,28 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
+(312, {|object_attrs :=
+        {|oattrs_proto := value_null;
+          oattrs_class := "ObjEnvRec";
+          oattrs_extensible := true;
+          oattrs_prim_value := value_null;
+          oattrs_code := objCode|};
+        object_properties :=
+        from_list [("bindings", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_object 2;
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|});
+                   ("provideThis", 
+                    attributes_data_of {|attributes_data_value := value_false;
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|})]|});
 (313, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -16801,7 +16688,7 @@ Definition store_items := [
           oattrs_code := privevallambda|};
         object_properties := from_list []|});
 (316, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -16816,13 +16703,13 @@ Definition store_items := [
                                          false|});
                    ("prototype", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 4;
+                                         value_object 3;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})]|});
 (317, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -16861,7 +16748,7 @@ Definition store_items := [
                                          attributes_data_configurable :=
                                          false|})]|});
 (319, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -16900,7 +16787,7 @@ Definition store_items := [
                                          attributes_data_configurable :=
                                          false|})]|});
 (321, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;
@@ -16939,7 +16826,7 @@ Definition store_items := [
                                          attributes_data_configurable :=
                                          false|})]|});
 (323, {|object_attrs :=
-        {|oattrs_proto := value_object 4;
+        {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_prim_value := value_undefined;

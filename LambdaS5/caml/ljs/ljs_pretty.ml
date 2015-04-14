@@ -171,11 +171,12 @@ and opt_braces exprec expr = match expr with
   | Coq_expr_seq _ -> braces (exprec expr)
   | _ -> exprec expr
 
-and attrsv exprec (Coq_objattrs_intro (k, b, p, c, _)) =
+and attrsv exprec (Coq_objattrs_intro (k, b, p, c, pv)) =
   brackets (horzOrVert (List.map (fun x -> squish [x; (text ",")])
                              [horz [text "#proto:"; exprec p]; 
                               horz [text "#code:"; exprec c]; 
                               horz [text "#class:"; exprec k]; 
+                              horz [text "#primval:"; exprec pv]; 
                               horz [text "#extensible:"; exprec b]]))
               
 (* TODO: print and parse enum and config *)

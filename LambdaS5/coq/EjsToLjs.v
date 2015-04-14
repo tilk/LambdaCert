@@ -91,7 +91,8 @@ Definition make_do_while (bdy tst : L.expr) :=
                      L.expr_empty)))
         (L.expr_app (L.expr_id "%do_while_loop") []).
     
-Definition make_for_in s robj bdy := 
+Definition make_for_in (s:string) (robj bdy:L.expr) := L.expr_undefined.
+(* TODO
     let sv := L.expr_string s in
     let tst := L.expr_op1 L.unary_op_not (undef_test (L.expr_get_field context sv)) in
     let after := make_set_field context sv (L.expr_app (L.expr_id "%prop_itr") []) in
@@ -109,6 +110,7 @@ Definition make_for_in s robj bdy :=
             (L.expr_if (null_test robj)
                 L.expr_undefined
                 (L.expr_app (L.expr_id "%do_loop") []))).
+*)
 
 Definition make_if e e1 e2 := L.expr_if (to_bool e) e1 e2.
 
@@ -117,7 +119,7 @@ Definition make_throw e :=
         [("%js-exn", L.property_data (L.data_intro e L.expr_false L.expr_false L.expr_false))]).
 
 Definition make_with e1 e2 := 
-    L.expr_let "%context" (make_app_builtin "%makeWithContext" [context; e1]) e2.
+    L.expr_let "%context" (make_app_builtin "%newObjEnvRec" [context; e1; L.expr_true]) e2.
 
 Definition if_strict e1 e2 := L.expr_if (L.expr_id "%strict") e1 e2.
 
@@ -130,25 +132,22 @@ Definition new_context_in ctx e :=
     L.expr_let "%context" ctx e.
 
 Definition derived_context_in flds e :=
-    new_context_in (L.expr_object (L.objattrs_with_proto (L.expr_id "%parent") L.default_objattrs) flds) e.
+    let objattrs := L.objattrs_intro (L.expr_string "DeclEnvRec") 
+        L.expr_true L.expr_null L.expr_undefined (L.expr_id "%parent") in
+    new_context_in (L.expr_object objattrs flds) e.
 
 Definition to_js_error e := make_app_builtin "%ToJSError" [e].
 
-Definition make_var_decl is e := (* TODO reimplement according to the semantics *) 
+Definition make_var_decl is e := 
     let flds := List.map (fun ip => 
         let '(i, e) := ip in (i, L.property_data (L.data_intro e L.expr_true L.expr_false L.expr_false))) is in
-    let mkvar ip := 
-        let '(i, e) := ip in
-        let getter := L.expr_lambda ["t"] (L.expr_get_field (L.expr_id "%ctxstore") (L.expr_string i)) in
-        let setter := L.expr_lambda ["t"; "a"] (L.expr_set_field (L.expr_id "%ctxstore") (L.expr_string i) (L.expr_id "a")) in
-        (i, L.property_accessor (L.accessor_intro getter setter L.expr_false L.expr_false)) in
-    L.expr_let "%ctxstore" (L.expr_object L.default_objattrs flds) (derived_context_in (map mkvar is) e).
+    derived_context_in flds e.
 
 Definition make_strictness b e := 
-    L.expr_let "#strict" (L.expr_bool b) e.
+    L.expr_let "%strict" (L.expr_bool b) e.
 
 Definition make_resolve_this e :=
-    make_app_builtin "%resolveThis" [L.expr_id "#strict"; e].
+    make_app_builtin "%resolveThis" [L.expr_id "%strict"; e].
 
 Definition make_lambda f (is : list string) p := 
     let 'E.prog_intro str vis e := p in 
@@ -195,7 +194,7 @@ Definition make_rec_fobj f i is p ctx :=
 
 Definition make_func_stmt f i is p :=
     let fobj := make_fobj f is p context in
-    make_set_field_naked context (L.expr_string i) fobj.
+    make_app_builtin "%defineFunction" [context; L.expr_string i; fobj].
 
 Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda [i] (
@@ -390,6 +389,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_func None is p => make_fobj ejs_to_ljs is p context
     | E.expr_func (Some i) is p => make_rec_fobj ejs_to_ljs i is p context 
     | E.expr_func_stmt i is p => make_func_stmt ejs_to_ljs i is p
+    | E.expr_fseq e1 e2 => L.expr_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_seq e1 e2 => make_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_if e e1 e2 => make_if (ejs_to_ljs e) (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_op1 op e => make_op1 ejs_to_ljs op e
