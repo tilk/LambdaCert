@@ -84,6 +84,7 @@ Implicit Type jer : J.env_record.
 Implicit Type jeptr : J.env_loc.
 Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
+Implicit Type jlenv : J.lexical_env.
 
 (** ** Composite desugaring functions 
     Desugaring for literals, expressions and statements. *)
@@ -323,8 +324,8 @@ Definition includes_init_ctx c :=
 
 (* Relates the lexical environment *)
 Inductive lexical_env_related BR st : J.lexical_env -> L.value -> Prop :=
-| lexical_env_related_global : forall ptr,
-    lexical_env_related BR st [J.env_loc_global_env_record] (L.value_object ptr)
+| lexical_env_related_nil : 
+    lexical_env_related BR st nil L.value_null
 | lexical_env_related_cons : forall jeptr jlenv ptr obj,
     (inr jeptr, ptr) \in BR ->
     binds st ptr obj ->

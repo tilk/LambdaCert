@@ -40,8 +40,10 @@ Implicit Type jrv : J.resvalue.
 Implicit Type jref : J.ref.
 Implicit Type jl : J.label.
 Implicit Type jer : J.env_record.
+Implicit Type jeptr : J.env_loc.
 Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
+Implicit Type jlenv : J.lexical_env.
 
 (* Expressions *)
 
@@ -54,12 +56,48 @@ Proof.
     destruct l as [ | [ | ] | | ]; inverts red_exprh Hlred; ijauto_js.
 Qed.
 
+Lemma get_identifier_value_lemma : forall jlenv k BR jst jc c st st' r b v i,
+    lexical_env_related BR st jlenv v ->
+    binds c "strict" (L.value_bool b) ->
+    binds c "context" v ->
+    binds c "id" (L.value_string i) ->
+    includes_init_ctx c ->
+    state_invariant BR jst jc c st ->
+    L.red_exprh k c st (L.expr_basic LjsInitEnv.ex_privEnvGet) (L.out_ter st' r) ->
+    exists BR' jst' jst'' jref,
+    state_invariant BR' jst' jc c st' /\
+    BR \c BR' /\
+    J.red_spec jst jc (J.spec_lexical_env_get_identifier_ref jlenv i b) (J.specret_val jst'' jref) /\
+    (exists jv v', r = L.res_value v' /\
+     J.red_spec jst'' jc (J.spec_get_value (J.resvalue_ref jref)) (J.specret_val jst' jv) /\
+     value_related BR' jv v').
+Proof.
+    inductions jlenv;
+    introv Henvrel; inverts Henvrel;
+    introv Hstrict Hcontext Hid Hii Hinv Hred.
+    (* nil *)
+    repeat ljs_autoforward. 
+    binds_determine. substs.  (* TODO tacticize, to autoforward *)
+    injects.
+    repeat ljs_autoforward.
+    binds_determine. substs.
+    skip.
+    (* cons *)
+    repeat ljs_autoforward. 
+    binds_determine. substs.  (* TODO tacticize, to autoforward *)
+    injects.
+    repeat ljs_autoforward. 
+    skip.
+Qed.
+
 Lemma red_expr_identifier_ok : forall k i,
     th_expr k (J.expr_identifier i).
 Proof.
     introv Hinv Hlred.
     repeat ljs_autoforward.
-
+    inverts H7. (* TODO *)
+    ljs_inv_value_is_closure. 
+    ljs_inv_closure_ctx. unfold L.closure_body in H12.
     skip.
 Qed.
 

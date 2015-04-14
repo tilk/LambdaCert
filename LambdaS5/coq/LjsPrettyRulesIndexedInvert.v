@@ -49,9 +49,9 @@ Derive Inversion inv_red_exprh_op1_1 with (forall k c st op o oo,
 Derive Inversion inv_red_exprh_op2 with (forall k c st op e1 e2 oo,
     red_exprh k c st (expr_op2 op e1 e2) oo) Sort Prop.
 Derive Inversion inv_red_exprh_op2_1 with (forall k c st op o e2 oo,
-    red_exprh k c st (expr_op2 op o e2) oo) Sort Prop.
+    red_exprh k c st (expr_op2_1 op o e2) oo) Sort Prop.
 Derive Inversion inv_red_exprh_op2_2 with (forall k c st op v1 o oo,
-    red_exprh k c st (expr_op2 op v1 o) oo) Sort Prop.
+    red_exprh k c st (expr_op2_2 op v1 o) oo) Sort Prop.
 Derive Inversion inv_red_exprh_if with (forall k c st e e1 e2 oo,
     red_exprh k c st (expr_if e e1 e2) oo) Sort Prop.
 Derive Inversion inv_red_exprh_if_1 with (forall k c st o e1 e2 oo,
@@ -141,9 +141,9 @@ Tactic Notation "invert" "keep" "red_exprh" hyp(H) :=
         inversion H using inv_red_exprh_op1_1
     | expr_basic (expr_op2 ?op ?e1 ?e2) =>
         inversion H using inv_red_exprh_op2
-    | expr_basic (expr_op2 ?op ?o ?e2) =>
+    | expr_op2_1 ?op ?o ?e2 =>
         inversion H using inv_red_exprh_op2_1
-    | expr_basic (expr_op2 ?op ?v1 ?o) =>
+    | expr_op2_2 ?op ?v1 ?o =>
         inversion H using inv_red_exprh_op2_2
     | expr_basic (expr_if ?e ?e1 ?e2) =>
         inversion H using inv_red_exprh_if

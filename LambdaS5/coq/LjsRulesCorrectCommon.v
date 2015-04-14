@@ -74,7 +74,8 @@ Hint Constructors J.abort : js_ljs.
 
 Hint Extern 4 (js_exn_object _ _) => unfold js_exn_object : js_ljs.
 Hint Extern 4 (res_related _ _ _ (J.res_throw _) _) => unfold J.res_throw : js_ljs.
-Hint Extern 4 (JsPreliminary.regular_binary_op _) => unfold JsPreliminary.regular_binary_op : js_ljs.
+Hint Extern 4 (J.regular_binary_op _) => unfold J.regular_binary_op : js_ljs.
+Hint Extern 4 (J.ref_is_unresolvable _) => unfold J.ref_is_unresolvable : js_ljs.
 
 (** Automatic deconstructing of ifs in goals *)
 
@@ -502,8 +503,8 @@ Lemma lexical_env_related_nindex_preserved : forall BR st ptr obj jle v,
     lexical_env_related BR (st \( ptr := obj )) jle v.
 Proof.
     introv Hni Hrel.
-    induction Hrel. 
-    eapply lexical_env_related_global. 
+    induction Hrel.
+    eapply lexical_env_related_nil. 
     eapply lexical_env_related_cons; prove_bag.
 Qed.
 
