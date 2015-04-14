@@ -1886,8 +1886,14 @@ expr_if
 Definition ex_privEnvCheckAssign := 
 expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
 (expr_if (expr_id "strict") (expr_app (expr_id "%UnboundId") [expr_id "id"])
- (expr_let "$newVal" (expr_id "val")
-  (expr_set_field (expr_id "%global") (expr_id "id") (expr_id "$newVal"))))
+ (expr_seq
+  (expr_set_attr pattr_config (expr_id "%global") (expr_id "id") expr_true)
+  (expr_seq
+   (expr_set_attr pattr_writable (expr_id "%global") (expr_id "id") expr_true)
+   (expr_seq
+    (expr_set_attr pattr_value (expr_id "%global") (expr_id "id")
+     (expr_id "val"))
+    (expr_set_attr pattr_enum (expr_id "%global") (expr_id "id") expr_true)))))
 (expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))

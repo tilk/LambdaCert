@@ -170,21 +170,43 @@ Definition object_related BR jobj obj :=
 
 (* Relates declarative environment records *)
 
+Definition mutability_writable jmut := 
+    match jmut with
+    | J.mutability_immutable => false
+    | _ => true
+    end.
+
+Definition mutability_configurable jmut :=
+    match jmut with
+    | J.mutability_nondeletable => false
+    | _ => true
+    end.
+
 Definition decl_env_record_related BR jder props := forall s,
     ~J.Heap.indom jder s /\ ~index props s \/
-    exists jmut jv acc, 
+    exists jmut jv v, 
         J.Heap.binds jder s (jmut, jv) /\ 
-        binds props s (L.attributes_accessor_of acc) /\
-        True. (* TODO *)
+        binds props s (L.attributes_data_of (L.attributes_data_intro v 
+            (mutability_writable jmut) true (mutability_configurable jmut))) /\
+        value_related BR jv v.
 
 (* Relates environment records *)
 Inductive env_record_related BR : J.env_record -> L.object -> Prop :=
 | env_record_related_decl : forall jder obj,
+    L.object_proto obj = L.value_null ->
+    L.object_class obj = "DeclEnvRec" ->
+    L.object_extensible obj = true ->
     decl_env_record_related BR jder (L.object_properties obj) ->
     env_record_related BR (J.env_record_decl jder) obj
-(*
-| env_record_related_object :
-*)
+| env_record_related_object : forall b ptr jptr obj,
+    L.object_proto obj = L.value_null ->
+    L.object_class obj = "ObjEnvRec" ->
+    binds (L.object_properties obj) "provideThis" 
+        (L.attributes_data_of (L.attributes_data_intro (L.value_bool b) false false false)) ->
+    binds (L.object_properties obj) "bindings" 
+        (L.attributes_data_of (L.attributes_data_intro (L.value_object ptr) false false false)) ->
+    (inl jptr, ptr) \in BR ->
+    env_record_related BR (J.env_record_object jptr b) obj
 .
 
 (** *** Properties of heap bisimulations
