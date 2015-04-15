@@ -39,7 +39,7 @@ Lemma object_property_is_deterministic : forall st obj name oattr oattr',
 Proof.
     introv Ho1.
     induction Ho1; introv Ho2; inverts Ho2; 
-    repeat binds_determine; substs; tryfalse; try reflexivity; try (false; prove_bag).
+    repeat binds_determine; substs; tryfalse; try reflexivity; try (false; prove_bag). 
     rewrite H0 in H3.
     injects.
     binds_determine; substs.
@@ -68,29 +68,41 @@ Qed.
 
 Module Export Tactics.
 
-Ltac object_property_is_determine :=
+Ltac object_property_is_determine_then :=
     match goal with
     | H1 : object_property_is ?st ?obj ?name ?oattr1, H2 : object_property_is ?st ?obj ?name ?oattr2 |- _ =>
         not constr_eq oattr1 oattr2; 
         not is_hyp (oattr1 = oattr2);
-        let H := fresh "H" in asserts H : (oattr1 = oattr2); [eauto using object_property_is_deterministic | idtac]
+        let H := fresh "H" in asserts H : (oattr1 = oattr2); [eauto using object_property_is_deterministic | idtac];
+        revert H
     end.
 
-Ltac value_is_closure_determine :=
+Ltac object_property_is_determine_eq := object_property_is_determine_then; intro.
+Ltac object_property_is_determine := object_property_is_determine_then; let H := fresh in intro H; try subst_hyp H.
+
+Ltac value_is_closure_determine_then :=
     match goal with
     | H1 : value_is_closure ?st ?v ?clo1, H2 : value_is_closure ?st ?v ?clo2 |- _ =>
         not constr_eq clo1 clo2; 
         not is_hyp (clo1 = clo2);
-        let H := fresh "H" in asserts H : (clo1 = clo2); [eauto using value_is_closure_deterministic | idtac]
+        let H := fresh "H" in asserts H : (clo1 = clo2); [eauto using value_is_closure_deterministic | idtac];
+        revert H
     end.
 
-Ltac closure_ctx_determine :=
+Ltac value_is_closure_determine_eq := value_is_closure_determine_then; intro.
+Ltac value_is_closure_determine := value_is_closure_determine_then; let H := fresh in intro H; try subst_hyp H.
+
+Ltac closure_ctx_determine_then :=
     match goal with
     | H1 : closure_ctx ?clo ?lv ?c1, H2 : closure_ctx ?clo ?lv ?c2 |- _ =>
         not constr_eq c1 c2; 
         not is_hyp (c1 = c2);
-        let H := fresh "H" in asserts H : (c1 = c2); [eauto using closure_ctx_deterministic | idtac]
+        let H := fresh "H" in asserts H : (c1 = c2); [eauto using closure_ctx_deterministic | idtac];
+        revert H
     end.
+
+Ltac closure_ctx_determine_eq := closure_ctx_determine_then; intro.
+Ltac closure_ctx_determine := closure_ctx_determine_then; let H := fresh in intro H; try subst_hyp H.
 
 Ltac ljs_out_red_ter Hred :=
     let H := fresh in

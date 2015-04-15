@@ -27,6 +27,7 @@ Include LjsPrettyRulesIndexedAux.
 Include LjsPrettyInterm.
 Include LjsStore.
 Include LjsAuxiliary.
+Include LjsOperators.
 Include LjsCommon.
 Include LjsValues.
 End L.

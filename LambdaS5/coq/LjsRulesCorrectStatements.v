@@ -498,16 +498,15 @@ Proof.
     repeat ljs_out_redh_ter.
     ljs_cases_res (L.expr_basic (E.ejs_to_ljs ee3)).
     (* after returns a value *)
-    repeat inv_fwd_ljs.
-    binds_determine. substs.
+    repeat ljs_autoforward.
     inverts red_exprh H0. (* TODO! *)
     ljs_apply.
-    rewrite from_list_empty in H9.
-    repeat rew_bag_simpl in H9.
+    rewrite from_list_empty in H8.
+    repeat rew_bag_simpl in H8.
     unfreeze Hctx.
-    rewrite <- Hctx in H9.
+    rewrite <- Hctx in H8.
     freeze Hctx.
-    specializes IH H9. omega.
+    specializes IH H8. omega.
     eapply while_unroll_step.
     repeat eexists. eauto. eauto. eauto.
     inv_internal_ljs. 

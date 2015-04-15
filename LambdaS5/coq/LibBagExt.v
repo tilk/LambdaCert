@@ -1350,13 +1350,18 @@ Tactic Notation "rew_binds_eq" "~" "in" hyp(H) :=
 Tactic Notation "rew_binds_eq" "*" "in" hyp(H) :=
     rew_binds_eq in H; auto_star.
 
-Ltac binds_determine :=
+Ltac binds_determine_then :=
     match goal with
     | H1 : binds ?m ?k ?v1, H2 : binds ?m ?k ?v2 |- _ =>
         not constr_eq v1 v2; 
         not is_hyp (v1 = v2);
-        let H := fresh "H" in asserts H : (v1 = v2); [eauto using binds_deterministic | idtac]
+        let H := fresh "H" in asserts H : (v1 = v2); [eauto using binds_deterministic | idtac]; 
+        revert H2; revert H
     end.
+
+Ltac binds_determine_eq := binds_determine_then; intro; intro.
+Ltac binds_determine := binds_determine_then; 
+    let H := fresh "H" in let H1 := fresh "H" in intro H; intro H1; try (subst_hyp H; clear H1).
 
 Global Instance from_list_empty_from_from_list_binds_eq :
     forall `{BagFromList (A * B) T} `{BagEmpty T} `{BagBinds A B T},

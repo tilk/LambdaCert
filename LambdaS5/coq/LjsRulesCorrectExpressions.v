@@ -77,15 +77,8 @@ Proof.
     introv Hstrict Hcontext Hid Hii Hinv Hred.
     (* nil *)
     repeat ljs_autoforward. 
-    binds_determine. substs.  (* TODO tacticize, to autoforward *)
-    injects.
-    repeat ljs_autoforward.
-    binds_determine. substs.
     skip.
     (* cons *)
-    repeat ljs_autoforward. 
-    binds_determine. substs.  (* TODO tacticize, to autoforward *)
-    injects.
     repeat ljs_autoforward. 
     skip.
 Qed.

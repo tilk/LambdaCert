@@ -1066,8 +1066,14 @@ Ltac res_related_abort :=
 
 Ltac destr_concl_auto := destr_concl; res_related_abort; try ljs_handle_abort.
 
+Ltac ljs_autoinject :=
+    match goal with
+    | H : L.unary_operator _ _ ?v |- _ => not is_var v; injects H
+    | H : L.binary_operator _ _ ?v1 ?v2 |- _ => not is_var v1; not is_var v2; injects H
+    end.
+
 Ltac ljs_autoforward := first [
-    inv_fwd_ljs | ljs_out_redh_ter | ljs_get_builtin | apply_ih_expr].
+    inv_fwd_ljs | ljs_out_redh_ter | ljs_get_builtin | apply_ih_expr | ljs_autoinject | binds_determine].
 
 (** ** Lemmas about operators *)
 

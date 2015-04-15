@@ -33,5 +33,4 @@ LjsStore.v
 LjsSyntaxAux.v
 LjsSyntax.v
 LjsValues.v
-lolol.v
 Utils.v
