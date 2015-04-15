@@ -136,8 +136,6 @@ Definition derived_context_in flds e :=
         L.expr_true L.expr_null L.expr_undefined (L.expr_id "%parent") in
     new_context_in (L.expr_object objattrs flds) e.
 
-Definition to_js_error e := make_app_builtin "%ToJSError" [e].
-
 Definition make_var_decl is e := 
     let flds := List.map (fun ip => 
         let '(i, e) := ip in (i, L.property_data (L.data_intro e L.expr_true L.expr_false L.expr_false))) is in
@@ -198,7 +196,7 @@ Definition make_func_stmt f i is p :=
 
 Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda [i] (
-        store_parent_in (make_var_decl [(i, to_js_error (L.expr_id i))] catch))).
+        store_parent_in (make_var_decl [(i, L.expr_id i)] catch))).
 
 Definition make_xfix s f e :=
     match e with
