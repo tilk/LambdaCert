@@ -84,6 +84,7 @@ Hint Extern 11 => match goal with |- context [If _ then _ else _] => case_if end
 (* TODO logical hints - move? different database? *)
 
 Hint Extern 1 (~(_ /\ _)) => rew_logic.
+Hint Extern 1 (_ <> _) => solve [let H := fresh in intro H; injects H; false]. 
 
 (** Pre-substitution hints *)
 (* TODO are they necessary? *)
@@ -497,6 +498,8 @@ Proof.
     prove_bag.
 Qed.
 
+Hint Resolve heaps_bisim_consistent_nindex_preserved : js_ljs.
+
 Lemma lexical_env_related_nindex_preserved : forall BR st ptr obj jle v,
     ~index st ptr ->
     lexical_env_related BR st jle v ->
@@ -508,6 +511,8 @@ Proof.
     eapply lexical_env_related_cons; prove_bag.
 Qed.
 
+Hint Resolve lexical_env_related_nindex_preserved : js_ljs.
+
 Lemma execution_ctx_related_nindex_preserved : forall BR jc c st ptr obj,
     ~index st ptr ->
     execution_ctx_related BR jc c st ->
@@ -518,8 +523,9 @@ Proof.
     auto.
     auto.
     intros. apply lexical_env_related_nindex_preserved; auto.
-    auto.
 Qed.
+
+Hint Resolve execution_ctx_related_nindex_preserved : js_ljs. 
 
 Lemma state_invariant_nindex_preserved : forall BR jst jc c st ptr obj,
     ~index st ptr ->
@@ -528,11 +534,7 @@ Lemma state_invariant_nindex_preserved : forall BR jst jc c st ptr obj,
 Proof.
     introv Hni Hinv.
     inverts Hinv.
-    constructor.
-    apply heaps_bisim_consistent_nindex_preserved; auto.
-    apply execution_ctx_related_nindex_preserved; auto.
-    assumption.
-    assumption.
+    constructor; jauto_js.
 Qed.
 
 Lemma state_invariant_fresh_preserved : forall BR jst jc c st obj,
@@ -554,6 +556,8 @@ Proof.
     prove_bag.
 Qed.
 
+Hint Resolve includes_init_ctx_incl_preserved : js_ljs.
+
 Lemma execution_ctx_related_incl_preserved : forall BR jc c c' st,
     c' \c c ->
     execution_ctx_related BR jc c st ->
@@ -561,12 +565,34 @@ Lemma execution_ctx_related_incl_preserved : forall BR jc c c' st,
 Proof.
     introv Hincl Hrel.
     inverts Hrel.
-    constructor.
-    prove_bag.
-    prove_bag.
-    intros.
-    eapply execution_ctx_related_lexical_env. prove_bag. prove_bag. (* TODO auto depth for prove_bag *)
+    constructor; jauto_js.
 Qed.
+
+Hint Resolve execution_ctx_related_incl_preserved : js_ljs.
+
+Lemma prealloc_in_ctx_incl_preserved : forall BR c c',
+    c' \c c ->
+    prealloc_in_ctx BR c ->
+    prealloc_in_ctx BR c'.
+Proof.
+    introv Hincl Hpre.
+    unfolds prealloc_in_ctx.
+    prove_bag.
+Qed.
+
+Hint Resolve prealloc_in_ctx_incl_preserved : js_ljs.
+
+Lemma global_env_record_exists_ctx_incl_preserved : forall BR c c',
+    c' \c c ->
+    global_env_record_exists BR c ->
+    global_env_record_exists BR c'.
+Proof.
+    introv Hincl Hpre.
+    unfolds global_env_record_exists.
+    prove_bag.
+Qed.
+
+Hint Resolve global_env_record_exists_ctx_incl_preserved : js_ljs.
 
 Lemma state_invariant_ctx_incl_preserved : forall BR jst jc c c' st,
     c' \c c ->
@@ -575,16 +601,10 @@ Lemma state_invariant_ctx_incl_preserved : forall BR jst jc c c' st,
 Proof.
     introv Hincl Hinv.
     inverts Hinv.
-    constructor.
-    assumption.
-    eapply execution_ctx_related_incl_preserved; eassumption.
-    eapply includes_init_ctx_incl_preserved; eassumption.
-    assumption.
+    constructor; jauto_js.
 Qed.
 
 Hint Resolve state_invariant_ctx_incl_preserved : js_ljs.
-
-Hint Extern 1 (_ <> _) => solve [let H := fresh in intro H; injects H; false]. 
 
 Section prefixes.
 
@@ -594,10 +614,18 @@ Lemma init_ctx_percent_prefix : forall v s,
     binds LjsInitEnv.init_ctx s v -> exists s', s = String "%" s'.
 Proof.
     introv Hmem.
-(*
+(* TODO faster inversion
     repeat (inverts Hmem as Hmem; [skip | idtac]).
 *)
     skip.
+Qed.
+
+Lemma prealloc_in_ctx_percent_prefix : forall jpre s,
+    Mem (jpre, s) prealloc_in_ctx_list -> exists s', s = String "%" s'.
+Proof.
+    introv Hmem.
+    repeat (inverts Hmem as Hmem; [eexists; reflexivity | idtac]).
+    inverts Hmem.
 Qed.
 
 Lemma execution_ctx_related_add_nopercent_id_preserved : forall BR jc c st s v ch,
@@ -626,6 +654,35 @@ Proof.
     destruct_hyp Hbinds; tryfalse; eauto.
 Qed.
 
+Lemma prealloc_in_ctx_add_nopercent_id_preserved : forall BR c s v ch,
+    ch <> "%" ->
+    prealloc_in_ctx BR c ->
+    prealloc_in_ctx BR (c \(String ch s := v)).
+Proof.
+    unfolds prealloc_in_ctx.
+    introv Hdif Hpre Hmem Hbinds.
+    lets (s'&EQs') : prealloc_in_ctx_percent_prefix Hmem. 
+    substs.
+    rew_binds_eq in Hbinds.
+    destruct_hyp Hbinds; tryfalse; eauto.
+Qed.
+
+Lemma global_env_record_exists_add_nopercent_id_preserved : forall BR c s v ch,
+    ch <> "%" ->
+    global_env_record_exists BR c ->
+    global_env_record_exists BR (c \(String ch s := v)).
+Proof.
+    unfolds global_env_record_exists.
+    introv Hdif Hgenv Hbinds.
+    rew_binds_eq in Hbinds.
+    destruct_hyp Hbinds; tryfalse; eauto.
+Qed.
+
+Hint Resolve execution_ctx_related_add_nopercent_id_preserved : js_ljs.
+Hint Resolve includes_init_ctx_add_nopercent_id_preserved : js_ljs.
+Hint Resolve prealloc_in_ctx_add_nopercent_id_preserved : js_ljs.
+Hint Resolve global_env_record_exists_add_nopercent_id_preserved : js_ljs.
+
 Lemma state_invariant_add_nopercent_id_preserved : forall BR jst jc c st s v ch,
     state_invariant BR jst jc c st ->
     ch <> "%" ->
@@ -633,11 +690,7 @@ Lemma state_invariant_add_nopercent_id_preserved : forall BR jst jc c st s v ch,
 Proof.
     introv Hinv Hdif.
     inverts Hinv.
-    constructor.
-    assumption.
-    eapply execution_ctx_related_add_nopercent_id_preserved; eassumption.
-    eapply includes_init_ctx_add_nopercent_id_preserved; eassumption.
-    assumption.
+    constructor; jauto_js.
 Qed.
 
 Lemma execution_ctx_related_unadd_nopercent_id_preserved : forall BR jc c st s v ch,
@@ -666,6 +719,37 @@ Proof.
     eauto.
 Qed.
 
+Lemma prealloc_in_ctx_unadd_nopercent_id_preserved : forall BR c s v ch,
+    ch <> "%" ->
+    prealloc_in_ctx BR (c \(String ch s := v)) ->
+    prealloc_in_ctx BR c.
+Proof.
+    unfolds prealloc_in_ctx.
+    introv Hdif Hpre Hmem Hbinds.
+    lets (s'&EQs') : prealloc_in_ctx_percent_prefix Hmem. 
+    substs.
+    eapply Hpre. eapply Hmem.
+    rew_binds_eq.
+    eauto.
+Qed.
+
+Lemma global_env_record_exists_unadd_nopercent_id_preserved : forall BR c s v ch,
+    ch <> "%" ->
+    global_env_record_exists BR (c \(String ch s := v)) ->
+    global_env_record_exists BR c.
+Proof.
+    unfolds global_env_record_exists.
+    introv Hdif Hgenv Hbinds.
+    apply Hgenv.
+    rew_binds_eq.
+    eauto.
+Qed.
+
+Hint Resolve execution_ctx_related_unadd_nopercent_id_preserved : js_ljs.
+Hint Resolve includes_init_ctx_unadd_nopercent_id_preserved : js_ljs.
+Hint Resolve prealloc_in_ctx_unadd_nopercent_id_preserved : js_ljs.
+Hint Resolve global_env_record_exists_unadd_nopercent_id_preserved : js_ljs.
+
 Lemma state_invariant_unadd_nopercent_id_preserved : forall BR jst jc c st s v ch,
     state_invariant BR jst jc (c \(String ch s := v)) st ->
     ch <> "%" ->
@@ -673,11 +757,7 @@ Lemma state_invariant_unadd_nopercent_id_preserved : forall BR jst jc c st s v c
 Proof.
     introv Hinv Hdif.
     inverts Hinv.
-    constructor.
-    assumption.
-    eapply execution_ctx_related_unadd_nopercent_id_preserved; eassumption.
-    eapply includes_init_ctx_unadd_nopercent_id_preserved; eassumption.
-    assumption.
+    constructor; jauto_js.
 Qed.
 
 End prefixes.
@@ -716,6 +796,33 @@ Qed.
 
 Hint Resolve includes_init_ctx_union_preserved : js_ljs.
 
+Lemma prealloc_in_ctx_union_preserved : forall BR c c',
+    prealloc_in_ctx BR c ->
+    prealloc_in_ctx BR c' -> 
+    prealloc_in_ctx BR (c \u c').
+Proof.
+    introv Hpre1 Hpre2.
+    unfolds prealloc_in_ctx.
+    introv Hmem Hbinds.
+    rewrite binds_union_eq in Hbinds.
+    destruct_hyp Hbinds; prove_bag.
+Qed.
+
+Hint Resolve prealloc_in_ctx_union_preserved : js_ljs.
+
+Lemma global_env_record_exists_union_preserved : forall BR c c',
+    global_env_record_exists BR c ->
+    global_env_record_exists BR c' -> 
+    global_env_record_exists BR (c \u c').
+Proof.
+    unfolds prealloc_in_ctx.
+    introv Hgenv1 Hgenv2 Hbinds.
+    rewrite binds_union_eq in Hbinds.
+    destruct_hyp Hbinds; prove_bag.
+Qed.
+
+Hint Resolve global_env_record_exists_union_preserved : js_ljs.
+
 Lemma state_invariant_union_preserved : forall BR jst jc c c' st,
     state_invariant BR jst jc c st ->
     state_invariant BR jst jc c' st ->
@@ -729,9 +836,8 @@ Qed.
 
 Hint Resolve state_invariant_union_preserved : js_ljs.
 
-Lemma includes_init_replace_ctx_sub_init : forall c,
-    c \c LjsInitEnv.init_ctx ->
-    includes_init_ctx c.
+Lemma includes_init_ctx_init_ctx : forall c,
+    includes_init_ctx LjsInitEnv.init_ctx.
 Proof.
     introv Hsub.
     unfolds.
@@ -739,19 +845,31 @@ Proof.
     eapply binds_deterministic; [idtac | eassumption]. prove_bag.
 Qed.
 
-Hint Resolve includes_init_replace_ctx_sub_init : js_ljs.
+Hint Resolve includes_init_ctx_init_ctx : js_ljs.
 
-Lemma execution_ctx_related_replace_ctx_sub_init : forall BR jc c c' st,
-    c' \c LjsInitEnv.init_ctx ->
-    execution_ctx_related BR jc c st ->
-    execution_ctx_related BR jc c' st.
+Lemma execution_ctx_related_init_ctx : forall BR jc st,
+    execution_ctx_related BR jc LjsInitEnv.init_ctx st.
 Proof.
-    introv Hsub Hrel.
-    destruct Hrel.
     constructor.
 Admitted. (* TODO *)
 
-Hint Resolve execution_ctx_related_replace_ctx_sub_init : js_ljs.
+Hint Resolve execution_ctx_related_init_ctx : js_ljs.
+
+Lemma global_env_record_exists_init_ctx : forall BR,
+    initBR \c BR ->
+    global_env_record_exists BR LjsInitEnv.init_ctx.
+Proof.
+Admitted. (* TODO *)
+
+Hint Resolve global_env_record_exists_init_ctx : js_ljs.
+
+Lemma prealloc_in_ctx_init_ctx : forall BR,
+    initBR \c BR ->
+    prealloc_in_ctx BR LjsInitEnv.init_ctx.
+Proof.
+Admitted. (* TODO *)
+
+Hint Resolve prealloc_in_ctx_init_ctx : js_ljs.
 
 Lemma state_invariant_replace_ctx_sub_init : forall BR jst jc c c' st,
     c' \c LjsInitEnv.init_ctx ->

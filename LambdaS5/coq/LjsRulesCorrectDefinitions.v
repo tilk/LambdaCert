@@ -87,6 +87,7 @@ Implicit Type jeptr : J.env_loc.
 Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
+Implicit Type jpre : J.prealloc.
 
 (** ** Composite desugaring functions 
     Desugaring for literals, expressions and statements. *)
@@ -345,12 +346,13 @@ Record execution_ctx_related BR jc c st := {
         v = L.value_bool (J.execution_ctx_strict jc);
     execution_ctx_related_lexical_env : forall v,
         binds c "%context" v ->
-        lexical_env_related BR st (J.execution_ctx_lexical_env jc) v;
-    execution_ctx_related_global_context : forall v ptr,
+        lexical_env_related BR st (J.execution_ctx_lexical_env jc) v
+}.
+
+Definition global_env_record_exists BR c := forall v ptr,
         binds c "%globalContext" v ->
         v = L.value_object ptr /\
-        (inr J.env_loc_global_env_record, ptr) \in BR 
-}.
+        (inr J.env_loc_global_env_record, ptr) \in BR.
 
 (* States that the variable environment and lexical environment exist *)
 Record env_records_exist BR jc := { 
@@ -360,14 +362,44 @@ Record env_records_exist BR jc := {
         Forall (fun jeptr => exists ptr, (inr jeptr, ptr) \in BR) (J.execution_ctx_lexical_env jc)
 }.
 
+(** *** Preallocated objects invariant
+    States that EcmaScript preallocated objects can be found in the LJS context. *)
+
+Definition prealloc_in_ctx_list := [
+    (J.prealloc_native_error_proto J.native_error_eval, "%EvalErrorGlobalFuncObj");
+    (J.prealloc_native_error_proto J.native_error_range, "%RangeErrorGlobalFuncObj");
+    (J.prealloc_native_error_proto J.native_error_ref, "%ReferenceErrorGlobalFuncObj");
+    (J.prealloc_native_error_proto J.native_error_syntax, "%SyntaxErrorGlobalFuncObj");
+    (J.prealloc_native_error_proto J.native_error_type, "%TypeErrorGlobalFuncObj");
+    (J.prealloc_native_error J.native_error_eval, "%EvalErrorProto");
+    (J.prealloc_native_error J.native_error_range, "%RangeErrorProto");
+    (J.prealloc_native_error J.native_error_ref, "%ReferenceErrorProto");
+    (J.prealloc_native_error J.native_error_syntax, "%SyntaxErrorProto");
+    (J.prealloc_native_error J.native_error_type, "%TypeErrorProto")
+].
+
+Definition prealloc_in_ctx BR c := forall jpre s v, 
+    Mem (jpre, s) prealloc_in_ctx_list ->
+    binds c s v ->
+    exists ptr,
+    v = L.value_object ptr /\
+    (inl (J.object_loc_prealloc jpre), ptr) \in BR.
+
+(** *** Initial bisimulation. *)
+
+Parameter initBR : object_bisim. (* TODO *)
+
 (** *** Invariant predicate
     The complete set of invariants, combined in one predicate to make proofs simpler. *)
 
 Record state_invariant BR jst jc c st : Prop := {
+    state_invariant_bisim_includes_init : initBR \c BR;
     state_invariant_heaps_bisim_consistent : heaps_bisim_consistent BR jst st;
     state_invariant_execution_ctx_related : execution_ctx_related BR jc c st;
     state_invariant_includes_init_ctx : includes_init_ctx c;
-    state_invariant_env_records_exist : env_records_exist BR jc
+    state_invariant_env_records_exist : env_records_exist BR jc;
+    state_invariant_prealloc_related : prealloc_in_ctx BR c;
+    state_invariant_global_env_record_exists : global_env_record_exists BR c
 }.
 
 (** ** Theorem statement  
