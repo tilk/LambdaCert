@@ -871,7 +871,7 @@ Admitted. (* TODO *)
 Hint Resolve prealloc_in_ctx_init_ctx : js_ljs.
 
 Lemma state_invariant_replace_ctx_sub_init : forall BR jst jc c c' st,
-    c' \c LjsInitEnv.init_ctx ->
+    c' \c LjsInitEnv.init_ctx -> 
     state_invariant BR jst jc c st ->
     state_invariant BR jst jc c' st.
 Proof.
@@ -914,6 +914,101 @@ Proof.
 Qed.
 
 Hint Resolve res_related_bisim_incl_preserved : js_ljs.
+
+Lemma env_records_exist_bisim_incl_preserved : forall BR1 BR2 jc,
+    BR1 \c BR2 ->
+    env_records_exist BR1 jc ->
+    env_records_exist BR2 jc.
+Proof.
+    introv Hs Hex.
+    inverts Hex. 
+    constructor; introv Hmem.
+    specializes env_record_exist_variable_env Hmem. destruct_hyp env_record_exist_variable_env. jauto_js.
+    specializes env_record_exist_lexical_env Hmem. destruct_hyp env_record_exist_lexical_env. jauto_js.
+Qed.
+
+Hint Resolve env_records_exist_bisim_incl_preserved : js_ljs.
+
+Lemma prealloc_in_ctx_bisim_incl_preserved : forall BR1 BR2 c,
+    BR1 \c BR2 ->
+    prealloc_in_ctx BR1 c ->
+    prealloc_in_ctx BR2 c.
+Proof.
+    introv Hs Hpre.
+    unfolds prealloc_in_ctx.
+    introv Hmem Hbinds.
+    specializes Hpre Hmem Hbinds.
+    destruct_hyp Hpre.
+    jauto_js.
+Qed.
+
+Hint Resolve prealloc_in_ctx_bisim_incl_preserved : js_ljs.
+
+Lemma global_env_record_exists_bisim_incl_preserved : forall BR1 BR2 c,
+    BR1 \c BR2 ->
+    global_env_record_exists BR1 c ->
+    global_env_record_exists BR2 c.
+Proof.
+    introv Hs Hpre.
+    unfolds global_env_record_exists. 
+    introv Hbinds.
+    specializes Hpre Hbinds.
+    destruct_hyp Hpre.
+    jauto_js.
+Qed.
+
+Hint Resolve global_env_record_exists_bisim_incl_preserved : js_ljs.
+
+Lemma lexical_env_related_bisim_incl_preserved : forall BR1 BR2 st jlenv v,
+    BR1 \c BR2 ->
+    lexical_env_related BR1 st jlenv v ->
+    lexical_env_related BR2 st jlenv v.
+Proof.
+    introv Hs Hpre.
+    induction Hpre; jauto_js.
+Qed.
+
+Hint Resolve lexical_env_related_bisim_incl_preserved : js_ljs.
+
+Lemma execution_ctx_related_bisim_incl_preserved : forall BR1 BR2 jc c st,
+    BR1 \c BR2 ->
+    execution_ctx_related BR1 jc c st ->
+    execution_ctx_related BR2 jc c st.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel.
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve execution_ctx_related_bisim_incl_preserved : js_ljs.
+
+(* TODO probably a bad idea, state_next_fresh needs to be considered *)
+(* state_fresh_ok goes to the invariants *)
+Lemma heaps_bisim_consistent_new_object_preserved : forall BR jst st jptr jobj ptr obj,
+    ~index jst jptr ->
+    ~index st ptr ->
+    object_related BR jobj obj ->
+    heaps_bisim_consistent BR jst st ->
+    heaps_bisim_consistent (\{(inl jptr, ptr)} \u BR) (jst \(jptr:=jobj)) (st \(ptr:=obj)).
+Proof.
+Admitted.
+
+Hint Resolve heaps_bisim_consistent_new_object_preserved : js_ljs.
+
+Lemma state_invariant_new_object_preserved : forall BR jst jc c st jptr jobj ptr obj,
+    ~index jst jptr ->
+    ~index st ptr ->
+    object_related BR jobj obj ->
+    state_invariant BR jst jc c st ->
+    state_invariant (\{(inl jptr, ptr)} \u BR) (jst \(jptr:=jobj)) jc c (st \(ptr:=obj)).
+Proof.
+    introv Hnjindex Hnindex Horel Hinv.
+    inverts Hinv.
+    asserts Hsub : (BR \c \{(inl jptr, ptr)} \u BR). jauto_js.
+    constructor; jauto_js. 
+Qed.
+
+Hint Resolve state_invariant_new_object_preserved : js_ljs.
 
 (* Prerequisites *)
 

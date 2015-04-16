@@ -1313,6 +1313,8 @@ Hint Resolve
     @index_update_same @index_update_index @index_update_diff
     @index_binds_inv @fresh_index 
     @incl_in @incl_index @incl_binds 
+    @incl_empty
+    @incl_union_l @incl_union_r
     @update_nindex_incl @remove_incl @restrict_incl
     @disjoint_in @disjoint_index @disjoint_binds
 : bag.
@@ -1518,4 +1520,18 @@ Proof.
     introv Hyp.
     apply case_classic_r in Hyp.
     destruct Hyp; jauto_set; rewrites binds_update_eq in *; intuition jauto.
+Qed.
+
+Global Instance incl_union_l_from_in_union :
+    forall `{BagIn A T} `{BagUnion T} `{BagIncl T},
+    Incl_in_eq -> In_union_eq -> Incl_union_l.
+Proof.
+    constructor. intros. apply incl_in_inv. prove_bag. 
+Qed.
+
+Global Instance incl_union_l_from_binds_union :
+    forall `{BagBinds A B T} `{BagIndex T A} `{BagUnion T} `{BagIncl T},
+    Incl_binds_eq -> Binds_union_eq -> Incl_union_l.
+Proof.
+    constructor. intros. apply incl_binds_inv. prove_bag. 
 Qed.

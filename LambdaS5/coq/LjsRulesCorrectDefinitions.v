@@ -49,6 +49,7 @@ End J.
 
 Export LjsPrettyRulesAux.Tactics.
 Export LjsPrettyRulesIndexedAux.Tactics.
+Export LjsPrettyRulesIndexedAux.Tactics.
 
 (** ** Implicit Type declarations 
     They are common for all LjsRulesCorrect* libraries. *)
@@ -358,9 +359,9 @@ Definition global_env_record_exists BR c := forall v ptr,
 (* States that the variable environment and lexical environment exist *)
 Record env_records_exist BR jc := { 
     env_record_exist_variable_env : 
-        Forall (fun jeptr => exists ptr, (inr jeptr, ptr) \in BR) (J.execution_ctx_variable_env jc);
+        forall jeptr, Mem jeptr (J.execution_ctx_variable_env jc) -> exists ptr, (inr jeptr, ptr) \in BR;
     env_record_exist_lexical_env : 
-        Forall (fun jeptr => exists ptr, (inr jeptr, ptr) \in BR) (J.execution_ctx_lexical_env jc)
+        forall jeptr, Mem jeptr (J.execution_ctx_lexical_env jc) -> exists ptr, (inr jeptr, ptr) \in BR
 }.
 
 (** *** Preallocated objects invariant
