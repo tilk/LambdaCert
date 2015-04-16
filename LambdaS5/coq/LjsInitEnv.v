@@ -39,12 +39,11 @@ expr_seq
 .
 Definition ex_copy_when_defined := 
 expr_if
-(expr_if
+(expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq (expr_get_field (expr_id "obj2") (expr_id "s"))
-  expr_undefined) expr_false expr_true)
-(expr_let "$newVal" (expr_get_field (expr_id "obj2") (expr_id "s"))
- (expr_set_field (expr_id "obj1") (expr_id "s") (expr_id "$newVal")))
-expr_undefined
+  expr_undefined))
+(expr_set_field (expr_id "obj1") (expr_id "s")
+ (expr_get_field (expr_id "obj2") (expr_id "s"))) expr_undefined
 .
 Definition ex_getter := 
 expr_object
@@ -1177,55 +1176,55 @@ expr_object
 .
 Definition ex_isAccessorDescriptor := 
 expr_let "%or"
-(expr_if
+(expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq
   (expr_op1 unary_op_typeof
    (expr_get_field (expr_id "attr-obj") (expr_string "set")))
-  (expr_string "undefined")) expr_false expr_true)
+  (expr_string "undefined")))
 (expr_if (expr_id "%or") (expr_id "%or")
- (expr_if
+ (expr_op1 unary_op_not
   (expr_op2 binary_op_stx_eq
    (expr_op1 unary_op_typeof
     (expr_get_field (expr_id "attr-obj") (expr_string "get")))
-   (expr_string "undefined")) expr_false expr_true))
+   (expr_string "undefined"))))
 .
 Definition ex_isAccessorField := 
 expr_let "%or"
-(expr_if
+(expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq
   (expr_get_attr pattr_setter (expr_id "obj") (expr_id "field"))
-  expr_undefined) expr_false expr_true)
+  expr_undefined))
 (expr_if (expr_id "%or") (expr_id "%or")
- (expr_if
+ (expr_op1 unary_op_not
   (expr_op2 binary_op_stx_eq
    (expr_get_attr pattr_getter (expr_id "obj") (expr_id "field"))
-   expr_undefined) expr_false expr_true))
+   expr_undefined)))
 .
 Definition ex_isDataDescriptor := 
 expr_let "%or"
-(expr_if
+(expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq
   (expr_op1 unary_op_typeof
    (expr_get_field (expr_id "attr-obj") (expr_string "value")))
-  (expr_string "undefined")) expr_false expr_true)
+  (expr_string "undefined")))
 (expr_if (expr_id "%or") (expr_id "%or")
- (expr_if
+ (expr_op1 unary_op_not
   (expr_op2 binary_op_stx_eq
    (expr_op1 unary_op_typeof
     (expr_get_field (expr_id "attr-obj") (expr_string "writable")))
-   (expr_string "undefined")) expr_false expr_true))
+   (expr_string "undefined"))))
 .
 Definition ex_isDataField := 
 expr_let "%or"
-(expr_if
+(expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq
   (expr_get_attr pattr_value (expr_id "obj") (expr_id "field"))
-  expr_undefined) expr_false expr_true)
+  expr_undefined))
 (expr_if (expr_id "%or") (expr_id "%or")
- (expr_if
+ (expr_op1 unary_op_not
   (expr_op2 binary_op_stx_eq
    (expr_get_attr pattr_writable (expr_id "obj") (expr_id "field"))
-   expr_undefined) expr_false expr_true))
+   expr_undefined)))
 .
 Definition ex_isGenericDescriptor := 
 expr_if
@@ -1398,9 +1397,9 @@ expr_app (expr_id "%TypeError")
 .
 Definition ex_privAppExprCheck := 
 expr_if
-(expr_if
+(expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "fun"))
-  (expr_string "function")) expr_false expr_true)
+  (expr_string "function")))
 (expr_app (expr_id "%TypeError") [expr_string "Not a function"])
 (expr_app (expr_id "fun") [expr_id "this"; expr_id "args"])
 .
@@ -1421,11 +1420,10 @@ expr_label "ret"
    (expr_recc "init"
     (expr_lambda ["n"]
      (expr_seq
-      (expr_let "$newVal"
+      (expr_set_field (expr_id "rtnobj")
+       (expr_op1 unary_op_prim_to_str (expr_id "n"))
        (expr_get_field (expr_id "args")
-        (expr_op1 unary_op_prim_to_str (expr_id "n")))
-       (expr_set_field (expr_id "rtnobj")
-        (expr_op1 unary_op_prim_to_str (expr_id "n")) (expr_id "$newVal")))
+        (expr_op1 unary_op_prim_to_str (expr_id "n"))))
       (expr_if
        (expr_op2 binary_op_gt (expr_id "n") (expr_number (JsNumber.of_int 0)))
        (expr_app (expr_id "init")
@@ -1435,11 +1433,9 @@ expr_label "ret"
      (expr_app (expr_id "init")
       [expr_get_field (expr_id "args") (expr_string "length")])
      (expr_seq
-      (expr_let "$newVal"
-       (expr_get_field (expr_id "args") (expr_string "length"))
-       (expr_set_field (expr_id "rtnobj") (expr_string "length")
-        (expr_id "$newVal"))) (expr_break "ret" (expr_id "rtnobj"))))))
-  expr_null)
+      (expr_set_field (expr_id "rtnobj") (expr_string "length")
+       (expr_get_field (expr_id "args") (expr_string "length")))
+      (expr_break "ret" (expr_id "rtnobj")))))) expr_null)
  (expr_let "c1"
   (expr_op2 binary_op_stx_eq
    (expr_op1 unary_op_typeof
@@ -1447,12 +1443,11 @@ expr_label "ret"
    (expr_string "number"))
   (expr_let "c2"
    (expr_if (expr_id "c1")
-    (expr_if
+    (expr_op1 unary_op_not
      (expr_op2 binary_op_stx_eq
       (expr_app (expr_id "%ToUint32")
        [expr_get_field (expr_id "args") (expr_string "0")])
-      (expr_get_field (expr_id "args") (expr_string "0"))) expr_false
-     expr_true) expr_false)
+      (expr_get_field (expr_id "args") (expr_string "0")))) expr_false)
    (expr_if (expr_id "c2")
     (expr_throw
      (expr_app (expr_id "%JSError")
@@ -1551,24 +1546,22 @@ expr_let "rest"
    (expr_label "ret"
     (expr_if
      (expr_let "%or"
-      (expr_if
-       (expr_op2 binary_op_stx_eq (expr_id "pxtype") (expr_string "string"))
-       expr_false expr_true)
+      (expr_op1 unary_op_not
+       (expr_op2 binary_op_stx_eq (expr_id "pxtype") (expr_string "string")))
       (expr_if (expr_id "%or") (expr_id "%or")
-       (expr_if
-        (expr_op2 binary_op_stx_eq (expr_id "pytype") (expr_string "string"))
-        expr_false expr_true)))
+       (expr_op1 unary_op_not
+        (expr_op2 binary_op_stx_eq (expr_id "pytype") (expr_string "string")))))
      (expr_let "nx" (expr_app (expr_id "%ToNumber") [expr_id "px"])
       (expr_let "ny" (expr_app (expr_id "%ToNumber") [expr_id "py"])
        (expr_seq
         (expr_if
          (expr_let "%or"
-          (expr_if (expr_op2 binary_op_stx_eq (expr_id "nx") (expr_id "nx"))
-           expr_false expr_true)
+          (expr_op1 unary_op_not
+           (expr_op2 binary_op_stx_eq (expr_id "nx") (expr_id "nx")))
           (expr_if (expr_id "%or") (expr_id "%or")
-           (expr_if (expr_op2 binary_op_stx_eq (expr_id "ny") (expr_id "ny"))
-            expr_false expr_true))) (expr_break "ret" expr_undefined)
-         expr_null)
+           (expr_op1 unary_op_not
+            (expr_op2 binary_op_stx_eq (expr_id "ny") (expr_id "ny")))))
+         (expr_break "ret" expr_undefined) expr_null)
         (expr_seq
          (expr_if (expr_op2 binary_op_stx_eq (expr_id "nx") (expr_id "ny"))
           (expr_break "ret" expr_false) expr_null)
@@ -1705,10 +1698,10 @@ expr_let "calledAsFunction"
                (expr_if
                 (expr_if
                  (expr_if
-                  (expr_if
-                   (expr_op2 binary_op_stx_eq (expr_id "y") (expr_id "y"))
-                   expr_false expr_true) (expr_id "rangecond1") expr_false)
-                 (expr_id "rangecond2") expr_false)
+                  (expr_op1 unary_op_not
+                   (expr_op2 binary_op_stx_eq (expr_id "y") (expr_id "y")))
+                  (expr_id "rangecond1") expr_false) (expr_id "rangecond2")
+                 expr_false)
                 (expr_op2 binary_op_add (expr_number (JsNumber.of_int 1900))
                  (expr_id "tiy")) (expr_id "y")))))
             (expr_let "finalDate"
@@ -1846,23 +1839,21 @@ expr_let "m"
 .
 Definition ex_privDaysInYear := 
 expr_if
-(expr_if
+(expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq
   (expr_op2 binary_op_mod (expr_id "y") (expr_number (JsNumber.of_int 4)))
-  (expr_number (JsNumber.of_int 0))) expr_false expr_true)
-(expr_number (JsNumber.of_int 365))
+  (expr_number (JsNumber.of_int 0)))) (expr_number (JsNumber.of_int 365))
 (expr_if
  (expr_let "%or"
   (expr_op2 binary_op_stx_eq
    (expr_op2 binary_op_mod (expr_id "y") (expr_number (JsNumber.of_int 400)))
    (expr_number (JsNumber.of_int 0)))
   (expr_if (expr_id "%or") (expr_id "%or")
-   (expr_if
+   (expr_op1 unary_op_not
     (expr_op2 binary_op_stx_eq
      (expr_op2 binary_op_mod (expr_id "y")
-      (expr_number (JsNumber.of_int 100))) (expr_number (JsNumber.of_int 0)))
-    expr_false expr_true))) (expr_number (JsNumber.of_int 366))
- (expr_number (JsNumber.of_int 365)))
+      (expr_number (JsNumber.of_int 100))) (expr_number (JsNumber.of_int 0))))))
+ (expr_number (JsNumber.of_int 366)) (expr_number (JsNumber.of_int 365)))
 .
 Definition ex_privEnvCheckAssign := 
 expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
@@ -1882,8 +1873,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
  (expr_if
   (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
   (expr_try_catch
-   (expr_let "$newVal" (expr_id "val")
-    (expr_set_field (expr_id "context") (expr_id "id") (expr_id "$newVal")))
+   (expr_set_field (expr_id "context") (expr_id "id") (expr_id "val"))
    (expr_app (expr_id "%UnwritableDispatch") [expr_id "id"]))
   (expr_app (expr_id "%EnvCheckAssign")
    [expr_get_obj_attr oattr_primval (expr_id "context");
@@ -2032,11 +2022,10 @@ expr_let "o"
   (expr_get_field (expr_id "args") (expr_string "length"))
   (expr_number (JsNumber.of_int 1)))
  (expr_seq
-  (expr_let "$newVal"
+  (expr_set_field (expr_id "o") (expr_string "message")
    (expr_app (expr_id "%ToString")
-    [expr_get_field (expr_id "args") (expr_string "0")])
-   (expr_set_field (expr_id "o") (expr_string "message") (expr_id "$newVal")))
-  (expr_id "o")) (expr_id "o"))
+    [expr_get_field (expr_id "args") (expr_string "0")])) (expr_id "o"))
+ (expr_id "o"))
 .
 Definition ex_privErrorDispatch := 
 expr_if (expr_app (expr_id "%IsJSError") [expr_id "maybe-js-error"])
@@ -2123,8 +2112,9 @@ Definition ex_privGreaterEqual :=
 expr_let "result"
 (expr_app (expr_id "%CompareOp") [expr_id "l"; expr_id "r"; expr_true])
 (expr_if
- (expr_if (expr_op2 binary_op_stx_eq (expr_id "result") expr_undefined)
-  expr_false expr_true) (expr_op1 unary_op_not (expr_id "result")) expr_false)
+ (expr_op1 unary_op_not
+  (expr_op2 binary_op_stx_eq (expr_id "result") expr_undefined))
+ (expr_op1 unary_op_not (expr_id "result")) expr_false)
 .
 Definition ex_privGreaterThan := 
 expr_let "result"
@@ -2144,8 +2134,8 @@ Definition ex_privIsFinite :=
 expr_op1 unary_op_not
 (expr_let "%or"
  (expr_let "%or"
-  (expr_if (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n")) expr_false
-   expr_true)
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n")))
   (expr_if (expr_id "%or") (expr_id "%or")
    (expr_op2 binary_op_stx_eq (expr_id "n") (expr_number (JsNumber.of_int 0)))))
  (expr_if (expr_id "%or") (expr_id "%or")
@@ -2205,8 +2195,9 @@ Definition ex_privLessEqual :=
 expr_let "result"
 (expr_app (expr_id "%CompareOp") [expr_id "r"; expr_id "l"; expr_false])
 (expr_if
- (expr_if (expr_op2 binary_op_stx_eq (expr_id "result") expr_undefined)
-  expr_false expr_true) (expr_op1 unary_op_not (expr_id "result")) expr_false)
+ (expr_op1 unary_op_not
+  (expr_op2 binary_op_stx_eq (expr_id "result") expr_undefined))
+ (expr_op1 unary_op_not (expr_id "result")) expr_false)
 .
 Definition ex_privLessThan := 
 expr_let "result"
@@ -2261,20 +2252,20 @@ expr_if
         (expr_if
          (expr_let "%or"
           (expr_let "%or"
-           (expr_if
+           (expr_op1 unary_op_not
             (expr_op2 binary_op_stx_eq
              (expr_app (expr_id "%YearFromTime") [expr_id "t"])
-             (expr_id "ym")) expr_false expr_true)
+             (expr_id "ym")))
            (expr_if (expr_id "%or") (expr_id "%or")
-            (expr_if
+            (expr_op1 unary_op_not
              (expr_op2 binary_op_stx_eq
               (expr_app (expr_id "%MonthFromTime") [expr_id "t"])
-              (expr_id "mn")) expr_false expr_true)))
+              (expr_id "mn")))))
           (expr_if (expr_id "%or") (expr_id "%or")
-           (expr_if
+           (expr_op1 unary_op_not
             (expr_op2 binary_op_stx_eq
              (expr_app (expr_id "%DateFromTime") [expr_id "t"])
-             (expr_number (JsNumber.of_int 1))) expr_false expr_true)))
+             (expr_number (JsNumber.of_int 1))))))
          (expr_number (JsNumber.of_int 0))
          (expr_op2 binary_op_sub
           (expr_op2 binary_op_add (expr_app (expr_id "%Day") [expr_id "t"])
@@ -2299,12 +2290,10 @@ expr_let "exc"
   expr_undefined) [])
 (expr_seq
  (expr_if
-  (expr_if (expr_op2 binary_op_stx_eq (expr_id "msg") expr_undefined)
-   expr_false expr_true)
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "msg") expr_undefined))
   (expr_seq
-   (expr_let "$newVal" (expr_id "msg")
-    (expr_set_field (expr_id "exc") (expr_string "message")
-     (expr_id "$newVal")))
+   (expr_set_field (expr_id "exc") (expr_string "message") (expr_id "msg"))
    (expr_set_attr pattr_enum (expr_id "exc") (expr_string "message")
     expr_false)) expr_undefined) (expr_id "exc"))
 .
@@ -2530,11 +2519,11 @@ expr_let "calledAsFunction"
 Definition ex_privObjectTypeCheck := 
 expr_let "t" (expr_op1 unary_op_typeof (expr_id "o"))
 (expr_let "c1"
- (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
-  expr_false expr_true)
+ (expr_op1 unary_op_not
+  (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object")))
  (expr_let "c2"
-  (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function"))
-   expr_false expr_true)
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function")))
   (expr_if (expr_if (expr_id "c1") (expr_id "c2") expr_false)
    (expr_app (expr_id "%TypeError")
     [expr_op2 binary_op_string_plus
@@ -2557,8 +2546,7 @@ expr_let "oldValue"
  (expr_app (expr_id "op")
   [expr_id "oldValue"; expr_number (JsNumber.of_int 1)])
  (expr_seq
-  (expr_let "$newVal" (expr_id "newValue")
-   (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "$newVal")))
+  (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "newValue"))
   (expr_id "oldValue")))
 .
 Definition ex_privPrefixDecrement := 
@@ -2577,8 +2565,7 @@ expr_let "oldValue"
  (expr_app (expr_id "op")
   [expr_id "oldValue"; expr_number (JsNumber.of_int 1)])
  (expr_seq
-  (expr_let "$newVal" (expr_id "newValue")
-   (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "$newVal")))
+  (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "newValue"))
   (expr_id "newValue")))
 .
 Definition ex_privPrimAdd := 
@@ -2704,12 +2691,12 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
            (expr_op2 binary_op_stx_eq (expr_id "j") (expr_id "searchLen"))
            expr_true
            (expr_if
-            (expr_if
+            (expr_op1 unary_op_not
              (expr_op2 binary_op_stx_eq
               (expr_op2 binary_op_char_at (expr_id "S")
                (expr_op2 binary_op_add (expr_id "k") (expr_id "j")))
-              (expr_op2 binary_op_char_at (expr_id "searchStr") (expr_id "j")))
-             expr_false expr_true) expr_false
+              (expr_op2 binary_op_char_at (expr_id "searchStr") (expr_id "j"))))
+            expr_false
             (expr_app (expr_id "check_j")
              [expr_op2 binary_op_add (expr_id "j")
               (expr_number (JsNumber.of_int 1))]))))
@@ -2743,10 +2730,9 @@ expr_let "len" (expr_op1 unary_op_strlen (expr_id "s"))
  (expr_lambda ["i"]
   (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "len"))
    (expr_seq
-    (expr_let "$newVal"
-     (expr_op2 binary_op_char_at (expr_id "s") (expr_id "i"))
-     (expr_set_field (expr_id "obj")
-      (expr_op1 unary_op_prim_to_str (expr_id "i")) (expr_id "$newVal")))
+    (expr_set_field (expr_id "obj")
+     (expr_op1 unary_op_prim_to_str (expr_id "i"))
+     (expr_op2 binary_op_char_at (expr_id "s") (expr_id "i")))
     (expr_app (expr_id "loop")
      [expr_op2 binary_op_add (expr_id "i") (expr_number (JsNumber.of_int 1))]))
    expr_undefined))
@@ -2801,8 +2787,8 @@ expr_label "ret"
 (expr_let "number" (expr_app (expr_id "%ToNumber") [expr_id "i"])
  (expr_seq
   (expr_if
-   (expr_if (expr_op2 binary_op_stx_eq (expr_id "number") (expr_id "number"))
-    expr_false expr_true)
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_stx_eq (expr_id "number") (expr_id "number")))
    (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
   (expr_seq
    (expr_if
@@ -2938,13 +2924,13 @@ expr_let "check"
 (expr_let "r1"
  (expr_app (expr_id "check") [expr_id "obj"; expr_string "valueOf"])
  (expr_if
-  (expr_if (expr_op2 binary_op_stx_eq (expr_id "r1") expr_null) expr_false
-   expr_true) (expr_id "r1")
+  (expr_op1 unary_op_not (expr_op2 binary_op_stx_eq (expr_id "r1") expr_null))
+  (expr_id "r1")
   (expr_let "r2"
    (expr_app (expr_id "check") [expr_id "obj"; expr_string "toString"])
    (expr_if
-    (expr_if (expr_op2 binary_op_stx_eq (expr_id "r2") expr_null) expr_false
-     expr_true) (expr_id "r2")
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_stx_eq (expr_id "r2") expr_null)) (expr_id "r2")
     (expr_app (expr_id "%TypeError")
      [expr_string "valueOf and toString both absent in toPrimitiveNum"])))))
 .
@@ -2991,9 +2977,8 @@ expr_let "number" (expr_app (expr_id "%ToNumber") [expr_id "n"])
  (expr_let "%or"
   (expr_let "%or"
    (expr_let "%or"
-    (expr_if
-     (expr_op2 binary_op_stx_eq (expr_id "number") (expr_id "number"))
-     expr_false expr_true)
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_stx_eq (expr_id "number") (expr_id "number")))
     (expr_if (expr_id "%or") (expr_id "%or")
      (expr_op2 binary_op_stx_eq (expr_id "number")
       (expr_number (JsNumber.of_int 0)))))
@@ -3051,9 +3036,9 @@ Definition ex_privUTC :=  expr_id "t" .
 Definition ex_privUnaryNeg := 
 expr_let "oldValue" (expr_app (expr_id "%ToNumber") [expr_id "expr"])
 (expr_if
- (expr_if
-  (expr_op2 binary_op_stx_eq (expr_id "oldValue") (expr_id "oldValue"))
-  expr_false expr_true) (expr_id "oldValue")
+ (expr_op1 unary_op_not
+  (expr_op2 binary_op_stx_eq (expr_id "oldValue") (expr_id "oldValue")))
+ (expr_id "oldValue")
  (expr_let "negOne"
   (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
    (expr_number (JsNumber.of_int 1)))
@@ -3373,9 +3358,9 @@ Definition ex_privbindLambda :=
 expr_label "ret"
 (expr_seq
  (expr_if
-  (expr_if
+  (expr_op1 unary_op_not
    (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
-    (expr_string "function")) expr_false expr_true)
+    (expr_string "function")))
   (expr_app (expr_id "%TypeError") [expr_string "this not function in bind"])
   expr_null)
  (expr_let "thisArg" (expr_get_field (expr_id "args") (expr_string "0"))
@@ -3536,9 +3521,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_let "procNormalElt"
      (expr_lambda ["nelt"; "k"]
       (expr_seq
-       (expr_let "$newVal" (expr_id "nelt")
-        (expr_set_field (expr_id "obj")
-         (expr_op1 unary_op_prim_to_str (expr_id "k")) (expr_id "$newVal")))
+       (expr_set_field (expr_id "obj")
+        (expr_op1 unary_op_prim_to_str (expr_id "k")) (expr_id "nelt"))
        (expr_op2 binary_op_add (expr_id "k")
         (expr_number (JsNumber.of_int 1)))))
      (expr_recc "procArrayElt"
@@ -3549,12 +3533,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
           (expr_op1 unary_op_prim_to_str (expr_id "fromIndex")))
          expr_undefined) (expr_id "toIndex")
         (expr_seq
-         (expr_let "$newVal"
+         (expr_set_field (expr_id "obj")
+          (expr_op1 unary_op_prim_to_str (expr_id "toIndex"))
           (expr_get_field (expr_id "arr")
-           (expr_op1 unary_op_prim_to_str (expr_id "fromIndex")))
-          (expr_set_field (expr_id "obj")
-           (expr_op1 unary_op_prim_to_str (expr_id "toIndex"))
-           (expr_id "$newVal")))
+           (expr_op1 unary_op_prim_to_str (expr_id "fromIndex"))))
          (expr_app (expr_id "procArrayElt")
           [expr_id "arr";
            expr_op2 binary_op_add (expr_id "fromIndex")
@@ -3575,11 +3557,11 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_recc "procAllElts"
     (expr_lambda ["from"; "fromIndex"; "toIndex"]
      (expr_if
-      (expr_if
+      (expr_op1 unary_op_not
        (expr_op2 binary_op_stx_eq
         (expr_get_field (expr_id "from")
          (expr_op1 unary_op_prim_to_str (expr_id "fromIndex")))
-        expr_undefined) expr_false expr_true)
+        expr_undefined))
       (expr_let "nextI"
        (expr_app (expr_id "procElt")
         [expr_id "A";
@@ -3600,16 +3582,14 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         expr_number (JsNumber.of_int 0);
         expr_number (JsNumber.of_int 0)])
       (expr_seq
-       (expr_let "$newVal" (expr_id "O")
-        (expr_set_field (expr_id "A") (expr_string "0") (expr_id "$newVal")))
+       (expr_set_field (expr_id "A") (expr_string "0") (expr_id "O"))
        (expr_number (JsNumber.of_int 1))))
      (expr_let "end"
       (expr_app (expr_id "procAllElts")
        [expr_id "args"; expr_number (JsNumber.of_int 0); expr_id "halftime"])
       (expr_seq
-       (expr_let "$newVal" (expr_id "end")
-        (expr_set_field (expr_id "A") (expr_string "length")
-         (expr_id "$newVal"))) (expr_id "A"))))))))
+       (expr_set_field (expr_id "A") (expr_string "length") (expr_id "end"))
+       (expr_id "A"))))))))
 .
 Definition ex_privconfigurableEval := 
 expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
@@ -3620,20 +3600,16 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_let "globalEnv"
   (expr_get_field (expr_id "%makeGlobalEnv") (expr_string "make"))
   (expr_seq
-   (expr_let "$newVal" (expr_id "evalThis")
-    (expr_set_field (expr_id "globalEnv") (expr_string "%this")
-     (expr_id "$newVal")))
+   (expr_set_field (expr_id "globalEnv") (expr_string "%this")
+    (expr_id "evalThis"))
    (expr_seq
-    (expr_let "$newVal" (expr_id "evalContext")
-     (expr_set_field (expr_id "globalEnv") (expr_string "%nonstrictContext")
-      (expr_id "$newVal")))
+    (expr_set_field (expr_id "globalEnv") (expr_string "%nonstrictContext")
+     (expr_id "evalContext"))
     (expr_seq
-     (expr_let "$newVal"
+     (expr_set_field (expr_id "globalEnv") (expr_string "%strictContext")
       (expr_object
        (objattrs_intro (expr_string "DeclEnvRec") expr_true expr_null
-        expr_null (expr_id "evalContext")) [])
-      (expr_set_field (expr_id "globalEnv") (expr_string "%strictContext")
-       (expr_id "$newVal")))
+        expr_null (expr_id "evalContext")) []))
      (expr_if
       (expr_op2 binary_op_stx_eq
        (expr_op1 unary_op_typeof (expr_id "evalStr")) (expr_string "string"))
@@ -3645,15 +3621,14 @@ Definition ex_privcreateLambda :=
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_let "t" (expr_op1 unary_op_typeof (expr_id "O"))
  (expr_let "c1"
-  (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
-   expr_false expr_true)
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object")))
   (expr_let "c2"
-   (expr_if
-    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function"))
-    expr_false expr_true)
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function")))
    (expr_let "c3"
-    (expr_if (expr_op2 binary_op_stx_eq (expr_id "O") expr_null) expr_false
-     expr_true)
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_stx_eq (expr_id "O") expr_null))
     (expr_seq
      (expr_if
       (expr_if (expr_if (expr_id "c1") (expr_id "c2") expr_false)
@@ -3669,10 +3644,10 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
         (expr_op2 binary_op_ge
          (expr_get_field (expr_id "args") (expr_string "length"))
          (expr_number (JsNumber.of_int 2)))
-        (expr_if
+        (expr_op1 unary_op_not
          (expr_op2 binary_op_stx_eq
-          (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined)
-         expr_false expr_true) expr_false)
+          (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined))
+        expr_false)
        (expr_let "Properties"
         (expr_app (expr_id "%ToObject")
          [expr_get_field (expr_id "args") (expr_string "1")])
@@ -3681,17 +3656,14 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
           (objattrs_intro (expr_string "Object") expr_true expr_null
            expr_null expr_undefined) [])
          (expr_seq
-          (expr_let "$newVal" (expr_id "obj")
-           (expr_set_field (expr_id "argsObj") (expr_string "0")
-            (expr_id "$newVal")))
+          (expr_set_field (expr_id "argsObj") (expr_string "0")
+           (expr_id "obj"))
           (expr_seq
-           (expr_let "$newVal" (expr_id "Properties")
-            (expr_set_field (expr_id "argsObj") (expr_string "1")
-             (expr_id "$newVal")))
+           (expr_set_field (expr_id "argsObj") (expr_string "1")
+            (expr_id "Properties"))
            (expr_seq
-            (expr_let "$newVal" (expr_number (JsNumber.of_int 2))
-             (expr_set_field (expr_id "argsObj") (expr_string "length")
-              (expr_id "$newVal")))
+            (expr_set_field (expr_id "argsObj") (expr_string "length")
+             (expr_number (JsNumber.of_int 2)))
             (expr_seq
              (expr_app (expr_id "%definePropertiesLambda")
               [expr_null; expr_id "argsObj"]) (expr_id "obj")))))))
@@ -3733,8 +3705,8 @@ Definition ex_privdefine15Property :=
 expr_let "%mkPropObj"
 (expr_lambda ["value"; "writable"; "enumerable"; "configurable"]
  (expr_if
-  (expr_if (expr_op2 binary_op_stx_eq (expr_id "value") expr_null) expr_false
-   expr_true)
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "value") expr_null))
   (expr_object
    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
     expr_undefined)
@@ -3847,11 +3819,11 @@ expr_seq
 (expr_let "t" (expr_op1 unary_op_typeof (expr_id "obj"))
  (expr_if
   (expr_if
-   (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
-    expr_false expr_true)
-   (expr_if
-    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function"))
-    expr_false expr_true) expr_false)
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object")))
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function")))
+   expr_false)
   (expr_throw (expr_string "defineOwnProperty didn't get object"))
   expr_undefined))
 (expr_let "fstr" (expr_app (expr_id "%ToString") [expr_id "field"])
@@ -3910,23 +3882,15 @@ expr_seq
     (expr_if
      (expr_op2 binary_op_is_accessor (expr_id "obj") (expr_id "fstr"))
      (expr_seq
-      (expr_let "$newVal"
-       (expr_get_attr pattr_getter (expr_id "obj") (expr_id "fstr"))
-       (expr_set_field (expr_id "current-prop") (expr_string "get")
-        (expr_id "$newVal")))
-      (expr_let "$newVal"
-       (expr_get_attr pattr_setter (expr_id "obj") (expr_id "fstr"))
-       (expr_set_field (expr_id "current-prop") (expr_string "set")
-        (expr_id "$newVal"))))
+      (expr_set_field (expr_id "current-prop") (expr_string "get")
+       (expr_get_attr pattr_getter (expr_id "obj") (expr_id "fstr")))
+      (expr_set_field (expr_id "current-prop") (expr_string "set")
+       (expr_get_attr pattr_setter (expr_id "obj") (expr_id "fstr"))))
      (expr_seq
-      (expr_let "$newVal"
-       (expr_get_attr pattr_writable (expr_id "obj") (expr_id "fstr"))
-       (expr_set_field (expr_id "current-prop") (expr_string "writable")
-        (expr_id "$newVal")))
-      (expr_let "$newVal"
-       (expr_get_attr pattr_value (expr_id "obj") (expr_id "fstr"))
-       (expr_set_field (expr_id "current-prop") (expr_string "value")
-        (expr_id "$newVal")))))
+      (expr_set_field (expr_id "current-prop") (expr_string "writable")
+       (expr_get_attr pattr_writable (expr_id "obj") (expr_id "fstr")))
+      (expr_set_field (expr_id "current-prop") (expr_string "value")
+       (expr_get_attr pattr_value (expr_id "obj") (expr_id "fstr")))))
     (expr_seq
      (expr_if
       (expr_op2 binary_op_stx_eq
@@ -3950,11 +3914,10 @@ expr_seq
            "(defineOwnPoperty) Can't change enumerable of a non-configurable property"])
          expr_undefined))
        (expr_if
-        (expr_if
+        (expr_op1 unary_op_not
          (expr_op2 binary_op_stx_eq
           (expr_app (expr_id "isDataDescriptor") [expr_id "current-prop"])
-          (expr_app (expr_id "isDataDescriptor") [expr_id "attr-obj"]))
-         expr_false expr_true)
+          (expr_app (expr_id "isDataDescriptor") [expr_id "attr-obj"])))
         (expr_if
          (expr_op2 binary_op_stx_eq
           (expr_get_attr pattr_config (expr_id "obj") (expr_id "fstr"))
@@ -4044,11 +4007,10 @@ expr_seq
            (expr_get_field (expr_id "current-prop") (expr_string "value")))
           expr_undefined)
          (expr_if
-          (expr_if
+          (expr_op1 unary_op_not
            (expr_op2 binary_op_stx_eq
             (expr_get_attr pattr_writable (expr_id "obj") (expr_id "fstr"))
-            (expr_get_field (expr_id "current-prop") (expr_string "writable")))
-           expr_false expr_true)
+            (expr_get_field (expr_id "current-prop") (expr_string "writable"))))
           (expr_set_attr pattr_writable (expr_id "obj") (expr_id "fstr")
            (expr_get_field (expr_id "current-prop") (expr_string "writable")))
           expr_undefined))
@@ -4062,21 +4024,21 @@ expr_seq
          expr_undefined))
        (expr_seq
         (expr_if
-         (expr_if
+         (expr_op1 unary_op_not
           (expr_op2 binary_op_stx_eq
            (expr_get_attr pattr_enum (expr_id "obj") (expr_id "fstr"))
            (expr_get_field (expr_id "current-prop")
-            (expr_string "enumerable"))) expr_false expr_true)
+            (expr_string "enumerable"))))
          (expr_set_attr pattr_enum (expr_id "obj") (expr_id "fstr")
           (expr_get_field (expr_id "current-prop") (expr_string "enumerable")))
          expr_undefined)
         (expr_seq
          (expr_if
-          (expr_if
+          (expr_op1 unary_op_not
            (expr_op2 binary_op_stx_eq
             (expr_get_attr pattr_config (expr_id "obj") (expr_id "fstr"))
             (expr_get_field (expr_id "current-prop")
-             (expr_string "configurable"))) expr_false expr_true)
+             (expr_string "configurable"))))
           (expr_set_attr pattr_config (expr_id "obj") (expr_id "fstr")
            (expr_get_field (expr_id "current-prop")
             (expr_string "configurable"))) expr_undefined) expr_true)))))))))
@@ -4104,22 +4066,17 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
               (objattrs_intro (expr_string "Object") expr_true expr_null
                expr_null expr_undefined) [])
              (expr_seq
-              (expr_let "$newVal" (expr_id "O")
-               (expr_set_field (expr_id "argsObj") (expr_string "0")
-                (expr_id "$newVal")))
+              (expr_set_field (expr_id "argsObj") (expr_string "0")
+               (expr_id "O"))
               (expr_seq
-               (expr_let "$newVal" (expr_id "name")
-                (expr_set_field (expr_id "argsObj") (expr_string "1")
-                 (expr_id "$newVal")))
+               (expr_set_field (expr_id "argsObj") (expr_string "1")
+                (expr_id "name"))
                (expr_seq
-                (expr_let "$newVal"
-                 (expr_get_field (expr_id "props") (expr_id "name"))
-                 (expr_set_field (expr_id "argsObj") (expr_string "2")
-                  (expr_id "$newVal")))
+                (expr_set_field (expr_id "argsObj") (expr_string "2")
+                 (expr_get_field (expr_id "props") (expr_id "name")))
                 (expr_seq
-                 (expr_let "$newVal" (expr_number (JsNumber.of_int 3))
-                  (expr_set_field (expr_id "argsObj") (expr_string "length")
-                   (expr_id "$newVal")))
+                 (expr_set_field (expr_id "argsObj") (expr_string "length")
+                  (expr_number (JsNumber.of_int 3)))
                  (expr_seq
                   (expr_app (expr_id "%definePropertylambda")
                    [expr_null; expr_id "argsObj"])
@@ -4150,82 +4107,76 @@ expr_let "obj" (expr_get_field (expr_id "args") (expr_string "0"))
      (expr_let "enumerable"
       (expr_get_field (expr_id "propobj") (expr_string "enumerable"))
       (expr_if
-       (expr_if
+       (expr_op1 unary_op_not
         (expr_op2 binary_op_stx_eq
          (expr_op1 unary_op_typeof (expr_id "enumerable"))
-         (expr_string "undefined")) expr_false expr_true)
-       (expr_let "$newVal" (expr_id "enumerable")
-        (expr_set_field (expr_id "attrobj") (expr_string "enumerable")
-         (expr_id "$newVal"))) (expr_id "attrobj")))
+         (expr_string "undefined")))
+       (expr_set_field (expr_id "attrobj") (expr_string "enumerable")
+        (expr_id "enumerable")) (expr_id "attrobj")))
      (expr_seq
       (expr_let "configurable"
        (expr_get_field (expr_id "propobj") (expr_string "configurable"))
        (expr_if
-        (expr_if
+        (expr_op1 unary_op_not
          (expr_op2 binary_op_stx_eq
           (expr_op1 unary_op_typeof (expr_id "configurable"))
-          (expr_string "undefined")) expr_false expr_true)
-        (expr_let "$newVal" (expr_id "configurable")
-         (expr_set_field (expr_id "attrobj") (expr_string "configurable")
-          (expr_id "$newVal"))) (expr_id "attrobj")))
+          (expr_string "undefined")))
+        (expr_set_field (expr_id "attrobj") (expr_string "configurable")
+         (expr_id "configurable")) (expr_id "attrobj")))
       (expr_seq
        (expr_let "writable"
         (expr_get_field (expr_id "propobj") (expr_string "writable"))
         (expr_if
-         (expr_if
+         (expr_op1 unary_op_not
           (expr_op2 binary_op_stx_eq
            (expr_op1 unary_op_typeof (expr_id "writable"))
-           (expr_string "undefined")) expr_false expr_true)
-         (expr_let "$newVal" (expr_id "writable")
-          (expr_set_field (expr_id "attrobj") (expr_string "writable")
-           (expr_id "$newVal"))) (expr_id "attrobj")))
+           (expr_string "undefined")))
+         (expr_set_field (expr_id "attrobj") (expr_string "writable")
+          (expr_id "writable")) (expr_id "attrobj")))
        (expr_seq
         (expr_let "value"
          (expr_get_field (expr_id "propobj") (expr_string "value"))
          (expr_if
-          (expr_if
+          (expr_op1 unary_op_not
            (expr_op2 binary_op_stx_eq
             (expr_op1 unary_op_typeof (expr_id "value"))
-            (expr_string "undefined")) expr_false expr_true)
-          (expr_let "$newVal" (expr_id "value")
-           (expr_set_field (expr_id "attrobj") (expr_string "value")
-            (expr_id "$newVal"))) (expr_id "attrobj")))
+            (expr_string "undefined")))
+          (expr_set_field (expr_id "attrobj") (expr_string "value")
+           (expr_id "value")) (expr_id "attrobj")))
         (expr_seq
          (expr_let "get"
           (expr_get_field (expr_id "propobj") (expr_string "get"))
           (expr_if
            (expr_if
-            (expr_if
+            (expr_op1 unary_op_not
              (expr_op2 binary_op_stx_eq
               (expr_op1 unary_op_typeof (expr_id "get"))
-              (expr_string "undefined")) expr_false expr_true)
-            (expr_if
+              (expr_string "undefined")))
+            (expr_op1 unary_op_not
              (expr_op2 binary_op_stx_eq
               (expr_op1 unary_op_typeof (expr_id "get"))
-              (expr_string "function")) expr_false expr_true) expr_false)
+              (expr_string "function"))) expr_false)
            (expr_app (expr_id "%TypeError")
             [expr_string "defineProperty given a non-function getter"])
-           (expr_let "$newVal" (expr_id "get")
-            (expr_set_field (expr_id "attrobj") (expr_string "get")
-             (expr_id "$newVal")))))
+           (expr_set_field (expr_id "attrobj") (expr_string "get")
+            (expr_id "get"))))
          (expr_seq
           (expr_let "set"
            (expr_get_field (expr_id "propobj") (expr_string "set"))
            (expr_if
             (expr_if
-             (expr_if
+             (expr_op1 unary_op_not
               (expr_op2 binary_op_stx_eq
                (expr_op1 unary_op_typeof (expr_id "set"))
-               (expr_string "undefined")) expr_false expr_true)
-             (expr_if
+               (expr_string "undefined")))
+             (expr_op1 unary_op_not
               (expr_op2 binary_op_stx_eq
                (expr_op1 unary_op_typeof (expr_id "set"))
-               (expr_string "function")) expr_false expr_true) expr_false)
+               (expr_string "function"))) expr_false)
             (expr_app (expr_id "%TypeError")
              [expr_string "defineProperty given a non-function setter"])
-            (expr_let "$newVal" (expr_id "set")
-             (expr_set_field (expr_id "attrobj") (expr_string "set")
-              (expr_id "$newVal")))))
+            (expr_set_field (expr_id "attrobj") (expr_string "set")
+             (expr_id "set"))))
           (expr_if
            (expr_if
             (expr_app (expr_id "isDataDescriptor") [expr_id "attrobj"])
@@ -4244,9 +4195,9 @@ Definition ex_privencodeURILambda :=  expr_string "encodeURI NYI" .
 Definition ex_privescapeLambda :=  expr_string "escape NYI" .
 Definition ex_privetslambda := 
 expr_if
-(expr_if
+(expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
-  (expr_string "object")) expr_false expr_true)
+  (expr_string "object")))
 (expr_app (expr_id "%TypeError")
  [expr_string "This not object in Error.prototype.toString"])
 (expr_let "name"
@@ -4292,10 +4243,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_label "ret"
     (expr_seq
      (expr_if
-      (expr_if
+      (expr_op1 unary_op_not
        (expr_op2 binary_op_stx_eq
         (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-        (expr_string "function")) expr_false expr_true)
+        (expr_string "function")))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not function in every"]) expr_null)
      (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
@@ -4312,21 +4263,17 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                (objattrs_intro (expr_string "Object") expr_true expr_null
                 expr_null expr_undefined) [])
               (expr_seq
-               (expr_let "$newVal" (expr_id "kValue")
-                (expr_set_field (expr_id "argsObj") (expr_string "0")
-                 (expr_id "$newVal")))
+               (expr_set_field (expr_id "argsObj") (expr_string "0")
+                (expr_id "kValue"))
                (expr_seq
-                (expr_let "$newVal" (expr_id "k")
-                 (expr_set_field (expr_id "argsObj") (expr_string "1")
-                  (expr_id "$newVal")))
+                (expr_set_field (expr_id "argsObj") (expr_string "1")
+                 (expr_id "k"))
                 (expr_seq
-                 (expr_let "$newVal" (expr_id "O")
-                  (expr_set_field (expr_id "argsObj") (expr_string "2")
-                   (expr_id "$newVal")))
+                 (expr_set_field (expr_id "argsObj") (expr_string "2")
+                  (expr_id "O"))
                  (expr_seq
-                  (expr_let "$newVal" (expr_number (JsNumber.of_int 3))
-                   (expr_set_field (expr_id "argsObj") (expr_string "length")
-                    (expr_id "$newVal")))
+                  (expr_set_field (expr_id "argsObj") (expr_string "length")
+                   (expr_number (JsNumber.of_int 3)))
                   (expr_let "testResult"
                    (expr_app (expr_id "callbackfn")
                     [expr_id "T"; expr_id "argsObj"])
@@ -4352,10 +4299,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_label "ret"
     (expr_seq
      (expr_if
-      (expr_if
+      (expr_op1 unary_op_not
        (expr_op2 binary_op_stx_eq
         (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-        (expr_string "function")) expr_false expr_true)
+        (expr_string "function")))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not a function in filter"]) expr_null)
      (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
@@ -4378,21 +4325,17 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                (objattrs_intro (expr_string "Object") expr_true expr_null
                 expr_null expr_undefined) [])
               (expr_seq
-               (expr_let "$newVal" (expr_id "kValue")
-                (expr_set_field (expr_id "argsObj") (expr_string "0")
-                 (expr_id "$newVal")))
+               (expr_set_field (expr_id "argsObj") (expr_string "0")
+                (expr_id "kValue"))
                (expr_seq
-                (expr_let "$newVal" (expr_id "k")
-                 (expr_set_field (expr_id "argsObj") (expr_string "1")
-                  (expr_id "$newVal")))
+                (expr_set_field (expr_id "argsObj") (expr_string "1")
+                 (expr_id "k"))
                 (expr_seq
-                 (expr_let "$newVal" (expr_id "O")
-                  (expr_set_field (expr_id "argsObj") (expr_string "2")
-                   (expr_id "$newVal")))
+                 (expr_set_field (expr_id "argsObj") (expr_string "2")
+                  (expr_id "O"))
                  (expr_seq
-                  (expr_let "$newVal" (expr_number (JsNumber.of_int 3))
-                   (expr_set_field (expr_id "argsObj") (expr_string "length")
-                    (expr_id "$newVal")))
+                  (expr_set_field (expr_id "argsObj") (expr_string "length")
+                   (expr_number (JsNumber.of_int 3)))
                   (expr_let "selected"
                    (expr_app (expr_id "callbackfn")
                     [expr_id "T"; expr_id "argsObj"])
@@ -4430,9 +4373,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              [expr_op2 binary_op_add (expr_id "k")
               (expr_number (JsNumber.of_int 1));
               expr_id "to"])))
-          (expr_let "$newVal" (expr_id "to")
-           (expr_set_field (expr_id "A") (expr_string "length")
-            (expr_id "$newVal")))))
+          (expr_set_field (expr_id "A") (expr_string "length") (expr_id "to"))))
         (expr_seq
          (expr_app (expr_id "loop")
           [expr_number (JsNumber.of_int 0); expr_number (JsNumber.of_int 0)])
@@ -4446,10 +4387,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_label "ret"
     (expr_seq
      (expr_if
-      (expr_if
+      (expr_op1 unary_op_not
        (expr_op2 binary_op_stx_eq
         (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-        (expr_string "function")) expr_false expr_true)
+        (expr_string "function")))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not a function in forEach"]) expr_undefined)
      (expr_seq
@@ -4707,15 +4648,12 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            (expr_op2 binary_op_sub (expr_id "len")
             (expr_op2 binary_op_add (expr_id "i")
              (expr_number (JsNumber.of_int 1)))))
-          (expr_let "$newVal"
-           (expr_get_field (expr_id "props") (expr_id "from"))
-           (expr_set_field (expr_id "A") (expr_id "to") (expr_id "$newVal")))))
+          (expr_set_field (expr_id "A") (expr_id "to")
+           (expr_get_field (expr_id "props") (expr_id "from")))))
         (expr_app (expr_id "loop")
          [expr_op2 binary_op_add (expr_id "i")
           (expr_number (JsNumber.of_int 1))]))
-       (expr_let "$newVal" (expr_id "i")
-        (expr_set_field (expr_id "A") (expr_string "length")
-         (expr_id "$newVal")))))
+       (expr_set_field (expr_id "A") (expr_string "length") (expr_id "i"))))
      (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])
       (expr_id "A")))))))
 .
@@ -4733,12 +4671,11 @@ Definition ex_privin :=
 expr_let "rtype" (expr_op1 unary_op_typeof (expr_id "r"))
 (expr_if
  (expr_if
-  (expr_if
-   (expr_op2 binary_op_stx_eq (expr_id "rtype") (expr_string "object"))
-   expr_false expr_true)
-  (expr_if
-   (expr_op2 binary_op_stx_eq (expr_id "rtype") (expr_string "function"))
-   expr_false expr_true) expr_false)
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "rtype") (expr_string "object")))
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "rtype") (expr_string "function")))
+  expr_false)
  (expr_app (expr_id "%TypeError")
   [expr_op2 binary_op_string_plus
    (expr_app (expr_id "%ToString") [expr_id "r"])
@@ -4752,32 +4689,29 @@ expr_let "rtype" (expr_op1 unary_op_typeof (expr_id "r"))
  (expr_label "ret"
   (expr_seq
    (expr_if
-    (expr_if
-     (expr_op2 binary_op_stx_eq (expr_id "rtype") (expr_string "function"))
-     expr_false expr_true)
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_stx_eq (expr_id "rtype") (expr_string "function")))
     (expr_app (expr_id "%TypeError")
      [expr_string "Non-function given to instanceof"]) expr_null)
    (expr_seq
     (expr_if
      (expr_if
-      (expr_if
-       (expr_op2 binary_op_stx_eq (expr_id "ltype") (expr_string "function"))
-       expr_false expr_true)
-      (expr_if
-       (expr_op2 binary_op_stx_eq (expr_id "ltype") (expr_string "object"))
-       expr_false expr_true) expr_false) (expr_break "ret" expr_false)
-     expr_null)
+      (expr_op1 unary_op_not
+       (expr_op2 binary_op_stx_eq (expr_id "ltype") (expr_string "function")))
+      (expr_op1 unary_op_not
+       (expr_op2 binary_op_stx_eq (expr_id "ltype") (expr_string "object")))
+      expr_false) (expr_break "ret" expr_false) expr_null)
     (expr_let "O" (expr_get_field (expr_id "r") (expr_string "prototype"))
      (expr_let "Otype" (expr_op1 unary_op_typeof (expr_id "O"))
       (expr_seq
        (expr_if
         (expr_if
-         (expr_if
+         (expr_op1 unary_op_not
           (expr_op2 binary_op_stx_eq (expr_id "Otype")
-           (expr_string "function")) expr_false expr_true)
-         (expr_if
-          (expr_op2 binary_op_stx_eq (expr_id "Otype") (expr_string "object"))
-          expr_false expr_true) expr_false)
+           (expr_string "function")))
+         (expr_op1 unary_op_not
+          (expr_op2 binary_op_stx_eq (expr_id "Otype") (expr_string "object")))
+         expr_false)
         (expr_app (expr_id "%TypeError")
          [expr_string "Prototype was not function or object"]) expr_null)
        (expr_recc "search"
@@ -4837,8 +4771,8 @@ Definition ex_privisNaNlambda :=
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "args") (expr_string "0")])
-(expr_if (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n")) expr_false
- expr_true)
+(expr_op1 unary_op_not
+ (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n")))
 .
 Definition ex_privisSealedLambda := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
@@ -4965,9 +4899,8 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            [expr_op2 binary_op_add (expr_id "i")
             (expr_number (JsNumber.of_int 1));
             expr_id "enumCount"]))))
-       (expr_let "$newVal" (expr_id "enumCount")
-        (expr_set_field (expr_id "A") (expr_string "length")
-         (expr_id "$newVal")))))
+       (expr_set_field (expr_id "A") (expr_string "length")
+        (expr_id "enumCount"))))
      (expr_seq
       (expr_app (expr_id "loop")
        [expr_number (JsNumber.of_int 0); expr_number (JsNumber.of_int 0)])
@@ -5016,10 +4949,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_label "ret"
     (expr_seq
      (expr_if
-      (expr_if
+      (expr_op1 unary_op_not
        (expr_op2 binary_op_stx_eq
         (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-        (expr_string "function")) expr_false expr_true)
+        (expr_string "function")))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not a function in map"]) expr_null)
      (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
@@ -5039,21 +4972,17 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                (objattrs_intro (expr_string "Object") expr_true expr_null
                 expr_null expr_undefined) [])
               (expr_seq
-               (expr_let "$newVal" (expr_id "kValue")
-                (expr_set_field (expr_id "argsObj") (expr_string "0")
-                 (expr_id "$newVal")))
+               (expr_set_field (expr_id "argsObj") (expr_string "0")
+                (expr_id "kValue"))
                (expr_seq
-                (expr_let "$newVal" (expr_id "k")
-                 (expr_set_field (expr_id "argsObj") (expr_string "1")
-                  (expr_id "$newVal")))
+                (expr_set_field (expr_id "argsObj") (expr_string "1")
+                 (expr_id "k"))
                 (expr_seq
-                 (expr_let "$newVal" (expr_id "O")
-                  (expr_set_field (expr_id "argsObj") (expr_string "2")
-                   (expr_id "$newVal")))
+                 (expr_set_field (expr_id "argsObj") (expr_string "2")
+                  (expr_id "O"))
                  (expr_seq
-                  (expr_let "$newVal" (expr_number (JsNumber.of_int 3))
-                   (expr_set_field (expr_id "argsObj") (expr_string "length")
-                    (expr_id "$newVal")))
+                  (expr_set_field (expr_id "argsObj") (expr_string "length")
+                   (expr_number (JsNumber.of_int 3)))
                   (expr_seq
                    (expr_let "mappedValue"
                     (expr_app (expr_id "callbackfn")
@@ -5082,9 +5011,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_add (expr_id "k")
               (expr_number (JsNumber.of_int 1))])))
-          (expr_let "$newVal" (expr_id "k")
-           (expr_set_field (expr_id "A") (expr_string "length")
-            (expr_id "$newVal")))))
+          (expr_set_field (expr_id "A") (expr_string "length") (expr_id "k"))))
         (expr_seq
          (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])
          (expr_break "ret" (expr_id "A")))))))))))
@@ -5096,8 +5023,9 @@ expr_let "n"
 (expr_label "ret"
  (expr_seq
   (expr_if
-   (expr_if (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n"))
-    expr_false expr_true) (expr_break "ret" (expr_id "n")) expr_null)
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n")))
+   (expr_break "ret" (expr_id "n")) expr_null)
   (expr_seq
    (expr_if
     (expr_op2 binary_op_stx_eq (expr_id "n")
@@ -5115,8 +5043,8 @@ expr_let "x"
    (expr_let "%or"
     (expr_let "%or"
      (expr_let "%or"
-      (expr_if (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x"))
-       expr_false expr_true)
+      (expr_op1 unary_op_not
+       (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x")))
       (expr_if (expr_id "%or") (expr_id "%or")
        (expr_op2 binary_op_stx_eq (expr_id "x")
         (expr_number (JsNumber.of_int 0)))))
@@ -5138,8 +5066,8 @@ expr_let "x"
    (expr_let "%or"
     (expr_let "%or"
      (expr_let "%or"
-      (expr_if (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x"))
-       expr_false expr_true)
+      (expr_op1 unary_op_not
+       (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x")))
       (expr_if (expr_id "%or") (expr_id "%or")
        (expr_op2 binary_op_stx_eq (expr_id "x")
         (expr_number (JsNumber.of_int 0)))))
@@ -5158,8 +5086,9 @@ expr_let "n"
 (expr_label "ret"
  (expr_seq
   (expr_if
-   (expr_if (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n"))
-    expr_false expr_true) (expr_break "ret" (expr_id "n")) expr_null)
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n")))
+   (expr_break "ret" (expr_id "n")) expr_null)
   (expr_seq
    (expr_if
     (expr_op2 binary_op_lt (expr_id "n") (expr_number (JsNumber.of_int 0)))
@@ -5204,8 +5133,8 @@ expr_let "x"
  (expr_label "ret"
   (expr_seq
    (expr_if
-    (expr_if (expr_op2 binary_op_stx_eq (expr_id "y") (expr_id "y"))
-     expr_false expr_true)
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_stx_eq (expr_id "y") (expr_id "y")))
     (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
    (expr_seq
     (expr_if
@@ -5215,11 +5144,11 @@ expr_let "x"
     (expr_seq
      (expr_if
       (expr_if
-       (expr_if (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x"))
-        expr_false expr_true)
-       (expr_if
+       (expr_op1 unary_op_not
+        (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x")))
+       (expr_op1 unary_op_not
         (expr_op2 binary_op_stx_eq (expr_id "y")
-         (expr_number (JsNumber.of_int 0))) expr_false expr_true) expr_false)
+         (expr_number (JsNumber.of_int 0)))) expr_false)
       (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
      (expr_let "absX" (expr_op1 unary_op_abs (expr_id "x"))
       (expr_seq
@@ -5290,10 +5219,10 @@ expr_let "x"
                 (expr_if
                  (expr_op2 binary_op_stx_eq
                   (expr_op1 unary_op_floor (expr_id "n")) (expr_id "n"))
-                 (expr_if
+                 (expr_op1 unary_op_not
                   (expr_op2 binary_op_stx_eq
                    (expr_op1 unary_op_floor (expr_id "divided"))
-                   (expr_id "divided")) expr_false expr_true) expr_false)))
+                   (expr_id "divided"))) expr_false)))
               (expr_seq
                (expr_if
                 (expr_if
@@ -5358,14 +5287,12 @@ expr_let "x"
                      (expr_let "isFinite"
                       (expr_lambda ["n"]
                        (expr_if
-                        (expr_if
+                        (expr_op1 unary_op_not
                          (expr_op2 binary_op_stx_eq (expr_id "n")
-                          (expr_number (JsNumber.of_int 0))) expr_false
-                         expr_true)
-                        (expr_if
+                          (expr_number (JsNumber.of_int 0))))
+                        (expr_op1 unary_op_not
                          (expr_op2 binary_op_stx_eq (expr_id "n")
-                          (expr_number (JsNumber.of_int 0))) expr_false
-                         expr_true) expr_false))
+                          (expr_number (JsNumber.of_int 0)))) expr_false))
                       (expr_let "finiteX"
                        (expr_app (expr_id "isFinite") [expr_id "x"])
                        (expr_let "finiteY"
@@ -5378,10 +5305,10 @@ expr_let "x"
                              (expr_number (JsNumber.of_int 0)))
                             (expr_id "finiteX") expr_false)
                            (expr_id "finiteY") expr_false)
-                          (expr_if
+                          (expr_op1 unary_op_not
                            (expr_op2 binary_op_stx_eq
                             (expr_op1 unary_op_floor (expr_id "y"))
-                            (expr_id "y")) expr_false expr_true) expr_false)
+                            (expr_id "y"))) expr_false)
                          (expr_break "ret" (expr_number (JsNumber.of_int 0)))
                          expr_null))))
                      (expr_break "ret"
@@ -5423,9 +5350,8 @@ expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
         (expr_op1 unary_op_prim_to_str (expr_id "i"))])
       (expr_seq
        (expr_if
-        (expr_if
-         (expr_op2 binary_op_stx_eq (expr_id "curr") (expr_id "curr"))
-         expr_false expr_true)
+        (expr_op1 unary_op_not
+         (expr_op2 binary_op_stx_eq (expr_id "curr") (expr_id "curr")))
         (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
        (expr_app (expr_id "loop")
         [expr_app (expr_id "op") [expr_id "best"; expr_id "curr"];
@@ -5438,9 +5364,7 @@ expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
 Definition ex_privmkArgsObj := 
 expr_let "argsObj" (expr_app (expr_id "%mkArgsObjBase") [expr_id "args"])
 (expr_seq
- (expr_let "$newVal" expr_false
-  (expr_set_field (expr_id "argsObj") (expr_string "%new")
-   (expr_id "$newVal")))
+ (expr_set_field (expr_id "argsObj") (expr_string "%new") expr_false)
  (expr_seq
   (expr_set_attr pattr_writable (expr_id "argsObj") (expr_string "%new")
    expr_false) (expr_id "argsObj")))
@@ -5517,10 +5441,7 @@ expr_let "keys" (expr_own_field_names (expr_id "args"))
 .
 Definition ex_privmkNewArgsObj := 
 expr_let "argsObj" (expr_app (expr_id "%mkArgsObjBase") [expr_id "args"])
-(expr_seq
- (expr_let "$newVal" expr_true
-  (expr_set_field (expr_id "argsObj") (expr_string "%new")
-   (expr_id "$newVal")))
+(expr_seq (expr_set_field (expr_id "argsObj") (expr_string "%new") expr_true)
  (expr_seq
   (expr_set_attr pattr_writable (expr_id "argsObj") (expr_string "%new")
    expr_false) (expr_id "argsObj")))
@@ -5556,8 +5477,9 @@ expr_recc "nts"
  (expr_label "ret"
   (expr_seq
    (expr_if
-    (expr_if (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n"))
-     expr_false expr_true) (expr_break "ret" (expr_string "NaN")) expr_null)
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n")))
+    (expr_break "ret" (expr_string "NaN")) expr_null)
    (expr_seq
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_id "n")
@@ -5592,15 +5514,14 @@ expr_recc "nts"
 .
 Definition ex_privnumberToStringlambda := 
 expr_let "notNumProto"
-(expr_if
- (expr_op2 binary_op_stx_eq (expr_id "this") (expr_id "%NumberProto"))
- expr_false expr_true)
+(expr_op1 unary_op_not
+ (expr_op2 binary_op_stx_eq (expr_id "this") (expr_id "%NumberProto")))
 (expr_if
  (expr_if (expr_id "notNumProto")
-  (expr_if
+  (expr_op1 unary_op_not
    (expr_op2 binary_op_stx_eq
-    (expr_get_obj_attr oattr_proto (expr_id "this")) (expr_id "%NumberProto"))
-   expr_false expr_true) expr_false)
+    (expr_get_obj_attr oattr_proto (expr_id "this")) (expr_id "%NumberProto")))
+  expr_false)
  (expr_throw
   (expr_object
    (objattrs_intro (expr_string "Object") expr_true
@@ -5674,9 +5595,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_op2 binary_op_stx_eq (expr_id "len")
     (expr_number (JsNumber.of_int 0)))
    (expr_seq
-    (expr_let "$newVal" (expr_number (JsNumber.of_int 0))
-     (expr_set_field (expr_id "O") (expr_string "length") (expr_id "$newVal")))
-    expr_undefined)
+    (expr_set_field (expr_id "O") (expr_string "length")
+     (expr_number (JsNumber.of_int 0))) expr_undefined)
    (expr_let "indx"
     (expr_app (expr_id "%ToString")
      [expr_op2 binary_op_sub (expr_id "len")
@@ -5684,9 +5604,9 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_let "element" (expr_get_field (expr_id "O") (expr_id "indx"))
      (expr_seq (expr_delete_field (expr_id "O") (expr_id "indx"))
       (expr_seq
-       (expr_let "$newVal" (expr_app (expr_id "%ToNumber") [expr_id "indx"])
-        (expr_set_field (expr_id "O") (expr_string "length")
-         (expr_id "$newVal"))) (expr_id "element"))))))))
+       (expr_set_field (expr_id "O") (expr_string "length")
+        (expr_app (expr_id "%ToNumber") [expr_id "indx"]))
+       (expr_id "element"))))))))
 .
 Definition ex_privpreventExtensionsLambda := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
@@ -5755,10 +5675,9 @@ expr_let "aux"
               (expr_get_field (expr_id "cur") (expr_id "istr")))
              (expr_if (expr_id "%or") (expr_id "%or")
               (expr_id "get-non-enumerable")))
-            (expr_let "$newVal" expr_true
-             (expr_set_field (expr_id "aux")
-              (expr_get_field (expr_id "cur") (expr_id "istr"))
-              (expr_id "$newVal"))) expr_undefined)
+            (expr_set_field (expr_id "aux")
+             (expr_get_field (expr_id "cur") (expr_id "istr")) expr_true)
+            expr_undefined)
            (expr_app (expr_id "loop")
             [expr_op2 binary_op_add (expr_id "i")
              (expr_number (JsNumber.of_int 1))]))) expr_undefined))
@@ -5813,10 +5732,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_label "ret"
      (expr_seq
       (expr_if
-       (expr_if
+       (expr_op1 unary_op_not
         (expr_op2 binary_op_stx_eq
          (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-         (expr_string "function")) expr_false expr_true)
+         (expr_string "function")))
        (expr_app (expr_id "%TypeError")
         [expr_string "Callback not function in reduceRight"]) expr_null)
       (expr_seq
@@ -5866,25 +5785,21 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   (objattrs_intro (expr_string "Object") expr_true expr_null
                    expr_null expr_undefined) [])
                  (expr_seq
-                  (expr_let "$newVal" (expr_id "accumulator")
-                   (expr_set_field (expr_id "argsObj") (expr_string "0")
-                    (expr_id "$newVal")))
+                  (expr_set_field (expr_id "argsObj") (expr_string "0")
+                   (expr_id "accumulator"))
                   (expr_seq
-                   (expr_let "$newVal" (expr_id "kValue")
-                    (expr_set_field (expr_id "argsObj") (expr_string "1")
-                     (expr_id "$newVal")))
+                   (expr_set_field (expr_id "argsObj") (expr_string "1")
+                    (expr_id "kValue"))
                    (expr_seq
-                    (expr_let "$newVal" (expr_id "k")
-                     (expr_set_field (expr_id "argsObj") (expr_string "2")
-                      (expr_id "$newVal")))
+                    (expr_set_field (expr_id "argsObj") (expr_string "2")
+                     (expr_id "k"))
                     (expr_seq
-                     (expr_let "$newVal" (expr_id "O")
-                      (expr_set_field (expr_id "argsObj") (expr_string "3")
-                       (expr_id "$newVal")))
+                     (expr_set_field (expr_id "argsObj") (expr_string "3")
+                      (expr_id "O"))
                      (expr_seq
-                      (expr_let "$newVal" (expr_number (JsNumber.of_int 4))
-                       (expr_set_field (expr_id "argsObj")
-                        (expr_string "length") (expr_id "$newVal")))
+                      (expr_set_field (expr_id "argsObj")
+                       (expr_string "length")
+                       (expr_number (JsNumber.of_int 4)))
                       (expr_let "next"
                        (expr_app (expr_id "callbackfn")
                         [expr_undefined; expr_id "argsObj"])
@@ -5914,10 +5829,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_label "ret"
      (expr_seq
       (expr_if
-       (expr_if
+       (expr_op1 unary_op_not
         (expr_op2 binary_op_stx_eq
          (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-         (expr_string "function")) expr_false expr_true)
+         (expr_string "function")))
        (expr_app (expr_id "%TypeError")
         [expr_string "Callback not a function in reduce"]) expr_null)
       (expr_seq
@@ -5964,25 +5879,21 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   (objattrs_intro (expr_string "Object") expr_true expr_null
                    expr_null expr_undefined) [])
                  (expr_seq
-                  (expr_let "$newVal" (expr_id "accumulator")
-                   (expr_set_field (expr_id "argsObj") (expr_string "0")
-                    (expr_id "$newVal")))
+                  (expr_set_field (expr_id "argsObj") (expr_string "0")
+                   (expr_id "accumulator"))
                   (expr_seq
-                   (expr_let "$newVal" (expr_id "kValue")
-                    (expr_set_field (expr_id "argsObj") (expr_string "1")
-                     (expr_id "$newVal")))
+                   (expr_set_field (expr_id "argsObj") (expr_string "1")
+                    (expr_id "kValue"))
                    (expr_seq
-                    (expr_let "$newVal" (expr_id "k")
-                     (expr_set_field (expr_id "argsObj") (expr_string "2")
-                      (expr_id "$newVal")))
+                    (expr_set_field (expr_id "argsObj") (expr_string "2")
+                     (expr_id "k"))
                     (expr_seq
-                     (expr_let "$newVal" (expr_id "O")
-                      (expr_set_field (expr_id "argsObj") (expr_string "3")
-                       (expr_id "$newVal")))
+                     (expr_set_field (expr_id "argsObj") (expr_string "3")
+                      (expr_id "O"))
                      (expr_seq
-                      (expr_let "$newVal" (expr_number (JsNumber.of_int 4))
-                       (expr_set_field (expr_id "argsObj")
-                        (expr_string "length") (expr_id "$newVal")))
+                      (expr_set_field (expr_id "argsObj")
+                       (expr_string "length")
+                       (expr_number (JsNumber.of_int 4)))
                       (expr_let "next"
                        (expr_app (expr_id "callbackfn")
                         [expr_undefined; expr_id "argsObj"])
@@ -6007,9 +5918,9 @@ expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
   [expr_get_field (expr_id "args") (expr_string "0")])
  (expr_let "replace" (expr_get_field (expr_id "args") (expr_string "1"))
   (expr_if
-   (expr_if
+   (expr_op1 unary_op_not
     (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "replace"))
-     (expr_string "function")) expr_false expr_true)
+     (expr_string "function")))
    (expr_throw (expr_string "String.replace() only supports functions"))
    (expr_recc "loop"
     (expr_lambda ["str"]
@@ -6048,8 +5959,8 @@ expr_if (expr_id "strict")
  (expr_if
   (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "obj"))
    (expr_string "object"))
-  (expr_if (expr_op2 binary_op_stx_eq (expr_id "obj") expr_null) expr_false
-   expr_true) expr_false)
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "obj") expr_null)) expr_false)
  (expr_let "klass" (expr_get_obj_attr oattr_class (expr_id "obj"))
   (expr_if
    (expr_if
@@ -6062,15 +5973,14 @@ expr_if (expr_id "strict")
       (expr_op2 binary_op_stx_eq (expr_id "klass") (expr_string "Boolean"))))
     (expr_if
      (expr_if
-      (expr_if
-       (expr_op2 binary_op_stx_eq (expr_id "obj") (expr_id "%StringProto"))
-       expr_false expr_true)
-      (expr_if
-       (expr_op2 binary_op_stx_eq (expr_id "obj") (expr_id "%NumberProto"))
-       expr_false expr_true) expr_false)
-     (expr_if
-      (expr_op2 binary_op_stx_eq (expr_id "obj") (expr_id "%BooleanProto"))
-      expr_false expr_true) expr_false) expr_false)
+      (expr_op1 unary_op_not
+       (expr_op2 binary_op_stx_eq (expr_id "obj") (expr_id "%StringProto")))
+      (expr_op1 unary_op_not
+       (expr_op2 binary_op_stx_eq (expr_id "obj") (expr_id "%NumberProto")))
+      expr_false)
+     (expr_op1 unary_op_not
+      (expr_op2 binary_op_stx_eq (expr_id "obj") (expr_id "%BooleanProto")))
+     expr_false) expr_false)
    (expr_get_obj_attr oattr_primval (expr_id "obj")) (expr_id "obj")))
  (expr_id "obj"))
 (expr_if
@@ -6089,9 +5999,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_recc "loop"
     (expr_lambda ["lower"]
      (expr_if
-      (expr_if
-       (expr_op2 binary_op_stx_eq (expr_id "lower") (expr_id "middle"))
-       expr_false expr_true)
+      (expr_op1 unary_op_not
+       (expr_op2 binary_op_stx_eq (expr_id "lower") (expr_id "middle")))
       (expr_label "ret"
        (expr_let "upper"
         (expr_op2 binary_op_sub
@@ -6115,13 +6024,11 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                 (expr_if (expr_id "lowerExists") (expr_id "upperExists")
                  expr_false)
                 (expr_seq
-                 (expr_let "$newVal" (expr_id "upperValue")
-                  (expr_set_field (expr_id "O") (expr_id "lowerP")
-                   (expr_id "$newVal")))
+                 (expr_set_field (expr_id "O") (expr_id "lowerP")
+                  (expr_id "upperValue"))
                  (expr_seq
-                  (expr_let "$newVal" (expr_id "lowerValue")
-                   (expr_set_field (expr_id "O") (expr_id "upperP")
-                    (expr_id "$newVal")))
+                  (expr_set_field (expr_id "O") (expr_id "upperP")
+                   (expr_id "lowerValue"))
                   (expr_break "ret"
                    (expr_app (expr_id "loop")
                     [expr_op2 binary_op_add (expr_id "lower")
@@ -6129,9 +6036,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                (expr_seq
                 (expr_if (expr_id "upperExists")
                  (expr_seq
-                  (expr_let "$newVal" (expr_id "upperValue")
-                   (expr_set_field (expr_id "O") (expr_id "lowerP")
-                    (expr_id "$newVal")))
+                  (expr_set_field (expr_id "O") (expr_id "lowerP")
+                   (expr_id "upperValue"))
                   (expr_seq
                    (expr_delete_field (expr_id "O") (expr_id "upperP"))
                    (expr_break "ret"
@@ -6143,9 +6049,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   (expr_seq
                    (expr_delete_field (expr_id "O") (expr_id "lowerP"))
                    (expr_seq
-                    (expr_let "$newVal" (expr_id "lowerValue")
-                     (expr_set_field (expr_id "O") (expr_id "upperP")
-                      (expr_id "$newVal")))
+                    (expr_set_field (expr_id "O") (expr_id "upperP")
+                     (expr_id "lowerValue"))
                     (expr_break "ret"
                      (expr_app (expr_id "loop")
                       [expr_op2 binary_op_add (expr_id "lower")
@@ -6199,10 +6104,9 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
        (expr_if
         (expr_op2 binary_op_stx_eq
          (expr_app (expr_id "%ToString") [expr_id "uint"]) (expr_id "fld"))
-        (expr_if
+        (expr_op1 unary_op_not
          (expr_op2 binary_op_stx_eq (expr_id "uint")
-          (expr_number (JsNumber.of_int 4294967295))) expr_false expr_true)
-        expr_false)))
+          (expr_number (JsNumber.of_int 4294967295)))) expr_false)))
      (expr_let "setArrayField"
       (expr_lambda []
        (expr_let "lenCheck"
@@ -6213,9 +6117,9 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
            (expr_let "toCompare"
             (expr_app (expr_id "%ToNumber") [expr_id "val"])
             (expr_if
-             (expr_if
+             (expr_op1 unary_op_not
               (expr_op2 binary_op_stx_eq (expr_id "newLen")
-               (expr_id "toCompare")) expr_false expr_true)
+               (expr_id "toCompare")))
              (expr_throw
               (expr_app (expr_id "%JSError")
                [expr_object
@@ -6230,12 +6134,10 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
           expr_undefined))
         (expr_seq (expr_app (expr_id "lenCheck") [])
          (expr_seq
-          (expr_let "$newVal"
+          (expr_set_field (expr_id "obj") (expr_id "fld")
            (expr_if
             (expr_op2 binary_op_stx_eq (expr_id "fld") (expr_string "length"))
-            (expr_app (expr_id "%ToUint32") [expr_id "val"]) (expr_id "val"))
-           (expr_set_field (expr_id "obj") (expr_id "fld")
-            (expr_id "$newVal")))
+            (expr_app (expr_id "%ToUint32") [expr_id "val"]) (expr_id "val")))
           (expr_if (expr_app (expr_id "isArrayIndex") [])
            (expr_let "uint" (expr_app (expr_id "%ToUint32") [expr_id "fld"])
             (expr_let "len"
@@ -6244,17 +6146,15 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
               (expr_op2 binary_op_lt (expr_id "len")
                (expr_op2 binary_op_add (expr_id "uint")
                 (expr_number (JsNumber.of_int 1))))
-              (expr_let "$newVal"
+              (expr_set_field (expr_id "obj") (expr_string "length")
                (expr_op2 binary_op_add (expr_id "uint")
-                (expr_number (JsNumber.of_int 1)))
-               (expr_set_field (expr_id "obj") (expr_string "length")
-                (expr_id "$newVal"))) expr_undefined))) expr_undefined)))))
+                (expr_number (JsNumber.of_int 1)))) expr_undefined)))
+           expr_undefined)))))
       (expr_if
        (expr_op2 binary_op_stx_eq
         (expr_get_obj_attr oattr_class (expr_id "obj")) (expr_string "Array"))
        (expr_app (expr_id "setArrayField") [])
-       (expr_let "$newVal" (expr_id "val")
-        (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "$newVal"))))))))))
+       (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "val")))))))))
 .
 Definition ex_privshiftlambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -6264,9 +6164,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_op2 binary_op_stx_eq (expr_id "len")
     (expr_number (JsNumber.of_int 0)))
    (expr_seq
-    (expr_let "$newVal" (expr_number (JsNumber.of_int 0))
-     (expr_set_field (expr_id "O") (expr_string "length") (expr_id "$newVal")))
-    expr_undefined)
+    (expr_set_field (expr_id "O") (expr_string "length")
+     (expr_number (JsNumber.of_int 0))) expr_undefined)
    (expr_let "first" (expr_get_field (expr_id "O") (expr_string "0"))
     (expr_seq
      (expr_recc "loop"
@@ -6286,9 +6185,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_seq
               (expr_let "fromVal"
                (expr_get_field (expr_id "O") (expr_id "from"))
-               (expr_let "$newVal" (expr_id "fromVal")
-                (expr_set_field (expr_id "O") (expr_id "to")
-                 (expr_id "$newVal"))))
+               (expr_set_field (expr_id "O") (expr_id "to")
+                (expr_id "fromVal")))
               (expr_break "ret"
                (expr_app (expr_id "loop")
                 [expr_op2 binary_op_add (expr_id "k")
@@ -6306,9 +6204,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_delete_field (expr_id "O")
         (expr_app (expr_id "%ToString") [expr_id "newLen"]))
        (expr_seq
-        (expr_let "$newVal" (expr_id "newLen")
-         (expr_set_field (expr_id "O") (expr_string "length")
-          (expr_id "$newVal"))) (expr_id "first")))))))))
+        (expr_set_field (expr_id "O") (expr_string "length")
+         (expr_id "newLen")) (expr_id "first")))))))))
 .
 Definition ex_privsinLambda := 
 expr_let "n"
@@ -6317,8 +6214,9 @@ expr_let "n"
 (expr_label "ret"
  (expr_seq
   (expr_if
-   (expr_if (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n"))
-    expr_false expr_true) (expr_break "ret" (expr_id "n")) expr_null)
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n")))
+   (expr_break "ret" (expr_id "n")) expr_null)
   (expr_seq
    (expr_if
     (expr_op2 binary_op_stx_eq (expr_id "n")
@@ -6348,11 +6246,10 @@ expr_let "retObj"
     (expr_op2 binary_op_has_own_property (expr_id "list")
      (expr_op1 unary_op_prim_to_str (expr_id "iter")))
     (expr_seq
-     (expr_let "$newVal"
+     (expr_set_field (expr_id "retObj")
+      (expr_op1 unary_op_prim_to_str (expr_id "ix"))
       (expr_get_field (expr_id "list")
-       (expr_op1 unary_op_prim_to_str (expr_id "iter")))
-      (expr_set_field (expr_id "retObj")
-       (expr_op1 unary_op_prim_to_str (expr_id "ix")) (expr_id "$newVal")))
+       (expr_op1 unary_op_prim_to_str (expr_id "iter"))))
      (expr_if (expr_op2 binary_op_gt (expr_id "iter") (expr_id "max"))
       expr_undefined
       (expr_app (expr_id "inner_slice")
@@ -6360,9 +6257,7 @@ expr_let "retObj"
         (expr_number (JsNumber.of_int 1));
         expr_op2 binary_op_add (expr_id "ix")
         (expr_number (JsNumber.of_int 1))])))
-    (expr_let "$newVal" (expr_id "ix")
-     (expr_set_field (expr_id "retObj") (expr_string "length")
-      (expr_id "$newVal")))))
+    (expr_set_field (expr_id "retObj") (expr_string "length") (expr_id "ix"))))
   (expr_app (expr_id "inner_slice")
    [expr_id "min"; expr_number (JsNumber.of_int 0)])) (expr_id "retObj"))
 .
@@ -6461,13 +6356,11 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                  expr_op2 binary_op_add (expr_id "finalLen")
                  (expr_number (JsNumber.of_int 1))]))))))))
         (expr_seq
-         (expr_let "$newVal"
+         (expr_set_field (expr_id "A") (expr_string "length")
           (expr_app (expr_id "loop")
            [expr_number (JsNumber.of_int 0);
             expr_id "initk";
-            expr_number (JsNumber.of_int 0)])
-          (expr_set_field (expr_id "A") (expr_string "length")
-           (expr_id "$newVal"))) (expr_id "A"))))))))))
+            expr_number (JsNumber.of_int 0)])) (expr_id "A"))))))))))
 .
 Definition ex_privsliolambda := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
@@ -6480,9 +6373,9 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
     [expr_get_field (expr_id "args") (expr_string "1")])
    (expr_let "pos"
     (expr_if
-     (expr_if
-      (expr_op2 binary_op_stx_eq (expr_id "numPos") (expr_id "numPos"))
-      expr_false expr_true) (expr_number (JsNumber.of_int 0))
+     (expr_op1 unary_op_not
+      (expr_op2 binary_op_stx_eq (expr_id "numPos") (expr_id "numPos")))
+     (expr_number (JsNumber.of_int 0))
      (expr_app (expr_id "%ToInteger") [expr_id "numPos"]))
     (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
      (expr_let "start"
@@ -6499,12 +6392,12 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
             (expr_op2 binary_op_stx_eq (expr_id "j") (expr_id "searchLen"))
             expr_true
             (expr_if
-             (expr_if
+             (expr_op1 unary_op_not
               (expr_op2 binary_op_stx_eq
                (expr_op2 binary_op_char_at (expr_id "S")
                 (expr_op2 binary_op_add (expr_id "k") (expr_id "j")))
                (expr_op2 binary_op_char_at (expr_id "searchStr")
-                (expr_id "j"))) expr_false expr_true) expr_false
+                (expr_id "j")))) expr_false
              (expr_app (expr_id "check_j")
               [expr_op2 binary_op_add (expr_id "j")
                (expr_number (JsNumber.of_int 1))]))))
@@ -6539,10 +6432,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_label "ret"
     (expr_seq
      (expr_if
-      (expr_if
+      (expr_op1 unary_op_not
        (expr_op2 binary_op_stx_eq
         (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-        (expr_string "function")) expr_false expr_true)
+        (expr_string "function")))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not function in some"]) expr_null)
      (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
@@ -6559,21 +6452,17 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                (objattrs_intro (expr_string "Object") expr_true expr_null
                 expr_null expr_undefined) [])
               (expr_seq
-               (expr_let "$newVal" (expr_id "kValue")
-                (expr_set_field (expr_id "argsObj") (expr_string "0")
-                 (expr_id "$newVal")))
+               (expr_set_field (expr_id "argsObj") (expr_string "0")
+                (expr_id "kValue"))
                (expr_seq
-                (expr_let "$newVal" (expr_id "k")
-                 (expr_set_field (expr_id "argsObj") (expr_string "1")
-                  (expr_id "$newVal")))
+                (expr_set_field (expr_id "argsObj") (expr_string "1")
+                 (expr_id "k"))
                 (expr_seq
-                 (expr_let "$newVal" (expr_id "O")
-                  (expr_set_field (expr_id "argsObj") (expr_string "2")
-                   (expr_id "$newVal")))
+                 (expr_set_field (expr_id "argsObj") (expr_string "2")
+                  (expr_id "O"))
                  (expr_seq
-                  (expr_let "$newVal" (expr_number (JsNumber.of_int 3))
-                   (expr_set_field (expr_id "argsObj") (expr_string "length")
-                    (expr_id "$newVal")))
+                  (expr_set_field (expr_id "argsObj") (expr_string "length")
+                   (expr_number (JsNumber.of_int 3)))
                   (expr_let "testResult"
                    (expr_app (expr_id "callbackfn")
                     [expr_id "T"; expr_id "argsObj"])
@@ -6635,17 +6524,17 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   (expr_number (JsNumber.of_int 1)))) expr_null)
                (expr_seq
                 (expr_if
-                 (expr_if
+                 (expr_op1 unary_op_not
                   (expr_op2 binary_op_stx_eq
                    (expr_get_field (expr_id "args") (expr_string "0"))
-                   expr_undefined) expr_false expr_true)
+                   expr_undefined))
                  (expr_seq
                   (expr_if
-                   (expr_if
+                   (expr_op1 unary_op_not
                     (expr_op2 binary_op_stx_eq
                      (expr_op1 unary_op_typeof
                       (expr_get_field (expr_id "args") (expr_string "0")))
-                     (expr_string "function")) expr_false expr_true)
+                     (expr_string "function")))
                    (expr_throw
                     (expr_app (expr_id "%JSError")
                      [expr_object
@@ -6691,8 +6580,7 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_let "indx" (expr_op1 unary_op_prim_to_str (expr_id "i"))
       (expr_let "next" (expr_get_field (expr_id "obj") (expr_id "indx"))
        (expr_seq
-        (expr_let "$newVal" (expr_id "prior")
-         (expr_set_field (expr_id "obj") (expr_id "indx") (expr_id "$newVal")))
+        (expr_set_field (expr_id "obj") (expr_id "indx") (expr_id "prior"))
         (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "before"))
          (expr_app (expr_id "insertAndShift")
           [expr_id "next";
@@ -6712,9 +6600,7 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
            (expr_number (JsNumber.of_int 1)))
           (expr_let "old" (expr_get_field (expr_id "obj") (expr_id "indx"))
            (expr_seq
-            (expr_let "$newVal" (expr_id "elt")
-             (expr_set_field (expr_id "obj") (expr_id "indx")
-              (expr_id "$newVal")))
+            (expr_set_field (expr_id "obj") (expr_id "indx") (expr_id "elt"))
             (expr_app (expr_id "insertAndShift")
              [expr_id "old";
               expr_op2 binary_op_add (expr_id "currIndex")
@@ -6804,12 +6690,10 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                                      (data_intro expr_true expr_true
                                       expr_false expr_false))]]))
                 (expr_seq
-                 (expr_let "$newVal"
+                 (expr_set_field (expr_id "A") (expr_string "length")
                   (expr_op2 binary_op_add
                    (expr_get_field (expr_id "A") (expr_string "length"))
-                   (expr_number (JsNumber.of_int 1)))
-                  (expr_set_field (expr_id "A") (expr_string "length")
-                   (expr_id "$newVal")))
+                   (expr_number (JsNumber.of_int 1))))
                  (expr_app (expr_id "writeToALoop")
                   [expr_op2 binary_op_add (expr_id "k")
                    (expr_number (JsNumber.of_int 1))])))
@@ -6848,10 +6732,8 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                        (expr_op2 binary_op_has_property (expr_id "O")
                         (expr_id "from"))
                        (expr_seq
-                        (expr_let "$newVal"
-                         (expr_get_field (expr_id "O") (expr_id "from"))
-                         (expr_set_field (expr_id "O") (expr_id "to")
-                          (expr_id "$newVal")))
+                        (expr_set_field (expr_id "O") (expr_id "to")
+                         (expr_get_field (expr_id "O") (expr_id "from")))
                         (expr_app (expr_id "writeToOLoop")
                          [expr_op2 binary_op_add (expr_id "k")
                           (expr_number (JsNumber.of_int 1))]))
@@ -6905,10 +6787,8 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                       (expr_op2 binary_op_has_property (expr_id "O")
                        (expr_id "from"))
                       (expr_seq
-                       (expr_let "$newVal"
-                        (expr_get_field (expr_id "O") (expr_id "from"))
-                        (expr_set_field (expr_id "O") (expr_id "to")
-                         (expr_id "$newVal")))
+                       (expr_set_field (expr_id "O") (expr_id "to")
+                        (expr_get_field (expr_id "O") (expr_id "from")))
                        (expr_app (expr_id "writeToOLoop")
                         [expr_op2 binary_op_sub (expr_id "k")
                          (expr_number (JsNumber.of_int 1))]))
@@ -6931,12 +6811,10 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                   (expr_op2 binary_op_lt (expr_id "argsIndex")
                    (expr_id "outerEnd"))
                   (expr_seq
-                   (expr_let "$newVal"
+                   (expr_set_field (expr_id "O")
+                    (expr_app (expr_id "%ToString") [expr_id "k"])
                     (expr_get_field (expr_id "args")
-                     (expr_op1 unary_op_prim_to_str (expr_id "argsIndex")))
-                    (expr_set_field (expr_id "O")
-                     (expr_app (expr_id "%ToString") [expr_id "k"])
-                     (expr_id "$newVal")))
+                     (expr_op1 unary_op_prim_to_str (expr_id "argsIndex"))))
                    (expr_app (expr_id "outerloop")
                     [expr_op2 binary_op_add (expr_id "k")
                      (expr_number (JsNumber.of_int 1));
@@ -6945,12 +6823,11 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                 (expr_app (expr_id "outerloop")
                  [expr_id "actualStart"; expr_number (JsNumber.of_int 2)])))
               (expr_seq
-               (expr_let "$newVal"
+               (expr_set_field (expr_id "O") (expr_string "length")
                 (expr_op2 binary_op_add
                  (expr_op2 binary_op_sub (expr_id "len")
-                  (expr_id "actualDeleteCount")) (expr_id "itemCount"))
-                (expr_set_field (expr_id "O") (expr_string "length")
-                 (expr_id "$newVal"))) (expr_id "A"))))))))))))))))
+                  (expr_id "actualDeleteCount")) (expr_id "itemCount")))
+               (expr_id "A"))))))))))))))))
 .
 Definition ex_privsplitLambda :=  expr_string "String.prototype.split NYI" .
 Definition ex_privsqrtLambda :=  expr_string "sqrt NYI" .
@@ -7091,8 +6968,9 @@ expr_let "f"
     (expr_get_obj_attr oattr_primval (expr_id "this")))
    (expr_seq
     (expr_if
-     (expr_if (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x"))
-      expr_false expr_true) (expr_break "ret" (expr_string "NaN")) expr_null)
+     (expr_op1 unary_op_not
+      (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x")))
+     (expr_break "ret" (expr_string "NaN")) expr_null)
     (expr_seq
      (expr_if
       (expr_op2 binary_op_ge (expr_id "x") (expr_number (JsNumber.of_int 0)))
@@ -7157,9 +7035,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          (expr_if
           (expr_op2 binary_op_has_property (expr_id "O") (expr_id "from"))
           (expr_seq
-           (expr_let "$newVal"
-            (expr_get_field (expr_id "O") (expr_id "from"))
-            (expr_set_field (expr_id "O") (expr_id "to") (expr_id "$newVal")))
+           (expr_set_field (expr_id "O") (expr_id "to")
+            (expr_get_field (expr_id "O") (expr_id "from")))
            (expr_app (expr_id "Oloop")
             [expr_op2 binary_op_sub (expr_id "k")
              (expr_number (JsNumber.of_int 1))]))
@@ -7175,12 +7052,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         (expr_if
          (expr_op2 binary_op_lt (expr_id "argsIndex") (expr_id "end"))
          (expr_seq
-          (expr_let "$newVal"
+          (expr_set_field (expr_id "O")
+           (expr_app (expr_id "%ToString") [expr_id "j"])
            (expr_get_field (expr_id "args")
-            (expr_op1 unary_op_prim_to_str (expr_id "argsIndex")))
-           (expr_set_field (expr_id "O")
-            (expr_app (expr_id "%ToString") [expr_id "j"])
-            (expr_id "$newVal")))
+            (expr_op1 unary_op_prim_to_str (expr_id "argsIndex"))))
           (expr_app (expr_id "argsLoop")
            [expr_op2 binary_op_add (expr_id "argsIndex")
             (expr_number (JsNumber.of_int 1));
@@ -7191,22 +7066,21 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_let "finalLen"
       (expr_op2 binary_op_add (expr_id "len") (expr_id "argCount"))
       (expr_seq
-       (expr_let "$newVal" (expr_id "finalLen")
-        (expr_set_field (expr_id "O") (expr_string "length")
-         (expr_id "$newVal"))) (expr_id "finalLen"))))))))
+       (expr_set_field (expr_id "O") (expr_string "length")
+        (expr_id "finalLen")) (expr_id "finalLen"))))))))
 .
 Definition ex_privvalueOfLambda := 
 expr_let "hasWrongProto"
-(expr_if
+(expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_proto (expr_id "this"))
-  (expr_id "proto")) expr_false expr_true)
+  (expr_id "proto")))
 (expr_let "hasWrongTypeof"
- (expr_if
+ (expr_op1 unary_op_not
   (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
-   (expr_id "typestr")) expr_false expr_true)
+   (expr_id "typestr")))
  (expr_let "isntProto"
-  (expr_if (expr_op2 binary_op_stx_eq (expr_id "this") (expr_id "proto"))
-   expr_false expr_true)
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "this") (expr_id "proto")))
   (expr_if
    (expr_if
     (expr_if (expr_id "hasWrongProto") (expr_id "hasWrongTypeof") expr_false)
