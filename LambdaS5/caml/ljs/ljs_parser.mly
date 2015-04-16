@@ -15,8 +15,8 @@ let with_pos exp pos = match exp with
   | SetAttr (_, prop, obj, field, value) -> SetAttr (pos, prop, obj, field, value)
   | GetObjAttr (_, oattr, obj) -> GetObjAttr (pos, oattr, obj)
   | SetObjAttr (_, oattr, obj, v) -> SetObjAttr (pos, oattr, obj, v)
-  | GetField (_, left, right, args) -> GetField (pos, left, right, args)
-  | SetField (_, obj, field, value, args) -> SetField (pos, obj, field, value, args)
+  | GetField (_, left, right) -> GetField (pos, left, right)
+  | SetField (_, obj, field, value) -> SetField (pos, obj, field, value)
   | DeleteField (_, obj, field) -> DeleteField (pos, obj, field)
   | OwnFieldNames (_, obj) -> OwnFieldNames(pos, obj)
   | SetBang (_, id, exp) -> SetBang (pos, id, exp)
@@ -175,27 +175,15 @@ exp :
      { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), "stx=", $1, $3) }
  | exp BANGEQEQUALS exp
      { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3) in
-         If (p, Op2 (p, "stx=", $1, $3),
-             False p, True p) }
+         Op1(p, "!", Op2 (p, "stx=", $1, $3)) }
  | exp LBRACK unbraced_seq_exp EQUALS unbraced_seq_exp RBRACK
-   { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6) in
-       Let (p, "$newVal", $5,
-	     SetField (p, $1, $3, 
-		       Id (p, "$newVal"), 
-		       Object (p, d_attrs,
-            [("0", Data ({ value = Id (p, "$newVal");
-                          writable = true },
-              true, true))])))
-    }
+   { SetField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), $1, $3, $5) }
  | exp LBRACK unbraced_seq_exp EQUALS unbraced_seq_exp COMMA unbraced_seq_exp RBRACK   
- { SetField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8), $1, $3, $5, $7) }
+ { SetField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8), $1, $3, $5) }
  | exp LBRACK unbraced_seq_exp RBRACK
-   { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4) in
-     GetField (p, $1,  $3,
-		       Object (p, d_attrs,
-            [])) }
+   { GetField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $1, $3) }
  | exp LBRACK unbraced_seq_exp COMMA unbraced_seq_exp RBRACK   
-  { GetField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), $1, $3, $5) }
+   { GetField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), $1, $3) }
  | exp LBRACK DELETE unbraced_seq_exp RBRACK
      { DeleteField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5), $1, $4) }
  | exp LBRACK unbraced_seq_exp LT attr_name GT RBRACK

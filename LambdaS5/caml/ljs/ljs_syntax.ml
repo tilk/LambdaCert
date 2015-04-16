@@ -54,8 +54,8 @@ type exp =
   | SetAttr of Pos.t * pattr * exp * exp * exp
   | GetObjAttr of Pos.t * oattr * exp
   | SetObjAttr of Pos.t * oattr * exp * exp
-  | GetField of Pos.t * exp * exp * exp (*Pos.t, left, right, args object *)
-  | SetField of Pos.t * exp * exp * exp * exp (* Pos.t, obj, field, new val, args *)
+  | GetField of Pos.t * exp * exp (*Pos.t, left, right *)
+  | SetField of Pos.t * exp * exp * exp (* Pos.t, obj, field, new val *)
   | DeleteField of Pos.t * exp * exp (* Pos.t, obj, field *)
   | OwnFieldNames of Pos.t * exp
   | SetBang of Pos.t * id * exp

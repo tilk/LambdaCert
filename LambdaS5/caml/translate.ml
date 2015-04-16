@@ -95,8 +95,8 @@ let rec translate_expr e = match e with
     | Ljs.SetAttr (_, p, e1, e2, e3) -> Cs.Coq_expr_set_attr (translate_pattr p, translate_expr e1, translate_expr e2, translate_expr e3)
     | Ljs.GetObjAttr (_, p, e) -> Cs.Coq_expr_get_obj_attr (translate_oattr p, translate_expr e)
     | Ljs.SetObjAttr (_, p, e1, e2) -> Cs.Coq_expr_set_obj_attr (translate_oattr p, translate_expr e1, translate_expr e2)
-    | Ljs.GetField (_, e, e1, e2) -> Cs.Coq_expr_get_field (translate_expr e, translate_expr e1)
-    | Ljs.SetField (_, e, e1, e2, e3) -> Cs.Coq_expr_set_field (translate_expr e, translate_expr e1, translate_expr e2)
+    | Ljs.GetField (_, e, e1) -> Cs.Coq_expr_get_field (translate_expr e, translate_expr e1)
+    | Ljs.SetField (_, e, e1, e2) -> Cs.Coq_expr_set_field (translate_expr e, translate_expr e1, translate_expr e2)
     | Ljs.DeleteField (_, e, e1) -> Cs.Coq_expr_delete_field (translate_expr e, translate_expr e1)
     | Ljs.OwnFieldNames (_, e) -> Cs.Coq_expr_own_field_names (translate_expr e)
     | Ljs.SetBang (_, i, e) -> failwith "no setbang in lambdacert"
