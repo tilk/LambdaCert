@@ -785,5 +785,5 @@ Proof.
 (* TODO seems like something to automate *)
     repeat ljs_autoforward. 
     repeat injects.
-    jauto_js 12.
+    jauto_js; [jauto_js 6 | jauto_js 12]. 
 Qed.

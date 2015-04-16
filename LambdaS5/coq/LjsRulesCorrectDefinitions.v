@@ -9,7 +9,7 @@ Require LjsInitEnv.
 Require EjsSyntax.
 Require JsSyntax JsPrettyInterm JsPrettyRules.
 Require EjsFromJs EjsToLjs.
-Require Import JsBagAdapter.
+Require Export JsBagAdapter.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
@@ -44,6 +44,7 @@ Include JsSyntaxAux.
 Include JsPreliminary.
 Include JsPrettyInterm.
 Include JsPrettyRules.
+Include JsBagAdapter.JsCertExt.
 End J.
 
 Export LjsPrettyRulesAux.Tactics.
@@ -410,12 +411,13 @@ Record state_invariant BR jst jc c st : Prop := {
 
 Definition concl_ext_expr_value BR jst jc c st st' r jee P :=
     exists BR' jst' jr,
+    ((exists jv, jr = J.res_val jv /\ P jv) \/
+     J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw) /\
     state_invariant BR' jst' jc c st' /\
     BR \c BR' /\
     J.red_expr jst jc jee (J.out_ter jst' jr) /\ 
-    res_related BR jst' st' jr r /\
-    ((exists jv, jr = J.res_val jv /\ P jv) \/
-     J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw).
+    res_related BR jst' st' jr r.
+
 (* unused
 Definition concl_expr_value BR jst jc c st st' r je :=  
     concl_ext_expr_value BR jst jc c st st' r (J.expr_basic je).

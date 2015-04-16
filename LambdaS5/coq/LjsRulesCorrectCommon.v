@@ -86,6 +86,10 @@ Hint Extern 11 => match goal with |- context [If _ then _ else _] => case_if end
 Hint Extern 1 (~(_ /\ _)) => rew_logic.
 Hint Extern 1 (_ <> _) => solve [let H := fresh in intro H; injects H; false]. 
 
+(** Additional hints *)
+
+Hint Resolve js_object_alloc_lemma : js_ljs.
+
 (** Pre-substitution hints *)
 (* TODO are they necessary? *)
 
@@ -477,10 +481,10 @@ Hint Resolve res_label_in_lemma : js_ljs.
 
 (* Lemmas about invariants *)
 
-Lemma heaps_bisim_consistent_nindex_preserved : forall BR jst st ptr obj,
-    ~index st ptr ->
+Lemma heaps_bisim_consistent_store_incl_preserved : forall BR jst st st',
+    st \c st' ->
     heaps_bisim_consistent BR jst st ->
-    heaps_bisim_consistent BR jst (st \( ptr := obj)).
+    heaps_bisim_consistent BR jst st'.
 Proof.
     introv Hni Hbi.
     inverts Hbi.
@@ -489,21 +493,27 @@ Proof.
     introv Hrel Hjb Hlb.
     specializes heaps_bisim_consistent_rnoghost Hrel.
     eapply heaps_bisim_consistent_bisim_inl; try eassumption.
-    eapply binds_update_diff_inv; try eassumption; auto. 
+    apply index_binds in heaps_bisim_consistent_rnoghost.
+    destruct heaps_bisim_consistent_rnoghost as (?obj&Hb1).
+    lets Hb2 : (incl_binds _ _ _ _ Hni Hb1). 
+    binds_determine. assumption.
     introv Hrel Hjb Hlb.
     specializes heaps_bisim_consistent_rnoghost Hrel.
     eapply heaps_bisim_consistent_bisim_inr; try eassumption.
-    eapply binds_update_diff_inv; try eassumption; auto. 
+    apply index_binds in heaps_bisim_consistent_rnoghost.
+    destruct heaps_bisim_consistent_rnoghost as (?obj&Hb1).
+    lets Hb2 : (incl_binds _ _ _ _ Hni Hb1). 
+    binds_determine. assumption.
     unfolds heaps_bisim_rnoghost.
     prove_bag.
 Qed.
 
-Hint Resolve heaps_bisim_consistent_nindex_preserved : js_ljs.
+Hint Resolve heaps_bisim_consistent_store_incl_preserved : js_ljs.
 
-Lemma lexical_env_related_nindex_preserved : forall BR st ptr obj jle v,
-    ~index st ptr ->
+Lemma lexical_env_related_store_incl_preserved : forall BR st st' jle v,
+    st \c st' ->
     lexical_env_related BR st jle v ->
-    lexical_env_related BR (st \( ptr := obj )) jle v.
+    lexical_env_related BR st' jle v.
 Proof.
     introv Hni Hrel.
     induction Hrel.
@@ -511,41 +521,30 @@ Proof.
     eapply lexical_env_related_cons; prove_bag.
 Qed.
 
-Hint Resolve lexical_env_related_nindex_preserved : js_ljs.
+Hint Resolve lexical_env_related_store_incl_preserved : js_ljs.
 
-Lemma execution_ctx_related_nindex_preserved : forall BR jc c st ptr obj,
-    ~index st ptr ->
+Lemma execution_ctx_related_store_incl_preserved : forall BR jc c st st',
+    st \c st' ->
     execution_ctx_related BR jc c st ->
-    execution_ctx_related BR jc c (st \( ptr := obj)).
+    execution_ctx_related BR jc c st'.
 Proof.
     introv Hni Hbi.
-    inverts Hbi; constructor.
-    auto.
-    auto.
-    intros. apply lexical_env_related_nindex_preserved; auto.
+    inverts Hbi; constructor; jauto_js.
 Qed.
 
-Hint Resolve execution_ctx_related_nindex_preserved : js_ljs. 
+Hint Resolve execution_ctx_related_store_incl_preserved : js_ljs. 
 
-Lemma state_invariant_nindex_preserved : forall BR jst jc c st ptr obj,
-    ~index st ptr ->
+Lemma state_invariant_store_incl_preserved : forall BR jst jc c st st',
+    st \c st' ->
     state_invariant BR jst jc c st ->
-    state_invariant BR jst jc c (st \( ptr := obj )).
+    state_invariant BR jst jc c st'.
 Proof.
     introv Hni Hinv.
     inverts Hinv.
     constructor; jauto_js.
 Qed.
 
-Lemma state_invariant_fresh_preserved : forall BR jst jc c st obj,
-    state_invariant BR jst jc c st ->
-    state_invariant BR jst jc c (st \( fresh st := obj )).
-Proof.
-    introv Hinv.
-    apply state_invariant_nindex_preserved; prove_bag.
-Qed.
-
-Hint Resolve state_invariant_fresh_preserved : js_ljs.
+Hint Resolve state_invariant_store_incl_preserved : js_ljs.
 
 Lemma includes_init_ctx_incl_preserved : forall c c',
     c' \c c ->
@@ -1184,14 +1183,15 @@ Ltac res_related_abort :=
 
 Ltac destr_concl_auto := destr_concl; res_related_abort; try ljs_handle_abort.
 
-Ltac ljs_autoinject :=
+Ltac ljs_autoinject := 
     match goal with
-    | H : L.unary_operator _ _ ?v |- _ => not is_var v; injects H
-    | H : L.binary_operator _ _ ?v1 ?v2 |- _ => not is_var v1; not is_var v2; injects H
-    end.
+    | H : L.unary_operator _ _ ?v = _ |- _ => not is_var v; injects H 
+    | H : LjsOperators.binary_operator _ _ ?v1 ?v2 = _ |- _ => not is_var v1; not is_var v2; injects H 
+    end. 
 
 Ltac ljs_autoforward := first [
-    inv_fwd_ljs | ljs_out_redh_ter | ljs_get_builtin | apply_ih_expr | ljs_autoinject | binds_determine].
+    inv_fwd_ljs | ljs_out_redh_ter | ljs_get_builtin | apply_ih_expr | ljs_autoinject | 
+    binds_inv | binds_determine ].
 
 (** ** Lemmas about operators *)
 
@@ -1219,7 +1219,6 @@ Proof.
     rew_bag_simpl in H8. 
 
     repeat ljs_autoforward.
-    binds_inv.
 
     inverts Hvrel; try injects; jauto_js.
     cases_if; 
@@ -1243,15 +1242,7 @@ Lemma red_spec_to_boolean_ok : forall k je,
                   r = L.res_value (L.value_bool b)).
 Proof.
     introv IHe Hinv Hlred.
-    inverts Hlred.
-    ljs_out_redh_ter.
-
-    ljs_get_builtin.
-
-    repeat inv_internal_fwd_ljs.
-    ljs_out_redh_ter.
-
-    apply_ih_expr.
+    repeat ljs_autoforward.
 
     destr_concl; try ljs_handle_abort.
 

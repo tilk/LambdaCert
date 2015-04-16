@@ -56,6 +56,32 @@ Proof.
     destruct l as [ | [ | ] | | ]; inverts red_exprh Hlred; ijauto_js.
 Qed.
 
+Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
+    (v2 = L.value_undefined \/ exists s, v2 = L.value_string s) ->
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    state_invariant BR jst jc c st ->
+    L.red_exprh k c st 
+       (L.expr_app_2 LjsInitEnv.privMakeNativeError [v1; v2]) 
+       (L.out_ter st' r) ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_build_error jv1 jv2) (fun _ => True).
+Proof.
+    introv Hv Hvrel1 Hvrel2 Hinv Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat rewrite from_list_update, from_list_empty in H8. (* TODO *)
+    rew_bag_simpl in H8. (* TODO *)
+    repeat ljs_autoforward;
+    destruct_hyp Hv;
+    repeat ljs_autoforward.
+    inverts Hvrel2.
+    jauto_js.
+    skip.
+    skip.
+    skip.
+    skip.
+Admitted.
+
 Lemma get_identifier_value_lemma : forall jlenv k BR jst jc c st st' r b v i,
     lexical_env_related BR st jlenv v ->
     binds c "strict" (L.value_bool b) ->
@@ -138,11 +164,10 @@ Proof.
     simpls.  
     repeat ljs_autoforward.
 (* TODO *)
-    match goal with H : binds ?c _ _ |- _ => sets_eq c' : c end.
+    match goal with H : L.red_exprh _ ?c _ _ _ |- _ => sets_eq c' : c end.
     asserts Hinv' : (state_invariant BR jst jc c' st). skip.
     subst c'.
 
-    repeat binds_inv.
     forwards_th red_spec_to_boolean_unary_ok. 
     destr_concl;
     (asserts Hinv'' : (state_invariant BR' jst' jc c st0); [skip | idtac]); (* TODO *)
@@ -150,8 +175,6 @@ Proof.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    binds_inv.
-    injects.
     jauto_js.
 Qed.
 
@@ -181,7 +204,7 @@ Proof.
     ljs_apply. 
     repeat ljs_autoforward.
 (* TODO *)
-    match goal with H : binds ?c _ _ |- _ => sets_eq c' : c end.
+    match goal with H : L.red_exprh _ ?c _ _ _ |- _ => sets_eq c' : c end.
     asserts Hinv' : (state_invariant BR jst jc c' st). skip.
     subst c'.
 
@@ -289,7 +312,7 @@ Proof.
     repeat inv_fwd_ljs.
     forwards Heql : strict_equality_test_lemma.
     jauto_js. jauto_js. jauto_js. destruct_hyp Heql. 
-    repeat ljs_autoforward. injects.
+    repeat ljs_autoforward. 
     jauto_js. left. jauto_js 8.
 Qed.
 
@@ -341,8 +364,7 @@ Proof.
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
-    inv_fwd_ljs.
-    injects.
+    repeat ljs_autoforward.
     jauto_js. left. jauto_js 15. 
 Qed.
 
