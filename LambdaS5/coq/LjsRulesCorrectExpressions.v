@@ -76,11 +76,12 @@ Proof.
     repeat ljs_autoforward.
     inverts Hvrel2.
     jauto_js.
+    eapply state_invariant_new_object_preserved. eauto_js.
+    skip. (* TODO *)
+    eassumption.
+    jauto_js.
+    eauto_js 8.
 
-
-    skip.
-    skip.
-    skip.
     skip.
 Admitted.
 

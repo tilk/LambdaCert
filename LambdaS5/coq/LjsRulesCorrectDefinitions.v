@@ -221,20 +221,23 @@ Inductive env_record_related BR : J.env_record -> L.object -> Prop :=
     - They must be injective - every JS object has an unique corresponding S5 object.
     - The mapped adresses must actually correspond to some object in JS and S5 heaps. *)
 
+Definition rel_functional A B (R : A -> B -> Prop) :=
+  forall a b b', (a, b) \in R -> (a, b') \in R -> b = b'.
+
 Definition heaps_bisim_ltotal_inl BR jst :=
-    forall jptr, index (J.state_object_heap jst) jptr -> exists ptr, BR (inl jptr) ptr.
+    forall jptr, index jst jptr -> exists ptr, (inl jptr, ptr) \in BR.
 
 Definition heaps_bisim_ltotal_inr BR jst :=
-    forall jeptr, index (J.state_env_record_heap jst) jeptr -> exists ptr, BR (inr jeptr) ptr.
+    forall jeptr, index jst jeptr -> exists ptr, (inr jeptr, ptr) \in BR.
 
 Definition heaps_bisim_lnoghost_inl BR jst :=
-    forall jptr ptr, BR (inl jptr) ptr -> index (J.state_object_heap jst) jptr.
+    forall jptr ptr, (inl jptr, ptr) \in BR -> index jst jptr.
 
 Definition heaps_bisim_lnoghost_inr BR jst :=
-    forall jeptr ptr, BR (inr jeptr) ptr -> index (J.state_env_record_heap jst) jeptr.
+    forall jeptr ptr, (inr jeptr, ptr) \in BR -> index jst jeptr.
 
 Definition heaps_bisim_rnoghost BR st :=
-    forall xptr ptr, BR xptr ptr -> index st ptr.
+    forall xptr ptr, (xptr, ptr) \in BR -> index st ptr.
 
 Definition heaps_bisim_inl BR jst st := forall jptr ptr jobj obj, 
      (inl jptr, ptr) \in BR -> 
@@ -251,8 +254,8 @@ Definition heaps_bisim_inr BR jst st := forall jeptr ptr jer obj,
 Record heaps_bisim_consistent BR jst st : Prop := {
     heaps_bisim_consistent_bisim_inl : heaps_bisim_inl BR jst st;
     heaps_bisim_consistent_bisim_inr : heaps_bisim_inr BR jst st;
-    heaps_bisim_consistent_lfun : functional BR;
-    heaps_bisim_consistent_rfun : functional (flip BR);
+    heaps_bisim_consistent_lfun : rel_functional BR;
+    heaps_bisim_consistent_rfun : rel_functional (flip BR);
     heaps_bisim_consistent_ltotal_inl : heaps_bisim_ltotal_inl BR jst;
     heaps_bisim_consistent_ltotal_inr : heaps_bisim_ltotal_inr BR jst;
     heaps_bisim_consistent_lnoghost_inl : heaps_bisim_lnoghost_inl BR jst;
@@ -401,7 +404,8 @@ Record state_invariant BR jst jc c st : Prop := {
     state_invariant_includes_init_ctx : includes_init_ctx c;
     state_invariant_env_records_exist : env_records_exist BR jc;
     state_invariant_prealloc_related : prealloc_in_ctx BR c;
-    state_invariant_global_env_record_exists : global_env_record_exists BR c
+    state_invariant_global_env_record_exists : global_env_record_exists BR c;
+    state_invariant_js_state_fresh_ok : J.state_fresh_ok jst
 }.
 
 (** ** Theorem statement  
@@ -417,7 +421,7 @@ Definition concl_ext_expr_value BR jst jc c st st' r jee P :=
     state_invariant BR' jst' jc c st' /\
     BR \c BR' /\
     J.red_expr jst jc jee (J.out_ter jst' jr) /\ 
-    res_related BR jst' st' jr r.
+    res_related BR' jst' st' jr r.
 
 (* unused
 Definition concl_expr_value BR jst jc c st st' r je :=  

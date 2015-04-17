@@ -1,8 +1,17 @@
 Require Import Utils.
-Require Import LibBagExt.
 Require Import JsSyntax.
 Require Import JsPreliminary.
 Import LibStream.
+Require Import LibBagExt.
+Import LibBag.
+
+Implicit Type jst : state.
+Implicit Type jc : execution_ctx.
+Implicit Type jv : value.
+Implicit Type jptr : object_loc.
+Implicit Type jobj : object.
+Implicit Type jer : env_record.
+Implicit Type jeptr : env_loc.
 
 Module Import JsCertExt.
 
@@ -117,8 +126,18 @@ Proof.
     eauto.
 Qed.
 
+Lemma js_state_fresh_ok_next_fresh_update_object_preserved : forall jst jobj,
+    state_fresh_ok jst -> state_fresh_ok (state_next_fresh (jst \(fresh jst := jobj))).
+Proof. 
+Admitted. (* TODO *)
+
+Lemma js_state_fresh_ok_next_fresh_update_env_record_preserved : forall jst jer,
+    state_fresh_ok jst -> state_fresh_ok (state_next_fresh (jst \(fresh jst := jer))).
+Proof. 
+Admitted. (* TODO *)
+
 Lemma js_object_alloc_lemma : forall jst jobj,
-    (object_loc_normal (fresh jst), state_next_fresh (jst \(fresh jst := jobj))) =
+    (fresh jst, state_next_fresh (jst \(fresh jst := jobj))) =
     JsPreliminary.object_alloc jst jobj.
 Proof.
     introv.
@@ -126,3 +145,100 @@ Proof.
     reflexivity.
 Qed.
 
+Lemma js_object_fresh_index : forall jst,
+    state_fresh_ok jst ->
+    ~LibBag.index jst (@fresh object_loc _ _ jst).
+Proof.
+    introv Hfok.
+    destruct jst. destruct state_fresh_locations.
+    inverts Hfok as Hfok (Hfok1&Hfok2). eauto.
+Qed.
+
+Lemma js_env_record_fresh_index : forall jst,
+    state_fresh_ok jst ->
+    ~index jst (@fresh env_loc _ _ jst).
+Proof.
+    introv Hfok.
+    destruct jst. destruct state_fresh_locations.
+    inverts Hfok as Hfok (Hfok1&Hfok2). eauto.
+Qed.
+
+Lemma js_state_next_fresh_index_object_preserved_eq : forall jst jptr,
+    index (state_next_fresh jst) jptr = index jst jptr.
+Proof. destruct jst. destruct state_fresh_locations. reflexivity. Qed.
+
+Lemma js_state_next_fresh_index_env_record_preserved_eq : forall jst jeptr,
+    index (state_next_fresh jst) jeptr = index jst jeptr.
+Proof. destruct jst. destruct state_fresh_locations. reflexivity. Qed.
+
+Lemma js_state_next_fresh_binds_object_preserved_eq : forall jst jptr jobj,
+    binds (state_next_fresh jst) jptr jobj = binds jst jptr jobj.
+Proof. destruct jst. destruct state_fresh_locations. reflexivity. Qed.
+
+Lemma js_state_next_fresh_binds_env_record_preserved_eq : forall jst jeptr jer,
+    binds (state_next_fresh jst) jeptr jer = binds jst jeptr jer.
+Proof. destruct jst. destruct state_fresh_locations. reflexivity. Qed.
+
+Lemma js_state_next_fresh_index_object_preserved : forall jst jptr,
+    index jst jptr ->
+    index (state_next_fresh jst) jptr.
+Proof. introv. rewrite js_state_next_fresh_index_object_preserved_eq. auto. Qed.
+
+Lemma js_state_next_fresh_index_env_record_preserved : forall jst jeptr,
+    index jst jeptr ->
+    index (state_next_fresh jst) jeptr.
+Proof. introv. rewrite js_state_next_fresh_index_env_record_preserved_eq. auto. Qed.
+
+Lemma js_state_next_fresh_binds_object_preserved : forall jst jptr jobj,
+    binds jst jptr jobj ->
+    binds (state_next_fresh jst) jptr jobj.
+Proof. introv. rewrite js_state_next_fresh_binds_object_preserved_eq. auto. Qed.
+
+Lemma js_state_next_fresh_binds_env_record_preserved : forall jst jeptr jer,
+    binds jst jeptr jer ->
+    binds (state_next_fresh jst) jeptr jer.
+Proof. introv. rewrite js_state_next_fresh_binds_env_record_preserved_eq. auto. Qed.
+
+Lemma js_state_next_fresh_index_object_preserved_inv : forall jst jptr,
+    index (state_next_fresh jst) jptr ->
+    index jst jptr.
+Proof. introv. rewrite js_state_next_fresh_index_object_preserved_eq. auto. Qed.
+
+Lemma js_state_next_fresh_index_env_record_preserved_inv : forall jst jeptr,
+    index (state_next_fresh jst) jeptr ->
+    index jst jeptr.
+Proof. introv. rewrite js_state_next_fresh_index_env_record_preserved_eq. auto. Qed.
+
+Lemma js_state_next_fresh_binds_object_preserved_inv : forall jst jptr jobj,
+    binds (state_next_fresh jst) jptr jobj ->
+    binds jst jptr jobj.
+Proof. introv. rewrite js_state_next_fresh_binds_object_preserved_eq. auto. Qed.
+
+Lemma js_state_next_fresh_binds_env_record_preserved_inv : forall jst jeptr jer,
+    binds (state_next_fresh jst) jeptr jer ->
+    binds jst jeptr jer.
+Proof. introv. rewrite js_state_next_fresh_binds_env_record_preserved_eq. auto. Qed.
+
+Lemma js_state_write_object_binds_env_record_preserved_eq : forall jst jptr jobj jeptr jer,
+    binds (jst \(jptr := jobj)) jeptr jer = binds jst jeptr jer.
+Proof. destruct jst. reflexivity. Qed.
+
+Lemma js_state_write_object_index_env_record_preserved_eq : forall jst jptr jobj jeptr,
+    index (jst \(jptr := jobj)) jeptr = index jst jeptr.
+Proof. destruct jst. reflexivity. Qed.
+
+Lemma js_state_write_env_record_binds_object_preserved_eq : forall jst jptr jobj jeptr jer,
+    binds (jst \(jeptr := jer)) jptr jobj = binds jst jptr jobj.
+Proof. destruct jst. reflexivity. Qed.
+
+Lemma js_state_write_env_record_index_object_preserved_eq : forall jst jptr jobj jeptr jer,
+    index (jst \(jeptr := jer)) jptr = index jst jptr.
+Proof. destruct jst. reflexivity. Qed.
+
+Hint Rewrite 
+    js_state_write_object_binds_env_record_preserved_eq
+    js_state_write_env_record_binds_object_preserved_eq : rew_binds_eq.
+
+Hint Rewrite 
+    js_state_write_object_index_env_record_preserved_eq
+    js_state_write_env_record_index_object_preserved_eq : rew_index_eq.
