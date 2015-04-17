@@ -61,6 +61,8 @@ Hint Constructors value_related : js_ljs.
 Hint Constructors resvalue_related : js_ljs.
 Hint Constructors res_related : js_ljs.
 Hint Constructors lexical_env_related : js_ljs.
+Hint Constructors object_related : js_ljs.
+Hint Constructors object_prim_related : js_ljs.
 
 (** The constructors of JSCert are used as hints, for automated building of
     the derivation trees for the semantics judgment. *)
@@ -1192,19 +1194,25 @@ Qed.
 Hint Resolve heaps_bisim_consistent_next_fresh_preserved : js_ljs.
 
 Lemma state_invariant_new_object_preserved : forall BR jst jc c st jobj ptr obj,
+    state_invariant BR jst jc c st ->
     ~index st ptr ->
     object_related (\{(inl (fresh jst), ptr)} \u BR) jobj obj ->
-    state_invariant BR jst jc c st ->
     state_invariant (\{(inl (fresh jst), ptr)} \u BR) 
         (J.state_next_fresh (jst \(fresh jst:=jobj))) jc c (st \(ptr:=obj)).
 Proof.
-    introv Hnindex Horel Hinv.
+    introv Hinv Hnindex Horel.
     inverts Hinv.
     asserts Hsub : (BR \c \{(inl (fresh jst), ptr)} \u BR). jauto_js.
     constructor; jauto_js. 
 Qed.
 
 Hint Resolve state_invariant_new_object_preserved : js_ljs.
+
+Lemma object_properties_related_new : forall BR,
+    object_properties_related BR \{} \{}.
+Proof. introv. unfolds. introv. left. split; eauto_js. Qed.
+
+Hint Resolve object_properties_related_new : js_ljs. 
 
 (* Prerequisites *)
 

@@ -420,11 +420,11 @@ Record state_invariant BR jst jc c st : Prop := {
 
 Definition concl_ext_expr_value BR jst jc c st st' r jee P :=
     exists BR' jst' jr,
+    J.red_expr jst jc jee (J.out_ter jst' jr) /\ 
     ((exists jv, jr = J.res_val jv /\ P jv) \/
      J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw) /\
     state_invariant BR' jst' jc c st' /\
     BR \c BR' /\
-    J.red_expr jst jc jee (J.out_ter jst' jr) /\ 
     res_related BR' jst' st' jr r.
 
 (* unused

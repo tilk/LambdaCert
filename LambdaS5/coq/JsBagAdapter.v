@@ -47,6 +47,9 @@ Global Instance index_heap_inst : BagIndex (Heap.heap A B) A :=
 Global Instance dom_heap_inst : BagDom (Heap.heap A B) (set A) :=
     { dom := @Heap.dom _ _ }.
 
+Global Instance empty_heap_inst : BagEmpty (Heap.heap A B) :=
+    { empty := @Heap.empty _ _ }.
+
 Global Instance update_heap_inst : BagUpdate A B (Heap.heap A B) :=
     { update := @Heap.write _ _ }.
 
@@ -54,6 +57,9 @@ Global Instance dom_index_eq_inst : Dom_index_eq.
 Admitted. (* TODO *)
 
 Global Instance index_binds_eq_inst : Index_binds_eq.
+Admitted. (* TODO *)
+
+Global Instance binds_empty_eq_inst : Binds_empty_eq.
 Admitted. (* TODO *)
 
 Global Instance binds_update_eq_inst : Binds_update_eq.
