@@ -68,6 +68,7 @@ Implicit Type obj : L.object.
 Implicit Type re : L.result.
 Implicit Type r : L.res.
 Implicit Type props : L.object_props.
+Implicit Type attrs : L.attributes.
 
 Implicit Type jst : J.state.
 Implicit Type je : J.expr.
@@ -88,6 +89,7 @@ Implicit Type jer : J.env_record.
 Implicit Type jeptr : J.env_loc.
 Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
+Implicit Type jattrs : J.attributes.
 Implicit Type jlenv : J.lexical_env.
 Implicit Type jpre : J.prealloc.
 
@@ -157,20 +159,22 @@ Inductive attributes_related BR : J.attributes -> L.attributes -> Prop :=
 
 Definition object_properties_related BR jprops props := forall s, 
     ~index jprops s /\ ~index props s \/
-    exists jptr ptr, 
-        binds jprops s jptr /\ binds props s ptr /\
-        attributes_related BR jptr ptr.
+    exists jattrs attrs, 
+        binds jprops s jattrs /\ binds props s attrs /\
+        attributes_related BR jattrs attrs.
 
 (** *** Relating objects
     To be related, objects must have related property sets and internal properties. *)
 
-Definition object_prim_related BR jobj obj := 
-    J.object_class_ jobj = L.object_class obj /\
-    J.object_extensible_ jobj = L.object_extensible obj.
+Record object_prim_related BR jobj obj : Prop := {
+    object_prim_related_class : J.object_class_ jobj = L.object_class obj;
+    object_prim_related_extensible : J.object_extensible_ jobj = L.object_extensible obj
+}.
 
-Definition object_related BR jobj obj :=
-    object_prim_related BR jobj obj /\
-    object_properties_related BR (J.object_properties_ jobj) (L.object_properties obj).
+Record object_related BR jobj obj : Prop := {
+    object_related_prim : object_prim_related BR jobj obj;
+    object_related_properties : object_properties_related BR (J.object_properties_ jobj) (L.object_properties obj)
+}.
 
 (** *** Relating environment records *)
 

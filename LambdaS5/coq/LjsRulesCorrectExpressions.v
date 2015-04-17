@@ -81,7 +81,6 @@ Proof.
     eassumption.
     jauto_js.
     eauto_js 8.
-
     skip.
 Admitted.
 

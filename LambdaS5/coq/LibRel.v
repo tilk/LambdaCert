@@ -138,8 +138,24 @@ Proof.
     intros a b. applys Hi (a, b).
 Qed.    
 
-Global Opaque union_inst inter_inst empty_inst in_inst single_inst incl_inst.
+Section Lemmas.
+Variables (A B : Type).
 
-Lemma in_implies_rel : forall {A B} (R : rel A B) a b, (a, b) \in R -> R a b.
+Lemma in_implies_rel : forall (R : rel A B) a b, (a, b) \in R -> R a b.
 Proof. auto. Qed.
 
+Lemma in_flip_eq : forall (R : rel A B) a b, (b, a) \in flip R = (a, b) \in R.
+Proof. introv. reflexivity. Qed.
+
+Lemma in_flip : forall (R : rel A B) a b, (a, b) \in R -> (b, a) \in flip R.
+Proof. introv. rewrite in_flip_eq. auto. Qed.
+
+Lemma in_flip_inv : forall (R : rel A B) a b, (b, a) \in flip R -> (a, b) \in R.
+Proof. introv. rewrite in_flip_eq. auto. Qed.
+
+End Lemmas.
+
+Hint Resolve in_flip : bag.
+Hint Rewrite in_flip_eq : rew_in_eq.
+
+Global Opaque union_inst inter_inst empty_inst in_inst single_inst incl_inst.

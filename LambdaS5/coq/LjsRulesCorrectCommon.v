@@ -1023,6 +1023,74 @@ Qed.
 
 Hint Resolve env_record_related_bisim_incl_preserved : js_ljs.
 
+Lemma object_prim_related_bisim_incl_preserved : forall BR1 BR2 jobj obj,
+    BR1 \c BR2 ->
+    object_prim_related BR1 jobj obj ->
+    object_prim_related BR2 jobj obj.
+Proof.
+    
+Admitted.
+
+Hint Resolve object_prim_related_bisim_incl_preserved : js_ljs.
+
+Lemma attributes_data_related_bisim_incl_preserved : forall BR1 BR2 jattrsd attrsd,
+    BR1 \c BR2 ->
+    attributes_data_related BR1 jattrsd attrsd ->
+    attributes_data_related BR2 jattrsd attrsd.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel; constructor; jauto_js.
+Qed.
+
+Hint Resolve attributes_data_related_bisim_incl_preserved : js_ljs.
+
+Lemma attributes_accessor_related_bisim_incl_preserved : forall BR1 BR2 jattrsa attrsa,
+    BR1 \c BR2 ->
+    attributes_accessor_related BR1 jattrsa attrsa ->
+    attributes_accessor_related BR2 jattrsa attrsa.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel; constructor; jauto_js.
+Qed.
+
+Hint Resolve attributes_accessor_related_bisim_incl_preserved : js_ljs.
+
+Lemma attributes_related_bisim_incl_preserved : forall BR1 BR2 jattrs attrs,
+    BR1 \c BR2 ->
+    attributes_related BR1 jattrs attrs ->
+    attributes_related BR2 jattrs attrs.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel; constructor; jauto_js.
+Qed.
+
+Hint Resolve attributes_related_bisim_incl_preserved : js_ljs.
+
+Lemma object_properties_related_bisim_incl_preserved : forall BR1 BR2 jprops props,
+    BR1 \c BR2 ->
+    object_properties_related BR1 jprops props ->
+    object_properties_related BR2 jprops props.
+Proof.
+    introv Hs Hrel.
+    unfolds object_properties_related.
+    intro s. specializes Hrel s.
+    destruct_hyp Hrel; ijauto_js.
+Qed.
+
+Hint Resolve object_properties_related_bisim_incl_preserved : js_ljs.
+
+Lemma object_related_bisim_incl_preserved : forall BR1 BR2 jobj obj,
+    BR1 \c BR2 ->
+    object_related BR1 jobj obj ->
+    object_related BR2 jobj obj.
+Proof. 
+    introv Hs Hrel.
+    inverts Hrel.
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve object_related_bisim_incl_preserved : js_ljs.
+
 Lemma heaps_bisim_consistent_new_object_preserved : forall BR jst st jptr jobj ptr obj,
     ~index jst jptr ->
     ~index st ptr ->
@@ -1037,19 +1105,20 @@ Proof.
     (* bisim_inl *)
     introv Hbi Hbinds1 Hbinds2.
     rew_in_eq in Hbi.
-    skip.
-(*
-    destruct_hyp Hbi.
-    injects.
-    skip.
     rew_binds_eq in Hbinds1. 
     rew_binds_eq in Hbinds2. 
-    destruct_hyp Hbinds1; destruct_hyp Hbinds2; repeat injects.
-    skip.
-    skip.
-    skip.
+    apply case_classic_l in Hbi.
+    destruct_hyp Hbi.
+    injects.
+    destruct_hyp Hbinds1; tryfalse.
+    destruct_hyp Hbinds2; tryfalse.
+    assumption.
+    destruct_hyp Hbinds1;
+    destruct_hyp Hbinds2.
     jauto_js.
-*)
+    false. jauto_js.
+    false. jauto_js.
+    jauto_js.
     (* bisim_inr *)
     introv Hbi Hbinds1 Hbinds2.
     rew_in_eq in Hbi.
@@ -1070,7 +1139,13 @@ Proof.
     jauto_js.
     (* rfun *)
     introv Hbi1 Hbi2.
-    skip.
+    rew_in_eq in Hbi1.
+    rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects.
+    reflexivity.
+    false; jauto_js.
+    false; jauto_js.
+    jauto_js.
     (* ltotal_inl *)
     introv Hindex.
     rew_index_eq in Hindex.
