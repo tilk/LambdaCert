@@ -1,4 +1,5 @@
 Set Implicit Arguments.
+Require Import JsNumber.
 Require Import Utils.
 Require Import LjsShared.
 Require Import LjsSyntax.

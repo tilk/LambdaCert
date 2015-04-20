@@ -22,47 +22,6 @@ Implicit Type obj : object.
 
 (****** Unary operators ******)
 
-(* TODO move the js-specific typeof logic to env? *)
-Definition typeof store (v : value) :=
-  match v with
-  | value_undefined => result_some (value_string "undefined")
-  | value_null => result_some (value_string  "null")
-  | value_string _ => result_some (value_string  "string")
-  | value_number _ => result_some (value_string  "number")
-  | value_bool _ => result_some (value_string  "boolean")
-  | value_object ptr => result_some (value_string "object")
-  | value_closure _ => result_some (value_string "closure")
-  | value_empty => result_some (value_string "empty")
-  end
-.
-
-Definition is_primitive v :=
-  match v with
-  | value_undefined | value_null | value_string _ | value_number _ | value_bool _ =>
-    result_some value_true
-  | _ =>
-    result_some value_false
-  end
-.
-
-Definition is_closure v :=
-  match v with
-  | value_closure _ =>
-    result_some value_true
-  | _ =>
-    result_some value_false
-  end
-.
-
-Definition is_object v :=
-  match v with
-  | value_object _ =>
-    result_some value_true
-  | _ =>
-    result_some value_false
-  end
-.
-
 Definition prim_to_str store (v : value) :=
   match v with
   | value_undefined => result_some (value_string "undefined")
@@ -88,24 +47,6 @@ Definition prim_to_num store (v : value) :=
   end
 .
 
-Definition prim_to_bool store (v : value) :=
-  match v with
-  | value_bool true => result_some value_true
-  | value_bool false => result_some value_false
-  | value_undefined => result_some value_false
-  | value_null => result_some value_false
-  | value_number n => result_some (
-      ifb n = JsNumber.zero \/ n = JsNumber.neg_zero \/ n = JsNumber.nan then
-        value_false
-      else
-        value_true
-    )
-  | value_string s => result_some (ifb s = "" then value_false else value_true)
-  | value_empty => result_some value_false
-  | _ => result_some value_true
-  end
-.
-
 Definition nnot store (v : value) :=
   match v with
   | value_bool b => result_some (value_bool (!b))
@@ -123,7 +64,7 @@ Definition print store (v : value) :=
   match v with
   | value_string s => _seq (_print_string s) (result_some value_undefined)
   | value_number n => _seq (_print_string (JsNumber.to_string n)) (result_some value_undefined)
-  | _ => result_fail "print of non-string and non-number."
+  | _ => _seq (_print_string "unsupported value") (result_some value_undefined)
   end
 .
 
@@ -185,15 +126,15 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
     | unary_op_print => print store v
     | unary_op_pretty => pretty store v
     | unary_op_strlen => strlen store v
-    | unary_op_typeof => typeof store v
-    | unary_op_is_primitive => is_primitive v
-    | unary_op_is_closure => is_closure v
-    | unary_op_is_object => is_object v
+    | unary_op_typeof => result_some (value_string (typeof v))
+    | unary_op_is_primitive => result_some (value_bool (decide (is_primitive v)))
+    | unary_op_is_closure => result_some (value_bool (decide (is_closure v)))
+    | unary_op_is_object => result_some (value_bool (decide (is_object v)))
     | unary_op_abs => unary_arith JsNumber.absolute v
     | unary_op_floor => unary_arith JsNumber.floor v
     | unary_op_prim_to_str => prim_to_str store v
     | unary_op_prim_to_num => prim_to_num store v
-    | unary_op_prim_to_bool => prim_to_bool store v
+    | unary_op_prim_to_bool => result_some (value_bool (prim_to_bool v))
     | unary_op_not => nnot store v
     | unary_op_numstr_to_num => numstr_to_num store v
     | unary_op_bnot => unary_int_arith int32_bitwise_not v

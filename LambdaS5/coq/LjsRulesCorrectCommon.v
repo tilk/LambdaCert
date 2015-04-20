@@ -1521,11 +1521,6 @@ Proof.
     repeat ljs_autoforward.
 
     inverts Hvrel; try injects; jauto_js.
-    cases_if; 
-    simpl; unfold J.convert_number_to_bool; cases_if; jauto_js.
-    cases_if; 
-    simpl; unfold J.convert_string_to_bool; cases_if; jauto_js.
-    destruct b; injects; jauto_js.
 Qed.
 
 Lemma red_spec_to_number_unary_ok : forall k,

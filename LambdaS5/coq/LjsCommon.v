@@ -27,6 +27,92 @@ Definition overwrite_value_if_empty v1 v2 :=
   end
 .
 
+(* For operators *)
+
+Definition typeof v :=
+  match v with
+  | value_undefined => "undefined"
+  | value_null => "null"
+  | value_string _ => "string"
+  | value_number _ => "number"
+  | value_bool _ => "boolean"
+  | value_object ptr => "object"
+  | value_closure _ => "closure"
+  | value_empty => "empty"
+  end
+.
+
+Definition prim_to_bool v :=
+  match v with
+  | value_bool b => b
+  | value_undefined => false
+  | value_null => false
+  | value_number n => 
+      !decide (n = JsNumber.zero \/ n = JsNumber.neg_zero \/ n = JsNumber.nan)
+  | value_string s => !decide (s = "")
+  | value_empty => false
+  | _ => true
+  end
+.
+
+Inductive is_primitive : value -> Prop :=
+| is_primitive_undefined : is_primitive value_undefined
+| is_primitive_null : is_primitive value_null
+| is_primitive_bool : forall b, is_primitive (value_bool b)
+| is_primitive_number : forall n, is_primitive (value_number n)
+| is_primitive_string : forall s, is_primitive (value_string s).
+
+Inductive is_closure : value -> Prop :=
+| is_closure_closure : forall cl, is_closure (value_closure cl).
+
+Inductive is_object : value -> Prop :=
+| is_object_object : forall ptr, is_object (value_object ptr).
+
+Definition is_primitive_decide v :=
+  match v with
+  | value_undefined | value_null | value_string _ | value_number _ | value_bool _ => true
+  | _ => false
+  end
+.
+
+Definition is_closure_decide v :=
+  match v with
+  | value_closure _ => true  
+  | _ => false
+  end
+.
+
+Definition is_object_decide v :=
+  match v with
+  | value_object _ => true
+  | _ => false
+  end
+.
+
+Section Instances.
+
+Local Hint Constructors is_primitive is_closure is_object.
+
+Global Instance is_primitive_decidable : forall v, Decidable (is_primitive v).
+Proof.
+    introv. applys decidable_make (is_primitive_decide v).
+    destruct v; simpl; fold_bool; rew_refl; eauto.
+Defined.
+
+Global Instance is_closure_decidable : forall v, Decidable (is_closure v).
+Proof.
+    introv. applys decidable_make (is_closure_decide v).
+    destruct v; simpl; fold_bool; rew_refl; eauto.
+Defined.
+
+Global Instance is_object_decidable : forall v, Decidable (is_object v).
+Proof.
+    introv. applys decidable_make (is_object_decide v).
+    destruct v; simpl; fold_bool; rew_refl; eauto.
+Defined.
+
+End Instances.
+
 (* Get object attribute *)
 
 Definition get_object_oattr obj (oa : oattr) : value :=
