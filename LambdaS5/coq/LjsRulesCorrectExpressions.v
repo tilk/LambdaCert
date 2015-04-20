@@ -75,7 +75,7 @@ Proof.
     destruct_hyp Hv;
     repeat ljs_autoforward.
     inverts Hvrel2.
-    jauto_js 8.
+    jauto_js 8. 
     skip.
 Admitted.
 
@@ -102,7 +102,10 @@ Proof.
     repeat ljs_autoforward. 
     skip.
     (* cons *)
-    repeat ljs_autoforward. 
+    repeat ljs_autoforward.
+    cases_decide. 
+    repeat ljs_autoforward.
+    skip.
     skip.
 Qed.
 

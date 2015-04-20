@@ -130,6 +130,15 @@ Tactic Notation "cases_let" "as" simple_intropattern(Eq) :=
 Tactic Notation "cases_let" :=
   let Eq := fresh in cases_let as Eq.
 
+Tactic Notation "cases_decide" "as" simple_intropattern(Eq) :=
+  match goal with
+  | |- context [decide ?B] => rewrite decide_def; cases_if as Eq
+  | K: context [decide ?B] |- _ => rewrite decide_def in K; cases_if as Eq
+  end.
+
+Tactic Notation "cases_decide" :=
+  let Eq := fresh in cases_decide as Eq.
+
 Tactic Notation "injects" :=
     match goal with
     | H : _ = _ |- _ => injects H

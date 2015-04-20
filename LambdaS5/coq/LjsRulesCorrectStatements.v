@@ -83,6 +83,18 @@ Proof.
     ijauto_js.
 Qed.
 
+Lemma red_stat_with_ok : forall k jt je,
+    ih_stat k ->
+    ih_expr k ->
+    th_stat k (J.stat_with je jt).
+Proof.
+    introv IHt IHe Hinv Hlred.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    skip. (* TODO *)
+Qed.
+
 Lemma red_stat_expr_ok : forall k je, 
     ih_expr k ->
     th_stat k (J.stat_expr je).
