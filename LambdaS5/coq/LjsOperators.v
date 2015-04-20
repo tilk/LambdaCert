@@ -54,16 +54,12 @@ Definition is_closure v :=
   end
 .
 
-Definition is_array st v :=
+Definition is_object v :=
   match v with
-  | value_object ptr =>
-    assert_get_object_from_ptr st ptr (fun obj => 
-      match object_class obj with
-      | "Array" => result_some value_true
-      | _ => result_some value_false
-      end
-    )
-  | _ => result_some value_false
+  | value_object _ =>
+    result_some value_true
+  | _ =>
+    result_some value_false
   end
 .
 
@@ -192,6 +188,7 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
     | unary_op_typeof => typeof store v
     | unary_op_is_primitive => is_primitive v
     | unary_op_is_closure => is_closure v
+    | unary_op_is_object => is_object v
     | unary_op_abs => unary_arith JsNumber.absolute v
     | unary_op_floor => unary_arith JsNumber.floor v
     | unary_op_prim_to_str => prim_to_str store v
@@ -200,7 +197,6 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
     | unary_op_not => nnot store v
     | unary_op_numstr_to_num => numstr_to_num store v
     | unary_op_bnot => unary_int_arith int32_bitwise_not v
-    | unary_op_is_array => is_array store v
     | unary_op_to_int32 => unary_int_arith (fun x => x) v
     | unary_op_ascii_ntoc => ascii_ntoc v
     | unary_op_ascii_cton => ascii_cton v

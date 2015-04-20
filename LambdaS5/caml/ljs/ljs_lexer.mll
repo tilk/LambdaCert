@@ -90,7 +90,7 @@ rule token = parse
    | ">" { GT }
    | "=" { EQUALS }
    | "," { COMMA }
-   | "!" { DEREF }
+   | "!" { BANG }
    | "ref" { REF }
    | ":" { COLON }
    | ":=" { COLONEQ }
@@ -109,6 +109,9 @@ rule token = parse
    | "===" { EQEQEQUALS }
    | "!==" { BANGEQEQUALS }
    | "typeof" { TYPEOF }
+   | "object?" { ISOBJECT }
+   | "closure?" { ISCLOSURE }
+   | "primitive?" { ISPRIMITIVE }
    | "true" { BOOL true }
    | "false" { BOOL false }
    | "&&" { AMPAMP }

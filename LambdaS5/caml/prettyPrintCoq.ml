@@ -75,7 +75,7 @@ let format_unary_op o = match o with
     | Coq_unary_op_typeof -> text "unary_op_typeof"
     | Coq_unary_op_is_primitive -> text "unary_op_is_primitive"
     | Coq_unary_op_is_closure -> text "unary_op_is_closure"
-    | Coq_unary_op_is_array -> text "unary_op_is_array"
+    | Coq_unary_op_is_object -> text "unary_op_is_object"
     | Coq_unary_op_abs -> text "unary_op_abs"
     | Coq_unary_op_floor -> text "unary_op_floor"
     | Coq_unary_op_prim_to_str -> text "unary_op_prim_to_str"

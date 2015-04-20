@@ -2178,16 +2178,11 @@ expr_op1 unary_op_not
   (expr_op2 binary_op_stx_eq (expr_id "n") (expr_number (JsNumber.of_int 0)))))
 .
 Definition ex_privIsJSError := 
-expr_if
-(expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "thing"))
- (expr_string "object"))
+expr_if (expr_op1 unary_op_is_object (expr_id "thing"))
 (expr_op2 binary_op_has_own_property (expr_id "thing")
  (expr_string "%js-exn")) expr_false
 .
-Definition ex_privIsObject := 
-expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "o"))
-(expr_string "object")
-.
+Definition ex_privIsObject :=  expr_op1 unary_op_is_object (expr_id "o") .
 Definition ex_privIsPrototypeOflambda := 
 expr_recc "searchChain"
 (expr_lambda ["o"; "v"]
@@ -2197,16 +2192,13 @@ expr_recc "searchChain"
    (expr_if (expr_op2 binary_op_stx_eq (expr_id "o") (expr_id "vproto"))
     expr_true
     (expr_app (expr_id "searchChain") [expr_id "o"; expr_id "vproto"])))))
-(expr_let "vtype"
- (expr_op1 unary_op_typeof
-  (expr_get_field (expr_id "args") (expr_string "0")))
- (expr_if
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_id "vtype") (expr_string "object")))
-  expr_false
-  (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-   (expr_app (expr_id "searchChain")
-    [expr_id "O"; expr_get_field (expr_id "args") (expr_string "0")]))))
+(expr_if
+ (expr_op1 unary_op_not
+  (expr_op1 unary_op_is_object
+   (expr_get_field (expr_id "args") (expr_string "0")))) expr_false
+ (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
+  (expr_app (expr_id "searchChain")
+   [expr_id "O"; expr_get_field (expr_id "args") (expr_string "0")])))
 .
 Definition ex_privJSError := 
 expr_object
@@ -2890,11 +2882,10 @@ Definition ex_privToPrimitive :=
 expr_app (expr_id "%ToPrimitiveHint") [expr_id "val"; expr_string "number"]
 .
 Definition ex_privToPrimitiveHint := 
-expr_let "t" (expr_op1 unary_op_typeof (expr_id "val"))
-(expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
- (expr_if (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string"))
-  (expr_app (expr_id "%ToPrimitiveStr") [expr_id "val"])
-  (expr_app (expr_id "%ToPrimitiveNum") [expr_id "val"])) (expr_id "val"))
+expr_if (expr_op1 unary_op_is_object (expr_id "val"))
+(expr_if (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string"))
+ (expr_app (expr_id "%ToPrimitiveStr") [expr_id "val"])
+ (expr_app (expr_id "%ToPrimitiveNum") [expr_id "val"])) (expr_id "val")
 .
 Definition ex_privToPrimitiveNum := 
 expr_let "check"
@@ -3230,9 +3221,8 @@ expr_let "isCallable"
  (expr_label "ret"
   (expr_seq
    (expr_if
-    (expr_op1 unary_op_not
-     (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "o"))
-      (expr_string "object"))) (expr_break "ret" expr_false) expr_null)
+    (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "o")))
+    (expr_break "ret" expr_false) expr_null)
    (expr_seq
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_code (expr_id "o"))
@@ -3327,9 +3317,8 @@ expr_let "array" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "thefunc" (expr_get_field (expr_id "array") (expr_string "join"))
  (expr_let "ffunc"
   (expr_if
-   (expr_op1 unary_op_not
-    (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "thefunc"))
-     (expr_string "object"))) (expr_id "%objectToStringlambda")
+   (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "thefunc")))
+   (expr_id "%objectToStringlambda")
    (expr_if
     (expr_op2 binary_op_stx_eq
      (expr_get_obj_attr oattr_code (expr_id "thefunc")) expr_null)
@@ -3533,9 +3522,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
            (expr_number (JsNumber.of_int 1));
            expr_op2 binary_op_add (expr_id "toIndex")
            (expr_number (JsNumber.of_int 1))]))))
-      (expr_if
-       (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "elt"))
-        (expr_string "object"))
+      (expr_if (expr_op1 unary_op_is_object (expr_id "elt"))
        (expr_if
         (expr_op2 binary_op_stx_eq
          (expr_get_obj_attr oattr_class (expr_id "elt"))
@@ -3798,12 +3785,10 @@ expr_let "unimplFunc"
 .
 Definition ex_privdefineOwnProperty := 
 expr_seq
-(expr_let "t" (expr_op1 unary_op_typeof (expr_id "obj"))
- (expr_if
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object")))
-  (expr_throw (expr_string "defineOwnProperty didn't get object"))
-  expr_undefined))
+(expr_if
+ (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "obj")))
+ (expr_throw (expr_string "defineOwnProperty didn't get object"))
+ expr_undefined)
 (expr_let "fstr" (expr_app (expr_id "%ToString") [expr_id "field"])
  (expr_if
   (expr_op2 binary_op_stx_eq
@@ -4173,9 +4158,7 @@ Definition ex_privencodeURILambda :=  expr_string "encodeURI NYI" .
 Definition ex_privescapeLambda :=  expr_string "escape NYI" .
 Definition ex_privetslambda := 
 expr_if
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
-  (expr_string "object")))
+(expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "this")))
 (expr_app (expr_id "%TypeError")
  [expr_string "This not object in Error.prototype.toString"])
 (expr_let "name"
@@ -4640,10 +4623,7 @@ expr_if
  (expr_get_field (expr_id "args") (expr_string "0"))) expr_true expr_false
 .
 Definition ex_privin := 
-expr_if
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "r"))
-  (expr_string "object")))
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "r")))
 (expr_app (expr_id "%TypeError")
  [expr_op2 binary_op_string_plus
   (expr_app (expr_id "%ToString") [expr_id "r"])
@@ -4652,37 +4632,31 @@ expr_if
  (expr_app (expr_id "%ToString") [expr_id "l"]))
 .
 Definition ex_privinstanceof := 
-expr_let "rtype" (expr_op1 unary_op_typeof (expr_id "r"))
-(expr_let "ltype" (expr_op1 unary_op_typeof (expr_id "l"))
- (expr_label "ret"
-  (expr_seq
+expr_label "ret"
+(expr_seq
+ (expr_if
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_app (expr_id "%Typeof") [expr_id "r"])
+    (expr_string "function")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Non-function given to instanceof"]) expr_null)
+ (expr_seq
+  (expr_if
+   (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "l")))
+   (expr_break "ret" expr_false) expr_null)
+  (expr_let "O" (expr_get_field (expr_id "r") (expr_string "prototype"))
    (expr_if
-    (expr_op1 unary_op_not
-     (expr_op2 binary_op_stx_eq
-      (expr_app (expr_id "%Typeof") [expr_id "rtype"])
-      (expr_string "function")))
+    (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
     (expr_app (expr_id "%TypeError")
-     [expr_string "Non-function given to instanceof"]) expr_null)
-   (expr_seq
-    (expr_if
-     (expr_op1 unary_op_not
-      (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "ltype"))
-       (expr_string "object"))) (expr_break "ret" expr_false) expr_null)
-    (expr_let "O" (expr_get_field (expr_id "r") (expr_string "prototype"))
-     (expr_if
-      (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "O"))
-        (expr_string "object")))
-      (expr_app (expr_id "%TypeError")
-       [expr_string "Prototype was not function or object"])
-      (expr_recc "search"
-       (expr_lambda ["v"]
-        (expr_let "vp" (expr_get_obj_attr oattr_proto (expr_id "v"))
-         (expr_if (expr_op2 binary_op_stx_eq (expr_id "vp") expr_null)
-          expr_false
-          (expr_if (expr_op2 binary_op_stx_eq (expr_id "O") (expr_id "vp"))
-           expr_true (expr_app (expr_id "search") [expr_id "vp"])))))
-       (expr_break "ret" (expr_app (expr_id "search") [expr_id "l"])))))))))
+     [expr_string "Prototype was not function or object"])
+    (expr_recc "search"
+     (expr_lambda ["v"]
+      (expr_let "vp" (expr_get_obj_attr oattr_proto (expr_id "v"))
+       (expr_if (expr_op2 binary_op_stx_eq (expr_id "vp") expr_null)
+        expr_false
+        (expr_if (expr_op2 binary_op_stx_eq (expr_id "O") (expr_id "vp"))
+         expr_true (expr_app (expr_id "search") [expr_id "vp"])))))
+     (expr_break "ret" (expr_app (expr_id "search") [expr_id "l"])))))))
 .
 Definition ex_privisExtensibleLambda := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))

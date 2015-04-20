@@ -23,6 +23,7 @@ let translate_unary_op s = match s with
     | "typeof" -> Cs.Coq_unary_op_typeof
     | "closure?" -> Cs.Coq_unary_op_is_closure
     | "primitive?" -> Cs.Coq_unary_op_is_primitive
+    | "object?" -> Cs.Coq_unary_op_is_object
     | "prim->str" -> Cs.Coq_unary_op_prim_to_str
     | "prim->num" -> Cs.Coq_unary_op_prim_to_num
     | "prim->bool" -> Cs.Coq_unary_op_prim_to_bool
@@ -30,7 +31,6 @@ let translate_unary_op s = match s with
     | "pretty" -> Cs.Coq_unary_op_pretty
     | "object-to-string" -> Cs.Coq_unary_op_object_to_string
     | "strlen" -> Cs.Coq_unary_op_strlen
-    | "is-array" -> Cs.Coq_unary_op_is_array
     | "to-int32" -> Cs.Coq_unary_op_to_int32
     | "!" -> Cs.Coq_unary_op_not
     | "floor" -> Cs.Coq_unary_op_floor

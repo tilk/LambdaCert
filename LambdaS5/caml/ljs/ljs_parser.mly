@@ -46,8 +46,9 @@ let with_pos exp pos = match exp with
 %token <bool> BOOL
 %token <string> ID
 %token UNDEFINED EMPTY NULL FUNC LET DELETE LBRACE RBRACE LPAREN RPAREN LBRACK
-  RBRACK EQUALS COMMA DEREF REF COLON COLONEQ PRIM IF ELSE SEMI JSEMI
-  LABEL BREAK TRY CATCH FINALLY THROW EQEQEQUALS TYPEOF
+  RBRACK EQUALS COMMA BANG REF COLON COLONEQ PRIM IF ELSE SEMI JSEMI
+  LABEL BREAK TRY CATCH FINALLY THROW EQEQEQUALS TYPEOF 
+  ISCLOSURE ISPRIMITIVE ISOBJECT
   AMPAMP PIPEPIPE RETURN BANGEQEQUALS FUNCTION REC WRITABLE GETTER SETTER
   CONFIG VALUE ENUM LT GT PROTO CODE EXTENSIBLE CLASS EVAL GETFIELDS PRIMVAL
 
@@ -57,6 +58,7 @@ let with_pos exp pos = match exp with
 %left PIPEPIPE
 %left AMPAMP
 %left EQEQEQUALS BANGEQEQUALS
+%left BANG
 %left LBRACK
 %left ELSE
 %left LPAREN
@@ -156,6 +158,12 @@ atom :
  | func { $1 }
  | TYPEOF atom
      { Op1 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), "typeof", $2) }
+ | ISOBJECT atom
+     { Op1 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), "object?", $2) }
+ | ISPRIMITIVE atom
+     { Op1 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), "primitive?", $2) }
+ | ISCLOSURE atom
+     { Op1 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), "closure?", $2) }
      
 exp :
  | atom { $1 }
@@ -171,6 +179,8 @@ exp :
    { Op1 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), $3, $5) }
  | ID COLONEQ exp
    { SetBang (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $1, $3) }
+ | BANG exp
+   { Op1(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), "!", $2) }
  | exp EQEQEQUALS exp
      { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), "stx=", $1, $3) }
  | exp BANGEQEQUALS exp
