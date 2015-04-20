@@ -119,6 +119,9 @@ expr_object
                       expr_false expr_false));
  ("%EnvGet", property_data
              (data_intro (expr_id "%EnvGet") expr_true expr_false expr_false));
+ ("%EnvTypeof", property_data
+                (data_intro (expr_id "%EnvTypeof") expr_true expr_false
+                 expr_false));
  ("%EqEq", property_data
            (data_intro (expr_id "%EqEq") expr_true expr_false expr_false));
  ("%ErrorConstructor", property_data
@@ -162,6 +165,9 @@ expr_object
                    expr_false));
  ("%InLeapYear", property_data
                  (data_intro (expr_id "%InLeapYear") expr_true expr_false
+                  expr_false));
+ ("%IsCallable", property_data
+                 (data_intro (expr_id "%IsCallable") expr_true expr_false
                   expr_false));
  ("%IsFinite", property_data
                (data_intro (expr_id "%IsFinite") expr_true expr_false
@@ -447,6 +453,8 @@ expr_object
  ("%UnwritableDispatch", property_data
                          (data_intro (expr_id "%UnwritableDispatch")
                           expr_true expr_false expr_false));
+ ("%Void", property_data
+           (data_intro (expr_id "%Void") expr_true expr_false expr_false));
  ("%YearFromTime", property_data
                    (data_intro (expr_id "%YearFromTime") expr_true expr_false
                     expr_false));
@@ -1396,12 +1404,9 @@ expr_app (expr_id "%TypeError")
 [expr_op2 binary_op_string_plus (expr_id "name") (expr_string " NYI")]
 .
 Definition ex_privAppExprCheck := 
-expr_if
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "fun"))
-  (expr_string "function")))
-(expr_app (expr_id "%TypeError") [expr_string "Not a function"])
+expr_if (expr_app (expr_id "%IsCallable") [expr_id "fun"])
 (expr_app (expr_id "fun") [expr_id "this"; expr_id "args"])
+(expr_app (expr_id "%TypeError") [expr_string "Not a function"])
 .
 Definition ex_privArrayConstructor := 
 expr_label "ret"
@@ -1927,6 +1932,33 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
       expr_id "strict"])))
   (expr_throw (expr_string "[env] Context not well formed! In %EnvGet"))))
 .
+Definition ex_privEnvTypeof := 
+expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
+(expr_string "undefined")
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_obj_attr oattr_class (expr_id "context"))
+  (expr_string "DeclEnvRec"))
+ (expr_if
+  (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
+  (expr_app (expr_id "%Typeof")
+   [expr_get_field (expr_id "context") (expr_id "id")])
+  (expr_app (expr_id "%EnvTypeof")
+   [expr_get_obj_attr oattr_primval (expr_id "context"); expr_id "id"]))
+ (expr_if
+  (expr_op2 binary_op_stx_eq
+   (expr_get_obj_attr oattr_class (expr_id "context"))
+   (expr_string "ObjEnvRec"))
+  (expr_let "bindings"
+   (expr_get_field (expr_id "context") (expr_string "bindings"))
+   (expr_if
+    (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
+    (expr_app (expr_id "%Typeof")
+     [expr_get_field (expr_id "bindings") (expr_id "id")])
+    (expr_app (expr_id "%EnvTypeof")
+     [expr_get_obj_attr oattr_primval (expr_id "context"); expr_id "id"])))
+  (expr_throw (expr_string "[env] Context not well formed! In %EnvTypeof"))))
+.
 Definition ex_privEqEq := 
 expr_label "ret"
 (expr_let "t1" (expr_op1 unary_op_typeof (expr_id "x1"))
@@ -2130,6 +2162,10 @@ expr_if
  (expr_number (JsNumber.of_int 365))) (expr_number (JsNumber.of_int 0))
 (expr_number (JsNumber.of_int 1))
 .
+Definition ex_privIsCallable := 
+expr_op2 binary_op_stx_eq (expr_app (expr_id "%Typeof") [expr_id "o"])
+(expr_string "function")
+.
 Definition ex_privIsFinite := 
 expr_op1 unary_op_not
 (expr_let "%or"
@@ -2149,13 +2185,8 @@ expr_if
  (expr_string "%js-exn")) expr_false
 .
 Definition ex_privIsObject := 
-expr_let "t" (expr_op1 unary_op_typeof (expr_id "o"))
-(expr_let "c1"
- (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
- (expr_let "c2"
-  (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function"))
-  (expr_let "%or" (expr_id "c1")
-   (expr_if (expr_id "%or") (expr_id "%or") (expr_id "c2")))))
+expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "o"))
+(expr_string "object")
 .
 Definition ex_privIsPrototypeOflambda := 
 expr_recc "searchChain"
@@ -2170,12 +2201,9 @@ expr_recc "searchChain"
  (expr_op1 unary_op_typeof
   (expr_get_field (expr_id "args") (expr_string "0")))
  (expr_if
-  (expr_if
-   (expr_op1 unary_op_not
-    (expr_op2 binary_op_stx_eq (expr_id "vtype") (expr_string "object")))
-   (expr_op1 unary_op_not
-    (expr_op2 binary_op_stx_eq (expr_id "vtype") (expr_string "function")))
-   expr_false) expr_false
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "vtype") (expr_string "object")))
+  expr_false
   (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_app (expr_id "searchChain")
     [expr_id "O"; expr_get_field (expr_id "args") (expr_string "0")]))))
@@ -2492,12 +2520,8 @@ expr_let "calledAsFunction"
         (expr_op1 unary_op_typeof
          (expr_get_field (expr_id "args") (expr_string "0")))
         (expr_let "isArgObject"
-         (expr_let "%or"
-          (expr_op2 binary_op_stx_eq (expr_id "argtype")
-           (expr_string "object"))
-          (expr_if (expr_id "%or") (expr_id "%or")
-           (expr_op2 binary_op_stx_eq (expr_id "argtype")
-            (expr_string "function"))))
+         (expr_op2 binary_op_stx_eq (expr_id "argtype")
+          (expr_string "object"))
          (expr_let "isArgSomething"
           (expr_let "%or"
            (expr_let "%or"
@@ -2517,18 +2541,11 @@ expr_let "calledAsFunction"
             (expr_id "defaultRtn")))))) (expr_id "defaultRtn"))))))))
 .
 Definition ex_privObjectTypeCheck := 
-expr_let "t" (expr_op1 unary_op_typeof (expr_id "o"))
-(expr_let "c1"
- (expr_op1 unary_op_not
-  (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object")))
- (expr_let "c2"
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function")))
-  (expr_if (expr_if (expr_id "c1") (expr_id "c2") expr_false)
-   (expr_app (expr_id "%TypeError")
-    [expr_op2 binary_op_string_plus
-     (expr_op1 unary_op_prim_to_str (expr_id "o"))
-     (expr_string " is not an object")]) expr_null)))
+expr_if (expr_app (expr_id "%IsObject") [expr_id "o"]) expr_null
+(expr_app (expr_id "%TypeError")
+ [expr_op2 binary_op_string_plus
+  (expr_op1 unary_op_prim_to_str (expr_id "o"))
+  (expr_string " is not an object")])
 .
 Definition ex_privPostDecrement := 
 expr_app (expr_id "%PostfixOp")
@@ -2815,93 +2832,66 @@ expr_label "ret"
        (expr_break "ret" (expr_id "r")))))))))
 .
 Definition ex_privToNumber := 
-expr_recc "inner"
-(expr_lambda ["x"]
- (expr_label "ret"
-  (expr_let "t" (expr_op1 unary_op_typeof (expr_id "x"))
-   (expr_seq
-    (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "number"))
-     (expr_break "ret" (expr_id "x")) expr_undefined)
-    (expr_seq
-     (expr_if (expr_op2 binary_op_stx_eq (expr_id "x") expr_undefined)
-      (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_undefined)
-     (expr_seq
-      (expr_if
-       (expr_let "%or" (expr_op2 binary_op_stx_eq (expr_id "x") expr_null)
-        (expr_if (expr_id "%or") (expr_id "%or")
-         (expr_op2 binary_op_stx_eq (expr_id "x") expr_false)))
-       (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_undefined)
-      (expr_seq
-       (expr_if (expr_op2 binary_op_stx_eq (expr_id "x") expr_true)
-        (expr_break "ret" (expr_number (JsNumber.of_int 1))) expr_undefined)
-       (expr_seq
-        (expr_if
-         (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "string"))
-         (expr_break "ret" (expr_op1 unary_op_numstr_to_num (expr_id "x")))
-         expr_undefined)
-        (expr_break "ret"
-         (expr_app (expr_id "inner")
-          [expr_app (expr_id "%ToPrimitiveNum") [expr_id "x"]]))))))))))
-(expr_app (expr_id "inner") [expr_id "x"])
+expr_let "t" (expr_op1 unary_op_typeof (expr_id "x"))
+(expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "number"))
+ (expr_id "x")
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "undefined"))
+  (expr_number (JsNumber.of_int 0))
+  (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "null"))
+   (expr_number (JsNumber.of_int 0))
+   (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "boolean"))
+    (expr_if (expr_id "x") (expr_number (JsNumber.of_int 1))
+     (expr_number (JsNumber.of_int 0)))
+    (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "string"))
+     (expr_op1 unary_op_numstr_to_num (expr_id "x"))
+     (expr_if
+      (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
+      (expr_app (expr_id "%ToNumber")
+       [expr_app (expr_id "%ToPrimitiveNum") [expr_id "x"]])
+      (expr_throw (expr_string "[env] Invalid type in %ToNumber"))))))))
 .
 Definition ex_privToObject := 
-expr_if (expr_op2 binary_op_stx_eq (expr_id "o") expr_null)
-(expr_app (expr_id "%TypeError") [expr_string "%ToObject received null"])
-(expr_label "ret"
- (expr_let "t" (expr_op1 unary_op_typeof (expr_id "o"))
-  (expr_seq
-   (expr_if
-    (expr_let "%or"
-     (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
-     (expr_if (expr_id "%or") (expr_id "%or")
-      (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function"))))
-    (expr_break "ret" (expr_id "o")) expr_null)
-   (expr_seq
-    (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "string"))
-     (expr_let "obj"
-      (expr_object
-       (objattrs_intro (expr_string "String") expr_true
-        (expr_id "%StringProto") expr_null (expr_id "o"))
-       [("length", property_data
-                   (data_intro (expr_op1 unary_op_strlen (expr_id "o"))
-                    expr_true expr_false expr_false))])
-      (expr_seq
-       (expr_app (expr_id "%StringIndices") [expr_id "obj"; expr_id "o"])
-       (expr_break "ret" (expr_id "obj")))) expr_null)
-    (expr_seq
-     (expr_if
-      (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "number"))
-      (expr_break "ret"
-       (expr_object
-        (objattrs_intro (expr_string "Number") expr_true
-         (expr_id "%NumberProto") expr_null (expr_id "o")) [])) expr_null)
+expr_let "t" (expr_op1 unary_op_typeof (expr_id "o"))
+(expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "null"))
+ (expr_app (expr_id "%TypeError") [expr_string "%ToObject received null"])
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "undefined"))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "%ToObject received undefined"])
+  (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
+   (expr_id "o")
+   (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "string"))
+    (expr_let "obj"
+     (expr_object
+      (objattrs_intro (expr_string "String") expr_true
+       (expr_id "%StringProto") expr_null (expr_id "o"))
+      [("length", property_data
+                  (data_intro (expr_op1 unary_op_strlen (expr_id "o"))
+                   expr_true expr_false expr_false))])
      (expr_seq
+      (expr_app (expr_id "%StringIndices") [expr_id "obj"; expr_id "o"])
+      (expr_id "obj")))
+    (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "number"))
+     (expr_object
+      (objattrs_intro (expr_string "Number") expr_true
+       (expr_id "%NumberProto") expr_null (expr_id "o")) [])
+     (expr_if
+      (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "boolean"))
+      (expr_object
+       (objattrs_intro (expr_string "Boolean") expr_true
+        (expr_id "%BooleanProto") expr_null (expr_id "o")) [])
       (expr_if
-       (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "boolean"))
-       (expr_break "ret"
-        (expr_object
-         (objattrs_intro (expr_string "Boolean") expr_true
-          (expr_id "%BooleanProto") expr_null (expr_id "o")) [])) expr_null)
-      (expr_seq
-       (expr_if
-        (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function"))
-        (expr_break "ret"
-         (expr_object
-          (objattrs_intro (expr_string "Function") expr_true
-           (expr_id "%BooleanProto") expr_null (expr_id "o")) [])) expr_null)
-       (expr_app (expr_id "%TypeError")
-        [expr_string "%ToObject received undefined"]))))))))
+       (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function"))
+       (expr_object
+        (objattrs_intro (expr_string "Function") expr_true
+         (expr_id "%BooleanProto") expr_null (expr_id "o")) [])
+       (expr_throw (expr_string "[env] Invalid type in %ToObject")))))))))
 .
 Definition ex_privToPrimitive := 
 expr_app (expr_id "%ToPrimitiveHint") [expr_id "val"; expr_string "number"]
 .
 Definition ex_privToPrimitiveHint := 
 expr_let "t" (expr_op1 unary_op_typeof (expr_id "val"))
-(expr_if
- (expr_let "%or"
-  (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function"))
-  (expr_if (expr_id "%or") (expr_id "%or")
-   (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))))
+(expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
  (expr_if (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string"))
   (expr_app (expr_id "%ToPrimitiveStr") [expr_id "val"])
   (expr_app (expr_id "%ToPrimitiveNum") [expr_id "val"])) (expr_id "val"))
@@ -2910,9 +2900,7 @@ Definition ex_privToPrimitiveNum :=
 expr_let "check"
 (expr_lambda ["o"; "str"]
  (expr_let "valueOf" (expr_get_field (expr_id "o") (expr_id "str"))
-  (expr_if
-   (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "valueOf"))
-    (expr_string "function"))
+  (expr_if (expr_app (expr_id "%IsCallable") [expr_id "valueOf"])
    (expr_let "str"
     (expr_app (expr_id "valueOf")
      [expr_id "o";
@@ -2939,9 +2927,7 @@ expr_label "ret"
 (expr_seq
  (expr_let "toString"
   (expr_get_field (expr_id "obj") (expr_string "toString"))
-  (expr_if
-   (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "toString"))
-    (expr_string "function"))
+  (expr_if (expr_app (expr_id "%IsCallable") [expr_id "toString"])
    (expr_let "str"
     (expr_app (expr_id "toString")
      [expr_id "obj";
@@ -2953,9 +2939,7 @@ expr_label "ret"
  (expr_seq
   (expr_let "valueOf"
    (expr_get_field (expr_id "obj") (expr_string "valueOf"))
-   (expr_if
-    (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "valueOf"))
-     (expr_string "function"))
+   (expr_if (expr_app (expr_id "%IsCallable") [expr_id "valueOf"])
     (expr_let "str"
      (expr_app (expr_id "valueOf")
       [expr_id "obj";
@@ -3022,9 +3006,26 @@ expr_app (expr_id "%MakeNativeError")
  [expr_get_field (expr_id "args") (expr_string "0")]]
 .
 Definition ex_privTypeof := 
-expr_try_catch
-(expr_op1 unary_op_typeof (expr_get_field (expr_id "context") (expr_id "id")))
-(expr_lambda ["e"] (expr_string "undefined"))
+expr_let "tp" (expr_op1 unary_op_typeof (expr_id "val"))
+(expr_if (expr_op2 binary_op_stx_eq (expr_id "tp") (expr_string "object"))
+ (expr_if
+  (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_code (expr_id "val"))
+   (expr_string "null")) (expr_string "object") (expr_string "function"))
+ (expr_if
+  (expr_op2 binary_op_stx_eq (expr_id "tp") (expr_string "undefined"))
+  (expr_string "undefined")
+  (expr_if (expr_op2 binary_op_stx_eq (expr_id "tp") (expr_string "null"))
+   (expr_string "object")
+   (expr_if
+    (expr_op2 binary_op_stx_eq (expr_id "tp") (expr_string "boolean"))
+    (expr_string "boolean")
+    (expr_if
+     (expr_op2 binary_op_stx_eq (expr_id "tp") (expr_string "number"))
+     (expr_string "number")
+     (expr_if
+      (expr_op2 binary_op_stx_eq (expr_id "tp") (expr_string "string"))
+      (expr_string "string")
+      (expr_throw (expr_string "[env] invalid value in %Typeof"))))))))
 .
 Definition ex_privURIErrorConstructor := 
 expr_app (expr_id "%MakeNativeError")
@@ -3069,6 +3070,7 @@ expr_lambda ["e"]
    (expr_string " not writable")])
  (expr_app (expr_id "%ErrorDispatch") [expr_id "e"]))
 .
+Definition ex_privVoid :=  expr_undefined .
 Definition ex_privYearFromTime := 
 expr_let "sign"
 (expr_if
@@ -3228,14 +3230,9 @@ expr_let "isCallable"
  (expr_label "ret"
   (expr_seq
    (expr_if
-    (expr_if
-     (expr_op1 unary_op_not
-      (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "o"))
-       (expr_string "object")))
-     (expr_op1 unary_op_not
-      (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "o"))
-       (expr_string "function"))) expr_false) (expr_break "ret" expr_false)
-    expr_null)
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "o"))
+      (expr_string "object"))) (expr_break "ret" expr_false) expr_null)
    (expr_seq
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_code (expr_id "o"))
@@ -3330,14 +3327,9 @@ expr_let "array" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "thefunc" (expr_get_field (expr_id "array") (expr_string "join"))
  (expr_let "ffunc"
   (expr_if
-   (expr_if
-    (expr_op1 unary_op_not
-     (expr_op2 binary_op_stx_eq
-      (expr_op1 unary_op_typeof (expr_id "thefunc")) (expr_string "object")))
-    (expr_op1 unary_op_not
-     (expr_op2 binary_op_stx_eq
-      (expr_op1 unary_op_typeof (expr_id "thefunc")) (expr_string "function")))
-    expr_false) (expr_id "%objectToStringlambda")
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "thefunc"))
+     (expr_string "object"))) (expr_id "%objectToStringlambda")
    (expr_if
     (expr_op2 binary_op_stx_eq
      (expr_get_obj_attr oattr_code (expr_id "thefunc")) expr_null)
@@ -3358,9 +3350,7 @@ Definition ex_privbindLambda :=
 expr_label "ret"
 (expr_seq
  (expr_if
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
-    (expr_string "function")))
+  (expr_op1 unary_op_not (expr_app (expr_id "%IsCallable") [expr_id "this"]))
   (expr_app (expr_id "%TypeError") [expr_string "this not function in bind"])
   expr_null)
  (expr_let "thisArg" (expr_get_field (expr_id "args") (expr_string "0"))
@@ -3620,54 +3610,46 @@ Definition ex_privcosLambda :=  expr_string "cos NYI" .
 Definition ex_privcreateLambda := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_let "t" (expr_op1 unary_op_typeof (expr_id "O"))
- (expr_let "c1"
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object")))
-  (expr_let "c2"
+ (expr_if
+  (expr_if
    (expr_op1 unary_op_not
-    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function")))
-   (expr_let "c3"
-    (expr_op1 unary_op_not
-     (expr_op2 binary_op_stx_eq (expr_id "O") expr_null))
-    (expr_seq
-     (expr_if
-      (expr_if (expr_if (expr_id "c1") (expr_id "c2") expr_false)
-       (expr_id "c3") expr_false)
-      (expr_app (expr_id "%TypeError") [expr_string "Object.create failed"])
-      expr_null)
-     (expr_let "obj"
+    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object")))
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "null")))
+   expr_false)
+  (expr_app (expr_id "%TypeError") [expr_string "Object.create failed"])
+  (expr_let "obj"
+   (expr_object
+    (objattrs_intro (expr_string "Object") expr_true (expr_id "O") expr_null
+     expr_undefined) [])
+   (expr_if
+    (expr_if
+     (expr_op2 binary_op_ge
+      (expr_get_field (expr_id "args") (expr_string "length"))
+      (expr_number (JsNumber.of_int 2)))
+     (expr_op1 unary_op_not
+      (expr_op2 binary_op_stx_eq
+       (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined))
+     expr_false)
+    (expr_let "Properties"
+     (expr_app (expr_id "%ToObject")
+      [expr_get_field (expr_id "args") (expr_string "1")])
+     (expr_let "argsObj"
       (expr_object
-       (objattrs_intro (expr_string "Object") expr_true (expr_id "O")
-        expr_null expr_undefined) [])
-      (expr_if
-       (expr_if
-        (expr_op2 binary_op_ge
-         (expr_get_field (expr_id "args") (expr_string "length"))
-         (expr_number (JsNumber.of_int 2)))
-        (expr_op1 unary_op_not
-         (expr_op2 binary_op_stx_eq
-          (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined))
-        expr_false)
-       (expr_let "Properties"
-        (expr_app (expr_id "%ToObject")
-         [expr_get_field (expr_id "args") (expr_string "1")])
-        (expr_let "argsObj"
-         (expr_object
-          (objattrs_intro (expr_string "Object") expr_true expr_null
-           expr_null expr_undefined) [])
+       (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
+        expr_undefined) [])
+      (expr_seq
+       (expr_set_field (expr_id "argsObj") (expr_string "0") (expr_id "obj"))
+       (expr_seq
+        (expr_set_field (expr_id "argsObj") (expr_string "1")
+         (expr_id "Properties"))
+        (expr_seq
+         (expr_set_field (expr_id "argsObj") (expr_string "length")
+          (expr_number (JsNumber.of_int 2)))
          (expr_seq
-          (expr_set_field (expr_id "argsObj") (expr_string "0")
-           (expr_id "obj"))
-          (expr_seq
-           (expr_set_field (expr_id "argsObj") (expr_string "1")
-            (expr_id "Properties"))
-           (expr_seq
-            (expr_set_field (expr_id "argsObj") (expr_string "length")
-             (expr_number (JsNumber.of_int 2)))
-            (expr_seq
-             (expr_app (expr_id "%definePropertiesLambda")
-              [expr_null; expr_id "argsObj"]) (expr_id "obj")))))))
-       (expr_id "obj"))))))))
+          (expr_app (expr_id "%definePropertiesLambda")
+           [expr_null; expr_id "argsObj"]) (expr_id "obj")))))))
+    (expr_id "obj")))))
 .
 Definition ex_privdateGetTimezoneOffsetLambda := 
 expr_let "t" (expr_get_obj_attr oattr_primval (expr_id "this"))
@@ -3735,7 +3717,7 @@ expr_let "%mkPropObj"
                       expr_false expr_false))])))
 (expr_if
  (expr_if
-  (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "obj"))
+  (expr_op2 binary_op_stx_eq (expr_app (expr_id "%Typeof") [expr_id "obj"])
    (expr_string "function"))
   (expr_op2 binary_op_stx_eq (expr_id "field") (expr_string "length"))
   expr_false)
@@ -3818,12 +3800,8 @@ Definition ex_privdefineOwnProperty :=
 expr_seq
 (expr_let "t" (expr_op1 unary_op_typeof (expr_id "obj"))
  (expr_if
-  (expr_if
-   (expr_op1 unary_op_not
-    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object")))
-   (expr_op1 unary_op_not
-    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function")))
-   expr_false)
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object")))
   (expr_throw (expr_string "defineOwnProperty didn't get object"))
   expr_undefined))
 (expr_let "fstr" (expr_app (expr_id "%ToString") [expr_id "field"])
@@ -4154,7 +4132,7 @@ expr_let "obj" (expr_get_field (expr_id "args") (expr_string "0"))
               (expr_string "undefined")))
             (expr_op1 unary_op_not
              (expr_op2 binary_op_stx_eq
-              (expr_op1 unary_op_typeof (expr_id "get"))
+              (expr_app (expr_id "%Typeof") [expr_id "get"])
               (expr_string "function"))) expr_false)
            (expr_app (expr_id "%TypeError")
             [expr_string "defineProperty given a non-function getter"])
@@ -4171,7 +4149,7 @@ expr_let "obj" (expr_get_field (expr_id "args") (expr_string "0"))
                (expr_string "undefined")))
              (expr_op1 unary_op_not
               (expr_op2 binary_op_stx_eq
-               (expr_op1 unary_op_typeof (expr_id "set"))
+               (expr_app (expr_id "%Typeof") [expr_id "set"])
                (expr_string "function"))) expr_false)
             (expr_app (expr_id "%TypeError")
              [expr_string "defineProperty given a non-function setter"])
@@ -4244,9 +4222,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_seq
      (expr_if
       (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq
-        (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-        (expr_string "function")))
+       (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not function in every"]) expr_null)
      (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
@@ -4300,9 +4276,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_seq
      (expr_if
       (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq
-        (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-        (expr_string "function")))
+       (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not a function in filter"]) expr_null)
      (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
@@ -4388,9 +4362,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_seq
      (expr_if
       (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq
-        (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-        (expr_string "function")))
+       (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not a function in forEach"]) expr_undefined)
      (expr_seq
@@ -4668,20 +4640,16 @@ expr_if
  (expr_get_field (expr_id "args") (expr_string "0"))) expr_true expr_false
 .
 Definition ex_privin := 
-expr_let "rtype" (expr_op1 unary_op_typeof (expr_id "r"))
-(expr_if
- (expr_if
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_id "rtype") (expr_string "object")))
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_id "rtype") (expr_string "function")))
-  expr_false)
- (expr_app (expr_id "%TypeError")
-  [expr_op2 binary_op_string_plus
-   (expr_app (expr_id "%ToString") [expr_id "r"])
-   (expr_string " is not an object")])
- (expr_op2 binary_op_has_property (expr_id "r")
-  (expr_app (expr_id "%ToString") [expr_id "l"])))
+expr_if
+(expr_op1 unary_op_not
+ (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "r"))
+  (expr_string "object")))
+(expr_app (expr_id "%TypeError")
+ [expr_op2 binary_op_string_plus
+  (expr_app (expr_id "%ToString") [expr_id "r"])
+  (expr_string " is not an object")])
+(expr_op2 binary_op_has_property (expr_id "r")
+ (expr_app (expr_id "%ToString") [expr_id "l"]))
 .
 Definition ex_privinstanceof := 
 expr_let "rtype" (expr_op1 unary_op_typeof (expr_id "r"))
@@ -4690,38 +4658,31 @@ expr_let "rtype" (expr_op1 unary_op_typeof (expr_id "r"))
   (expr_seq
    (expr_if
     (expr_op1 unary_op_not
-     (expr_op2 binary_op_stx_eq (expr_id "rtype") (expr_string "function")))
+     (expr_op2 binary_op_stx_eq
+      (expr_app (expr_id "%Typeof") [expr_id "rtype"])
+      (expr_string "function")))
     (expr_app (expr_id "%TypeError")
      [expr_string "Non-function given to instanceof"]) expr_null)
    (expr_seq
     (expr_if
+     (expr_op1 unary_op_not
+      (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "ltype"))
+       (expr_string "object"))) (expr_break "ret" expr_false) expr_null)
+    (expr_let "O" (expr_get_field (expr_id "r") (expr_string "prototype"))
      (expr_if
       (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq (expr_id "ltype") (expr_string "function")))
-      (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq (expr_id "ltype") (expr_string "object")))
-      expr_false) (expr_break "ret" expr_false) expr_null)
-    (expr_let "O" (expr_get_field (expr_id "r") (expr_string "prototype"))
-     (expr_let "Otype" (expr_op1 unary_op_typeof (expr_id "O"))
-      (expr_seq
-       (expr_if
-        (expr_if
-         (expr_op1 unary_op_not
-          (expr_op2 binary_op_stx_eq (expr_id "Otype")
-           (expr_string "function")))
-         (expr_op1 unary_op_not
-          (expr_op2 binary_op_stx_eq (expr_id "Otype") (expr_string "object")))
-         expr_false)
-        (expr_app (expr_id "%TypeError")
-         [expr_string "Prototype was not function or object"]) expr_null)
-       (expr_recc "search"
-        (expr_lambda ["v"]
-         (expr_let "vp" (expr_get_obj_attr oattr_proto (expr_id "v"))
-          (expr_if (expr_op2 binary_op_stx_eq (expr_id "vp") expr_null)
-           expr_false
-           (expr_if (expr_op2 binary_op_stx_eq (expr_id "O") (expr_id "vp"))
-            expr_true (expr_app (expr_id "search") [expr_id "vp"])))))
-        (expr_break "ret" (expr_app (expr_id "search") [expr_id "l"]))))))))))
+       (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "O"))
+        (expr_string "object")))
+      (expr_app (expr_id "%TypeError")
+       [expr_string "Prototype was not function or object"])
+      (expr_recc "search"
+       (expr_lambda ["v"]
+        (expr_let "vp" (expr_get_obj_attr oattr_proto (expr_id "v"))
+         (expr_if (expr_op2 binary_op_stx_eq (expr_id "vp") expr_null)
+          expr_false
+          (expr_if (expr_op2 binary_op_stx_eq (expr_id "O") (expr_id "vp"))
+           expr_true (expr_app (expr_id "search") [expr_id "vp"])))))
+       (expr_break "ret" (expr_app (expr_id "search") [expr_id "l"])))))))))
 .
 Definition ex_privisExtensibleLambda := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
@@ -4950,9 +4911,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_seq
      (expr_if
       (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq
-        (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-        (expr_string "function")))
+       (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not a function in map"]) expr_null)
      (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
@@ -5733,9 +5692,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_seq
       (expr_if
        (expr_op1 unary_op_not
-        (expr_op2 binary_op_stx_eq
-         (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-         (expr_string "function")))
+        (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
        (expr_app (expr_id "%TypeError")
         [expr_string "Callback not function in reduceRight"]) expr_null)
       (expr_seq
@@ -5830,9 +5787,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_seq
       (expr_if
        (expr_op1 unary_op_not
-        (expr_op2 binary_op_stx_eq
-         (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-         (expr_string "function")))
+        (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
        (expr_app (expr_id "%TypeError")
         [expr_string "Callback not a function in reduce"]) expr_null)
       (expr_seq
@@ -5919,8 +5874,7 @@ expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "replace" (expr_get_field (expr_id "args") (expr_string "1"))
   (expr_if
    (expr_op1 unary_op_not
-    (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "replace"))
-     (expr_string "function")))
+    (expr_app (expr_id "%IsCallable") [expr_id "replace"]))
    (expr_throw (expr_string "String.replace() only supports functions"))
    (expr_recc "loop"
     (expr_lambda ["str"]
@@ -5956,11 +5910,8 @@ expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
 Definition ex_privresolveThis := 
 expr_if (expr_id "strict")
 (expr_if
- (expr_if
-  (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "obj"))
-   (expr_string "object"))
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_id "obj") expr_null)) expr_false)
+ (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "obj"))
+  (expr_string "object"))
  (expr_let "klass" (expr_get_obj_attr oattr_class (expr_id "obj"))
   (expr_if
    (expr_if
@@ -6433,9 +6384,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_seq
      (expr_if
       (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq
-        (expr_op1 unary_op_typeof (expr_id "callbackfn"))
-        (expr_string "function")))
+       (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not function in some"]) expr_null)
      (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
@@ -6531,10 +6480,8 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                  (expr_seq
                   (expr_if
                    (expr_op1 unary_op_not
-                    (expr_op2 binary_op_stx_eq
-                     (expr_op1 unary_op_typeof
-                      (expr_get_field (expr_id "args") (expr_string "0")))
-                     (expr_string "function")))
+                    (expr_app (expr_id "%IsCallable")
+                     [expr_get_field (expr_id "args") (expr_string "0")]))
                    (expr_throw
                     (expr_app (expr_id "%JSError")
                      [expr_object
@@ -7076,7 +7023,7 @@ expr_let "hasWrongProto"
   (expr_id "proto")))
 (expr_let "hasWrongTypeof"
  (expr_op1 unary_op_not
-  (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
+  (expr_op2 binary_op_stx_eq (expr_app (expr_id "%Typeof") [expr_id "this"])
    (expr_id "typestr")))
  (expr_let "isntProto"
   (expr_op1 unary_op_not
@@ -7094,6 +7041,15 @@ expr_app (expr_id "%ToObject") [expr_id "this"]
 .
 Definition objCode :=  value_null .
 Definition name_objCode :=  "objCode" .
+Definition privTypeof := 
+value_closure (closure_intro [] None ["val"] ex_privTypeof)
+.
+Definition name_privTypeof :=  "%Typeof" .
+Definition privIsCallable := 
+value_closure
+(closure_intro [("%Typeof", privTypeof)] None ["o"] ex_privIsCallable)
+.
+Definition name_privIsCallable :=  "%IsCallable" .
 Definition privJSError := 
 value_closure (closure_intro [] None ["err"] ex_privJSError)
 .
@@ -7120,8 +7076,9 @@ value_closure
 Definition name_privTypeError :=  "%TypeError" .
 Definition privAppExprCheck := 
 value_closure
-(closure_intro [("%TypeError", privTypeError)] None ["fun"; "this"; "args"]
- ex_privAppExprCheck)
+(closure_intro
+ [("%IsCallable", privIsCallable); ("%TypeError", privTypeError)] None
+ ["fun"; "this"; "args"] ex_privAppExprCheck)
 .
 Definition name_privAppExprCheck :=  "%AppExprCheck" .
 Definition privArrayProto :=  value_object 52 .
@@ -7130,14 +7087,15 @@ Definition privRangeErrorProto :=  value_object 10 .
 Definition name_privRangeErrorProto :=  "%RangeErrorProto" .
 Definition privToPrimitiveNum := 
 value_closure
-(closure_intro [("%TypeError", privTypeError)] None ["obj"]
- ex_privToPrimitiveNum)
+(closure_intro
+ [("%IsCallable", privIsCallable); ("%TypeError", privTypeError)] None
+ ["obj"] ex_privToPrimitiveNum)
 .
 Definition name_privToPrimitiveNum :=  "%ToPrimitiveNum" .
 Definition privToNumber := 
 value_closure
-(closure_intro [("%ToPrimitiveNum", privToPrimitiveNum)] None ["x"]
- ex_privToNumber)
+(closure_intro [("%ToPrimitiveNum", privToPrimitiveNum)] (Some "%ToNumber")
+ ["x"] ex_privToNumber)
 .
 Definition name_privToNumber :=  "%ToNumber" .
 Definition privToUint := 
@@ -7165,8 +7123,9 @@ value_closure (closure_intro [] None ["x"] ex_privToBoolean)
 Definition name_privToBoolean :=  "%ToBoolean" .
 Definition privToPrimitiveStr := 
 value_closure
-(closure_intro [("%TypeError", privTypeError)] None ["obj"]
- ex_privToPrimitiveStr)
+(closure_intro
+ [("%IsCallable", privIsCallable); ("%TypeError", privTypeError)] None
+ ["obj"] ex_privToPrimitiveStr)
 .
 Definition name_privToPrimitiveStr :=  "%ToPrimitiveStr" .
 Definition privToPrimitiveHint := 
@@ -7534,6 +7493,12 @@ value_closure
  ["context"; "id"; "strict"] ex_privEnvGet)
 .
 Definition name_privEnvGet :=  "%EnvGet" .
+Definition privEnvTypeof := 
+value_closure
+(closure_intro [("%Typeof", privTypeof)] (Some "%EnvTypeof")
+ ["context"; "id"] ex_privEnvTypeof)
+.
+Definition name_privEnvTypeof :=  "%EnvTypeof" .
 Definition privEqEq := 
 value_closure
 (closure_intro [("%ToPrimitive", privToPrimitive)] (Some "eqeq") ["x1"; "x2"]
@@ -7676,8 +7641,8 @@ Definition privObjectGlobalFuncObj :=  value_object 34 .
 Definition name_privObjectGlobalFuncObj :=  "%ObjectGlobalFuncObj" .
 Definition privObjectTypeCheck := 
 value_closure
-(closure_intro [("%TypeError", privTypeError)] None ["o"]
- ex_privObjectTypeCheck)
+(closure_intro [("%IsObject", privIsObject); ("%TypeError", privTypeError)]
+ None ["o"] ex_privObjectTypeCheck)
 .
 Definition name_privObjectTypeCheck :=  "%ObjectTypeCheck" .
 Definition privPostfixOp := 
@@ -7876,10 +7841,6 @@ value_closure
 Definition name_privTypeErrorConstructor :=  "%TypeErrorConstructor" .
 Definition privTypeErrorGlobalFuncObj :=  value_object 49 .
 Definition name_privTypeErrorGlobalFuncObj :=  "%TypeErrorGlobalFuncObj" .
-Definition privTypeof := 
-value_closure (closure_intro [] None ["context"; "id"] ex_privTypeof)
-.
-Definition name_privTypeof :=  "%Typeof" .
 Definition proto1 :=  value_object 50 .
 Definition name_proto1 :=  "proto" .
 Definition privURIErrorConstructor := 
@@ -7913,6 +7874,10 @@ value_closure
  ex_privUnsignedRightShift)
 .
 Definition name_privUnsignedRightShift :=  "%UnsignedRightShift" .
+Definition privVoid := 
+value_closure (closure_intro [] None ["val"] ex_privVoid)
+.
+Definition name_privVoid :=  "%Void" .
 Definition privacos :=  value_object 264 .
 Definition name_privacos :=  "%acos" .
 Definition privacosLambda := 
@@ -8051,6 +8016,7 @@ Definition privbindLambda :=
 value_closure
 (closure_intro
  [("%FunctionProto", privFunctionProto);
+  ("%IsCallable", privIsCallable);
   ("%IsObject", privIsObject);
   ("%ObjectProto", privObjectProto);
   ("%ThrowTypeError", privThrowTypeError);
@@ -8126,6 +8092,7 @@ value_closure
 (closure_intro
  [("%ObjectTypeCheck", privObjectTypeCheck);
   ("%TypeError", privTypeError);
+  ("%Typeof", privTypeof);
   ("%defineOwnProperty", privdefineOwnProperty);
   ("isAccessorDescriptor", isAccessorDescriptor);
   ("isDataDescriptor", isDataDescriptor)] None ["this"; "args"]
@@ -8198,8 +8165,9 @@ value_closure (closure_intro [] None ["this"; "args"] ex_privdecodeURILambda)
 Definition name_privdecodeURILambda :=  "%decodeURILambda" .
 Definition privdefine15Property := 
 value_closure
-(closure_intro [("%defineOwnProperty", privdefineOwnProperty)] None
- ["obj"; "field"; "prop"] ex_privdefine15Property)
+(closure_intro
+ [("%Typeof", privTypeof); ("%defineOwnProperty", privdefineOwnProperty)]
+ None ["obj"; "field"; "prop"] ex_privdefine15Property)
 .
 Definition name_privdefine15Property :=  "%define15Property" .
 Definition privdefineGlobalVar := 
@@ -8262,7 +8230,8 @@ Definition name_privevery :=  "%every" .
 Definition priveverylambda := 
 value_closure
 (closure_intro
- [("%ToBoolean", privToBoolean);
+ [("%IsCallable", privIsCallable);
+  ("%ToBoolean", privToBoolean);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
@@ -8281,6 +8250,7 @@ Definition privfilterlambda :=
 value_closure
 (closure_intro
  [("%ArrayProto", privArrayProto);
+  ("%IsCallable", privIsCallable);
   ("%ToBoolean", privToBoolean);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -8295,7 +8265,8 @@ Definition name_privforeach :=  "%foreach" .
 Definition privforeachlambda := 
 value_closure
 (closure_intro
- [("%ToObject", privToObject);
+ [("%IsCallable", privIsCallable);
+  ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
   ("%TypeError", privTypeError)] None ["this"; "args"] ex_privforeachlambda)
@@ -8380,8 +8351,8 @@ value_closure
 Definition name_privin :=  "%in" .
 Definition privinstanceof := 
 value_closure
-(closure_intro [("%TypeError", privTypeError)] None ["l"; "r"]
- ex_privinstanceof)
+(closure_intro [("%TypeError", privTypeError); ("%Typeof", privTypeof)] 
+ None ["l"; "r"] ex_privinstanceof)
 .
 Definition name_privinstanceof :=  "%instanceof" .
 Definition privisExtensible :=  value_object 70 .
@@ -8469,6 +8440,7 @@ Definition privmaplambda :=
 value_closure
 (closure_intro
  [("%ArrayProto", privArrayProto);
+  ("%IsCallable", privIsCallable);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
@@ -8688,7 +8660,8 @@ Definition name_privreduceRight :=  "%reduceRight" .
 Definition privreduceRightLambda := 
 value_closure
 (closure_intro
- [("%ToObject", privToObject);
+ [("%IsCallable", privIsCallable);
+  ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
   ("%TypeError", privTypeError)] None ["this"; "args"]
@@ -8698,7 +8671,8 @@ Definition name_privreduceRightLambda :=  "%reduceRightLambda" .
 Definition privreducelambda := 
 value_closure
 (closure_intro
- [("%ToObject", privToObject);
+ [("%IsCallable", privIsCallable);
+  ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
   ("%TypeError", privTypeError)] None ["this"; "args"] ex_privreducelambda)
@@ -8725,7 +8699,8 @@ Definition name_privtwoArgObj :=  "%twoArgObj" .
 Definition privreplacelambda := 
 value_closure
 (closure_intro
- [("%StringIndexOflambda", privStringIndexOflambda);
+ [("%IsCallable", privIsCallable);
+  ("%StringIndexOflambda", privStringIndexOflambda);
   ("%ToString", privToString);
   ("%oneArgObj", privoneArgObj);
   ("%substringlambda", privsubstringlambda);
@@ -8801,7 +8776,8 @@ Definition name_privsome :=  "%some" .
 Definition privsomelambda := 
 value_closure
 (closure_intro
- [("%ToBoolean", privToBoolean);
+ [("%IsCallable", privIsCallable);
+  ("%ToBoolean", privToBoolean);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
@@ -8813,7 +8789,8 @@ Definition name_privsort :=  "%sort" .
 Definition privsortlambda := 
 value_closure
 (closure_intro
- [("%JSError", privJSError);
+ [("%IsCallable", privIsCallable);
+  ("%JSError", privJSError);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%TypeErrorProto", privTypeErrorProto)] None ["this"; "args"]
@@ -8956,8 +8933,8 @@ Definition privvalueOf :=  value_object 42 .
 Definition name_privvalueOf :=  "%valueOf" .
 Definition privvalueOfLambda := 
 value_closure
-(closure_intro [("%TypeError", privTypeError)] None
- ["this"; "args"; "proto"; "typestr"] ex_privvalueOfLambda)
+(closure_intro [("%TypeError", privTypeError); ("%Typeof", privTypeof)] 
+ None ["this"; "args"; "proto"; "typestr"] ex_privvalueOfLambda)
 .
 Definition name_privvalueOfLambda :=  "%valueOfLambda" .
 Definition privvalueOflambda := 
@@ -9311,6 +9288,7 @@ Definition ctx_items :=
  (name_privDaysInYear, privDaysInYear);
  (name_privEnvCheckAssign, privEnvCheckAssign);
  (name_privEnvGet, privEnvGet);
+ (name_privEnvTypeof, privEnvTypeof);
  (name_privEqEq, privEqEq);
  (name_privErrorConstructor, privErrorConstructor);
  (name_privErrorDispatch, privErrorDispatch);
@@ -9326,6 +9304,7 @@ Definition ctx_items :=
  (name_privGreaterEqual, privGreaterEqual);
  (name_privGreaterThan, privGreaterThan);
  (name_privInLeapYear, privInLeapYear);
+ (name_privIsCallable, privIsCallable);
  (name_privIsFinite, privIsFinite);
  (name_privIsJSError, privIsJSError);
  (name_privIsObject, privIsObject);
@@ -9421,6 +9400,7 @@ Definition ctx_items :=
  (name_privUnboundId, privUnboundId);
  (name_privUnsignedRightShift, privUnsignedRightShift);
  (name_privUnwritableDispatch, privUnwritableDispatch);
+ (name_privVoid, privVoid);
  (name_privYearFromTime, privYearFromTime);
  (name_privacos, privacos);
  (name_privacosLambda, privacosLambda);
@@ -9716,6 +9696,7 @@ Definition store_items := [
                                              ("%DaysInYear", privDaysInYear);
                                              ("%EnvCheckAssign", privEnvCheckAssign);
                                              ("%EnvGet", privEnvGet);
+                                             ("%EnvTypeof", privEnvTypeof);
                                              ("%EqEq", privEqEq);
                                              ("%ErrorConstructor", privErrorConstructor);
                                              ("%ErrorDispatch", privErrorDispatch);
@@ -9731,6 +9712,7 @@ Definition store_items := [
                                              ("%GreaterEqual", privGreaterEqual);
                                              ("%GreaterThan", privGreaterThan);
                                              ("%InLeapYear", privInLeapYear);
+                                             ("%IsCallable", privIsCallable);
                                              ("%IsFinite", privIsFinite);
                                              ("%IsJSError", privIsJSError);
                                              ("%IsObject", privIsObject);
@@ -9826,6 +9808,7 @@ Definition store_items := [
                                              ("%UnboundId", privUnboundId);
                                              ("%UnsignedRightShift", privUnsignedRightShift);
                                              ("%UnwritableDispatch", privUnwritableDispatch);
+                                             ("%Void", privVoid);
                                              ("%YearFromTime", privYearFromTime);
                                              ("%acos", privacos);
                                              ("%acosLambda", privacosLambda);

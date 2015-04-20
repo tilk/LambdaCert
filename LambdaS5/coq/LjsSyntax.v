@@ -26,7 +26,6 @@ Inductive unary_op : Type :=
 | unary_op_is_closure 
 | unary_op_is_array
 | unary_op_abs
-| unary_op_void
 | unary_op_floor
 | unary_op_prim_to_str
 | unary_op_prim_to_num

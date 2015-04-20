@@ -33,7 +33,6 @@ let string_of_unary_op s = match s with
     | Coq_unary_op_is_array -> "is-array"
     | Coq_unary_op_to_int32 -> "to-int32"
     | Coq_unary_op_not -> "!"
-    | Coq_unary_op_void -> "void"
     | Coq_unary_op_floor -> "floor"
     | Coq_unary_op_ceil -> "ceil"
     | Coq_unary_op_abs -> "abs"

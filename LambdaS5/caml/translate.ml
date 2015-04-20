@@ -33,7 +33,6 @@ let translate_unary_op s = match s with
     | "is-array" -> Cs.Coq_unary_op_is_array
     | "to-int32" -> Cs.Coq_unary_op_to_int32
     | "!" -> Cs.Coq_unary_op_not
-    | "void" -> Cs.Coq_unary_op_void
     | "floor" -> Cs.Coq_unary_op_floor
     | "ceil" -> Cs.Coq_unary_op_ceil
     | "abs" -> Cs.Coq_unary_op_abs

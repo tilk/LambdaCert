@@ -30,16 +30,9 @@ Definition typeof store (v : value) :=
   | value_string _ => result_some (value_string  "string")
   | value_number _ => result_some (value_string  "number")
   | value_bool _ => result_some (value_string  "boolean")
-  | value_object ptr =>
-    assert_get_object_from_ptr store ptr (fun obj =>
-      match object_code obj with
-      | value_undefined (* TODO choose one *)
-      | value_null => result_some (value_string  "object")
-      | _ => result_some (value_string "function")
-      end
-    )
-  | value_closure _ => result_fail "typeof got lambda"
-  | value_empty => result_fail "typeof got empty"
+  | value_object ptr => result_some (value_string "object")
+  | value_closure _ => result_some (value_string "closure")
+  | value_empty => result_some (value_string "empty")
   end
 .
 
@@ -72,10 +65,6 @@ Definition is_array st v :=
     )
   | _ => result_some value_false
   end
-.
-
-Definition void store (v : value) :=
-  result_some value_undefined
 .
 
 Definition prim_to_str store (v : value) :=
@@ -204,7 +193,6 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
     | unary_op_is_primitive => is_primitive v
     | unary_op_is_closure => is_closure v
     | unary_op_abs => unary_arith JsNumber.absolute v
-    | unary_op_void => void store v
     | unary_op_floor => unary_arith JsNumber.floor v
     | unary_op_prim_to_str => prim_to_str store v
     | unary_op_prim_to_num => prim_to_num store v

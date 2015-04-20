@@ -208,8 +208,8 @@ Definition make_xfix s f e :=
 Definition make_typeof f e :=
     match e with
     | E.expr_var_id fldexpr => 
-        make_app_builtin "%Typeof" [context; L.expr_string fldexpr]
-    | _ => L.expr_op1 L.unary_op_typeof (f e)
+        make_app_builtin "%EnvTypeof" [context; L.expr_string fldexpr]
+    | _ => make_app_builtin "%Typeof" [f e]
     end.
 
 Definition make_delete f e :=
@@ -231,7 +231,7 @@ Definition make_op1 f op e :=
     | J.unary_op_bitwise_not => make_app_builtin "%BitwiseNot" [f e]
     | J.unary_op_not => make_app_builtin "%UnaryNot" [f e]
     | J.unary_op_typeof => make_typeof f e
-    | J.unary_op_void => L.expr_op1 L.unary_op_void (f e)
+    | J.unary_op_void => make_app_builtin "%Void" [f e]
     end.
 
 Definition op2_func op := L.expr_lambda ["%x1";"%x2"] (L.expr_op2 op (L.expr_id "%x1") (L.expr_id "%x2")).
