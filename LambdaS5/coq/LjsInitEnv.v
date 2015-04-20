@@ -2724,7 +2724,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
           (expr_op2 binary_op_gt
            (expr_op2 binary_op_add (expr_id "curr") (expr_id "searchLen"))
            (expr_id "len"))
-          (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+          (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
            (expr_number (JsNumber.of_int 1)))
           (expr_if (expr_app (expr_id "check_k") [expr_id "curr"])
            (expr_id "curr")
@@ -2816,7 +2816,7 @@ expr_label "ret"
     (expr_if
      (expr_op2 binary_op_lt (expr_id "number")
       (expr_number (JsNumber.of_int 0)))
-     (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+     (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
       (expr_number (JsNumber.of_int 1))) (expr_number (JsNumber.of_int 1)))
     (expr_let "a" (expr_op1 unary_op_abs (expr_id "number"))
      (expr_let "f" (expr_op1 unary_op_floor (expr_id "a"))
@@ -2967,7 +2967,7 @@ expr_let "number" (expr_app (expr_id "%ToNumber") [expr_id "n"])
   (expr_if
    (expr_op2 binary_op_lt (expr_id "number")
     (expr_number (JsNumber.of_int 0)))
-   (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+   (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
     (expr_number (JsNumber.of_int 1))) (expr_number (JsNumber.of_int 1)))
   (expr_let "posInt"
    (expr_op2 binary_op_mul (expr_id "sign")
@@ -3031,7 +3031,7 @@ expr_let "oldValue" (expr_app (expr_id "%ToNumber") [expr_id "expr"])
  (expr_op1 unary_op_not
   (expr_op2 binary_op_stx_eq (expr_id "oldValue") (expr_id "oldValue")))
  (expr_id "oldValue")
- (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+ (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
   (expr_id "oldValue")))
 .
 Definition ex_privUnaryNot := 
@@ -3065,7 +3065,7 @@ expr_let "sign"
 (expr_if
  (expr_op2 binary_op_gt (expr_id "t") (expr_number (JsNumber.of_int 0)))
  (expr_number (JsNumber.of_int 1))
- (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+ (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
   (expr_number (JsNumber.of_int 1))))
 (expr_let "start"
  (expr_if
@@ -3097,7 +3097,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_op2 binary_op_stx_eq (expr_id "len")
       (expr_number (JsNumber.of_int 0)))
      (expr_break "ret"
-      (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+      (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
        (expr_number (JsNumber.of_int 1)))) expr_undefined)
     (expr_let "n"
      (expr_if
@@ -3109,7 +3109,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_seq
       (expr_if (expr_op2 binary_op_ge (expr_id "n") (expr_id "len"))
        (expr_break "ret"
-        (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+        (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
          (expr_number (JsNumber.of_int 1)))) expr_undefined)
       (expr_recc "loop"
        (expr_lambda ["k"]
@@ -3141,7 +3141,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
            expr_number (JsNumber.of_int 0)]))
         (expr_seq (expr_app (expr_id "loop") [expr_id "start"])
          (expr_break "ret"
-          (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+          (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
            (expr_number (JsNumber.of_int 1)))))))))))))
 .
 Definition ex_privaliolambda := 
@@ -3154,7 +3154,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_op2 binary_op_stx_eq (expr_id "len")
       (expr_number (JsNumber.of_int 0)))
      (expr_break "ret"
-      (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+      (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
        (expr_number (JsNumber.of_int 1)))) expr_undefined)
     (expr_seq
      (expr_let "n"
@@ -3196,7 +3196,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
           (expr_op1 unary_op_abs (expr_id "n"))))
         (expr_app (expr_id "loop") [expr_id "start"]))))
      (expr_break "ret"
-      (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+      (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
        (expr_number (JsNumber.of_int 1)))))))))
 .
 Definition ex_privapplylambda := 
@@ -5426,7 +5426,7 @@ expr_recc "nts"
       (expr_break "ret"
        (expr_op2 binary_op_string_plus (expr_string "-")
         (expr_app (expr_id "nts")
-         [expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+         [expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
           (expr_id "n");
           expr_id "r"]))) expr_null)
      (expr_seq
@@ -5774,7 +5774,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         expr_null)
        (expr_let "origK"
         (expr_if (expr_id "has_initial")
-         (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+         (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
           (expr_number (JsNumber.of_int 1)))
          (expr_recc "accumLoop"
           (expr_lambda ["k"]
@@ -5856,7 +5856,7 @@ expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
        [expr_id "str"; expr_app (expr_id "%oneArgObj") [expr_id "search"]])
       (expr_if
        (expr_op2 binary_op_stx_eq (expr_id "start")
-        (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+        (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
          (expr_number (JsNumber.of_int 1)))) (expr_id "str")
        (expr_let "replaced"
         (expr_app (expr_id "%ToString")
@@ -6339,7 +6339,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
           (expr_if
            (expr_op2 binary_op_lt (expr_id "curr")
             (expr_number (JsNumber.of_int 0)))
-           (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+           (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
             (expr_number (JsNumber.of_int 1)))
            (expr_if (expr_app (expr_id "check_k") [expr_id "curr"])
             (expr_id "curr")
@@ -6423,7 +6423,7 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
          (expr_seq
           (expr_if (expr_op2 binary_op_stx_eq (expr_id "hask") expr_false)
            (expr_break "ret"
-            (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+            (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
              (expr_number (JsNumber.of_int 1)))) expr_null)
           (expr_let "x" (expr_get_field (expr_id "obj") (expr_id "jString"))
            (expr_let "y" (expr_get_field (expr_id "obj") (expr_id "kString"))
@@ -6442,7 +6442,7 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                (expr_if
                 (expr_op2 binary_op_stx_eq (expr_id "y") expr_undefined)
                 (expr_break "ret"
-                 (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+                 (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
                   (expr_number (JsNumber.of_int 1)))) expr_null)
                (expr_seq
                 (expr_if
@@ -6483,8 +6483,8 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                     (expr_op2 binary_op_string_lt (expr_id "xString")
                      (expr_id "yString"))
                     (expr_break "ret"
-                     (expr_op2 binary_op_sub
-                      (expr_number (JsNumber.of_int 0))
+                     (expr_op2 binary_op_mul
+                      (expr_number (JsNumber.of_int -1))
                       (expr_number (JsNumber.of_int 1)))) expr_null)
                    (expr_seq
                     (expr_if

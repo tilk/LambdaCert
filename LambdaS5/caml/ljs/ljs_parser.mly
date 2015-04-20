@@ -194,7 +194,7 @@ exp :
  | exp DIV exp
    { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8), "/", $1, $3) }
  | MINUS exp %prec UMINUS
-   { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2) in Op2(p, "-", Num(p, 0.), $2) }
+   { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2) in Op2(p, "*", Num(p, -1.), $2) }
  | exp EQEQEQUALS exp
      { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), "stx=", $1, $3) }
  | exp BANGEQEQUALS exp
