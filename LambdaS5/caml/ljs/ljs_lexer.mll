@@ -86,6 +86,10 @@ rule token = parse
    | "delete" { DELETE }
    | "[" { LBRACK }
    | "]" { RBRACK }
+   | "+" { PLUS }
+   | "-" { MINUS }
+   | "*" { MULT }
+   | "/" { DIV }
    | "<" { LT }
    | ">" { GT }
    | "=" { EQUALS }

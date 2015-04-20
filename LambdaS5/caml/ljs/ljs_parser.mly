@@ -49,6 +49,7 @@ let with_pos exp pos = match exp with
   RBRACK EQUALS COMMA BANG REF COLON COLONEQ PRIM IF ELSE SEMI JSEMI
   LABEL BREAK TRY CATCH FINALLY THROW EQEQEQUALS TYPEOF 
   ISCLOSURE ISPRIMITIVE ISOBJECT
+  PLUS MINUS MULT DIV
   AMPAMP PIPEPIPE RETURN BANGEQEQUALS FUNCTION REC WRITABLE GETTER SETTER
   CONFIG VALUE ENUM LT GT PROTO CODE EXTENSIBLE CLASS EVAL GETFIELDS PRIMVAL
 
@@ -59,6 +60,9 @@ let with_pos exp pos = match exp with
 %left AMPAMP
 %left EQEQEQUALS BANGEQEQUALS
 %left BANG
+%left PLUS MINUS
+%left MULT DIV
+%left UMINUS
 %left LBRACK
 %left ELSE
 %left LPAREN
@@ -181,6 +185,16 @@ exp :
    { SetBang (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $1, $3) }
  | BANG exp
    { Op1(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), "!", $2) }
+ | exp PLUS exp
+   { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8), "+", $1, $3) }
+ | exp MINUS exp
+   { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8), "-", $1, $3) }
+ | exp MULT exp
+   { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8), "*", $1, $3) }
+ | exp DIV exp
+   { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8), "/", $1, $3) }
+ | MINUS exp %prec UMINUS
+   { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2) in Op2(p, "-", Num(p, 0.), $2) }
  | exp EQEQEQUALS exp
      { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), "stx=", $1, $3) }
  | exp BANGEQEQUALS exp

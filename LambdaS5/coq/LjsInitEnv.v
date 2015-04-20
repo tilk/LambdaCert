@@ -3031,10 +3031,8 @@ expr_let "oldValue" (expr_app (expr_id "%ToNumber") [expr_id "expr"])
  (expr_op1 unary_op_not
   (expr_op2 binary_op_stx_eq (expr_id "oldValue") (expr_id "oldValue")))
  (expr_id "oldValue")
- (expr_let "negOne"
-  (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
-   (expr_number (JsNumber.of_int 1)))
-  (expr_op2 binary_op_mul (expr_id "oldValue") (expr_id "negOne"))))
+ (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+  (expr_id "oldValue")))
 .
 Definition ex_privUnaryNot := 
 expr_let "oldValue" (expr_app (expr_id "%ToBoolean") [expr_id "expr"])
@@ -3093,109 +3091,113 @@ Definition ex_privaiolambda :=
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
-  (expr_let "negOne"
-   (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
-    (expr_number (JsNumber.of_int 1)))
-   (expr_label "ret"
-    (expr_seq
+  (expr_label "ret"
+   (expr_seq
+    (expr_if
+     (expr_op2 binary_op_stx_eq (expr_id "len")
+      (expr_number (JsNumber.of_int 0)))
+     (expr_break "ret"
+      (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+       (expr_number (JsNumber.of_int 1)))) expr_undefined)
+    (expr_let "n"
      (expr_if
-      (expr_op2 binary_op_stx_eq (expr_id "len")
-       (expr_number (JsNumber.of_int 0)))
-      (expr_break "ret" (expr_id "negOne")) expr_undefined)
-     (expr_let "n"
-      (expr_if
-       (expr_op2 binary_op_stx_eq
-        (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined)
-       (expr_number (JsNumber.of_int 0))
-       (expr_app (expr_id "%ToInteger")
-        [expr_get_field (expr_id "args") (expr_string "1")]))
-      (expr_seq
-       (expr_if (expr_op2 binary_op_ge (expr_id "n") (expr_id "len"))
-        (expr_break "ret" (expr_id "negOne")) expr_undefined)
-       (expr_recc "loop"
-        (expr_lambda ["k"]
-         (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
-          (expr_let "kStr" (expr_app (expr_id "%ToString") [expr_id "k"])
-           (expr_if
-            (expr_op2 binary_op_has_property (expr_id "O") (expr_id "kStr"))
-            (expr_seq
-             (expr_let "elementK"
-              (expr_get_field (expr_id "O") (expr_id "kStr"))
-              (expr_if
-               (expr_op2 binary_op_stx_eq
-                (expr_get_field (expr_id "args") (expr_string "0"))
-                (expr_id "elementK")) (expr_break "ret" (expr_id "k"))
-               expr_undefined))
-             (expr_app (expr_id "loop")
-              [expr_op2 binary_op_add (expr_id "k")
-               (expr_number (JsNumber.of_int 1))]))
+      (expr_op2 binary_op_stx_eq
+       (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined)
+      (expr_number (JsNumber.of_int 0))
+      (expr_app (expr_id "%ToInteger")
+       [expr_get_field (expr_id "args") (expr_string "1")]))
+     (expr_seq
+      (expr_if (expr_op2 binary_op_ge (expr_id "n") (expr_id "len"))
+       (expr_break "ret"
+        (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+         (expr_number (JsNumber.of_int 1)))) expr_undefined)
+      (expr_recc "loop"
+       (expr_lambda ["k"]
+        (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
+         (expr_let "kStr" (expr_app (expr_id "%ToString") [expr_id "k"])
+          (expr_if
+           (expr_op2 binary_op_has_property (expr_id "O") (expr_id "kStr"))
+           (expr_seq
+            (expr_let "elementK"
+             (expr_get_field (expr_id "O") (expr_id "kStr"))
+             (expr_if
+              (expr_op2 binary_op_stx_eq
+               (expr_get_field (expr_id "args") (expr_string "0"))
+               (expr_id "elementK")) (expr_break "ret" (expr_id "k"))
+              expr_undefined))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_add (expr_id "k")
-              (expr_number (JsNumber.of_int 1))]))) expr_undefined))
-        (expr_let "start"
-         (expr_if
-          (expr_op2 binary_op_ge (expr_id "n")
-           (expr_number (JsNumber.of_int 0))) (expr_id "n")
-          (expr_app (expr_id "%max")
-           [expr_op2 binary_op_sub (expr_id "len")
-            (expr_op1 unary_op_abs (expr_id "n"));
-            expr_number (JsNumber.of_int 0)]))
-         (expr_seq (expr_app (expr_id "loop") [expr_id "start"])
-          (expr_break "ret" (expr_id "negOne"))))))))))))
+              (expr_number (JsNumber.of_int 1))]))
+           (expr_app (expr_id "loop")
+            [expr_op2 binary_op_add (expr_id "k")
+             (expr_number (JsNumber.of_int 1))]))) expr_undefined))
+       (expr_let "start"
+        (expr_if
+         (expr_op2 binary_op_ge (expr_id "n")
+          (expr_number (JsNumber.of_int 0))) (expr_id "n")
+         (expr_app (expr_id "%max")
+          [expr_op2 binary_op_sub (expr_id "len")
+           (expr_op1 unary_op_abs (expr_id "n"));
+           expr_number (JsNumber.of_int 0)]))
+        (expr_seq (expr_app (expr_id "loop") [expr_id "start"])
+         (expr_break "ret"
+          (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+           (expr_number (JsNumber.of_int 1)))))))))))))
 .
 Definition ex_privaliolambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
-  (expr_let "negOne"
-   (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
-    (expr_number (JsNumber.of_int 1)))
-   (expr_label "ret"
+  (expr_label "ret"
+   (expr_seq
+    (expr_if
+     (expr_op2 binary_op_stx_eq (expr_id "len")
+      (expr_number (JsNumber.of_int 0)))
+     (expr_break "ret"
+      (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+       (expr_number (JsNumber.of_int 1)))) expr_undefined)
     (expr_seq
-     (expr_if
-      (expr_op2 binary_op_stx_eq (expr_id "len")
-       (expr_number (JsNumber.of_int 0)))
-      (expr_break "ret" (expr_id "negOne")) expr_undefined)
-     (expr_seq
-      (expr_let "n"
-       (expr_if
-        (expr_op2 binary_op_stx_eq
-         (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined)
-        (expr_op2 binary_op_sub (expr_id "len")
-         (expr_number (JsNumber.of_int 1)))
-        (expr_app (expr_id "%ToInteger")
-         [expr_get_field (expr_id "args") (expr_string "1")]))
-       (expr_recc "loop"
-        (expr_lambda ["k"]
-         (expr_if
-          (expr_op2 binary_op_ge (expr_id "k")
-           (expr_number (JsNumber.of_int 0)))
-          (expr_let "kstr" (expr_app (expr_id "%ToString") [expr_id "k"])
+     (expr_let "n"
+      (expr_if
+       (expr_op2 binary_op_stx_eq
+        (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined)
+       (expr_op2 binary_op_sub (expr_id "len")
+        (expr_number (JsNumber.of_int 1)))
+       (expr_app (expr_id "%ToInteger")
+        [expr_get_field (expr_id "args") (expr_string "1")]))
+      (expr_recc "loop"
+       (expr_lambda ["k"]
+        (expr_if
+         (expr_op2 binary_op_ge (expr_id "k")
+          (expr_number (JsNumber.of_int 0)))
+         (expr_let "kstr" (expr_app (expr_id "%ToString") [expr_id "k"])
+          (expr_if
+           (expr_op2 binary_op_has_property (expr_id "O") (expr_id "kstr"))
            (expr_if
-            (expr_op2 binary_op_has_property (expr_id "O") (expr_id "kstr"))
-            (expr_if
-             (expr_op2 binary_op_stx_eq
-              (expr_get_field (expr_id "O") (expr_id "kstr"))
-              (expr_get_field (expr_id "args") (expr_string "0")))
-             (expr_break "ret" (expr_id "k"))
-             (expr_app (expr_id "loop")
-              [expr_op2 binary_op_sub (expr_id "k")
-               (expr_number (JsNumber.of_int 1))]))
+            (expr_op2 binary_op_stx_eq
+             (expr_get_field (expr_id "O") (expr_id "kstr"))
+             (expr_get_field (expr_id "args") (expr_string "0")))
+            (expr_break "ret" (expr_id "k"))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_sub (expr_id "k")
-              (expr_number (JsNumber.of_int 1))]))) expr_undefined))
-        (expr_let "start"
-         (expr_if
-          (expr_op2 binary_op_ge (expr_id "n")
-           (expr_number (JsNumber.of_int 0)))
-          (expr_app (expr_id "%min")
-           [expr_id "n";
-            expr_op2 binary_op_sub (expr_id "len")
-            (expr_number (JsNumber.of_int 1))])
-          (expr_op2 binary_op_sub (expr_id "len")
-           (expr_op1 unary_op_abs (expr_id "n"))))
-         (expr_app (expr_id "loop") [expr_id "start"]))))
-      (expr_break "ret" (expr_id "negOne"))))))))
+              (expr_number (JsNumber.of_int 1))]))
+           (expr_app (expr_id "loop")
+            [expr_op2 binary_op_sub (expr_id "k")
+             (expr_number (JsNumber.of_int 1))]))) expr_undefined))
+       (expr_let "start"
+        (expr_if
+         (expr_op2 binary_op_ge (expr_id "n")
+          (expr_number (JsNumber.of_int 0)))
+         (expr_app (expr_id "%min")
+          [expr_id "n";
+           expr_op2 binary_op_sub (expr_id "len")
+           (expr_number (JsNumber.of_int 1))])
+         (expr_op2 binary_op_sub (expr_id "len")
+          (expr_op1 unary_op_abs (expr_id "n"))))
+        (expr_app (expr_id "loop") [expr_id "start"]))))
+     (expr_break "ret"
+      (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+       (expr_number (JsNumber.of_int 1)))))))))
 .
 Definition ex_privapplylambda := 
 expr_let "applyArgs1" (expr_get_field (expr_id "args") (expr_string "1"))
@@ -5421,15 +5423,12 @@ expr_recc "nts"
     (expr_seq
      (expr_if
       (expr_op2 binary_op_lt (expr_id "n") (expr_number (JsNumber.of_int 0)))
-      (expr_let "negOne"
-       (expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
-        (expr_number (JsNumber.of_int 1)))
-       (expr_let "newN"
-        (expr_op2 binary_op_mul (expr_id "n") (expr_id "negOne"))
-        (expr_break "ret"
-         (expr_op2 binary_op_string_plus (expr_string "-")
-          (expr_app (expr_id "nts") [expr_id "newN"; expr_id "r"])))))
-      expr_null)
+      (expr_break "ret"
+       (expr_op2 binary_op_string_plus (expr_string "-")
+        (expr_app (expr_id "nts")
+         [expr_op2 binary_op_sub (expr_number (JsNumber.of_int 0))
+          (expr_id "n");
+          expr_id "r"]))) expr_null)
      (expr_seq
       (expr_if
        (expr_op2 binary_op_stx_eq (expr_id "n")
