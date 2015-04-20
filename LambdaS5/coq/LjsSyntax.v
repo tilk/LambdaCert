@@ -57,7 +57,6 @@ Inductive binary_op : Type :=
 | binary_op_gt 
 | binary_op_ge
 | binary_op_stx_eq
-| binary_op_abs_eq
 | binary_op_same_value
 | binary_op_has_property
 | binary_op_has_own_property

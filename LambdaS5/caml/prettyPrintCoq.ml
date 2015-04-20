@@ -106,7 +106,6 @@ let format_binary_op o = match o with
     | Coq_binary_op_gt -> text "binary_op_gt"
     | Coq_binary_op_ge -> text "binary_op_ge"
     | Coq_binary_op_stx_eq -> text "binary_op_stx_eq"
-    | Coq_binary_op_abs_eq -> text "binary_op_abs_eq"
     | Coq_binary_op_same_value -> text "binary_op_same_value"
     | Coq_binary_op_has_property -> text "binary_op_has_property"
     | Coq_binary_op_has_own_property -> text "binary_op_has_own_property"

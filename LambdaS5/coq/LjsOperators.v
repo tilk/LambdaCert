@@ -147,44 +147,6 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
 
 (****** Binary operators ******)
 
-Parameter _number_eq_bool : number -> number -> bool.
-
-Definition stx_eq store v1 v2 :=
-  match v1, v2 with
-  | value_empty, value_empty => result_some value_true
-  | value_string s1, value_string s2 => result_some (value_bool (decide(s1 = s2)))
-  | value_null, value_null => result_some value_true
-  | value_undefined, value_undefined => result_some value_true
-  | value_bool true, value_bool true => result_some value_true
-  | value_bool false, value_bool false => result_some value_true
-  | value_number n1, value_number n2 => result_some (value_bool (_number_eq_bool n1 n2))
-  | value_object ptr1, value_object ptr2 => result_some (value_bool (beq_nat ptr1 ptr2))
-  | _, _ => result_some value_false
-  end
-.
-
-Definition abs_eq store v1 v2 :=
-  match v1, v2 with
-  | value_empty, value_empty => result_some value_true
-  | value_string s1, value_string s2 => result_some (value_bool (decide(s1 = s2)))
-  | value_null, value_null => result_some value_true
-  | value_undefined, value_undefined => result_some value_true
-  | value_bool true, value_bool true => result_some value_true
-  | value_bool false, value_bool false => result_some value_true
-  | value_number n1, value_number n2 => result_some (value_bool (_number_eq_bool n1 n2))
-  | value_object ptr1, value_object ptr2 => result_some (value_bool (beq_nat ptr1 ptr2))
-  | value_null, value_undefined => result_some value_true
-  | value_undefined, value_null => result_some value_true
-  | value_number n, value_string s
-  | value_string s, value_number n => result_some (value_bool (_number_eq_bool (JsNumber.from_string s) n))
-  | value_bool true, value_number n
-  | value_number n, value_bool true => result_some (value_bool (_number_eq_bool (JsNumber.of_int 1) n))
-  | value_bool false, value_number n
-  | value_number n, value_bool false => result_some (value_bool (_number_eq_bool (JsNumber.of_int 0) n))
-  | _, _ => result_some value_false
-  end
-.
-
 Definition has_property store v1_loc v2 :=
   assert_get_object_ptr v1_loc (fun ptr =>
     match v2 with
@@ -341,8 +303,7 @@ Definition binary_operator (op : binary_op) store v1 v2 : resultof value :=
       | binary_op_le => cmp store value_true value_true value_false le_bool v1 v2
       | binary_op_gt => cmp store value_false value_false value_true gt_bool v1 v2
       | binary_op_ge => cmp store value_false value_true value_true ge_bool v1 v2
-      | binary_op_stx_eq => stx_eq store v1 v2
-      | binary_op_abs_eq => abs_eq store v1 v2
+      | binary_op_stx_eq => result_some (value_bool (decide (stx_eq v1 v2)))
       | binary_op_same_value => same_value store v1 v2
       | binary_op_has_property => has_property store v1 v2
       | binary_op_has_own_property => has_own_property store v1 v2

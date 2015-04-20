@@ -233,7 +233,7 @@ Extract Constant LjsOperators._same_value => "(fun v1 v2 -> begin
   | _ -> compare v1 v2 = 0
 end)".
 
-Extract Constant LjsOperators._number_eq_bool => "(=)".
+Extract Constant LjsCommon.eq_number_decidable => "(=)".
 
 Extract Constant LjsOperators._ascii_of_int => "(fun c -> char_of_int (int_of_float c))".
 Extract Constant LjsOperators._int_of_ascii => "(fun c -> float_of_int (int_of_char c))".

@@ -63,7 +63,6 @@ let string_of_binary_op s = match s with
     | Coq_binary_op_gt -> ">"
     | Coq_binary_op_ge -> ">="
     | Coq_binary_op_stx_eq -> "stx="
-    | Coq_binary_op_abs_eq -> "abs="
     | Coq_binary_op_same_value -> "sameValue"
     | Coq_binary_op_has_property -> "hasProperty"
     | Coq_binary_op_has_own_property -> "hasOwnProperty"

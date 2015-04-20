@@ -1,4 +1,5 @@
 Set Implicit Arguments.
+Require Import JsNumber.
 Require Import LjsShared.
 Require Import LjsSyntax.
 Require Import Utils.
@@ -68,6 +69,22 @@ Inductive is_closure : value -> Prop :=
 Inductive is_object : value -> Prop :=
 | is_object_object : forall ptr, is_object (value_object ptr).
 
+Definition eq_number n1 n2 := 
+    n1 <> nan /\ n2 <> nan /\ 
+    (n1 = zero /\ n2 = neg_zero \/ n1 = neg_zero /\ n2 = zero \/ n1 = n2).
+
+Definition eq_number_decidable n1 n2 := decide (eq_number n1 n2).
+
+Inductive stx_eq : value -> value -> Prop :=
+| stx_eq_empty : stx_eq value_empty value_empty
+| stx_eq_string : forall s, stx_eq (value_string s) (value_string s)
+| stx_eq_null : stx_eq value_null value_null
+| stx_eq_undefined : stx_eq value_undefined value_undefined
+| stx_eq_bool : forall b, stx_eq (value_bool b) (value_bool b)
+| stx_eq_number : forall n1 n2, eq_number n1 n2 -> stx_eq (value_number n1) (value_number n2)
+| stx_eq_object : forall ptr, stx_eq (value_object ptr) (value_object ptr)
+.
+
 Definition is_primitive_decide v :=
   match v with
   | value_undefined | value_null | value_string _ | value_number _ | value_bool _ => true
@@ -89,9 +106,23 @@ Definition is_object_decide v :=
   end
 .
 
+Definition stx_eq_decide v1 v2 :=
+  match v1, v2 with
+  | value_empty, value_empty => true
+  | value_string s1, value_string s2 => decide (s1 = s2)
+  | value_null, value_null => true
+  | value_undefined, value_undefined => true
+  | value_bool true, value_bool true => true
+  | value_bool false, value_bool false => true
+  | value_number n1, value_number n2 => eq_number_decidable n1 n2
+  | value_object ptr1, value_object ptr2 => decide (ptr1 = ptr2)
+  | _, _ => false
+  end
+.
+
 Section Instances.
 
-Local Hint Constructors is_primitive is_closure is_object.
+Local Hint Constructors is_primitive is_closure is_object stx_eq.
 
 Global Instance is_primitive_decidable : forall v, Decidable (is_primitive v).
 Proof.
@@ -108,7 +139,15 @@ Defined.
 Global Instance is_object_decidable : forall v, Decidable (is_object v).
 Proof.
     introv. applys decidable_make (is_object_decide v).
-    destruct v; simpl; fold_bool; rew_refl; eauto.
+    destruct v; simpl; fold_bool; rew_refl; auto.
+Defined.
+
+Global Instance stx_eq_decidable : forall v1 v2, Decidable (stx_eq v1 v2).
+Proof.
+    introv. applys decidable_make (stx_eq_decide v1 v2).
+    destruct v1; destruct v2; simpl; try unfold eq_number_decidable;
+    repeat cases_decide; repeat cases_if; fold_bool; rew_reflect; auto;
+    intro Hx; inverts Hx; auto.
 Defined.
 
 End Instances.
