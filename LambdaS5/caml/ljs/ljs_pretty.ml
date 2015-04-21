@@ -43,7 +43,6 @@ let string_of_unary_op s = match s with
     | Coq_unary_op_to_upper -> "to-upper"
     | Coq_unary_op_bnot -> "~"
     | Coq_unary_op_sin -> "sin"
-    | Coq_unary_op_numstr_to_num -> "numstr->num"
     | Coq_unary_op_current_utc_millis -> "current-utc-millis"
 
 let string_of_binary_op s = match s with

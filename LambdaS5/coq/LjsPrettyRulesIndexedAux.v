@@ -142,7 +142,9 @@ Proof.
     induction Hr1; introv Hr2;
     try abstract (
         inversions Hr2; 
-        repeat (determine || (progress substs) || inst_hyps_det || binds_determine || object_property_is_determine || value_is_closure_determine || closure_ctx_determine); 
+        repeat first [determine | (progress substs) | inst_hyps_det | binds_determine 
+                     | object_property_is_determine | value_is_closure_determine | closure_ctx_determine 
+                     | eval_unary_op_determine]; 
         eauto; try ljs_abort_false; tryfalse;
     false; jauto). 
 Qed.

@@ -66,6 +66,14 @@ Proof.
     rewrite H in *; injects; reflexivity.
 Qed.
 
+Lemma eval_unary_op_deterministic : forall op st v0 v v',
+    eval_unary_op op st v0 v -> eval_unary_op op st v0 v' -> v = v'.
+Proof.
+    introv He1 He2.
+    destruct op; inverts He1 as Hu1; try inverts Hu1; inverts He2 as Hu2; try inverts Hu2;
+    reflexivity.
+Qed.
+
 Module Export Tactics.
 
 Ltac object_property_is_determine_then :=
@@ -103,6 +111,18 @@ Ltac closure_ctx_determine_then :=
 
 Ltac closure_ctx_determine_eq := closure_ctx_determine_then; intro.
 Ltac closure_ctx_determine := closure_ctx_determine_then; let H := fresh in intro H; try subst_hyp H.
+
+Ltac eval_unary_op_determine_then :=
+    match goal with
+    | H1 : eval_unary_op ?op ?st ?v0 ?v1, H2 : eval_unary_op ?op ?st ?v0 ?v2 |- _ =>
+        not constr_eq v1 v2; 
+        not is_hyp (v1 = v2);
+        let H := fresh "H" in asserts H : (v1 = v2); [eauto using eval_unary_op_deterministic | idtac];
+        revert H
+    end.
+
+Ltac eval_unary_op_determine_eq := eval_unary_op_determine_then; intro.
+Ltac eval_unary_op_determine := eval_unary_op_determine_then; let H := fresh in intro H; try subst_hyp H.
 
 Ltac ljs_out_red_ter Hred :=
     let H := fresh in

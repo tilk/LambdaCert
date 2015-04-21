@@ -1414,13 +1414,13 @@ expr_label "ret"
  (expr_if
   (expr_op2 binary_op_ge
    (expr_get_field (expr_id "args") (expr_string "length"))
-   (expr_number (JsNumber.of_int 2)))
+   (expr_number (JsNumber.of_int (2))))
   (expr_let "rtnobj"
    (expr_object
     (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
      expr_null expr_undefined)
     [("length", property_data
-                (data_intro (expr_number (JsNumber.of_int 0)) expr_true
+                (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                  expr_false expr_false))])
    (expr_recc "init"
     (expr_lambda ["n"]
@@ -1430,10 +1430,11 @@ expr_label "ret"
        (expr_get_field (expr_id "args")
         (expr_op1 unary_op_prim_to_str (expr_id "n"))))
       (expr_if
-       (expr_op2 binary_op_gt (expr_id "n") (expr_number (JsNumber.of_int 0)))
+       (expr_op2 binary_op_gt (expr_id "n")
+        (expr_number (JsNumber.of_int (0))))
        (expr_app (expr_id "init")
         [expr_op2 binary_op_sub (expr_id "n")
-         (expr_number (JsNumber.of_int 1))]) expr_undefined)))
+         (expr_number (JsNumber.of_int (1)))]) expr_undefined)))
     (expr_seq
      (expr_app (expr_id "init")
       [expr_get_field (expr_id "args") (expr_string "length")])
@@ -1509,8 +1510,9 @@ expr_let "oldlen"
     (expr_delete_field (expr_id "arr")
      (expr_op1 unary_op_prim_to_str (expr_id "i")))
     (expr_app (expr_id "fix")
-     [expr_op2 binary_op_add (expr_id "i") (expr_number (JsNumber.of_int 1))]))
-   expr_undefined)) (expr_app (expr_id "fix") [expr_id "newlen"]))
+     [expr_op2 binary_op_add (expr_id "i")
+      (expr_number (JsNumber.of_int (1)))])) expr_undefined))
+ (expr_app (expr_id "fix") [expr_id "newlen"]))
 .
 Definition ex_privBitwiseAnd := 
 expr_op2 binary_op_band (expr_app (expr_id "%ToInt32") [expr_id "l"])
@@ -1573,22 +1575,22 @@ expr_let "rest"
          (expr_seq
           (expr_if
            (expr_op2 binary_op_stx_eq (expr_id "nx")
-            (expr_number (JsNumber.of_int 0))) (expr_break "ret" expr_false)
-           expr_null)
+            (expr_number (JsNumber.of_int (0))))
+           (expr_break "ret" expr_false) expr_null)
           (expr_seq
            (expr_if
             (expr_op2 binary_op_stx_eq (expr_id "ny")
-             (expr_number (JsNumber.of_int 0))) (expr_break "ret" expr_true)
-            expr_null)
+             (expr_number (JsNumber.of_int (0))))
+            (expr_break "ret" expr_true) expr_null)
            (expr_seq
             (expr_if
              (expr_op2 binary_op_stx_eq (expr_id "ny")
-              (expr_number (JsNumber.of_int 0)))
+              (expr_number (JsNumber.of_int (0))))
              (expr_break "ret" expr_false) expr_null)
             (expr_seq
              (expr_if
               (expr_op2 binary_op_stx_eq (expr_id "nx")
-               (expr_number (JsNumber.of_int 0)))
+               (expr_number (JsNumber.of_int (0))))
               (expr_break "ret" expr_true) expr_null)
              (expr_break "ret"
               (expr_op2 binary_op_lt (expr_id "nx") (expr_id "ny")))))))))))
@@ -1623,14 +1625,14 @@ expr_let "calledAsFunction"
        expr_undefined) []])))
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "nargs")
-    (expr_number (JsNumber.of_int 0)))
+    (expr_number (JsNumber.of_int (0))))
    (expr_let "v" (expr_app (expr_id "%getCurrentUTC") [])
     (expr_object
      (objattrs_intro (expr_string "Date") expr_true (expr_id "%DateProto")
       expr_null (expr_id "v")) []))
    (expr_if
     (expr_op2 binary_op_stx_eq (expr_id "nargs")
-     (expr_number (JsNumber.of_int 1)))
+     (expr_number (JsNumber.of_int (1))))
     (expr_let "v"
      (expr_app (expr_id "%ToPrimitive")
       [expr_get_field (expr_id "args") (expr_string "0")])
@@ -1653,53 +1655,53 @@ expr_let "calledAsFunction"
        (expr_if
         (expr_op2 binary_op_stx_eq
          (expr_get_field (expr_id "args") (expr_string "2")) expr_undefined)
-        (expr_number (JsNumber.of_int 1))
+        (expr_number (JsNumber.of_int (1)))
         (expr_app (expr_id "%ToNumber")
          [expr_get_field (expr_id "args") (expr_string "2")]))
        (expr_let "h"
         (expr_if
          (expr_op2 binary_op_stx_eq
           (expr_get_field (expr_id "args") (expr_string "3")) expr_undefined)
-         (expr_number (JsNumber.of_int 0))
+         (expr_number (JsNumber.of_int (0)))
          (expr_app (expr_id "%ToNumber")
           [expr_get_field (expr_id "args") (expr_string "3")]))
         (expr_let "min"
          (expr_if
           (expr_op2 binary_op_stx_eq
            (expr_get_field (expr_id "args") (expr_string "4")) expr_undefined)
-          (expr_number (JsNumber.of_int 0))
+          (expr_number (JsNumber.of_int (0)))
           (expr_app (expr_id "%ToNumber")
            [expr_get_field (expr_id "args") (expr_string "4")]))
          (expr_let "s"
           (expr_if
            (expr_op2 binary_op_stx_eq
             (expr_get_field (expr_id "args") (expr_string "5"))
-            expr_undefined) (expr_number (JsNumber.of_int 0))
+            expr_undefined) (expr_number (JsNumber.of_int (0)))
            (expr_app (expr_id "%ToNumber")
             [expr_get_field (expr_id "args") (expr_string "5")]))
           (expr_let "milli"
            (expr_if
             (expr_op2 binary_op_stx_eq
              (expr_get_field (expr_id "args") (expr_string "6"))
-             expr_undefined) (expr_number (JsNumber.of_int 0))
+             expr_undefined) (expr_number (JsNumber.of_int (0)))
             (expr_app (expr_id "%ToNumber")
              [expr_get_field (expr_id "args") (expr_string "6")]))
            (expr_let "yr"
             (expr_let "tiy" (expr_app (expr_id "%ToInteger") [expr_id "y"])
              (expr_let "rangecond1"
               (expr_let "%or"
-               (expr_op2 binary_op_lt (expr_number (JsNumber.of_int 0))
+               (expr_op2 binary_op_lt (expr_number (JsNumber.of_int (0)))
                 (expr_id "tiy"))
                (expr_if (expr_id "%or") (expr_id "%or")
-                (expr_op2 binary_op_stx_eq (expr_number (JsNumber.of_int 0))
-                 (expr_id "tiy"))))
+                (expr_op2 binary_op_stx_eq
+                 (expr_number (JsNumber.of_int (0))) (expr_id "tiy"))))
               (expr_let "rangecond2"
                (expr_let "%or"
                 (expr_op2 binary_op_lt (expr_id "tiy")
-                 (expr_number (JsNumber.of_int 99)))
+                 (expr_number (JsNumber.of_int (99))))
                 (expr_if (expr_id "%or") (expr_id "%or")
                  (expr_op2 binary_op_stx_eq (expr_id "tiy")
-                  (expr_number (JsNumber.of_int 99)))))
+                  (expr_number (JsNumber.of_int (99))))))
                (expr_if
                 (expr_if
                  (expr_if
@@ -1707,8 +1709,9 @@ expr_let "calledAsFunction"
                    (expr_op2 binary_op_stx_eq (expr_id "y") (expr_id "y")))
                   (expr_id "rangecond1") expr_false) (expr_id "rangecond2")
                  expr_false)
-                (expr_op2 binary_op_add (expr_number (JsNumber.of_int 1900))
-                 (expr_id "tiy")) (expr_id "y")))))
+                (expr_op2 binary_op_add
+                 (expr_number (JsNumber.of_int (1900))) (expr_id "tiy"))
+                (expr_id "y")))))
             (expr_let "finalDate"
              (expr_app (expr_id "%MakeDate")
               [expr_app (expr_id "%MakeDay")
@@ -1733,56 +1736,58 @@ expr_let "mft" (expr_app (expr_id "%MonthFromTime") [expr_id "t"])
    (expr_app (expr_id "%InLeapYear") [expr_id "t"])))
  (expr_if
   (expr_op2 binary_op_stx_eq (expr_id "mft")
-   (expr_number (JsNumber.of_int 0)))
+   (expr_number (JsNumber.of_int (0))))
   (expr_op2 binary_op_add (expr_app (expr_id "%DayWithinYear") [expr_id "t"])
-   (expr_number (JsNumber.of_int 1)))
+   (expr_number (JsNumber.of_int (1))))
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "mft")
-    (expr_number (JsNumber.of_int 1)))
+    (expr_number (JsNumber.of_int (1))))
    (expr_op2 binary_op_sub
     (expr_app (expr_id "%DayWithinYear") [expr_id "t"])
-    (expr_number (JsNumber.of_int 30)))
+    (expr_number (JsNumber.of_int (30))))
    (expr_if
     (expr_op2 binary_op_stx_eq (expr_id "mft")
-     (expr_number (JsNumber.of_int 2)))
-    (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int 58)])
+     (expr_number (JsNumber.of_int (2))))
+    (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int (58))])
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_id "mft")
-      (expr_number (JsNumber.of_int 3)))
-     (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int 89)])
+      (expr_number (JsNumber.of_int (3))))
+     (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int (89))])
      (expr_if
       (expr_op2 binary_op_stx_eq (expr_id "mft")
-       (expr_number (JsNumber.of_int 4)))
-      (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int 119)])
+       (expr_number (JsNumber.of_int (4))))
+      (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int (119))])
       (expr_if
        (expr_op2 binary_op_stx_eq (expr_id "mft")
-        (expr_number (JsNumber.of_int 5)))
-       (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int 150)])
+        (expr_number (JsNumber.of_int (5))))
+       (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int (150))])
        (expr_if
         (expr_op2 binary_op_stx_eq (expr_id "mft")
-         (expr_number (JsNumber.of_int 6)))
-        (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int 180)])
+         (expr_number (JsNumber.of_int (6))))
+        (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int (180))])
         (expr_if
          (expr_op2 binary_op_stx_eq (expr_id "mft")
-          (expr_number (JsNumber.of_int 7)))
-         (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int 211)])
+          (expr_number (JsNumber.of_int (7))))
+         (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int (211))])
          (expr_if
           (expr_op2 binary_op_stx_eq (expr_id "mft")
-           (expr_number (JsNumber.of_int 8)))
-          (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int 242)])
+           (expr_number (JsNumber.of_int (8))))
+          (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int (242))])
           (expr_if
            (expr_op2 binary_op_stx_eq (expr_id "mft")
-            (expr_number (JsNumber.of_int 9)))
-           (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int 272)])
+            (expr_number (JsNumber.of_int (9))))
+           (expr_app (expr_id "CalcDay")
+            [expr_number (JsNumber.of_int (272))])
            (expr_if
             (expr_op2 binary_op_stx_eq (expr_id "mft")
-             (expr_number (JsNumber.of_int 10)))
-            (expr_app (expr_id "CalcDay") [expr_number (JsNumber.of_int 303)])
+             (expr_number (JsNumber.of_int (10))))
+            (expr_app (expr_id "CalcDay")
+             [expr_number (JsNumber.of_int (303))])
             (expr_if
              (expr_op2 binary_op_stx_eq (expr_id "mft")
-              (expr_number (JsNumber.of_int 11)))
+              (expr_number (JsNumber.of_int (11))))
              (expr_app (expr_id "CalcDay")
-              [expr_number (JsNumber.of_int 333)])
+              [expr_number (JsNumber.of_int (333))])
              (expr_app (expr_id "%TypeError")
               [expr_string "Something terrible happened in %DateFromTime"]))))))))))))))
 .
@@ -1798,17 +1803,20 @@ expr_let "fragment"
    (expr_op2 binary_op_sub (expr_id "y") (expr_id "offset"))
    (expr_id "coefficient"))))
 (expr_let "base"
- (expr_op2 binary_op_mul (expr_number (JsNumber.of_int 365))
-  (expr_op2 binary_op_sub (expr_id "y") (expr_number (JsNumber.of_int 1970))))
+ (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (365)))
+  (expr_op2 binary_op_sub (expr_id "y")
+   (expr_number (JsNumber.of_int (1970)))))
  (expr_let "part1"
   (expr_app (expr_id "fragment")
-   [expr_number (JsNumber.of_int 1969); expr_number (JsNumber.of_int 4)])
+   [expr_number (JsNumber.of_int (1969)); expr_number (JsNumber.of_int (4))])
   (expr_let "part2"
    (expr_app (expr_id "fragment")
-    [expr_number (JsNumber.of_int 1901); expr_number (JsNumber.of_int 100)])
+    [expr_number (JsNumber.of_int (1901));
+     expr_number (JsNumber.of_int (100))])
    (expr_let "part3"
     (expr_app (expr_id "fragment")
-     [expr_number (JsNumber.of_int 1601); expr_number (JsNumber.of_int 400)])
+     [expr_number (JsNumber.of_int (1601));
+      expr_number (JsNumber.of_int (400))])
     (expr_op2 binary_op_add
      (expr_op2 binary_op_sub
       (expr_op2 binary_op_add (expr_id "base") (expr_id "part1"))
@@ -1821,44 +1829,48 @@ expr_op2 binary_op_sub (expr_app (expr_id "%Day") [expr_id "t"])
 .
 Definition ex_privDaysInMonth := 
 expr_let "m"
-(expr_op2 binary_op_mod (expr_id "m") (expr_number (JsNumber.of_int 12)))
+(expr_op2 binary_op_mod (expr_id "m") (expr_number (JsNumber.of_int (12))))
 (expr_if
  (expr_let "%or"
   (expr_let "%or"
    (expr_let "%or"
     (expr_op2 binary_op_stx_eq (expr_id "m")
-     (expr_number (JsNumber.of_int 3)))
+     (expr_number (JsNumber.of_int (3))))
     (expr_if (expr_id "%or") (expr_id "%or")
      (expr_op2 binary_op_stx_eq (expr_id "m")
-      (expr_number (JsNumber.of_int 5)))))
+      (expr_number (JsNumber.of_int (5))))))
    (expr_if (expr_id "%or") (expr_id "%or")
     (expr_op2 binary_op_stx_eq (expr_id "m")
-     (expr_number (JsNumber.of_int 8)))))
+     (expr_number (JsNumber.of_int (8))))))
   (expr_if (expr_id "%or") (expr_id "%or")
    (expr_op2 binary_op_stx_eq (expr_id "m")
-    (expr_number (JsNumber.of_int 10))))) (expr_number (JsNumber.of_int 30))
+    (expr_number (JsNumber.of_int (10))))))
+ (expr_number (JsNumber.of_int (30)))
  (expr_if
-  (expr_op2 binary_op_stx_eq (expr_id "m") (expr_number (JsNumber.of_int 1)))
-  (expr_op2 binary_op_add (expr_number (JsNumber.of_int 28)) (expr_id "leap"))
-  (expr_number (JsNumber.of_int 31))))
+  (expr_op2 binary_op_stx_eq (expr_id "m")
+   (expr_number (JsNumber.of_int (1))))
+  (expr_op2 binary_op_add (expr_number (JsNumber.of_int (28)))
+   (expr_id "leap")) (expr_number (JsNumber.of_int (31)))))
 .
 Definition ex_privDaysInYear := 
 expr_if
 (expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq
-  (expr_op2 binary_op_mod (expr_id "y") (expr_number (JsNumber.of_int 4)))
-  (expr_number (JsNumber.of_int 0)))) (expr_number (JsNumber.of_int 365))
+  (expr_op2 binary_op_mod (expr_id "y") (expr_number (JsNumber.of_int (4))))
+  (expr_number (JsNumber.of_int (0))))) (expr_number (JsNumber.of_int (365)))
 (expr_if
  (expr_let "%or"
   (expr_op2 binary_op_stx_eq
-   (expr_op2 binary_op_mod (expr_id "y") (expr_number (JsNumber.of_int 400)))
-   (expr_number (JsNumber.of_int 0)))
+   (expr_op2 binary_op_mod (expr_id "y")
+    (expr_number (JsNumber.of_int (400))))
+   (expr_number (JsNumber.of_int (0))))
   (expr_if (expr_id "%or") (expr_id "%or")
    (expr_op1 unary_op_not
     (expr_op2 binary_op_stx_eq
      (expr_op2 binary_op_mod (expr_id "y")
-      (expr_number (JsNumber.of_int 100))) (expr_number (JsNumber.of_int 0))))))
- (expr_number (JsNumber.of_int 366)) (expr_number (JsNumber.of_int 365)))
+      (expr_number (JsNumber.of_int (100))))
+     (expr_number (JsNumber.of_int (0)))))))
+ (expr_number (JsNumber.of_int (366))) (expr_number (JsNumber.of_int (365))))
 .
 Definition ex_privEnvCheckAssign := 
 expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
@@ -2052,7 +2064,7 @@ expr_let "o"
 (expr_if
  (expr_op2 binary_op_ge
   (expr_get_field (expr_id "args") (expr_string "length"))
-  (expr_number (JsNumber.of_int 1)))
+  (expr_number (JsNumber.of_int (1))))
  (expr_seq
   (expr_set_field (expr_id "o") (expr_string "message")
    (expr_app (expr_id "%ToString")
@@ -2085,7 +2097,7 @@ expr_let "argCount" (expr_get_field (expr_id "args") (expr_string "length"))
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "n")
     (expr_op2 binary_op_sub (expr_id "argCount")
-     (expr_number (JsNumber.of_int 1)))) (expr_id "result")
+     (expr_number (JsNumber.of_int (1))))) (expr_id "result")
    (expr_let "currentArg"
     (expr_app (expr_id "%ToString")
      [expr_get_field (expr_id "args")
@@ -2094,33 +2106,34 @@ expr_let "argCount" (expr_get_field (expr_id "args") (expr_string "length"))
      (expr_if
       (expr_op2 binary_op_stx_eq (expr_id "n")
        (expr_op2 binary_op_sub (expr_id "argCount")
-        (expr_number (JsNumber.of_int 2))))
+        (expr_number (JsNumber.of_int (2)))))
       (expr_op2 binary_op_string_plus (expr_id "result")
        (expr_id "currentArg"))
       (expr_op2 binary_op_string_plus
        (expr_op2 binary_op_string_plus (expr_id "result")
         (expr_id "currentArg")) (expr_string ",")))
      (expr_app (expr_id "formArgString")
-      [expr_op2 binary_op_add (expr_id "n") (expr_number (JsNumber.of_int 1));
+      [expr_op2 binary_op_add (expr_id "n")
+       (expr_number (JsNumber.of_int (1)));
        expr_id "next"])))))
  (expr_let "body"
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "argCount")
-    (expr_number (JsNumber.of_int 0))) (expr_string "")
+    (expr_number (JsNumber.of_int (0)))) (expr_string "")
    (expr_get_field (expr_id "args")
     (expr_op1 unary_op_prim_to_str
      (expr_op2 binary_op_sub (expr_id "argCount")
-      (expr_number (JsNumber.of_int 1))))))
+      (expr_number (JsNumber.of_int (1)))))))
   (expr_let "P"
    (expr_if
     (expr_let "%or"
      (expr_op2 binary_op_stx_eq (expr_id "argCount")
-      (expr_number (JsNumber.of_int 0)))
+      (expr_number (JsNumber.of_int (0))))
      (expr_if (expr_id "%or") (expr_id "%or")
       (expr_op2 binary_op_stx_eq (expr_id "argCount")
-       (expr_number (JsNumber.of_int 1))))) (expr_string "")
+       (expr_number (JsNumber.of_int (1)))))) (expr_string "")
     (expr_app (expr_id "formArgString")
-     [expr_number (JsNumber.of_int 0); expr_string ""]))
+     [expr_number (JsNumber.of_int (0)); expr_string ""]))
    (expr_let "prefix"
     (expr_op2 binary_op_string_plus
      (expr_string "((function(){ return function (")
@@ -2159,8 +2172,8 @@ expr_if
 (expr_op2 binary_op_stx_eq
  (expr_app (expr_id "%DaysInYear")
   [expr_app (expr_id "%YearFromTime") [expr_id "t"]])
- (expr_number (JsNumber.of_int 365))) (expr_number (JsNumber.of_int 0))
-(expr_number (JsNumber.of_int 1))
+ (expr_number (JsNumber.of_int (365)))) (expr_number (JsNumber.of_int (0)))
+(expr_number (JsNumber.of_int (1)))
 .
 Definition ex_privIsCallable := 
 expr_op2 binary_op_stx_eq (expr_app (expr_id "%Typeof") [expr_id "o"])
@@ -2173,9 +2186,11 @@ expr_op1 unary_op_not
   (expr_op1 unary_op_not
    (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n")))
   (expr_if (expr_id "%or") (expr_id "%or")
-   (expr_op2 binary_op_stx_eq (expr_id "n") (expr_number (JsNumber.of_int 0)))))
+   (expr_op2 binary_op_stx_eq (expr_id "n")
+    (expr_number (JsNumber.of_int (0))))))
  (expr_if (expr_id "%or") (expr_id "%or")
-  (expr_op2 binary_op_stx_eq (expr_id "n") (expr_number (JsNumber.of_int 0)))))
+  (expr_op2 binary_op_stx_eq (expr_id "n")
+   (expr_number (JsNumber.of_int (0))))))
 .
 Definition ex_privIsJSError := 
 expr_if (expr_op1 unary_op_is_object (expr_id "thing"))
@@ -2238,7 +2253,7 @@ expr_if
   (expr_if (expr_app (expr_id "%IsFinite") [expr_id "yr"])
    (expr_app (expr_id "%IsFinite") [expr_id "mt"]) expr_false)
   (expr_app (expr_id "%IsFinite") [expr_id "date"]) expr_false))
-(expr_number (JsNumber.of_int 0))
+(expr_number (JsNumber.of_int (0)))
 (expr_let "y" (expr_app (expr_id "%ToInteger") [expr_id "yr"])
  (expr_let "m" (expr_app (expr_id "%ToInteger") [expr_id "mt"])
   (expr_let "dt" (expr_app (expr_id "%ToInteger") [expr_id "date"])
@@ -2246,9 +2261,10 @@ expr_if
     (expr_op2 binary_op_add (expr_id "y")
      (expr_op1 unary_op_floor
       (expr_op2 binary_op_div (expr_id "m")
-       (expr_number (JsNumber.of_int 12)))))
+       (expr_number (JsNumber.of_int (12))))))
     (expr_let "mn"
-     (expr_op2 binary_op_mod (expr_id "m") (expr_number (JsNumber.of_int 12)))
+     (expr_op2 binary_op_mod (expr_id "m")
+      (expr_number (JsNumber.of_int (12))))
      (expr_let "yt" (expr_app (expr_id "%TimeFromYear") [expr_id "y"])
       (expr_recc "loop"
        (expr_lambda ["t"; "mo"; "leap"]
@@ -2262,12 +2278,12 @@ expr_if
            (expr_app (expr_id "loop")
             [expr_id "t";
              expr_op2 binary_op_add (expr_id "mo")
-             (expr_number (JsNumber.of_int 1));
+             (expr_number (JsNumber.of_int (1)));
              expr_id "leap"]))) (expr_id "t")))
        (expr_let "t"
         (expr_app (expr_id "loop")
          [expr_id "yt";
-          expr_number (JsNumber.of_int 0);
+          expr_number (JsNumber.of_int (0));
           expr_app (expr_id "%InLeapYear") [expr_id "yt"]])
         (expr_if
          (expr_let "%or"
@@ -2285,11 +2301,11 @@ expr_if
            (expr_op1 unary_op_not
             (expr_op2 binary_op_stx_eq
              (expr_app (expr_id "%DateFromTime") [expr_id "t"])
-             (expr_number (JsNumber.of_int 1))))))
-         (expr_number (JsNumber.of_int 0))
+             (expr_number (JsNumber.of_int (1)))))))
+         (expr_number (JsNumber.of_int (0)))
          (expr_op2 binary_op_sub
           (expr_op2 binary_op_add (expr_app (expr_id "%Day") [expr_id "t"])
-           (expr_id "dt")) (expr_number (JsNumber.of_int 1))))))))))))
+           (expr_id "dt")) (expr_number (JsNumber.of_int (1)))))))))))))
 .
 Definition ex_privMakeGetter := 
 expr_object
@@ -2350,7 +2366,7 @@ expr_if
     (expr_app (expr_id "%IsFinite") [expr_id "m"]) expr_false)
    (expr_app (expr_id "%IsFinite") [expr_id "s"]) expr_false)
   (expr_app (expr_id "%IsFinite") [expr_id "ms"]) expr_false))
-(expr_number (JsNumber.of_int 0))
+(expr_number (JsNumber.of_int (0)))
 (expr_let "hour" (expr_app (expr_id "%ToInteger") [expr_id "h"])
  (expr_let "min" (expr_app (expr_id "%ToInteger") [expr_id "m"])
   (expr_let "sec" (expr_app (expr_id "%ToInteger") [expr_id "s"])
@@ -2382,66 +2398,69 @@ expr_let "DayWithinYear"
      (expr_app (expr_id "%InLeapYear") [expr_id "t"]))) expr_false))
  (expr_if
   (expr_if
-   (expr_op2 binary_op_le (expr_number (JsNumber.of_int 0))
+   (expr_op2 binary_op_le (expr_number (JsNumber.of_int (0)))
     (expr_app (expr_id "%DayWithinYear") [expr_id "t"]))
    (expr_op2 binary_op_lt (expr_app (expr_id "%DayWithinYear") [expr_id "t"])
-    (expr_number (JsNumber.of_int 31))) expr_false)
-  (expr_number (JsNumber.of_int 0))
+    (expr_number (JsNumber.of_int (31)))) expr_false)
+  (expr_number (JsNumber.of_int (0)))
   (expr_if
    (expr_if
-    (expr_op2 binary_op_le (expr_number (JsNumber.of_int 31))
+    (expr_op2 binary_op_le (expr_number (JsNumber.of_int (31)))
      (expr_app (expr_id "%DayWithinYear") [expr_id "t"]))
     (expr_op2 binary_op_lt
      (expr_app (expr_id "%DayWithinYear") [expr_id "t"])
-     (expr_op2 binary_op_add (expr_number (JsNumber.of_int 59))
+     (expr_op2 binary_op_add (expr_number (JsNumber.of_int (59)))
       (expr_app (expr_id "%InLeapYear") [expr_id "t"]))) expr_false)
-   (expr_number (JsNumber.of_int 1))
+   (expr_number (JsNumber.of_int (1)))
    (expr_if
     (expr_app (expr_id "CheckLeapRange")
-     [expr_number (JsNumber.of_int 59); expr_number (JsNumber.of_int 90)])
-    (expr_number (JsNumber.of_int 2))
+     [expr_number (JsNumber.of_int (59)); expr_number (JsNumber.of_int (90))])
+    (expr_number (JsNumber.of_int (2)))
     (expr_if
      (expr_app (expr_id "CheckLeapRange")
-      [expr_number (JsNumber.of_int 90); expr_number (JsNumber.of_int 120)])
-     (expr_number (JsNumber.of_int 3))
+      [expr_number (JsNumber.of_int (90));
+       expr_number (JsNumber.of_int (120))])
+     (expr_number (JsNumber.of_int (3)))
      (expr_if
       (expr_app (expr_id "CheckLeapRange")
-       [expr_number (JsNumber.of_int 120); expr_number (JsNumber.of_int 151)])
-      (expr_number (JsNumber.of_int 4))
+       [expr_number (JsNumber.of_int (120));
+        expr_number (JsNumber.of_int (151))])
+      (expr_number (JsNumber.of_int (4)))
       (expr_if
        (expr_app (expr_id "CheckLeapRange")
-        [expr_number (JsNumber.of_int 151); expr_number (JsNumber.of_int 181)])
-       (expr_number (JsNumber.of_int 5))
+        [expr_number (JsNumber.of_int (151));
+         expr_number (JsNumber.of_int (181))])
+       (expr_number (JsNumber.of_int (5)))
        (expr_if
         (expr_app (expr_id "CheckLeapRange")
-         [expr_number (JsNumber.of_int 181);
-          expr_number (JsNumber.of_int 212)])
-        (expr_number (JsNumber.of_int 6))
+         [expr_number (JsNumber.of_int (181));
+          expr_number (JsNumber.of_int (212))])
+        (expr_number (JsNumber.of_int (6)))
         (expr_if
          (expr_app (expr_id "CheckLeapRange")
-          [expr_number (JsNumber.of_int 212);
-           expr_number (JsNumber.of_int 243)])
-         (expr_number (JsNumber.of_int 7))
+          [expr_number (JsNumber.of_int (212));
+           expr_number (JsNumber.of_int (243))])
+         (expr_number (JsNumber.of_int (7)))
          (expr_if
           (expr_app (expr_id "CheckLeapRange")
-           [expr_number (JsNumber.of_int 243);
-            expr_number (JsNumber.of_int 273)])
-          (expr_number (JsNumber.of_int 8))
+           [expr_number (JsNumber.of_int (243));
+            expr_number (JsNumber.of_int (273))])
+          (expr_number (JsNumber.of_int (8)))
           (expr_if
            (expr_app (expr_id "CheckLeapRange")
-            [expr_number (JsNumber.of_int 273);
-             expr_number (JsNumber.of_int 304)])
-           (expr_number (JsNumber.of_int 9))
+            [expr_number (JsNumber.of_int (273));
+             expr_number (JsNumber.of_int (304))])
+           (expr_number (JsNumber.of_int (9)))
            (expr_if
             (expr_app (expr_id "CheckLeapRange")
-             [expr_number (JsNumber.of_int 304);
-              expr_number (JsNumber.of_int 334)])
-            (expr_number (JsNumber.of_int 10))
+             [expr_number (JsNumber.of_int (304));
+              expr_number (JsNumber.of_int (334))])
+            (expr_number (JsNumber.of_int (10)))
             (expr_if
              (expr_app (expr_id "CheckLeapRange")
-              [expr_number (JsNumber.of_int 334);
-               expr_number (JsNumber.of_int 365)])
-             (expr_number (JsNumber.of_int 11))
+              [expr_number (JsNumber.of_int (334));
+               expr_number (JsNumber.of_int (365))])
+             (expr_number (JsNumber.of_int (11)))
              (expr_app (expr_id "%TypeError")
               [expr_string "Something terrible in date %MonthFromTime"]))))))))))))))
 .
@@ -2462,7 +2481,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "this") expr_undefined)
 (expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_field (expr_id "args") (expr_string "length"))
-  (expr_number (JsNumber.of_int 0))) (expr_number (JsNumber.of_int 0))
+  (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
  (expr_app (expr_id "%ToNumber")
   [expr_get_field (expr_id "args") (expr_string "0")]))
 (expr_let "hasProp"
@@ -2472,8 +2491,8 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "this") expr_undefined)
    (expr_get_field (expr_id "args") (expr_string "0")) expr_undefined)
   (expr_let "v"
    (expr_if (expr_if (expr_id "hasProp") (expr_id "argUndef") expr_false)
-    (expr_number (JsNumber.of_int 0))
-    (expr_if (expr_id "argUndef") (expr_number (JsNumber.of_int 0))
+    (expr_number (JsNumber.of_int (0)))
+    (expr_if (expr_id "argUndef") (expr_number (JsNumber.of_int (0)))
      (expr_app (expr_id "%ToNumber")
       [expr_get_field (expr_id "args") (expr_string "0")])))
    (expr_object
@@ -2486,7 +2505,7 @@ expr_let "calledAsFunction"
 (expr_let "hasArg"
  (expr_op2 binary_op_gt
   (expr_get_field (expr_id "args") (expr_string "length"))
-  (expr_number (JsNumber.of_int 0)))
+  (expr_number (JsNumber.of_int (0))))
  (expr_let "notNull"
   (expr_op1 unary_op_not
    (expr_op2 binary_op_stx_eq
@@ -2553,7 +2572,7 @@ expr_let "oldValue"
  [expr_get_field (expr_id "obj") (expr_id "fld")])
 (expr_let "newValue"
  (expr_app (expr_id "op")
-  [expr_id "oldValue"; expr_number (JsNumber.of_int 1)])
+  [expr_id "oldValue"; expr_number (JsNumber.of_int (1))])
  (expr_seq
   (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "newValue"))
   (expr_id "oldValue")))
@@ -2572,7 +2591,7 @@ expr_let "oldValue"
  [expr_get_field (expr_id "obj") (expr_id "fld")])
 (expr_let "newValue"
  (expr_app (expr_id "op")
-  [expr_id "oldValue"; expr_number (JsNumber.of_int 1)])
+  [expr_id "oldValue"; expr_number (JsNumber.of_int (1))])
  (expr_seq
   (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "newValue"))
   (expr_id "newValue")))
@@ -2660,7 +2679,7 @@ expr_let "S"
 (expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_field (expr_id "args") (expr_string "length"))
-  (expr_number (JsNumber.of_int 0))) (expr_string "")
+  (expr_number (JsNumber.of_int (0)))) (expr_string "")
  (expr_app (expr_id "%ToString")
   [expr_get_field (expr_id "args") (expr_string "0")]))
 (expr_if (expr_op2 binary_op_stx_eq (expr_id "this") expr_undefined)
@@ -2689,7 +2708,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
     (expr_let "start"
      (expr_app (expr_id "%min")
       [expr_app (expr_id "%max")
-       [expr_id "pos"; expr_number (JsNumber.of_int 0)];
+       [expr_id "pos"; expr_number (JsNumber.of_int (0))];
        expr_id "len"])
      (expr_let "searchLen" (expr_op1 unary_op_strlen (expr_id "searchStr"))
       (expr_let "check_k"
@@ -2708,7 +2727,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
             expr_false
             (expr_app (expr_id "check_j")
              [expr_op2 binary_op_add (expr_id "j")
-              (expr_number (JsNumber.of_int 1))]))))
+              (expr_number (JsNumber.of_int (1)))]))))
          (expr_if
           (expr_op1 unary_op_not
            (expr_op2 binary_op_le
@@ -2716,7 +2735,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
             (expr_id "len"))) expr_false
           (expr_if
            (expr_op1 unary_op_not
-            (expr_app (expr_id "check_j") [expr_number (JsNumber.of_int 0)]))
+            (expr_app (expr_id "check_j") [expr_number (JsNumber.of_int (0))]))
            expr_false expr_true))))
        (expr_recc "find_k"
         (expr_lambda ["curr"]
@@ -2724,13 +2743,13 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
           (expr_op2 binary_op_gt
            (expr_op2 binary_op_add (expr_id "curr") (expr_id "searchLen"))
            (expr_id "len"))
-          (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-           (expr_number (JsNumber.of_int 1)))
+          (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+           (expr_number (JsNumber.of_int (1))))
           (expr_if (expr_app (expr_id "check_k") [expr_id "curr"])
            (expr_id "curr")
            (expr_app (expr_id "find_k")
             [expr_op2 binary_op_add (expr_id "curr")
-             (expr_number (JsNumber.of_int 1))]))))
+             (expr_number (JsNumber.of_int (1)))]))))
         (expr_app (expr_id "find_k") [expr_id "start"])))))))))
 .
 Definition ex_privStringIndices := 
@@ -2743,9 +2762,9 @@ expr_let "len" (expr_op1 unary_op_strlen (expr_id "s"))
      (expr_op1 unary_op_prim_to_str (expr_id "i"))
      (expr_op2 binary_op_char_at (expr_id "s") (expr_id "i")))
     (expr_app (expr_id "loop")
-     [expr_op2 binary_op_add (expr_id "i") (expr_number (JsNumber.of_int 1))]))
-   expr_undefined))
- (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)]))
+     [expr_op2 binary_op_add (expr_id "i")
+      (expr_number (JsNumber.of_int (1)))])) expr_undefined))
+ (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))]))
 .
 Definition ex_privStxEq := 
 expr_op2 binary_op_stx_eq (expr_id "x1") (expr_id "x2")
@@ -2769,8 +2788,8 @@ expr_if
 (expr_op1 unary_op_not
  (expr_if (expr_app (expr_id "%IsFinite") [expr_id "t"])
   (expr_op2 binary_op_le (expr_op1 unary_op_abs (expr_id "t"))
-   (expr_number (JsNumber.of_int 8640000000000000))) expr_false))
-(expr_number (JsNumber.of_int 0))
+   (expr_number (JsNumber.of_int (8640000000000000)))) expr_false))
+(expr_number (JsNumber.of_int (0)))
 (expr_app (expr_id "%ToInteger") [expr_id "t"])
 .
 Definition ex_privTimeFromYear := 
@@ -2787,9 +2806,9 @@ Definition ex_privToInt32 :=
 expr_let "int32bit" (expr_app (expr_id "%ToUint32") [expr_id "n"])
 (expr_if
  (expr_op2 binary_op_ge (expr_id "int32bit")
-  (expr_number (JsNumber.of_int 2147483648)))
+  (expr_number (JsNumber.of_int (2147483648))))
  (expr_op2 binary_op_sub (expr_id "int32bit")
-  (expr_number (JsNumber.of_int 4294967296))) (expr_id "int32bit"))
+  (expr_number (JsNumber.of_int (4294967296)))) (expr_id "int32bit"))
 .
 Definition ex_privToInteger := 
 expr_label "ret"
@@ -2798,26 +2817,27 @@ expr_label "ret"
   (expr_if
    (expr_op1 unary_op_not
     (expr_op2 binary_op_stx_eq (expr_id "number") (expr_id "number")))
-   (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+   (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
   (expr_seq
    (expr_if
     (expr_let "%or"
      (expr_let "%or"
       (expr_op2 binary_op_stx_eq (expr_id "number")
-       (expr_number (JsNumber.of_int 0)))
+       (expr_number (JsNumber.of_int (0))))
       (expr_if (expr_id "%or") (expr_id "%or")
        (expr_op2 binary_op_stx_eq (expr_id "number")
-        (expr_number (JsNumber.of_int 0)))))
+        (expr_number (JsNumber.of_int (0))))))
      (expr_if (expr_id "%or") (expr_id "%or")
       (expr_op2 binary_op_stx_eq (expr_id "number")
-       (expr_number (JsNumber.of_int 0)))))
+       (expr_number (JsNumber.of_int (0))))))
     (expr_break "ret" (expr_id "number")) expr_null)
    (expr_let "sign"
     (expr_if
      (expr_op2 binary_op_lt (expr_id "number")
-      (expr_number (JsNumber.of_int 0)))
-     (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-      (expr_number (JsNumber.of_int 1))) (expr_number (JsNumber.of_int 1)))
+      (expr_number (JsNumber.of_int (0))))
+     (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+      (expr_number (JsNumber.of_int (1))))
+     (expr_number (JsNumber.of_int (1))))
     (expr_let "a" (expr_op1 unary_op_abs (expr_id "number"))
      (expr_let "f" (expr_op1 unary_op_floor (expr_id "a"))
       (expr_let "r" (expr_op2 binary_op_mul (expr_id "sign") (expr_id "f"))
@@ -2828,14 +2848,14 @@ expr_let "t" (expr_op1 unary_op_typeof (expr_id "x"))
 (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "number"))
  (expr_id "x")
  (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "undefined"))
-  (expr_number (JsNumber.of_int 0))
+  (expr_number (JsNumber.of_int (0)))
   (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "null"))
-   (expr_number (JsNumber.of_int 0))
+   (expr_number (JsNumber.of_int (0)))
    (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "boolean"))
-    (expr_if (expr_id "x") (expr_number (JsNumber.of_int 1))
-     (expr_number (JsNumber.of_int 0)))
+    (expr_if (expr_id "x") (expr_number (JsNumber.of_int (1)))
+     (expr_number (JsNumber.of_int (0))))
     (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "string"))
-     (expr_op1 unary_op_numstr_to_num (expr_id "x"))
+     (expr_op1 unary_op_prim_to_num (expr_id "x"))
      (expr_if
       (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
       (expr_app (expr_id "%ToNumber")
@@ -2956,24 +2976,26 @@ expr_let "number" (expr_app (expr_id "%ToNumber") [expr_id "n"])
      (expr_op2 binary_op_stx_eq (expr_id "number") (expr_id "number")))
     (expr_if (expr_id "%or") (expr_id "%or")
      (expr_op2 binary_op_stx_eq (expr_id "number")
-      (expr_number (JsNumber.of_int 0)))))
+      (expr_number (JsNumber.of_int (0))))))
    (expr_if (expr_id "%or") (expr_id "%or")
     (expr_op2 binary_op_stx_eq (expr_id "number")
-     (expr_number (JsNumber.of_int 0)))))
+     (expr_number (JsNumber.of_int (0))))))
   (expr_if (expr_id "%or") (expr_id "%or")
    (expr_op2 binary_op_stx_eq (expr_id "number")
-    (expr_number (JsNumber.of_int 0))))) (expr_number (JsNumber.of_int 0))
+    (expr_number (JsNumber.of_int (0))))))
+ (expr_number (JsNumber.of_int (0)))
  (expr_let "sign"
   (expr_if
    (expr_op2 binary_op_lt (expr_id "number")
-    (expr_number (JsNumber.of_int 0)))
-   (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-    (expr_number (JsNumber.of_int 1))) (expr_number (JsNumber.of_int 1)))
+    (expr_number (JsNumber.of_int (0))))
+   (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+    (expr_number (JsNumber.of_int (1)))) (expr_number (JsNumber.of_int (1))))
   (expr_let "posInt"
    (expr_op2 binary_op_mul (expr_id "sign")
     (expr_op1 unary_op_floor (expr_op1 unary_op_abs (expr_id "number"))))
    (expr_if
-    (expr_op2 binary_op_lt (expr_id "sign") (expr_number (JsNumber.of_int 0)))
+    (expr_op2 binary_op_lt (expr_id "sign")
+     (expr_number (JsNumber.of_int (0))))
     (expr_let "close"
      (expr_op2 binary_op_mod (expr_id "posInt") (expr_id "limit"))
      (expr_op2 binary_op_add (expr_id "close") (expr_id "limit")))
@@ -2981,11 +3003,11 @@ expr_let "number" (expr_app (expr_id "%ToNumber") [expr_id "n"])
 .
 Definition ex_privToUint16 := 
 expr_app (expr_id "%ToUint")
-[expr_id "n"; expr_number (JsNumber.of_int 65536)]
+[expr_id "n"; expr_number (JsNumber.of_int (65536))]
 .
 Definition ex_privToUint32 := 
 expr_app (expr_id "%ToUint")
-[expr_id "n"; expr_number (JsNumber.of_int 4294967296)]
+[expr_id "n"; expr_number (JsNumber.of_int (4294967296))]
 .
 Definition ex_privTypeError := 
 expr_app (expr_id "%NativeError") [expr_id "%TypeErrorProto"; expr_id "msg"]
@@ -3031,7 +3053,7 @@ expr_let "oldValue" (expr_app (expr_id "%ToNumber") [expr_id "expr"])
  (expr_op1 unary_op_not
   (expr_op2 binary_op_stx_eq (expr_id "oldValue") (expr_id "oldValue")))
  (expr_id "oldValue")
- (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
+ (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
   (expr_id "oldValue")))
 .
 Definition ex_privUnaryNot := 
@@ -3063,15 +3085,16 @@ Definition ex_privVoid :=  expr_undefined .
 Definition ex_privYearFromTime := 
 expr_let "sign"
 (expr_if
- (expr_op2 binary_op_gt (expr_id "t") (expr_number (JsNumber.of_int 0)))
- (expr_number (JsNumber.of_int 1))
- (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-  (expr_number (JsNumber.of_int 1))))
+ (expr_op2 binary_op_gt (expr_id "t") (expr_number (JsNumber.of_int (0))))
+ (expr_number (JsNumber.of_int (1)))
+ (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+  (expr_number (JsNumber.of_int (1)))))
 (expr_let "start"
  (expr_if
   (expr_op2 binary_op_stx_eq (expr_id "sign")
-   (expr_number (JsNumber.of_int 1))) (expr_number (JsNumber.of_int 1969))
-  (expr_number (JsNumber.of_int 1970)))
+   (expr_number (JsNumber.of_int (1))))
+  (expr_number (JsNumber.of_int (1969)))
+  (expr_number (JsNumber.of_int (1970))))
  (expr_recc "loop"
   (expr_lambda ["y"]
    (expr_if
@@ -3080,7 +3103,7 @@ expr_let "sign"
       (expr_app (expr_id "%TimeFromYear") [expr_id "y"]) (expr_id "t"))
      (expr_op2 binary_op_gt
       (expr_app (expr_id "%TimeFromYear")
-       [expr_op2 binary_op_add (expr_number (JsNumber.of_int 1))
+       [expr_op2 binary_op_add (expr_number (JsNumber.of_int (1)))
         (expr_id "y")]) (expr_id "t")) expr_false) (expr_id "y")
     (expr_app (expr_id "loop")
      [expr_op2 binary_op_add (expr_id "y") (expr_id "sign")])))
@@ -3095,22 +3118,22 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_seq
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_id "len")
-      (expr_number (JsNumber.of_int 0)))
+      (expr_number (JsNumber.of_int (0))))
      (expr_break "ret"
-      (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-       (expr_number (JsNumber.of_int 1)))) expr_undefined)
+      (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+       (expr_number (JsNumber.of_int (1))))) expr_undefined)
     (expr_let "n"
      (expr_if
       (expr_op2 binary_op_stx_eq
        (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined)
-      (expr_number (JsNumber.of_int 0))
+      (expr_number (JsNumber.of_int (0)))
       (expr_app (expr_id "%ToInteger")
        [expr_get_field (expr_id "args") (expr_string "1")]))
      (expr_seq
       (expr_if (expr_op2 binary_op_ge (expr_id "n") (expr_id "len"))
        (expr_break "ret"
-        (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-         (expr_number (JsNumber.of_int 1)))) expr_undefined)
+        (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+         (expr_number (JsNumber.of_int (1))))) expr_undefined)
       (expr_recc "loop"
        (expr_lambda ["k"]
         (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
@@ -3127,22 +3150,22 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
               expr_undefined))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_add (expr_id "k")
-              (expr_number (JsNumber.of_int 1))]))
+              (expr_number (JsNumber.of_int (1)))]))
            (expr_app (expr_id "loop")
             [expr_op2 binary_op_add (expr_id "k")
-             (expr_number (JsNumber.of_int 1))]))) expr_undefined))
+             (expr_number (JsNumber.of_int (1)))]))) expr_undefined))
        (expr_let "start"
         (expr_if
          (expr_op2 binary_op_ge (expr_id "n")
-          (expr_number (JsNumber.of_int 0))) (expr_id "n")
+          (expr_number (JsNumber.of_int (0)))) (expr_id "n")
          (expr_app (expr_id "%max")
           [expr_op2 binary_op_sub (expr_id "len")
            (expr_op1 unary_op_abs (expr_id "n"));
-           expr_number (JsNumber.of_int 0)]))
+           expr_number (JsNumber.of_int (0))]))
         (expr_seq (expr_app (expr_id "loop") [expr_id "start"])
          (expr_break "ret"
-          (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-           (expr_number (JsNumber.of_int 1)))))))))))))
+          (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+           (expr_number (JsNumber.of_int (1))))))))))))))
 .
 Definition ex_privaliolambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -3152,24 +3175,24 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_seq
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_id "len")
-      (expr_number (JsNumber.of_int 0)))
+      (expr_number (JsNumber.of_int (0))))
      (expr_break "ret"
-      (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-       (expr_number (JsNumber.of_int 1)))) expr_undefined)
+      (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+       (expr_number (JsNumber.of_int (1))))) expr_undefined)
     (expr_seq
      (expr_let "n"
       (expr_if
        (expr_op2 binary_op_stx_eq
         (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined)
        (expr_op2 binary_op_sub (expr_id "len")
-        (expr_number (JsNumber.of_int 1)))
+        (expr_number (JsNumber.of_int (1))))
        (expr_app (expr_id "%ToInteger")
         [expr_get_field (expr_id "args") (expr_string "1")]))
       (expr_recc "loop"
        (expr_lambda ["k"]
         (expr_if
          (expr_op2 binary_op_ge (expr_id "k")
-          (expr_number (JsNumber.of_int 0)))
+          (expr_number (JsNumber.of_int (0))))
          (expr_let "kstr" (expr_app (expr_id "%ToString") [expr_id "k"])
           (expr_if
            (expr_op2 binary_op_has_property (expr_id "O") (expr_id "kstr"))
@@ -3180,24 +3203,24 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
             (expr_break "ret" (expr_id "k"))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_sub (expr_id "k")
-              (expr_number (JsNumber.of_int 1))]))
+              (expr_number (JsNumber.of_int (1)))]))
            (expr_app (expr_id "loop")
             [expr_op2 binary_op_sub (expr_id "k")
-             (expr_number (JsNumber.of_int 1))]))) expr_undefined))
+             (expr_number (JsNumber.of_int (1)))]))) expr_undefined))
        (expr_let "start"
         (expr_if
          (expr_op2 binary_op_ge (expr_id "n")
-          (expr_number (JsNumber.of_int 0)))
+          (expr_number (JsNumber.of_int (0))))
          (expr_app (expr_id "%min")
           [expr_id "n";
            expr_op2 binary_op_sub (expr_id "len")
-           (expr_number (JsNumber.of_int 1))])
+           (expr_number (JsNumber.of_int (1)))])
          (expr_op2 binary_op_sub (expr_id "len")
           (expr_op1 unary_op_abs (expr_id "n"))))
         (expr_app (expr_id "loop") [expr_id "start"]))))
      (expr_break "ret"
-      (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-       (expr_number (JsNumber.of_int 1)))))))))
+      (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+       (expr_number (JsNumber.of_int (1))))))))))
 .
 Definition ex_privapplylambda := 
 expr_let "applyArgs1" (expr_get_field (expr_id "args") (expr_string "1"))
@@ -3239,7 +3262,7 @@ expr_let "isCallable"
      (expr_seq
       (expr_if
        (expr_op2 binary_op_stx_eq (expr_id "len")
-        (expr_number (JsNumber.of_int 0)))
+        (expr_number (JsNumber.of_int (0))))
        (expr_break "ret" (expr_string "")) expr_null)
       (expr_let "firstElement"
        (expr_get_field (expr_id "array") (expr_string "0"))
@@ -3306,13 +3329,13 @@ expr_let "isCallable"
                      expr_null expr_null expr_undefined) []])))))
               (expr_app (expr_id "inner")
                [expr_op2 binary_op_add (expr_id "k")
-                (expr_number (JsNumber.of_int 1));
+                (expr_number (JsNumber.of_int (1)));
                 expr_op2 binary_op_string_plus
                 (expr_op1 unary_op_prim_to_str (expr_id "r"))
                 (expr_op1 unary_op_prim_to_str (expr_id "toAppend"))]))))))
          (expr_break "ret"
           (expr_app (expr_id "inner")
-           [expr_number (JsNumber.of_int 1); expr_id "R"])))))))))))
+           [expr_number (JsNumber.of_int (1)); expr_id "R"])))))))))))
 .
 Definition ex_privarrayToStringlambda := 
 expr_let "array" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -3348,7 +3371,7 @@ expr_label "ret"
   (expr_let "A"
    (expr_app (expr_id "%slicelambda")
     [expr_id "args";
-     expr_app (expr_id "%oneArgObj") [expr_number (JsNumber.of_int 1)]])
+     expr_app (expr_id "%oneArgObj") [expr_number (JsNumber.of_int (1))]])
    (expr_let "mkNewObj"
     (expr_lambda ["proto"]
      (expr_let "proto"
@@ -3403,8 +3426,8 @@ expr_label "ret"
            (expr_get_field (expr_id "this") (expr_string "length"))
            (expr_get_field (expr_id "A") (expr_string "length")))
           (expr_app (expr_id "%max")
-           [expr_number (JsNumber.of_int 0); expr_id "L"]))
-         (expr_number (JsNumber.of_int 0)))
+           [expr_number (JsNumber.of_int (0)); expr_id "L"]))
+         (expr_number (JsNumber.of_int (0))))
         (expr_seq
          (expr_app (expr_id "%defineOwnProperty")
           [expr_id "F";
@@ -3450,7 +3473,7 @@ Definition ex_privcalllambda :=
 expr_let "callArgs"
 (expr_app (expr_id "%slice_internal")
  [expr_id "args";
-  expr_number (JsNumber.of_int 1);
+  expr_number (JsNumber.of_int (1));
   expr_app (expr_id "%len") [expr_id "args"]])
 (expr_app (expr_id "this")
  [expr_get_field (expr_id "args") (expr_string "0"); expr_id "callArgs"])
@@ -3465,7 +3488,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
    (expr_if
     (expr_let "%or"
      (expr_op2 binary_op_lt (expr_id "position")
-      (expr_number (JsNumber.of_int 0)))
+      (expr_number (JsNumber.of_int (0))))
      (expr_if (expr_id "%or") (expr_id "%or")
       (expr_op2 binary_op_ge (expr_id "position") (expr_id "size"))))
     (expr_string "")
@@ -3481,10 +3504,10 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
    (expr_if
     (expr_let "%or"
      (expr_op2 binary_op_lt (expr_id "position")
-      (expr_number (JsNumber.of_int 0)))
+      (expr_number (JsNumber.of_int (0))))
      (expr_if (expr_id "%or") (expr_id "%or")
       (expr_op2 binary_op_ge (expr_id "position") (expr_id "size"))))
-    (expr_number (JsNumber.of_int 0))
+    (expr_number (JsNumber.of_int (0)))
     (expr_op1 unary_op_ascii_cton
      (expr_op2 binary_op_char_at (expr_id "S") (expr_id "position")))))))
 .
@@ -3505,7 +3528,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_set_field (expr_id "obj")
         (expr_op1 unary_op_prim_to_str (expr_id "k")) (expr_id "nelt"))
        (expr_op2 binary_op_add (expr_id "k")
-        (expr_number (JsNumber.of_int 1)))))
+        (expr_number (JsNumber.of_int (1))))))
      (expr_recc "procArrayElt"
       (expr_lambda ["arr"; "fromIndex"; "toIndex"]
        (expr_if
@@ -3521,16 +3544,16 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          (expr_app (expr_id "procArrayElt")
           [expr_id "arr";
            expr_op2 binary_op_add (expr_id "fromIndex")
-           (expr_number (JsNumber.of_int 1));
+           (expr_number (JsNumber.of_int (1)));
            expr_op2 binary_op_add (expr_id "toIndex")
-           (expr_number (JsNumber.of_int 1))]))))
+           (expr_number (JsNumber.of_int (1)))]))))
       (expr_if (expr_op1 unary_op_is_object (expr_id "elt"))
        (expr_if
         (expr_op2 binary_op_stx_eq
          (expr_get_obj_attr oattr_class (expr_id "elt"))
          (expr_string "Array"))
         (expr_app (expr_id "procArrayElt")
-         [expr_id "elt"; expr_number (JsNumber.of_int 0); expr_id "n"])
+         [expr_id "elt"; expr_number (JsNumber.of_int (0)); expr_id "n"])
         (expr_app (expr_id "procNormalElt") [expr_id "elt"; expr_id "n"]))
        (expr_app (expr_id "procNormalElt") [expr_id "elt"; expr_id "n"])))))
    (expr_recc "procAllElts"
@@ -3550,7 +3573,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_app (expr_id "procAllElts")
         [expr_id "from";
          expr_op2 binary_op_add (expr_id "fromIndex")
-         (expr_number (JsNumber.of_int 1));
+         (expr_number (JsNumber.of_int (1)));
          expr_id "nextI"])) (expr_id "toIndex")))
     (expr_let "halftime"
      (expr_if
@@ -3558,14 +3581,14 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_get_obj_attr oattr_class (expr_id "O")) (expr_string "Array"))
       (expr_app (expr_id "procAllElts")
        [expr_id "O";
-        expr_number (JsNumber.of_int 0);
-        expr_number (JsNumber.of_int 0)])
+        expr_number (JsNumber.of_int (0));
+        expr_number (JsNumber.of_int (0))])
       (expr_seq
        (expr_set_field (expr_id "A") (expr_string "0") (expr_id "O"))
-       (expr_number (JsNumber.of_int 1))))
+       (expr_number (JsNumber.of_int (1)))))
      (expr_let "end"
       (expr_app (expr_id "procAllElts")
-       [expr_id "args"; expr_number (JsNumber.of_int 0); expr_id "halftime"])
+       [expr_id "args"; expr_number (JsNumber.of_int (0)); expr_id "halftime"])
       (expr_seq
        (expr_set_field (expr_id "A") (expr_string "length") (expr_id "end"))
        (expr_id "A"))))))))
@@ -3615,7 +3638,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
     (expr_if
      (expr_op2 binary_op_ge
       (expr_get_field (expr_id "args") (expr_string "length"))
-      (expr_number (JsNumber.of_int 2)))
+      (expr_number (JsNumber.of_int (2))))
      (expr_op1 unary_op_not
       (expr_op2 binary_op_stx_eq
        (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined))
@@ -3634,7 +3657,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
          (expr_id "Properties"))
         (expr_seq
          (expr_set_field (expr_id "argsObj") (expr_string "length")
-          (expr_number (JsNumber.of_int 2)))
+          (expr_number (JsNumber.of_int (2))))
          (expr_seq
           (expr_app (expr_id "%definePropertiesLambda")
            [expr_null; expr_id "argsObj"]) (expr_id "obj")))))))
@@ -3643,8 +3666,8 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 Definition ex_privdateGetTimezoneOffsetLambda := 
 expr_let "t" (expr_get_obj_attr oattr_primval (expr_id "this"))
 (expr_if
- (expr_op2 binary_op_stx_eq (expr_id "t") (expr_number (JsNumber.of_int 0)))
- (expr_number (JsNumber.of_int 0)) (expr_number (JsNumber.of_int 0)))
+ (expr_op2 binary_op_stx_eq (expr_id "t") (expr_number (JsNumber.of_int (0))))
+ (expr_number (JsNumber.of_int (0))) (expr_number (JsNumber.of_int (0))))
 .
 Definition ex_privdateToStringLambda :=  expr_string "Date toString NYI" .
 Definition ex_privdateValueOfLambda := 
@@ -3653,7 +3676,7 @@ expr_get_obj_attr oattr_primval (expr_id "this")
 Definition ex_privdategetDateLambda := 
 expr_let "t" (expr_get_obj_attr oattr_primval (expr_id "this"))
 (expr_if
- (expr_op2 binary_op_stx_eq (expr_id "t") (expr_number (JsNumber.of_int 0)))
+ (expr_op2 binary_op_stx_eq (expr_id "t") (expr_number (JsNumber.of_int (0))))
  (expr_id "t")
  (expr_app (expr_id "%DateFromTime")
   [expr_app (expr_id "%LocalTime") [expr_id "t"]]))
@@ -3665,8 +3688,8 @@ expr_let "day"
   (expr_id "%msPerDay")))
 (expr_let "weekday"
  (expr_op2 binary_op_mod
-  (expr_op2 binary_op_add (expr_id "day") (expr_number (JsNumber.of_int 4)))
-  (expr_number (JsNumber.of_int 7))) (expr_id "weekday"))
+  (expr_op2 binary_op_add (expr_id "day") (expr_number (JsNumber.of_int (4))))
+  (expr_number (JsNumber.of_int (7)))) (expr_id "weekday"))
 .
 Definition ex_privdecodeURIComponentLambda := 
 expr_string "decodeURIComponent NYI"
@@ -4041,20 +4064,20 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
                  (expr_get_field (expr_id "props") (expr_id "name")))
                 (expr_seq
                  (expr_set_field (expr_id "argsObj") (expr_string "length")
-                  (expr_number (JsNumber.of_int 3)))
+                  (expr_number (JsNumber.of_int (3))))
                  (expr_seq
                   (expr_app (expr_id "%definePropertylambda")
                    [expr_null; expr_id "argsObj"])
                   (expr_break "ret"
                    (expr_app (expr_id "loop")
                     [expr_op2 binary_op_add (expr_id "i")
-                     (expr_number (JsNumber.of_int 1))]))))))))
+                     (expr_number (JsNumber.of_int (1)))]))))))))
             (expr_break "ret"
              (expr_app (expr_id "loop")
               [expr_op2 binary_op_add (expr_id "i")
-               (expr_number (JsNumber.of_int 1))])))))
+               (expr_number (JsNumber.of_int (1)))])))))
          (expr_break "ret" expr_undefined))))
-      (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])))))
+      (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))
   (expr_id "O")))
 .
 Definition ex_privdefinePropertylambda := 
@@ -4234,7 +4257,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   (expr_id "O"))
                  (expr_seq
                   (expr_set_field (expr_id "argsObj") (expr_string "length")
-                   (expr_number (JsNumber.of_int 3)))
+                   (expr_number (JsNumber.of_int (3))))
                   (expr_let "testResult"
                    (expr_app (expr_id "callbackfn")
                     [expr_id "T"; expr_id "argsObj"])
@@ -4244,12 +4267,12 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                      expr_false) expr_false
                     (expr_app (expr_id "loop")
                      [expr_op2 binary_op_add (expr_id "k")
-                      (expr_number (JsNumber.of_int 1))])))))))))
+                      (expr_number (JsNumber.of_int (1)))])))))))))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_add (expr_id "k")
-              (expr_number (JsNumber.of_int 1))])))) expr_true))
+              (expr_number (JsNumber.of_int (1)))])))) expr_true))
        (expr_break "ret"
-        (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])))))))))
+        (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))))))
 .
 Definition ex_privexplambda :=  expr_undefined .
 Definition ex_privfilterlambda := 
@@ -4270,7 +4293,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         (objattrs_intro (expr_string "Array") expr_true
          (expr_id "%ArrayProto") expr_null expr_undefined)
         [("length", property_data
-                    (data_intro (expr_number (JsNumber.of_int 0)) expr_true
+                    (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                      expr_false expr_false))])
        (expr_recc "loop"
         (expr_lambda ["k"; "to"]
@@ -4294,7 +4317,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   (expr_id "O"))
                  (expr_seq
                   (expr_set_field (expr_id "argsObj") (expr_string "length")
-                   (expr_number (JsNumber.of_int 3)))
+                   (expr_number (JsNumber.of_int (3))))
                   (expr_let "selected"
                    (expr_app (expr_id "callbackfn")
                     [expr_id "T"; expr_id "argsObj"])
@@ -4321,21 +4344,22 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                                           expr_false expr_false))]])
                      (expr_app (expr_id "loop")
                       [expr_op2 binary_op_add (expr_id "k")
-                       (expr_number (JsNumber.of_int 1));
+                       (expr_number (JsNumber.of_int (1)));
                        expr_op2 binary_op_add (expr_id "to")
-                       (expr_number (JsNumber.of_int 1))]))
+                       (expr_number (JsNumber.of_int (1)))]))
                     (expr_app (expr_id "loop")
                      [expr_op2 binary_op_add (expr_id "k")
-                      (expr_number (JsNumber.of_int 1));
+                      (expr_number (JsNumber.of_int (1)));
                       expr_id "to"])))))))))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_add (expr_id "k")
-              (expr_number (JsNumber.of_int 1));
+              (expr_number (JsNumber.of_int (1)));
               expr_id "to"])))
           (expr_set_field (expr_id "A") (expr_string "length") (expr_id "to"))))
         (expr_seq
          (expr_app (expr_id "loop")
-          [expr_number (JsNumber.of_int 0); expr_number (JsNumber.of_int 0)])
+          [expr_number (JsNumber.of_int (0));
+           expr_number (JsNumber.of_int (0))])
          (expr_break "ret" (expr_id "A")))))))))))
 .
 Definition ex_privforeachlambda := 
@@ -4377,11 +4401,11 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                 [expr_id "T"; expr_id "argslist"])))
              (expr_app (expr_id "loop")
               [expr_op2 binary_op_add (expr_id "k")
-               (expr_number (JsNumber.of_int 1))]))
+               (expr_number (JsNumber.of_int (1)))]))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_add (expr_id "k")
-              (expr_number (JsNumber.of_int 1))]))) expr_undefined))
-        (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])))
+              (expr_number (JsNumber.of_int (1)))]))) expr_undefined))
+        (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))
       expr_undefined))))))
 .
 Definition ex_privfreezelambda := 
@@ -4408,8 +4432,8 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
           expr_false)
          (expr_app (expr_id "loop")
           [expr_op2 binary_op_add (expr_id "i")
-           (expr_number (JsNumber.of_int 1))])))) expr_null))
-    (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])
+           (expr_number (JsNumber.of_int (1)))])))) expr_null))
+    (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
      (expr_seq (expr_set_obj_attr oattr_extensible (expr_id "O") expr_false)
       (expr_id "O")))))))
 .
@@ -4417,7 +4441,7 @@ Definition ex_privfromcclambda :=
 expr_if
 (expr_op2 binary_op_stx_eq
  (expr_get_field (expr_id "args") (expr_string "length"))
- (expr_number (JsNumber.of_int 0))) (expr_string "")
+ (expr_number (JsNumber.of_int (0)))) (expr_string "")
 (expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
  (expr_recc "loop"
   (expr_lambda ["i"; "soFar"]
@@ -4431,10 +4455,10 @@ expr_if
       (expr_op2 binary_op_string_plus (expr_id "soFar") (expr_id "char"))
       (expr_app (expr_id "loop")
        [expr_op2 binary_op_add (expr_id "i")
-        (expr_number (JsNumber.of_int 1));
+        (expr_number (JsNumber.of_int (1)));
         expr_id "next"]))) (expr_id "soFar")))
   (expr_app (expr_id "loop")
-   [expr_number (JsNumber.of_int 0); expr_string ""])))
+   [expr_number (JsNumber.of_int (0)); expr_string ""])))
 .
 Definition ex_privfunctionToStringlambda := 
 expr_string "function ToString"
@@ -4442,8 +4466,8 @@ expr_string "function ToString"
 Definition ex_privgetCurrentUTC := 
 expr_op1 unary_op_current_utc_millis (expr_string "ignored")
 .
-Definition ex_privgetMonthlambda :=  expr_number (JsNumber.of_int 3) .
-Definition ex_privgetYearlambda :=  expr_number (JsNumber.of_int 78) .
+Definition ex_privgetMonthlambda :=  expr_number (JsNumber.of_int (3)) .
+Definition ex_privgetYearlambda :=  expr_number (JsNumber.of_int (78)) .
 Definition ex_privgopdLambda := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
@@ -4591,7 +4615,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
    (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
     expr_null expr_undefined)
    [("length", property_data
-               (data_intro (expr_number (JsNumber.of_int 0)) expr_true
+               (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                 expr_false expr_false))])
   (expr_let "props" (expr_own_field_names (expr_id "O"))
    (expr_let "len" (expr_get_field (expr_id "props") (expr_string "length"))
@@ -4604,14 +4628,15 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
           (expr_op1 unary_op_prim_to_str
            (expr_op2 binary_op_sub (expr_id "len")
             (expr_op2 binary_op_add (expr_id "i")
-             (expr_number (JsNumber.of_int 1)))))
+             (expr_number (JsNumber.of_int (1))))))
           (expr_set_field (expr_id "A") (expr_id "to")
            (expr_get_field (expr_id "props") (expr_id "from")))))
         (expr_app (expr_id "loop")
          [expr_op2 binary_op_add (expr_id "i")
-          (expr_number (JsNumber.of_int 1))]))
+          (expr_number (JsNumber.of_int (1)))]))
        (expr_set_field (expr_id "A") (expr_string "length") (expr_id "i"))))
-     (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])
+     (expr_seq
+      (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
       (expr_id "A")))))))
 .
 Definition ex_privgpoLambda := 
@@ -4698,11 +4723,11 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            (expr_break "ret"
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_add (expr_id "i")
-              (expr_number (JsNumber.of_int 1))]))))))
+              (expr_number (JsNumber.of_int (1)))]))))))
        (expr_break "ret"
         (expr_op1 unary_op_not
          (expr_get_obj_attr oattr_extensible (expr_id "O")))))))
-    (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])))))
+    (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))
 .
 Definition ex_privisNaNlambda := 
 expr_let "n"
@@ -4729,11 +4754,11 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
         (expr_break "ret"
          (expr_app (expr_id "loop")
           [expr_op2 binary_op_add (expr_id "i")
-           (expr_number (JsNumber.of_int 1))])))
+           (expr_number (JsNumber.of_int (1)))])))
        (expr_break "ret"
         (expr_op1 unary_op_not
          (expr_get_obj_attr oattr_extensible (expr_id "O")))))))
-    (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])))))
+    (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))
 .
 Definition ex_privjoinlambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -4750,8 +4775,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_seq
      (expr_if
       (expr_op2 binary_op_stx_eq (expr_id "len")
-       (expr_number (JsNumber.of_int 0))) (expr_break "ret" (expr_string ""))
-      expr_null)
+       (expr_number (JsNumber.of_int (0))))
+      (expr_break "ret" (expr_string "")) expr_null)
      (expr_recc "loop"
       (expr_lambda ["k"; "R"]
        (expr_if (expr_op2 binary_op_ge (expr_id "k") (expr_id "len"))
@@ -4771,7 +4796,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
             (expr_app (expr_id "%ToString") [expr_id "element"]))
            (expr_app (expr_id "loop")
             [expr_op2 binary_op_add (expr_id "k")
-             (expr_number (JsNumber.of_int 1));
+             (expr_number (JsNumber.of_int (1)));
              expr_op2 binary_op_string_plus (expr_id "S") (expr_id "next")]))))))
       (expr_let "start"
        (expr_if
@@ -4786,7 +4811,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          [expr_get_field (expr_id "O") (expr_string "0")]))
        (expr_break "ret"
         (expr_app (expr_id "loop")
-         [expr_number (JsNumber.of_int 1); expr_id "start"])))))))))
+         [expr_number (JsNumber.of_int (1)); expr_id "start"])))))))))
 .
 Definition ex_privkeysLambda := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
@@ -4796,7 +4821,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
    (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
     expr_null expr_undefined)
    [("length", property_data
-               (data_intro (expr_number (JsNumber.of_int 0)) expr_true
+               (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                 expr_false expr_false))])
   (expr_let "names" (expr_own_field_names (expr_id "O"))
    (expr_let "len" (expr_get_field (expr_id "names") (expr_string "length"))
@@ -4829,18 +4854,18 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
               expr_id "pd"]))
            (expr_app (expr_id "loop")
             [expr_op2 binary_op_add (expr_id "i")
-             (expr_number (JsNumber.of_int 1));
+             (expr_number (JsNumber.of_int (1)));
              expr_op2 binary_op_add (expr_id "enumCount")
-             (expr_number (JsNumber.of_int 1))]))
+             (expr_number (JsNumber.of_int (1)))]))
           (expr_app (expr_id "loop")
            [expr_op2 binary_op_add (expr_id "i")
-            (expr_number (JsNumber.of_int 1));
+            (expr_number (JsNumber.of_int (1)));
             expr_id "enumCount"]))))
        (expr_set_field (expr_id "A") (expr_string "length")
         (expr_id "enumCount"))))
      (expr_seq
       (expr_app (expr_id "loop")
-       [expr_number (JsNumber.of_int 0); expr_number (JsNumber.of_int 0)])
+       [expr_number (JsNumber.of_int (0)); expr_number (JsNumber.of_int (0))])
       (expr_id "A")))))))
 .
 Definition ex_privlen := 
@@ -4849,11 +4874,11 @@ expr_recc "inner_len"
  (expr_if
   (expr_op2 binary_op_has_own_property (expr_id "list")
    (expr_op1 unary_op_prim_to_str (expr_id "iter")))
-  (expr_op2 binary_op_add (expr_number (JsNumber.of_int 1))
+  (expr_op2 binary_op_add (expr_number (JsNumber.of_int (1)))
    (expr_app (expr_id "inner_len")
-    [expr_op2 binary_op_add (expr_number (JsNumber.of_int 1))
+    [expr_op2 binary_op_add (expr_number (JsNumber.of_int (1)))
      (expr_id "iter")])) (expr_id "iter")))
-(expr_app (expr_id "inner_len") [expr_number (JsNumber.of_int 0)])
+(expr_app (expr_id "inner_len") [expr_number (JsNumber.of_int (0))])
 .
 Definition ex_privlocaleCompareLambda := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
@@ -4874,9 +4899,9 @@ expr_recc "loop"
     (expr_get_field (expr_id "s")
      (expr_op1 unary_op_prim_to_str (expr_id "i"))))
    (expr_app (expr_id "loop")
-    [expr_op2 binary_op_add (expr_id "i") (expr_number (JsNumber.of_int 1))]))
+    [expr_op2 binary_op_add (expr_id "i") (expr_number (JsNumber.of_int (1)))]))
   expr_undefined))
-(expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])
+(expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
 .
 Definition ex_privmaplambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -4917,7 +4942,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   (expr_id "O"))
                  (expr_seq
                   (expr_set_field (expr_id "argsObj") (expr_string "length")
-                   (expr_number (JsNumber.of_int 3)))
+                   (expr_number (JsNumber.of_int (3))))
                   (expr_seq
                    (expr_let "mappedValue"
                     (expr_app (expr_id "callbackfn")
@@ -4942,13 +4967,13 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                                          expr_false expr_false))]]))
                    (expr_app (expr_id "loop")
                     [expr_op2 binary_op_add (expr_id "k")
-                     (expr_number (JsNumber.of_int 1))]))))))))
+                     (expr_number (JsNumber.of_int (1)))]))))))))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_add (expr_id "k")
-              (expr_number (JsNumber.of_int 1))])))
+              (expr_number (JsNumber.of_int (1)))])))
           (expr_set_field (expr_id "A") (expr_string "length") (expr_id "k"))))
         (expr_seq
-         (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])
+         (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
          (expr_break "ret" (expr_id "A")))))))))))
 .
 Definition ex_privmathAbsLambda := 
@@ -4964,8 +4989,8 @@ expr_let "n"
   (expr_seq
    (expr_if
     (expr_op2 binary_op_stx_eq (expr_id "n")
-     (expr_number (JsNumber.of_int 0)))
-    (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+     (expr_number (JsNumber.of_int (0))))
+    (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
    (expr_break "ret" (expr_op1 unary_op_abs (expr_id "n"))))))
 .
 Definition ex_privmathCeilLambda := 
@@ -4982,13 +5007,13 @@ expr_let "x"
        (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x")))
       (expr_if (expr_id "%or") (expr_id "%or")
        (expr_op2 binary_op_stx_eq (expr_id "x")
-        (expr_number (JsNumber.of_int 0)))))
+        (expr_number (JsNumber.of_int (0))))))
      (expr_if (expr_id "%or") (expr_id "%or")
       (expr_op2 binary_op_stx_eq (expr_id "x")
-       (expr_number (JsNumber.of_int 0)))))
+       (expr_number (JsNumber.of_int (0))))))
     (expr_if (expr_id "%or") (expr_id "%or")
      (expr_op2 binary_op_stx_eq (expr_id "x")
-      (expr_number (JsNumber.of_int 0))))) (expr_break "ret" (expr_id "x"))
+      (expr_number (JsNumber.of_int (0)))))) (expr_break "ret" (expr_id "x"))
    expr_null) (expr_break "ret" (expr_op1 unary_op_ceil (expr_id "x")))))
 .
 Definition ex_privmathFloorLambda := 
@@ -5005,13 +5030,13 @@ expr_let "x"
        (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x")))
       (expr_if (expr_id "%or") (expr_id "%or")
        (expr_op2 binary_op_stx_eq (expr_id "x")
-        (expr_number (JsNumber.of_int 0)))))
+        (expr_number (JsNumber.of_int (0))))))
      (expr_if (expr_id "%or") (expr_id "%or")
       (expr_op2 binary_op_stx_eq (expr_id "x")
-       (expr_number (JsNumber.of_int 0)))))
+       (expr_number (JsNumber.of_int (0))))))
     (expr_if (expr_id "%or") (expr_id "%or")
      (expr_op2 binary_op_stx_eq (expr_id "x")
-      (expr_number (JsNumber.of_int 0))))) (expr_break "ret" (expr_id "x"))
+      (expr_number (JsNumber.of_int (0)))))) (expr_break "ret" (expr_id "x"))
    expr_null) (expr_break "ret" (expr_op1 unary_op_floor (expr_id "x")))))
 .
 Definition ex_privmathLogLambda := 
@@ -5026,22 +5051,22 @@ expr_let "n"
    (expr_break "ret" (expr_id "n")) expr_null)
   (expr_seq
    (expr_if
-    (expr_op2 binary_op_lt (expr_id "n") (expr_number (JsNumber.of_int 0)))
-    (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+    (expr_op2 binary_op_lt (expr_id "n") (expr_number (JsNumber.of_int (0))))
+    (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
    (expr_seq
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_id "n")
-      (expr_number (JsNumber.of_int 0)))
-     (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+      (expr_number (JsNumber.of_int (0))))
+     (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
     (expr_seq
      (expr_if
       (expr_op2 binary_op_stx_eq (expr_id "n")
-       (expr_number (JsNumber.of_int 1)))
-      (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+       (expr_number (JsNumber.of_int (1))))
+      (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
      (expr_seq
       (expr_if
        (expr_op2 binary_op_stx_eq (expr_id "n")
-        (expr_number (JsNumber.of_int 0))) (expr_break "ret" (expr_id "n"))
+        (expr_number (JsNumber.of_int (0)))) (expr_break "ret" (expr_id "n"))
        expr_null) (expr_break "ret" (expr_op1 unary_op_log (expr_id "n")))))))))
 .
 Definition ex_privmathMaxLambda := 
@@ -5049,14 +5074,14 @@ expr_app (expr_id "%minMaxLambda")
 [expr_id "this";
  expr_id "args";
  expr_id "%max";
- expr_number (JsNumber.of_int 0)]
+ expr_number (JsNumber.of_int (0))]
 .
 Definition ex_privmathMinLambda := 
 expr_app (expr_id "%minMaxLambda")
 [expr_id "this";
  expr_id "args";
  expr_id "%min";
- expr_number (JsNumber.of_int 0)]
+ expr_number (JsNumber.of_int (0))]
 .
 Definition ex_privmathPowLambda := 
 expr_let "x"
@@ -5070,12 +5095,12 @@ expr_let "x"
    (expr_if
     (expr_op1 unary_op_not
      (expr_op2 binary_op_stx_eq (expr_id "y") (expr_id "y")))
-    (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+    (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
    (expr_seq
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_id "y")
-      (expr_number (JsNumber.of_int 0)))
-     (expr_break "ret" (expr_number (JsNumber.of_int 1))) expr_null)
+      (expr_number (JsNumber.of_int (0))))
+     (expr_break "ret" (expr_number (JsNumber.of_int (1)))) expr_null)
     (expr_seq
      (expr_if
       (expr_if
@@ -5083,74 +5108,75 @@ expr_let "x"
         (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x")))
        (expr_op1 unary_op_not
         (expr_op2 binary_op_stx_eq (expr_id "y")
-         (expr_number (JsNumber.of_int 0)))) expr_false)
-      (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+         (expr_number (JsNumber.of_int (0))))) expr_false)
+      (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
      (expr_let "absX" (expr_op1 unary_op_abs (expr_id "x"))
       (expr_seq
        (expr_if
         (expr_if
          (expr_op2 binary_op_gt (expr_id "absX")
-          (expr_number (JsNumber.of_int 1)))
+          (expr_number (JsNumber.of_int (1))))
          (expr_op2 binary_op_stx_eq (expr_id "y")
-          (expr_number (JsNumber.of_int 0))) expr_false)
-        (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+          (expr_number (JsNumber.of_int (0)))) expr_false)
+        (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
        (expr_seq
         (expr_if
          (expr_if
           (expr_op2 binary_op_gt (expr_id "absX")
-           (expr_number (JsNumber.of_int 1)))
+           (expr_number (JsNumber.of_int (1))))
           (expr_op2 binary_op_stx_eq (expr_id "y")
-           (expr_number (JsNumber.of_int 0))) expr_false)
-         (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+           (expr_number (JsNumber.of_int (0)))) expr_false)
+         (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
         (expr_seq
          (expr_if
           (expr_if
            (expr_op2 binary_op_stx_eq (expr_id "absX")
-            (expr_number (JsNumber.of_int 1)))
+            (expr_number (JsNumber.of_int (1))))
            (expr_let "%or"
             (expr_op2 binary_op_stx_eq (expr_id "y")
-             (expr_number (JsNumber.of_int 0)))
+             (expr_number (JsNumber.of_int (0))))
             (expr_if (expr_id "%or") (expr_id "%or")
              (expr_op2 binary_op_stx_eq (expr_id "y")
-              (expr_number (JsNumber.of_int 0))))) expr_false)
-          (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+              (expr_number (JsNumber.of_int (0)))))) expr_false)
+          (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
          (expr_seq
           (expr_if
            (expr_if
             (expr_op2 binary_op_lt (expr_id "absX")
-             (expr_number (JsNumber.of_int 1)))
+             (expr_number (JsNumber.of_int (1))))
             (expr_op2 binary_op_stx_eq (expr_id "y")
-             (expr_number (JsNumber.of_int 0))) expr_false)
-           (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+             (expr_number (JsNumber.of_int (0)))) expr_false)
+           (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
           (expr_seq
            (expr_if
             (expr_if
              (expr_op2 binary_op_lt (expr_id "absX")
-              (expr_number (JsNumber.of_int 1)))
+              (expr_number (JsNumber.of_int (1))))
              (expr_op2 binary_op_stx_eq (expr_id "y")
-              (expr_number (JsNumber.of_int 0))) expr_false)
-            (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+              (expr_number (JsNumber.of_int (0)))) expr_false)
+            (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
            (expr_seq
             (expr_if
              (expr_if
               (expr_op2 binary_op_stx_eq (expr_id "x")
-               (expr_number (JsNumber.of_int 0)))
+               (expr_number (JsNumber.of_int (0))))
               (expr_op2 binary_op_gt (expr_id "y")
-               (expr_number (JsNumber.of_int 0))) expr_false)
-             (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+               (expr_number (JsNumber.of_int (0)))) expr_false)
+             (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
             (expr_seq
              (expr_if
               (expr_if
                (expr_op2 binary_op_stx_eq (expr_id "x")
-                (expr_number (JsNumber.of_int 0)))
+                (expr_number (JsNumber.of_int (0))))
                (expr_op2 binary_op_lt (expr_id "y")
-                (expr_number (JsNumber.of_int 0))) expr_false)
-              (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+                (expr_number (JsNumber.of_int (0)))) expr_false)
+              (expr_break "ret" (expr_number (JsNumber.of_int (0))))
+              expr_null)
              (expr_let "isOdd"
               (expr_lambda ["n"]
                (expr_let "divided"
                 (expr_op2 binary_op_div (expr_id "n")
-                 (expr_number (JsNumber.of_int 2)))
+                 (expr_number (JsNumber.of_int (2))))
                 (expr_if
                  (expr_op2 binary_op_stx_eq
                   (expr_op1 unary_op_floor (expr_id "n")) (expr_id "n"))
@@ -5162,39 +5188,39 @@ expr_let "x"
                (expr_if
                 (expr_if
                  (expr_op2 binary_op_stx_eq (expr_id "x")
-                  (expr_number (JsNumber.of_int 0)))
+                  (expr_number (JsNumber.of_int (0))))
                  (expr_op2 binary_op_gt (expr_id "y")
-                  (expr_number (JsNumber.of_int 0))) expr_false)
+                  (expr_number (JsNumber.of_int (0)))) expr_false)
                 (expr_break "ret"
                  (expr_if (expr_app (expr_id "isOdd") [expr_id "y"])
-                  (expr_number (JsNumber.of_int 0))
-                  (expr_number (JsNumber.of_int 0)))) expr_null)
+                  (expr_number (JsNumber.of_int (0)))
+                  (expr_number (JsNumber.of_int (0))))) expr_null)
                (expr_seq
                 (expr_if
                  (expr_if
                   (expr_op2 binary_op_stx_eq (expr_id "x")
-                   (expr_number (JsNumber.of_int 0)))
+                   (expr_number (JsNumber.of_int (0))))
                   (expr_op2 binary_op_lt (expr_id "y")
-                   (expr_number (JsNumber.of_int 0))) expr_false)
-                 (expr_break "ret" (expr_number (JsNumber.of_int 0)))
+                   (expr_number (JsNumber.of_int (0)))) expr_false)
+                 (expr_break "ret" (expr_number (JsNumber.of_int (0))))
                  expr_null)
                 (expr_seq
                  (expr_if
                   (expr_if
                    (expr_op2 binary_op_stx_eq (expr_id "x")
-                    (expr_number (JsNumber.of_int 0)))
+                    (expr_number (JsNumber.of_int (0))))
                    (expr_op2 binary_op_gt (expr_id "y")
-                    (expr_number (JsNumber.of_int 0))) expr_false)
-                  (expr_break "ret" (expr_number (JsNumber.of_int 0)))
+                    (expr_number (JsNumber.of_int (0)))) expr_false)
+                  (expr_break "ret" (expr_number (JsNumber.of_int (0))))
                   expr_null)
                  (expr_seq
                   (expr_if
                    (expr_if
                     (expr_op2 binary_op_stx_eq (expr_id "x")
-                     (expr_number (JsNumber.of_int 0)))
+                     (expr_number (JsNumber.of_int (0))))
                     (expr_op2 binary_op_lt (expr_id "y")
-                     (expr_number (JsNumber.of_int 0))) expr_false)
-                   (expr_break "ret" (expr_number (JsNumber.of_int 0)))
+                     (expr_number (JsNumber.of_int (0)))) expr_false)
+                   (expr_break "ret" (expr_number (JsNumber.of_int (0))))
                    expr_null)
                   (expr_seq
                    (expr_let "oddY"
@@ -5203,20 +5229,20 @@ expr_let "x"
                      (expr_if
                       (expr_if
                        (expr_op2 binary_op_stx_eq (expr_id "x")
-                        (expr_number (JsNumber.of_int 0)))
+                        (expr_number (JsNumber.of_int (0))))
                        (expr_op2 binary_op_lt (expr_id "y")
-                        (expr_number (JsNumber.of_int 0))) expr_false)
+                        (expr_number (JsNumber.of_int (0)))) expr_false)
                       (expr_id "oddY") expr_false)
-                     (expr_break "ret" (expr_number (JsNumber.of_int 0)))
+                     (expr_break "ret" (expr_number (JsNumber.of_int (0))))
                      expr_null))
                    (expr_seq
                     (expr_if
                      (expr_if
                       (expr_op2 binary_op_stx_eq (expr_id "x")
-                       (expr_number (JsNumber.of_int 0)))
+                       (expr_number (JsNumber.of_int (0))))
                       (expr_op2 binary_op_lt (expr_id "y")
-                       (expr_number (JsNumber.of_int 0))) expr_false)
-                     (expr_break "ret" (expr_number (JsNumber.of_int 0)))
+                       (expr_number (JsNumber.of_int (0)))) expr_false)
+                     (expr_break "ret" (expr_number (JsNumber.of_int (0))))
                      expr_null)
                     (expr_seq
                      (expr_let "isFinite"
@@ -5224,10 +5250,10 @@ expr_let "x"
                        (expr_if
                         (expr_op1 unary_op_not
                          (expr_op2 binary_op_stx_eq (expr_id "n")
-                          (expr_number (JsNumber.of_int 0))))
+                          (expr_number (JsNumber.of_int (0)))))
                         (expr_op1 unary_op_not
                          (expr_op2 binary_op_stx_eq (expr_id "n")
-                          (expr_number (JsNumber.of_int 0)))) expr_false))
+                          (expr_number (JsNumber.of_int (0))))) expr_false))
                       (expr_let "finiteX"
                        (expr_app (expr_id "isFinite") [expr_id "x"])
                        (expr_let "finiteY"
@@ -5237,15 +5263,15 @@ expr_let "x"
                           (expr_if
                            (expr_if
                             (expr_op2 binary_op_lt (expr_id "x")
-                             (expr_number (JsNumber.of_int 0)))
+                             (expr_number (JsNumber.of_int (0))))
                             (expr_id "finiteX") expr_false)
                            (expr_id "finiteY") expr_false)
                           (expr_op1 unary_op_not
                            (expr_op2 binary_op_stx_eq
                             (expr_op1 unary_op_floor (expr_id "y"))
                             (expr_id "y"))) expr_false)
-                         (expr_break "ret" (expr_number (JsNumber.of_int 0)))
-                         expr_null))))
+                         (expr_break "ret"
+                          (expr_number (JsNumber.of_int (0)))) expr_null))))
                      (expr_break "ret"
                       (expr_op2 binary_op_pow (expr_id "x") (expr_id "y"))))))))))))))))))))))))
 .
@@ -5274,7 +5300,7 @@ expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
  (expr_seq
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "end")
-    (expr_number (JsNumber.of_int 0))) (expr_break "ret" (expr_id "init"))
+    (expr_number (JsNumber.of_int (0)))) (expr_break "ret" (expr_id "init"))
    expr_null)
   (expr_recc "loop"
    (expr_lambda ["best"; "i"]
@@ -5287,14 +5313,14 @@ expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
        (expr_if
         (expr_op1 unary_op_not
          (expr_op2 binary_op_stx_eq (expr_id "curr") (expr_id "curr")))
-        (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+        (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
        (expr_app (expr_id "loop")
         [expr_app (expr_id "op") [expr_id "best"; expr_id "curr"];
          expr_op2 binary_op_add (expr_id "i")
-         (expr_number (JsNumber.of_int 1))]))) (expr_id "best")))
+         (expr_number (JsNumber.of_int (1)))]))) (expr_id "best")))
    (expr_break "ret"
     (expr_app (expr_id "loop")
-     [expr_id "init"; expr_number (JsNumber.of_int 0)])))))
+     [expr_id "init"; expr_number (JsNumber.of_int (0))])))))
 .
 Definition ex_privmkArgsObj := 
 expr_let "argsObj" (expr_app (expr_id "%mkArgsObjBase") [expr_id "args"])
@@ -5353,7 +5379,7 @@ expr_let "keys" (expr_own_field_names (expr_id "args"))
                            expr_false))]])
         (expr_app (expr_id "loop")
          [expr_op2 binary_op_add (expr_id "iter")
-          (expr_number (JsNumber.of_int 1))]))
+          (expr_number (JsNumber.of_int (1)))]))
        (expr_app (expr_id "%defineOwnProperty")
         [expr_id "argsObj";
          expr_string "length";
@@ -5371,7 +5397,7 @@ expr_let "keys" (expr_own_field_names (expr_id "args"))
           ("enumerable", property_data
                          (data_intro expr_false expr_false expr_false
                           expr_false))]]))))
-    (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])
+    (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
      (expr_id "argsObj"))))))
 .
 Definition ex_privmkNewArgsObj := 
@@ -5418,26 +5444,27 @@ expr_recc "nts"
    (expr_seq
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_id "n")
-      (expr_number (JsNumber.of_int 0))) (expr_break "ret" (expr_string "0"))
-     expr_null)
+      (expr_number (JsNumber.of_int (0))))
+     (expr_break "ret" (expr_string "0")) expr_null)
     (expr_seq
      (expr_if
-      (expr_op2 binary_op_lt (expr_id "n") (expr_number (JsNumber.of_int 0)))
+      (expr_op2 binary_op_lt (expr_id "n")
+       (expr_number (JsNumber.of_int (0))))
       (expr_break "ret"
        (expr_op2 binary_op_string_plus (expr_string "-")
         (expr_app (expr_id "nts")
-         [expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
+         [expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
           (expr_id "n");
           expr_id "r"]))) expr_null)
      (expr_seq
       (expr_if
        (expr_op2 binary_op_stx_eq (expr_id "n")
-        (expr_number (JsNumber.of_int 0)))
+        (expr_number (JsNumber.of_int (0))))
        (expr_break "ret" (expr_string "Infinity")) expr_null)
       (expr_seq
        (expr_if
         (expr_op2 binary_op_stx_eq (expr_id "r")
-         (expr_number (JsNumber.of_int 10)))
+         (expr_number (JsNumber.of_int (10))))
         (expr_break "ret" (expr_op1 unary_op_prim_to_str (expr_id "n")))
         expr_null)
        (expr_break "ret"
@@ -5462,15 +5489,15 @@ expr_let "notNumProto"
   (expr_if
    (expr_op2 binary_op_stx_eq
     (expr_get_field (expr_id "args") (expr_string "0")) expr_undefined)
-   (expr_number (JsNumber.of_int 10))
+   (expr_number (JsNumber.of_int (10)))
    (expr_app (expr_id "%ToInteger")
     [expr_get_field (expr_id "args") (expr_string "0")]))
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "rint")
-    (expr_number (JsNumber.of_int 10)))
+    (expr_number (JsNumber.of_int (10))))
    (expr_app (expr_id "%numToStringAbstract")
     [expr_get_obj_attr oattr_primval (expr_id "this");
-     expr_number (JsNumber.of_int 10)])
+     expr_number (JsNumber.of_int (10))])
    (expr_if
     (expr_op1 unary_op_not
      (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "rint"))
@@ -5478,10 +5505,10 @@ expr_let "notNumProto"
     (expr_if
      (expr_let "%or"
       (expr_op2 binary_op_lt (expr_id "rint")
-       (expr_number (JsNumber.of_int 2)))
+       (expr_number (JsNumber.of_int (2))))
       (expr_if (expr_id "%or") (expr_id "%or")
        (expr_op2 binary_op_gt (expr_id "rint")
-        (expr_number (JsNumber.of_int 36)))))
+        (expr_number (JsNumber.of_int (36))))))
      (expr_throw (expr_string "RangeError"))
      (expr_app (expr_id "%numToStringAbstract")
       [expr_get_obj_attr oattr_primval (expr_id "this"); expr_id "rint"]))))))
@@ -5508,16 +5535,16 @@ expr_app (expr_id "%mkArgsObj")
  [("0", property_data
         (data_intro (expr_id "arg") expr_false expr_false expr_false));
   ("length", property_data
-             (data_intro (expr_number (JsNumber.of_int 1)) expr_false
+             (data_intro (expr_number (JsNumber.of_int (1))) expr_false
               expr_false expr_false))]]
 .
-Definition ex_privparse :=  expr_number (JsNumber.of_int 0) .
+Definition ex_privparse :=  expr_number (JsNumber.of_int (0)) .
 Definition ex_privparseFloatLambda :=  expr_string "parseFloat NYI" .
 Definition ex_privparseIntlambda := 
 expr_let "numstr"
 (expr_app (expr_id "%ToString")
  [expr_get_field (expr_id "args") (expr_string "0")])
-(expr_op1 unary_op_numstr_to_num (expr_id "numstr"))
+(expr_op1 unary_op_prim_to_num (expr_id "numstr"))
 .
 Definition ex_privpoplambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -5525,14 +5552,14 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "len")
-    (expr_number (JsNumber.of_int 0)))
+    (expr_number (JsNumber.of_int (0))))
    (expr_seq
     (expr_set_field (expr_id "O") (expr_string "length")
-     (expr_number (JsNumber.of_int 0))) expr_undefined)
+     (expr_number (JsNumber.of_int (0)))) expr_undefined)
    (expr_let "indx"
     (expr_app (expr_id "%ToString")
      [expr_op2 binary_op_sub (expr_id "len")
-      (expr_number (JsNumber.of_int 1))])
+      (expr_number (JsNumber.of_int (1)))])
     (expr_let "element" (expr_get_field (expr_id "O") (expr_id "indx"))
      (expr_seq (expr_delete_field (expr_id "O") (expr_id "indx"))
       (expr_seq
@@ -5556,9 +5583,9 @@ expr_recc "loop"
     (expr_app (expr_id "fn")
      [expr_get_field (expr_id "arr") (expr_id "istr")])
     (expr_app (expr_id "loop")
-     [expr_op2 binary_op_add (expr_id "i") (expr_number (JsNumber.of_int 1))]))
-   expr_undefined)))
-(expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])
+     [expr_op2 binary_op_add (expr_id "i")
+      (expr_number (JsNumber.of_int (1)))])) expr_undefined)))
+(expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
 .
 Definition ex_privprintlambda := 
 expr_op1 unary_op_print
@@ -5612,8 +5639,8 @@ expr_let "aux"
             expr_undefined)
            (expr_app (expr_id "loop")
             [expr_op2 binary_op_add (expr_id "i")
-             (expr_number (JsNumber.of_int 1))]))) expr_undefined))
-       (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)]))))
+             (expr_number (JsNumber.of_int (1)))]))) expr_undefined))
+       (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))]))))
     (expr_app (expr_id "helper")
      [expr_get_obj_attr oattr_proto (expr_id "obj")]))))
  (expr_seq (expr_app (expr_id "helper") [expr_id "obj"])
@@ -5645,13 +5672,13 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          expr_get_field (expr_id "args") (expr_id "ii")]))
       (expr_app (expr_id "loop")
        [expr_op2 binary_op_add (expr_id "i")
-        (expr_number (JsNumber.of_int 1));
+        (expr_number (JsNumber.of_int (1)));
         expr_op2 binary_op_add (expr_id "n")
-        (expr_number (JsNumber.of_int 1))])) (expr_id "n")))
+        (expr_number (JsNumber.of_int (1)))])) (expr_id "n")))
    (expr_app (expr_id "loop")
-    [expr_number (JsNumber.of_int 0); expr_id "len"]))))
+    [expr_number (JsNumber.of_int (0)); expr_id "len"]))))
 .
-Definition ex_privrandomLambda :=  expr_number (JsNumber.of_int 4) .
+Definition ex_privrandomLambda :=  expr_number (JsNumber.of_int (4)) .
 Definition ex_privreduceRightLambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
@@ -5660,7 +5687,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_let "has_initial"
     (expr_op2 binary_op_ge
      (expr_get_field (expr_id "args") (expr_string "length"))
-     (expr_number (JsNumber.of_int 2)))
+     (expr_number (JsNumber.of_int (2))))
     (expr_label "ret"
      (expr_seq
       (expr_if
@@ -5672,7 +5699,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_if
         (expr_if
          (expr_op2 binary_op_stx_eq (expr_id "len")
-          (expr_number (JsNumber.of_int 0)))
+          (expr_number (JsNumber.of_int (0))))
          (expr_op1 unary_op_not (expr_id "has_initial")) expr_false)
         (expr_app (expr_id "%TypeError")
          [expr_string "Zero-length array in reduceRight"]) expr_null)
@@ -5682,18 +5709,18 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
           (expr_lambda ["k"]
            (expr_if
             (expr_op2 binary_op_ge (expr_id "k")
-             (expr_number (JsNumber.of_int 0)))
+             (expr_number (JsNumber.of_int (0))))
             (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
              (expr_let "kPresent"
               (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
               (expr_if (expr_id "kPresent") (expr_id "k")
                (expr_app (expr_id "accumLoop")
                 [expr_op2 binary_op_sub (expr_id "k")
-                 (expr_number (JsNumber.of_int 1))]))))
+                 (expr_number (JsNumber.of_int (1)))]))))
             (expr_app (expr_id "%TypeError") [expr_string "reduceRight"])))
           (expr_app (expr_id "accumLoop")
            [expr_op2 binary_op_sub (expr_id "len")
-            (expr_number (JsNumber.of_int 1))])))
+            (expr_number (JsNumber.of_int (1)))])))
         (expr_let "accumulator"
          (expr_if (expr_id "has_initial")
           (expr_get_field (expr_id "args") (expr_string "1"))
@@ -5703,7 +5730,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
           (expr_lambda ["k"; "accumulator"]
            (expr_if
             (expr_op2 binary_op_ge (expr_id "k")
-             (expr_number (JsNumber.of_int 0)))
+             (expr_number (JsNumber.of_int (0))))
             (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
              (expr_let "kPresent"
               (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
@@ -5729,22 +5756,22 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                      (expr_seq
                       (expr_set_field (expr_id "argsObj")
                        (expr_string "length")
-                       (expr_number (JsNumber.of_int 4)))
+                       (expr_number (JsNumber.of_int (4))))
                       (expr_let "next"
                        (expr_app (expr_id "callbackfn")
                         [expr_undefined; expr_id "argsObj"])
                        (expr_app (expr_id "outerLoop")
                         [expr_op2 binary_op_sub (expr_id "k")
-                         (expr_number (JsNumber.of_int 1));
+                         (expr_number (JsNumber.of_int (1)));
                          expr_id "next"])))))))))
                (expr_app (expr_id "outerLoop")
                 [expr_op2 binary_op_sub (expr_id "k")
-                 (expr_number (JsNumber.of_int 1));
+                 (expr_number (JsNumber.of_int (1)));
                  expr_id "accumulator"])))) (expr_id "accumulator")))
           (expr_break "ret"
            (expr_app (expr_id "outerLoop")
             [expr_op2 binary_op_sub (expr_id "origK")
-             (expr_number (JsNumber.of_int 1));
+             (expr_number (JsNumber.of_int (1)));
              expr_id "accumulator"]))))))))))))
 .
 Definition ex_privreducelambda := 
@@ -5755,7 +5782,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_let "has_initial"
     (expr_op2 binary_op_ge
      (expr_get_field (expr_id "args") (expr_string "length"))
-     (expr_number (JsNumber.of_int 2)))
+     (expr_number (JsNumber.of_int (2))))
     (expr_label "ret"
      (expr_seq
       (expr_if
@@ -5767,15 +5794,15 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_if
         (expr_if
          (expr_op2 binary_op_stx_eq (expr_id "len")
-          (expr_number (JsNumber.of_int 0)))
+          (expr_number (JsNumber.of_int (0))))
          (expr_op1 unary_op_not (expr_id "has_initial")) expr_false)
         (expr_app (expr_id "%TypeError")
          [expr_string "Reducing an empty list with not enough arguments."])
         expr_null)
        (expr_let "origK"
         (expr_if (expr_id "has_initial")
-         (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-          (expr_number (JsNumber.of_int 1)))
+         (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+          (expr_number (JsNumber.of_int (1))))
          (expr_recc "accumLoop"
           (expr_lambda ["k"]
            (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
@@ -5785,9 +5812,9 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
               (expr_if (expr_id "kPresent") (expr_id "k")
                (expr_app (expr_id "accumLoop")
                 [expr_op2 binary_op_add (expr_id "k")
-                 (expr_number (JsNumber.of_int 1))]))))
+                 (expr_number (JsNumber.of_int (1)))]))))
             (expr_app (expr_id "%TypeError") [expr_string "In Array reduce"])))
-          (expr_app (expr_id "accumLoop") [expr_number (JsNumber.of_int 0)])))
+          (expr_app (expr_id "accumLoop") [expr_number (JsNumber.of_int (0))])))
         (expr_let "accumulator"
          (expr_if (expr_id "has_initial")
           (expr_get_field (expr_id "args") (expr_string "1"))
@@ -5821,22 +5848,22 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                      (expr_seq
                       (expr_set_field (expr_id "argsObj")
                        (expr_string "length")
-                       (expr_number (JsNumber.of_int 4)))
+                       (expr_number (JsNumber.of_int (4))))
                       (expr_let "next"
                        (expr_app (expr_id "callbackfn")
                         [expr_undefined; expr_id "argsObj"])
                        (expr_app (expr_id "outerLoop")
                         [expr_op2 binary_op_add (expr_id "k")
-                         (expr_number (JsNumber.of_int 1));
+                         (expr_number (JsNumber.of_int (1)));
                          expr_id "next"])))))))))
                (expr_app (expr_id "outerLoop")
                 [expr_op2 binary_op_add (expr_id "k")
-                 (expr_number (JsNumber.of_int 1));
+                 (expr_number (JsNumber.of_int (1)));
                  expr_id "accumulator"])))) (expr_id "accumulator")))
           (expr_break "ret"
            (expr_app (expr_id "outerLoop")
             [expr_op2 binary_op_add (expr_id "origK")
-             (expr_number (JsNumber.of_int 1));
+             (expr_number (JsNumber.of_int (1)));
              expr_id "accumulator"]))))))))))))
 .
 Definition ex_privreplacelambda := 
@@ -5856,8 +5883,8 @@ expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
        [expr_id "str"; expr_app (expr_id "%oneArgObj") [expr_id "search"]])
       (expr_if
        (expr_op2 binary_op_stx_eq (expr_id "start")
-        (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-         (expr_number (JsNumber.of_int 1)))) (expr_id "str")
+        (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+         (expr_number (JsNumber.of_int (1))))) (expr_id "str")
        (expr_let "replaced"
         (expr_app (expr_id "%ToString")
          [expr_app (expr_id "replace")
@@ -5867,7 +5894,7 @@ expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
          (expr_app (expr_id "%substringlambda")
           [expr_id "str";
            expr_app (expr_id "%twoArgObj")
-           [expr_number (JsNumber.of_int 0); expr_id "start"]])
+           [expr_number (JsNumber.of_int (0)); expr_id "start"]])
          (expr_let "afterix"
           (expr_op2 binary_op_add (expr_id "start")
            (expr_op1 unary_op_strlen (expr_id "search")))
@@ -5919,7 +5946,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
   (expr_let "middle"
    (expr_op1 unary_op_floor
-    (expr_op2 binary_op_div (expr_id "len") (expr_number (JsNumber.of_int 2))))
+    (expr_op2 binary_op_div (expr_id "len")
+     (expr_number (JsNumber.of_int (2)))))
    (expr_recc "loop"
     (expr_lambda ["lower"]
      (expr_if
@@ -5929,7 +5957,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_let "upper"
         (expr_op2 binary_op_sub
          (expr_op2 binary_op_sub (expr_id "len") (expr_id "lower"))
-         (expr_number (JsNumber.of_int 1)))
+         (expr_number (JsNumber.of_int (1))))
         (expr_let "upperP" (expr_app (expr_id "%ToString") [expr_id "upper"])
          (expr_let "lowerP"
           (expr_app (expr_id "%ToString") [expr_id "lower"])
@@ -5956,7 +5984,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   (expr_break "ret"
                    (expr_app (expr_id "loop")
                     [expr_op2 binary_op_add (expr_id "lower")
-                     (expr_number (JsNumber.of_int 1))])))) expr_null)
+                     (expr_number (JsNumber.of_int (1)))])))) expr_null)
                (expr_seq
                 (expr_if (expr_id "upperExists")
                  (expr_seq
@@ -5967,7 +5995,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                    (expr_break "ret"
                     (expr_app (expr_id "loop")
                      [expr_op2 binary_op_add (expr_id "lower")
-                      (expr_number (JsNumber.of_int 1))])))) expr_null)
+                      (expr_number (JsNumber.of_int (1)))])))) expr_null)
                 (expr_seq
                  (expr_if (expr_id "lowerExists")
                   (expr_seq
@@ -5978,13 +6006,13 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                     (expr_break "ret"
                      (expr_app (expr_id "loop")
                       [expr_op2 binary_op_add (expr_id "lower")
-                       (expr_number (JsNumber.of_int 1))])))) expr_null)
+                       (expr_number (JsNumber.of_int (1)))])))) expr_null)
                  (expr_break "ret"
                   (expr_app (expr_id "loop")
                    [expr_op2 binary_op_add (expr_id "lower")
-                    (expr_number (JsNumber.of_int 1))])))))))))))))
+                    (expr_number (JsNumber.of_int (1)))])))))))))))))
       expr_undefined))
-    (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])
+    (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
      (expr_id "O"))))))
 .
 Definition ex_privroundLambda :=  expr_string "round NYI" .
@@ -6005,8 +6033,8 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
           expr_false))
         (expr_app (expr_id "loop")
          [expr_op2 binary_op_add (expr_id "i")
-          (expr_number (JsNumber.of_int 1))])) expr_null))
-     (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)]))))
+          (expr_number (JsNumber.of_int (1)))])) expr_null))
+     (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))]))))
   (expr_seq (expr_set_obj_attr oattr_extensible (expr_id "O") expr_false)
    (expr_id "O"))))
 .
@@ -6030,7 +6058,7 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
          (expr_app (expr_id "%ToString") [expr_id "uint"]) (expr_id "fld"))
         (expr_op1 unary_op_not
          (expr_op2 binary_op_stx_eq (expr_id "uint")
-          (expr_number (JsNumber.of_int 4294967295)))) expr_false)))
+          (expr_number (JsNumber.of_int (4294967295))))) expr_false)))
      (expr_let "setArrayField"
       (expr_lambda []
        (expr_let "lenCheck"
@@ -6069,10 +6097,10 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
              (expr_if
               (expr_op2 binary_op_lt (expr_id "len")
                (expr_op2 binary_op_add (expr_id "uint")
-                (expr_number (JsNumber.of_int 1))))
+                (expr_number (JsNumber.of_int (1)))))
               (expr_set_field (expr_id "obj") (expr_string "length")
                (expr_op2 binary_op_add (expr_id "uint")
-                (expr_number (JsNumber.of_int 1)))) expr_undefined)))
+                (expr_number (JsNumber.of_int (1))))) expr_undefined)))
            expr_undefined)))))
       (expr_if
        (expr_op2 binary_op_stx_eq
@@ -6086,10 +6114,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "len")
-    (expr_number (JsNumber.of_int 0)))
+    (expr_number (JsNumber.of_int (0))))
    (expr_seq
     (expr_set_field (expr_id "O") (expr_string "length")
-     (expr_number (JsNumber.of_int 0))) expr_undefined)
+     (expr_number (JsNumber.of_int (0)))) expr_undefined)
    (expr_let "first" (expr_get_field (expr_id "O") (expr_string "0"))
     (expr_seq
      (expr_recc "loop"
@@ -6102,7 +6130,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
           (expr_let "to"
            (expr_app (expr_id "%ToString")
             [expr_op2 binary_op_sub (expr_id "k")
-             (expr_number (JsNumber.of_int 1))])
+             (expr_number (JsNumber.of_int (1)))])
            (expr_let "fromPresent"
             (expr_op2 binary_op_has_property (expr_id "O") (expr_id "from"))
             (expr_if (expr_id "fromPresent")
@@ -6114,16 +6142,16 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
               (expr_break "ret"
                (expr_app (expr_id "loop")
                 [expr_op2 binary_op_add (expr_id "k")
-                 (expr_number (JsNumber.of_int 1))])))
+                 (expr_number (JsNumber.of_int (1)))])))
              (expr_seq (expr_delete_field (expr_id "O") (expr_id "to"))
               (expr_break "ret"
                (expr_app (expr_id "loop")
                 [expr_op2 binary_op_add (expr_id "k")
-                 (expr_number (JsNumber.of_int 1))]))))))))))
-      (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 1)]))
+                 (expr_number (JsNumber.of_int (1)))]))))))))))
+      (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (1))]))
      (expr_let "newLen"
       (expr_op2 binary_op_sub (expr_id "len")
-       (expr_number (JsNumber.of_int 1)))
+       (expr_number (JsNumber.of_int (1))))
       (expr_seq
        (expr_delete_field (expr_id "O")
         (expr_app (expr_id "%ToString") [expr_id "newLen"]))
@@ -6144,18 +6172,18 @@ expr_let "n"
   (expr_seq
    (expr_if
     (expr_op2 binary_op_stx_eq (expr_id "n")
-     (expr_number (JsNumber.of_int 0))) (expr_break "ret" (expr_id "n"))
+     (expr_number (JsNumber.of_int (0)))) (expr_break "ret" (expr_id "n"))
     expr_null)
    (expr_seq
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_id "n")
-      (expr_number (JsNumber.of_int 0)))
-     (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+      (expr_number (JsNumber.of_int (0))))
+     (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
     (expr_seq
      (expr_if
       (expr_op2 binary_op_stx_eq (expr_id "n")
-       (expr_number (JsNumber.of_int 0)))
-      (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+       (expr_number (JsNumber.of_int (0))))
+      (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
      (expr_break "ret" (expr_op1 unary_op_sin (expr_id "n"))))))))
 .
 Definition ex_privslice_internal := 
@@ -6178,12 +6206,12 @@ expr_let "retObj"
       expr_undefined
       (expr_app (expr_id "inner_slice")
        [expr_op2 binary_op_add (expr_id "iter")
-        (expr_number (JsNumber.of_int 1));
+        (expr_number (JsNumber.of_int (1)));
         expr_op2 binary_op_add (expr_id "ix")
-        (expr_number (JsNumber.of_int 1))])))
+        (expr_number (JsNumber.of_int (1)))])))
     (expr_set_field (expr_id "retObj") (expr_string "length") (expr_id "ix"))))
   (expr_app (expr_id "inner_slice")
-   [expr_id "min"; expr_number (JsNumber.of_int 0)])) (expr_id "retObj"))
+   [expr_id "min"; expr_number (JsNumber.of_int (0))])) (expr_id "retObj"))
 .
 Definition ex_privslicelambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -6192,7 +6220,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
    expr_null expr_undefined)
   [("length", property_data
-              (data_intro (expr_number (JsNumber.of_int 0)) expr_true
+              (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                expr_false expr_false))])
  (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
   (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
@@ -6202,13 +6230,13 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_let "initk"
      (expr_if
       (expr_op2 binary_op_lt (expr_id "relativeStart")
-       (expr_number (JsNumber.of_int 0)))
+       (expr_number (JsNumber.of_int (0))))
       (expr_let "added"
        (expr_op2 binary_op_add (expr_id "len") (expr_id "relativeStart"))
        (expr_if
         (expr_op2 binary_op_gt (expr_id "added")
-         (expr_number (JsNumber.of_int 0))) (expr_id "added")
-        (expr_number (JsNumber.of_int 0))))
+         (expr_number (JsNumber.of_int (0)))) (expr_id "added")
+        (expr_number (JsNumber.of_int (0)))))
       (expr_if
        (expr_op2 binary_op_lt (expr_id "relativeStart") (expr_id "len"))
        (expr_id "relativeStart") (expr_id "len")))
@@ -6222,13 +6250,13 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       (expr_let "final"
        (expr_if
         (expr_op2 binary_op_lt (expr_id "relativeEnd")
-         (expr_number (JsNumber.of_int 0)))
+         (expr_number (JsNumber.of_int (0))))
         (expr_let "added"
          (expr_op2 binary_op_add (expr_id "len") (expr_id "relativeEnd"))
          (expr_if
           (expr_op2 binary_op_gt (expr_id "added")
-           (expr_number (JsNumber.of_int 0))) (expr_id "added")
-          (expr_number (JsNumber.of_int 0))))
+           (expr_number (JsNumber.of_int (0)))) (expr_id "added")
+          (expr_number (JsNumber.of_int (0)))))
         (expr_if
          (expr_op2 binary_op_lt (expr_id "relativeEnd") (expr_id "len"))
          (expr_id "relativeEnd") (expr_id "len")))
@@ -6266,25 +6294,25 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                (expr_break "ret"
                 (expr_app (expr_id "loop")
                  [expr_op2 binary_op_add (expr_id "n")
-                  (expr_number (JsNumber.of_int 1));
+                  (expr_number (JsNumber.of_int (1)));
                   expr_op2 binary_op_add (expr_id "k")
-                  (expr_number (JsNumber.of_int 1));
+                  (expr_number (JsNumber.of_int (1)));
                   expr_op2 binary_op_add (expr_id "finalLen")
-                  (expr_number (JsNumber.of_int 1))])))
+                  (expr_number (JsNumber.of_int (1)))])))
               (expr_break "ret"
                (expr_app (expr_id "loop")
                 [expr_op2 binary_op_add (expr_id "n")
-                 (expr_number (JsNumber.of_int 1));
+                 (expr_number (JsNumber.of_int (1)));
                  expr_op2 binary_op_add (expr_id "k")
-                 (expr_number (JsNumber.of_int 1));
+                 (expr_number (JsNumber.of_int (1)));
                  expr_op2 binary_op_add (expr_id "finalLen")
-                 (expr_number (JsNumber.of_int 1))]))))))))
+                 (expr_number (JsNumber.of_int (1)))]))))))))
         (expr_seq
          (expr_set_field (expr_id "A") (expr_string "length")
           (expr_app (expr_id "loop")
-           [expr_number (JsNumber.of_int 0);
+           [expr_number (JsNumber.of_int (0));
             expr_id "initk";
-            expr_number (JsNumber.of_int 0)])) (expr_id "A"))))))))))
+            expr_number (JsNumber.of_int (0))])) (expr_id "A"))))))))))
 .
 Definition ex_privsliolambda := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
@@ -6299,13 +6327,13 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
     (expr_if
      (expr_op1 unary_op_not
       (expr_op2 binary_op_stx_eq (expr_id "numPos") (expr_id "numPos")))
-     (expr_number (JsNumber.of_int 0))
+     (expr_number (JsNumber.of_int (0)))
      (expr_app (expr_id "%ToInteger") [expr_id "numPos"]))
     (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
      (expr_let "start"
       (expr_app (expr_id "%min")
        [expr_app (expr_id "%max")
-        [expr_id "pos"; expr_number (JsNumber.of_int 0)];
+        [expr_id "pos"; expr_number (JsNumber.of_int (0))];
         expr_id "len"])
       (expr_let "searchLen" (expr_op1 unary_op_strlen (expr_id "searchStr"))
        (expr_let "check_k"
@@ -6324,7 +6352,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
                 (expr_id "j")))) expr_false
              (expr_app (expr_id "check_j")
               [expr_op2 binary_op_add (expr_id "j")
-               (expr_number (JsNumber.of_int 1))]))))
+               (expr_number (JsNumber.of_int (1)))]))))
           (expr_if
            (expr_op1 unary_op_not
             (expr_op2 binary_op_le
@@ -6332,20 +6360,20 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
              (expr_id "len"))) expr_false
            (expr_if
             (expr_op1 unary_op_not
-             (expr_app (expr_id "check_j") [expr_number (JsNumber.of_int 0)]))
-            expr_false expr_true))))
+             (expr_app (expr_id "check_j")
+              [expr_number (JsNumber.of_int (0))])) expr_false expr_true))))
         (expr_recc "find_k"
          (expr_lambda ["curr"]
           (expr_if
            (expr_op2 binary_op_lt (expr_id "curr")
-            (expr_number (JsNumber.of_int 0)))
-           (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-            (expr_number (JsNumber.of_int 1)))
+            (expr_number (JsNumber.of_int (0))))
+           (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+            (expr_number (JsNumber.of_int (1))))
            (expr_if (expr_app (expr_id "check_k") [expr_id "curr"])
             (expr_id "curr")
             (expr_app (expr_id "find_k")
              [expr_op2 binary_op_sub (expr_id "curr")
-              (expr_number (JsNumber.of_int 1))]))))
+              (expr_number (JsNumber.of_int (1)))]))))
          (expr_app (expr_id "find_k") [expr_id "start"]))))))))))
 .
 Definition ex_privsomelambda := 
@@ -6384,7 +6412,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   (expr_id "O"))
                  (expr_seq
                   (expr_set_field (expr_id "argsObj") (expr_string "length")
-                   (expr_number (JsNumber.of_int 3)))
+                   (expr_number (JsNumber.of_int (3))))
                   (expr_let "testResult"
                    (expr_app (expr_id "callbackfn")
                     [expr_id "T"; expr_id "argsObj"])
@@ -6394,12 +6422,12 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                      expr_true) expr_true
                     (expr_app (expr_id "loop")
                      [expr_op2 binary_op_add (expr_id "k")
-                      (expr_number (JsNumber.of_int 1))])))))))))
+                      (expr_number (JsNumber.of_int (1)))])))))))))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_add (expr_id "k")
-              (expr_number (JsNumber.of_int 1))])))) expr_false))
+              (expr_number (JsNumber.of_int (1)))])))) expr_false))
        (expr_break "ret"
-        (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)])))))))))
+        (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))))))
 .
 Definition ex_privsortlambda := 
 expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -6416,15 +6444,15 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
         (expr_if
          (expr_if (expr_op2 binary_op_stx_eq (expr_id "hasj") expr_false)
           (expr_op2 binary_op_stx_eq (expr_id "hask") expr_false) expr_false)
-         (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+         (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
         (expr_seq
          (expr_if (expr_op2 binary_op_stx_eq (expr_id "hasj") expr_false)
-          (expr_break "ret" (expr_number (JsNumber.of_int 1))) expr_null)
+          (expr_break "ret" (expr_number (JsNumber.of_int (1)))) expr_null)
          (expr_seq
           (expr_if (expr_op2 binary_op_stx_eq (expr_id "hask") expr_false)
            (expr_break "ret"
-            (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-             (expr_number (JsNumber.of_int 1)))) expr_null)
+            (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+             (expr_number (JsNumber.of_int (1))))) expr_null)
           (expr_let "x" (expr_get_field (expr_id "obj") (expr_id "jString"))
            (expr_let "y" (expr_get_field (expr_id "obj") (expr_id "kString"))
             (expr_seq
@@ -6433,17 +6461,19 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                (expr_op2 binary_op_stx_eq (expr_id "x") expr_undefined)
                (expr_op2 binary_op_stx_eq (expr_id "y") expr_undefined)
                expr_false)
-              (expr_break "ret" (expr_number (JsNumber.of_int 0))) expr_null)
+              (expr_break "ret" (expr_number (JsNumber.of_int (0))))
+              expr_null)
              (expr_seq
               (expr_if
                (expr_op2 binary_op_stx_eq (expr_id "x") expr_undefined)
-               (expr_break "ret" (expr_number (JsNumber.of_int 1))) expr_null)
+               (expr_break "ret" (expr_number (JsNumber.of_int (1))))
+               expr_null)
               (expr_seq
                (expr_if
                 (expr_op2 binary_op_stx_eq (expr_id "y") expr_undefined)
                 (expr_break "ret"
-                 (expr_op2 binary_op_mul (expr_number (JsNumber.of_int -1))
-                  (expr_number (JsNumber.of_int 1)))) expr_null)
+                 (expr_op2 binary_op_mul (expr_number (JsNumber.of_int (-1)))
+                  (expr_number (JsNumber.of_int (1))))) expr_null)
                (expr_seq
                 (expr_if
                  (expr_op1 unary_op_not
@@ -6484,15 +6514,15 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                      (expr_id "yString"))
                     (expr_break "ret"
                      (expr_op2 binary_op_mul
-                      (expr_number (JsNumber.of_int -1))
-                      (expr_number (JsNumber.of_int 1)))) expr_null)
+                      (expr_number (JsNumber.of_int (-1)))
+                      (expr_number (JsNumber.of_int (1))))) expr_null)
                    (expr_seq
                     (expr_if
                      (expr_op2 binary_op_string_lt (expr_id "yString")
                       (expr_id "xString"))
-                     (expr_break "ret" (expr_number (JsNumber.of_int 1)))
+                     (expr_break "ret" (expr_number (JsNumber.of_int (1))))
                      expr_null)
-                    (expr_break "ret" (expr_number (JsNumber.of_int 0))))))))))))))))))))))
+                    (expr_break "ret" (expr_number (JsNumber.of_int (0)))))))))))))))))))))))
  (expr_let "insert"
   (expr_lambda ["elt"; "before"]
    (expr_recc "insertAndShift"
@@ -6505,7 +6535,7 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
          (expr_app (expr_id "insertAndShift")
           [expr_id "next";
            expr_op2 binary_op_add (expr_id "i")
-           (expr_number (JsNumber.of_int 1))]) expr_undefined)))))
+           (expr_number (JsNumber.of_int (1)))]) expr_undefined)))))
     (expr_recc "loop"
      (expr_lambda ["currIndex"]
       (expr_if
@@ -6517,18 +6547,18 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
           [expr_id "currIndex"; expr_id "before"])
          (expr_if
           (expr_op2 binary_op_stx_eq (expr_id "result")
-           (expr_number (JsNumber.of_int 1)))
+           (expr_number (JsNumber.of_int (1))))
           (expr_let "old" (expr_get_field (expr_id "obj") (expr_id "indx"))
            (expr_seq
             (expr_set_field (expr_id "obj") (expr_id "indx") (expr_id "elt"))
             (expr_app (expr_id "insertAndShift")
              [expr_id "old";
               expr_op2 binary_op_add (expr_id "currIndex")
-              (expr_number (JsNumber.of_int 1))])))
+              (expr_number (JsNumber.of_int (1)))])))
           (expr_app (expr_id "loop")
            [expr_op2 binary_op_add (expr_id "currIndex")
-            (expr_number (JsNumber.of_int 1))]))))))
-     (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0)]))))
+            (expr_number (JsNumber.of_int (1)))]))))))
+     (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))]))))
   (expr_let "len" (expr_get_field (expr_id "obj") (expr_string "length"))
    (expr_recc "isort"
     (expr_lambda ["i"]
@@ -6540,8 +6570,8 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
          expr_id "i"])
        (expr_app (expr_id "isort")
         [expr_op2 binary_op_add (expr_id "i")
-         (expr_number (JsNumber.of_int 1))])) (expr_id "obj")))
-    (expr_app (expr_id "isort") [expr_number (JsNumber.of_int 1)])))))
+         (expr_number (JsNumber.of_int (1)))])) (expr_id "obj")))
+    (expr_app (expr_id "isort") [expr_number (JsNumber.of_int (1))])))))
 .
 Definition ex_privsplicelambda := 
 expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
@@ -6556,7 +6586,7 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
      (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
       expr_null expr_undefined)
      [("length", property_data
-                 (data_intro (expr_number (JsNumber.of_int 0)) expr_true
+                 (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                   expr_false expr_false))])
     (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
      (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
@@ -6565,16 +6595,16 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
        (expr_let "actualStart"
         (expr_if
          (expr_op2 binary_op_lt (expr_id "relativeStart")
-          (expr_number (JsNumber.of_int 0)))
+          (expr_number (JsNumber.of_int (0))))
          (expr_app (expr_id "%max")
           [expr_op2 binary_op_add (expr_id "len") (expr_id "relativeStart");
-           expr_number (JsNumber.of_int 0)])
+           expr_number (JsNumber.of_int (0))])
          (expr_app (expr_id "%min") [expr_id "relativeStart"; expr_id "len"]))
         (expr_let "actualDeleteCount"
          (expr_app (expr_id "%min")
           [expr_app (expr_id "%max")
            [expr_app (expr_id "%ToInteger") [expr_id "deleteCount"];
-            expr_number (JsNumber.of_int 0)];
+            expr_number (JsNumber.of_int (0))];
            expr_op2 binary_op_sub (expr_id "len") (expr_id "actualStart")])
          (expr_seq
           (expr_recc "writeToALoop"
@@ -6613,19 +6643,19 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                  (expr_set_field (expr_id "A") (expr_string "length")
                   (expr_op2 binary_op_add
                    (expr_get_field (expr_id "A") (expr_string "length"))
-                   (expr_number (JsNumber.of_int 1))))
+                   (expr_number (JsNumber.of_int (1)))))
                  (expr_app (expr_id "writeToALoop")
                   [expr_op2 binary_op_add (expr_id "k")
-                   (expr_number (JsNumber.of_int 1))])))
+                   (expr_number (JsNumber.of_int (1)))])))
                (expr_app (expr_id "writeToALoop")
                 [expr_op2 binary_op_add (expr_id "k")
-                 (expr_number (JsNumber.of_int 1))]))) expr_undefined))
+                 (expr_number (JsNumber.of_int (1)))]))) expr_undefined))
            (expr_app (expr_id "writeToALoop")
-            [expr_number (JsNumber.of_int 0)]))
+            [expr_number (JsNumber.of_int (0))]))
           (expr_let "itemCount"
            (expr_op2 binary_op_sub
             (expr_get_field (expr_id "args") (expr_string "length"))
-            (expr_number (JsNumber.of_int 2)))
+            (expr_number (JsNumber.of_int (2))))
            (expr_seq
             (expr_let "step1"
              (expr_lambda []
@@ -6656,12 +6686,12 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                          (expr_get_field (expr_id "O") (expr_id "from")))
                         (expr_app (expr_id "writeToOLoop")
                          [expr_op2 binary_op_add (expr_id "k")
-                          (expr_number (JsNumber.of_int 1))]))
+                          (expr_number (JsNumber.of_int (1)))]))
                        (expr_seq
                         (expr_delete_field (expr_id "O") (expr_id "to"))
                         (expr_app (expr_id "writeToOLoop")
                          [expr_op2 binary_op_add (expr_id "k")
-                          (expr_number (JsNumber.of_int 1))])))))
+                          (expr_number (JsNumber.of_int (1)))])))))
                     expr_undefined))
                   (expr_app (expr_id "writeToOLoop") [expr_id "actualStart"])))
                 (expr_let "delLimit"
@@ -6674,7 +6704,7 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                     (expr_op2 binary_op_gt (expr_id "k") (expr_id "delLimit"))
                     (expr_let "next"
                      (expr_op2 binary_op_sub (expr_id "k")
-                      (expr_number (JsNumber.of_int 1)))
+                      (expr_number (JsNumber.of_int (1))))
                      (expr_seq
                       (expr_delete_field (expr_id "O")
                        (expr_app (expr_id "%ToString") [expr_id "next"]))
@@ -6697,12 +6727,12 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                     (expr_app (expr_id "%ToString")
                      [expr_op2 binary_op_add (expr_id "k")
                       (expr_op2 binary_op_sub (expr_id "actualDeleteCount")
-                       (expr_number (JsNumber.of_int 1)))])
+                       (expr_number (JsNumber.of_int (1))))])
                     (expr_let "to"
                      (expr_app (expr_id "%ToString")
                       [expr_op2 binary_op_add (expr_id "k")
                        (expr_op2 binary_op_sub (expr_id "itemCount")
-                        (expr_number (JsNumber.of_int 1)))])
+                        (expr_number (JsNumber.of_int (1))))])
                      (expr_if
                       (expr_op2 binary_op_has_property (expr_id "O")
                        (expr_id "from"))
@@ -6711,12 +6741,12 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                         (expr_get_field (expr_id "O") (expr_id "from")))
                        (expr_app (expr_id "writeToOLoop")
                         [expr_op2 binary_op_sub (expr_id "k")
-                         (expr_number (JsNumber.of_int 1))]))
+                         (expr_number (JsNumber.of_int (1)))]))
                       (expr_seq
                        (expr_delete_field (expr_id "O") (expr_id "to"))
                        (expr_app (expr_id "writeToOLoop")
                         [expr_op2 binary_op_sub (expr_id "k")
-                         (expr_number (JsNumber.of_int 1))])))))
+                         (expr_number (JsNumber.of_int (1)))])))))
                    expr_undefined))
                  (expr_app (expr_id "writeToOLoop")
                   [expr_op2 binary_op_sub (expr_id "len")
@@ -6737,11 +6767,11 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                      (expr_op1 unary_op_prim_to_str (expr_id "argsIndex"))))
                    (expr_app (expr_id "outerloop")
                     [expr_op2 binary_op_add (expr_id "k")
-                     (expr_number (JsNumber.of_int 1));
+                     (expr_number (JsNumber.of_int (1)));
                      expr_op2 binary_op_add (expr_id "argsIndex")
-                     (expr_number (JsNumber.of_int 1))])) expr_undefined))
+                     (expr_number (JsNumber.of_int (1)))])) expr_undefined))
                 (expr_app (expr_id "outerloop")
-                 [expr_id "actualStart"; expr_number (JsNumber.of_int 2)])))
+                 [expr_id "actualStart"; expr_number (JsNumber.of_int (2))])))
               (expr_seq
                (expr_set_field (expr_id "O") (expr_string "length")
                 (expr_op2 binary_op_add
@@ -6764,10 +6794,11 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
         (expr_op1 unary_op_prim_to_str (expr_id "i"))])
       (expr_app (expr_id "loop")
        [expr_op2 binary_op_add (expr_id "i")
-        (expr_number (JsNumber.of_int 1));
+        (expr_number (JsNumber.of_int (1)));
         expr_op2 binary_op_string_plus (expr_id "soFar") (expr_id "next")]))
      (expr_id "soFar")))
-   (expr_app (expr_id "loop") [expr_number (JsNumber.of_int 0); expr_id "S"]))))
+   (expr_app (expr_id "loop")
+    [expr_number (JsNumber.of_int (0)); expr_id "S"]))))
 .
 Definition ex_privstringSliceLambda := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
@@ -6783,23 +6814,23 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
      (expr_let "from"
       (expr_if
        (expr_op2 binary_op_lt (expr_id "intStart")
-        (expr_number (JsNumber.of_int 0)))
+        (expr_number (JsNumber.of_int (0))))
        (expr_app (expr_id "%max")
         [expr_op2 binary_op_add (expr_id "len") (expr_id "intStart");
-         expr_number (JsNumber.of_int 0)])
+         expr_number (JsNumber.of_int (0))])
        (expr_app (expr_id "%min") [expr_id "intStart"; expr_id "len"]))
       (expr_let "to"
        (expr_if
         (expr_op2 binary_op_lt (expr_id "intEnd")
-         (expr_number (JsNumber.of_int 0)))
+         (expr_number (JsNumber.of_int (0))))
         (expr_app (expr_id "%max")
          [expr_op2 binary_op_add (expr_id "len") (expr_id "intEnd");
-          expr_number (JsNumber.of_int 0)])
+          expr_number (JsNumber.of_int (0))])
         (expr_app (expr_id "%min") [expr_id "intEnd"; expr_id "len"]))
        (expr_let "span"
         (expr_app (expr_id "%max")
          [expr_op2 binary_op_sub (expr_id "to") (expr_id "from");
-          expr_number (JsNumber.of_int 0)])
+          expr_number (JsNumber.of_int (0))])
         (expr_recc "build"
          (expr_lambda ["i"; "result"]
           (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "span"))
@@ -6809,10 +6840,10 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
               (expr_op2 binary_op_add (expr_id "from") (expr_id "i"))))
             (expr_app (expr_id "build")
              [expr_op2 binary_op_add (expr_id "i")
-              (expr_number (JsNumber.of_int 1));
+              (expr_number (JsNumber.of_int (1)));
               expr_id "next"])) (expr_id "result")))
          (expr_app (expr_id "build")
-          [expr_number (JsNumber.of_int 0); expr_string ""]))))))))))
+          [expr_number (JsNumber.of_int (0)); expr_string ""]))))))))))
 .
 Definition ex_privstringToStringlambda := 
 expr_get_obj_attr oattr_primval (expr_id "this")
@@ -6831,12 +6862,12 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
     (expr_let "finalStart"
      (expr_app (expr_id "%min")
       [expr_app (expr_id "%max")
-       [expr_id "intStart"; expr_number (JsNumber.of_int 0)];
+       [expr_id "intStart"; expr_number (JsNumber.of_int (0))];
        expr_id "len"])
      (expr_let "finalEnd"
       (expr_app (expr_id "%min")
        [expr_app (expr_id "%max")
-        [expr_id "intEnd"; expr_number (JsNumber.of_int 0)];
+        [expr_id "intEnd"; expr_number (JsNumber.of_int (0))];
         expr_id "len"])
       (expr_let "from"
        (expr_app (expr_id "%min") [expr_id "finalStart"; expr_id "finalEnd"])
@@ -6847,7 +6878,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
           (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "to"))
            (expr_app (expr_id "loop")
             [expr_op2 binary_op_add (expr_id "i")
-             (expr_number (JsNumber.of_int 1));
+             (expr_number (JsNumber.of_int (1)));
              expr_op2 binary_op_string_plus (expr_id "soFar")
              (expr_op2 binary_op_char_at (expr_id "S") (expr_id "i"))])
            (expr_id "soFar")))
@@ -6873,9 +6904,10 @@ expr_let "f"
  (expr_seq
   (expr_if
    (expr_let "%or"
-    (expr_op2 binary_op_lt (expr_id "f") (expr_number (JsNumber.of_int 0)))
+    (expr_op2 binary_op_lt (expr_id "f") (expr_number (JsNumber.of_int (0))))
     (expr_if (expr_id "%or") (expr_id "%or")
-     (expr_op2 binary_op_gt (expr_id "f") (expr_number (JsNumber.of_int 20)))))
+     (expr_op2 binary_op_gt (expr_id "f")
+      (expr_number (JsNumber.of_int (20))))))
    (expr_throw
     (expr_app (expr_id "%JSError")
      [expr_object
@@ -6893,7 +6925,8 @@ expr_let "f"
      (expr_break "ret" (expr_string "NaN")) expr_null)
     (expr_seq
      (expr_if
-      (expr_op2 binary_op_ge (expr_id "x") (expr_number (JsNumber.of_int 0)))
+      (expr_op2 binary_op_ge (expr_id "x")
+       (expr_number (JsNumber.of_int (0))))
       (expr_break "ret" (expr_app (expr_id "%ToString") [expr_id "x"]))
       expr_null)
      (expr_break "ret"
@@ -6928,7 +6961,7 @@ expr_app (expr_id "%mkArgsObj")
   ("1", property_data
         (data_intro (expr_id "arg2") expr_false expr_false expr_false));
   ("length", property_data
-             (data_intro (expr_number (JsNumber.of_int 2)) expr_false
+             (data_intro (expr_number (JsNumber.of_int (2))) expr_false
               expr_false expr_false))]]
 .
 Definition ex_privunescapeLambda :=  expr_string "unescape NYI" .
@@ -6942,16 +6975,17 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_recc "Oloop"
      (expr_lambda ["k"]
       (expr_if
-       (expr_op2 binary_op_gt (expr_id "k") (expr_number (JsNumber.of_int 0)))
+       (expr_op2 binary_op_gt (expr_id "k")
+        (expr_number (JsNumber.of_int (0))))
        (expr_let "from"
         (expr_app (expr_id "%ToString")
          [expr_op2 binary_op_sub (expr_id "k")
-          (expr_number (JsNumber.of_int 1))])
+          (expr_number (JsNumber.of_int (1)))])
         (expr_let "to"
          (expr_app (expr_id "%ToString")
           [expr_op2 binary_op_add (expr_id "k")
            (expr_op2 binary_op_sub (expr_id "argCount")
-            (expr_number (JsNumber.of_int 1)))])
+            (expr_number (JsNumber.of_int (1))))])
          (expr_if
           (expr_op2 binary_op_has_property (expr_id "O") (expr_id "from"))
           (expr_seq
@@ -6959,11 +6993,11 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
             (expr_get_field (expr_id "O") (expr_id "from")))
            (expr_app (expr_id "Oloop")
             [expr_op2 binary_op_sub (expr_id "k")
-             (expr_number (JsNumber.of_int 1))]))
+             (expr_number (JsNumber.of_int (1)))]))
           (expr_seq (expr_delete_field (expr_id "O") (expr_id "to"))
            (expr_app (expr_id "Oloop")
             [expr_op2 binary_op_sub (expr_id "k")
-             (expr_number (JsNumber.of_int 1))]))))) expr_undefined))
+             (expr_number (JsNumber.of_int (1)))]))))) expr_undefined))
      (expr_app (expr_id "Oloop") [expr_id "len"]))
     (expr_seq
      (expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
@@ -6978,11 +7012,11 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
             (expr_op1 unary_op_prim_to_str (expr_id "argsIndex"))))
           (expr_app (expr_id "argsLoop")
            [expr_op2 binary_op_add (expr_id "argsIndex")
-            (expr_number (JsNumber.of_int 1));
+            (expr_number (JsNumber.of_int (1)));
             expr_op2 binary_op_add (expr_id "j")
-            (expr_number (JsNumber.of_int 1))])) expr_undefined))
+            (expr_number (JsNumber.of_int (1)))])) expr_undefined))
        (expr_app (expr_id "argsLoop")
-        [expr_number (JsNumber.of_int 0); expr_number (JsNumber.of_int 0)])))
+        [expr_number (JsNumber.of_int (0)); expr_number (JsNumber.of_int (0))])))
      (expr_let "finalLen"
       (expr_op2 binary_op_add (expr_id "len") (expr_id "argCount"))
       (expr_seq
@@ -7221,7 +7255,7 @@ value_closure
 Definition name_privCompareOp :=  "%CompareOp" .
 Definition privDateProto :=  value_object 167 .
 Definition name_privDateProto :=  "%DateProto" .
-Definition privmsPerDay :=  value_number (JsNumber.of_int 86400000) .
+Definition privmsPerDay :=  value_number (JsNumber.of_int (86400000)) .
 Definition name_privmsPerDay :=  "%msPerDay" .
 Definition privMakeDate := 
 value_closure
@@ -7318,11 +7352,11 @@ value_closure
   ("%msPerDay", privmsPerDay)] None ["yr"; "mt"; "date"] ex_privMakeDay)
 .
 Definition name_privMakeDay :=  "%MakeDay" .
-Definition privmsPerHour :=  value_number (JsNumber.of_int 3600000) .
+Definition privmsPerHour :=  value_number (JsNumber.of_int (3600000)) .
 Definition name_privmsPerHour :=  "%msPerHour" .
-Definition privmsPerMin :=  value_number (JsNumber.of_int 60000) .
+Definition privmsPerMin :=  value_number (JsNumber.of_int (60000)) .
 Definition name_privmsPerMin :=  "%msPerMin" .
-Definition privmsPerSecond :=  value_number (JsNumber.of_int 1000) .
+Definition privmsPerSecond :=  value_number (JsNumber.of_int (1000)) .
 Definition name_privmsPerSecond :=  "%msPerSecond" .
 Definition privMakeTime := 
 value_closure
@@ -10141,7 +10175,7 @@ Definition store_items := [
                                        attributes_data_configurable := true|});
                  ("Infinity", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_number (JsNumber.of_int 0);
+                                       value_number (JsNumber.of_int (0));
                                        attributes_data_writable := false;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := false|});
@@ -10153,7 +10187,7 @@ Definition store_items := [
                                        attributes_data_configurable := true|});
                  ("NaN", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_number (JsNumber.of_int 0);
+                                       value_number (JsNumber.of_int (0));
                                        attributes_data_writable := false;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := false|});
@@ -10334,7 +10368,7 @@ Definition store_items := [
                                        attributes_data_configurable := true|});
                  ("length", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_number (JsNumber.of_int 0);
+                                       value_number (JsNumber.of_int (0));
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := false|});
@@ -10353,7 +10387,7 @@ Definition store_items := [
       object_properties :=
       from_list [("length", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_number (JsNumber.of_int 0);
+                                       value_number (JsNumber.of_int (0));
                                        attributes_data_writable := false;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := false|})]|});
@@ -10522,7 +10556,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -10555,7 +10589,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 1;
          oattrs_class := "Number";
          oattrs_extensible := true;
-         oattrs_prim_value := value_number (JsNumber.of_int 0);
+         oattrs_prim_value := value_number (JsNumber.of_int (0));
          oattrs_code := objCode|};
        object_properties :=
        from_list [("constructor", 
@@ -10645,7 +10679,7 @@ Definition store_items := [
                                         attributes_data_configurable := true|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -10843,37 +10877,37 @@ Definition store_items := [
        object_properties :=
        from_list [("MAX_VALUE", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
                   ("MIN_VALUE", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
                   ("NEGATIVE_INFINITY", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
                   ("NaN", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
                   ("POSITIVE_INFINITY", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -10892,7 +10926,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -10934,7 +10968,7 @@ Definition store_items := [
                                         attributes_data_configurable := true|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -10953,7 +10987,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -10976,7 +11010,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -11022,7 +11056,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
@@ -11125,7 +11159,7 @@ Definition store_items := [
                                         attributes_data_configurable := true|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -11206,7 +11240,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -11219,7 +11253,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -11232,7 +11266,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -11245,7 +11279,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -11258,7 +11292,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -11271,7 +11305,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -11429,7 +11463,7 @@ Definition store_items := [
                                         attributes_data_configurable := true|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
@@ -11874,7 +11908,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -11910,7 +11944,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -11933,7 +11967,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -11946,7 +11980,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -11964,7 +11998,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -11995,7 +12029,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12013,7 +12047,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12044,7 +12078,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12062,7 +12096,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12093,7 +12127,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12111,7 +12145,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12142,7 +12176,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12196,7 +12230,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 0);
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12227,7 +12261,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12245,7 +12279,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12271,7 +12305,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12289,7 +12323,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int 1);
+                                        value_number (JsNumber.of_int (1));
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})]|});
@@ -12334,7 +12368,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12387,7 +12421,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12407,7 +12441,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12441,7 +12475,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12461,7 +12495,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12495,7 +12529,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12515,7 +12549,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12549,7 +12583,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12569,7 +12603,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12603,7 +12637,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12623,7 +12657,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12657,7 +12691,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12677,7 +12711,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12711,7 +12745,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12731,7 +12765,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12765,7 +12799,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12785,7 +12819,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12819,7 +12853,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12839,7 +12873,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12885,7 +12919,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12905,7 +12939,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12966,7 +13000,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -12986,7 +13020,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13020,7 +13054,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13040,7 +13074,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13074,7 +13108,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13094,7 +13128,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13128,7 +13162,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13148,7 +13182,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13182,7 +13216,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13202,7 +13236,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13236,7 +13270,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13256,7 +13290,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13302,7 +13336,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13328,7 +13362,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13380,7 +13414,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13401,7 +13435,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13415,7 +13449,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -13429,7 +13463,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15283,7 +15317,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15346,56 +15380,56 @@ Definition store_items := [
         object_properties :=
         from_list [("E", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("LN10", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("LN2", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 0);
+                                         value_number (JsNumber.of_int (0));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("LOG10E", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 0);
+                                         value_number (JsNumber.of_int (0));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("LOG2E", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("PI", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 3);
+                                         value_number (JsNumber.of_int (3));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("SQRT1_2", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 0);
+                                         value_number (JsNumber.of_int (0));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("SQRT2", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15518,7 +15552,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15544,7 +15578,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15578,7 +15612,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -15604,7 +15638,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 2);
+                                         value_number (JsNumber.of_int (2));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -16142,7 +16176,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable := true|})]|});
@@ -16161,7 +16195,7 @@ Definition store_items := [
                                          false|});
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 1);
+                                         value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -16375,7 +16409,7 @@ Definition store_items := [
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int 0);
+                                         value_number (JsNumber.of_int (0));
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=

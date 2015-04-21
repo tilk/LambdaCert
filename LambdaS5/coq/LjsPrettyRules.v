@@ -213,7 +213,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_op1_1 op o) o' ->
     red_expr c st (expr_op1 op e) o'
 | red_expr_op1_1 : forall c st' st op v v',
-    unary_operator op st v = result_some v' ->
+    eval_unary_op op st v v' ->
     red_expr c st' (expr_op1_1 op (out_ter st (res_value v))) (out_ter st (res_value v'))
 | red_expr_op1_1_abort : forall c st op o,
     abort o ->
@@ -396,26 +396,15 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_throw_1 o) o
 
 (* eval *)
-| red_expr_eval : forall c st e1 e2 o o',
-    red_expr c st e1 o ->
-    red_expr c st (expr_eval_1 o e2) o' ->
-    red_expr c st (expr_eval e1 e2) o' 
-| red_expr_eval_1 : forall c st st' v1 e2 o o',
-    red_expr c st e2 o ->
-    red_expr c st (expr_eval_2 v1 o) o' -> 
-    red_expr c st' (expr_eval_1 (out_ter st (res_value v1)) e2) o'
-| red_expr_eval_1_abort : forall c st e2 o,
-    abort o ->
-    red_expr c st (expr_eval_1 o e2) o
-| red_expr_eval_2 : forall c c1 st' st s e ptr obj o,
+| red_expr_eval : forall c st e1 e2 o,
+    red_expr c st (expr_eval_many_1 [e1; e2] nil expr_eval_1) o ->
+    red_expr c st (expr_eval e1 e2) o
+| red_expr_eval_1 : forall c c1 st s e ptr obj o,
     binds st ptr obj ->
     ctx_of_obj obj = Some c1 ->
     desugar_expr s = Some e ->
     red_expr c1 st e o ->
-    red_expr c st' (expr_eval_2 (value_string s) (out_ter st (res_value (value_object ptr)))) o
-| red_expr_eval_2_abort : forall c st v1 o,
-    abort o ->
-    red_expr c st (expr_eval_2 v1 o) o
+    red_expr c st (expr_eval_1 [value_string s; value_object ptr]) o
 
 (* hint *)
 | red_expr_hint : forall c st s e o,

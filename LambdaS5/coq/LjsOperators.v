@@ -22,31 +22,6 @@ Implicit Type obj : object.
 
 (****** Unary operators ******)
 
-Definition prim_to_str store (v : value) :=
-  match v with
-  | value_undefined => result_some (value_string "undefined")
-  | value_null => result_some (value_string "null")
-  | value_string s => result_some (value_string s)
-  | value_number n => result_some (value_string (JsNumber.to_string n))
-  | value_bool true => result_some (value_string "true")
-  | value_bool false => result_some (value_string "false")
-  | _ => result_fail "prim_to_str not implemented for this type."
-  end
-.
-
-Definition prim_to_num store (v : value) :=
-  match v with
-  | value_undefined => result_some (value_number JsNumber.nan)
-  | value_null => result_some (value_number JsNumber.zero)
-  | value_bool true => result_some (value_number JsNumber.one)
-  | value_bool false => result_some (value_number JsNumber.zero)
-  | value_number n => result_some (value_number n)
-  | value_string "" => result_some (value_number JsNumber.zero)
-  | value_string s => result_some (value_number (JsNumber.from_string s))
-  | _ => result_fail "prim_to_num got invalid value."
-  end
-.
-
 Definition nnot store (v : value) :=
   match v with
   | value_bool b => result_some (value_bool (!b))
@@ -60,12 +35,8 @@ Definition _seq {X Y : Type} (x : X) (y : Y) : Y :=
   y
 .
 
-Definition print store (v : value) :=
-  match v with
-  | value_string s => _seq (_print_string s) (result_some value_undefined)
-  | value_number n => _seq (_print_string (JsNumber.to_string n)) (result_some value_undefined)
-  | _ => _seq (_print_string "unsupported value") (result_some value_undefined)
-  end
+Definition print st v :=
+  _seq (_print_string (value_to_str_cast v)) (result_some value_undefined)
 .
 
 Definition pretty store v :=
@@ -78,14 +49,6 @@ Definition strlen store v :=
   match v with
   | value_string s => result_some (value_number (JsNumber.of_int (String.length s)))
   | _ => result_fail "strlen got non-string."
-  end
-.
-
-Definition numstr_to_num store (v : value) :=
-  match v with
-  | value_string "" => result_some (value_number JsNumber.zero)
-  | value_string s => result_some (value_number (JsNumber.from_string s))
-  | _ => result_fail "numstr_to_num got invalid value."
   end
 .
 
@@ -102,10 +65,6 @@ Definition unary_int_arith (op : int -> int) (v : value) : resultof value :=
   | _ => result_fail "Arithmetic with non-number."
   end
 .
-
-Definition _ascii_of_int (i : int) : Ascii.ascii := Ascii.ascii_of_N (Z.to_N i).
-
-Definition _int_of_ascii (c : Ascii.ascii) : int := Z.of_N (Ascii.N_of_ascii c).
 
 Definition ascii_ntoc (v : value) : resultof value :=
   match v with
@@ -132,11 +91,10 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
     | unary_op_is_object => result_some (value_bool (decide (is_object v)))
     | unary_op_abs => unary_arith JsNumber.absolute v
     | unary_op_floor => unary_arith JsNumber.floor v
-    | unary_op_prim_to_str => prim_to_str store v
-    | unary_op_prim_to_num => prim_to_num store v
-    | unary_op_prim_to_bool => result_some (value_bool (prim_to_bool v))
+    | unary_op_prim_to_str => result_some (value_string (value_to_str_cast v))
+    | unary_op_prim_to_num => result_some (value_number (value_to_num_cast v))
+    | unary_op_prim_to_bool => result_some (value_bool (value_to_bool_cast v))
     | unary_op_not => nnot store v
-    | unary_op_numstr_to_num => numstr_to_num store v
     | unary_op_bnot => unary_int_arith int32_bitwise_not v
     | unary_op_to_int32 => unary_int_arith (fun x => x) v
     | unary_op_ascii_ntoc => ascii_ntoc v

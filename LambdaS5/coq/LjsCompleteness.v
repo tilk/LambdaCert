@@ -7,6 +7,7 @@ Require Import LjsSyntax.
 Require Import LjsPrettyInterm.
 Require Import LjsPrettyRules.
 Require Import LjsPrettyRulesIndexed.
+Require Import LjsPrettyRulesIndexedInvert.
 Require Import LjsPrettyRulesIndexedAux.
 Require Import LjsStore.
 Require Import LjsCommon.
@@ -250,7 +251,7 @@ Ltac ljs_inv_red_internal :=
     | H	: red_exprh _ _ _ ?e _ |- _ => 
         match e with 
         | expr_basic _ => fail 
-        | _ => inverts H
+        | _ => inverts red_exprh H; tryfalse
         end
     end.
 
@@ -258,17 +259,18 @@ Ltac ljs_inv_red_inter :=
     match goal with
     | H	: red_exprh _ _ _ ?e _ |- _ => 
         match e with 
-        | expr_eval_many_1 _ _ _ => inverts H
-        | expr_object_1 _ _ => inverts H
-        | expr_object_data_1 _ _ _ _ => inverts H
-        | expr_object_accessor_1 _ _ _ _ => inverts H
-        | expr_get_attr_1 _ _ => inverts H
-        | expr_set_attr_1 _ _ => inverts H
-        | expr_set_obj_attr_1 _ _ => inverts H
-        | expr_get_field_1 _ => inverts H
-        | expr_set_field_1 _ => inverts H
-        | expr_delete_field_1 _ => inverts H
-        end; [idtac]
+        | expr_eval_many_1 _ _ _ => inverts red_exprh H
+        | expr_object_1 _ _ => inverts red_exprh H
+        | expr_object_data_1 _ _ _ _ => inverts red_exprh H
+        | expr_object_accessor_1 _ _ _ _ => inverts red_exprh H
+        | expr_get_attr_1 _ _ => inverts red_exprh H
+        | expr_set_attr_1 _ _ => inverts red_exprh H
+        | expr_set_obj_attr_1 _ _ => inverts red_exprh H
+        | expr_get_field_1 _ => inverts red_exprh H
+        | expr_set_field_1 _ => inverts red_exprh H
+        | expr_delete_field_1 _ => inverts red_exprh H
+        | expr_eval_1 _ => inverts red_exprh H
+        end; tryfalse; [idtac]
     end.
 
 Ltac ljs_inv_red_abort := ljs_inv_red_internal; [ | ljs_abort].
@@ -338,6 +340,14 @@ Proof.
     eauto.
 Qed.
 
+Lemma unary_op_lemma : forall op st v v',
+    eval_unary_op op st v v' ->
+    unary_operator op st v = result_some v'.
+Proof.
+    introv He.
+    inverts He as Hee; try inverts Hee; reflexivity.
+Qed.
+
 (* The main lemma *)
 
 Opaque read_option. 
@@ -405,15 +415,14 @@ Proof.
     (* own_field_names *)
     unfolds.
     repeat ljs_eval_push.
-    cases_let.
-    match goal with H : (_, _) = (_, _) |- _ => injects H end.
-    reflexivity.
     (* op1 *)
     unfolds.
-    abstract (repeat ljs_eval_push).
+    repeat ljs_eval_push.
+    forwards Hop : unary_op_lemma; try eassumption.
+    repeat ljs_eval_push.
     (* op2 *)
     unfolds.
-    abstract (repeat ljs_eval_push).
+    abstract (repeat ljs_eval_push). 
     (* if *)
     unfolds.
     ljs_specialize_ih. ljs_inv_red_internal.

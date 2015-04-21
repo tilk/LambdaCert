@@ -43,7 +43,6 @@ let translate_unary_op s = match s with
     | "to-upper" -> Cs.Coq_unary_op_to_upper
     | "~" -> Cs.Coq_unary_op_bnot
     | "sin" -> Cs.Coq_unary_op_sin
-    | "numstr->num" -> Cs.Coq_unary_op_numstr_to_num
     | "current-utc-millis" -> Cs.Coq_unary_op_current_utc_millis
     | _ -> failwith "operator not implemented"
 

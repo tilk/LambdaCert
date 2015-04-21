@@ -62,6 +62,8 @@ patterns = [
     ("delete_field", "expr_delete_field ?e1 ?e2"),
     ("delete_field_1", "expr_delete_field_1 ?vs"),
     ("delete_field_2", "expr_delete_field_2 ?ptr ?obj ?oattr ?s"),
+    ("own_field_names", "expr_own_field_names ?e"),
+    ("own_field_names_1", "expr_own_field_names_1 ?o"),
     ("op1", "expr_op1 ?op ?e"),
     ("op1_1", "expr_op1_1 ?op ?o"),
     ("op2", "expr_op2 ?op ?e1 ?e2"),
@@ -91,7 +93,10 @@ patterns = [
     ("try_finally_1", "expr_try_finally_1 ?o ?e2"),
     ("try_finally_2", "expr_try_finally_2 ?r' ?o"),
     ("throw", "expr_throw ?e"),
-    ("throw_1", "expr_throw_1 ?o")]
+    ("throw_1", "expr_throw_1 ?o"),
+    ("eval", "expr_eval ?e1 ?e2"),
+    ("eval_1", "expr_eval_1 ?vs"),
+    ("hint", "expr_hint ?s ?e")]
 
 is_basic :: String -> Bool
 is_basic s = not (s =~ "_[0-9]+$")

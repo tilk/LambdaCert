@@ -1271,10 +1271,10 @@ Ltac binds_inv H :=
         match M with
         | ?x' \:= ?v1 =>
             lets He : (binds_single_bind_same_inv _ _ _ H);
-            subst v2; clear H    
+            (subst_hyp He || injects He); clear H    
         | _ \(?x':=?v1) =>
             lets He : (binds_update_same_inv _ _ _ _ H);
-            subst v2; clear H
+            (subst_hyp He || injects He); clear H
         | _ \(?x':=?v1) =>
             let Ha := fresh "H" in
             asserts Ha : (x <> x'); [eauto | 
@@ -1489,8 +1489,16 @@ Ltac ljs_autoinject :=
     | H : LjsOperators.binary_operator _ _ ?v1 ?v2 = _ |- _ => not is_var v1; not is_var v2; injects H 
     end. 
 
+Ltac ljs_op_inv :=
+    match goal with
+    | H : L.eval_unary_op ?op ?st ?v ?v' |- _ => 
+        let H1 := fresh in inverts H as H1; try inverts H1
+    end.
+
+Ltac ljs_fwd_op_inv := ljs_op_inv; [idtac].
+
 Ltac ljs_autoforward := first [
-    inv_fwd_ljs | ljs_out_redh_ter | ljs_get_builtin | apply_ih_expr | ljs_autoinject | 
+    inv_fwd_ljs | ljs_fwd_op_inv | ljs_out_redh_ter | ljs_get_builtin | apply_ih_expr | ljs_autoinject | 
     binds_inv | binds_determine ].
 
 (** ** Lemmas about operators *)

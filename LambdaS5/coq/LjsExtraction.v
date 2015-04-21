@@ -235,8 +235,8 @@ end)".
 
 Extract Constant LjsCommon.eq_number_decidable => "(=)".
 
-Extract Constant LjsOperators._ascii_of_int => "(fun c -> char_of_int (int_of_float c))".
-Extract Constant LjsOperators._int_of_ascii => "(fun c -> float_of_int (int_of_char c))".
+Extract Constant LjsCommon._ascii_of_int => "(fun c -> char_of_int (int_of_float c))".
+Extract Constant LjsCommon._int_of_ascii => "(fun c -> float_of_int (int_of_char c))".
 
 Extract Constant LjsOperators._string_lt_bool => "(<)".
 

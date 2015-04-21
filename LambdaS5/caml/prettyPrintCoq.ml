@@ -83,7 +83,6 @@ let format_unary_op o = match o with
     | Coq_unary_op_prim_to_bool -> text "unary_op_prim_to_bool"
     | Coq_unary_op_not -> text "unary_op_not"
     | Coq_unary_op_bnot -> text "unary_op_bnot"
-    | Coq_unary_op_numstr_to_num -> text "unary_op_numstr_to_num"
     | Coq_unary_op_to_int32 -> text "unary_op_to_int32"
     | Coq_unary_op_ascii_ntoc -> text "unary_op_ascii_ntoc"
     | Coq_unary_op_ascii_cton -> text "unary_op_ascii_cton"
@@ -142,7 +141,7 @@ let format_oattr a = match a with
 
 let format_number n = 
     if n == nan then text "JsNumber.nan"
-    else parens (squish [text "JsNumber.of_int "; int (Float.to_int n)])
+    else parens (squish [text "JsNumber.of_int ("; int (Float.to_int n); text ")"])
 
 (* TODO modify to give letrecs own identifiers! *)
 let rec format_expr b e = match e with

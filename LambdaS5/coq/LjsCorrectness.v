@@ -693,15 +693,19 @@ Proof.
     jauto.
 Qed.
 
+Local Hint Constructors eval_unary_op int_unary_op num_unary_op.
+
 Lemma eval_op1_correct : forall runs c st op e1 o,
     runs_type_correct runs ->
     eval_op1 runs c st op e1 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
-        exists v, unary_operator op st' v1 = result_some v /\ o = out_ter st' (res_value v)).
+        exists v, eval_unary_op op st' v1 v /\ o = out_ter st' (res_value v)).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
-    ljs_run_inv. eauto.
+    ljs_run_inv. 
+    destruct op; destruct v; repeat injects; repeat substs; simpls; tryfalse; eauto. 
+    destruct s; tryfalse; injects; eauto.
 Qed.
 
 Lemma eval_op2_correct : forall runs c st op e1 e2 o,
@@ -1235,12 +1239,12 @@ Proof.
     eapply red_expr_lambda; assumption.
     (* eval *)
     lets H: eval_eval_correct IH R.
-    ljs_pretty_advance red_expr_eval red_expr_eval_1_abort.
-    ljs_pretty_advance red_expr_eval_1 red_expr_eval_2_abort.
+    eapply red_expr_eval.
+    ljs_advance_eval_many.
     jauto_set.
     rewrite read_option_binds_eq in H1. 
     substs.
-    eapply red_expr_eval_2; eauto.
+    eapply red_expr_eval_1; eauto.
     ljs_run_inv.
     ljs_eval_ih.
     (* hint *)

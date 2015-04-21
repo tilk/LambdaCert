@@ -43,7 +43,7 @@ Definition typeof v :=
   end
 .
 
-Definition prim_to_bool v :=
+Definition value_to_bool_cast v :=
   match v with
   | value_bool b => b
   | value_undefined => false
@@ -53,6 +53,33 @@ Definition prim_to_bool v :=
   | value_string s => !decide (s = "")
   | value_empty => false
   | _ => true
+  end
+.
+
+Definition value_to_str_cast v :=
+  match v with
+  | value_undefined => "undefined"
+  | value_null => "null"
+  | value_string s => s
+  | value_number n => JsNumber.to_string n
+  | value_bool b => ifb b then "true" else "false"
+  | value_empty => "empty"
+  | value_object ptr => "object"
+  | value_closure clo => "closure"
+  end
+.
+
+Definition value_to_num_cast v :=
+  match v with
+  | value_undefined => JsNumber.nan
+  | value_null => JsNumber.zero
+  | value_bool b => ifb b then JsNumber.one else JsNumber.zero
+  | value_number n => n
+  | value_string "" => JsNumber.zero
+  | value_string s => JsNumber.from_string s
+  | value_empty => JsNumber.nan
+  | value_object ptr => JsNumber.nan
+  | value_closure clo => JsNumber.nan
   end
 .
 
@@ -177,9 +204,9 @@ Definition set_object_oattr obj oa v : resultof object :=
     | _ => result_fail "Update proto failed"
     end
   | oattr_extensible =>
-    match value_to_bool v with
-    | Some b => result_some (object_intro (oattrs_intro pr cl b pv co) pp)
-    | None => result_fail "Update extensible failed"
+    match v with
+    | value_bool b => result_some (object_intro (oattrs_intro pr cl b pv co) pp)
+    | _ => result_fail "Update extensible failed"
     end
   | oattr_code => result_fail "Can't update code"
   | oattr_primval => result_some (object_intro (oattrs_intro pr cl ex v co) pp)
@@ -293,6 +320,10 @@ Definition set_object_pattr obj s (pa : pattr) v : resultof object :=
 (* Desugaring function *)
 
 Parameter desugar_expr : string -> option expr.
+
+Definition _ascii_of_int (i : int) : Ascii.ascii := Ascii.ascii_of_N (Z.to_N i).
+
+Definition _int_of_ascii (c : Ascii.ascii) : int := Z.of_N (Ascii.N_of_ascii c).
 
 (* Gets a property recursively (the recursion limit is the size of the store) *)
 

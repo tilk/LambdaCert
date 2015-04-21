@@ -52,8 +52,7 @@ Inductive ext_expr :=
 | expr_try_finally_1 : out -> expr -> ext_expr
 | expr_try_finally_2 : res -> out -> ext_expr
 | expr_throw_1 : out -> ext_expr
-| expr_eval_1 : out -> expr -> ext_expr
-| expr_eval_2 : value -> out -> ext_expr
+| expr_eval_1 : list value -> ext_expr
 .
 
 Coercion expr_basic : expr >-> ext_expr.
@@ -78,8 +77,6 @@ Definition out_of_ext_expr p := match p with
 | expr_try_finally_1 o _
 | expr_try_finally_2 _ o
 | expr_throw_1 o 
-| expr_eval_1 o _
-| expr_eval_2 _ o
     => Some o
 | _ => None
 end.
@@ -146,3 +143,43 @@ Inductive closure_ctx : closure -> list value -> ctx -> Prop :=
     Zip args_n args_v args ->
     closure_ctx (closure_intro lc (Some s) args_n body) args_v 
         (from_list args \u (from_list lc \(s := value_closure (closure_intro lc (Some s) args_n body)))).
+
+Inductive int_unary_op : unary_op -> (int -> int) -> Prop :=
+| int_unary_op_bnot : int_unary_op unary_op_bnot int32_bitwise_not
+| int_unary_op_to_int32 : int_unary_op unary_op_to_int32 (fun x => x)
+.
+
+Inductive num_unary_op : unary_op -> (number -> number) -> Prop :=
+| num_unary_op_abs : num_unary_op unary_op_abs absolute
+| num_unary_op_floor : num_unary_op unary_op_floor floor
+.
+
+Inductive eval_unary_op : unary_op -> store -> value -> value -> Prop :=
+| eval_unary_op_print : forall v st, eval_unary_op unary_op_print st v value_undefined
+| eval_unary_op_pretty : forall v st, eval_unary_op unary_op_pretty st v value_undefined
+| eval_unary_op_strlen : forall s st, 
+    eval_unary_op unary_op_strlen st (value_string s) (value_number (of_int (String.length s)))
+| eval_unary_op_typeof : forall v st, eval_unary_op unary_op_typeof st v (value_string (typeof v))
+| eval_unary_op_is_primitive : forall v st, 
+    eval_unary_op unary_op_is_primitive st v (value_bool (decide (is_primitive v)))
+| eval_unary_op_is_closure : forall v st, 
+    eval_unary_op unary_op_is_closure st v (value_bool (decide (is_closure v)))
+| eval_unary_op_is_object : forall v st, 
+    eval_unary_op unary_op_is_object st v (value_bool (decide (is_object v)))
+| eval_unary_op_num : forall n op F st, 
+    num_unary_op op F -> eval_unary_op op st (value_number n) (value_number (F n))
+| eval_unary_op_int32 : forall n op F st, 
+    int_unary_op op F -> eval_unary_op op st (value_number n) (value_number (of_int (F (to_int32 n))))
+| eval_unary_op_not : forall b st, eval_unary_op unary_op_not st (value_bool b) (value_bool (! b))
+| eval_unary_op_prim_to_bool : forall v st, 
+    eval_unary_op unary_op_prim_to_bool st v (value_bool (value_to_bool_cast v))
+| eval_unary_op_prim_to_str : forall v st, 
+    eval_unary_op unary_op_prim_to_str st v (value_string (value_to_str_cast v))
+| eval_unary_op_prim_to_num : forall v st, 
+    eval_unary_op unary_op_prim_to_num st v (value_number (value_to_num_cast v))
+| eval_unary_op_ascii_ntoc : forall n st,
+    eval_unary_op unary_op_ascii_ntoc st (value_number n)
+        (value_string (String (_ascii_of_int (to_int32 n)) EmptyString))
+| eval_unary_op_ascii_cton : forall ch s st,
+    eval_unary_op unary_op_ascii_cton st (value_string (String ch s)) (value_number (of_int (_int_of_ascii ch)))
+.
