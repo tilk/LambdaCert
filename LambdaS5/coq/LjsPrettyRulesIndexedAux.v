@@ -8,6 +8,7 @@ Require Import LjsPrettyInterm.
 Require Import LjsPrettyRules.
 Require Import LjsPrettyRulesAux.
 Require Import LjsPrettyRulesIndexed.
+Require Import LjsPrettyRulesIndexedInvert.
 Require Import LjsStore.
 Require Import LjsCommon.
 Require Import LjsValues.
@@ -140,11 +141,10 @@ Lemma red_exprh_deterministic : forall k k' c st ee o o',
 Proof.
     introv Hr1. generalize k' o'.
     induction Hr1; introv Hr2;
-    try abstract (
-        inversions Hr2; 
-        repeat first [determine | (progress substs) | inst_hyps_det | binds_determine 
+    try (
+        inverts red_exprh Hr2; 
+        repeat first [ injects | determine | (progress substs) | inst_hyps_det | binds_determine 
                      | object_property_is_determine | value_is_closure_determine | closure_ctx_determine 
-                     | eval_unary_op_determine]; 
-        eauto; try ljs_abort_false; tryfalse;
-    false; jauto). 
+                     | eval_unary_op_determine | eval_binary_op_determine]; 
+        eauto; try ljs_abort_false; tryfalse; try solve [false; jauto]).
 Qed.

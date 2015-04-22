@@ -103,9 +103,10 @@ Proof.
     skip.
     (* cons *)
     repeat ljs_autoforward.
+(*
     cases_decide. 
     repeat ljs_autoforward.
-    skip.
+*)
     skip.
 Qed.
 

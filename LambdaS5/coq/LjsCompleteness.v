@@ -348,6 +348,22 @@ Proof.
     inverts He as Hee; try inverts Hee; reflexivity.
 Qed.
 
+Lemma binary_op_lemma : forall op st v v1 v',
+    eval_binary_op op st v v1 v' ->
+    binary_operator op st v v1 = result_some v'.
+Proof.
+    introv He.
+    inverts He as Hee; try inverts Hee; try reflexivity.
+    (* has_property *)
+    unfolds binary_operator, has_property. 
+    repeat ljs_eval_push. skip.
+    (* has_own_property *)
+    unfolds binary_operator, has_own_property.
+    repeat ljs_eval_push. unfolds get_object_property. simpl. 
+    unfolds prop_name.
+    cases_match_option as Eq1; reflexivity.
+Qed.
+
 (* The main lemma *)
 
 Opaque read_option. 
@@ -422,7 +438,9 @@ Proof.
     repeat ljs_eval_push.
     (* op2 *)
     unfolds.
-    abstract (repeat ljs_eval_push). 
+    repeat ljs_eval_push. 
+    forwards Hop : binary_op_lemma; try eassumption.
+    repeat ljs_eval_push.
     (* if *)
     unfolds.
     ljs_specialize_ih. ljs_inv_red_internal.

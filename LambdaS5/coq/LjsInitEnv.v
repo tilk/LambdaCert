@@ -998,6 +998,9 @@ expr_object
  ("%roundLambda", property_data
                   (data_intro (expr_id "%roundLambda") expr_true expr_false
                    expr_false));
+ ("%sameValue", property_data
+                (data_intro (expr_id "%sameValue") expr_true expr_false
+                 expr_false));
  ("%seal", property_data
            (data_intro (expr_id "%seal") expr_true expr_false expr_false));
  ("%sealLambda", property_data
@@ -3941,11 +3944,10 @@ expr_seq
            [expr_string
             "(defineOwnProperty) Cannot escalate writable from false to true."])
           (expr_if
-           (expr_op2 binary_op_stx_eq
-            (expr_op2 binary_op_same_value
-             (expr_get_field (expr_id "attr-obj") (expr_string "value"))
-             (expr_get_field (expr_id "current-prop") (expr_string "value")))
-            expr_false)
+           (expr_op1 unary_op_not
+            (expr_app (expr_id "%sameValue")
+             [expr_get_field (expr_id "attr-obj") (expr_string "value");
+              expr_get_field (expr_id "current-prop") (expr_string "value")]))
            (expr_app (expr_id "%TypeError")
             [expr_string
              "(defineOwnProperty) Cannot change a non-configurable value"])
@@ -3961,17 +3963,15 @@ expr_seq
           (expr_string "configurable")) expr_false)
         (expr_if
          (expr_let "%or"
-          (expr_op2 binary_op_stx_eq
-           (expr_op2 binary_op_same_value
-            (expr_get_field (expr_id "current-prop") (expr_string "set"))
-            (expr_get_field (expr_id "attr-obj") (expr_string "set")))
-           expr_false)
+          (expr_op1 unary_op_not
+           (expr_app (expr_id "%sameValue")
+            [expr_get_field (expr_id "current-prop") (expr_string "set");
+             expr_get_field (expr_id "attr-obj") (expr_string "set")]))
           (expr_if (expr_id "%or") (expr_id "%or")
-           (expr_op2 binary_op_stx_eq
-            (expr_op2 binary_op_same_value
-             (expr_get_field (expr_id "current-prop") (expr_string "get"))
-             (expr_get_field (expr_id "attr-obj") (expr_string "get")))
-            expr_false)))
+           (expr_op1 unary_op_not
+            (expr_app (expr_id "%sameValue")
+             [expr_get_field (expr_id "current-prop") (expr_string "get");
+              expr_get_field (expr_id "attr-obj") (expr_string "get")]))))
          (expr_app (expr_id "%TypeError")
           [expr_op2 binary_op_string_plus
            (expr_string
@@ -3986,11 +3986,10 @@ expr_seq
         (expr_app (expr_id "isDataDescriptor") [expr_id "current-prop"])
         (expr_seq
          (expr_if
-          (expr_op2 binary_op_stx_eq
-           (expr_op2 binary_op_same_value
-            (expr_get_attr pattr_value (expr_id "obj") (expr_id "fstr"))
-            (expr_get_field (expr_id "current-prop") (expr_string "value")))
-           expr_false)
+          (expr_op1 unary_op_not
+           (expr_app (expr_id "%sameValue")
+            [expr_get_attr pattr_value (expr_id "obj") (expr_id "fstr");
+             expr_get_field (expr_id "current-prop") (expr_string "value")]))
           (expr_set_attr pattr_value (expr_id "obj") (expr_id "fstr")
            (expr_get_field (expr_id "current-prop") (expr_string "value")))
           expr_undefined)
@@ -6016,6 +6015,25 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_id "O"))))))
 .
 Definition ex_privroundLambda :=  expr_string "round NYI" .
+Definition ex_privsameValue := 
+expr_let "tx" (expr_op1 unary_op_typeof (expr_id "x"))
+(expr_if
+ (expr_op1 unary_op_not
+  (expr_op2 binary_op_stx_eq (expr_id "tx")
+   (expr_op1 unary_op_typeof (expr_id "y")))) expr_false
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "tx") (expr_string "number"))
+  (expr_if
+   (expr_if
+    (expr_op2 binary_op_stx_eq (expr_id "x")
+     (expr_number (JsNumber.of_int (0))))
+    (expr_op2 binary_op_stx_eq (expr_id "y")
+     (expr_number (JsNumber.of_int (0)))) expr_false)
+   (expr_op2 binary_op_stx_eq
+    (expr_op2 binary_op_div (expr_number (JsNumber.of_int (1))) (expr_id "x"))
+    (expr_op2 binary_op_div (expr_number (JsNumber.of_int (1))) (expr_id "y")))
+   (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "y")))
+  (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "y"))))
+.
 Definition ex_privsealLambda := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
@@ -7149,6 +7167,10 @@ value_closure
  ex_privToString)
 .
 Definition name_privToString :=  "%ToString" .
+Definition privsameValue := 
+value_closure (closure_intro [] None ["x"; "y"] ex_privsameValue)
+.
+Definition name_privsameValue :=  "%sameValue" .
 Definition copy_when_defined := 
 value_closure
 (closure_intro [] None ["obj1"; "obj2"; "s"] ex_copy_when_defined)
@@ -7182,6 +7204,7 @@ value_closure
   ("%ToBoolean", privToBoolean);
   ("%ToString", privToString);
   ("%TypeError", privTypeError);
+  ("%sameValue", privsameValue);
   ("copy-access-desc", copy_access_desc);
   ("copy-data-desc", copy_data_desc);
   ("isAccessorDescriptor", isAccessorDescriptor);
@@ -9601,6 +9624,7 @@ Definition ctx_items :=
  (name_privreverselambda, privreverselambda);
  (name_privround, privround);
  (name_privroundLambda, privroundLambda);
+ (name_privsameValue, privsameValue);
  (name_privseal, privseal);
  (name_privsealLambda, privsealLambda);
  (name_privset_property, privset_property);
@@ -10009,6 +10033,7 @@ Definition store_items := [
                                              ("%reverselambda", privreverselambda);
                                              ("%round", privround);
                                              ("%roundLambda", privroundLambda);
+                                             ("%sameValue", privsameValue);
                                              ("%seal", privseal);
                                              ("%sealLambda", privsealLambda);
                                              ("%set-property", privset_property);

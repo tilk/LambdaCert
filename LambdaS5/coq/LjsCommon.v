@@ -14,6 +14,7 @@ Implicit Type s : string.
 Implicit Type i : id.
 Implicit Type o : out.
 Implicit Type c : ctx.
+Implicit Type b : bool.
 Implicit Type ptr : object_ptr.
 Implicit Type obj : object.
 
@@ -83,6 +84,24 @@ Definition value_to_num_cast v :=
   end
 .
 
+Definition num_comparison_op (op : number -> number -> bool) b1 b2 n1 n2 : bool :=
+  let '(n1', n2') := ifb b1 then (n2, n1) else (n1, n2) in
+  let b := op n1' n2' in
+  if b2 then !b else b.
+
+Definition num_lt := num_comparison_op JsNumber.lt_bool false false.
+Definition num_gt := num_comparison_op JsNumber.lt_bool true false.
+Definition num_le := num_comparison_op JsNumber.lt_bool true true.
+Definition num_ge := num_comparison_op JsNumber.lt_bool false true.
+
+Fixpoint string_lt s1 s2 :=
+    match s1, s2 with
+    | EmptyString, _ => true
+    | _, EmptyString => false
+    | String ch1 s1', String ch2 s2' => 
+        ifb ch1 = ch2 then string_lt s1' s2' else decide (int_of_char ch1 < int_of_char ch2)
+    end.
+
 Inductive is_primitive : value -> Prop :=
 | is_primitive_undefined : is_primitive value_undefined
 | is_primitive_null : is_primitive value_null
@@ -110,6 +129,16 @@ Inductive stx_eq : value -> value -> Prop :=
 | stx_eq_bool : forall b, stx_eq (value_bool b) (value_bool b)
 | stx_eq_number : forall n1 n2, eq_number n1 n2 -> stx_eq (value_number n1) (value_number n2)
 | stx_eq_object : forall ptr, stx_eq (value_object ptr) (value_object ptr)
+.
+
+Inductive same_value : value -> value -> Prop :=
+| same_value_empty : same_value value_empty value_empty
+| same_value_string : forall s, same_value (value_string s) (value_string s)
+| same_value_null : same_value value_null value_null
+| same_value_undefined : same_value value_undefined value_undefined
+| same_value_bool : forall b, same_value (value_bool b) (value_bool b)
+| same_value_number : forall n, same_value (value_number n) (value_number n)
+| same_value_object : forall ptr, same_value (value_object ptr) (value_object ptr)
 .
 
 Definition is_primitive_decide v :=
@@ -147,9 +176,23 @@ Definition stx_eq_decide v1 v2 :=
   end
 .
 
+Definition same_value_decide v1 v2 :=
+  match v1, v2 with
+  | value_empty, value_empty => true
+  | value_string s1, value_string s2 => decide (s1 = s2)
+  | value_null, value_null => true
+  | value_undefined, value_undefined => true
+  | value_bool true, value_bool true => true
+  | value_bool false, value_bool false => true
+  | value_number n1, value_number n2 => decide (n1 = n2)
+  | value_object ptr1, value_object ptr2 => decide (ptr1 = ptr2)
+  | _, _ => false
+  end
+.
+
 Section Instances.
 
-Local Hint Constructors is_primitive is_closure is_object stx_eq.
+Local Hint Constructors is_primitive is_closure is_object stx_eq same_value.
 
 Global Instance is_primitive_decidable : forall v, Decidable (is_primitive v).
 Proof.
@@ -172,6 +215,14 @@ Defined.
 Global Instance stx_eq_decidable : forall v1 v2, Decidable (stx_eq v1 v2).
 Proof.
     introv. applys decidable_make (stx_eq_decide v1 v2).
+    destruct v1; destruct v2; simpl; try unfold eq_number_decidable;
+    repeat cases_decide; repeat cases_if; fold_bool; rew_reflect; auto;
+    intro Hx; inverts Hx; auto.
+Defined.
+
+Global Instance same_value_decidable : forall v1 v2, Decidable (same_value v1 v2).
+Proof.
+    introv. applys decidable_make (same_value_decide v1 v2).
     destruct v1; destruct v2; simpl; try unfold eq_number_decidable;
     repeat cases_decide; repeat cases_if; fold_bool; rew_reflect; auto;
     intro Hx; inverts Hx; auto.

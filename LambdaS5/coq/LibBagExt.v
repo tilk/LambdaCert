@@ -1,6 +1,6 @@
 (* Should be integrated with LibBag *)
 Require Import Utils.
-Require Import LibTactics LibLogic LibList LibOperation LibRelation.
+Require Import LibTactics LibReflect LibLogic LibList LibOperation LibRelation.
 Require Export LibBag.
 Generalizable Variables A B T U.
 
@@ -1317,6 +1317,7 @@ Hint Resolve
     @incl_union_l @incl_union_r
     @update_nindex_incl @remove_incl @restrict_incl
     @disjoint_in @disjoint_index @disjoint_binds
+    @read_option_binds
 : bag.
 
 Hint Extern 0 (?x \c ?x) => solve [apply incl_refl] : bag.
@@ -1535,3 +1536,13 @@ Global Instance incl_union_l_from_binds_union :
 Proof.
     constructor. intros. apply incl_binds_inv. prove_bag. 
 Qed.
+
+Global Instance index_decidable_from_read_option :
+    forall `{BagReadOption A B T} `{BagBinds A B T} `{BagIndex T A},
+    Read_option_binds_eq -> Index_binds_eq -> forall M k, Decidable (index M k).
+Proof.
+    intros. applys decidable_make (match M \(k?) with None => false | _ => true end).
+    cases_match_option as Eq; fold_bool; rew_refl. prove_bag.
+    rewrite index_binds_eq. rew_logic. intros. 
+    rewrite <- read_option_binds_eq. intro. tryfalse.
+Defined.

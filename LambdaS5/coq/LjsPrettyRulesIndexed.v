@@ -232,7 +232,7 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     abort o ->
     red_exprh k c st (expr_op2_1 op o e2) o
 | red_exprh_op2_2 : forall k c st' st op v1 v2 v,
-    binary_operator op st v1 v2 = result_some v ->
+    eval_binary_op op st v1 v2 v ->
     red_exprh k c st' (expr_op2_2 op v1 (out_ter st (res_value v2))) (out_ter st (res_value v))
 | red_exprh_op2_2_abort : forall k c st op v o,
     abort o ->

@@ -17,6 +17,7 @@ Implicit Type n : number.
 Implicit Type i : id.
 Implicit Type o : out.
 Implicit Type c : ctx.
+Implicit Type b : bool.
 Implicit Type ptr : object_ptr.
 Implicit Type obj : object.
 
@@ -200,12 +201,6 @@ Definition is_accessor store v1_loc v2 :=
   )
 .
 
-Parameter _same_value : value -> value -> bool.
-
-Definition same_value store v1 v2 :=
-  result_some (value_bool (_same_value v1 v2))
-.
-
 Definition arith (op : number -> number -> number) (v1 v2 : value) : resultof value :=
   match v1, v2 with
   | value_number n1, value_number n2 => result_some (value_number (op n1 n2))
@@ -220,32 +215,23 @@ Definition int_arith (op : int -> int -> int) (v1 v2 : value) : resultof value :
   end
 .
 
-Definition cmp store undef_left undef_both undef_right (op : number -> number -> bool) (v1 v2 : value) : resultof value :=
-  match (v1, v2) with
-  | (value_number n1, value_number n2) => result_some (if (op n1 n2) then value_true else value_false)
-  | (value_undefined, value_number _) => result_some undef_left
-  | (value_undefined, value_undefined) => result_some undef_both
-  | (value_number _, value_undefined) => result_some undef_right
-  | _ => result_fail "Comparison/order of non-numbers."
+Definition cmp (op : number -> number -> bool) v1 v2 : resultof value :=
+  match v1, v2 with
+  | value_number n1, value_number n2 => result_some (value_bool (op n1 n2))
+  | _, _ => result_fail "Comparison/order of non-numbers."
   end
 .
 
-Parameter le_bool : number -> number -> bool.
-Parameter gt_bool : number -> number -> bool.
-Parameter ge_bool : number -> number -> bool.
-
-Parameter _string_lt_bool : string -> string -> bool.
-
-Definition string_lt v1 v2 : resultof value :=
+Definition string_lt_op v1 v2 : resultof value :=
   match v1, v2 with
-  | value_string s1, value_string s2 => result_some (value_bool (_string_lt_bool s1 s2))
+  | value_string s1, value_string s2 => result_some (value_bool (string_lt s1 s2))
   | _, _ => result_fail "string_lt"
   end
 .
 
-Definition locale_compare v1 v2 : resultof value :=
+Definition locale_compare_op v1 v2 : resultof value :=
   match v1, v2 with
-  | value_string s1, value_string s2 => result_some (value_bool (_string_lt_bool s1 s2))
+  | value_string s1, value_string s2 => result_some (value_bool (string_lt s1 s2))
   | _, _ => result_fail "locale_compare"
   end
 .
@@ -257,12 +243,12 @@ Definition binary_operator (op : binary_op) store v1 v2 : resultof value :=
       | binary_op_mul => arith JsNumber.mult v1 v2
       | binary_op_div => arith JsNumber.div v1 v2
       | binary_op_mod => arith JsNumber.fmod v1 v2
-      | binary_op_lt => cmp store value_true value_false value_false JsNumber.lt_bool v1 v2
-      | binary_op_le => cmp store value_true value_true value_false le_bool v1 v2
-      | binary_op_gt => cmp store value_false value_false value_true gt_bool v1 v2
-      | binary_op_ge => cmp store value_false value_true value_true ge_bool v1 v2
+      | binary_op_lt => cmp num_lt v1 v2
+      | binary_op_gt => cmp num_gt v1 v2
+      | binary_op_le => cmp num_le v1 v2
+      | binary_op_ge => cmp num_ge v1 v2
       | binary_op_stx_eq => result_some (value_bool (decide (stx_eq v1 v2)))
-      | binary_op_same_value => same_value store v1 v2
+      | binary_op_same_value => result_some (value_bool (decide (same_value v1 v2)))
       | binary_op_has_property => has_property store v1 v2
       | binary_op_has_own_property => has_own_property store v1 v2
       | binary_op_string_plus => string_plus store v1 v2
@@ -275,8 +261,8 @@ Definition binary_operator (op : binary_op) store v1 v2 : resultof value :=
       | binary_op_shiftl => int_arith int32_left_shift v1 v2
       | binary_op_shiftr => int_arith int32_right_shift v1 v2
       | binary_op_zfshiftr => int_arith uint32_right_shift v1 v2
-      | binary_op_string_lt => string_lt v1 v2
-      | binary_op_locale_compare => locale_compare v1 v2
+      | binary_op_string_lt => string_lt_op v1 v2
+      | binary_op_locale_compare => locale_compare_op v1 v2
       | _ => result_fail ("Binary operator " ++ " not implemented.")
       end
 .

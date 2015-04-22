@@ -4,6 +4,7 @@ Require Import Utils.
 Require Import LjsSyntax.
 Require Import LjsPrettyInterm.
 Require Import LjsPrettyRules.
+Require Import LjsPrettyRulesAux.
 Require Import LjsStore.
 Require Import LjsCommon.
 Require Import LjsValues.
@@ -293,7 +294,8 @@ Ltac ljs_run_push_auto :=
         let H1 := fresh "H" in
         let R := fresh "R" in
         unfold assert_get_object in H;
-        try ljs_run_push H as a H1 R
+        ljs_run_push H as a H1 R
+    | |- _ => idtac
     end
 .
 
@@ -704,20 +706,42 @@ Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
     ljs_run_inv. 
-    destruct op; destruct v; repeat injects; repeat substs; simpls; tryfalse; eauto. 
+    destruct op; destruct v; tryfalse; repeat injects; repeat substs; simpls; tryfalse; eauto. 
     destruct s; tryfalse; injects; eauto.
 Qed.
+
+Local Hint Constructors eval_binary_op int_binary_op num_binary_op num_cmp_binary_op.
 
 Lemma eval_op2_correct : forall runs c st op e1 e2 o,
     runs_type_correct runs ->
     eval_op2 runs c st op e1 e2 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
-            exists v, binary_operator op st'' v1 v2 = result_some v /\ o = out_ter st'' (res_value v))).
+            exists v, eval_binary_op op st'' v1 v2 v /\ o = out_ter st'' (res_value v))).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
-    ljs_run_inv. eauto.
+    ljs_run_inv. 
+    destruct op; destruct v; tryfalse; destruct v0; tryfalse; repeat injects; repeat substs; simpls; eauto.
+    (* has_property *)
+    ljs_run_push_post_auto.
+    cases_match_option; repeat injects; substs; eexists; (split; [prove_bag | idtac]);
+    apply func_eq_2; try reflexivity; apply func_eq_1; apply func_eq_1;
+    fold_bool; rew_refl; eauto.
+    forwards Hx : object_property_is_from_get_property. eassumption. 
+    intro Hy. object_property_is_determine. tryfalse.
+    (* has_own_property *)
+    unfolds has_own_property.
+    ljs_run_push_post_auto. 
+    cases_match_option; repeat injects; substs; eexists; (split; [prove_bag | idtac]);
+    apply func_eq_2; try reflexivity; apply func_eq_1; apply func_eq_1;
+    unfolds get_object_property; simpl; cases_match_option; reflexivity.
+    (* char_at *)
+    skip. (* TODO *)
+    (* is_accessor *)
+    skip. (* TODO *)
+    (* prop_to_obj *)
+    skip. (* TODO *)
 Qed.
 
 Lemma eval_get_obj_attr_correct : forall runs c st oa e1 o,

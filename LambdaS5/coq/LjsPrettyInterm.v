@@ -168,7 +168,7 @@ Inductive eval_unary_op : unary_op -> store -> value -> value -> Prop :=
     eval_unary_op unary_op_is_object st v (value_bool (decide (is_object v)))
 | eval_unary_op_num : forall n op F st, 
     num_unary_op op F -> eval_unary_op op st (value_number n) (value_number (F n))
-| eval_unary_op_int32 : forall n op F st, 
+| eval_unary_op_int : forall n op F st, 
     int_unary_op op F -> eval_unary_op op st (value_number n) (value_number (of_int (F (to_int32 n))))
 | eval_unary_op_not : forall b st, eval_unary_op unary_op_not st (value_bool b) (value_bool (! b))
 | eval_unary_op_prim_to_bool : forall v st, 
@@ -182,4 +182,59 @@ Inductive eval_unary_op : unary_op -> store -> value -> value -> Prop :=
         (value_string (String (_ascii_of_int (to_int32 n)) EmptyString))
 | eval_unary_op_ascii_cton : forall ch s st,
     eval_unary_op unary_op_ascii_cton st (value_string (String ch s)) (value_number (of_int (_int_of_ascii ch)))
+.
+
+Inductive num_binary_op : binary_op -> (number -> number -> number) -> Prop :=
+| num_binary_op_add : num_binary_op binary_op_add JsNumber.add
+| num_binary_op_sub : num_binary_op binary_op_sub JsNumber.sub
+| num_binary_op_mul : num_binary_op binary_op_mul JsNumber.mult
+| num_binary_op_div : num_binary_op binary_op_div JsNumber.div
+| num_binary_op_mod : num_binary_op binary_op_mod JsNumber.fmod
+.
+
+Inductive int_binary_op : binary_op -> (int -> int -> int) -> Prop :=
+| int_binary_op_band : int_binary_op binary_op_band int32_bitwise_and
+| int_binary_op_bor : int_binary_op binary_op_bor int32_bitwise_or
+| int_binary_op_bxor : int_binary_op binary_op_bxor int32_bitwise_xor
+| int_binary_op_shiftl : int_binary_op binary_op_shiftl int32_left_shift
+| int_binary_op_shiftr : int_binary_op binary_op_shiftr int32_right_shift
+| int_binary_op_zfshiftr : int_binary_op binary_op_zfshiftr uint32_right_shift
+.
+
+Inductive num_cmp_binary_op : binary_op -> (number -> number -> bool) -> Prop :=
+| num_cmp_binary_op_lt : num_cmp_binary_op binary_op_lt num_lt
+| num_cmp_binary_op_gt : num_cmp_binary_op binary_op_gt num_gt
+| num_cmp_binary_op_le : num_cmp_binary_op binary_op_le num_le
+| num_cmp_binary_op_ge : num_cmp_binary_op binary_op_ge num_ge
+.
+
+Inductive eval_binary_op : binary_op -> store -> value -> value -> value -> Prop :=
+| eval_binary_op_num : forall op st F n1 n2, 
+    num_binary_op op F -> 
+    eval_binary_op op st (value_number n1) (value_number n2) (value_number (F n1 n2))
+| eval_binary_op_int : forall op st F n1 n2, 
+    int_binary_op op F -> 
+    eval_binary_op op st (value_number n1) (value_number n2) (value_number (of_int (F (to_int32 n1) (to_int32 n2))))
+| eval_binary_op_num_cmp : forall op st F n1 n2,
+    num_cmp_binary_op op F ->
+    eval_binary_op op st (value_number n1) (value_number n2) (value_bool (F n1 n2))
+| eval_binary_op_stx_eq : forall st v1 v2,
+    eval_binary_op binary_op_stx_eq st v1 v2 (value_bool (decide (stx_eq v1 v2)))
+| eval_binary_op_same_value : forall st v1 v2,
+    eval_binary_op binary_op_same_value st v1 v2 (value_bool (decide (same_value v1 v2)))
+| eval_binary_op_string_plus : forall st s1 s2,
+    eval_binary_op binary_op_string_plus st (value_string s1) (value_string s2) (value_string (s1++s2))
+| eval_binary_op_has_property : forall st ptr obj s,
+    binds st ptr obj -> 
+    eval_binary_op binary_op_has_property st (value_object ptr) (value_string s) 
+        (value_bool (!isTrue (object_property_is st obj s None)))
+| eval_binary_op_has_own_property : forall st ptr obj s,
+    binds st ptr obj -> 
+    eval_binary_op binary_op_has_own_property st (value_object ptr) (value_string s) 
+        (value_bool (decide (index (object_properties obj) s)))
+| eval_binary_op_string_lt : forall st s1 s2,
+    eval_binary_op binary_op_string_lt st (value_string s1) (value_string s2) (value_bool (string_lt s1 s2))
+| eval_binary_op_locale_compare : forall st s1 s2,
+    eval_binary_op binary_op_locale_compare st (value_string s1) (value_string s2) (value_bool (string_lt s1 s2))
+(* TODO rest *)
 .

@@ -151,9 +151,6 @@ Extract Constant JsNumber.neg => "(~-.)".
 Extract Constant JsNumber.sign => "(fun f -> float_of_int (compare f 0.))".
 Extract Constant JsNumber.number_comparable => "(fun n1 n2 -> 0 = compare n1 n2)".
 Extract Constant JsNumber.lt_bool => "(<)".
-Extract Constant LjsOperators.le_bool => "(<=)".
-Extract Constant LjsOperators.gt_bool => "(>)".
-Extract Constant LjsOperators.ge_bool => "(>=)".
 
 Extract Constant JsNumber.to_int32 => 
 "fun n ->
@@ -224,21 +221,17 @@ Extract Constant Utils.string_of_nat => "fun n -> Batteries.String.to_list (stri
 
 Extract Constant LjsOperators._nat_of_float => "int_of_float".
 
-Extract Constant LjsOperators._same_value => "(fun v1 v2 -> begin
-  match v1, v2 with
-  | Coq_value_number x, Coq_value_number y ->
-    if x = 0. && y = 0.
-    then 1. /. x = 1. /. y
-    else compare x y = 0
-  | _ -> compare v1 v2 = 0
-end)".
-
 Extract Constant LjsCommon.eq_number_decidable => "(=)".
+
+Extract Constant LjsCommon.num_lt => "(<)".
+Extract Constant LjsCommon.num_le => "(<=)".
+Extract Constant LjsCommon.num_gt => "(>)".
+Extract Constant LjsCommon.num_ge => "(>=)".
 
 Extract Constant LjsCommon._ascii_of_int => "(fun c -> char_of_int (int_of_float c))".
 Extract Constant LjsCommon._int_of_ascii => "(fun c -> float_of_int (int_of_char c))".
 
-Extract Constant LjsOperators._string_lt_bool => "(<)".
+Extract Constant LjsCommon.string_lt => "(<)".
 
 Extract Constant LjsOperators._print_string => "fun x -> print_string (Batteries.String.of_list x); print_char '\n'".
 Extract Constant LjsOperators._pretty => "fun store value -> print_string (PrettyPrint.string_of_value 100 store value); print_char '\n'".
