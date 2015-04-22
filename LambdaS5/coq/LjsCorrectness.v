@@ -761,6 +761,8 @@ Proof.
     ljs_run_inv. eauto.
 Qed.
 
+Local Hint Constructors object_oattr_valid object_oattr_modifiable.
+
 Lemma eval_set_obj_attr_correct : forall runs c st oa e1 e2 o,
     runs_type_correct runs ->
     eval_set_obj_attr runs c st e1 oa e2 = result_some o ->
@@ -777,24 +779,35 @@ Proof.
     unfolds change_object_cont.
     cases_match_option; tryfalse.
     ljs_run_push_post_auto.
-    cases_if. injects.
-    jauto.
+    injects.
+    unfolds set_object_oattr_check.
+    cases_let. cases_let.
+    destruct oa; try cases_if; substs; tryfalse; 
+    repeat injects; simpls; jauto;
+    destruct v0; tryfalse; repeat injects; jauto.
 Qed.
+
+Local Hint Constructors attributes_pattr_readable.
 
 Lemma eval_get_attr_correct : forall runs c st pa e1 e2 o,
     runs_type_correct runs ->
     eval_get_attr runs c st e1 e2 pa = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
-            exists ptr obj s v, v1 = value_object ptr /\
+            exists ptr obj s attrs, v1 = value_object ptr /\
                 v2 = value_string s /\
                 st'' \(ptr?) = Some obj /\
-                get_object_pattr obj s pa = result_some v /\
-                o = out_ter st'' (res_value v))).
+                binds (object_properties obj) s attrs /\
+                attributes_pattr_readable attrs pa /\
+                o = out_ter st'' (res_value (get_attributes_pattr attrs pa)))).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
-    ljs_run_inv. jauto. 
+    ljs_run_inv. substs. 
+    unfolds get_object_pattr.
+    cases_match_option as Hop;
+    apply get_object_property_some_lemma in Hop.
+    destruct pa; tryfalse; destruct a; tryfalse; repeat injects; jauto.
 Qed.
 
 Lemma eval_set_attr_correct : forall runs c st pa e1 e2 e3 o,

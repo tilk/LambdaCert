@@ -334,37 +334,40 @@ Definition set_object_oattr obj oa v : object :=
 (* Get property attribute *)
 (* May fail if the attribute does not exist, or if the property is of the wrong kind. *)
 
-Definition get_object_pattr obj s (pa : pattr) : resultof value :=
-  match get_object_property obj s with
-  | None => result_some value_undefined
-  | Some prop =>
-    match pa, prop with
-    | pattr_enum, _ => result_some (value_bool (attributes_enumerable prop))
-
-    | pattr_config, _ => result_some (value_bool (attributes_configurable prop))
-
-    | pattr_writable, attributes_data_of data =>
-      result_some (value_bool (attributes_data_writable data))
-    | pattr_writable, attributes_accessor_of _ =>
-      result_fail "Access #writable of accessor."
-
-    | pattr_value, attributes_data_of data =>
-      result_some (attributes_data_value data)
-    | pattr_value, attributes_accessor_of _ =>
-      result_fail "Access #value of accessor."
-
-    | pattr_getter, attributes_accessor_of acc =>
-      result_some (attributes_accessor_get acc)
-    | pattr_getter, attributes_data_of _ =>
-      result_fail "Access #getter of data."
-
-    | pattr_setter, attributes_accessor_of acc =>
-      result_some (attributes_accessor_set acc)
-    | pattr_setter, attributes_data_of _ =>
-      result_fail "Access #setter of data."
-    end
-  end
+Inductive attributes_pattr_readable : attributes -> pattr -> Prop :=
+| attributes_pattr_readable_enum : forall attrs, attributes_pattr_readable attrs pattr_enum
+| attributes_pattr_readable_config : forall attrs, attributes_pattr_readable attrs pattr_config
+| attributes_pattr_readable_value : forall data, attributes_pattr_readable (attributes_data_of data) pattr_value
+| attributes_pattr_readable_writable : forall data, attributes_pattr_readable (attributes_data_of data) pattr_writable
+| attributes_pattr_readable_getter : forall acc, attributes_pattr_readable (attributes_accessor_of acc) pattr_getter
+| attributes_pattr_readable_setter : forall acc, attributes_pattr_readable (attributes_accessor_of acc) pattr_setter
 .
+
+Definition attributes_pattr_readable_decide attrs pa :=
+  match pa with
+  | pattr_enum | pattr_config => true
+  | pattr_value | pattr_writable => !decide (is_accessor attrs)
+  | pattr_getter | pattr_setter => decide (is_accessor attrs)
+  end.
+
+Local Hint Constructors attributes_pattr_readable.
+
+Instance attributes_pattr_readable_decidable : forall attrs pa, Decidable (attributes_pattr_readable attrs pa).
+Proof.
+    introv. applys decidable_make (attributes_pattr_readable_decide attrs pa).
+    destruct attrs; destruct pa; simpl; fold_bool; rew_reflect; auto.
+Defined.
+
+Definition get_attributes_pattr attrs pa :=
+    match pa, attrs with
+    | pattr_enum, _ => value_bool (attributes_enumerable attrs)
+    | pattr_config, _ => value_bool (attributes_configurable attrs)
+    | pattr_writable, attributes_data_of data => value_bool (attributes_data_writable data)
+    | pattr_value, attributes_data_of data => attributes_data_value data
+    | pattr_getter, attributes_accessor_of acc => attributes_accessor_get acc
+    | pattr_setter, attributes_accessor_of acc => attributes_accessor_set acc
+    | _, _ => arbitrary
+    end.
 
 (* Set object attribute *)
 (* May fail because of permission issues *)

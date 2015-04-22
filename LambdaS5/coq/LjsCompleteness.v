@@ -212,6 +212,7 @@ Ltac ljs_eval :=
         let X := fresh in let H := fresh in 
         sets_eq X H :(result_some (out_ter st r)); rewrite (if_out_ter_lemma _ H); inverts H
     | H : ?res = result_some _ |- if_result_some ?res _ = _ => rewrite (if_result_some_lemma _ H)
+    | |- if_result_some (result_some _) _ = _ => unfold if_result_some
     end.
 
 Ltac ljs_abort :=
@@ -405,7 +406,16 @@ Proof.
               eauto using object_properties_lemma).
     (* get_attr *)
     unfolds.
-    abstract (repeat ljs_eval_push).
+    repeat ljs_eval_push.
+    unfolds get_object_pattr, get_object_property.
+    cases_match_option as Hopt.
+    rewrite read_option_binds_eq in Hopt. binds_determine.
+    match goal with H : attributes_pattr_readable _ _ |- _ => inverts H end;
+    repeat ljs_eval_push.
+    unfolds object_props, prop_name.
+    match goal with H : binds (object_properties _) _ _ |- _ => 
+        rewrite <- read_option_binds_eq in H; rewrite H in Hopt end.
+    solve [false].
     (* set_attr *)
     unfolds.
     abstract (repeat ljs_eval_push).
@@ -415,7 +425,11 @@ Proof.
     (* set_obj_attr *)
     unfolds.
     repeat ljs_eval_push.
-    cases_if; iauto. 
+    unfolds set_object_oattr_check.
+    cases_let. cases_let. substs.
+    match goal with H : object_oattr_modifiable _ _ |- _ => inverts H end;
+    match goal with H : object_oattr_valid _ _ |- _ => inverts H end;
+    try cases_if; tryfalse; repeat ljs_eval_push.
     (* get_field *)
     unfolds.
     repeat ljs_eval_push.

@@ -82,10 +82,12 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_get_attr : forall k c st pa e1 e2 o,
     red_exprh k c st (expr_eval_many_1 [e1; e2] nil (expr_get_attr_1 pa)) o ->
     red_exprh (S k) c st (expr_get_attr pa e1 e2) o
-| red_exprh_get_attr_1 : forall k c st st pa s ptr obj v,
+| red_exprh_get_attr_1 : forall k c st pa s ptr obj attrs,
     binds st ptr obj ->
-    get_object_pattr obj s pa = result_some v ->
-    red_exprh k c st (expr_get_attr_1 pa [value_object ptr; value_string s]) (out_ter st (res_value v))
+    binds (object_properties obj) s attrs ->
+    attributes_pattr_readable attrs pa ->
+    red_exprh k c st (expr_get_attr_1 pa [value_object ptr; value_string s]) 
+        (out_ter st (res_value (get_attributes_pattr attrs pa)))
 
 (* set_attr *)
 | red_exprh_set_attr : forall k c st pa e1 e2 e3 o,

@@ -336,6 +336,37 @@ Definition eval_app runs c st (f : expr) (args_expr : list expr) : result :=
   ))
 .
 
+Definition get_object_pattr obj s (pa : pattr) : resultof value :=
+  match get_object_property obj s with
+  | None => result_fail "Accessing nonexistent attribute"
+  | Some prop =>
+    match pa, prop with
+    | pattr_enum, _ => result_some (value_bool (attributes_enumerable prop))
+
+    | pattr_config, _ => result_some (value_bool (attributes_configurable prop))
+
+    | pattr_writable, attributes_data_of data =>
+      result_some (value_bool (attributes_data_writable data))
+    | pattr_writable, attributes_accessor_of _ =>
+      result_fail "Access #writable of accessor."
+
+    | pattr_value, attributes_data_of data =>
+      result_some (attributes_data_value data)
+    | pattr_value, attributes_accessor_of _ =>
+      result_fail "Access #value of accessor."
+
+    | pattr_getter, attributes_accessor_of acc =>
+      result_some (attributes_accessor_get acc)
+    | pattr_getter, attributes_data_of _ =>
+      result_fail "Access #getter of data."
+
+    | pattr_setter, attributes_accessor_of acc =>
+      result_some (attributes_accessor_set acc)
+    | pattr_setter, attributes_data_of _ =>
+      result_fail "Access #setter of data."
+    end
+  end
+.
 
 (* left[right<attr>] *)
 Definition eval_get_attr runs c st left_expr right_expr attr :=
@@ -367,15 +398,37 @@ Definition eval_get_obj_attr runs c st obj_expr oattr :=
       result_value st (get_object_oattr obj oattr)))
 .
 
+Definition set_object_oattr_check obj oa v : resultof object :=
+  let 'object_intro (oattrs_intro pr cl ex pv co) pp := obj in
+  match oa with
+  | oattr_proto =>
+    ifb object_extensible obj then
+    match v with
+    | value_null
+    | value_object _ => result_some (object_intro (oattrs_intro v cl ex pv co) pp)
+    | _ => result_fail "Update proto failed"
+    end
+    else result_fail "Update proto on unextensible object"
+  | oattr_extensible => 
+    ifb object_extensible obj then
+    match v with
+    | value_bool b => result_some (object_intro (oattrs_intro pr cl b pv co) pp)
+    | _ => result_fail "Update extensible failed"
+    end
+    else result_fail "Update extensible on unextensible object"
+  | oattr_code => result_fail "Can't update code"
+  | oattr_primval => result_some (object_intro (oattrs_intro pr cl ex v co) pp)
+  | oattr_class => result_fail "Can't update klass"
+  end
+.
+
 Definition eval_set_obj_attr runs c st obj_expr oattr attr :=
   if_eval_return runs c st obj_expr (fun st obj_loc =>
     if_eval_return runs c st attr (fun st v =>
       assert_get_object_ptr obj_loc (fun obj_ptr =>
         change_object_cont st obj_ptr (fun obj cont =>
-          ifb object_oattr_valid oattr v /\ object_oattr_modifiable obj oattr 
-          then cont st (set_object_oattr obj oattr v) v
-          else result_fail "invalid set_obj_attr"))))
-.
+          if_result_some (set_object_oattr_check obj oattr v) (fun obj' =>
+            cont st obj' v))))).
 
 Definition eval_own_field_names runs c st obj_expr : result :=
   if_eval_return runs c st obj_expr (fun st obj_loc =>
