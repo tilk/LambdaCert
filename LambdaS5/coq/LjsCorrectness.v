@@ -1135,7 +1135,7 @@ Proof.
     lets H: eval_set_field_correct IH R.
     eapply red_expr_set_field.
     ljs_advance_eval_many.
-    destruct_hyp H;
+    destruct_hyp H; fold_bool;
     eapply red_expr_set_field_1; try eauto using read_option_binds.
     eapply red_expr_set_field_2_add_field; eauto.
     eapply red_expr_set_field_2_unextensible_add; eauto. 
@@ -1153,7 +1153,7 @@ Proof.
     rewrite read_option_binds_eq in Ho. 
     inverts Hv. inverts Hs.
     eapply red_expr_delete_field_1; try eassumption.
-    repeat destruct_or H; repeat destruct_exists H; destructs H; subst o;
+    repeat destruct_or H; repeat destruct_exists H; destructs H; fold_bool; subst o;
     match goal with H : oattrs = _ |- _ => inverts H end.
     eapply red_expr_delete_field_2_not_found.
     eapply red_expr_delete_field_2_unconfigurable; eauto.

@@ -255,6 +255,8 @@ Ltac ljs_inv_red_internal :=
         end
     end.
 
+Ltac bool_tryfalse := try solve [fold_bool; rew_reflect in *; tryfalse].
+
 Ltac ljs_inv_red_inter := 
     match goal with
     | H	: red_exprh _ _ _ ?e _ |- _ => 
@@ -270,7 +272,7 @@ Ltac ljs_inv_red_inter :=
         | expr_set_field_1 _ => inverts red_exprh H
         | expr_delete_field_1 _ => inverts red_exprh H
         | expr_eval_1 _ => inverts red_exprh H
-        end; tryfalse; [idtac]
+        end; tryfalse; bool_tryfalse; [idtac]
     end.
 
 Ltac ljs_inv_red_abort := ljs_inv_red_internal; [ | ljs_abort].
@@ -427,14 +429,14 @@ Proof.
     repeat ljs_eval_push.
     unfold change_object_property, change_object_property_cont.
     destruct oattr as [[|]|].
-    repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; tryfalse; try reflexivity.
+    repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; tryfalse; bool_tryfalse; reflexivity.
     ljs_inv_red_internal.
     eapply apply_lemma; eauto. 
-    cases_if; ljs_inv_red; tryfalse; try ljs_eval; reflexivity.
+    cases_if; ljs_inv_red; tryfalse; bool_tryfalse; try ljs_eval; reflexivity.
     (* delete_field *)
     unfolds.
     repeat ljs_eval_push.
-    repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; tryfalse; reflexivity.
+    repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; tryfalse; bool_tryfalse; reflexivity.
     (* own_field_names *)
     unfolds.
     repeat ljs_eval_push.

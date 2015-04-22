@@ -142,9 +142,9 @@ Proof.
     introv Hr1. generalize k' o'.
     induction Hr1; introv Hr2;
     try (
-        inverts red_exprh Hr2; 
+        inverts red_exprh Hr2; rew_refl in *;
         repeat first [ injects | determine | (progress substs) | inst_hyps_det | binds_determine 
                      | object_property_is_determine | value_is_closure_determine | closure_ctx_determine 
                      | eval_unary_op_determine | eval_binary_op_determine]; 
-        eauto; try ljs_abort_false; tryfalse; try solve [false; jauto]).
+        eauto; try ljs_abort_false; tryfalse; try solve [false; jauto]). 
 Qed.
