@@ -115,6 +115,9 @@ Inductive is_closure : value -> Prop :=
 Inductive is_object : value -> Prop :=
 | is_object_object : forall ptr, is_object (value_object ptr).
 
+Inductive is_accessor : attributes -> Prop :=
+| is_accessor_accessor : forall acc, is_accessor (attributes_accessor_of acc).
+
 Definition eq_number n1 n2 := 
     n1 <> nan /\ n2 <> nan /\ 
     (n1 = zero /\ n2 = neg_zero \/ n1 = neg_zero /\ n2 = zero \/ n1 = n2).
@@ -162,6 +165,13 @@ Definition is_object_decide v :=
   end
 .
 
+Definition is_accessor_decide attrs :=
+  match attrs with
+  | attributes_accessor_of _ => true
+  | _ => false
+  end
+.
+
 Definition stx_eq_decide v1 v2 :=
   match v1, v2 with
   | value_empty, value_empty => true
@@ -192,7 +202,7 @@ Definition same_value_decide v1 v2 :=
 
 Section Instances.
 
-Local Hint Constructors is_primitive is_closure is_object stx_eq same_value.
+Local Hint Constructors is_primitive is_closure is_object is_accessor stx_eq same_value.
 
 Global Instance is_primitive_decidable : forall v, Decidable (is_primitive v).
 Proof.
@@ -210,6 +220,12 @@ Global Instance is_object_decidable : forall v, Decidable (is_object v).
 Proof.
     introv. applys decidable_make (is_object_decide v).
     destruct v; simpl; fold_bool; rew_refl; auto.
+Defined.
+
+Global Instance is_accessor_decidable : forall attrs, Decidable (is_accessor attrs).
+Proof.
+    introv. applys decidable_make (is_accessor_decide attrs).
+    destruct attrs; simpl; fold_bool; rew_refl; auto.
 Defined.
 
 Global Instance stx_eq_decidable : forall v1 v2, Decidable (stx_eq v1 v2).

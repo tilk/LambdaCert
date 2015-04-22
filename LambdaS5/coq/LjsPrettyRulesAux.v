@@ -79,8 +79,9 @@ Lemma eval_binary_op_deterministic : forall op st v1 v2 v v',
 Proof.
     introv He1 He2.
     destruct op; inverts He1 as Hu1; try inverts Hu1; inverts He2 as Hu2; try inverts Hu2;
-    try binds_determine;
-    reflexivity.
+    repeat binds_determine; try reflexivity.
+    rewrite H1 in *. injects. reflexivity. 
+    lets X : object_property_is_deterministic H1 H5. injects. reflexivity.
 Qed.
 
 Module Export Tactics.

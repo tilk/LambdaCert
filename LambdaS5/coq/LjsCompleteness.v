@@ -362,6 +362,12 @@ Proof.
     repeat ljs_eval_push. unfolds get_object_property. simpl. 
     unfolds prop_name.
     cases_match_option as Eq1; reflexivity.
+    (* is_accessor *)
+    unfolds binary_operator, is_accessor.
+    repeat ljs_eval_push.
+    (* char_at *)
+    unfolds binary_operator, char_at.
+    cases_if. rewrite H1. reflexivity. false. auto.
 Qed.
 
 (* The main lemma *)

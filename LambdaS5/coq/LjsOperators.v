@@ -134,35 +134,6 @@ Definition has_own_property store v1 v2 :=
   | _ => result_fail "hasOwnProperty expected an object and a string."
   end
 .
-      
-Definition prop_to_obj store v1 v2 :=
-  let make_attr := (fun x => attributes_data_of (attributes_data_intro x false false false)) in
-  match (v1, v2) with
-  | (value_object ptr, value_string s) =>
-    assert_get_object_from_ptr store ptr (fun obj =>
-      match (get_object_property obj s) with
-      | Some (attributes_data_of (attributes_data_intro val writ enum config)) =>
-        let props := \{} \("configurable" := make_attr (value_bool config))
-                         \("enumerable" := make_attr (value_bool enum)) 
-                         \("writable" := make_attr (value_bool writ)) 
-                         \("value" := make_attr val) in
-        let obj := object_intro (oattrs_intro value_undefined "Object" false value_undefined value_null) props in
-        let (store, loc) := add_object store obj in
-        result_some loc
-      | Some (attributes_accessor_of (attributes_accessor_intro get set enum config)) =>
-        let props := \{} \("configurable" := make_attr (value_bool config)) 
-                         \("enumerable" := make_attr (value_bool enum)) 
-                         \("setter" := make_attr set) 
-                         \("getter" := make_attr get) in
-        let obj := object_intro (oattrs_intro value_undefined "Object" false value_undefined value_null) props in
-        let (store, loc) := add_object store obj in
-        result_some loc
-      | None => result_some value_undefined
-      end
-    )
-  | _ => result_fail "hasOwnProperty expected an object and a string."
-  end
-.
 
 Definition string_plus store v1 v2 : resultof value :=
   match (v1, v2) with
@@ -171,15 +142,14 @@ Definition string_plus store v1 v2 : resultof value :=
   end
 .
 
-Parameter _nat_of_float : number -> nat.
-
 Definition char_at store v1 v2 :=
   match (v1, v2) with
   | (value_string s, value_number n) =>
-      match (String.get (_nat_of_float n) s) with
+      ifb 0 <= to_int32 n then
+      match (String.get (abs (to_int32 n)) s) with
       | Some char => result_some (value_string (String.String char String.EmptyString))
       | None => result_fail "char_at called with index larger than length."
-      end
+      end else result_fail "char_at called with a negative index."
   | _ => result_fail "char_at called with wrong argument types."
   end
 .
@@ -191,8 +161,7 @@ Definition is_accessor store v1_loc v2 :=
       assert_get_object_from_ptr store ptr (fun obj =>
         if_result_some (get_property store obj s) (fun ret =>
           match ret with
-          | Some (attributes_data_of _) => result_some value_false
-          | Some (attributes_accessor_of _) => result_some value_true
+          | Some attrs => result_some (value_bool (decide (is_accessor attrs)))
           | None => result_fail "isAccessor topped out."
           end
       ))
@@ -254,7 +223,6 @@ Definition binary_operator (op : binary_op) store v1 v2 : resultof value :=
       | binary_op_string_plus => string_plus store v1 v2
       | binary_op_char_at => char_at store v1 v2
       | binary_op_is_accessor => is_accessor store v1 v2
-      | binary_op_prop_to_obj => prop_to_obj store v1 v2 (* For debugging purposes *)
       | binary_op_band => int_arith int32_bitwise_and v1 v2
       | binary_op_bor => int_arith int32_bitwise_or v1 v2
       | binary_op_bxor => int_arith int32_bitwise_xor v1 v2

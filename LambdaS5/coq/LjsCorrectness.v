@@ -737,11 +737,15 @@ Proof.
     apply func_eq_2; try reflexivity; apply func_eq_1; apply func_eq_1;
     unfolds get_object_property; simpl; cases_match_option; reflexivity.
     (* char_at *)
-    skip. (* TODO *)
+    unfolds char_at.
+    cases_if.
+    cases_match_option.
+    injects. eauto.
     (* is_accessor *)
-    skip. (* TODO *)
-    (* prop_to_obj *)
-    skip. (* TODO *)
+    ljs_run_push_post_auto.
+    forwards Hx : object_property_is_from_get_property. eassumption. 
+    cases_match_option; repeat injects; substs. 
+    eexists. split. prove_bag. eauto. 
 Qed.
 
 Lemma eval_get_obj_attr_correct : forall runs c st oa e1 o,

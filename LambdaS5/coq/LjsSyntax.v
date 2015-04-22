@@ -62,7 +62,6 @@ Inductive binary_op : Type :=
 | binary_op_string_plus
 | binary_op_char_at
 | binary_op_is_accessor
-| binary_op_prop_to_obj
 | binary_op_band
 | binary_op_bor
 | binary_op_bxor
