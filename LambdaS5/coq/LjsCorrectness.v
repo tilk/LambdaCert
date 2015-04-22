@@ -766,17 +766,18 @@ Lemma eval_set_obj_attr_correct : forall runs c st oa e1 e2 o,
     eval_set_obj_attr runs c st e1 oa e2 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
-            exists ptr obj obj', v1 = value_object ptr /\
+            exists ptr obj, v1 = value_object ptr /\
                 st'' \(ptr?) = Some obj /\
-                set_object_oattr obj oa v2 = result_some obj' /\
-                o = out_ter (st'' \(ptr := obj')) (res_value v2))).
+                object_oattr_valid oa v2 /\
+                object_oattr_modifiable obj oa /\
+                o = out_ter (st'' \(ptr := set_object_oattr obj oa v2)) (res_value v2))).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
     unfolds change_object_cont.
     cases_match_option; tryfalse.
     ljs_run_push_post_auto.
-    inverts R.
+    cases_if. injects.
     jauto.
 Qed.
 
@@ -1118,8 +1119,7 @@ Proof.
     eapply red_expr_set_obj_attr.
     ljs_advance_eval_many.
     destruct H as (ptr&obj&obj'&Hy1&Hy2&Hy3&Hy4).
-    inverts Hy1. inverts Hy4.
-    rewrite read_option_binds_eq in Hy2. 
+    rewrite read_option_binds_eq in Hy1. substs.
     eapply red_expr_set_obj_attr_1; eauto.
     (* get_field *)
     lets H: eval_get_field_correct IH R.

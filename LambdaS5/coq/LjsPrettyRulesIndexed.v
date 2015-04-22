@@ -115,8 +115,9 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     red_exprh (S k) c st (expr_set_obj_attr oa e1 e2) o
 | red_exprh_set_obj_attr_1 : forall k c st st1 oa ptr obj obj' v,
     binds st ptr obj ->
-    set_object_oattr obj oa v = result_some obj' ->
-    st1 = st \(ptr := obj') ->
+    object_oattr_valid oa v ->
+    object_oattr_modifiable obj oa ->
+    st1 = st \(ptr := set_object_oattr obj oa v) ->
     red_exprh k c st (expr_set_obj_attr_1 oa [value_object ptr; v]) (out_ter st1 (res_value v))
 
 (* get_field *)

@@ -372,8 +372,9 @@ Definition eval_set_obj_attr runs c st obj_expr oattr attr :=
     if_eval_return runs c st attr (fun st v =>
       assert_get_object_ptr obj_loc (fun obj_ptr =>
         change_object_cont st obj_ptr (fun obj cont =>
-          if_result_some (set_object_oattr obj oattr v) (fun obj' =>
-            cont st obj' v)))))
+          ifb object_oattr_valid oattr v /\ object_oattr_modifiable obj oattr 
+          then cont st (set_object_oattr obj oattr v) v
+          else result_fail "invalid set_obj_attr"))))
 .
 
 Definition eval_own_field_names runs c st obj_expr : result :=

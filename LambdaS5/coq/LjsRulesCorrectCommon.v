@@ -1485,13 +1485,13 @@ Ltac destr_concl_auto := destr_concl; res_related_abort; try ljs_handle_abort.
 Ltac ljs_autoinject := 
     match goal with
     | H : L.value_object ?obj1 = L.value_object ?obj2 |- _ => injects H || (constr_eq obj1 obj2; clear H)
-    | H : L.unary_operator _ _ ?v = _ |- _ => not is_var v; injects H 
-    | H : LjsOperators.binary_operator _ _ ?v1 ?v2 = _ |- _ => not is_var v1; not is_var v2; injects H 
     end. 
 
 Ltac ljs_op_inv :=
     match goal with
     | H : L.eval_unary_op ?op ?st ?v ?v' |- _ => 
+        let H1 := fresh in inverts H as H1; try inverts H1
+    | H : L.eval_binary_op ?op ?st ?v ?v1 ?v' |- _ => 
         let H1 := fresh in inverts H as H1; try inverts H1
     end.
 

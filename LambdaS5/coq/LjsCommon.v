@@ -261,24 +261,74 @@ Definition get_object_oattr obj (oa : oattr) : value :=
 (* Set object attribute *)
 (* May fail because of wrong type. *)
 
-Definition set_object_oattr obj oa v : resultof object :=
-  let 'object_intro (oattrs_intro pr cl ex pv co) pp := obj in
+Inductive object_oattr_valid : oattr -> value -> Prop :=
+| object_oattr_valid_proto_null : 
+    object_oattr_valid oattr_proto value_null
+| object_oattr_valid_proto_object : forall ptr,
+    object_oattr_valid oattr_proto (value_object ptr)
+| object_oattr_valid_extensible_bool : forall b,
+    object_oattr_valid oattr_extensible (value_bool b)
+| object_oattr_valid_primval : forall v,
+    object_oattr_valid oattr_primval v
+.
+
+Inductive object_oattr_modifiable obj : oattr -> Prop :=
+| object_oattr_modifiable_proto : 
+    object_extensible obj ->
+    object_oattr_modifiable obj oattr_proto
+| object_oattr_modifiable_extensible : 
+    object_extensible obj ->
+    object_oattr_modifiable obj oattr_extensible
+| object_oattr_modifiable_primval : 
+    object_oattr_modifiable obj oattr_primval
+.
+
+Definition object_oattr_valid_decide oa v :=
+    match oa with
+    | oattr_proto => 
+        match v with value_null | value_object _ => true | _ => false end
+    | oattr_extensible =>
+        match v with value_bool _ => true | _ => false end
+    | oattr_primval => true
+    | _ => false
+    end.
+
+Definition object_oattr_modifiable_decide obj oa :=
+    match oa with
+    | oattr_proto | oattr_extensible => object_extensible obj
+    | oattr_primval => true
+    | _ => false
+    end.
+
+Local Hint Constructors object_oattr_valid object_oattr_modifiable.
+
+Instance object_oattr_valid_decidable : forall oa v, Decidable (object_oattr_valid oa v).
+Proof.
+    introv. applys decidable_make (object_oattr_valid_decide oa v).
+    destruct oa; destruct v; simpl; fold_bool; rew_refl; auto.
+Qed.
+
+Instance object_oattr_modifiable_decidable : forall obj oa, Decidable (object_oattr_modifiable obj oa).
+Proof.
+    introv. applys decidable_make (object_oattr_modifiable_decide obj oa).
+    destruct oa; simpl; fold_bool; rew_refl; auto; 
+    sets_eq beq : (object_extensible obj); symmetry in EQbeq; destruct beq;
+    fold_bool; rew_reflect in *; auto; intro H; inverts H; auto.
+Qed.
+
+Definition modify_object_oattrs obj f : object :=
+  let 'object_intro oattrs pp := obj in object_intro (f oattrs) pp.
+
+Definition set_object_oattr obj oa v : object :=
+  modify_object_oattrs obj (fun oattrs => 
+  let 'oattrs_intro pr cl ex pv co := oattrs in
   match oa with
-  | oattr_proto => 
-    match v with
-    | value_null 
-    | value_object _ => result_some (object_intro (oattrs_intro v cl ex pv co) pp)
-    | _ => result_fail "Update proto failed"
-    end
-  | oattr_extensible =>
-    match v with
-    | value_bool b => result_some (object_intro (oattrs_intro pr cl b pv co) pp)
-    | _ => result_fail "Update extensible failed"
-    end
-  | oattr_code => result_fail "Can't update code"
-  | oattr_primval => result_some (object_intro (oattrs_intro pr cl ex v co) pp)
-  | oattr_class => result_fail "Can't update klass"
-  end
+  | oattr_proto => oattrs_intro v cl ex pv co
+  | oattr_extensible => oattrs_intro pr cl (match v with value_bool b => b | _ => arbitrary end) pv co
+  | oattr_code => oattrs_intro pr cl ex pv v
+  | oattr_primval => oattrs_intro pr cl ex v co
+  | oattr_class => oattrs_intro pr (match v with value_string s => s | _ => arbitrary end) ex pv co
+  end)
 .
 
 (* Get property attribute *)

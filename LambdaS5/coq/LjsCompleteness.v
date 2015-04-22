@@ -412,7 +412,8 @@ Proof.
     abstract (repeat ljs_eval_push).
     (* set_obj_attr *)
     unfolds.
-    abstract (repeat ljs_eval_push).
+    repeat ljs_eval_push.
+    cases_if; iauto. 
     (* get_field *)
     unfolds.
     repeat ljs_eval_push.

@@ -219,8 +219,6 @@ Extract Constant LjsCommon.desugar_expr => "fun s -> Some (Desugar.desugar (Batt
 
 Extract Constant Utils.string_of_nat => "fun n -> Batteries.String.to_list (string_of_int n)".
 
-Extract Constant LjsOperators._nat_of_float => "int_of_float".
-
 Extract Constant LjsCommon.eq_number_decidable => "(=)".
 
 Extract Constant LjsCommon.num_lt => "(<)".

@@ -111,7 +111,6 @@ let format_binary_op o = match o with
     | Coq_binary_op_string_plus -> text "binary_op_string_plus"
     | Coq_binary_op_char_at -> text "binary_op_char_at"
     | Coq_binary_op_is_accessor -> text "binary_op_is_accessor"
-    | Coq_binary_op_prop_to_obj -> text "binary_op_prop_to_obj"
     | Coq_binary_op_band -> text "binary_op_band"
     | Coq_binary_op_bor -> text "binary_op_bor"
     | Coq_binary_op_bxor -> text "binary_op_bxor"
