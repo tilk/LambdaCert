@@ -324,10 +324,10 @@ Definition set_object_oattr obj oa v : object :=
   let 'oattrs_intro pr cl ex pv co := oattrs in
   match oa with
   | oattr_proto => oattrs_intro v cl ex pv co
-  | oattr_extensible => oattrs_intro pr cl (match v with value_bool b => b | _ => arbitrary end) pv co
+  | oattr_extensible => oattrs_intro pr cl (unsome (value_to_bool v)) pv co
   | oattr_code => oattrs_intro pr cl ex pv v
   | oattr_primval => oattrs_intro pr cl ex v co
-  | oattr_class => oattrs_intro pr (match v with value_string s => s | _ => arbitrary end) ex pv co
+  | oattr_class => oattrs_intro pr (unsome (value_to_string v)) ex pv co
   end)
 .
 
@@ -372,7 +372,39 @@ Definition get_attributes_pattr attrs pa :=
 (* Set object attribute *)
 (* May fail because of permission issues *)
 
-Definition pattr_okupdate (attr : attributes) (pa : pattr) v : bool := 
+Inductive attributes_pattr_valid : pattr -> value -> Prop :=
+| attributes_pattr_valid_value : forall v, attributes_pattr_valid pattr_value v
+| attritubes_pattr_valid_writable : forall b, attributes_pattr_valid pattr_writable (value_bool b)
+| attributes_pattr_valid_getter : forall v, attributes_pattr_valid pattr_getter v
+| attributes_pattr_valid_setter : forall v, attributes_pattr_valid pattr_setter v
+| attritubes_pattr_valid_enum : forall b, attributes_pattr_valid pattr_enum (value_bool b)
+| attritubes_pattr_valid_config : forall b, attributes_pattr_valid pattr_config (value_bool b)
+.
+
+Inductive attributes_pattr_writable : attributes -> pattr -> Prop :=
+| attributes_pattr_writable_configurable : forall attr pa,
+    attributes_configurable attr ->
+    attributes_pattr_writable attr pa
+| attributes_pattr_writable_value : forall data,
+    attributes_data_writable data ->
+    attributes_pattr_writable (attributes_data_of data) pattr_value
+| attributes_pattr_writable_writable : forall data,
+    attributes_data_writable data ->
+    attributes_pattr_writable (attributes_data_of data) pattr_writable
+.
+
+Definition attributes_pattr_valid_decide pa v : bool :=
+  match pa, v with
+  | pattr_value, _ => true
+  | pattr_writable, value_bool _ => true
+  | pattr_getter, _ => true
+  | pattr_setter, _ => true
+  | pattr_enum, value_bool _ => true
+  | pattr_config, value_bool _ => true
+  | _, _ => false
+  end.
+
+Definition attributes_pattr_writable_decide (attr : attributes) (pa : pattr) : bool := 
   match attr, pa with
   | attributes_accessor_of {| attributes_accessor_configurable := true |}, _ => true
   | attributes_data_of {| attributes_data_configurable := true |}, _ => true
@@ -382,60 +414,61 @@ Definition pattr_okupdate (attr : attributes) (pa : pattr) v : bool :=
   end
 .
 
-Definition set_object_pattr obj s (pa : pattr) v : resultof object :=
-  match get_object_property obj s with
-  | None =>
-    if object_extensible obj then 
-      let oattr :=
-        match pa with
-        | pattr_getter => Some (attributes_accessor_of (attributes_accessor_intro v value_undefined false false))
-        | pattr_setter => Some (attributes_accessor_of (attributes_accessor_intro value_undefined v false false))
-        | pattr_value => Some (attributes_data_of (attributes_data_intro v false false false))
-        | pattr_writable => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined b false false)) (value_to_bool v)
-        | pattr_enum => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined false b false)) (value_to_bool v)
-        | pattr_config => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined false false b)) (value_to_bool v)
-        end in
-      match oattr with
-      | Some attr => result_some (set_object_property obj s attr)
-      | None => result_fail "Invalid operation."
-      end
-    else result_fail "Object inextensible."
-  | Some prop =>
-    if pattr_okupdate prop pa v then
-    let oattr :=
-      match pa, prop with
-      | pattr_getter, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
-        Some (attributes_accessor_of (attributes_accessor_intro v se en co))
-      | pattr_setter, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
-        Some (attributes_accessor_of (attributes_accessor_intro ge v en co))
-      | pattr_enum, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
-        LibOption.map (fun b => attributes_accessor_of (attributes_accessor_intro ge se b co)) (value_to_bool v)
-      | pattr_config, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
-        LibOption.map (fun b => attributes_accessor_of (attributes_accessor_intro ge se en b)) (value_to_bool v)
-      | pattr_value, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
-        Some (attributes_data_of (attributes_data_intro v false en co))
-      | pattr_writable, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
-        LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined b en co)) (value_to_bool v)
-      | pattr_value, attributes_data_of (attributes_data_intro va wr en co) =>
-        Some (attributes_data_of (attributes_data_intro v wr en co))
-      | pattr_writable, attributes_data_of (attributes_data_intro va wr en co) =>
-        LibOption.map (fun b => attributes_data_of (attributes_data_intro va b en co)) (value_to_bool v)
-      | pattr_enum, attributes_data_of (attributes_data_intro va wr en co) =>
-        LibOption.map (fun b => attributes_data_of (attributes_data_intro va wr b co)) (value_to_bool v)
-      | pattr_config, attributes_data_of (attributes_data_intro va wr en co) =>
-        LibOption.map (fun b => attributes_data_of (attributes_data_intro va wr en b)) (value_to_bool v)
-      | pattr_getter, attributes_data_of (attributes_data_intro va wr en co) =>
-        Some (attributes_accessor_of (attributes_accessor_intro v value_undefined en co))
-      | pattr_setter, attributes_data_of (attributes_data_intro va wr en co) =>
-        Some (attributes_accessor_of (attributes_accessor_intro value_undefined v en co))
-      end in
-      match oattr with
-      | Some attr => result_some (set_object_property obj s attr)
-      | None => result_fail "Invalid operation."
-      end
-    else result_fail "Attribute update not permitted"
-  end
-.
+Local Hint Constructors attributes_pattr_valid attributes_pattr_writable.
+
+Instance attributes_pattr_valid_decidable : forall pa v, Decidable (attributes_pattr_valid pa v).
+Proof.
+    introv. applys decidable_make (attributes_pattr_valid_decide pa v).
+    destruct pa; destruct v; simpl; fold_bool; rew_refl; auto.
+Defined.
+
+Instance attributes_pattr_writable_decidable : forall attrs pa, Decidable (attributes_pattr_writable attrs pa).
+Proof.
+    introv. applys decidable_make (attributes_pattr_writable_decide attrs pa).
+    destruct attrs as [aa|aa]; destruct aa; destruct pa; simpl; repeat cases_if; substs;
+    fold_bool; rew_refl; auto; introv Hw; inverts Hw; tryfalse.
+Defined.
+
+Definition new_attributes_pattr pa v :=
+  match pa with
+  | pattr_getter => attributes_accessor_of (attributes_accessor_intro v value_undefined false false)
+  | pattr_setter => attributes_accessor_of (attributes_accessor_intro value_undefined v false false)
+  | pattr_value => attributes_data_of (attributes_data_intro v false false false)
+  | pattr_writable => 
+    attributes_data_of (attributes_data_intro value_undefined (unsome (value_to_bool v)) false false)
+  | pattr_enum => 
+    attributes_data_of (attributes_data_intro value_undefined false (unsome (value_to_bool v)) false)
+  | pattr_config => 
+    attributes_data_of (attributes_data_intro value_undefined false false (unsome (value_to_bool v)))
+  end.
+
+Definition set_attributes_pattr attrs pa v :=
+  match pa, attrs with
+  | pattr_getter, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+    attributes_accessor_of (attributes_accessor_intro v se en co)
+  | pattr_setter, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+    attributes_accessor_of (attributes_accessor_intro ge v en co)
+  | pattr_enum, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+    attributes_accessor_of (attributes_accessor_intro ge se (unsome (value_to_bool v)) co)
+  | pattr_config, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+    attributes_accessor_of (attributes_accessor_intro ge se en (unsome (value_to_bool v)))
+  | pattr_value, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+    attributes_data_of (attributes_data_intro v false en co)
+  | pattr_writable, attributes_accessor_of (attributes_accessor_intro ge se en co) =>
+    attributes_data_of (attributes_data_intro value_undefined (unsome (value_to_bool v)) en co) 
+  | pattr_value, attributes_data_of (attributes_data_intro va wr en co) =>
+    attributes_data_of (attributes_data_intro v wr en co)
+  | pattr_writable, attributes_data_of (attributes_data_intro va wr en co) =>
+    attributes_data_of (attributes_data_intro va (unsome (value_to_bool v)) en co)
+  | pattr_enum, attributes_data_of (attributes_data_intro va wr en co) =>
+    attributes_data_of (attributes_data_intro va wr (unsome (value_to_bool v)) co) 
+  | pattr_config, attributes_data_of (attributes_data_intro va wr en co) =>
+    attributes_data_of (attributes_data_intro va wr en (unsome (value_to_bool v)))
+  | pattr_getter, attributes_data_of (attributes_data_intro va wr en co) =>
+    attributes_accessor_of (attributes_accessor_intro v value_undefined en co)
+  | pattr_setter, attributes_data_of (attributes_data_intro va wr en co) =>
+    attributes_accessor_of (attributes_accessor_intro value_undefined v en co)
+  end.
 
 (* Desugaring function *)
 

@@ -15,6 +15,13 @@ Definition value_to_bool (v : value) : option bool :=
   end
 .
 
+Definition value_to_string v : option string :=
+  match v with
+  | value_string s => Some s
+  | _ => None
+  end
+.
+
 Definition attributes_data_value_update data v :=
   let 'attributes_data_intro _v w e c := data in attributes_data_intro v w e c
 .

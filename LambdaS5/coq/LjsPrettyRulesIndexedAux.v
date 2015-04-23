@@ -14,7 +14,6 @@ Require Import LjsCommon.
 Require Import LjsValues.
 Require Import LjsOperators.
 Require Import LjsMonads.
-Require Import Coq.Strings.String.
 Import List.ListNotations.
 
 Open Scope list_scope.
@@ -129,11 +128,12 @@ Local Ltac inst_hyps_det :=
         let H := fresh "H" in forwards H : H2 H1; subst o2
     end.
 
-Local Ltac pred_determine :=
+Local Ltac index_binds_false :=
     match goal with
-    | H1 : binds ?m ?k ?v1, H2 : binds ?m ?k ?v2 |- _ =>
-        (not constr_eq v1 v2); 
-        let H := fresh "H" in asserts H : (v1 = v2); [eauto using binds_deterministic | subst v1]
+    | H1 : binds ?what ?k _, H2 : ~index ?what1 ?k1 |- _ =>
+        constr_eq what what1; constr_eq k k1; 
+        rewrite index_binds_eq in H2; rew_logic in H2;
+        false; applys H2 H1
     end.
 
 Lemma red_exprh_deterministic : forall k k' c st ee o o',
@@ -146,5 +146,5 @@ Proof.
         repeat first [ injects | determine | (progress substs) | inst_hyps_det | binds_determine 
                      | object_property_is_determine | value_is_closure_determine | closure_ctx_determine 
                      | eval_unary_op_determine | eval_binary_op_determine]; 
-        eauto; try ljs_abort_false; tryfalse; try solve [false; jauto]). 
+        eauto; try ljs_abort_false; try index_binds_false; tryfalse; try solve [false; jauto]).
 Qed.

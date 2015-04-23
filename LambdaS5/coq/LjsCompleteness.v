@@ -15,7 +15,6 @@ Require Import LjsValues.
 Require Import LjsOperators.
 Require Import LjsMonads.
 Require Import LjsInterpreter.
-(* Require Import Coq.Strings.String. *)
 
 Import ListNotations.
 
@@ -418,7 +417,25 @@ Proof.
     solve [false].
     (* set_attr *)
     unfolds.
-    abstract (repeat ljs_eval_push).
+    repeat ljs_eval_push.
+    ljs_inv_red_internal;
+    repeat ljs_eval_push;
+    unfolds set_object_pattr, get_object_property;
+    cases_match_option as Hopt. 
+    rewrite read_option_binds_eq in Hopt. binds_determine.
+    cases_if.
+    destruct a as [aa|aa]; destruct aa;
+    match goal with H : attributes_pattr_writable _ _ |- _ => inverts H end;
+    match goal with H : attributes_pattr_valid _ _ |- _ => inverts H end;
+    repeat ljs_eval_push.
+    unfolds object_props, prop_name.
+    match goal with H : binds (object_properties _) _ _ |- _ => 
+        rewrite <- read_option_binds_eq in H; rewrite H in Hopt end.
+    solve [false]. 
+    rewrite read_option_binds_eq in Hopt. false. prove_bag.
+    cases_if.
+    match goal with H : attributes_pattr_valid _ _ |- _ => inverts H end;
+    repeat ljs_eval_push.
     (* get_obj_attr *)
     unfolds.
     abstract (repeat ljs_eval_push).

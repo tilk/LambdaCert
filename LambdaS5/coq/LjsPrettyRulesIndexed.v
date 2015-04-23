@@ -1,15 +1,13 @@
 Generalizable All Variables.
 Set Implicit Arguments.
+Require Import JsNumber.
 Require Import LjsShared.
+Require Import Utils.
 Require Import LjsSyntax.
 Require Import LjsPrettyInterm.
 Require Import LjsStore.
 Require Import LjsCommon.
 Require Import LjsValues.
-Require Import LjsOperators.
-Require Import LjsMonads.
-Require Import JsNumber.
-Require Import Coq.Strings.String.
 Import List.ListNotations.
 
 Open Scope list_scope.
@@ -93,10 +91,19 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_set_attr : forall k c st pa e1 e2 e3 o,
     red_exprh k c st (expr_eval_many_1 [e1; e2; e3] nil (expr_set_attr_1 pa)) o ->
     red_exprh (S k) c st (expr_set_attr pa e1 e2 e3) o
-| red_exprh_set_attr_1 : forall k c st st1 pa ptr obj obj' s v,
+| red_exprh_set_attr_1 : forall k c st st1 pa ptr obj attrs s v,
     binds st ptr obj ->
-    set_object_pattr obj s pa v = result_some obj' ->
-    st1 = st \(ptr := obj') ->
+    binds (object_properties obj) s attrs ->
+    attributes_pattr_valid pa v ->
+    attributes_pattr_writable attrs pa ->
+    st1 = st \(ptr := set_object_property obj s (set_attributes_pattr attrs pa v)) ->
+    red_exprh k c st (expr_set_attr_1 pa [value_object ptr; value_string s; v]) (out_ter st1 (res_value v))
+| red_exprh_set_attr_1_add_field : forall k c st st1 pa ptr obj s v,
+    binds st ptr obj ->
+    ~index (object_properties obj) s ->
+    object_extensible obj ->
+    attributes_pattr_valid pa v ->
+    st1 = st \(ptr := set_object_property obj s (new_attributes_pattr pa v)) ->
     red_exprh k c st (expr_set_attr_1 pa [value_object ptr; value_string s; v]) (out_ter st1 (res_value v))
 
 (* get_obj_attr *)

@@ -810,25 +810,51 @@ Proof.
     destruct pa; tryfalse; destruct a; tryfalse; repeat injects; jauto.
 Qed.
 
+Local Hint Constructors attributes_pattr_valid attributes_pattr_writable.
+
 Lemma eval_set_attr_correct : forall runs c st pa e1 e2 e3 o,
     runs_type_correct runs ->
     eval_set_attr runs c st e1 e2 pa e3 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
             is_some_value o (runs_type_eval runs c st'' e3) (fun st''' v3 =>
-                exists ptr obj obj' s, v1 = value_object ptr /\
+                exists ptr obj s, v1 = value_object ptr /\
                     v2 = value_string s /\
                     st''' \(ptr?) = Some obj /\
-                    set_object_pattr obj s pa v3 = result_some obj' /\
-                    o = out_ter (st''' \(ptr := obj')) (res_value v3)))).
+                    (~index (object_properties obj) s /\
+                     object_extensible obj /\
+                     attributes_pattr_valid pa v3 /\
+                     o = out_ter (st''' \(ptr := set_object_property obj s (new_attributes_pattr pa v3))) 
+                             (res_value v3) \/
+                     exists attrs, 
+                     binds (object_properties obj) s attrs /\
+                     attributes_pattr_writable attrs pa /\
+                     attributes_pattr_valid pa v3 /\
+                     o = out_ter (st''' \(ptr := set_object_property obj s (set_attributes_pattr attrs pa v3))) 
+                             (res_value v3))))).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
     unfolds change_object_cont.
     cases_match_option; tryfalse.
     ljs_run_push_post_auto.
-    inverts R.
-    jauto.
+    injects.
+    unfolds set_object_pattr.
+    substs.
+    cases_match_option as Hprop.
+    apply get_object_property_some_lemma in Hprop.
+    cases_if.
+    match goal with H : attributes_pattr_writable ?attrs _ |- _ => 
+        destruct attrs as [aa|aa]; destruct aa end;
+    destruct pa; try cases_match_option; injects; try solve [jauto_set; eauto 7];
+    match goal with H : context [ value_to_bool ?v ] |- _ => destruct v; simpl in H; tryfalse end;
+    injects; jauto_set; eauto 7.
+    cases_if.
+    cases_match_option as Hsome.
+    apply get_object_property_none_lemma in Hprop.
+    destruct pa;
+    try match goal with H : context [ value_to_bool ?v ] |- _ => destruct v; simpl in H; tryfalse end;
+    injects; injects; jauto.
 Qed.
 
 Lemma eval_get_field_correct : forall runs c st e1 e2 o,
@@ -1115,11 +1141,12 @@ Proof.
     lets H: eval_set_attr_correct IH R. 
     eapply red_expr_set_attr.
     ljs_advance_eval_many.
-    destruct H as (ptr&obj&obj'&s&Hy1&Hy2&Hy3&Hy4&Hy5).
-    inverts Hy1. inverts Hy2.
-    inverts Hy5.
+    destruct H as (ptr&obj&s&Hy1&Hy2&Hy3&H).
     rewrite read_option_binds_eq in Hy3.  
-    eapply red_expr_set_attr_1; eauto.
+    substs.
+    destruct_hyp H.
+    eapply red_expr_set_attr_1_add_field; eauto with bag.
+    eapply red_expr_set_attr_1; eauto with bag.
     (* get_obj_attr *)
     lets H: eval_get_obj_attr_correct IH R.
     ljs_pretty_advance red_expr_get_obj_attr red_expr_get_obj_attr_1_abort.
