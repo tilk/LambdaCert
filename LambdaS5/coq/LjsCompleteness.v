@@ -412,7 +412,8 @@ Proof.
     match goal with H : attributes_pattr_readable _ _ |- _ => inverts H end;
     repeat ljs_eval_push.
     unfolds object_props, prop_name.
-    match goal with H : binds (object_properties _) _ _ |- _ => 
+    simpl in Hopt.
+    match goal with H : binds props _ _ |- _ => 
         rewrite <- read_option_binds_eq in H; rewrite H in Hopt end.
     solve [false].
     (* set_attr *)
@@ -429,10 +430,13 @@ Proof.
     match goal with H : attributes_pattr_valid _ _ |- _ => inverts H end;
     repeat ljs_eval_push.
     unfolds object_props, prop_name.
-    match goal with H : binds (object_properties _) _ _ |- _ => 
+    simpl in Hopt.
+    match goal with H : binds props _ _ |- _ => 
         rewrite <- read_option_binds_eq in H; rewrite H in Hopt end.
     solve [false]. 
     rewrite read_option_binds_eq in Hopt. false. prove_bag.
+    unfolds object_extensible.
+    simpls. 
     cases_if.
     match goal with H : attributes_pattr_valid _ _ |- _ => inverts H end;
     repeat ljs_eval_push.
@@ -443,10 +447,11 @@ Proof.
     unfolds.
     repeat ljs_eval_push.
     unfolds set_object_oattr_check.
-    cases_let. cases_let. substs.
+    cases_let. substs.
+    unfolds object_extensible. 
     match goal with H : object_oattr_modifiable _ _ |- _ => inverts H end;
     match goal with H : object_oattr_valid _ _ |- _ => inverts H end;
-    try cases_if; tryfalse; repeat ljs_eval_push.
+    simpls; try cases_if; tryfalse; repeat ljs_eval_push.
     (* get_field *)
     unfolds.
     repeat ljs_eval_push.

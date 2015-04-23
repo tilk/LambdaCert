@@ -80,9 +80,9 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_get_attr : forall k c st pa e1 e2 o,
     red_exprh k c st (expr_eval_many_1 [e1; e2] nil (expr_get_attr_1 pa)) o ->
     red_exprh (S k) c st (expr_get_attr pa e1 e2) o
-| red_exprh_get_attr_1 : forall k c st pa s ptr obj attrs,
-    binds st ptr obj ->
-    binds (object_properties obj) s attrs ->
+| red_exprh_get_attr_1 : forall k c st pa s ptr oas props attrs,
+    binds st ptr (object_intro oas props) ->
+    binds props s attrs ->
     attributes_pattr_readable attrs pa ->
     red_exprh k c st (expr_get_attr_1 pa [value_object ptr; value_string s]) 
         (out_ter st (res_value (get_attributes_pattr attrs pa)))
@@ -91,19 +91,19 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_set_attr : forall k c st pa e1 e2 e3 o,
     red_exprh k c st (expr_eval_many_1 [e1; e2; e3] nil (expr_set_attr_1 pa)) o ->
     red_exprh (S k) c st (expr_set_attr pa e1 e2 e3) o
-| red_exprh_set_attr_1 : forall k c st st1 pa ptr obj attrs s v,
-    binds st ptr obj ->
-    binds (object_properties obj) s attrs ->
+| red_exprh_set_attr_1 : forall k c st st1 pa ptr oas props attrs s v,
+    binds st ptr (object_intro oas props) ->
+    binds props s attrs ->
     attributes_pattr_valid pa v ->
     attributes_pattr_writable attrs pa ->
-    st1 = st \(ptr := set_object_property obj s (set_attributes_pattr attrs pa v)) ->
+    st1 = st \(ptr := object_intro oas (props \(s := set_attributes_pattr attrs pa v))) ->
     red_exprh k c st (expr_set_attr_1 pa [value_object ptr; value_string s; v]) (out_ter st1 (res_value v))
-| red_exprh_set_attr_1_add_field : forall k c st st1 pa ptr obj s v,
-    binds st ptr obj ->
-    ~index (object_properties obj) s ->
-    object_extensible obj ->
+| red_exprh_set_attr_1_add_field : forall k c st st1 pa ptr oas props s v,
+    binds st ptr (object_intro oas props) ->
+    ~index props s ->
+    oattrs_extensible oas ->
     attributes_pattr_valid pa v ->
-    st1 = st \(ptr := set_object_property obj s (new_attributes_pattr pa v)) ->
+    st1 = st \(ptr := object_intro oas (props \(s := new_attributes_pattr pa v))) ->
     red_exprh k c st (expr_set_attr_1 pa [value_object ptr; value_string s; v]) (out_ter st1 (res_value v))
 
 (* get_obj_attr *)
@@ -111,9 +111,10 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     red_exprh k c st e1 o ->
     red_exprh k c st (expr_get_obj_attr_1 oa o) o' ->
     red_exprh (S k) c st (expr_get_obj_attr oa e1) o'
-| red_exprh_get_obj_attr_1 : forall k c st' st oa ptr obj,
-    binds st ptr obj ->
-    red_exprh k c st' (expr_get_obj_attr_1 oa (out_ter st (res_value (value_object ptr)))) (out_ter st (res_value (get_object_oattr obj oa)))
+| red_exprh_get_obj_attr_1 : forall k c st' st oa ptr oas props,
+    binds st ptr (object_intro oas props) ->
+    red_exprh k c st' (expr_get_obj_attr_1 oa (out_ter st (res_value (value_object ptr)))) 
+        (out_ter st (res_value (get_oattrs_oattr oas oa)))
 | red_exprh_get_obj_attr_1_abort : forall k c st oa o,
     abort o ->
     red_exprh k c st (expr_get_obj_attr_1 oa o) o
@@ -122,11 +123,11 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_set_obj_attr : forall k c st oa e1 e2 o,
     red_exprh k c st (expr_eval_many_1 [e1; e2] nil (expr_set_obj_attr_1 oa)) o ->
     red_exprh (S k) c st (expr_set_obj_attr oa e1 e2) o
-| red_exprh_set_obj_attr_1 : forall k c st st1 oa ptr obj obj' v,
-    binds st ptr obj ->
+| red_exprh_set_obj_attr_1 : forall k c st st1 oa ptr oas props v,
+    binds st ptr (object_intro oas props) ->
     object_oattr_valid oa v ->
-    object_oattr_modifiable obj oa ->
-    st1 = st \(ptr := set_object_oattr obj oa v) ->
+    object_oattr_modifiable oas oa ->
+    st1 = st \(ptr := object_intro (set_oattrs_oattr oas oa v) props) ->
     red_exprh k c st (expr_set_obj_attr_1 oa [value_object ptr; v]) (out_ter st1 (res_value v))
 
 (* get_field *)
@@ -141,7 +142,8 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_get_field_2_no_field : forall k c st ptr,
     red_exprh k c st (expr_get_field_2 ptr None) (out_ter st (res_value value_undefined))
 | red_exprh_get_field_2_get_field : forall k c st ptr data,
-    red_exprh k c st (expr_get_field_2 ptr (Some (attributes_data_of data))) (out_ter st (res_value (attributes_data_value data)))
+    red_exprh k c st (expr_get_field_2 ptr (Some (attributes_data_of data))) 
+        (out_ter st (res_value (attributes_data_value data)))
 | red_exprh_get_field_2_getter : forall k c st ptr acc o,
     red_exprh k c st (expr_app_2 (attributes_accessor_get acc) [value_object ptr]) o ->
     red_exprh k c st (expr_get_field_2 ptr (Some (attributes_accessor_of acc))) o
@@ -175,7 +177,8 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     red_exprh k c st (expr_set_field_2 ptr obj (Some (attributes_accessor_of acc)) s v3) o
 | red_exprh_set_field_2_unwritable : forall k c st ptr obj data s v3,
     !attributes_data_writable data ->
-    red_exprh k c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st (res_exception (value_string "unwritable-field")))
+    red_exprh k c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) 
+        (out_ter st (res_exception (value_string "unwritable-field")))
 | red_exprh_set_field_2_unextensible_add : forall k c st ptr obj s v3,
     !object_extensible obj ->
     red_exprh k c st (expr_set_field_2 ptr obj None s v3) (out_ter st (res_exception (value_string "unextensible-set")))
@@ -183,7 +186,8 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     attributes_data_writable data ->
     get_object_property obj s = None ->
     !object_extensible obj ->
-    red_exprh k c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st (res_exception (value_string "unextensible-shadow")))
+    red_exprh k c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) 
+        (out_ter st (res_exception (value_string "unextensible-shadow")))
 
 (* delete_field *)
 | red_exprh_delete_field : forall k c st e1 e2 o,
@@ -198,7 +202,8 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     red_exprh k c st (expr_delete_field_2 ptr obj None s) (out_ter st (res_value value_false))
 | red_exprh_delete_field_2_unconfigurable : forall k c st ptr obj attr s,
     !attributes_configurable attr ->
-    red_exprh k c st (expr_delete_field_2 ptr obj (Some attr) s) (out_ter st (res_exception (value_string "unconfigurable-delete")))
+    red_exprh k c st (expr_delete_field_2 ptr obj (Some attr) s) 
+        (out_ter st (res_exception (value_string "unconfigurable-delete")))
 | red_exprh_delete_field_2_found : forall k c st st1 ptr obj attr s,
     attributes_configurable attr ->
     st1 = st \(ptr := delete_object_property obj s) ->
