@@ -114,19 +114,19 @@ Inductive abort : out -> Prop :=
 Hint Constructors abort.
 
 Inductive object_property_is st : object -> prop_name -> option attributes -> Prop :=
-| object_property_is_own : forall obj name attr, 
-    binds (object_properties obj) name attr -> 
-    object_property_is st obj name (Some attr)
-| object_property_is_none : forall obj name,
-    ~index (object_properties obj) name ->
-    object_proto obj = value_null ->
-    object_property_is st obj name None
-| object_property_is_proto : forall obj obj' ptr name oattr,
-    ~index (object_properties obj) name ->
-    object_proto obj = value_object ptr ->
+| object_property_is_own : forall oas props name attr, 
+    binds props name attr -> 
+    object_property_is st (object_intro oas props) name (Some attr)
+| object_property_is_none : forall oas props name,
+    ~index props name ->
+    oattrs_proto oas = value_null ->
+    object_property_is st (object_intro oas props) name None
+| object_property_is_proto : forall oas props obj' ptr name oattr,
+    ~index props name ->
+    oattrs_proto oas = value_object ptr ->
     binds st ptr obj' ->
     object_property_is st obj' name oattr ->
-    object_property_is st obj name oattr.
+    object_property_is st (object_intro oas props) name oattr.
 
 Inductive value_is_closure st : value -> closure -> Prop :=
 | value_is_closure_closure : forall clo, 

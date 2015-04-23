@@ -209,12 +209,11 @@ Lemma object_property_is_from_get_property : forall st obj name oattr,
 Proof.
     unfolds get_property.
     introv. gen obj.
-    induction (card st); introv Hgp;
+    induction (card st); introv Hgp; destruct obj;
     simpls;
     (cases_match_option as Heq;
     [apply get_object_property_some_lemma in Heq; injects; apply object_property_is_own; assumption | apply get_object_property_none_lemma in Heq]);
-    sets_eq v : (object_proto obj);
-    destruct v; tryfalse.
+    destruct object_attrs; destruct oattrs_proto; simpls; tryfalse.
     injects.
     apply object_property_is_none; auto.
     injects.
@@ -1180,14 +1179,14 @@ Proof.
     lets H: eval_set_field_correct IH R.
     eapply red_expr_set_field.
     ljs_advance_eval_many.
-    destruct_hyp H; fold_bool;
+    destruct_hyp H; fold_bool; destruct obj; unfolds get_object_property; simpls;
     eapply red_expr_set_field_1; try eauto using read_option_binds.
     eapply red_expr_set_field_2_add_field; eauto.
     eapply red_expr_set_field_2_unextensible_add; eauto. 
     eapply red_expr_set_field_2_unwritable; eauto. 
-    eapply red_expr_set_field_2_set_field; eauto.
-    eapply red_expr_set_field_2_shadow_field; eauto.
-    eapply red_expr_set_field_2_unextensible_shadow; eauto. 
+    eapply red_expr_set_field_2_set_field; option_neq_positivize; prove_bag.
+    eapply red_expr_set_field_2_shadow_field; prove_bag.
+    eapply red_expr_set_field_2_unextensible_shadow; prove_bag. 
     eapply red_expr_set_field_2_setter; try eassumption.
     eauto using red_expr_app_2_lemma. 
     (* delete_field *)

@@ -160,6 +160,16 @@ Ltac destruct_hyp H := match type of H with
     | _ = ?x => is_var x; subst x
     end.
 
+Ltac option_neq_positivize := 
+    match goal with
+    | H : ?o <> None |- _  =>
+       let x := fresh "x" in let H' := fresh in 
+       set_eq x H' : o in H; destruct x; tryfalse; clear H; symmetry in H'; rename H' into H
+    | H : None <> ?o  |- _  =>
+       let x := fresh "x" in let H' := fresh in 
+       set_eq x H' : o in H; destruct x; tryfalse; clear H; rename H' into H
+    end.
+
 (* for faster inverts *)
 
 Ltac inverts_tactic_general T H :=

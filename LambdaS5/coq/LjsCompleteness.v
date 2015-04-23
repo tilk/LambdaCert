@@ -463,11 +463,15 @@ Proof.
     unfolds.
     repeat ljs_eval_push.
     unfold change_object_property, change_object_property_cont.
-    destruct oattr as [[|]|].
-    repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; tryfalse; bool_tryfalse; reflexivity.
+    destruct oattr as [[|]|]. destruct obj.
+    repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; 
+    unfolds get_object_property, object_extensible; simpls;
+    try match goal with H : object_properties\(s?) = _ |- _ => 
+        apply read_option_binds in H || apply read_option_not_index in H end;
+    tryfalse; bool_tryfalse; try solve [false; prove_bag 8]; try reflexivity.
     ljs_inv_red_internal.
     eapply apply_lemma; eauto. 
-    cases_if; ljs_inv_red; tryfalse; bool_tryfalse; try ljs_eval; reflexivity.
+    cases_if; ljs_inv_red; unfolds object_extensible; simpls; tryfalse; bool_tryfalse; try ljs_eval; reflexivity.
     (* delete_field *)
     unfolds.
     repeat ljs_eval_push.

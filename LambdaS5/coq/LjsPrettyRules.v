@@ -157,21 +157,23 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     object_property_is st obj s oattr ->
     red_expr c st (expr_set_field_2 ptr obj oattr s v3) o ->
     red_expr c st (expr_set_field_1 [value_object ptr; value_string s; v3]) o
-| red_expr_set_field_2_set_field : forall c st st1 ptr obj data s v3,
-    get_object_property obj s <> None ->
+| red_expr_set_field_2_set_field : forall c st st1 ptr oas props data s v3,
+    index props s ->
     attributes_data_writable data ->
-    st1 = st \(ptr := set_object_property obj s (attributes_data_of (attributes_data_value_update data v3))) ->
-    red_expr c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st1 (res_value v3))
-| red_expr_set_field_2_shadow_field : forall c st st1 ptr obj data s v3,
-    get_object_property obj s = None ->
-    object_extensible obj ->
+    st1 = st \(ptr := object_intro oas (props \(s := attributes_data_of (attributes_data_value_update data v3)))) ->
+    red_expr c st (expr_set_field_2 ptr (object_intro oas props) (Some (attributes_data_of data)) s v3) 
+        (out_ter st1 (res_value v3))
+| red_expr_set_field_2_shadow_field : forall c st st1 ptr oas props data s v3,
+    ~index props s ->
+    oattrs_extensible oas ->
     attributes_data_writable data ->
-    st1 = st \(ptr := set_object_property obj s (attributes_data_of (attributes_data_intro v3 true true true))) ->
-    red_expr c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) (out_ter st1 (res_value v3))
-| red_expr_set_field_2_add_field : forall c st st1 ptr obj s v3,
-    object_extensible obj ->
-    st1 = st \(ptr := set_object_property obj s (attributes_data_of (attributes_data_intro v3 true true true))) ->
-    red_expr c st (expr_set_field_2 ptr obj None s v3) (out_ter st1 (res_value v3))
+    st1 = st \(ptr := object_intro oas (props \(s := attributes_data_of (attributes_data_intro v3 true true true)))) ->
+    red_expr c st (expr_set_field_2 ptr (object_intro oas props) (Some (attributes_data_of data)) s v3) 
+        (out_ter st1 (res_value v3))
+| red_expr_set_field_2_add_field : forall c st st1 ptr oas props s v3,
+    oattrs_extensible oas ->
+    st1 = st \(ptr := object_intro oas (props \(s := attributes_data_of (attributes_data_intro v3 true true true)))) ->
+    red_expr c st (expr_set_field_2 ptr (object_intro oas props) None s v3) (out_ter st1 (res_value v3))
 | red_expr_set_field_2_setter : forall c st ptr obj acc s v3 o,
     red_expr c st (expr_app_2 (attributes_accessor_set acc) [value_object ptr; v3]) o ->
     red_expr c st (expr_set_field_2 ptr obj (Some (attributes_accessor_of acc)) s v3) o
@@ -179,14 +181,15 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     !attributes_data_writable data ->
     red_expr c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) 
         (out_ter st (res_exception (value_string "unwritable-field")))
-| red_expr_set_field_2_unextensible_add : forall c st ptr obj s v3,
-    !object_extensible obj ->
-    red_expr c st (expr_set_field_2 ptr obj None s v3) (out_ter st (res_exception (value_string "unextensible-set")))
-| red_expr_set_field_2_unextensible_shadow : forall c st ptr obj data s v3,
+| red_expr_set_field_2_unextensible_add : forall c st ptr oas props s v3,
+    !oattrs_extensible oas ->
+    red_expr c st (expr_set_field_2 ptr (object_intro oas props) None s v3) 
+        (out_ter st (res_exception (value_string "unextensible-set")))
+| red_expr_set_field_2_unextensible_shadow : forall c st ptr oas props data s v3,
     attributes_data_writable data ->
-    get_object_property obj s = None ->
-    !object_extensible obj ->
-    red_expr c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) 
+    ~index props s ->
+    !oattrs_extensible oas ->
+    red_expr c st (expr_set_field_2 ptr (object_intro oas props) (Some (attributes_data_of data)) s v3) 
         (out_ter st (res_exception (value_string "unextensible-shadow")))
 
 (* delete_field *)

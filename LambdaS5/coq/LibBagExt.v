@@ -1317,7 +1317,7 @@ Hint Resolve
     @incl_union_l @incl_union_r
     @update_nindex_incl @remove_incl @restrict_incl
     @disjoint_in @disjoint_index @disjoint_binds
-    @read_option_binds
+    @read_option_binds @read_option_not_index
 : bag.
 
 Hint Extern 0 (?x \c ?x) => solve [apply incl_refl] : bag.
@@ -1327,8 +1327,10 @@ Hint Extern 0 (?A \c ?C) =>
     | H : ?B \c C |- _ => apply ((fun bs1 bs2 => @incl_trans _ _ _ B A C bs2 bs1) H) 
     end : bag. 
 
-Tactic Notation "prove_bag" :=
-    solve [ eauto with bag typeclass_instances ].
+Tactic Notation "prove_bag" integer(n) :=
+    solve [ eauto n with bag typeclass_instances ].
+
+Tactic Notation "prove_bag" := prove_bag 5.
 
 Hint Rewrite 
     @binds_empty_eq @binds_single_bind_eq @binds_union_eq
