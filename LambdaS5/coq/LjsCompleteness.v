@@ -304,7 +304,6 @@ Proof.
     (* [] *)
     simpl.
     ljs_inv_red.
-    injects.
     reflexivity.
     (* [] *)
     destruct p as (i&[()|()]); ljs_inv_red; simpl.

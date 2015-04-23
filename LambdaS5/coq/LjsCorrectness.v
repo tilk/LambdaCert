@@ -1129,7 +1129,8 @@ Proof.
     simpl in Ho.
     destruct Ho as (st'''&v&Ho).
     destructs Ho. substs.
-    eapply red_expr_object_2; eassumption.
+    injects.
+    eapply red_expr_object_2; eauto.
     (* get_attr *)
     lets H: eval_get_attr_correct IH R.
     eapply red_expr_get_attr.
@@ -1208,7 +1209,7 @@ Proof.
     repeat destruct_exists H.
     destruct H as (Hv&Ho&Ha&Hb).
     rewrite read_option_binds_eq in Ho. 
-    substs.
+    substs. injects.
     eapply red_expr_own_field_names_1; eauto.
     (* op1 *)
     lets H: eval_op1_correct IH R.

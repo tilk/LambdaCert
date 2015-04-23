@@ -60,9 +60,9 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_object_1 : forall c st class ext proto code prim a o,
     red_expr c st (expr_object_2 (object_intro (oattrs_intro proto class ext prim code) \{}) a) o ->
     red_expr c st (expr_object_1 a [value_string class; value_bool ext; proto; code; prim]) o
-| red_expr_object_2 : forall c st st1 obj v,
-    (st1, v) = add_object st obj ->
-    red_expr c st (expr_object_2 obj nil) (out_ter st1 (res_value v))
+| red_expr_object_2 : forall c st st1 obj,
+    st1 = st \(fresh st := obj) ->
+    red_expr c st (expr_object_2 obj nil) (out_ter st1 (res_value (value_object (fresh st))))
 | red_expr_object_2_data : forall c st obj s e1 e2 e3 e4 a o,
     red_expr c st (expr_eval_many_1 [e1; e2; e3; e4] nil (expr_object_data_1 obj a s)) o ->
     red_expr c st (expr_object_2 obj ((s, property_data (data_intro e3 e4 e2 e1)) :: a)) o
@@ -214,10 +214,11 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st e o ->
     red_expr c st (expr_own_field_names_1 o) o' ->
     red_expr c st (expr_own_field_names e) o'
-| red_expr_own_field_names_1 : forall c st' st st1 ptr obj v,
+| red_expr_own_field_names_1 : forall c st' st st1 ptr obj,
     binds st ptr obj ->
-    (st1, v) = add_object st (make_prop_list obj) ->
-    red_expr c st' (expr_own_field_names_1 (out_ter st (res_value (value_object ptr)))) (out_ter st1 (res_value v))
+    st1 = st \(fresh st := make_prop_list obj) ->
+    red_expr c st' (expr_own_field_names_1 (out_ter st (res_value (value_object ptr)))) 
+        (out_ter st1 (res_value (value_object (fresh st))))
 | red_expr_own_field_names_1_abort : forall c st o,
     abort o ->
     red_expr c st (expr_own_field_names_1 o) o
