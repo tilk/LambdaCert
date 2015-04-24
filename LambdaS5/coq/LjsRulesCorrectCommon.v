@@ -91,6 +91,7 @@ Hint Extern 1 (_ <> _) => solve [let H := fresh in intro H; injects H; false].
 (** Additional hints *)
 
 Hint Resolve js_object_alloc_lemma : js_ljs.
+Hint Resolve js_object_set_property_lemma : js_ljs.
 Hint Resolve js_object_fresh_index js_env_record_fresh_index : js_ljs.
 Hint Resolve js_state_fresh_ok_next_fresh_update_object_preserved : js_ljs.
 Hint Resolve js_state_fresh_ok_next_fresh_update_env_record_preserved : js_ljs.
@@ -1093,6 +1094,66 @@ Qed.
 
 Hint Resolve object_related_bisim_incl_preserved : js_ljs.
 
+Lemma object_prim_related_map_properties_preserved : forall BR jobj obj F,
+    object_prim_related BR jobj obj ->
+    object_prim_related BR (J.object_map_properties jobj F) obj.
+Proof.
+    introv Hprim. 
+    inverts Hprim. destruct jobj.
+    constructor; eauto.
+Qed.
+
+Hint Resolve object_prim_related_map_properties_preserved : js_ljs.
+
+Lemma object_related_map_properties_preserved : forall BR jobj obj F,
+    object_prim_related BR jobj obj ->
+    object_properties_related BR (F (J.object_properties_ jobj)) (L.object_properties obj) ->
+    object_related BR (J.object_map_properties jobj F) obj.
+Proof.
+    introv Hrel1 Hrel2. destruct jobj. 
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve object_related_map_properties_preserved : js_ljs.
+
+Lemma object_prim_related_object_new : forall BR jv v s obj,
+    L.object_class obj = s ->
+    L.object_extensible obj ->
+    value_related BR jv v ->
+    object_prim_related BR (J.object_new jv s) obj.
+Proof.
+    introv Hcl Hrel.
+    constructor.
+    rewrite Hcl. reflexivity.
+    rewrite Hrel. reflexivity. 
+Qed.
+
+Hint Resolve object_prim_related_object_new : js_ljs.
+
+Lemma object_properties_related_new : forall BR,
+    object_properties_related BR \{} \{}.
+Proof. introv. unfolds. introv. left. split; eauto_js. Qed.
+
+Hint Resolve object_properties_related_new : js_ljs. 
+
+Lemma object_properties_related_update : forall BR jprops props jattrs attrs s,
+    attributes_related BR jattrs attrs ->
+    object_properties_related BR jprops props ->
+    object_properties_related BR (jprops \(s := jattrs)) (props \(s := attrs)).
+Proof.
+    introv Hrel1 Hrel2.
+    unfolds object_properties_related. intro s'.
+    tests Eq : (s' = s). 
+    right. jauto_js.
+    specializes Hrel2 s'.
+    destruct_hyp Hrel2; eauto_js. 
+    repeat rewrite index_update_diff_eq; eauto.
+    right. do 2 eexists.
+    repeat rewrite binds_update_diff_eq; eauto.
+Qed.
+
+Hint Resolve object_properties_related_update : js_ljs.
+
 Lemma heaps_bisim_consistent_new_object_preserved : forall BR jst st jptr jobj ptr obj,
     ~index jst jptr ->
     ~index st ptr ->
@@ -1208,11 +1269,23 @@ Qed.
 
 Hint Resolve state_invariant_new_object_preserved : js_ljs.
 
-Lemma object_properties_related_new : forall BR,
-    object_properties_related BR \{} \{}.
-Proof. introv. unfolds. introv. left. split; eauto_js. Qed.
+Lemma state_invariant_next_fresh_commute_object_preserved : forall BR jst jptr jobj jc c st,
+    state_invariant BR (J.state_next_fresh (jst \(jptr := jobj))) jc c st ->
+    state_invariant BR (J.state_next_fresh jst \(jptr := jobj)) jc c st.
+Proof.
+    introv Hinv. rewrite js_state_write_object_next_fresh_commute. assumption. 
+Qed.
 
-Hint Resolve object_properties_related_new : js_ljs. 
+Hint Resolve state_invariant_next_fresh_commute_object_preserved : js_ljs.
+
+Lemma state_invariant_double_write_preserved : forall BR jst jptr jobj jobj' jc c st,
+    state_invariant BR (jst \(jptr := jobj)) jc c st ->
+    state_invariant BR (jst \(jptr := jobj') \(jptr := jobj)) jc c st.
+Proof.
+    introv Hinv. rew_bag_simpl. assumption. 
+Qed.
+
+Hint Resolve state_invariant_double_write_preserved : js_ljs.
 
 (* Prerequisites *)
 

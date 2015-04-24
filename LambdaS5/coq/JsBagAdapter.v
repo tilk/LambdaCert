@@ -12,6 +12,7 @@ Implicit Type jptr : object_loc.
 Implicit Type jobj : object.
 Implicit Type jer : env_record.
 Implicit Type jeptr : env_loc.
+Implicit Type jattrs : attributes.
 
 Module Import JsCertExt.
 
@@ -63,6 +64,9 @@ Global Instance binds_empty_eq_inst : Binds_empty_eq.
 Admitted. (* TODO *)
 
 Global Instance binds_update_eq_inst : Binds_update_eq.
+Admitted. (* TODO *)
+
+Global Instance binds_double_inst : Binds_double.
 Admitted. (* TODO *)
 
 End Instances.
@@ -119,6 +123,20 @@ Proof.
     applys (binds_update_eq (T := Heap.heap env_loc env_record)).
 Qed.
 
+Global Instance update_overwrite_object_state_inst : Update_overwrite (T := state) (A := object_loc).
+Proof.
+    constructor. introv. destruct M.
+    lets H : (update_overwrite state_object_heap k x x').
+    simpls. rewrite H. reflexivity.
+Qed.
+
+Global Instance update_overwrite_env_record_state_inst : Update_overwrite (T := state) (A := env_loc).
+Proof.
+    constructor. introv. destruct M.
+    lets H : (update_overwrite state_env_record_heap k x x').
+    simpls. rewrite H. reflexivity.
+Qed.
+
 End StateInstances.
 
 Lemma js_state_fresh_ok_next_fresh_preserved : forall jst, 
@@ -149,6 +167,14 @@ Proof.
     introv.
     destruct jst. destruct state_fresh_locations.
     reflexivity.
+Qed.
+
+Lemma js_object_set_property_lemma : forall jst jptr jobj s jattrs,
+    binds jst jptr jobj ->
+    JsPreliminary.object_set_property jst jptr s jattrs 
+        (jst \(jptr := object_map_properties jobj (fun jprops => jprops \(s := jattrs)))).
+Proof.
+    introv Hbinds. unfolds. unfolds. jauto.
 Qed.
 
 Lemma js_object_fresh_index : forall jst,
@@ -240,6 +266,14 @@ Proof. destruct jst. reflexivity. Qed.
 Lemma js_state_write_env_record_index_object_preserved_eq : forall jst jptr jobj jeptr jer,
     index (jst \(jeptr := jer)) jptr = index jst jptr.
 Proof. destruct jst. reflexivity. Qed.
+
+Lemma js_state_write_object_next_fresh_commute : forall jst jptr jobj,
+    state_next_fresh jst \(jptr := jobj) = state_next_fresh (jst \(jptr := jobj)).
+Proof. destruct jst. destruct state_fresh_locations. reflexivity. Qed. 
+
+Lemma js_state_write_env_record_next_fresh_commute : forall jst jeptr jer,
+    state_next_fresh jst \(jeptr := jer) = state_next_fresh (jst \(jeptr := jer)).
+Proof. destruct jst. destruct state_fresh_locations. reflexivity. Qed. 
 
 Hint Rewrite 
     js_state_write_object_binds_env_record_preserved_eq

@@ -75,9 +75,29 @@ Proof.
     destruct_hyp Hv;
     repeat ljs_autoforward.
     inverts Hvrel2.
-    jauto_js 8. 
-    skip.
-Admitted.
+    jauto_js 8.
+    (* has message *)
+    inv_ljs;
+    binds_inv. (* TODO *) simpls. false. rewrite binds_empty_eq in H6. eauto.
+    repeat ljs_autoforward.
+    inv_ljs; binds_inv. 
+    repeat ljs_autoforward.
+    rew_bag_simpl. 
+    simpls.
+    binds_inv.
+    inverts Hvrel2.
+    unfold_concl. do 3 eexists. split. 
+    jauto_js 15.
+    jauto_js.
+    eapply state_invariant_next_fresh_commute_object_preserved.
+    rew_bag_simpl.
+    eapply state_invariant_new_object_preserved.
+    eauto_js. eauto_js.
+    eauto_js 6.
+    jauto_js.
+    jauto_js 8.
+    simpls. false. prove_bag 7.
+Qed.
 
 Lemma get_identifier_value_lemma : forall jlenv k BR jst jc c st st' r b v i,
     lexical_env_related BR st jlenv v ->

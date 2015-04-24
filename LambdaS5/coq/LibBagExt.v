@@ -65,6 +65,9 @@ Class Update_union_assoc `{BagUpdate A B T} `{BagUnion T} :=
 Class Single_bind_union `{BagSingleBind A B T} `{BagUpdate A B T} `{BagUnion T} :=
     { single_bind_union : forall M k x, (k \:= x) \u M = M \(k := x) }.
 
+Class Update_overwrite `{BagUpdate A B T} :=
+    { update_overwrite : forall M k x x', M \(k := x') \(k := x) = M \(k := x) }.
+
 Class Remove_empty_l `{BagEmpty T} `{BagRemove T T} :=
     { remove_empty_l : absorb_l remove empty }.
 
@@ -508,7 +511,7 @@ Hint Rewrite
     @union_empty_l @union_empty_r
     @inter_empty_l @inter_empty_r
     @remove_empty_l @remove_empty_r 
-    @update_empty @update_union_assoc @single_bind_union
+    @update_empty @update_union_assoc @single_bind_union @update_overwrite
     @dom_empty @dom_single_bind @dom_union @dom_remove @dom_restrict @dom_update
     using (eauto with typeclass_instances) : rew_bag_simpl.
 
@@ -1395,6 +1398,14 @@ Global Instance update_empty_from_binds_update :
 Proof.
     constructor. intros. apply binds_double. intros.
     rew_binds_eq. rew_logic. iauto.
+Qed.
+
+Global Instance update_overwrite_from_binds_update :
+    forall `{BagBinds A B T} `{BagUpdate A B T}, 
+    Binds_double -> Binds_update_eq -> Update_overwrite.
+Proof.
+    constructor. intros. apply binds_double. intros.
+    rew_binds_eq. iauto.
 Qed.
 
 Global Instance update_union_assoc_from_binds_union :
