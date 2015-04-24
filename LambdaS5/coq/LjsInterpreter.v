@@ -385,12 +385,12 @@ Definition set_object_pattr obj s (pa : pattr) v : resultof object :=
     if object_extensible obj then 
       let oattr :=
         match pa with
-        | pattr_getter => Some (attributes_accessor_of (attributes_accessor_intro v value_undefined false false))
-        | pattr_setter => Some (attributes_accessor_of (attributes_accessor_intro value_undefined v false false))
-        | pattr_value => Some (attributes_data_of (attributes_data_intro v false false false))
-        | pattr_writable => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined b false false)) (value_to_bool v)
-        | pattr_enum => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined false b false)) (value_to_bool v)
-        | pattr_config => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined false false b)) (value_to_bool v)
+        | pattr_getter => Some (attributes_accessor_of (attributes_accessor_intro v value_undefined true true))
+        | pattr_setter => Some (attributes_accessor_of (attributes_accessor_intro value_undefined v true true))
+        | pattr_value => Some (attributes_data_of (attributes_data_intro v true true true))
+        | pattr_writable => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined b true true)) (value_to_bool v)
+        | pattr_enum => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined true b true)) (value_to_bool v)
+        | pattr_config => LibOption.map (fun b => attributes_data_of (attributes_data_intro value_undefined true true b)) (value_to_bool v)
         end in
       match oattr with
       | Some attr => result_some (set_object_property obj s attr)

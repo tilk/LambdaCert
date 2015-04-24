@@ -437,15 +437,15 @@ Defined.
 
 Definition new_attributes_pattr pa v :=
   match pa with
-  | pattr_getter => attributes_accessor_of (attributes_accessor_intro v value_undefined false false)
-  | pattr_setter => attributes_accessor_of (attributes_accessor_intro value_undefined v false false)
-  | pattr_value => attributes_data_of (attributes_data_intro v false false false)
+  | pattr_getter => attributes_accessor_of (attributes_accessor_intro v value_undefined true true)
+  | pattr_setter => attributes_accessor_of (attributes_accessor_intro value_undefined v true true)
+  | pattr_value => attributes_data_of (attributes_data_intro v true true true)
   | pattr_writable => 
-    attributes_data_of (attributes_data_intro value_undefined (unsome (value_to_bool v)) false false)
+    attributes_data_of (attributes_data_intro value_undefined (unsome (value_to_bool v)) true true)
   | pattr_enum => 
-    attributes_data_of (attributes_data_intro value_undefined false (unsome (value_to_bool v)) false)
+    attributes_data_of (attributes_data_intro value_undefined true (unsome (value_to_bool v)) true)
   | pattr_config => 
-    attributes_data_of (attributes_data_intro value_undefined false false (unsome (value_to_bool v)))
+    attributes_data_of (attributes_data_intro value_undefined true true (unsome (value_to_bool v)))
   end.
 
 Definition set_attributes_pattr attrs pa v :=
