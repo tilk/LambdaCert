@@ -275,16 +275,18 @@ Inductive object_oattr_valid : oattr -> value -> Prop :=
     object_oattr_valid oattr_primval v
 .
 
-Inductive object_oattr_modifiable oas : oattr -> Prop :=
-| object_oattr_modifiable_proto : 
+Inductive oattrs_oattr_modifiable oas : oattr -> Prop :=
+| oattrs_oattr_modifiable_proto : 
     oattrs_extensible oas ->
-    object_oattr_modifiable oas oattr_proto
-| object_oattr_modifiable_extensible : 
+    oattrs_oattr_modifiable oas oattr_proto
+| oattrs_oattr_modifiable_extensible : 
     oattrs_extensible oas ->
-    object_oattr_modifiable oas oattr_extensible
-| object_oattr_modifiable_primval : 
-    object_oattr_modifiable oas oattr_primval
+    oattrs_oattr_modifiable oas oattr_extensible
+| oattrs_oattr_modifiable_primval : 
+    oattrs_oattr_modifiable oas oattr_primval
 .
+
+Definition object_oattr_modifiable obj oa := oattrs_oattr_modifiable (object_attrs obj) oa.
 
 Definition object_oattr_valid_decide oa v :=
     match oa with
@@ -296,14 +298,14 @@ Definition object_oattr_valid_decide oa v :=
     | _ => false
     end.
 
-Definition object_oattr_modifiable_decide oas oa :=
+Definition oattrs_oattr_modifiable_decide oas oa :=
     match oa with
     | oattr_proto | oattr_extensible => oattrs_extensible oas
     | oattr_primval => true
     | _ => false
     end.
 
-Local Hint Constructors object_oattr_valid object_oattr_modifiable.
+Local Hint Constructors object_oattr_valid oattrs_oattr_modifiable.
 
 Instance object_oattr_valid_decidable : forall oa v, Decidable (object_oattr_valid oa v).
 Proof.
@@ -311,9 +313,9 @@ Proof.
     destruct oa; destruct v; simpl; fold_bool; rew_refl; auto.
 Qed.
 
-Instance object_oattr_modifiable_decidable : forall oas oa, Decidable (object_oattr_modifiable oas oa).
+Instance object_oattr_modifiable_decidable : forall oas oa, Decidable (oattrs_oattr_modifiable oas oa).
 Proof.
-    introv. applys decidable_make (object_oattr_modifiable_decide oas oa).
+    introv. applys decidable_make (oattrs_oattr_modifiable_decide oas oa).
     destruct oa; simpl; fold_bool; rew_refl; auto; 
     sets_eq beq : (oattrs_extensible oas); symmetry in EQbeq; destruct beq;
     fold_bool; rew_reflect in *; auto; intro H; inverts H; auto.

@@ -751,29 +751,29 @@ Lemma eval_get_obj_attr_correct : forall runs c st oa e1 o,
     runs_type_correct runs ->
     eval_get_obj_attr runs c st e1 oa = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
-        exists ptr oas props, v1 = value_object ptr /\ 
-            st' \(ptr?) = Some (object_intro oas props) /\ 
-            o = out_ter st' (res_value (get_oattrs_oattr oas oa))).
+        exists ptr obj, v1 = value_object ptr /\ 
+            binds st' ptr obj /\ 
+            o = out_ter st' (res_value (get_object_oattr obj oa))).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
     ljs_run_inv. substs. 
     match goal with obj : object |- _ => destruct obj end.
-    jauto.
+    jauto_set; prove_bag.
 Qed.
 
-Local Hint Constructors object_oattr_valid object_oattr_modifiable.
+Local Hint Constructors object_oattr_valid oattrs_oattr_modifiable.
 
 Lemma eval_set_obj_attr_correct : forall runs c st oa e1 e2 o,
     runs_type_correct runs ->
     eval_set_obj_attr runs c st e1 oa e2 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
-            exists ptr oas props, v1 = value_object ptr /\
-                st'' \(ptr?) = Some (object_intro oas props) /\
+            exists ptr obj, v1 = value_object ptr /\
+                binds st'' ptr obj /\
                 object_oattr_valid oa v2 /\
-                object_oattr_modifiable oas oa /\
-                o = out_ter (st'' \(ptr := object_intro (set_oattrs_oattr oas oa v2) props)) (res_value v2))).
+                object_oattr_modifiable obj oa /\
+                o = out_ter (st'' \(ptr := set_object_oattr obj oa v2)) (res_value v2))).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
@@ -782,10 +782,10 @@ Proof.
     ljs_run_push_post_auto.
     injects.
     unfolds set_object_oattr_check.
-    cases_let. cases_let.
-    destruct oa; try cases_if; substs; tryfalse; 
-    repeat injects; simpls; jauto;
-    destruct v0; tryfalse; repeat injects; jauto.
+    cases_let. cases_let. 
+    destruct oa; try cases_if; substs; tryfalse;
+    repeat injects; simpls; unfold object_oattr_modifiable; try solve [jauto_set; prove_bag];
+    destruct v0; tryfalse; repeat injects; jauto_set; prove_bag.
 Qed.
 
 Local Hint Constructors attributes_pattr_readable.
@@ -1149,21 +1149,18 @@ Proof.
     substs.
     destruct obj.
     destruct_hyp H.
-    eapply red_expr_set_attr_1_add_field; eauto with bag.
-    eapply red_expr_set_attr_1; eauto with bag.
+    eapply red_expr_set_attr_1_add_field; prove_bag.
+    eapply red_expr_set_attr_1; prove_bag.
     (* get_obj_attr *)
     lets H: eval_get_obj_attr_correct IH R.
     ljs_pretty_advance red_expr_get_obj_attr red_expr_get_obj_attr_1_abort.
-    destruct H as (ptr&oas&props&Hy1&Hy2&Hy3).
-    inverts Hy1. inverts Hy3.
-    rewrite read_option_binds_eq in Hy2. 
+    destruct_hyp H.
     eapply red_expr_get_obj_attr_1; eauto.
     (* set_obj_attr *)
     lets H: eval_set_obj_attr_correct IH R.
     eapply red_expr_set_obj_attr.
     ljs_advance_eval_many.
-    destruct H as (ptr&oas&props&Hy1&Hy2&Hy3&Hy4&Hy5).
-    rewrite read_option_binds_eq in Hy2. substs.
+    destruct_hyp H.
     eapply red_expr_set_obj_attr_1; eauto.
     (* get_field *)
     lets H: eval_get_field_correct IH R.
