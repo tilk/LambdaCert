@@ -393,12 +393,6 @@ expr_object
  ("%ToPrimitiveHint", property_data
                       (data_intro (expr_id "%ToPrimitiveHint") expr_true
                        expr_false expr_false));
- ("%ToPrimitiveNum", property_data
-                     (data_intro (expr_id "%ToPrimitiveNum") expr_true
-                      expr_false expr_false));
- ("%ToPrimitiveStr", property_data
-                     (data_intro (expr_id "%ToPrimitiveStr") expr_true
-                      expr_false expr_false));
  ("%ToString", property_data
                (data_intro (expr_id "%ToString") expr_true expr_false
                 expr_false));
@@ -2860,7 +2854,8 @@ expr_let "t" (expr_op1 unary_op_typeof (expr_id "x"))
      (expr_if
       (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
       (expr_app (expr_id "%ToNumber")
-       [expr_app (expr_id "%ToPrimitiveNum") [expr_id "x"]])
+       [expr_app (expr_id "%ToPrimitiveHint")
+        [expr_id "x"; expr_string "number"]])
       (expr_throw (expr_string "[env] Invalid type in %ToNumber"))))))))
 .
 Definition ex_privToObject := 
@@ -2904,64 +2899,38 @@ expr_app (expr_id "%ToPrimitiveHint") [expr_id "val"; expr_string "number"]
 .
 Definition ex_privToPrimitiveHint := 
 expr_if (expr_op1 unary_op_is_object (expr_id "val"))
-(expr_if (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string"))
- (expr_app (expr_id "%ToPrimitiveStr") [expr_id "val"])
- (expr_app (expr_id "%ToPrimitiveNum") [expr_id "val"])) (expr_id "val")
-.
-Definition ex_privToPrimitiveNum := 
-expr_let "check"
-(expr_lambda ["o"; "str"]
- (expr_let "valueOf" (expr_get_field (expr_id "o") (expr_id "str"))
-  (expr_if (expr_app (expr_id "%IsCallable") [expr_id "valueOf"])
-   (expr_let "str"
-    (expr_app (expr_id "valueOf")
-     [expr_id "o";
-      expr_object
-      (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-       expr_undefined) []])
-    (expr_if (expr_op1 unary_op_is_primitive (expr_id "str")) (expr_id "str")
-     expr_null)) expr_null)))
-(expr_let "r1"
- (expr_app (expr_id "check") [expr_id "obj"; expr_string "valueOf"])
- (expr_if
-  (expr_op1 unary_op_not (expr_op2 binary_op_stx_eq (expr_id "r1") expr_null))
-  (expr_id "r1")
-  (expr_let "r2"
-   (expr_app (expr_id "check") [expr_id "obj"; expr_string "toString"])
+(expr_let "check"
+ (expr_lambda ["str"; "next"]
+  (expr_lambda []
+   (expr_let "f" (expr_get_field (expr_id "val") (expr_id "str"))
+    (expr_if (expr_app (expr_id "%IsCallable") [expr_id "f"])
+     (expr_let "res"
+      (expr_app (expr_id "f")
+       [expr_id "val";
+        expr_object
+        (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
+         expr_undefined) []])
+      (expr_if (expr_op1 unary_op_is_primitive (expr_id "res"))
+       (expr_id "res") (expr_app (expr_id "next") [])))
+     (expr_app (expr_id "next") [])))))
+ (expr_let "met1"
+  (expr_if
+   (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string"))
+   (expr_string "toString") (expr_string "valueOf"))
+  (expr_let "met2"
    (expr_if
     (expr_op1 unary_op_not
-     (expr_op2 binary_op_stx_eq (expr_id "r2") expr_null)) (expr_id "r2")
-    (expr_app (expr_id "%TypeError")
-     [expr_string "valueOf and toString both absent in toPrimitiveNum"])))))
-.
-Definition ex_privToPrimitiveStr := 
-expr_label "ret"
-(expr_seq
- (expr_let "toString"
-  (expr_get_field (expr_id "obj") (expr_string "toString"))
-  (expr_if (expr_app (expr_id "%IsCallable") [expr_id "toString"])
-   (expr_let "str"
-    (expr_app (expr_id "toString")
-     [expr_id "obj";
-      expr_object
-      (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-       expr_undefined) []])
-    (expr_if (expr_op1 unary_op_is_primitive (expr_id "str"))
-     (expr_break "ret" (expr_id "str")) expr_null)) expr_undefined))
- (expr_seq
-  (expr_let "valueOf"
-   (expr_get_field (expr_id "obj") (expr_string "valueOf"))
-   (expr_if (expr_app (expr_id "%IsCallable") [expr_id "valueOf"])
-    (expr_let "str"
-     (expr_app (expr_id "valueOf")
-      [expr_id "obj";
-       expr_object
-       (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-        expr_undefined) []])
-     (expr_if (expr_op1 unary_op_is_primitive (expr_id "str"))
-      (expr_break "ret" (expr_id "str")) expr_null)) expr_undefined))
-  (expr_app (expr_id "%TypeError")
-   [expr_string "valueOf and toString both absent in toPrimitiveStr"])))
+     (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string")))
+    (expr_string "toString") (expr_string "valueOf"))
+   (expr_app
+    (expr_app (expr_id "check")
+     [expr_id "met1";
+      expr_app (expr_id "check")
+      [expr_id "met2";
+       expr_lambda []
+       (expr_app (expr_id "%TypeError")
+        [expr_string "valueOf and toString both absent in toPrimitive"])]])
+    [])))) (expr_id "val")
 .
 Definition ex_privToString := 
 expr_op1 unary_op_prim_to_str
@@ -7093,16 +7062,16 @@ Definition privArrayProto :=  value_object 52 .
 Definition name_privArrayProto :=  "%ArrayProto" .
 Definition privRangeErrorProto :=  value_object 10 .
 Definition name_privRangeErrorProto :=  "%RangeErrorProto" .
-Definition privToPrimitiveNum := 
+Definition privToPrimitiveHint := 
 value_closure
 (closure_intro
  [("%IsCallable", privIsCallable); ("%TypeError", privTypeError)] None
- ["obj"] ex_privToPrimitiveNum)
+ ["val"; "hint"] ex_privToPrimitiveHint)
 .
-Definition name_privToPrimitiveNum :=  "%ToPrimitiveNum" .
+Definition name_privToPrimitiveHint :=  "%ToPrimitiveHint" .
 Definition privToNumber := 
 value_closure
-(closure_intro [("%ToPrimitiveNum", privToPrimitiveNum)] (Some "%ToNumber")
+(closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] (Some "%ToNumber")
  ["x"] ex_privToNumber)
 .
 Definition name_privToNumber :=  "%ToNumber" .
@@ -7129,21 +7098,6 @@ Definition privToBoolean :=
 value_closure (closure_intro [] None ["x"] ex_privToBoolean)
 .
 Definition name_privToBoolean :=  "%ToBoolean" .
-Definition privToPrimitiveStr := 
-value_closure
-(closure_intro
- [("%IsCallable", privIsCallable); ("%TypeError", privTypeError)] None
- ["obj"] ex_privToPrimitiveStr)
-.
-Definition name_privToPrimitiveStr :=  "%ToPrimitiveStr" .
-Definition privToPrimitiveHint := 
-value_closure
-(closure_intro
- [("%ToPrimitiveNum", privToPrimitiveNum);
-  ("%ToPrimitiveStr", privToPrimitiveStr)] None ["val"; "hint"]
- ex_privToPrimitiveHint)
-.
-Definition name_privToPrimitiveHint :=  "%ToPrimitiveHint" .
 Definition privToString := 
 value_closure
 (closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["val"]
@@ -9387,8 +9341,6 @@ Definition ctx_items :=
  (name_privToObject, privToObject);
  (name_privToPrimitive, privToPrimitive);
  (name_privToPrimitiveHint, privToPrimitiveHint);
- (name_privToPrimitiveNum, privToPrimitiveNum);
- (name_privToPrimitiveStr, privToPrimitiveStr);
  (name_privToString, privToString);
  (name_privToUint, privToUint);
  (name_privToUint16, privToUint16);
@@ -9795,8 +9747,6 @@ Definition store_items := [
                                              ("%ToObject", privToObject);
                                              ("%ToPrimitive", privToPrimitive);
                                              ("%ToPrimitiveHint", privToPrimitiveHint);
-                                             ("%ToPrimitiveNum", privToPrimitiveNum);
-                                             ("%ToPrimitiveStr", privToPrimitiveStr);
                                              ("%ToString", privToString);
                                              ("%ToUint", privToUint);
                                              ("%ToUint16", privToUint16);
