@@ -99,6 +99,28 @@ Proof.
     simpls. false. prove_bag 7.
 Qed.
 
+Lemma native_error_lemma : forall BR k jst jc c st st' jne ptr v r,
+    (v = L.value_undefined \/ exists s, v = L.value_string s) -> (* TODO error messages in jscert *)
+    (inl (J.object_loc_prealloc (J.prealloc_native_error_proto jne)), ptr) \in BR ->
+    state_invariant BR jst jc c st ->
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privNativeError [L.value_object ptr; v]) 
+        (L.out_ter st' r) ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_error jne) (fun _ => False).
+Proof.
+    introv Hv Hbr Hinv Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat rewrite from_list_update in H8.
+    repeat rewrite from_list_empty in H8. (* TODO *)
+    rew_bag_simpl in H8. (* TODO *)
+    repeat ljs_autoforward.
+    destruct_hyp Hv;
+    forwards Hlol : make_native_error_lemma H7. jauto_js. jauto_js. jauto_js. skip.
+
+    jauto_js.
+Admitted.
+
 Lemma get_identifier_value_lemma : forall jlenv k BR jst jc c st st' r b v i,
     lexical_env_related BR st jlenv v ->
     binds c "strict" (L.value_bool b) ->
