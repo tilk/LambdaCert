@@ -593,6 +593,7 @@ Lemma red_stat_while_lemma : forall k k' jls je jt v jrv,
     exists BR' jst' jr,
     state_invariant BR' jst' jc c st' /\
     BR \c BR' /\
+    lexical_ctx_chain_ok BR st st' /\
     J.red_stat jst jc (J.stat_while_1 jls je jt jrv) (J.out_ter jst' jr) /\ 
     res_related BR' jst' st' jr r.
 Proof.
@@ -797,5 +798,5 @@ Proof.
 (* TODO seems like something to automate *)
     repeat ljs_autoforward. 
     repeat injects.
-    jauto_js; [jauto_js 6 | jauto_js 12]. 
+    jauto_js; [jauto_js 6 | jauto_js 12]. (* TODO performance *)
 Qed.

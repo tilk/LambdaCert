@@ -340,7 +340,7 @@ Inductive lexical_env_related BR st : J.lexical_env -> L.value -> Prop :=
 | lexical_env_related_cons : forall jeptr jlenv ptr obj,
     (inr jeptr, ptr) \in BR ->
     binds st ptr obj ->
-    lexical_env_related BR st jlenv (L.object_proto obj) ->
+    lexical_env_related BR st jlenv (L.object_prim_value obj) ->
     lexical_env_related BR st (jeptr::jlenv) (L.value_object ptr)
 .
 
@@ -411,6 +411,15 @@ Record state_invariant BR jst jc c st : Prop := {
     state_invariant_js_state_fresh_ok : J.state_fresh_ok jst
 }.
 
+(** Preserving lexical context chains *)
+
+Definition lexical_ctx_chain_ok BR st st' :=
+    forall jeptr ptr obj,
+    (inr jeptr, ptr) \in BR ->
+    binds st ptr obj -> exists obj',
+    binds st' ptr obj' /\
+    L.object_prim_value obj = L.object_prim_value obj'.
+    
 (** ** Theorem statement  
     Factored out, because it is used in many lemmas. *)
 
@@ -424,6 +433,7 @@ Definition concl_ext_expr_value BR jst jc c st st' r jee P :=
      J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw) /\
     state_invariant BR' jst' jc c st' /\
     BR \c BR' /\
+    lexical_ctx_chain_ok BR st st' /\
     res_related BR' jst' st' jr r.
 
 (* unused
@@ -434,6 +444,7 @@ Definition concl_stat BR jst jc c st st' r jt :=
     exists BR' jst' jr,
     state_invariant BR' jst' jc c st' /\
     BR \c BR' /\
+    lexical_ctx_chain_ok BR st st' /\
     J.red_stat jst jc (J.stat_basic jt) (J.out_ter jst' jr) /\ 
     res_related BR' jst' st' jr r.
 
@@ -442,6 +453,7 @@ Definition concl_spec {A : Type} BR jst jc c st st' r jes
     exists BR' jst',
     state_invariant BR' jst' jc c st' /\ 
     BR \c BR' /\
+    lexical_ctx_chain_ok BR st st' /\
     ((exists x, J.red_spec jst jc jes (J.specret_val jst' x) /\ P BR' jst' x) \/
      (exists jr, 
         J.red_spec jst jc jes (@J.specret_out A (J.out_ter jst' jr)) /\ 

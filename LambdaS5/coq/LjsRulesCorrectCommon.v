@@ -1287,6 +1287,102 @@ Qed.
 
 Hint Resolve state_invariant_double_write_preserved : js_ljs.
 
+Lemma lexical_ctx_chain_ok_bisim_incl_preserved : forall BR BR' st st',
+    lexical_ctx_chain_ok BR st st' ->
+    BR' \c BR ->
+    lexical_ctx_chain_ok BR' st st'.
+Proof.
+    unfolds lexical_ctx_chain_ok.
+    introv Hlc Hsub Hbisim Hbinds.
+    prove_bag.
+Qed.
+
+Hint Resolve lexical_ctx_chain_ok_bisim_incl_preserved : js_ljs.
+
+Lemma lexical_ctx_chain_ok_trans : forall BR, trans (lexical_ctx_chain_ok BR).
+Proof.
+    introv Hlc1 Hlc2.
+    unfolds lexical_ctx_chain_ok.
+    introv Hbisim Hbinds.
+    specializes Hlc1 Hbisim Hbinds.
+    destruct Hlc1 as (?obj&Hbinds1&Heq1).
+    specializes Hlc2 Hbisim Hbinds1.
+    destruct Hlc2 as (?obj&Hbinds2&Heq2).
+    rewrite Heq2 in Heq1.
+    eauto.
+Qed.
+
+Lemma lexical_ctx_chain_ok_refl : forall BR, refl (lexical_ctx_chain_ok BR).
+Proof.
+    introv Hbisim Hbinds.
+    eauto.
+Qed.
+
+Hint Extern 0 (lexical_ctx_chain_ok ?BR ?st ?st) => apply (@lexical_ctx_chain_ok_refl BR st).
+
+Hint Extern 0 (lexical_ctx_chain_ok ?BR ?st1 ?st3) =>
+    match goal with
+    | H : lexical_ctx_chain_ok ?BR' st1 ?st2 |- _ => 
+        apply (@lexical_ctx_chain_ok_trans BR st2 st1 st3); 
+        [apply (@lexical_ctx_chain_ok_bisim_incl_preserved BR' BR st1 st2 H) | idtac]
+    end : js_ljs.
+
+Lemma lexical_ctx_chain_ok_new_object : forall BR st ptr obj,
+    ~index st ptr ->
+    lexical_ctx_chain_ok BR st (st \(ptr := obj)).
+Proof.
+    introv Hnindex Hbisim Hbinds.
+    prove_bag 7.
+Qed.
+
+Hint Resolve lexical_ctx_chain_ok_new_object : js_ljs.
+
+Lemma lexical_env_related_restore_lexical_env : forall BR BR' jlenv v st st',
+    lexical_env_related BR st jlenv v ->
+    BR \c BR' ->
+    lexical_ctx_chain_ok BR st st' ->
+    lexical_env_related BR' st' jlenv v.
+Proof.
+    introv Hrel Hsub Hlc.
+    induction Hrel as [|? ? ? ? Hbisim Hbinds].
+    jauto_js.
+    specializes Hlc Hbisim Hbinds.
+    destruct Hlc as (?&Hbinds1&Heq). 
+    eapply lexical_env_related_cons.
+    jauto_js.
+    jauto_js.
+    rewrite <- Heq; assumption.
+Qed.
+
+Hint Resolve lexical_env_related_restore_lexical_env : js_ljs.
+
+Lemma execution_ctx_related_restore_lexical_env : forall BR BR' jc c st st',
+    execution_ctx_related BR jc c st ->
+    BR \c BR' ->
+    lexical_ctx_chain_ok BR st st' ->
+    execution_ctx_related BR' jc c st'.
+Proof.
+    introv Hrel Hsub Hlc.
+    destruct Hrel.
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve execution_ctx_related_restore_lexical_env : js_ljs.
+
+Lemma state_invariant_restore_lexical_env : forall BR BR' jst jst' jc jc' c c' st st',
+    lexical_ctx_chain_ok BR st st' ->
+    BR \c BR' ->
+    state_invariant BR jst jc c st ->
+    state_invariant BR' jst' jc' c' st' ->
+    state_invariant BR' jst' jc c st'.
+Proof.
+    introv Hlc Hsub Hinv1 Hinv2.
+    destruct Hinv1. destruct Hinv2.
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve state_invariant_restore_lexical_env : js_ljs.
+
 (* Prerequisites *)
 
 Lemma ih_expr_leq : forall k k', (k' <= k)%nat -> ih_expr k -> ih_expr k'.

@@ -256,8 +256,8 @@ Proof.
     destr_concl.
     res_related_invert.
     resvalue_related_invert.
-    jauto_js. skip.
-    jauto_js. skip.
+    jauto_js. 
+    jauto_js. 
 Qed.
 
 Lemma red_expr_unary_op_add_ok : forall k je,
