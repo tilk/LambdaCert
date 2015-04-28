@@ -175,9 +175,6 @@ expr_object
  ("%IsJSError", property_data
                 (data_intro (expr_id "%IsJSError") expr_true expr_false
                  expr_false));
- ("%IsObject", property_data
-               (data_intro (expr_id "%IsObject") expr_true expr_false
-                expr_false));
  ("%IsPrototypeOflambda", property_data
                           (data_intro (expr_id "%IsPrototypeOflambda")
                            expr_true expr_false expr_false));
@@ -2194,7 +2191,6 @@ expr_if (expr_op1 unary_op_is_object (expr_id "thing"))
 (expr_op2 binary_op_has_own_property (expr_id "thing")
  (expr_string "%js-exn")) expr_false
 .
-Definition ex_privIsObject :=  expr_op1 unary_op_is_object (expr_id "o") .
 Definition ex_privIsPrototypeOflambda := 
 expr_recc "searchChain"
 (expr_lambda ["o"; "v"]
@@ -2600,7 +2596,7 @@ expr_let "calledAsFunction"
             (expr_id "defaultRtn")))))) (expr_id "defaultRtn"))))))))
 .
 Definition ex_privObjectTypeCheck := 
-expr_if (expr_app (expr_id "%IsObject") [expr_id "o"]) expr_null
+expr_if (expr_op1 unary_op_is_object (expr_id "o")) expr_null
 (expr_app (expr_id "%TypeError")
  [expr_op2 binary_op_string_plus
   (expr_op1 unary_op_prim_to_str (expr_id "o"))
@@ -2669,20 +2665,25 @@ expr_let "lNum" (expr_app (expr_id "%ToNumber") [expr_id "l"])
  (expr_app (expr_id "op") [expr_id "lNum"; expr_id "rNum"]))
 .
 Definition ex_privPrimNew := 
-expr_let "cproto1"
-(expr_get_field (expr_id "constr") (expr_string "prototype"))
-(expr_let "cproto"
- (expr_if (expr_app (expr_id "%IsObject") [expr_id "cproto1"])
-  (expr_id "cproto1") (expr_id "%ObjectProto"))
- (expr_let "newobj"
-  (expr_object
-   (objattrs_intro (expr_string "Object") expr_true (expr_id "cproto")
-    expr_null expr_undefined) [])
-  (expr_let "constr_ret"
-   (expr_app (expr_id "%AppExprCheck")
-    [expr_id "constr"; expr_id "newobj"; expr_id "args"])
-   (expr_if (expr_app (expr_id "%IsObject") [expr_id "constr_ret"])
-    (expr_id "constr_ret") (expr_id "newobj")))))
+expr_seq
+(expr_if
+ (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "constr")))
+ (expr_app (expr_id "%TypeError") [expr_string "not a constructor"])
+ expr_undefined)
+(expr_let "cproto1"
+ (expr_get_field (expr_id "constr") (expr_string "prototype"))
+ (expr_let "cproto"
+  (expr_if (expr_op1 unary_op_is_object (expr_id "cproto1"))
+   (expr_id "cproto1") (expr_id "%ObjectProto"))
+  (expr_let "newobj"
+   (expr_object
+    (objattrs_intro (expr_string "Object") expr_true (expr_id "cproto")
+     expr_null expr_undefined) [])
+   (expr_let "constr_ret"
+    (expr_app (expr_id "%AppExprCheck")
+     [expr_id "constr"; expr_id "newobj"; expr_id "args"])
+    (expr_if (expr_op1 unary_op_is_object (expr_id "constr_ret"))
+     (expr_id "constr_ret") (expr_id "newobj"))))))
 .
 Definition ex_privPrimSub := 
 expr_let "l" (expr_app (expr_id "%ToNumber") [expr_id "l"])
@@ -3384,7 +3385,7 @@ expr_label "ret"
  (expr_if
   (expr_op1 unary_op_not (expr_app (expr_id "%IsCallable") [expr_id "this"]))
   (expr_app (expr_id "%TypeError") [expr_string "this not function in bind"])
-  expr_null)
+  expr_undefined)
  (expr_let "thisArg" (expr_get_field (expr_id "args") (expr_string "0"))
   (expr_let "A"
    (expr_app (expr_id "%slicelambda")
@@ -3393,7 +3394,7 @@ expr_label "ret"
    (expr_let "mkNewObj"
     (expr_lambda ["proto"]
      (expr_let "proto"
-      (expr_if (expr_app (expr_id "%IsObject") [expr_id "proto"])
+      (expr_if (expr_op1 unary_op_is_object (expr_id "proto"))
        (expr_id "proto") (expr_id "%ObjectProto"))
       (expr_object
        (objattrs_intro (expr_string "Object") expr_true (expr_id "proto")
@@ -7582,10 +7583,6 @@ value_closure
  ex_privGreaterThan)
 .
 Definition name_privGreaterThan :=  "%GreaterThan" .
-Definition privIsObject := 
-value_closure (closure_intro [] None ["o"] ex_privIsObject)
-.
-Definition name_privIsObject :=  "%IsObject" .
 Definition privIsPrototypeOflambda := 
 value_closure
 (closure_intro [("%ToObject", privToObject)] None ["this"; "args"]
@@ -7662,8 +7659,8 @@ Definition privObjectGlobalFuncObj :=  value_object 34 .
 Definition name_privObjectGlobalFuncObj :=  "%ObjectGlobalFuncObj" .
 Definition privObjectTypeCheck := 
 value_closure
-(closure_intro [("%IsObject", privIsObject); ("%TypeError", privTypeError)]
- None ["o"] ex_privObjectTypeCheck)
+(closure_intro [("%TypeError", privTypeError)] None ["o"]
+ ex_privObjectTypeCheck)
 .
 Definition name_privObjectTypeCheck :=  "%ObjectTypeCheck" .
 Definition privPostfixOp := 
@@ -7723,8 +7720,8 @@ Definition privPrimNew :=
 value_closure
 (closure_intro
  [("%AppExprCheck", privAppExprCheck);
-  ("%IsObject", privIsObject);
-  ("%ObjectProto", privObjectProto)] None ["constr"; "args"] ex_privPrimNew)
+  ("%ObjectProto", privObjectProto);
+  ("%TypeError", privTypeError)] None ["constr"; "args"] ex_privPrimNew)
 .
 Definition name_privPrimNew :=  "%PrimNew" .
 Definition privPropAccessorCheck := 
@@ -8036,7 +8033,6 @@ value_closure
 (closure_intro
  [("%FunctionProto", privFunctionProto);
   ("%IsCallable", privIsCallable);
-  ("%IsObject", privIsObject);
   ("%ObjectProto", privObjectProto);
   ("%ThrowTypeError", privThrowTypeError);
   ("%TypeError", privTypeError);
@@ -9326,7 +9322,6 @@ Definition ctx_items :=
  (name_privIsCallable, privIsCallable);
  (name_privIsFinite, privIsFinite);
  (name_privIsJSError, privIsJSError);
- (name_privIsObject, privIsObject);
  (name_privIsPrototypeOflambda, privIsPrototypeOflambda);
  (name_privJSError, privJSError);
  (name_privLeftShift, privLeftShift);
@@ -9733,7 +9728,6 @@ Definition store_items := [
                                              ("%IsCallable", privIsCallable);
                                              ("%IsFinite", privIsFinite);
                                              ("%IsJSError", privIsJSError);
-                                             ("%IsObject", privIsObject);
                                              ("%IsPrototypeOflambda", privIsPrototypeOflambda);
                                              ("%JSError", privJSError);
                                              ("%LeftShift", privLeftShift);

@@ -34,7 +34,7 @@ Definition make_not e := L.expr_op1 L.unary_op_not e.
 
 Definition make_app_builtin s es := L.expr_app (make_builtin s) es.
 
-Definition is_object_type e := make_app_builtin "%IsObject" [e]. 
+Definition is_object_type e := L.expr_op1 L.unary_op_is_object e. 
 
 Definition to_object e := make_app_builtin "%ToObject" [e].
 

@@ -1704,6 +1704,16 @@ Lemma red_spec_to_number_unary_ok : forall k,
     th_ext_expr_unary k LjsInitEnv.privToNumber J.spec_to_number
         (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
 Proof.
+    introv Hinv Hvrel Hlred.
+    inverts red_exprh Hlred.
+(* NEXT STEP - BETTER ljs_apply *)
+
+    ljs_apply.
+
+    rewrite from_list_update in H8.
+    repeat rewrite from_list_empty in H8. (* TODO *)
+    rew_bag_simpl in H8. 
+
 Admitted.
 
 Lemma red_spec_to_boolean_ok : forall k je, 
