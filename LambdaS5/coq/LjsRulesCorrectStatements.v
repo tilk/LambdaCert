@@ -512,7 +512,7 @@ Proof.
     (* after returns a value *)
     repeat ljs_autoforward.
     inverts red_exprh H0. (* TODO! *)
-    ljs_apply.
+    (* ljs_apply. *) ljs_inv_value_is_closure; ljs_inv_closure_ctx; ljs_closure_body. (* TODO *)
     rewrite from_list_empty in H8.
     repeat rew_bag_simpl in H8.
     unfreeze Hctx.
@@ -566,7 +566,7 @@ Proof.
     inverts H7. (* TODO *)
 
     unfolds L.add_closure.
-    ljs_apply.
+    (* ljs_apply. *) ljs_inv_value_is_closure; ljs_inv_closure_ctx; ljs_closure_body. (* TODO *)
     rewrite from_list_empty in H9. (* TODO *)
     rew_bag_simpl in H9.
     eexists. split.

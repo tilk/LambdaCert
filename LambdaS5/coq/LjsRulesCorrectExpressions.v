@@ -69,9 +69,7 @@ Proof.
     introv Hv Hvrel1 Hvrel2 Hinv Hlred.
     inverts red_exprh Hlred.
     ljs_apply.
-    repeat rewrite from_list_update, from_list_empty in H8. (* TODO *)
-    rew_bag_simpl in H8. (* TODO *)
-    repeat ljs_autoforward;
+    repeat ljs_autoforward.
     destruct_hyp Hv;
     repeat ljs_autoforward.
     inverts Hvrel2.
@@ -111,12 +109,9 @@ Proof.
     introv Hv Hbr Hinv Hlred.
     inverts red_exprh Hlred.
     ljs_apply.
-    repeat rewrite from_list_update in H8.
-    repeat rewrite from_list_empty in H8. (* TODO *)
-    rew_bag_simpl in H8. (* TODO *)
     repeat ljs_autoforward.
     destruct_hyp Hv;
-    forwards Hlol : make_native_error_lemma H7. jauto_js. jauto_js. jauto_js. skip.
+    forwards Hlol : make_native_error_lemma H0. jauto_js. jauto_js. jauto_js. skip.
 
     jauto_js.
 Admitted.
@@ -207,9 +202,7 @@ Proof.
     simpls.  
     repeat ljs_autoforward.
 (* TODO *)
-    match goal with H : L.red_exprh _ ?c _ _ _ |- _ => sets_eq c' : c end.
     asserts Hinv' : (state_invariant BR jst jc c' st). skip.
-    subst c'.
 
     forwards_th red_spec_to_boolean_unary_ok. 
     destr_concl;
@@ -247,9 +240,7 @@ Proof.
     ljs_apply. 
     repeat ljs_autoforward.
 (* TODO *)
-    match goal with H : L.red_exprh _ ?c _ _ _ |- _ => sets_eq c' : c end.
     asserts Hinv' : (state_invariant BR jst jc c' st). skip.
-    subst c'.
 
     repeat binds_inv.
     forwards_th red_spec_to_number_unary_ok.

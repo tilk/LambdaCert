@@ -1429,29 +1429,60 @@ Ltac ljs_closure_body :=
         unfold L.closure_body in H; try (unfold e in H)
     end.
 
-Ltac ljs_apply := progress repeat (ljs_inv_value_is_closure || ljs_inv_closure_ctx || ljs_closure_body).
+Ltac ljs_inv_closure_hyps :=
+    match goal with
+    | Hvcl : L.value_is_closure _ ?v ?clo,
+      Hcctx : L.closure_ctx ?clo _ ?c |- _ =>
+        try unfold v in Hvcl; 
+        inverts Hvcl;
+        let Hz := fresh "H" in
+        let c' := fresh "c" in
+        remember c as c';
+        inverts Hcctx as Hz; repeat (inverts Hz as Hz); (* crunching Zip *)
+        let EQc := match goal with H : _ = c' |- _ => constr:H end in
+        try fold v in EQc;
+        repeat rewrite from_list_update in EQc;
+        repeat rewrite from_list_empty in EQc;
+        rew_bag_simpl in EQc;
+        let cdef0 := match type of EQc with ?cdef = _ => constr:cdef end in
+        let rec to_binds cdef := 
+            match cdef with
+            | ?cdef' \( ?s := ?v ) =>
+                let Hb := fresh "Hb" in
+                assert (Hb : binds cdef0 s v) by prove_bag 100;
+                rewrite EQc in Hb;
+                to_binds cdef'
+            | \{} => idtac
+            end in
+        to_binds cdef0 
+    end.
+
+Ltac ljs_apply := progress repeat (ljs_inv_closure_hyps || ljs_closure_body).
 
 Ltac binds_inv H :=
     repeat rewrite from_list_update, from_list_empty in H; (* TODO *)
     rew_bag_simpl in H;
-    match type of H with
-    | binds ?M ?x ?v2 =>
-        let He := fresh "H" in
-        match M with
-        | ?x' \:= ?v1 =>
-            lets He : (binds_single_bind_same_inv _ _ _ H);
-            (subst_hyp He || injects He); clear H    
-        | _ \(?x':=?v1) =>
-            lets He : (binds_update_same_inv _ _ _ _ H);
-            (subst_hyp He || injects He); clear H
-        | _ \(?x':=?v1) =>
-            let Ha := fresh "H" in
-            asserts Ha : (x <> x'); [eauto | 
-            lets He : (binds_update_diff_inv _ _ _ _ _ Ha H);
-            clear H; clear Ha;
-            binds_inv He]
-        end
-    end.
+    let rec f H :=
+        match type of H with
+        | binds ?M ?x ?v2 =>
+            let He := fresh "H" in
+            match M with
+                | ?v => is_var v; idtac
+                | ?x' \:= ?v1 =>
+                    lets He : (binds_single_bind_same_inv _ _ _ H);
+                    (subst_hyp He || injects He); clear H    
+                | _ \(?x':=?v1) =>
+                    lets He : (binds_update_same_inv _ _ _ _ H);
+                    (subst_hyp He || injects He); clear H
+                | _ \(?x':=?v1) =>
+                    let Ha := fresh "H" in
+                    asserts Ha : (x <> x'); [eauto | 
+                    lets He : (binds_update_diff_inv _ _ _ _ _ Ha H);
+                    clear H; clear Ha;
+                    f He]
+            end
+        end in
+    progress f H.
 
 Tactic Notation "binds_inv" hyp(H) := binds_inv H.
 
@@ -1689,13 +1720,10 @@ Lemma red_spec_to_boolean_unary_ok : forall k,
 Proof.
     introv Hinv Hvrel Hlred.
     inverts red_exprh Hlred.
+
     ljs_apply.
 
-    rewrite from_list_update in H8.
-    repeat rewrite from_list_empty in H8. (* TODO *)
-    rew_bag_simpl in H8. 
-
-    repeat ljs_autoforward.
+    repeat ljs_autoforward. 
 
     inverts Hvrel; try injects; jauto_js.
 Qed.
@@ -1708,11 +1736,9 @@ Proof.
     inverts red_exprh Hlred.
 (* NEXT STEP - BETTER ljs_apply *)
 
-    ljs_apply.
 
-    rewrite from_list_update in H8.
-    repeat rewrite from_list_empty in H8. (* TODO *)
-    rew_bag_simpl in H8. 
+
+    ljs_apply.
 
 Admitted.
 
