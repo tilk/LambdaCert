@@ -202,6 +202,9 @@ expr_object
  ("%MakeDay", property_data
               (data_intro (expr_id "%MakeDay") expr_true expr_false
                expr_false));
+ ("%MakeFunctionObject", property_data
+                         (data_intro (expr_id "%MakeFunctionObject")
+                          expr_true expr_false expr_false));
  ("%MakeGetter", property_data
                  (data_intro (expr_id "%MakeGetter") expr_true expr_false
                   expr_false));
@@ -2301,6 +2304,56 @@ expr_if
           (expr_op2 binary_op_add (expr_app (expr_id "%Day") [expr_id "t"])
            (expr_id "dt")) (expr_number (JsNumber.of_int (1)))))))))))))
 .
+Definition ex_privMakeFunctionObject := 
+expr_let "fobj"
+(expr_object
+ (objattrs_intro (expr_string "Function") expr_true
+  (expr_id "%FunctionProto") (expr_id "body") expr_undefined)
+ [("length", property_data
+             (data_intro (expr_id "len") expr_false expr_false expr_false))])
+(expr_let "proto"
+ (expr_object
+  (objattrs_intro (expr_string "Object") expr_true (expr_id "%ObjectProto")
+   expr_null expr_undefined)
+  [("constructor", property_data
+                   (data_intro (expr_id "fobj") expr_true expr_false
+                    expr_true))])
+ (expr_seq
+  (expr_set_attr pattr_value (expr_id "fobj") (expr_string "prototype")
+   (expr_id "proto"))
+  (expr_seq
+   (expr_set_attr pattr_enum (expr_id "fobj") (expr_string "prototype")
+    expr_false)
+   (expr_seq
+    (expr_set_attr pattr_config (expr_id "fobj") (expr_string "prototype")
+     expr_false)
+    (expr_seq
+     (expr_if (expr_id "strict")
+      (expr_seq
+       (expr_set_attr pattr_getter (expr_id "fobj") (expr_string "caller")
+        (expr_id "%ThrowTypeError"))
+       (expr_seq
+        (expr_set_attr pattr_setter (expr_id "fobj") (expr_string "caller")
+         (expr_id "%ThrowTypeError"))
+        (expr_seq
+         (expr_set_attr pattr_enum (expr_id "fobj") (expr_string "caller")
+          expr_false)
+         (expr_seq
+          (expr_set_attr pattr_config (expr_id "fobj") (expr_string "caller")
+           expr_false)
+          (expr_seq
+           (expr_set_attr pattr_getter (expr_id "fobj")
+            (expr_string "arguments") (expr_id "%ThrowTypeError"))
+           (expr_seq
+            (expr_set_attr pattr_setter (expr_id "fobj")
+             (expr_string "arguments") (expr_id "%ThrowTypeError"))
+            (expr_seq
+             (expr_set_attr pattr_enum (expr_id "fobj")
+              (expr_string "arguments") expr_false)
+             (expr_set_attr pattr_config (expr_id "fobj")
+              (expr_string "arguments") expr_false)))))))) expr_undefined)
+     (expr_id "fobj"))))))
+.
 Definition ex_privMakeGetter := 
 expr_object
 (objattrs_intro (expr_string "Object") expr_false expr_null
@@ -2887,12 +2940,7 @@ expr_let "t" (expr_op1 unary_op_typeof (expr_id "o"))
       (expr_object
        (objattrs_intro (expr_string "Boolean") expr_true
         (expr_id "%BooleanProto") expr_null (expr_id "o")) [])
-      (expr_if
-       (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "function"))
-       (expr_object
-        (objattrs_intro (expr_string "Function") expr_true
-         (expr_id "%BooleanProto") expr_null (expr_id "o")) [])
-       (expr_throw (expr_string "[env] Invalid type in %ToObject")))))))))
+      (expr_throw (expr_string "[env] Invalid type in %ToObject"))))))))
 .
 Definition ex_privToPrimitive := 
 expr_app (expr_id "%ToPrimitiveHint") [expr_id "val"; expr_string "number"]
@@ -7566,6 +7614,19 @@ Definition privLocalTime :=
 value_closure (closure_intro [] None ["t"] ex_privLocalTime)
 .
 Definition name_privLocalTime :=  "%LocalTime" .
+Definition privObjectProto :=  value_object 1 .
+Definition name_privObjectProto :=  "%ObjectProto" .
+Definition privThrowTypeError :=  value_object 11 .
+Definition name_privThrowTypeError :=  "%ThrowTypeError" .
+Definition privMakeFunctionObject := 
+value_closure
+(closure_intro
+ [("%FunctionProto", privFunctionProto);
+  ("%ObjectProto", privObjectProto);
+  ("%ThrowTypeError", privThrowTypeError)] None ["body"; "len"; "strict"]
+ ex_privMakeFunctionObject)
+.
+Definition name_privMakeFunctionObject :=  "%MakeFunctionObject" .
 Definition privMakeNativeErrorProto := 
 value_closure
 (closure_intro [("%ErrorProto", privErrorProto)] None ["name"]
@@ -7590,8 +7651,6 @@ value_closure
 Definition name_privNumberConstructor :=  "%NumberConstructor" .
 Definition privNumberGlobalFuncObj :=  value_object 25 .
 Definition name_privNumberGlobalFuncObj :=  "%NumberGlobalFuncObj" .
-Definition privObjectProto :=  value_object 1 .
-Definition name_privObjectProto :=  "%ObjectProto" .
 Definition privObjectConstructor := 
 value_closure
 (closure_intro
@@ -7774,8 +7833,6 @@ value_closure
 Definition name_privSyntaxErrorConstructor :=  "%SyntaxErrorConstructor" .
 Definition privSyntaxErrorGlobalFuncObj :=  value_object 45 .
 Definition name_privSyntaxErrorGlobalFuncObj :=  "%SyntaxErrorGlobalFuncObj" .
-Definition privThrowTypeError :=  value_object 11 .
-Definition name_privThrowTypeError :=  "%ThrowTypeError" .
 Definition privThrowTypeErrorFun := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["this"; "args"]
@@ -9278,6 +9335,7 @@ Definition ctx_items :=
  (name_privLocalTime, privLocalTime);
  (name_privMakeDate, privMakeDate);
  (name_privMakeDay, privMakeDay);
+ (name_privMakeFunctionObject, privMakeFunctionObject);
  (name_privMakeGetter, privMakeGetter);
  (name_privMakeNativeError, privMakeNativeError);
  (name_privMakeNativeErrorProto, privMakeNativeErrorProto);
@@ -9684,6 +9742,7 @@ Definition store_items := [
                                              ("%LocalTime", privLocalTime);
                                              ("%MakeDate", privMakeDate);
                                              ("%MakeDay", privMakeDay);
+                                             ("%MakeFunctionObject", privMakeFunctionObject);
                                              ("%MakeGetter", privMakeGetter);
                                              ("%MakeNativeError", privMakeNativeError);
                                              ("%MakeNativeErrorProto", privMakeNativeErrorProto);

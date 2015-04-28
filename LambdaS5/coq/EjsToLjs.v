@@ -165,26 +165,8 @@ Definition make_lambda f (is : list string) p :=
 Definition make_fobj f is p (ctx : L.expr) :=
     ifb Exists (fun nm => nm = "arguments" \/ nm = "eval") is \/ Has_dupes is then 
         if_strict (syntax_error "Illegal function definition") L.expr_undefined else
-    let proto_obj_objattrs := L.objattrs_with_proto (make_builtin "%ObjectProto") L.default_objattrs in
-    let proto_obj_props := [
-        ("constructor", L.property_data (L.data_intro L.expr_undefined L.expr_true L.expr_false L.expr_false))] in
-    let proto_obj := L.expr_object proto_obj_objattrs proto_obj_props in
-    let func_obj_objattrs := 
-        L.objattrs_intro (L.expr_string "Function") L.expr_true (make_builtin "%FunctionProto") 
-            (make_lambda f is p) L.expr_undefined in
-    let errorer := make_builtin "%ThrowTypeError" in 
-    let errorer_prop := L.property_accessor (L.accessor_intro errorer errorer L.expr_false L.expr_false) in
-    let func_obj_props := [
-        ("prototype", L.property_data (L.data_intro (L.expr_id "%prototype") L.expr_true L.expr_false L.expr_true));
-        ("length", L.property_data (L.data_intro (L.expr_number (length is)) L.expr_true L.expr_false L.expr_false));
-        ("caller", errorer_prop);
-        ("arguments", errorer_prop)] in
-    let func_obj := L.expr_object func_obj_objattrs func_obj_props in
-    L.expr_let "%prototype" proto_obj (
-    store_parent_in (
-    L.expr_let "%thisfunc" func_obj (
-    L.expr_seq (L.expr_set_field (L.expr_id "%prototype") (L.expr_string "constructor") (L.expr_id "%thisfunc")) (
-    L.expr_id "%thisfunc")))).
+    store_parent_in (make_app_builtin "%MakeFunctionObject" 
+        [make_lambda f is p; L.expr_number (length is); L.expr_id "%strict"]).
 
 Definition make_rec_fobj f i is p ctx :=
     let fobj := make_fobj f is p ctx in
