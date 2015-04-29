@@ -26,28 +26,20 @@ and string_of_object_ptr depth st ptr =
     | None -> "<reference to non-existing object>"
     | Some obj -> string_of_object (depth-1) st obj
 and string_of_object depth (st : store) obj =
-  Printf.sprintf "{[#proto: %s, #class: %s, #extensible: %B, #primval: %s, #code: %s] %s}"
+  Printf.sprintf "{[#proto: %s, #class: %s, #extensible: %B, #primval: %s, #code: %s%s] %s}"
   (string_of_value depth st (object_proto obj)) (String.of_list (object_class obj))
   (object_extensible obj) (string_of_value depth st (object_prim_value obj))
   (string_of_value depth st (object_code obj))
+  (string_of_internal_list depth st (LibFinmap.FinmapImpl.to_list_impl (object_internal obj)))
   (string_of_prop_list depth st (LibFinmap.FinmapImpl.to_list_impl (object_properties obj)) [])
+and string_of_internal_list depth st l =
+  let string_of_internal = function (name, v) ->
+    Printf.sprintf ", %s: %s" (String.of_list name) (string_of_value depth st v)
+  in String.concat "" (List.map string_of_internal l)
 and string_of_prop_list depth st l skip =
   let string_of_prop = function (name, attr) ->
     Printf.sprintf "'%s': %s" (String.of_list name) (string_of_attr depth st attr)
-  in let rec string_of_prop_list_aux props skip acc =
-    match props with
-    | [] -> acc
-    | (name, value) :: tl ->
-        if StringSet.mem (String.of_list name) skip then
-          string_of_prop_list_aux tl skip acc
-        else
-          string_of_prop_list_aux tl (StringSet.add (String.of_list name) skip) (acc ^ ", " ^ (string_of_prop (name, value)))
-  in match l with
-  | [] -> ""
-  | (name, value) :: tl ->
-      let skip0 = (StringSet.singleton (String.of_list name)) in
-      let skip1 = (List.fold_left (fun set elem -> StringSet.add (String.of_list elem) set) skip0 skip) in
-      string_of_prop_list_aux tl skip1 (string_of_prop (name, value))
+  in String.concat ", " (List.map string_of_prop l)
 
 and string_of_expression depth e =
   "<expr>"

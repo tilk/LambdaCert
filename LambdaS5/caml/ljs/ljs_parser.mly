@@ -10,7 +10,7 @@ let with_pos exp pos = match exp with
   | True _ -> True pos
   | False _ -> False pos
   | Id (_, id) -> Id (pos, id)
-  | Object (_, attrs, props) -> Object (pos, attrs, props)
+  | Object (_, attrs, iattrs, props) -> Object (pos, attrs, iattrs, props)
   | GetAttr (_, pattr, obj, field) -> GetAttr (pos, pattr, obj, field)
   | SetAttr (_, prop, obj, field, value) -> SetAttr (pos, prop, obj, field, value)
   | GetObjAttr (_, oattr, obj) -> GetObjAttr (pos, oattr, obj)
@@ -89,15 +89,16 @@ const :
 
 more_oattrs :
  | COMMA oattrsv { $2 }
- | COMMA { d_attrs }
- | { d_attrs }
+ | COMMA { (d_attrs, []) }
+ | { (d_attrs, []) }
 
 oattrsv :
- | PRIMVAL COLON exp more_oattrs { { $4 with primval = Some $3 } }
- | EXTENSIBLE COLON BOOL more_oattrs { { $4 with extensible = $3 } }
- | PROTO COLON exp more_oattrs { { $4 with proto = Some $3 } }
- | CODE COLON exp more_oattrs { {$4 with code = Some $3 } }
- | CLASS COLON STRING more_oattrs { { $4 with klass = $3 } }
+ | PRIMVAL COLON exp more_oattrs { ({ (fst $4) with primval = Some $3 }, snd $4) }
+ | EXTENSIBLE COLON BOOL more_oattrs { ({ (fst $4) with extensible = $3 }, snd $4) }
+ | PROTO COLON exp more_oattrs { ({ (fst $4) with proto = Some $3 }, snd $4) }
+ | CODE COLON exp more_oattrs { ({ (fst $4) with code = Some $3 }, snd $4) }
+ | CLASS COLON STRING more_oattrs { ({ (fst $4) with klass = $3 }, snd $4) }
+ | ID COLON exp more_oattrs { (fst $4, ($1, $3) :: snd $4) }
 
 oattr_name :
  | PRIMVAL { Primval }
@@ -153,9 +154,9 @@ atom :
  | const { $1 }
  | ID { Id (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1), $1) }
  | LBRACE LBRACK oattrsv RBRACK props RBRACE 
-   { Object (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), $3, $5 )}
+   { Object (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), fst $3, snd $3, $5 )}
  | LBRACE LBRACK RBRACK props RBRACE 
-   { Object (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), d_attrs, $4 )}
+   { Object (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), d_attrs, [], $4 )}
  | braced_seq_exp
    { $1 }
  | LPAREN unbraced_seq_exp RPAREN { $2 }
@@ -219,6 +220,12 @@ exp :
                   $4, $1) }
  | exp LBRACK LT oattr_name GT EQUALS unbraced_seq_exp RBRACK
      { SetObjAttr(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8),
+                  $4, $1, $7) }
+ | exp LBRACK LT ID GT RBRACK
+     { GetInternal(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6),
+                  $4, $1) }
+ | exp LBRACK LT ID GT EQUALS unbraced_seq_exp RBRACK
+     { SetInternal(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8),
                   $4, $1, $7) }
  | exp AMPAMP exp
      { If (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $1, 

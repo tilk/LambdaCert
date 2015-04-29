@@ -47,7 +47,7 @@ type exp =
   | True of Pos.t
   | False of Pos.t
   | Id of Pos.t * id
-  | Object of Pos.t * attrs * (string * prop) list
+  | Object of Pos.t * attrs * (string * exp) list * (string * prop) list
       (* GetAttr (Pos.t, property, object, field name) *)
   | GetAttr of Pos.t * pattr * exp * exp
       (* SetAttr (Pos.t, property, object, field name, new value) *)
@@ -57,6 +57,8 @@ type exp =
   | GetField of Pos.t * exp * exp (*Pos.t, left, right *)
   | SetField of Pos.t * exp * exp * exp (* Pos.t, obj, field, new val *)
   | DeleteField of Pos.t * exp * exp (* Pos.t, obj, field *)
+  | GetInternal of Pos.t * string * exp
+  | SetInternal of Pos.t * string * exp * exp
   | OwnFieldNames of Pos.t * exp
   | SetBang of Pos.t * id * exp
   | Op1 of Pos.t * string * exp

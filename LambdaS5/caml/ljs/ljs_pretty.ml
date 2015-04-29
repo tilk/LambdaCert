@@ -96,8 +96,8 @@ let rec exp_helper exprec e = match e with
   | Coq_expr_id x -> text (String.of_list x)
   | Coq_expr_object (avs, iprops, props) -> begin
     match props with
-    | [] -> braces (attrsv exprec avs)
-    | _ -> braces (vert [attrsv exprec avs; vert (vert_intersperse (text ",") (List.map (prop exprec) props))])
+    | [] -> braces (attrsv exprec avs iprops)
+    | _ -> braces (vert [attrsv exprec avs iprops; vert (vert_intersperse (text ",") (List.map (prop exprec) props))])
   end
   | Coq_expr_set_field (o, f, v) ->
     squish [exprec o; brackets (horzOrVert [exprec f; text "="; exprec v])]
@@ -118,6 +118,13 @@ let rec exp_helper exprec e = match e with
   | Coq_expr_set_obj_attr (a, o, v) ->
     squish [exprec o;
             brackets (squish [angles (horz [text (string_of_oattr a)]);
+                              text "="; exprec v])]
+  | Coq_expr_get_internal (a, o) ->
+    squish [exprec o;
+            brackets (angles (horz [text (String.of_list a)]))]
+  | Coq_expr_set_internal (a, o, v) ->
+    squish [exprec o;
+            brackets (squish [angles (horz [text (String.of_list a)]);
                               text "="; exprec v])]
   | Coq_expr_own_field_names (o) ->
     squish [text "get-own-field-names"; parens (exprec o)]
@@ -168,26 +175,27 @@ and opt_braces exprec expr = match expr with
   | Coq_expr_seq _ -> braces (exprec expr)
   | _ -> exprec expr
 
-and attrsv exprec (Coq_objattrs_intro (k, b, p, c, pv)) =
-  brackets (horzOrVert (List.map (fun x -> squish [x; (text ",")])
+and attrsv exprec (Coq_objattrs_intro (k, b, p, c, pv)) ip =
+  brackets (horzOrVert (List.map (fun x -> squish [x; (text ",")]) (
                              [horz [text "#proto:"; exprec p]; 
                               horz [text "#code:"; exprec c]; 
                               horz [text "#class:"; exprec k]; 
                               horz [text "#primval:"; exprec pv]; 
-                              horz [text "#extensible:"; exprec b]]))
+                              horz [text "#extensible:"; exprec b]] @ List.map (function (s, v) -> horz [text (String.of_list s ^ ":"); exprec v]) ip)))
               
-(* TODO: print and parse enum and config *)
 and prop exprec (f, prop) = match prop with
   | Coq_property_data (Coq_data_intro (v, w, enum, config)) ->
     horz [text ("'" ^ String.of_list f ^ "'"); text ":"; 
           braces (horzOrVert [horz [text "#value"; parens (exprec v); text ","]; 
                               horz [text "#writable"; exprec w; text ","];
+                              horz [text "#enumerable"; exprec enum; text ","];
                               horz [text "#configurable"; exprec config]])]
   | Coq_property_accessor (Coq_accessor_intro (g, s, enum, config)) ->
-    horz [text ("'" ^ String.of_list f ^ "'"); text ":"; braces (vert [horz [text "#getter";
-                                          exprec g; text ","];
-                                          horz[text "#setter";
-                                               exprec s]])]
+    horz [text ("'" ^ String.of_list f ^ "'"); text ":"; 
+          braces (horzOrVert [horz [text "#getter"; exprec g; text ","];
+                              horz [text "#setter"; exprec s; text ","];
+                              horz [text "#enumerable"; exprec enum; text ","];
+                              horz [text "#configurable"; exprec config]])]
 
 let rec exp e = exp_helper exp e
 
