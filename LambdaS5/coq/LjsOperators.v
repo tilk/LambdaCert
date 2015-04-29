@@ -1,6 +1,5 @@
 Require Import LibInt.
 Require Import JsNumber.
-Require Import String.
 Require Import LjsSyntax.
 Require Import LjsStore.
 Require Import LjsMonads.
@@ -123,15 +122,25 @@ Definition has_property store v1_loc v2 :=
 .
 
 Definition has_own_property store v1 v2 :=
-  match (v1, v2) with
-  | (value_object ptr, value_string s) =>
+  match v1, v2 with
+  | value_object ptr, value_string s =>
     assert_get_object_from_ptr store ptr (fun obj =>
       match (get_object_property obj s) with
       | Some _ => result_some value_true
       | None => result_some value_false
       end
     )
-  | _ => result_fail "hasOwnProperty expected an object and a string."
+  | _, _ => result_fail "hasOwnProperty expected an object and a string."
+  end
+.
+
+Definition has_internal store v1 v2 :=
+  match v1, v2 with
+  | value_object ptr, value_string s =>
+    assert_get_object_from_ptr store ptr (fun obj =>
+      result_some (value_bool (decide (index (object_internal obj) s)))
+    )
+  | _, _ => result_fail "hasOwnProperty expected an object and a string."
   end
 .
 
@@ -220,6 +229,7 @@ Definition binary_operator (op : binary_op) store v1 v2 : resultof value :=
       | binary_op_same_value => result_some (value_bool (decide (same_value v1 v2)))
       | binary_op_has_property => has_property store v1 v2
       | binary_op_has_own_property => has_own_property store v1 v2
+      | binary_op_has_internal => has_internal store v1 v2
       | binary_op_string_plus => string_plus store v1 v2
       | binary_op_char_at => char_at store v1 v2
       | binary_op_is_accessor => is_accessor store v1 v2

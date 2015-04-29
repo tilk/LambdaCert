@@ -370,6 +370,9 @@ Proof.
     repeat ljs_eval_push. unfolds get_object_property. simpl. 
     unfolds prop_name.
     cases_match_option as Eq1; reflexivity.
+    (* has_internal *)
+    unfolds binary_operator, has_internal.
+    repeat ljs_eval_push. 
     (* is_accessor *)
     unfolds binary_operator, is_accessor.
     repeat ljs_eval_push.

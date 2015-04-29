@@ -59,6 +59,7 @@ Inductive binary_op : Type :=
 | binary_op_same_value
 | binary_op_has_property
 | binary_op_has_own_property
+| binary_op_has_internal
 | binary_op_string_plus
 | binary_op_char_at
 | binary_op_is_accessor

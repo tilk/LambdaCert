@@ -236,6 +236,10 @@ Inductive eval_binary_op : binary_op -> store -> value -> value -> value -> Prop
     binds st ptr obj -> 
     eval_binary_op binary_op_has_own_property st (value_object ptr) (value_string s) 
         (value_bool (decide (index (object_properties obj) s)))
+| eval_binary_op_has_internal : forall st ptr obj s,
+    binds st ptr obj ->
+    eval_binary_op binary_op_has_internal st (value_object ptr) (value_string s)
+        (value_bool (decide (index (object_internal obj) s)))
 | eval_binary_op_string_lt : forall st s1 s2,
     eval_binary_op binary_op_string_lt st (value_string s1) (value_string s2) (value_bool (string_lt s1 s2))
 | eval_binary_op_locale_compare : forall st s1 s2,

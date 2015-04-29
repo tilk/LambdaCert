@@ -66,6 +66,7 @@ let translate_binary_op s = match s with
     | "sameValue" -> Cs.Coq_binary_op_same_value
     | "hasProperty" -> Cs.Coq_binary_op_has_property
     | "hasOwnProperty" -> Cs.Coq_binary_op_has_own_property
+    | "hasInternal" -> Cs.Coq_binary_op_has_internal
     | "string+" -> Cs.Coq_binary_op_string_plus
     | "string<" -> Cs.Coq_binary_op_string_lt
     | "base" -> Cs.Coq_binary_op_base

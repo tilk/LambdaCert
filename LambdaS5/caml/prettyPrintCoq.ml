@@ -108,6 +108,7 @@ let format_binary_op o = match o with
     | Coq_binary_op_same_value -> text "binary_op_same_value"
     | Coq_binary_op_has_property -> text "binary_op_has_property"
     | Coq_binary_op_has_own_property -> text "binary_op_has_own_property"
+    | Coq_binary_op_has_internal -> text "binary_op_has_internal"
     | Coq_binary_op_string_plus -> text "binary_op_string_plus"
     | Coq_binary_op_char_at -> text "binary_op_char_at"
     | Coq_binary_op_is_accessor -> text "binary_op_is_accessor"

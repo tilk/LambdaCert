@@ -746,8 +746,10 @@ Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
     ljs_run_inv. 
-    destruct op; destruct v; tryfalse; destruct v0; tryfalse; repeat injects; repeat substs; simpls; eauto.
+    destruct op; destruct v; tryfalse; destruct v0; tryfalse; repeat injects; repeat substs; eauto;
+    unfolds binary_operator.
     (* has_property *)
+    unfolds has_property, assert_get_object_ptr.
     ljs_run_push_post_auto.
     cases_match_option; repeat injects; substs; eexists; (split; [prove_bag | idtac]);
     apply func_eq_2; try reflexivity; apply func_eq_1; apply func_eq_1;
@@ -760,12 +762,17 @@ Proof.
     cases_match_option; repeat injects; substs; eexists; (split; [prove_bag | idtac]);
     apply func_eq_2; try reflexivity; apply func_eq_1; apply func_eq_1;
     unfolds get_object_property; simpl; cases_match_option; reflexivity.
+    (* has_internal *)
+    unfolds has_internal.
+    ljs_run_push_post_auto.
+    injects. prove_bag 10.
     (* char_at *)
     unfolds char_at.
     cases_if.
     cases_match_option.
     injects. eauto.
     (* is_accessor *)
+    unfolds is_accessor, assert_get_object_ptr.
     ljs_run_push_post_auto.
     forwards Hx : object_property_is_from_get_property. eassumption. 
     cases_match_option; repeat injects; substs. 
