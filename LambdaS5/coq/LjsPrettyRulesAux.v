@@ -40,7 +40,7 @@ Proof.
     introv Ho1.
     induction Ho1; introv Ho2; inverts Ho2; 
     repeat binds_determine; substs; tryfalse; try reflexivity; try (false; prove_bag). 
-    rewrite H0 in H5.
+    rewrite H0 in H6.
     injects.
     binds_determine; substs.
     auto.

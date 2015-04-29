@@ -55,10 +55,13 @@ Definition get_object_property (object : object) (name : prop_name) : option att
   object_properties object \( name ?)
 .
 Definition set_object_property (obj : object) (name : prop_name) (attrs : attributes) : object :=
-  let 'object_intro ps props := obj in object_intro ps (props \( name :=  attrs))   
+  let 'object_intro ps props iprops := obj in object_intro ps (props \( name :=  attrs)) iprops
 .
 Definition delete_object_property (obj : object) (name : prop_name) : object :=
-  let 'object_intro ps props := obj in object_intro ps (props \-- name) 
+  let 'object_intro ps props iprops := obj in object_intro ps (props \-- name) iprops
+.
+Definition set_object_internal obj s v :=
+  let 'object_intro ps props iprops := obj in object_intro ps props (iprops \(s := v))
 .
 
 Definition make_prop_list_aux (left : nat * object_props) (val : string) : nat * object_props :=
@@ -82,7 +85,8 @@ Definition make_prop_list obj : object :=
         oattrs_prim_value := value_undefined;
         oattrs_code := value_null 
       |};
-      object_properties := props
+      object_properties := props;
+      object_internal := \{}
     |}
   end
 .

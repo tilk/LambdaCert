@@ -1763,3 +1763,17 @@ Proof.
     jauto_js. left. jauto_js.
     jauto_js. right. jauto_js.
 Qed.
+
+Lemma priv_js_error_lemma : forall k c st v st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privJSError [v]) (L.out_ter st' r) ->
+    exists obj,
+    r = L.res_value (L.value_object (fresh st)) /\
+    st' = st \(fresh st := obj) /\
+    js_exn_object obj v.
+Proof.
+    introv Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    jauto_js.
+Qed.

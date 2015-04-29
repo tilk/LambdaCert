@@ -32,16 +32,18 @@ Derive Inversion inv_red_exprh_many_1 with (forall k c st es vs E oo,
     red_exprh k c st (expr_eval_many_1 es vs E) oo) Sort Prop.
 Derive Inversion inv_red_exprh_many_2 with (forall k c st es o vs E oo,
     red_exprh k c st (expr_eval_many_2 es o vs E) oo) Sort Prop.
-Derive Inversion inv_red_exprh_object with (forall k c st oa a oo,
-    red_exprh k c st (expr_object oa a) oo) Sort Prop.
-Derive Inversion inv_red_exprh_object_1 with (forall k c st a oal oo,
-    red_exprh k c st (expr_object_1 a oal) oo) Sort Prop.
-Derive Inversion inv_red_exprh_object_2 with (forall k c st obj a oo,
-    red_exprh k c st (expr_object_2 obj a) oo) Sort Prop.
-Derive Inversion inv_red_exprh_object_data_1 with (forall k c st obj a s vs oo,
-    red_exprh k c st (expr_object_data_1 obj a s vs) oo) Sort Prop.
-Derive Inversion inv_red_exprh_object_accessor_1 with (forall k c st obj a s vs oo,
-    red_exprh k c st (expr_object_accessor_1 obj a s vs) oo) Sort Prop.
+Derive Inversion inv_red_exprh_object with (forall k c st oa ia a oo,
+    red_exprh k c st (expr_object oa ia a) oo) Sort Prop.
+Derive Inversion inv_red_exprh_object_1 with (forall k c st a ia oal oo,
+    red_exprh k c st (expr_object_1 a ia oal) oo) Sort Prop.
+Derive Inversion inv_red_exprh_object_2 with (forall k c st a ia obj oo,
+    red_exprh k c st (expr_object_2 a ia obj) oo) Sort Prop.
+Derive Inversion inv_red_exprh_object_data_1 with (forall k c st obj s E vs oo,
+    red_exprh k c st (expr_object_data_1 obj s E vs) oo) Sort Prop.
+Derive Inversion inv_red_exprh_object_accessor_1 with (forall k c st obj s E vs oo,
+    red_exprh k c st (expr_object_accessor_1 obj s E vs) oo) Sort Prop.
+Derive Inversion inv_red_exprh_object_internal_1 with (forall k c st obj s E vs oo,
+    red_exprh k c st (expr_object_internal_1 obj s E vs) oo) Sort Prop.
 Derive Inversion inv_red_exprh_get_attr with (forall k c st pa e1 e2 oo,
     red_exprh k c st (expr_get_attr pa e1 e2) oo) Sort Prop.
 Derive Inversion inv_red_exprh_get_attr_1 with (forall k c st pa vs oo,
@@ -58,6 +60,14 @@ Derive Inversion inv_red_exprh_set_obj_attr with (forall k c st pa e1 e2 oo,
     red_exprh k c st (expr_set_obj_attr pa e1 e2) oo) Sort Prop.
 Derive Inversion inv_red_exprh_set_obj_attr_1 with (forall k c st pa vs oo,
     red_exprh k c st (expr_set_obj_attr_1 pa vs) oo) Sort Prop.
+Derive Inversion inv_red_exprh_get_internal with (forall k c st s e1 oo,
+    red_exprh k c st (expr_get_internal s e1) oo) Sort Prop.
+Derive Inversion inv_red_exprh_get_internal_1 with (forall k c st s vs oo,
+    red_exprh k c st (expr_get_internal_1 s vs) oo) Sort Prop.
+Derive Inversion inv_red_exprh_set_internal with (forall k c st s e1 e2 oo,
+    red_exprh k c st (expr_set_internal s e1 e2) oo) Sort Prop.
+Derive Inversion inv_red_exprh_set_internal_1 with (forall k c st s vs oo,
+    red_exprh k c st (expr_set_internal_1 s vs) oo) Sort Prop.
 Derive Inversion inv_red_exprh_get_field with (forall k c st e1 e2 oo,
     red_exprh k c st (expr_get_field e1 e2) oo) Sort Prop.
 Derive Inversion inv_red_exprh_get_field_1 with (forall k c st vs oo,
@@ -169,16 +179,18 @@ Tactic Notation "invert" "keep" "red_exprh" hyp(H) :=
         inversion H using inv_red_exprh_many_1
     | expr_eval_many_2 ?es ?o ?vs ?E =>
         inversion H using inv_red_exprh_many_2
-    | expr_basic (expr_object ?oa ?a) =>
+    | expr_basic (expr_object ?oa ?ia ?a) =>
         inversion H using inv_red_exprh_object
-    | expr_object_1 ?a ?oal =>
+    | expr_object_1 ?a ?ia ?oal =>
         inversion H using inv_red_exprh_object_1
-    | expr_object_2 ?obj ?a =>
+    | expr_object_2 ?a ?ia ?obj =>
         inversion H using inv_red_exprh_object_2
-    | expr_object_data_1 ?obj ?a ?s ?vs =>
+    | expr_object_data_1 ?obj ?s ?E ?vs =>
         inversion H using inv_red_exprh_object_data_1
-    | expr_object_accessor_1 ?obj ?a ?s ?vs =>
+    | expr_object_accessor_1 ?obj ?s ?E ?vs =>
         inversion H using inv_red_exprh_object_accessor_1
+    | expr_object_internal_1 ?obj ?s ?E ?vs =>
+        inversion H using inv_red_exprh_object_internal_1
     | expr_basic (expr_get_attr ?pa ?e1 ?e2) =>
         inversion H using inv_red_exprh_get_attr
     | expr_get_attr_1 ?pa ?vs =>
@@ -195,6 +207,14 @@ Tactic Notation "invert" "keep" "red_exprh" hyp(H) :=
         inversion H using inv_red_exprh_set_obj_attr
     | expr_set_obj_attr_1 ?pa ?vs =>
         inversion H using inv_red_exprh_set_obj_attr_1
+    | expr_basic (expr_get_internal ?s ?e1) =>
+        inversion H using inv_red_exprh_get_internal
+    | expr_get_internal_1 ?s ?vs =>
+        inversion H using inv_red_exprh_get_internal_1
+    | expr_basic (expr_set_internal ?s ?e1 ?e2) =>
+        inversion H using inv_red_exprh_set_internal
+    | expr_set_internal_1 ?s ?vs =>
+        inversion H using inv_red_exprh_set_internal_1
     | expr_basic (expr_get_field ?e1 ?e2) =>
         inversion H using inv_red_exprh_get_field
     | expr_get_field_1 ?vs =>

@@ -21,10 +21,11 @@ Inductive ext_expr :=
 | expr_basic : expr -> ext_expr
 | expr_eval_many_1 : list expr -> list value -> (list value -> ext_expr) -> ext_expr
 | expr_eval_many_2 : list expr -> out -> list value -> (list value -> ext_expr) -> ext_expr
-| expr_object_1 : list (string * property) -> list value -> ext_expr
-| expr_object_2 : object -> list (string * property) -> ext_expr
-| expr_object_data_1 : object -> list (string * property) -> string -> list value -> ext_expr
-| expr_object_accessor_1 : object -> list (string * property) -> string -> list value -> ext_expr
+| expr_object_1 : list (string * expr) -> list (string * property) -> list value -> ext_expr
+| expr_object_2 : list (string * expr) -> list (string * property) -> object -> ext_expr
+| expr_object_internal_1 : object -> string -> (object -> ext_expr) -> list value -> ext_expr
+| expr_object_data_1 : object -> string -> (object -> ext_expr) -> list value -> ext_expr
+| expr_object_accessor_1 : object -> string -> (object -> ext_expr) -> list value -> ext_expr
 | expr_get_attr_1 : pattr -> list value -> ext_expr
 | expr_set_attr_1 : pattr -> list value -> ext_expr
 | expr_get_obj_attr_1 : oattr -> out -> ext_expr
@@ -35,6 +36,8 @@ Inductive ext_expr :=
 | expr_set_field_2 : object_ptr -> object -> option attributes -> prop_name -> value -> ext_expr
 | expr_delete_field_1 : list value -> ext_expr
 | expr_delete_field_2 : object_ptr -> object -> option attributes -> prop_name -> ext_expr
+| expr_get_internal_1 : string -> list value -> ext_expr
+| expr_set_internal_1 : string -> list value -> ext_expr
 | expr_own_field_names_1 : out -> ext_expr
 | expr_op1_1 : unary_op -> out -> ext_expr
 | expr_op2_1 : binary_op -> out -> expr -> ext_expr
@@ -114,19 +117,19 @@ Inductive abort : out -> Prop :=
 Hint Constructors abort.
 
 Inductive object_property_is st : object -> prop_name -> option attributes -> Prop :=
-| object_property_is_own : forall oas props name attr, 
+| object_property_is_own : forall oas props iprops name attr, 
     binds props name attr -> 
-    object_property_is st (object_intro oas props) name (Some attr)
-| object_property_is_none : forall oas props name,
+    object_property_is st (object_intro oas props iprops) name (Some attr)
+| object_property_is_none : forall oas props iprops name,
     ~index props name ->
     oattrs_proto oas = value_null ->
-    object_property_is st (object_intro oas props) name None
-| object_property_is_proto : forall oas props obj' ptr name oattr,
+    object_property_is st (object_intro oas props iprops) name None
+| object_property_is_proto : forall oas props iprops obj' ptr name oattr,
     ~index props name ->
     oattrs_proto oas = value_object ptr ->
     binds st ptr obj' ->
     object_property_is st obj' name oattr ->
-    object_property_is st (object_intro oas props) name oattr.
+    object_property_is st (object_intro oas props iprops) name oattr.
 
 Inductive value_is_closure st : value -> closure -> Prop :=
 | value_is_closure_closure : forall clo, 

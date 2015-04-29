@@ -55,7 +55,8 @@ Definition change_object (st : store) (ptr : object_ptr) (pred : object -> (stor
 * If the predicate returns None as the now property, the property is
 * destroyed; otherwise it is updated/created with the one returned by
 * the predicate. *)
-Definition change_object_property_cont st (ptr : object_ptr) (name : prop_name) (cont : option attributes -> (store -> option attributes -> value -> result) -> result) : result :=
+Definition change_object_property_cont st (ptr : object_ptr) (name : prop_name) 
+    (cont : option attributes -> (store -> option attributes -> value -> result) -> result) : result :=
   change_object_cont st ptr (fun obj cont1 =>
     cont (get_object_property obj name) (fun st oprop res => match oprop with
       | Some prop =>
@@ -66,8 +67,10 @@ Definition change_object_property_cont st (ptr : object_ptr) (name : prop_name) 
     end))
 .
 
-Definition change_object_property st (ptr : object_ptr) (name : prop_name) (pred : option attributes -> (store * option attributes * value)) : result :=
-  change_object_property_cont st ptr name (fun attrs cont => match pred attrs with (st, oattrs, ret) => cont st oattrs ret end)
+Definition change_object_property st (ptr : object_ptr) (name : prop_name) 
+    (pred : option attributes -> (store * option attributes * value)) : result :=
+  change_object_property_cont st ptr name (fun attrs cont => 
+    match pred attrs with (st, oattrs, ret) => cont st oattrs ret end)
 .
 
 (***** Monadic operations for interpreting *******)
@@ -94,7 +97,8 @@ Definition if_eval_return runs c st e (cont : store -> value -> result) : result
 (****** Closures handling ******)
 
 (* Evaluates all arguments, passing the store from one to the next. *)
-Definition eval_arg_list_aux runs c (arg_expr : expr) (cont : store -> list value -> result) st (l : list value) : result :=
+Definition eval_arg_list_aux runs c (arg_expr : expr) 
+    (cont : store -> list value -> result) st (l : list value) : result :=
   if_eval_return runs c st arg_expr (fun st arg => cont st (arg::l)) 
 .
 
@@ -147,7 +151,8 @@ Definition eval_jseq runs c st e1 e2 :=
       end)).
 
 (* Evaluates properties of object literals. *)
-Fixpoint eval_object_properties runs c st (l : list (string * property)) (acc : object) (cont : store -> object -> result) {struct l} : result :=
+Fixpoint eval_object_properties runs c st (l : list (string * property)) (acc : object) 
+    (cont : store -> object -> result) {struct l} : result :=
   match l with
   | nil => cont st acc
   | (name, property_data (data_intro value_expr writable_expr enumerable_expr configurable_expr)) :: tail =>
@@ -182,11 +187,22 @@ Fixpoint eval_object_properties runs c st (l : list (string * property)) (acc : 
   end
 .
 
+Fixpoint eval_object_internal runs c st (l : list (string * expr)) (acc : object)
+    (cont : store -> object -> result) {struct l} : result :=
+  match l with
+  | nil => cont st acc
+  | (s, e) :: t =>
+    if_eval_return runs c st e (fun st v =>
+      eval_object_internal runs c st t (set_object_internal acc s v) cont)
+  end
+.
+
 (* { [ attrs ] props }
 * Evaluate the primval attribute (if any), then the proto attribute (defaults
 * to Undefined), then properties. Finally, allocate a new object with the
 * computed values. *)
-Definition eval_object_decl runs c st (attrs : objattrs) (l : list (string * property)) : result :=
+Definition eval_object_decl runs c st (attrs : objattrs) (iattrs : list (string * expr)) 
+    (l : list (string * property)) : result :=
   let 'objattrs_intro class_expr extensible_expr prototype_expr code_expr primval_expr := attrs in
     (* Order of evaluation as in the paper: *)
     if_eval_return runs c st class_expr (fun st class_v =>
@@ -203,12 +219,14 @@ Definition eval_object_decl runs c st (attrs : objattrs) (l : list (string * pro
                       oattrs_prim_value := primval_v;
                       oattrs_code := code_v 
                     |};
-                    object_properties := \{}
+                    object_properties := \{};
+                    object_internal := \{}
                 |} in
-                eval_object_properties runs c st l obj (fun st obj =>
-                  let (st, loc) := add_object st obj
-                  in result_value st loc
-          ))))))))
+                eval_object_internal runs c st iattrs obj (fun st obj =>
+                  eval_object_properties runs c st l obj (fun st obj =>
+                    let (st, loc) := add_object st obj
+                    in result_value st loc
+          )))))))))
 .
 
 (* left[right].
@@ -434,6 +452,23 @@ Definition set_object_pattr obj s (pa : pattr) v : resultof object :=
   end
 .
 
+Definition eval_get_internal runs c st e1 s :=
+  if_eval_return runs c st e1 (fun st v1 =>
+    assert_get_object st v1 (fun obj =>
+      match object_internal obj \(s?) with
+      | Some v => result_value st v
+      | None => result_fail ("Internal property does not exist: " ++ s)
+      end)).
+
+Definition eval_set_internal runs c st e1 s e2 :=
+  if_eval_return runs c st e1 (fun st v1 =>
+    if_eval_return runs c st e2 (fun st v2 =>
+      assert_get_object_ptr v1 (fun ptr =>
+        change_object_cont st ptr (fun obj cont =>
+          ifb index (object_internal obj) s 
+          then cont st (set_object_internal obj s v2) v2
+          else result_fail "")))).
+
 (* left[right<attr> = new_val] *)
 Definition eval_set_attr runs c st left_expr right_expr attr new_val_expr :=
   if_eval_return runs c st left_expr (fun st left_ =>
@@ -454,25 +489,25 @@ Definition eval_get_obj_attr runs c st obj_expr oattr :=
 .
 
 Definition set_object_oattr_check obj oa v : resultof object :=
-  let 'object_intro (oattrs_intro pr cl ex pv co) pp := obj in
+  let 'object_intro (oattrs_intro pr cl ex pv co) pp ipp := obj in
   match oa with
   | oattr_proto =>
     ifb object_extensible obj then
     match v with
     | value_null
-    | value_object _ => result_some (object_intro (oattrs_intro v cl ex pv co) pp)
+    | value_object _ => result_some (object_intro (oattrs_intro v cl ex pv co) pp ipp)
     | _ => result_fail "Update proto failed"
     end
     else result_fail "Update proto on unextensible object"
   | oattr_extensible => 
     ifb object_extensible obj then
     match v with
-    | value_bool b => result_some (object_intro (oattrs_intro pr cl b pv co) pp)
+    | value_bool b => result_some (object_intro (oattrs_intro pr cl b pv co) pp ipp)
     | _ => result_fail "Update extensible failed"
     end
     else result_fail "Update extensible on unextensible object"
   | oattr_code => result_fail "Can't update code"
-  | oattr_primval => result_some (object_intro (oattrs_intro pr cl ex v co) pp)
+  | oattr_primval => result_some (object_intro (oattrs_intro pr cl ex v co) pp ipp)
   | oattr_class => result_fail "Can't update klass"
   end
 .
@@ -579,7 +614,7 @@ Definition eval runs c st (e : expr) : result :=
   | expr_if e_cond e_true e_false => eval_if runs c st e_cond e_true e_false
   | expr_seq e1 e2 => eval_seq runs c st e1 e2
   | expr_jseq e1 e2 => eval_jseq runs c st e1 e2
-  | expr_object attrs l => eval_object_decl runs c st attrs l
+  | expr_object attrs iattrs l => eval_object_decl runs c st attrs iattrs l
   | expr_get_field left_ right_ => eval_get_field runs c st left_ right_ 
   | expr_set_field left_ right_ new_val => eval_set_field runs c st left_ right_ new_val
   | expr_delete_field left_ right_ => eval_delete_field runs c st left_ right_
@@ -591,6 +626,8 @@ Definition eval runs c st (e : expr) : result :=
   | expr_set_attr attr left_ right_ newval => eval_set_attr runs c st left_ right_ attr newval
   | expr_get_obj_attr oattr obj => eval_get_obj_attr runs c st obj oattr
   | expr_set_obj_attr oattr obj attr => eval_set_obj_attr runs c st obj oattr attr
+  | expr_get_internal s e_obj => eval_get_internal runs c st e_obj s
+  | expr_set_internal s e_obj e_val => eval_set_internal runs c st e_obj s e_val
   | expr_own_field_names e => eval_own_field_names runs c st e
   | expr_op1 op e => eval_op1 runs c st op e
   | expr_op2 op e1 e2 => eval_op2 runs c st op e1 e2

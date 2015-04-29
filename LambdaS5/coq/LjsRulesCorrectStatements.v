@@ -797,6 +797,8 @@ Proof.
     destr_concl; try ljs_handle_abort.
 (* TODO seems like something to automate *)
     repeat ljs_autoforward. 
-    repeat injects.
+    autoforwards H : priv_js_error_lemma.
+    destruct_hyp H.
+    repeat ljs_autoforward. 
     jauto_js; [jauto_js 6 | jauto_js 12]. (* TODO performance *)
 Qed.

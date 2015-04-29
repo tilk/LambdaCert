@@ -534,6 +534,14 @@ Fixpoint is_some_eval_objprops o runs c st props obj Pred : Prop :=
             is_some_eval_objprops o runs c st' props' (set_object_property obj s attr) Pred)
     end.
 
+Fixpoint is_some_eval_internal o runs c st iprops obj Pred : Prop :=
+    match iprops with
+    | nil => Pred st obj
+    | (s, e) :: iprops' =>
+        is_some_value o (runs_type_eval runs c st e) (fun st' v =>
+            is_some_eval_internal o runs c st' iprops' (set_object_internal obj s v) Pred)
+    end.
+
 Lemma is_some_eval_objprops_lemma : forall runs c o props cont (Pred : _ -> _ -> Prop),
     runs_type_correct runs ->
     (forall st obj, cont st obj = result_some o -> Pred st obj) ->
@@ -550,15 +558,31 @@ Proof.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch; substs; repeat eexists; eauto.
 Qed.
 
-Lemma eval_object_correct : forall runs c st attrs l o,
+Lemma is_some_eval_internal_lemma : forall runs c o iprops cont (Pred : _ -> _ -> Prop),
     runs_type_correct runs ->
-    eval_object_decl runs c st attrs l = result_some o ->
+    (forall st obj, cont st obj = result_some o -> Pred st obj) ->
+    forall st obj,
+        eval_object_internal runs c st iprops obj cont = result_some o ->
+        is_some_eval_internal o runs c st iprops obj Pred.
+Proof.
+    introv IH CH.
+    induction iprops.
+    eauto.
+    introv H.
+    destruct a as (s&e).
+    simpls; ljs_run_push_post_auto; repeat ljs_is_some_value_munch; substs; eauto.
+Qed.
+
+Lemma eval_object_correct : forall runs c st attrs l1 l2 o,
+    runs_type_correct runs ->
+    eval_object_decl runs c st attrs l1 l2 = result_some o ->
     is_some_eval_objattrs o runs c st attrs (fun st' class ext proto code prim => 
-        let obj := object_intro (oattrs_intro proto class ext prim code) \{} in
-        is_some_eval_objprops o runs c st' l obj (fun st'' obj =>
+        let obj := object_intro (oattrs_intro proto class ext prim code) \{} \{} in
+        is_some_eval_internal o runs c st' l1 obj (fun st' obj =>
+        is_some_eval_objprops o runs c st' l2 obj (fun st'' obj =>
             exists st''' v,
                 (st''', v) = add_object st'' obj /\
-                o = out_ter st''' (res_value v))).
+                o = out_ter st''' (res_value v)))).
 Proof.
     introv IH R. unfolds in R.
     cases_let.
@@ -566,6 +590,7 @@ Proof.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
     do 2 eexists; splits.
     eassumption. substs; eauto.
+    eapply is_some_eval_internal_lemma; try eassumption.
     eapply is_some_eval_objprops_lemma; try eassumption.
     intros. cbv beta in H7. cases_let. ljs_run_inv. eauto.
 Qed.
@@ -745,6 +770,41 @@ Proof.
     forwards Hx : object_property_is_from_get_property. eassumption. 
     cases_match_option; repeat injects; substs. 
     eexists. split. prove_bag. eauto. 
+Qed.
+
+Lemma eval_get_internal_correct : forall runs c st s e1 o,
+    runs_type_correct runs ->
+    eval_get_internal runs c st e1 s = result_some o ->
+    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
+        exists ptr obj v, v1 = value_object ptr /\ 
+            binds st' ptr obj /\ 
+            binds (object_internal obj) s v /\
+            o = out_ter st' (res_value v)).
+Proof.
+    introv IH R. unfolds in R.
+    ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
+    cases_match_option as Eq.
+    injects.
+    jauto_set; prove_bag.
+Qed.
+
+Lemma eval_set_internal_correct : forall runs c st s e1 e2 o,
+    runs_type_correct runs ->
+    eval_set_internal runs c st e1 s e2 = result_some o ->
+    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
+        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
+            exists ptr obj, v1 = value_object ptr /\
+                binds st'' ptr obj /\
+                index (object_internal obj) s /\
+                o = out_ter (st'' \(ptr := set_object_internal obj s v2)) (res_value v2))).
+Proof.
+    introv IH R. unfolds in R.
+    ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
+    unfolds change_object_cont.
+    cases_match_option.
+    cases_if.
+    injects.
+    jauto_set; prove_bag.
 Qed.
 
 Lemma eval_get_obj_attr_correct : forall runs c st oa e1 o,
@@ -1031,33 +1091,20 @@ Proof.
     eauto.
 Qed.
 
-(*
-Lemma red_expr_app_2_lemma : forall runs c o v (Pred : _ -> _ -> Prop),
-    runs_type_correct runs -> 
-    (forall st vs, Pred st (rev vs) -> red_expr c st (expr_app_2 v vs nil) o) ->
-    forall es st vs,
-    is_some_values_eval runs c st o es vs Pred ->
-    red_expr c st (expr_app_2 v vs es) o.
-Proof.
-    introv IH PH.
-    induction es. eauto.
-    introv R. 
-    unfold is_some_values_eval in R at 1.
-    ljs_pretty_advance red_expr_app_2_next red_expr_app_3_abort.
-    eapply red_expr_app_3.
-    eauto.
-Qed.
-*)
-
 Ltac value_to_bool := 
     repeat match goal with H : value_to_bool ?v = Some _ |- _ => destruct v; tryfalse; injects H end.
 
-Lemma red_expr_object_2_lemma : forall runs c o (Pred : _ -> _ -> Prop),
+Ltac ljs_advance_eval_many :=
+    repeat (ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort;
+            eapply red_expr_eval_many_2);
+    eapply red_expr_eval_many_1.
+
+Lemma red_expr_object_2_lemma1 : forall runs c o (Pred : _ -> _ -> Prop),
     runs_type_correct runs ->
-    (forall st obj, Pred st obj -> red_expr c st (expr_object_2 obj nil) o) ->
+    (forall st obj, Pred st obj -> red_expr c st (expr_object_2 nil nil obj) o) ->
     forall props st obj,
     is_some_eval_objprops o runs c st props obj Pred ->
-    red_expr c st (expr_object_2 obj props) o.
+    red_expr c st (expr_object_2 nil props obj) o.
 Proof.
     introv IH PH.
     induction props. eauto.
@@ -1067,29 +1114,37 @@ Proof.
     destruct data.
     unfolds in R.
     eapply red_expr_object_2_data.
-    repeat (ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort;
-            eapply red_expr_eval_many_2).
-    eapply red_expr_eval_many_1.
-    destruct R as (b1&b2&b3&Hb1&Hb2&Hb3&R).
+    ljs_advance_eval_many.
+    destruct_hyp R.
     value_to_bool.
     eapply red_expr_object_data_1; eauto. 
     destruct acc.
     unfolds in R.
     eapply red_expr_object_2_accessor.
-    repeat (ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort;
-            eapply red_expr_eval_many_2).
-    eapply red_expr_eval_many_1.
-    destruct R as (b1&b2&Hb1&Hb2&R).
+    ljs_advance_eval_many.
+    destruct_hyp R.
     value_to_bool.
     eapply red_expr_object_accessor_1; eauto.
 Qed.
 
-(* Main lemma *)
+Lemma red_expr_object_2_lemma2 : forall runs c o props (Pred : _ -> _ -> Prop),
+    runs_type_correct runs ->
+    (forall st obj, Pred st obj -> red_expr c st (expr_object_2 nil props obj) o) ->
+    forall iprops st obj,
+    is_some_eval_internal o runs c st iprops obj Pred ->
+    red_expr c st (expr_object_2 iprops props obj) o.
+Proof.
+    introv IH PH.
+    induction iprops. eauto.
+    introv R.
+    unfold is_some_eval_internal in R at 1.
+    destruct a as (s&e).
+    eapply red_expr_object_2_internal.
+    ljs_advance_eval_many.
+    eapply red_expr_object_internal_1; eauto.
+Qed.
 
-Ltac ljs_advance_eval_many :=
-    repeat (ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort;
-            eapply red_expr_eval_many_2);
-    eapply red_expr_eval_many_1.
+(* Main lemma *)
 
 Lemma eval_correct : forall runs c st e o,
     runs_type_correct runs -> eval runs c st e = result_some o -> red_expr c st e o.
@@ -1123,11 +1178,10 @@ Proof.
     substs.
     value_to_bool.
     eapply red_expr_object_1; try eassumption.
-    applys red_expr_object_2_lemma IH; try eassumption.
+    applys red_expr_object_2_lemma2 IH; try eassumption.
+    applys red_expr_object_2_lemma1 IH; try eassumption.
     introv Ho.
-    simpl in Ho.
-    destruct Ho as (st'''&v&Ho).
-    destructs Ho. substs.
+    destruct_hyp Ho.
     injects.
     eapply red_expr_object_2; eauto.
     (* get_attr *)
@@ -1199,6 +1253,18 @@ Proof.
     eapply red_expr_delete_field_2_not_found.
     eapply red_expr_delete_field_2_unconfigurable; eauto.
     eapply red_expr_delete_field_2_found; eauto.
+    (* get_internal *)
+    lets H: eval_get_internal_correct IH R.
+    eapply red_expr_get_internal.
+    ljs_advance_eval_many.
+    destruct_hyp H.
+    eapply red_expr_get_internal_1; eauto.
+    (* set_internal *)
+    lets H: eval_set_internal_correct IH R.
+    eapply red_expr_set_internal.
+    ljs_advance_eval_many.
+    destruct_hyp H.
+    eapply red_expr_set_internal_1; eauto.
     (* own_field_names *)
     lets H: eval_own_field_names_correct IH R.
     ljs_pretty_advance red_expr_own_field_names red_expr_own_field_names_1_abort.

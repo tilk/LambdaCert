@@ -87,7 +87,7 @@ let rec translate_expr e = match e with
     | Ljs.True _ -> Cs.Coq_expr_bool true
     | Ljs.False _ -> Cs.Coq_expr_bool false
     | Ljs.Id (_, i) -> Cs.Coq_expr_id (String.to_list i)
-    | Ljs.Object (_, a, l) -> Cs.Coq_expr_object (translate_attrs a, List.map (function (x, y) -> (String.to_list x, translate_prop y)) l)
+    | Ljs.Object (_, a, l) -> Cs.Coq_expr_object (translate_attrs a, [], List.map (function (x, y) -> (String.to_list x, translate_prop y)) l)
     | Ljs.GetAttr (_, p, e1, e2) -> Cs.Coq_expr_get_attr (translate_pattr p, translate_expr e1, translate_expr e2)
     | Ljs.SetAttr (_, p, e1, e2, e3) -> Cs.Coq_expr_set_attr (translate_pattr p, translate_expr e1, translate_expr e2, translate_expr e3)
     | Ljs.GetObjAttr (_, p, e) -> Cs.Coq_expr_get_obj_attr (translate_oattr p, translate_expr e)

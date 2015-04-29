@@ -262,15 +262,18 @@ Ltac ljs_inv_red_inter :=
     | H	: red_exprh _ _ _ ?e _ |- _ => 
         match e with 
         | expr_eval_many_1 _ _ _ => inverts red_exprh H
-        | expr_object_1 _ _ => inverts red_exprh H
+        | expr_object_1 _ _ _ => inverts red_exprh H
         | expr_object_data_1 _ _ _ _ => inverts red_exprh H
         | expr_object_accessor_1 _ _ _ _ => inverts red_exprh H
+        | expr_object_internal_1 _ _ _ _ => inverts red_exprh H
         | expr_get_attr_1 _ _ => inverts red_exprh H
         | expr_set_attr_1 _ _ => inverts red_exprh H
         | expr_set_obj_attr_1 _ _ => inverts red_exprh H
         | expr_get_field_1 _ => inverts red_exprh H
         | expr_set_field_1 _ => inverts red_exprh H
         | expr_delete_field_1 _ => inverts red_exprh H
+        | expr_get_internal_1 _ _ => inverts red_exprh H
+        | expr_set_internal_1 _ _ => inverts red_exprh H
         | expr_eval_1 _ => inverts red_exprh H
         end; tryfalse; bool_tryfalse; [idtac]
     end.
@@ -292,25 +295,29 @@ Ltac ljs_eval_push := solve [auto] || ljs_specialize_ih || ljs_inv_red_abort || 
 
 Lemma object_properties_lemma : forall k,
     (forall c st e o, red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o) -> 
-    forall l c st obj o,
-    red_exprh k c st (expr_object_2 obj l) o ->
-    eval_object_properties (runs k) c st l obj (fun st obj =>
+    forall l1 l2 c st obj o,
+    red_exprh k c st (expr_object_2 l1 l2 obj) o ->
+    eval_object_internal (runs k) c st l1 obj (fun st obj =>
+    eval_object_properties (runs k) c st l2 obj (fun st obj =>
                   let (st, loc) := add_object st obj
                   in result_value st loc
-          ) = result_some o.
+          )) = result_some o.
 Proof.
     introv IH.
-    induction l as [|p l]; introv R.
-    (* [] *)
+    induction l1 as [|p1 l1]; [induction l2 as [|p2 l2] | idtac]; introv R.
+    (* l1 = [], l2 = [] *)
     simpl.
     ljs_inv_red.
     reflexivity.
-    (* [] *)
-    destruct p as (i&[()|()]); ljs_inv_red; simpl.
+    (* l1 = [], l2 != [] *)
+    destruct p2 as (i&[()|()]); ljs_inv_red; simpl.
     (* data *)
     abstract (repeat ljs_eval_push; eauto).
     (* accessor *)
     abstract (repeat ljs_eval_push; eauto).
+    (* l1 != [] *)
+    destruct p1 as (i&e); ljs_inv_red; simpl.
+    abstract (repeat ljs_eval_push; eauto). 
 Qed.
 
 Lemma apply_lemma : forall k,
@@ -400,8 +407,7 @@ Proof.
     (* lambda *)
     reflexivity.
     (* object *)
-    abstract (repeat ljs_eval_push;
-              eauto using object_properties_lemma).
+    abstract (repeat ljs_eval_push; eauto using object_properties_lemma).
     (* get_attr *)
     unfolds.
     repeat ljs_eval_push.
@@ -476,6 +482,18 @@ Proof.
     unfolds.
     repeat ljs_eval_push.
     repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; tryfalse; bool_tryfalse; reflexivity.
+    (* get_internal *)
+    unfolds.
+    repeat ljs_eval_push.
+    cases_match_option as Hopt.
+    rewrite read_option_binds_eq in Hopt. binds_determine.
+    reflexivity.
+    rewrite read_option_not_index_eq in Hopt.
+    false. prove_bag.
+    (* set_internal *)
+    unfolds.
+    repeat ljs_eval_push.
+    cases_if. reflexivity.
     (* own_field_names *)
     unfolds.
     repeat ljs_eval_push.

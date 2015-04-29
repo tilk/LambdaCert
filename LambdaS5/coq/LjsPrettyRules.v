@@ -54,27 +54,33 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_eval_many_2 es o vs E) o
 
 (* object *)
-| red_expr_object : forall c st e1 e2 e3 e4 e5 a o,
-    red_expr c st (expr_eval_many_1 [e1; e2; e3; e4; e5] nil (expr_object_1 a)) o ->
-    red_expr c st (expr_object (objattrs_intro e1 e2 e3 e4 e5) a) o
-| red_expr_object_1 : forall c st class ext proto code prim a o,
-    red_expr c st (expr_object_2 (object_intro (oattrs_intro proto class ext prim code) \{}) a) o ->
-    red_expr c st (expr_object_1 a [value_string class; value_bool ext; proto; code; prim]) o
+| red_expr_object : forall c st e1 e2 e3 e4 e5 ia a o,
+    red_expr c st (expr_eval_many_1 [e1; e2; e3; e4; e5] nil (expr_object_1 ia a)) o ->
+    red_expr c st (expr_object (objattrs_intro e1 e2 e3 e4 e5) ia a) o
+| red_expr_object_1 : forall c st class ext proto code prim ia a o,
+    red_expr c st (expr_object_2 ia a (object_intro (oattrs_intro proto class ext prim code) \{} \{})) o ->
+    red_expr c st (expr_object_1 ia a [value_string class; value_bool ext; proto; code; prim]) o
 | red_expr_object_2 : forall c st st1 obj,
     st1 = st \(fresh st := obj) ->
-    red_expr c st (expr_object_2 obj nil) (out_ter st1 (res_value (value_object (fresh st))))
+    red_expr c st (expr_object_2 nil nil obj) (out_ter st1 (res_value (value_object (fresh st))))
 | red_expr_object_2_data : forall c st obj s e1 e2 e3 e4 a o,
-    red_expr c st (expr_eval_many_1 [e1; e2; e3; e4] nil (expr_object_data_1 obj a s)) o ->
-    red_expr c st (expr_object_2 obj ((s, property_data (data_intro e3 e4 e2 e1)) :: a)) o
-| red_expr_object_data_1 : forall c st obj a s v3 b1 b2 b4 o,
-    red_expr c st (expr_object_2 (set_object_property obj s (attributes_data_of (attributes_data_intro v3 b4 b2 b1))) a) o ->
-    red_expr c st (expr_object_data_1 obj a s [value_bool b1; value_bool b2; v3; value_bool b4]) o
+    red_expr c st (expr_eval_many_1 [e1; e2; e3; e4] nil (expr_object_data_1 obj s (expr_object_2 nil a))) o ->
+    red_expr c st (expr_object_2 nil ((s, property_data (data_intro e3 e4 e2 e1)) :: a) obj) o
+| red_expr_object_data_1 : forall c st obj E s v3 b1 b2 b4 o,
+    red_expr c st (E (set_object_property obj s (attributes_data_of (attributes_data_intro v3 b4 b2 b1)))) o ->
+    red_expr c st (expr_object_data_1 obj s E [value_bool b1; value_bool b2; v3; value_bool b4]) o
 | red_expr_object_2_accessor : forall c st obj s e1 e2 e3 e4 a o,
-    red_expr c st (expr_eval_many_1 [e1; e2; e3; e4] nil (expr_object_accessor_1 obj a s)) o ->
-    red_expr c st (expr_object_2 obj ((s, property_accessor (accessor_intro e3 e4 e2 e1)) :: a)) o
-| red_expr_object_accessor_1 : forall c st obj a s v1 v2 v3 v4 b1 b2 o,
-    red_expr c st (expr_object_2 (set_object_property obj s (attributes_accessor_of (attributes_accessor_intro v3 v4 b2 b1))) a) o ->
-    red_expr c st (expr_object_accessor_1 obj a s [value_bool b1; value_bool b2; v3; v4]) o
+    red_expr c st (expr_eval_many_1 [e1; e2; e3; e4] nil (expr_object_accessor_1 obj s (expr_object_2 nil a))) o ->
+    red_expr c st (expr_object_2 nil ((s, property_accessor (accessor_intro e3 e4 e2 e1)) :: a) obj) o
+| red_expr_object_accessor_1 : forall c st obj E s v3 v4 b1 b2 o,
+    red_expr c st (E (set_object_property obj s (attributes_accessor_of (attributes_accessor_intro v3 v4 b2 b1)))) o ->
+    red_expr c st (expr_object_accessor_1 obj s E [value_bool b1; value_bool b2; v3; v4]) o
+| red_expr_object_2_internal : forall c st obj s e ia a o,
+    red_expr c st (expr_eval_many_1 [e] nil (expr_object_internal_1 obj s (expr_object_2 ia a))) o ->
+    red_expr c st (expr_object_2 ((s, e) :: ia) a obj) o
+| red_expr_object_internal_1 : forall c st obj E s v o,
+    red_expr c st (E (set_object_internal obj s v)) o ->
+    red_expr c st (expr_object_internal_1 obj s E [v]) o
 
 (* get_attr *)
 | red_expr_get_attr : forall c st pa e1 e2 o,
@@ -211,6 +217,25 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     attributes_configurable attr ->
     st1 = st \(ptr := delete_object_property obj s) ->
     red_expr c st (expr_delete_field_2 ptr obj (Some attr) s) (out_ter st1 (res_value value_true))
+
+(* get_internal *)
+| red_expr_get_internal : forall c st s e o,
+    red_expr c st (expr_eval_many_1 [e] nil (expr_get_internal_1 s)) o ->
+    red_expr c st (expr_get_internal s e) o
+| red_expr_get_internal_1 : forall c st s ptr obj v,
+    binds st ptr obj ->
+    binds (object_internal obj) s v ->
+    red_expr c st (expr_get_internal_1 s [value_object ptr]) (out_ter st (res_value v))
+
+(* set_internal *)
+| red_expr_set_internal : forall c st s e1 e2 o,
+    red_expr c st (expr_eval_many_1 [e1; e2] nil (expr_set_internal_1 s)) o ->
+    red_expr c st (expr_set_internal s e1 e2) o
+| red_expr_set_internal_1 : forall c st st1 s ptr obj v,
+    binds st ptr obj ->
+    index (object_internal obj) s ->
+    st1 = st \(ptr := set_object_internal obj s v) ->
+    red_expr c st (expr_set_internal_1 s [value_object ptr; v]) (out_ter st1 (res_value v))
 
 (* own_field_names *)
 | red_expr_own_field_names : forall c st e o o',

@@ -322,7 +322,7 @@ Proof.
 Qed.
 
 Definition modify_object_oattrs obj f : object :=
-  let 'object_intro oattrs pp := obj in object_intro (f oattrs) pp.
+  let 'object_intro oattrs props iprops := obj in object_intro (f oattrs) props iprops.
 
 Definition set_oattrs_oattr oas oa v :=
   let 'oattrs_intro pr cl ex pv co := oas in

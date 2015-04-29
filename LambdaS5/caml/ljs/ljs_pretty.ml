@@ -94,7 +94,7 @@ let rec exp_helper exprec e = match e with
   | Coq_expr_bool true -> text "true"
   | Coq_expr_bool false -> text "false"
   | Coq_expr_id x -> text (String.of_list x)
-  | Coq_expr_object (avs, props) -> begin
+  | Coq_expr_object (avs, iprops, props) -> begin
     match props with
     | [] -> braces (attrsv exprec avs)
     | _ -> braces (vert [attrsv exprec avs; vert (vert_intersperse (text ",") (List.map (prop exprec) props))])

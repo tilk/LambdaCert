@@ -76,7 +76,7 @@ Proof.
     jauto_js 8.
     (* has message *)
     inv_ljs;
-    binds_inv. (* TODO *) simpls. false. rewrite binds_empty_eq in H6. eauto.
+    binds_inv. (* TODO *) simpls. false. rewrite binds_empty_eq in H0. eauto.
     repeat ljs_autoforward.
     inv_ljs; binds_inv. 
     repeat ljs_autoforward.

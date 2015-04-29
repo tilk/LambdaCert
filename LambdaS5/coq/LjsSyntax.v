@@ -101,7 +101,7 @@ Inductive expr : Type :=
 | expr_number : number -> expr
 | expr_bool : bool -> expr
 | expr_id : id -> expr
-| expr_object : objattrs -> list (string * property) -> expr
+| expr_object : objattrs -> list (string * expr) -> list (string * property) -> expr
 | expr_get_attr : pattr -> expr -> expr -> expr (* property -> object -> field_name -> expr *)
 | expr_set_attr : pattr -> expr -> expr -> expr -> expr (* property -> object -> field_name -> new_value -> expr *)
 | expr_get_obj_attr : oattr -> expr -> expr
@@ -109,6 +109,8 @@ Inductive expr : Type :=
 | expr_get_field : expr -> expr -> expr (* object -> field -> expr *)
 | expr_set_field : expr -> expr -> expr -> expr (* object -> field -> new_val -> expr *)
 | expr_delete_field : expr -> expr -> expr (* object -> field -> expr *)
+| expr_get_internal : string -> expr -> expr
+| expr_set_internal : string -> expr -> expr -> expr
 | expr_own_field_names : expr -> expr
 | expr_op1 : unary_op -> expr -> expr
 | expr_op2 : binary_op -> expr -> expr -> expr
@@ -147,8 +149,10 @@ Fixpoint expr_fv e : finset id := match e with
 | expr_bool _ 
 | expr_dump => \{}
 | expr_id i => \{i}
-| expr_object oa ps => 
+| expr_object oa ips ps => 
     objattrs_fv oa \u 
+    List.fold_left (fun x y => x \u y) 
+        (List.map (fun (x : string * expr) => let (_, e) := x in expr_fv e) ips) \{} \u
     List.fold_left (fun x y => x \u y) 
         (List.map (fun (x : string * property) => let (_, p) := x in property_fv p) ps) \{} 
 | expr_get_attr _ e1 e2 => expr_fv e1 \u expr_fv e2
@@ -158,6 +162,8 @@ Fixpoint expr_fv e : finset id := match e with
 | expr_get_field e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_set_field e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
 | expr_delete_field e1 e2 => expr_fv e1 \u expr_fv e2
+| expr_get_internal _ e1 => expr_fv e1
+| expr_set_internal _ e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_own_field_names e => expr_fv e
 | expr_op1 _ e => expr_fv e
 | expr_op2 _ e1 e2 => expr_fv e1 \u expr_fv e2
@@ -257,7 +263,8 @@ Record oattrs := oattrs_intro {
 
 Record object := object_intro {
    object_attrs : oattrs;
-   object_properties : object_props
+   object_properties : object_props;
+   object_internal : finmap string value
 }.
 
 Definition object_proto obj := oattrs_proto (object_attrs obj).
@@ -276,12 +283,13 @@ Definition default_oattrs : oattrs := {|
 
 Definition default_object : object := {|
   object_attrs := default_oattrs;
-  object_properties := \{}
+  object_properties := \{};
+  object_internal := \{}
 |}.
 
 Definition object_with_properties props obj :=
-  let 'object_intro x1 x2 := obj in
-  object_intro x1 props.
+  let 'object_intro x1 x2 x3:= obj in
+  object_intro x1 props x3.
 
 (* Representation of the store *)
 

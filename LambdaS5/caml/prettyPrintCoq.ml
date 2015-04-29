@@ -151,7 +151,7 @@ let rec format_expr b e = match e with
     | Coq_expr_bool true -> text "expr_true"
     | Coq_expr_bool false -> text "expr_false"
     | Coq_expr_id s -> coqconstr b "expr_id" [format_id s]
-    | Coq_expr_object (oa, ps) -> coqconstr b "expr_object" [format_objattrs true oa; format_property_list ps]
+    | Coq_expr_object (oa, ips, ps) -> coqconstr b "expr_object" [format_objattrs true oa; format_internal_list ips; format_property_list ps]
     | Coq_expr_get_attr (a, e1, e2) -> coqconstr b "expr_get_attr" [format_pattr a; format_expr true e1; format_expr true e2]
     | Coq_expr_set_attr (a, e1, e2, e3) -> coqconstr b "expr_set_attr" [format_pattr a; format_expr true e1; format_expr true e2; format_expr true e3]
     | Coq_expr_get_obj_attr (a, e1) -> coqconstr b "expr_get_obj_attr" [format_oattr a; format_expr true e1]
@@ -180,6 +180,10 @@ let rec format_expr b e = match e with
 
 and format_objattrs b e = match e with
     | Coq_objattrs_intro (e1, e2, e3, e4, e5) -> coqconstr b "objattrs_intro" (List.map (format_expr true) [e1; e2; e3; e4; e5])
+
+and format_internal_list ps = 
+    let format_internal_item (i, e) = parens (squish [format_id i; text ", "; format_expr false e]) in
+    format_list (List.map format_internal_item ps)
 
 and format_property_list ps = 
     let format_property_item (i, p) = parens (squish [format_id i; text ", "; format_property false p]) in
@@ -244,6 +248,10 @@ let format_object_properties vh =
     let format_object_properties_item (i, a) = parens (horzOrVert [squish [format_id i; text ", "]; format_attributes a]) in
     horz [text "from_list"; format_list (List.map format_object_properties_item (LibFinmap.FinmapImpl.to_list_impl vh))] 
 
+let format_object_internal vh = 
+    let format_object_internal_item (i, v) = parens (horzOrVert [squish [format_id i; text ", "]; format_value "internal" v]) in
+    horz [text "from_list"; format_list (List.map format_object_internal_item (LibFinmap.FinmapImpl.to_list_impl vh))] 
+
 let format_object o = 
     let l1 = [
         "oattrs_proto", format_value "proto" (object_proto o);
@@ -254,7 +262,8 @@ let format_object o =
     ] in
     let l = [
         "object_attrs", coqrecord l1;
-        "object_properties", format_object_properties (object_properties o)
+        "object_properties", format_object_properties (object_properties o);
+        "object_internal", format_object_internal (object_internal o)
     ] in
     coqrecord l
 

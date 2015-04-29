@@ -115,8 +115,7 @@ Definition make_for_in (s:string) (robj bdy:L.expr) := L.expr_undefined.
 Definition make_if e e1 e2 := L.expr_if (to_bool e) e1 e2.
 
 Definition make_throw e :=
-    L.expr_throw (L.expr_object L.default_objattrs 
-        [("%js-exn", L.property_data (L.data_intro e L.expr_false L.expr_false L.expr_false))]).
+    L.expr_throw (make_app_builtin "%JSError" [e]).
 
 Definition make_with e1 e2 := 
     L.expr_let "%context" (make_app_builtin "%newObjEnvRec" [context; e1; L.expr_true]) e2.
@@ -134,7 +133,7 @@ Definition new_context_in ctx e :=
 Definition derived_context_in flds e :=
     let objattrs := L.objattrs_intro (L.expr_string "DeclEnvRec") 
         L.expr_true L.expr_null L.expr_undefined (L.expr_id "%parent") in
-    new_context_in (L.expr_object objattrs flds) e.
+    new_context_in (L.expr_object objattrs nil flds) e.
 
 Definition make_var_decl is e := 
     let flds := List.map (fun ip => 
@@ -255,13 +254,13 @@ Definition make_array es :=
     let exp_props := number_list_from 0 (map mkprop es) in
     let l_prop := L.property_data (L.data_intro (L.expr_number (length exp_props)) L.expr_true L.expr_false L.expr_false) in
     let attrs := L.objattrs_intro (L.expr_string "Array") L.expr_true (make_builtin "%ArrayProto") L.expr_null L.expr_undefined in 
-    L.expr_object attrs (("length", l_prop) :: exp_props).
+    L.expr_object attrs nil (("length", l_prop) :: exp_props).
 
 Definition make_args_obj is_new (es : list L.expr) := 
     let mkprop e := L.property_data (L.data_intro e L.expr_true L.expr_true L.expr_true) in
     let props := zipl_stream (id_stream_from 0) (map mkprop es) in
     let arg_constructor := if is_new then make_builtin "%mkNewArgsObj" else make_builtin "%mkArgsObj" in
-    L.expr_app arg_constructor [L.expr_object L.default_objattrs props].
+    L.expr_app arg_constructor [L.expr_object L.default_objattrs nil props].
 
 Definition throw_typ_error msg := make_app_builtin "%TypeError" [L.expr_string msg].
 
@@ -320,7 +319,7 @@ Definition make_object ps :=
     let gs_ids := remove_dupes (map fst ps) in
     let props := map (fun s => (s, combine_props (assocs s ps))) gs_ids in
     let oa := L.objattrs_intro (L.expr_string "Object") L.expr_true (make_builtin "%ObjectProto") L.expr_undefined L.expr_undefined in
-    L.expr_object oa props.
+    L.expr_object oa nil props.
 
 Definition make_new e es := make_app_builtin "%PrimNew" [e; make_args_obj true es].
 
