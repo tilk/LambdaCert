@@ -49,12 +49,10 @@ Definition to_bool e := make_app_builtin "%ToBoolean" [e].
 Definition with_error_dispatch e :=
     L.expr_try_catch e (make_builtin "%ErrorDispatch").
 
-Definition prop_accessor_check e := make_app_builtin "%PropAccessorCheck" [e].
-
 Definition make_seq e1 e2 := L.expr_jseq e1 e2.
 
 Definition make_get_field obj fld :=
-    L.expr_get_field obj (to_string fld).
+    make_app_builtin "%GetField" [obj; fld].
 
 Definition make_set_field_naked obj fld v :=
     L.expr_set_field obj (to_string fld) v.
@@ -150,16 +148,15 @@ Definition make_lambda f (is : list string) p :=
     let 'E.prog_intro str vis e := p in 
     let args_obj := L.expr_id "%args" in
     let argdecls := 
-        map (fun p => let '(vnum, vid) := p in (vid, make_get_field (L.expr_id "%args") (L.expr_string vnum))) 
+        map (fun p => let '(vnum, vid) := p in (vid, L.expr_get_field (L.expr_id "%args") (L.expr_string vnum))) 
             (zipl_stream (id_stream_from 0) is) in
     let vdecls := map (fun i => (i, L.expr_undefined)) vis in
     L.expr_lambda ["%this"; "%args"] (
-    L.expr_seq (L.expr_delete_field (L.expr_id "%args") (L.expr_string "%new")) ( (* TODO rationale? *)
     L.expr_label "%ret" (
     L.expr_let "%this" (make_resolve_this (L.expr_id "%this")) (
     make_var_decl (vdecls ++ ("arguments", args_obj) :: argdecls) (
     make_strictness str (
-    L.expr_seq (f e) L.expr_undefined)))))).
+    L.expr_seq (f e) L.expr_undefined))))).
 
 Definition make_fobj f is p (ctx : L.expr) :=
     ifb Exists (fun nm => nm = "arguments" \/ nm = "eval") is \/ Has_dupes is then 
@@ -256,26 +253,24 @@ Definition make_array es :=
     let attrs := L.objattrs_intro (L.expr_string "Array") L.expr_true (make_builtin "%ArrayProto") L.expr_null L.expr_undefined in 
     L.expr_object attrs nil (("length", l_prop) :: exp_props).
 
-Definition make_args_obj is_new (es : list L.expr) := 
+Definition make_args_obj (es : list L.expr) := 
     let mkprop e := L.property_data (L.data_intro e L.expr_true L.expr_true L.expr_true) in
     let props := zipl_stream (id_stream_from 0) (map mkprop es) in
-    let arg_constructor := if is_new then make_builtin "%mkNewArgsObj" else make_builtin "%mkArgsObj" in
-    L.expr_app arg_constructor [L.expr_object L.default_objattrs nil props].
+    make_app_builtin "%mkArgsObj" [L.expr_object L.default_objattrs nil props].
 
 Definition throw_typ_error msg := make_app_builtin "%TypeError" [L.expr_string msg].
 
 Definition appexpr_check e1 e2 e3 := make_app_builtin "%AppExprCheck" [e1; e2; e3].
 
 Definition make_app f (e : E.expr) es := 
-    let args_obj := make_args_obj false es in 
+    let args_obj := make_args_obj es in 
     match e with
     | E.expr_var_id "eval" =>
         make_app_builtin "%maybeDirectEval" [L.expr_id "%this"; L.expr_id "%context"; args_obj; L.expr_id "%strict"]
     | E.expr_get_field obj fld =>
-        L.expr_let "%obj" (f obj) (L.expr_let "%fun" (make_get_field (to_object (L.expr_id "%obj")) (f fld)) 
-            (L.expr_app (L.expr_id "%fun") [to_object (L.expr_id "%obj"); args_obj]))
+        make_app_builtin "%AppMethod" [f obj; f fld; args_obj]
     | _ => 
-        L.expr_let "%fun" (f e) (appexpr_check (L.expr_id "%fun") L.expr_undefined args_obj)
+        make_app_builtin "%AppExprCheck" [f e; L.expr_undefined; args_obj]
     end.
 
 (* TODO move to utils *)
@@ -321,7 +316,7 @@ Definition make_object ps :=
     let oa := L.objattrs_intro (L.expr_string "Object") L.expr_true (make_builtin "%ObjectProto") L.expr_undefined L.expr_undefined in
     L.expr_object oa nil props.
 
-Definition make_new e es := make_app_builtin "%PrimNew" [e; make_args_obj true es].
+Definition make_new e es := make_app_builtin "%PrimNew" [e; make_args_obj es].
 
 Definition make_case (tb : L.expr * L.expr) cont found := let (test, body) := tb in
     L.expr_let "%found" (make_or (eq (L.expr_id "%disc") test) (L.expr_id found))
@@ -374,7 +369,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_op1 op e => make_op1 ejs_to_ljs op e
     | E.expr_op2 op e1 e2 => make_op2 op (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_set_field e1 e2 e3 => make_set_field (ejs_to_ljs e1) (ejs_to_ljs e2) (ejs_to_ljs e3)
-    | E.expr_get_field e1 e2 => make_get_field (prop_accessor_check (ejs_to_ljs e1)) (ejs_to_ljs e2)
+    | E.expr_get_field e1 e2 => make_get_field (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_for_in s e1 e2 => make_for_in s (ejs_to_ljs e1) (ejs_to_ljs e2) 
     | E.expr_while e1 e2 e3 => make_while (ejs_to_ljs e1) (ejs_to_ljs e2) (ejs_to_ljs e3) 
     | E.expr_do_while e1 e2 => make_do_while (ejs_to_ljs e1) (ejs_to_ljs e2)

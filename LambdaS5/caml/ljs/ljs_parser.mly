@@ -18,6 +18,8 @@ let with_pos exp pos = match exp with
   | GetField (_, left, right) -> GetField (pos, left, right)
   | SetField (_, obj, field, value) -> SetField (pos, obj, field, value)
   | DeleteField (_, obj, field) -> DeleteField (pos, obj, field)
+  | GetInternal (_, oattr, obj) -> GetInternal (pos, oattr, obj)
+  | SetInternal (_, oattr, obj, v) -> SetInternal (pos, oattr, obj, v)
   | OwnFieldNames (_, obj) -> OwnFieldNames(pos, obj)
   | SetBang (_, id, exp) -> SetBang (pos, id, exp)
   | Op1 (_, op, exp) -> Op1 (pos, op, exp)
@@ -226,7 +228,7 @@ exp :
                   $4, $1) }
  | exp LBRACK LT ID GT EQUALS unbraced_seq_exp RBRACK
      { SetInternal(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8),
-                  $4, $1, $7) }
+                  $4, $1, $7) } 
  | exp AMPAMP exp
      { If (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $1, 
             $3, False (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3))) }
