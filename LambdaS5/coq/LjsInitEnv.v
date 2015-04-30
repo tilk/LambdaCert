@@ -2968,7 +2968,7 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "o"])
 (expr_seq
  (expr_if
   (expr_op2 binary_op_has_internal (expr_id "obj") (expr_string "virtual"))
-  (expr_set_obj_attr "virtual" (expr_id "obj") expr_true) expr_undefined)
+  (expr_set_internal "virtual" (expr_id "obj") expr_true) expr_undefined)
  (expr_id "obj"))
 .
 Definition ex_privToPrimitive := 
@@ -4229,7 +4229,7 @@ expr_if
  (expr_string "object"))
 (expr_if
  (expr_op2 binary_op_has_internal (expr_id "obj") (expr_string "virtual"))
- (expr_if (expr_get_obj_attr "virtual" (expr_id "obj"))
+ (expr_if (expr_get_internal "virtual" (expr_id "obj"))
   (expr_get_obj_attr oattr_primval (expr_id "obj")) (expr_id "obj"))
  (expr_id "obj")) (expr_id "obj")
 .
