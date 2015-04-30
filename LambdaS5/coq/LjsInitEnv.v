@@ -1411,8 +1411,7 @@ expr_app (expr_id "%TypeError")
 .
 Definition ex_privAppExprCheck := 
 expr_if (expr_app (expr_id "%IsCallable") [expr_id "fun"])
-(expr_app (expr_get_obj_attr oattr_code (expr_id "fun"))
- [expr_id "this"; expr_id "args"])
+(expr_app (expr_id "fun") [expr_id "this"; expr_id "args"])
 (expr_app (expr_id "%TypeError") [expr_string "Not a function"])
 .
 Definition ex_privAppMethod := 
@@ -5381,74 +5380,38 @@ expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
      [expr_id "init"; expr_number (JsNumber.of_int (0))])))))
 .
 Definition ex_privmkArgsObj := 
-expr_let "keys" (expr_own_field_names (expr_id "args"))
-(expr_let "argsObj"
- (expr_object
-  (objattrs_intro (expr_string "Arguments") expr_true
-   (expr_id "%ObjectProto") expr_null expr_undefined) []
-  [("callee", property_accessor
-              (accessor_intro
-               (expr_app (expr_id "%MakeGetter") [expr_id "%ThrowTypeError"])
-               (expr_app (expr_id "%MakeSetter") [expr_id "%ThrowTypeError"])
-               expr_false expr_true));
-   ("caller", property_accessor
-              (accessor_intro
-               (expr_app (expr_id "%MakeGetter") [expr_id "%ThrowTypeError"])
-               (expr_app (expr_id "%MakeSetter") [expr_id "%ThrowTypeError"])
-               expr_false expr_true))])
- (expr_seq
-  (expr_set_attr pattr_config (expr_id "argsObj") (expr_string "callee")
-   expr_false)
-  (expr_seq
-   (expr_set_attr pattr_config (expr_id "argsObj") (expr_string "caller")
-    expr_false)
-   (expr_recc "loop"
-    (expr_lambda ["iter"]
-     (expr_let "strx" (expr_app (expr_id "%ToString") [expr_id "iter"])
-      (expr_if
-       (expr_op2 binary_op_has_own_property (expr_id "keys") (expr_id "strx"))
-       (expr_seq
-        (expr_app (expr_id "%defineOwnProperty")
-         [expr_id "argsObj";
-          expr_id "strx";
-          expr_object
-          (objattrs_intro (expr_string "Object") expr_true expr_null
-           expr_null expr_undefined) []
-          [("value", property_data
-                     (data_intro
-                      (expr_get_field (expr_id "args") (expr_id "strx"))
-                      expr_false expr_false expr_false));
-           ("writable", property_data
-                        (data_intro expr_true expr_false expr_false
-                         expr_false));
-           ("configurable", property_data
-                            (data_intro expr_true expr_false expr_false
-                             expr_false));
-           ("enumerable", property_data
-                          (data_intro expr_true expr_false expr_false
-                           expr_false))]])
-        (expr_app (expr_id "loop")
-         [expr_op2 binary_op_add (expr_id "iter")
-          (expr_number (JsNumber.of_int (1)))]))
-       (expr_app (expr_id "%defineOwnProperty")
-        [expr_id "argsObj";
-         expr_string "length";
-         expr_object
-         (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-          expr_undefined) []
-         [("value", property_data
-                    (data_intro (expr_id "iter") expr_false expr_false
-                     expr_false));
-          ("writable", property_data
-                       (data_intro expr_true expr_false expr_false expr_false));
-          ("configurable", property_data
-                           (data_intro expr_true expr_false expr_false
-                            expr_false));
-          ("enumerable", property_data
-                         (data_intro expr_false expr_false expr_false
-                          expr_false))]]))))
-    (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
-     (expr_id "argsObj"))))))
+expr_let "argsObj"
+(expr_object
+ (objattrs_intro (expr_string "Arguments") expr_true (expr_id "%ObjectProto")
+  expr_null expr_undefined) []
+ [("callee", property_accessor
+             (accessor_intro
+              (expr_app (expr_id "%MakeGetter") [expr_id "%ThrowTypeError"])
+              (expr_app (expr_id "%MakeSetter") [expr_id "%ThrowTypeError"])
+              expr_false expr_false));
+  ("caller", property_accessor
+             (accessor_intro
+              (expr_app (expr_id "%MakeGetter") [expr_id "%ThrowTypeError"])
+              (expr_app (expr_id "%MakeSetter") [expr_id "%ThrowTypeError"])
+              expr_false expr_false))])
+(expr_recc "loop"
+ (expr_lambda ["iter"]
+  (expr_let "strx" (expr_op1 unary_op_prim_to_str (expr_id "iter"))
+   (expr_if
+    (expr_op2 binary_op_has_own_property (expr_id "args") (expr_id "strx"))
+    (expr_seq
+     (expr_set_attr pattr_value (expr_id "argsObj") (expr_string "value")
+      (expr_get_field (expr_id "args") (expr_id "strx")))
+     (expr_app (expr_id "loop")
+      [expr_op2 binary_op_add (expr_id "iter")
+       (expr_number (JsNumber.of_int (1)))]))
+    (expr_seq
+     (expr_set_attr pattr_value (expr_id "argsObj") (expr_string "length")
+      (expr_id "iter"))
+     (expr_set_attr pattr_enum (expr_id "argsObj") (expr_string "length")
+      expr_false)))))
+ (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
+  (expr_id "argsObj")))
 .
 Definition ex_privnewObjEnvRec := 
 expr_object
@@ -5576,10 +5539,7 @@ expr_app (expr_id "%mkArgsObj")
  (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
   expr_undefined) []
  [("0", property_data
-        (data_intro (expr_id "arg") expr_false expr_false expr_false));
-  ("length", property_data
-             (data_intro (expr_number (JsNumber.of_int (1))) expr_false
-              expr_false expr_false))]]
+        (data_intro (expr_id "arg") expr_false expr_false expr_false))]]
 .
 Definition ex_privparse :=  expr_number (JsNumber.of_int (0)) .
 Definition ex_privparseFloatLambda :=  expr_string "parseFloat NYI" .
@@ -6978,10 +6938,7 @@ expr_app (expr_id "%mkArgsObj")
  [("0", property_data
         (data_intro (expr_id "arg1") expr_false expr_false expr_false));
   ("1", property_data
-        (data_intro (expr_id "arg2") expr_false expr_false expr_false));
-  ("length", property_data
-             (data_intro (expr_number (JsNumber.of_int (2))) expr_false
-              expr_false expr_false))]]
+        (data_intro (expr_id "arg2") expr_false expr_false expr_false))]]
 .
 Definition ex_privunescapeLambda :=  expr_string "unescape NYI" .
 Definition ex_privunshiftlambda := 
@@ -7966,10 +7923,7 @@ value_closure
  [("%MakeGetter", privMakeGetter);
   ("%MakeSetter", privMakeSetter);
   ("%ObjectProto", privObjectProto);
-  ("%ThrowTypeError", privThrowTypeError);
-  ("%ToString", privToString);
-  ("%defineOwnProperty", privdefineOwnProperty)] None ["args"]
- ex_privmkArgsObj)
+  ("%ThrowTypeError", privThrowTypeError)] None ["args"] ex_privmkArgsObj)
 .
 Definition name_privmkArgsObj :=  "%mkArgsObj" .
 Definition privapplylambda := 

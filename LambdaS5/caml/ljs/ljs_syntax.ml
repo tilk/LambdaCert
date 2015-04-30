@@ -111,6 +111,16 @@ let d_accessor =
   { getter = Undefined Pos.dummy;
     setter = Undefined Pos.dummy; }
 
+let with_enum p v = 
+  match p with
+  | Data (x, e, c) -> Data (x, v, c)
+  | Accessor (x, e, c) -> Accessor (x, v, c)
+
+let with_config p v = 
+  match p with
+  | Data (x, e, c) -> Data (x, e, v)
+  | Accessor (x, e, c) -> Accessor (x, e, v)
+
 (*
 let pos_of exp = match exp with
   | Null pos -> pos

@@ -117,17 +117,16 @@ attr_name :
  | GETTER { Getter }
  | ENUM { Enum }
 
-prop_attrs :
+pattrs :
  | VALUE exp COMMA WRITABLE BOOL
      { Data ({ value = $2; writable = $5 }, false, false) }
- | VALUE exp COMMA WRITABLE BOOL COMMA CONFIG BOOL
-     { Data ({ value = $2; writable = $5 }, false, $8) }
- | VALUE exp COMMA WRITABLE BOOL COMMA CONFIG BOOL COMMA ENUM BOOL
-     { Data ({ value = $2; writable = $5 }, $11, $8) }
- | VALUE exp COMMA WRITABLE BOOL COMMA ENUM BOOL COMMA CONFIG BOOL
-     { Data ({ value = $2; writable = $5 }, $8, $11) }
  | GETTER exp COMMA SETTER exp
      { Accessor ({ getter = $2; setter = $5 }, false, true) }
+
+prop_attrs :
+ | pattrs { $1 }
+ | prop_attrs COMMA ENUM BOOL { with_enum $1 $4 }
+ | prop_attrs COMMA CONFIG BOOL { with_config $1 $4 }
 
 prop :
  | STRING COLON LBRACE prop_attrs RBRACE { ($1, $4) }

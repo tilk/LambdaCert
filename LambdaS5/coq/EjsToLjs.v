@@ -154,7 +154,7 @@ Definition make_lambda f (is : list string) p :=
     L.expr_lambda ["%this"; "%args"] (
     L.expr_label "%ret" (
     L.expr_let "%this" (make_resolve_this (L.expr_id "%this")) (
-    make_var_decl (vdecls ++ ("arguments", args_obj) :: argdecls) (
+    make_var_decl (vdecls ++ ("arguments", make_app_builtin "%mkArgsObj" [args_obj]) :: argdecls) (
     make_strictness str (
     L.expr_seq (f e) L.expr_undefined))))).
 
@@ -256,7 +256,7 @@ Definition make_array es :=
 Definition make_args_obj (es : list L.expr) := 
     let mkprop e := L.property_data (L.data_intro e L.expr_true L.expr_true L.expr_true) in
     let props := zipl_stream (id_stream_from 0) (map mkprop es) in
-    make_app_builtin "%mkArgsObj" [L.expr_object L.default_objattrs nil props].
+    L.expr_object L.default_objattrs nil props.
 
 Definition throw_typ_error msg := make_app_builtin "%TypeError" [L.expr_string msg].
 
