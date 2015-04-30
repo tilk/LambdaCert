@@ -783,19 +783,31 @@ Proof.
     jauto_js.
 Qed.
 
+Lemma red_stat_try_finally_ok : forall k jt1 jt2,
+    ih_stat k ->
+    th_stat k (J.stat_try jt1 None (Some jt2)).
+Proof.
+    introv IHt Hinv Hlred.
+    repeat ljs_autoforward.
+    apply_ih_stat. 
+    destr_concl.
+    apply_ih_stat. 
+    destr_concl.
+    inv_ljs;
+    res_related_invert;
+    res_related_invert;
+    try ljs_abort;
+    jauto_js 6.
+    skip. (* TODO *)
+Qed.
+
 Lemma red_stat_throw_ok : forall k je,
     ih_expr k ->
     th_stat k (J.stat_throw je).
 Proof.
     introv IHe Hinv Hlred.
-    inverts Hlred as Hlred'.
-    ljs_out_redh_ter.
-    inversions Hlred'.
-    repeat inv_fwd_ljs.
-    ljs_out_redh_ter.
-    apply_ih_expr.
+    repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
-(* TODO seems like something to automate *)
     repeat ljs_autoforward. 
     autoforwards H : priv_js_error_lemma.
     destruct_hyp H.

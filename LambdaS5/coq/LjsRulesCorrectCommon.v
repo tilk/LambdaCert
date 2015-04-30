@@ -1698,7 +1698,8 @@ Ltac ljs_op_inv :=
 Ltac ljs_fwd_op_inv := ljs_op_inv; [idtac].
 
 Ltac ljs_autoforward := first [
-    inv_fwd_ljs | ljs_fwd_op_inv | ljs_out_redh_ter | ljs_get_builtin | apply_ih_expr | ljs_autoinject | 
+    inv_fwd_ljs | ljs_fwd_op_inv | ljs_out_redh_ter | ljs_get_builtin | 
+    apply_ih_stat | apply_ih_expr | ljs_autoinject | 
     binds_inv | binds_determine ].
 
 (** ** Lemmas about operators *)

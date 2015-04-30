@@ -411,7 +411,7 @@ Record state_invariant BR jst jc c st : Prop := {
     state_invariant_js_state_fresh_ok : J.state_fresh_ok jst
 }.
 
-(** Preserving lexical context chains *)
+(** *** Preserving lexical context chains *)
 
 Definition lexical_ctx_chain_ok BR st st' :=
     forall jeptr ptr obj,
@@ -419,7 +419,7 @@ Definition lexical_ctx_chain_ok BR st st' :=
     binds st ptr obj -> exists obj',
     binds st' ptr obj' /\
     L.object_prim_value obj = L.object_prim_value obj'.
-    
+
 (** ** Theorem statement  
     Factored out, because it is used in many lemmas. *)
 
