@@ -63,6 +63,7 @@ Hint Constructors res_related : js_ljs.
 Hint Constructors lexical_env_related : js_ljs.
 Hint Constructors object_related : js_ljs.
 Hint Constructors object_prim_related : js_ljs.
+Hint Constructors js_exn_object_ptr : js_ljs.
 
 (** The constructors of JSCert are used as hints, for automated building of
     the derivation trees for the semantics judgment. *)
@@ -212,14 +213,18 @@ Ltac apply_ih_expr := match goal with
       HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
         let Hle := fresh "Hle" in
         let Hih := fresh "IH" in
-        asserts Hle : (k < k')%nat; [omega | lets Hih : H Hle HS HR; clear Hle; clear HR]
+        let Hsec := fresh "Hsec" in
+        asserts Hle : (k < k')%nat; [omega | 
+            lets Hih : H Hle HS HR; lets Hsec : L.red_exprh_state_security_ok HR; clear Hle; clear HR]
     end.
 
 Ltac apply_ih_stat := match goal with
     | H : ih_stat ?k', HS : state_invariant _ _ _ ?c ?st, 
       HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
         let Hle := fresh "Hle" in
-        asserts Hle : (k < k')%nat; [omega | lets Hih : H Hle HS HR; clear Hle; clear HR]
+        let Hsec := fresh "Hsec" in
+        asserts Hle : (k < k')%nat; [omega | 
+            lets Hih : H Hle HS HR; lets Hsec : L.red_exprh_state_security_ok HR; clear Hle; clear HR]
     end.
 
 Hint Extern 1 (J.regular_unary_op _) =>
@@ -1318,7 +1323,7 @@ Proof.
     eauto.
 Qed.
 
-Hint Extern 0 (lexical_ctx_chain_ok ?BR ?st ?st) => apply (@lexical_ctx_chain_ok_refl BR st).
+Hint Extern 0 (lexical_ctx_chain_ok ?BR ?st ?st) => apply (@lexical_ctx_chain_ok_refl BR st) : js_ljs.
 
 Hint Extern 0 (lexical_ctx_chain_ok ?BR ?st1 ?st3) =>
     match goal with
@@ -1382,6 +1387,36 @@ Proof.
 Qed.
 
 Hint Resolve state_invariant_restore_lexical_env : js_ljs.
+
+Lemma js_exn_object_state_security_ok_preserved : forall st st' ptr v,
+    L.state_security_ok st st' ->
+    js_exn_object_ptr st ptr v ->
+    js_exn_object_ptr st' ptr v.
+Proof.
+    introv Hsec Hexn.
+    inverts Hexn as Hbinds Hexno.
+    specializes Hsec Hbinds.
+    destruct Hsec as (?obj&Hbinds'&Hsec).
+    econstructor. eassumption.
+    destruct Hsec.
+    unfolds js_exn_object.
+    forwards Hok : object_security_ok_attributes Hexno.
+    reflexivity.
+    destruct Hok as (?attrs&Habinds'&Hconf&Hasec).
+    inverts Hasec; tryfalse. assumption.
+Qed.
+
+Hint Resolve js_exn_object_state_security_ok_preserved : js_ljs.
+
+Hint Extern 0 (L.state_security_ok ?st ?st) => apply (@L.state_security_ok_refl st) : js_ljs.
+
+Hint Extern 0 (L.state_security_ok ?st1 ?st3) =>
+    match goal with
+    | H : lexical_ctx_chain_ok st1 ?st2 |- _ => 
+        apply (@L.state_security_ok_trans st2 st1 st3 H)
+    | H : lexical_ctx_chain_ok ?st2 st3 |- _ => 
+        apply ((fun h1 h2 => @L.state_security_ok_trans st2 st1 st3 h2 h1) H)
+    end : js_ljs.
 
 (* Prerequisites *)
 

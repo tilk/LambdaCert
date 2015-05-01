@@ -156,6 +156,8 @@ Derive Inversion inv_red_exprh_eval_1 with (forall k c st vs oo,
     red_exprh k c st (expr_eval_1 vs) oo) Sort Prop.
 Derive Inversion inv_red_exprh_hint with (forall k c st s e oo,
     red_exprh k c st (expr_hint s e) oo) Sort Prop.
+Derive Inversion inv_red_exprh_dump with (forall k c st oo,
+    red_exprh k c st (expr_dump) oo) Sort Prop.
 Tactic Notation "invert" "keep" "red_exprh" hyp(H) := 
     match type of H with
     | red_exprh ?k ?c ?st (?e) ?oo => match red_exprh_hnf e with
@@ -303,6 +305,8 @@ Tactic Notation "invert" "keep" "red_exprh" hyp(H) :=
         inversion H using inv_red_exprh_eval_1
     | expr_basic (expr_hint ?s ?e) =>
         inversion H using inv_red_exprh_hint
+    | expr_basic (expr_dump) =>
+        inversion H using inv_red_exprh_dump
     end end; clear H; intro H.
 Tactic Notation "inverts" "keep" "red_exprh" hyp(H) := 
     inverts_tactic_general ltac:(fun H => invert keep red_exprh H) H.

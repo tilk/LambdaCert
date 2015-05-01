@@ -4,7 +4,7 @@ Require Import JsNumber.
 Require Import LjsShared.
 Require Import Utils.
 Require LjsSyntax LjsPrettyRules LjsPrettyRulesAux LjsPrettyRulesIndexed LjsPrettyRulesIndexedAux
-    LjsPrettyInterm LjsStore LjsAuxiliary.
+    LjsPrettyInterm LjsStore LjsAuxiliary LjsPrettyRulesSecurity.
 Require LjsInitEnv.
 Require EjsSyntax.
 Require JsSyntax JsPrettyInterm JsPrettyRules.
@@ -24,6 +24,7 @@ Include LjsSyntax.
 Include LjsPrettyRules.
 Include LjsPrettyRulesIndexed.
 Include LjsPrettyRulesIndexedAux.
+Include LjsPrettyRulesSecurity.
 Include LjsPrettyInterm.
 Include LjsStore.
 Include LjsAuxiliary.
@@ -47,7 +48,6 @@ Include JsBagAdapter.JsCertExt.
 End J.
 
 Export LjsPrettyRulesAux.Tactics.
-Export LjsPrettyRulesIndexedAux.Tactics.
 Export LjsPrettyRulesIndexedAux.Tactics.
 
 (** ** Implicit Type declarations 
@@ -289,6 +289,9 @@ Definition js_exn_object obj v :=
     binds (L.object_properties obj) "%js-exn" 
         (L.attributes_data_of (L.attributes_data_intro v false false false)).
 
+Inductive js_exn_object_ptr st ptr v : Prop :=
+| js_exn_object_ptr_intro : forall obj, binds st ptr obj -> js_exn_object obj v -> js_exn_object_ptr st ptr v.
+
 (** The relationship is as follows:
     - Normal results in JS map to normal results in S5.
     - Throws in JS translate to throws with a wrapper in S5.
@@ -301,9 +304,8 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
     resvalue_related BR jrv v ->
     res_related BR jst st (J.res_intro J.restype_normal jrv J.label_empty) 
         (L.res_value v)
-| res_related_throw : forall jrv ptr obj v,
-    binds st ptr obj ->
-    js_exn_object obj v ->
+| res_related_throw : forall jrv ptr v,
+    js_exn_object_ptr st ptr v ->
     resvalue_related BR jrv v ->
     res_related BR jst st (J.res_intro J.restype_throw jrv J.label_empty) 
         (L.res_exception (L.value_object ptr))

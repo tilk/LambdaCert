@@ -789,16 +789,14 @@ Lemma red_stat_try_finally_ok : forall k jt1 jt2,
 Proof.
     introv IHt Hinv Hlred.
     repeat ljs_autoforward.
-    apply_ih_stat. 
     destr_concl.
-    apply_ih_stat. 
+    repeat ljs_autoforward.
     destr_concl.
     inv_ljs;
     res_related_invert;
     res_related_invert;
     try ljs_abort;
     jauto_js 6.
-    skip. (* TODO *)
 Qed.
 
 Lemma red_stat_throw_ok : forall k je,

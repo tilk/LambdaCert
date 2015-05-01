@@ -101,7 +101,8 @@ patterns = [
     ("throw_1", "expr_throw_1 ?o"),
     ("eval", "expr_eval ?e1 ?e2"),
     ("eval_1", "expr_eval_1 ?vs"),
-    ("hint", "expr_hint ?s ?e")]
+    ("hint", "expr_hint ?s ?e"),
+    ("dump", "expr_dump")]
 
 is_basic :: String -> Bool
 is_basic s = not (s =~ "_[0-9]+$")
