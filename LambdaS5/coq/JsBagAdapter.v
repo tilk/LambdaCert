@@ -169,6 +169,24 @@ Proof.
     reflexivity.
 Qed.
 
+Lemma js_lexical_env_alloc_object_lemma : forall jst jlenv jptr b,
+    (fresh jst :: jlenv, state_next_fresh (jst \(fresh jst := env_record_object jptr b))) = 
+    JsPreliminary.lexical_env_alloc_object jst jlenv jptr b.
+Proof.
+    introv.
+    destruct jst. destruct state_fresh_locations.
+    reflexivity.
+Qed.
+
+Lemma js_lexical_env_alloc_decl_lemma : forall jst jlenv,
+    (fresh jst :: jlenv, state_next_fresh (jst \(fresh jst := env_record_decl decl_env_record_empty))) = 
+    JsPreliminary.lexical_env_alloc_decl jst jlenv.
+Proof.
+    introv.
+    destruct jst. destruct state_fresh_locations.
+    reflexivity.
+Qed.
+
 Lemma js_object_set_property_lemma : forall jst jptr jobj s jattrs,
     binds jst jptr jobj ->
     JsPreliminary.object_set_property jst jptr s jattrs 
@@ -263,7 +281,7 @@ Lemma js_state_write_env_record_binds_object_preserved_eq : forall jst jptr jobj
     binds (jst \(jeptr := jer)) jptr jobj = binds jst jptr jobj.
 Proof. destruct jst. reflexivity. Qed.
 
-Lemma js_state_write_env_record_index_object_preserved_eq : forall jst jptr jobj jeptr jer,
+Lemma js_state_write_env_record_index_object_preserved_eq : forall jst jptr jeptr jer,
     index (jst \(jeptr := jer)) jptr = index jst jptr.
 Proof. destruct jst. reflexivity. Qed.
 

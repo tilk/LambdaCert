@@ -1902,7 +1902,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
    (expr_set_field (expr_id "context") (expr_id "id") (expr_id "val"))
    (expr_app (expr_id "%UnwritableDispatch") [expr_id "id"]))
   (expr_app (expr_id "%EnvCheckAssign")
-   [expr_get_obj_attr oattr_primval (expr_id "context");
+   [expr_get_internal "parent" (expr_id "context");
     expr_id "id";
     expr_id "val";
     expr_id "strict"]))
@@ -1917,7 +1917,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
     (expr_app (expr_id "%set-property")
      [expr_id "bindings"; expr_id "id"; expr_id "val"])
     (expr_app (expr_id "%EnvCheckAssign")
-     [expr_get_obj_attr oattr_primval (expr_id "context");
+     [expr_get_internal "parent" (expr_id "context");
       expr_id "id";
       expr_id "val";
       expr_id "strict"])))
@@ -1935,7 +1935,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
   (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
   (expr_get_field (expr_id "context") (expr_id "id"))
   (expr_app (expr_id "%EnvGet")
-   [expr_get_obj_attr oattr_primval (expr_id "context");
+   [expr_get_internal "parent" (expr_id "context");
     expr_id "id";
     expr_id "strict"]))
  (expr_if
@@ -1948,7 +1948,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
     (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
     (expr_get_field (expr_id "bindings") (expr_id "id"))
     (expr_app (expr_id "%EnvGet")
-     [expr_get_obj_attr oattr_primval (expr_id "context");
+     [expr_get_internal "parent" (expr_id "context");
       expr_id "id";
       expr_id "strict"])))
   (expr_throw (expr_string "[env] Context not well formed! In %EnvGet"))))
@@ -1965,7 +1965,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
   (expr_app (expr_id "%Typeof")
    [expr_get_field (expr_id "context") (expr_id "id")])
   (expr_app (expr_id "%EnvTypeof")
-   [expr_get_obj_attr oattr_primval (expr_id "context"); expr_id "id"]))
+   [expr_get_internal "parent" (expr_id "context"); expr_id "id"]))
  (expr_if
   (expr_op2 binary_op_stx_eq
    (expr_get_obj_attr oattr_class (expr_id "context"))
@@ -1977,7 +1977,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
     (expr_app (expr_id "%Typeof")
      [expr_get_field (expr_id "bindings") (expr_id "id")])
     (expr_app (expr_id "%EnvTypeof")
-     [expr_get_obj_attr oattr_primval (expr_id "context"); expr_id "id"])))
+     [expr_get_internal "parent" (expr_id "context"); expr_id "id"])))
   (expr_throw (expr_string "[env] Context not well formed! In %EnvTypeof"))))
 .
 Definition ex_privEqEq := 
@@ -3658,7 +3658,8 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
      (expr_set_field (expr_id "globalEnv") (expr_string "%strictContext")
       (expr_object
        (objattrs_intro (expr_string "DeclEnvRec") expr_true expr_null
-        expr_null (expr_id "evalContext")) [] []))
+        expr_null expr_undefined) [("parent", expr_id "evalContext")] 
+       []))
      (expr_if
       (expr_op2 binary_op_stx_eq
        (expr_op1 unary_op_typeof (expr_id "evalStr")) (expr_string "string"))
@@ -5416,7 +5417,7 @@ expr_let "argsObj"
 Definition ex_privnewObjEnvRec := 
 expr_object
 (objattrs_intro (expr_string "ObjEnvRec") expr_true expr_null expr_null
- (expr_id "parent")) []
+ expr_undefined) [("parent", expr_id "parent")]
 [("bindings", property_data
               (data_intro (expr_id "obj") expr_false expr_false expr_false));
  ("provideThis", property_data
@@ -16631,7 +16632,7 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "ObjEnvRec";
           oattrs_extensible := true;
-          oattrs_prim_value := value_null;
+          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("bindings", 
@@ -16647,7 +16648,7 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
-        object_internal := from_list []|});
+        object_internal := from_list [("parent",  value_null)]|});
 (308, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";

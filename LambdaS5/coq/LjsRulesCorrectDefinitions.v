@@ -339,23 +339,24 @@ Definition includes_init_ctx c :=
 Inductive lexical_env_related BR st : J.lexical_env -> L.value -> Prop :=
 | lexical_env_related_nil : 
     lexical_env_related BR st nil L.value_null
-| lexical_env_related_cons : forall jeptr jlenv ptr obj,
+| lexical_env_related_cons : forall jeptr jlenv ptr obj v,
     (inr jeptr, ptr) \in BR ->
     binds st ptr obj ->
-    lexical_env_related BR st jlenv (L.object_prim_value obj) ->
+    binds (L.object_internal obj) "parent" v ->
+    lexical_env_related BR st jlenv v ->
     lexical_env_related BR st (jeptr::jlenv) (L.value_object ptr)
 .
 
 (* Relates the lexical contexts *)
 Record execution_ctx_related BR jc c st := {
     execution_ctx_related_this_binding : forall v,
-        binds c "%this" v ->
+        binds c "$this" v ->
         value_related BR (J.execution_ctx_this_binding jc) v;
     execution_ctx_related_strictness_flag : forall v, 
-        binds c "%strict" v ->
+        binds c "$strict" v ->
         v = L.value_bool (J.execution_ctx_strict jc);
     execution_ctx_related_lexical_env : forall v,
-        binds c "%context" v ->
+        binds c "$context" v ->
         lexical_env_related BR st (J.execution_ctx_lexical_env jc) v
 }.
 
@@ -416,11 +417,13 @@ Record state_invariant BR jst jc c st : Prop := {
 (** *** Preserving lexical context chains *)
 
 Definition lexical_ctx_chain_ok BR st st' :=
-    forall jeptr ptr obj,
+    forall jeptr ptr obj v,
     (inr jeptr, ptr) \in BR ->
-    binds st ptr obj -> exists obj',
+    binds st ptr obj -> 
+    binds (L.object_internal obj) "parent" v ->
+    exists obj',
     binds st' ptr obj' /\
-    L.object_prim_value obj = L.object_prim_value obj'.
+    binds (L.object_internal obj') "parent" v.
 
 (** ** Theorem statement  
     Factored out, because it is used in many lemmas. *)
@@ -444,10 +447,10 @@ Definition concl_expr_value BR jst jc c st st' r je :=
 *)
 Definition concl_stat BR jst jc c st st' r jt :=
     exists BR' jst' jr,
+    J.red_stat jst jc (J.stat_basic jt) (J.out_ter jst' jr) /\ 
     state_invariant BR' jst' jc c st' /\
     BR \c BR' /\
     lexical_ctx_chain_ok BR st st' /\
-    J.red_stat jst jc (J.stat_basic jt) (J.out_ter jst' jr) /\ 
     res_related BR' jst' st' jr r.
 
 Definition concl_spec {A : Type} BR jst jc c st st' r jes 
