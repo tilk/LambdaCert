@@ -1949,6 +1949,77 @@ Ltac ljs_autoforward := first [
 
 (** ** Lemmas about specification functions *)
 
+Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
+    (v2 = L.value_undefined \/ exists s, v2 = L.value_string s) ->
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    state_invariant BR jst jc c st ->
+    L.red_exprh k c st 
+       (L.expr_app_2 LjsInitEnv.privMakeNativeError [v1; v2]) 
+       (L.out_ter st' r) ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_build_error jv1 jv2) (fun _ => True).
+Proof.
+    introv Hv Hvrel1 Hvrel2 Hinv Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    destruct_hyp Hv;
+    repeat ljs_autoforward.
+    inverts Hvrel2.
+    jauto_js 8.
+    (* has message *)
+    inv_ljs;
+    binds_inv. (* TODO *) simpls. false. rewrite binds_empty_eq in H0. eauto.
+    repeat ljs_autoforward.
+    inv_ljs; binds_inv. 
+    repeat ljs_autoforward.
+    rew_bag_simpl. 
+    simpls.
+    binds_inv.
+    inverts Hvrel2.
+    unfold_concl. do 3 eexists. split. 
+    jauto_js 15.
+    jauto_js.
+    eapply state_invariant_next_fresh_commute_object_preserved.
+    rew_bag_simpl.
+    eapply state_invariant_new_object_preserved.
+    eauto_js. eauto_js.
+    eauto_js 6.
+    jauto_js.
+    jauto_js 8.
+    simpls. false. prove_bag 7.
+Qed.
+
+Lemma native_error_lemma : forall BR k jst jc c st st' jne ptr v r,
+    (v = L.value_undefined \/ exists s, v = L.value_string s) -> (* TODO error messages in jscert *)
+    (inl (J.object_loc_prealloc (J.prealloc_native_error_proto jne)), ptr) \in BR ->
+    state_invariant BR jst jc c st ->
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privNativeError [L.value_object ptr; v]) 
+        (L.out_ter st' r) ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_error jne) (fun _ => False).
+Proof.
+    introv Hv Hbr Hinv Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    destruct_hyp Hv;
+    forwards Hlol : make_native_error_lemma H0. jauto_js. jauto_js. jauto_js. skip.
+
+    jauto_js.
+Admitted. (* TODO *)
+
+Lemma type_error_lemma : forall BR k jst jc c st st' v r,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privTypeError [v]) 
+        (L.out_ter st' r) ->
+    (v = L.value_undefined \/ exists s, v = L.value_string s) ->
+    state_invariant BR jst jc c st ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_error J.native_error_type) (fun _ => False).
+Proof.
+    introv Hlred Hv Hinv.
+Admitted. (* TODO *)
+
 (** *** spec_expr_get_value_conv spec_to_boolean 
     It corresponds to [to_bool] in the desugaring. *)
 
@@ -1980,6 +2051,7 @@ Proof.
 
 Admitted.
 
+(* TODO move *)
 Ltac decide_stx_eq := 
     match goal with
     | H : context[decide (L.stx_eq ?v1 ?v2)] |- _ => 
@@ -1987,7 +2059,12 @@ Ltac decide_stx_eq :=
         case_if_on (decide (L.stx_eq v1 v2)) as EQ;
         [applys_to EQ eq_true_r; rew_refl in EQ; try solve [inverts EQ]
         |applys_to EQ eq_false_r; rew_refl in EQ; try solve [false; apply EQ; jauto_js]]
-    end; [idtac].
+    end.
+
+Ltac invert_stx_eq :=
+    match goal with
+    | H : L.stx_eq _ _  |- _ => inverts H
+    end. 
 
 Lemma red_spec_to_object_ok : forall k,
     th_ext_expr_unary k LjsInitEnv.privToObject J.spec_to_object
@@ -1996,28 +2073,38 @@ Proof.
     introv Hinv Hvrel Hlred.
     inverts red_exprh Hlred.
     ljs_apply.
-    repeat ljs_autoforward.
-(*
-    inverts Hvrel;
     repeat (ljs_autoforward || decide_stx_eq).
-    (* null *) 
-    skip. 
+    (* null *)
+    destruct Hvrel; invert_stx_eq.
+    asserts Hinv' : (state_invariant BR jst jc c' st). (* TODO fold it into ljs_apply *)
+        eapply state_invariant_replace_ctx_sub_init. skip. eassumption. 
+    forwards Hx : type_error_lemma. eassumption. iauto. eauto_js.
+    destr_concl; tryfalse.
+    jauto_js.
     (* undefined *)
+    destruct Hvrel; invert_stx_eq.
     skip.
+    (* object *)
+    destruct Hvrel; invert_stx_eq.
+    jauto_js.
+    (* string *)
+    destruct Hvrel; invert_stx_eq.
+    skip. (* TODO *)
     (* number *)
+    destruct Hvrel; invert_stx_eq.
     inverts red_exprh H7. (* TODO *)
     ljs_apply.
     repeat ljs_autoforward.
     jauto_js 8.
-    debug eauto 8 with js_ljs bag typeclass_instances.
-    eauto_js 8.
-    (* string *)
-    skip. 
-    skip. 
-    skip. 
-    jauto_js. 
-*)
-Admitted.
+    (* boolean *)
+    destruct Hvrel; invert_stx_eq.
+    inverts red_exprh H7. (* TODO *)
+    ljs_apply.
+    repeat ljs_autoforward.
+    jauto_js 8.
+    (* impossible *)
+    destruct Hvrel; false; eauto_js.
+Qed.
 
 Lemma red_spec_to_boolean_ok : forall k je, 
     ih_expr k ->

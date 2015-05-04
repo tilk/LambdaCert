@@ -56,66 +56,6 @@ Proof.
     destruct l as [ | [ | ] | | ]; inverts red_exprh Hlred; ijauto_js.
 Qed.
 
-Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
-    (v2 = L.value_undefined \/ exists s, v2 = L.value_string s) ->
-    value_related BR jv1 v1 ->
-    value_related BR jv2 v2 ->
-    state_invariant BR jst jc c st ->
-    L.red_exprh k c st 
-       (L.expr_app_2 LjsInitEnv.privMakeNativeError [v1; v2]) 
-       (L.out_ter st' r) ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_build_error jv1 jv2) (fun _ => True).
-Proof.
-    introv Hv Hvrel1 Hvrel2 Hinv Hlred.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    repeat ljs_autoforward.
-    destruct_hyp Hv;
-    repeat ljs_autoforward.
-    inverts Hvrel2.
-    jauto_js 8.
-    (* has message *)
-    inv_ljs;
-    binds_inv. (* TODO *) simpls. false. rewrite binds_empty_eq in H0. eauto.
-    repeat ljs_autoforward.
-    inv_ljs; binds_inv. 
-    repeat ljs_autoforward.
-    rew_bag_simpl. 
-    simpls.
-    binds_inv.
-    inverts Hvrel2.
-    unfold_concl. do 3 eexists. split. 
-    jauto_js 15.
-    jauto_js.
-    eapply state_invariant_next_fresh_commute_object_preserved.
-    rew_bag_simpl.
-    eapply state_invariant_new_object_preserved.
-    eauto_js. eauto_js.
-    eauto_js 6.
-    jauto_js.
-    jauto_js 8.
-    simpls. false. prove_bag 7.
-Qed.
-
-Lemma native_error_lemma : forall BR k jst jc c st st' jne ptr v r,
-    (v = L.value_undefined \/ exists s, v = L.value_string s) -> (* TODO error messages in jscert *)
-    (inl (J.object_loc_prealloc (J.prealloc_native_error_proto jne)), ptr) \in BR ->
-    state_invariant BR jst jc c st ->
-    L.red_exprh k c st 
-        (L.expr_app_2 LjsInitEnv.privNativeError [L.value_object ptr; v]) 
-        (L.out_ter st' r) ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_error jne) (fun _ => False).
-Proof.
-    introv Hv Hbr Hinv Hlred.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    repeat ljs_autoforward.
-    destruct_hyp Hv;
-    forwards Hlol : make_native_error_lemma H0. jauto_js. jauto_js. jauto_js. skip.
-
-    jauto_js.
-Admitted.
-
 Lemma get_identifier_value_lemma : forall jlenv k BR jst jc c st st' r b v i,
     lexical_env_related BR st jlenv v ->
     binds c "strict" (L.value_bool b) ->
