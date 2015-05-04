@@ -16,7 +16,6 @@ let string_of_oattr oattr = match oattr with
   | Coq_oattr_proto -> "#proto"
   | Coq_oattr_class -> "#class"
   | Coq_oattr_extensible -> "#extensible"
-  | Coq_oattr_primval -> "#primval"
   | Coq_oattr_code -> "#code"
 
 let string_of_unary_op s = match s with
@@ -176,12 +175,11 @@ and opt_braces exprec expr = match expr with
   | Coq_expr_seq _ -> braces (exprec expr)
   | _ -> exprec expr
 
-and attrsv exprec (Coq_objattrs_intro (k, b, p, c, pv)) ip =
+and attrsv exprec (Coq_objattrs_intro (k, b, p, c)) ip =
   brackets (horzOrVert (List.map (fun x -> squish [x; (text ",")]) (
                              [horz [text "#proto:"; exprec p]; 
                               horz [text "#code:"; exprec c]; 
                               horz [text "#class:"; exprec k]; 
-                              horz [text "#primval:"; exprec pv]; 
                               horz [text "#extensible:"; exprec b]] @ List.map (function (s, v) -> horz [text (String.of_list s ^ ":"); exprec v]) ip)))
               
 and prop exprec (f, prop) = match prop with

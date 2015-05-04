@@ -81,7 +81,6 @@ Inductive oattr : Type := (* object attribute name *)
 | oattr_proto
 | oattr_class
 | oattr_extensible
-| oattr_primval
 | oattr_code
 .
 
@@ -138,7 +137,7 @@ with property : Type :=
 | property_data : data -> property 
 | property_accessor : accessor -> property
 with objattrs : Type :=
-| objattrs_intro : expr -> expr -> expr -> expr -> expr -> objattrs (* class -> extensible -> prototype -> code -> primval -> objattrs *)
+| objattrs_intro : expr -> expr -> expr -> expr -> objattrs (* class -> extensible -> prototype -> code -> objattrs *)
 .
 
 Fixpoint expr_fv e : finset id := match e with
@@ -184,7 +183,7 @@ Fixpoint expr_fv e : finset id := match e with
 | expr_hint _ e => expr_fv e
 end
 with objattrs_fv oa := match oa with
-| objattrs_intro e1 e2 e3 e4 e5 => expr_fv e1 \u expr_fv e2 \u expr_fv e3 \u expr_fv e4 \u expr_fv e5
+| objattrs_intro e1 e2 e3 e4 => expr_fv e1 \u expr_fv e2 \u expr_fv e3 \u expr_fv e4 
 end
 with property_fv p := match p with
 | property_data (data_intro e1 e2 e3 e4) => expr_fv e1 \u expr_fv e2 \u expr_fv e3 \u expr_fv e4
@@ -202,9 +201,9 @@ Fixpoint expr_seqs es :=
 Definition expr_true := expr_bool true.
 Definition expr_false := expr_bool false.
 
-Definition default_objattrs := objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined expr_undefined.
+Definition default_objattrs := objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined.
 
-Definition objattrs_with_proto p oa := let 'objattrs_intro cl ex pr co pv := oa in objattrs_intro cl ex p co pv.
+Definition objattrs_with_proto p oa := let 'objattrs_intro cl ex pr co := oa in objattrs_intro cl ex p co.
 
 (* Values *)
 
@@ -258,7 +257,6 @@ Record oattrs := oattrs_intro {
    oattrs_proto : value;
    oattrs_class : class_name;
    oattrs_extensible : bool;
-   oattrs_prim_value : value;
    oattrs_code : value 
 }.
 
@@ -271,14 +269,12 @@ Record object := object_intro {
 Definition object_proto obj := oattrs_proto (object_attrs obj).
 Definition object_class obj := oattrs_class (object_attrs obj).
 Definition object_extensible obj := oattrs_extensible (object_attrs obj).
-Definition object_prim_value obj := oattrs_prim_value (object_attrs obj).
 Definition object_code obj := oattrs_code (object_attrs obj).
 
 Definition default_oattrs : oattrs := {|
   oattrs_proto := value_null;
   oattrs_class := "Object";
   oattrs_extensible := true;
-  oattrs_prim_value := value_undefined;
   oattrs_code := value_null
 |}.
 

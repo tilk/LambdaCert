@@ -253,7 +253,6 @@ Definition get_oattrs_oattr oas (oa : oattr) : value :=
   | oattr_proto => oattrs_proto oas
   | oattr_extensible => value_bool (oattrs_extensible oas)
   | oattr_code => oattrs_code oas
-  | oattr_primval => oattrs_prim_value oas
   | oattr_class => value_string (oattrs_class oas)
   end
 .
@@ -271,8 +270,6 @@ Inductive object_oattr_valid : oattr -> value -> Prop :=
     object_oattr_valid oattr_proto (value_object ptr)
 | object_oattr_valid_extensible_bool : forall b,
     object_oattr_valid oattr_extensible (value_bool b)
-| object_oattr_valid_primval : forall v,
-    object_oattr_valid oattr_primval v
 .
 
 Inductive oattrs_oattr_modifiable oas : oattr -> Prop :=
@@ -282,8 +279,6 @@ Inductive oattrs_oattr_modifiable oas : oattr -> Prop :=
 | oattrs_oattr_modifiable_extensible : 
     oattrs_extensible oas ->
     oattrs_oattr_modifiable oas oattr_extensible
-| oattrs_oattr_modifiable_primval : 
-    oattrs_oattr_modifiable oas oattr_primval
 .
 
 Definition object_oattr_modifiable obj oa := oattrs_oattr_modifiable (object_attrs obj) oa.
@@ -294,14 +289,12 @@ Definition object_oattr_valid_decide oa v :=
         match v with value_null | value_object _ => true | _ => false end
     | oattr_extensible =>
         match v with value_bool _ => true | _ => false end
-    | oattr_primval => true
     | _ => false
     end.
 
 Definition oattrs_oattr_modifiable_decide oas oa :=
     match oa with
     | oattr_proto | oattr_extensible => oattrs_extensible oas
-    | oattr_primval => true
     | _ => false
     end.
 
@@ -325,13 +318,12 @@ Definition modify_object_oattrs obj f : object :=
   let 'object_intro oattrs props iprops := obj in object_intro (f oattrs) props iprops.
 
 Definition set_oattrs_oattr oas oa v :=
-  let 'oattrs_intro pr cl ex pv co := oas in
+  let 'oattrs_intro pr cl ex co := oas in
   match oa with
-  | oattr_proto => oattrs_intro v cl ex pv co
-  | oattr_extensible => oattrs_intro pr cl (unsome (value_to_bool v)) pv co
-  | oattr_code => oattrs_intro pr cl ex pv v
-  | oattr_primval => oattrs_intro pr cl ex v co
-  | oattr_class => oattrs_intro pr (unsome (value_to_string v)) ex pv co
+  | oattr_proto => oattrs_intro v cl ex co
+  | oattr_extensible => oattrs_intro pr cl (unsome (value_to_bool v)) co
+  | oattr_code => oattrs_intro pr cl ex v
+  | oattr_class => oattrs_intro pr (unsome (value_to_string v)) ex co
   end.
 
 Definition set_object_oattr obj oa v : object :=

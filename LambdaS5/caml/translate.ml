@@ -8,7 +8,6 @@ let translate_oattr o = match o with
     | Ljs.Proto -> Cs.Coq_oattr_proto
     | Ljs.Klass -> Cs.Coq_oattr_class
     | Ljs.Extensible -> Cs.Coq_oattr_extensible
-    | Ljs.Primval -> Cs.Coq_oattr_primval
     | Ljs.Code -> Cs.Coq_oattr_code
 
 let translate_pattr p = match p with
@@ -127,6 +126,5 @@ and translate_attrs a = Cs.Coq_objattrs_intro
     (Cs.Coq_expr_string (String.to_list a.Ljs.klass), 
      translate_bool a.Ljs.extensible,
      Option.map_default translate_expr (Cs.Coq_expr_null) a.Ljs.proto, 
-     Option.map_default translate_expr (Cs.Coq_expr_null) a.Ljs.code, 
-     Option.map_default translate_expr (Cs.Coq_expr_undefined) a.Ljs.primval 
+     Option.map_default translate_expr (Cs.Coq_expr_null) a.Ljs.code
      )

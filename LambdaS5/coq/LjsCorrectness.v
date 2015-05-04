@@ -494,14 +494,13 @@ Proof.
 Qed.
 
 Definition is_some_eval_objattrs o runs c st attrs Pred : Prop :=
-    let 'objattrs_intro e1 e2 e3 e4 e5 := attrs in
+    let 'objattrs_intro e1 e2 e3 e4 := attrs in
     is_some_value o (runs_type_eval runs c st e1) (fun st1 v1 =>
     is_some_value o (runs_type_eval runs c st1 e2) (fun st2 v2 =>
     is_some_value o (runs_type_eval runs c st2 e3) (fun st3 v3 =>
     is_some_value o (runs_type_eval runs c st3 e4) (fun st4 v4 =>
-    is_some_value o (runs_type_eval runs c st4 e5) (fun st5 v5 =>
         exists b s, v1 = value_string s /\ value_to_bool v2 = Some b /\
-            Pred st5 s b v3 v4 v5))))). 
+            Pred st4 s b v3 v4)))). 
 
 Definition is_some_eval_objprop o runs c st s prop Pred : Prop :=
     match prop with
@@ -576,8 +575,8 @@ Qed.
 Lemma eval_object_correct : forall runs c st attrs l1 l2 o,
     runs_type_correct runs ->
     eval_object_decl runs c st attrs l1 l2 = result_some o ->
-    is_some_eval_objattrs o runs c st attrs (fun st' class ext proto code prim => 
-        let obj := object_intro (oattrs_intro proto class ext prim code) \{} \{} in
+    is_some_eval_objattrs o runs c st attrs (fun st' class ext proto code => 
+        let obj := object_intro (oattrs_intro proto class ext code) \{} \{} in
         is_some_eval_internal o runs c st' l1 obj (fun st' obj =>
         is_some_eval_objprops o runs c st' l2 obj (fun st'' obj =>
             exists st''' v,
@@ -592,7 +591,7 @@ Proof.
     eassumption. substs; eauto.
     eapply is_some_eval_internal_lemma; try eassumption.
     eapply is_some_eval_objprops_lemma; try eassumption.
-    intros. cbv beta in H7. cases_let. ljs_run_inv. eauto.
+    intros. cbv beta in H6. cases_let. ljs_run_inv. eauto.
 Qed.
 
 Lemma eval_break_correct : forall runs c st s e o,

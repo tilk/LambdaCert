@@ -136,7 +136,6 @@ let format_oattr a = match a with
     | Coq_oattr_proto -> text "oattr_proto"
     | Coq_oattr_class -> text "oattr_class"
     | Coq_oattr_extensible -> text "oattr_extensible"
-    | Coq_oattr_primval -> text "oattr_primval"
     | Coq_oattr_code -> text "oattr_code"
 
 let format_number n = 
@@ -182,7 +181,7 @@ let rec format_expr b e = match e with
     | _ -> text "expr_dump"
 
 and format_objattrs b e = match e with
-    | Coq_objattrs_intro (e1, e2, e3, e4, e5) -> coqconstr b "objattrs_intro" (List.map (format_expr true) [e1; e2; e3; e4; e5])
+    | Coq_objattrs_intro (e1, e2, e3, e4) -> coqconstr b "objattrs_intro" (List.map (format_expr true) [e1; e2; e3; e4])
 
 and format_internal_list ps = 
     let format_internal_item (i, e) = parens (squish [format_id i; text ", "; format_expr false e]) in
@@ -260,7 +259,6 @@ let format_object o =
         "oattrs_proto", format_value "proto" (object_proto o);
         "oattrs_class", format_id (object_class o);
         "oattrs_extensible", bool (object_extensible o);
-        "oattrs_prim_value", format_value "primval" (object_prim_value o);
         "oattrs_code", format_named_val (String.to_list "objCode") (object_code o)
     ] in
     let l = [

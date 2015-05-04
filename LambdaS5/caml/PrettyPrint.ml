@@ -26,10 +26,9 @@ and string_of_object_ptr depth st ptr =
     | None -> "<reference to non-existing object>"
     | Some obj -> string_of_object (depth-1) st obj
 and string_of_object depth (st : store) obj =
-  Printf.sprintf "{[#proto: %s, #class: %s, #extensible: %B, #primval: %s, #code: %s%s] %s}"
+  Printf.sprintf "{[#proto: %s, #class: %s, #extensible: %B, #code: %s%s] %s}"
   (string_of_value depth st (object_proto obj)) (String.of_list (object_class obj))
-  (object_extensible obj) (string_of_value depth st (object_prim_value obj))
-  (string_of_value depth st (object_code obj))
+  (object_extensible obj) (string_of_value depth st (object_code obj))
   (string_of_internal_list depth st (LibFinmap.FinmapImpl.to_list_impl (object_internal obj)))
   (string_of_prop_list depth st (LibFinmap.FinmapImpl.to_list_impl (object_properties obj)) [])
 and string_of_internal_list depth st l =

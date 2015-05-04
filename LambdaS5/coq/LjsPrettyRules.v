@@ -54,12 +54,12 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
     red_expr c st (expr_eval_many_2 es o vs E) o
 
 (* object *)
-| red_expr_object : forall c st e1 e2 e3 e4 e5 ia a o,
-    red_expr c st (expr_eval_many_1 [e1; e2; e3; e4; e5] nil (expr_object_1 ia a)) o ->
-    red_expr c st (expr_object (objattrs_intro e1 e2 e3 e4 e5) ia a) o
-| red_expr_object_1 : forall c st class ext proto code prim ia a o,
-    red_expr c st (expr_object_2 ia a (object_intro (oattrs_intro proto class ext prim code) \{} \{})) o ->
-    red_expr c st (expr_object_1 ia a [value_string class; value_bool ext; proto; code; prim]) o
+| red_expr_object : forall c st e1 e2 e3 e4 ia a o,
+    red_expr c st (expr_eval_many_1 [e1; e2; e3; e4] nil (expr_object_1 ia a)) o ->
+    red_expr c st (expr_object (objattrs_intro e1 e2 e3 e4) ia a) o
+| red_expr_object_1 : forall c st class ext proto code ia a o,
+    red_expr c st (expr_object_2 ia a (object_intro (oattrs_intro proto class ext code) \{} \{})) o ->
+    red_expr c st (expr_object_1 ia a [value_string class; value_bool ext; proto; code]) o
 | red_expr_object_2 : forall c st st1 obj,
     st1 = st \(fresh st := obj) ->
     red_expr c st (expr_object_2 nil nil obj) (out_ter st1 (res_value (value_object (fresh st))))

@@ -95,7 +95,7 @@ more_oattrs :
  | { (d_attrs, []) }
 
 oattrsv :
- | PRIMVAL COLON exp more_oattrs { ({ (fst $4) with primval = Some $3 }, snd $4) }
+ | PRIMVAL COLON exp more_oattrs { (fst $4, ("primval", $3) :: snd $4) }
  | EXTENSIBLE COLON BOOL more_oattrs { ({ (fst $4) with extensible = $3 }, snd $4) }
  | PROTO COLON exp more_oattrs { ({ (fst $4) with proto = Some $3 }, snd $4) }
  | CODE COLON exp more_oattrs { ({ (fst $4) with code = Some $3 }, snd $4) }

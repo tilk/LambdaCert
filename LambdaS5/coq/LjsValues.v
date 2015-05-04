@@ -82,7 +82,6 @@ Definition make_prop_list obj : object :=
         oattrs_proto := value_null;
         oattrs_class := "Internal"; 
         oattrs_extensible := false;
-        oattrs_prim_value := value_undefined;
         oattrs_code := value_null 
       |};
       object_properties := props;

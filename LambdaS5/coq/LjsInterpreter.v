@@ -203,20 +203,18 @@ Fixpoint eval_object_internal runs c st (l : list (string * expr)) (acc : object
 * computed values. *)
 Definition eval_object_decl runs c st (attrs : objattrs) (iattrs : list (string * expr)) 
     (l : list (string * property)) : result :=
-  let 'objattrs_intro class_expr extensible_expr prototype_expr code_expr primval_expr := attrs in
+  let 'objattrs_intro class_expr extensible_expr prototype_expr code_expr := attrs in
     (* Order of evaluation as in the paper: *)
     if_eval_return runs c st class_expr (fun st class_v =>
       if_eval_return runs c st extensible_expr (fun st extensible_v =>
         if_eval_return runs c st prototype_expr (fun st prototype_v =>
           if_eval_return runs c st code_expr (fun st code_v =>
-            if_eval_return runs c st primval_expr (fun st primval_v =>
               assert_get_string class_v (fun class => assert_get_bool extensible_v (fun extensible =>
                 let obj := {|
                     object_attrs := {|
                       oattrs_proto := prototype_v;
                       oattrs_class := class;
                       oattrs_extensible := extensible;
-                      oattrs_prim_value := primval_v;
                       oattrs_code := code_v 
                     |};
                     object_properties := \{};
@@ -226,7 +224,7 @@ Definition eval_object_decl runs c st (attrs : objattrs) (iattrs : list (string 
                   eval_object_properties runs c st l obj (fun st obj =>
                     let (st, loc) := add_object st obj
                     in result_value st loc
-          )))))))))
+          ))))))))
 .
 
 (* left[right].
@@ -489,25 +487,24 @@ Definition eval_get_obj_attr runs c st obj_expr oattr :=
 .
 
 Definition set_object_oattr_check obj oa v : resultof object :=
-  let 'object_intro (oattrs_intro pr cl ex pv co) pp ipp := obj in
+  let 'object_intro (oattrs_intro pr cl ex co) pp ipp := obj in
   match oa with
   | oattr_proto =>
     ifb object_extensible obj then
     match v with
     | value_null
-    | value_object _ => result_some (object_intro (oattrs_intro v cl ex pv co) pp ipp)
+    | value_object _ => result_some (object_intro (oattrs_intro v cl ex co) pp ipp)
     | _ => result_fail "Update proto failed"
     end
     else result_fail "Update proto on unextensible object"
   | oattr_extensible => 
     ifb object_extensible obj then
     match v with
-    | value_bool b => result_some (object_intro (oattrs_intro pr cl b pv co) pp ipp)
+    | value_bool b => result_some (object_intro (oattrs_intro pr cl b co) pp ipp)
     | _ => result_fail "Update extensible failed"
     end
     else result_fail "Update extensible on unextensible object"
   | oattr_code => result_fail "Can't update code"
-  | oattr_primval => result_some (object_intro (oattrs_intro pr cl ex v co) pp ipp)
   | oattr_class => result_fail "Can't update klass"
   end
 .

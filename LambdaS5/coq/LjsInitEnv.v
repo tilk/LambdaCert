@@ -47,8 +47,8 @@ expr_if
 .
 Definition ex_getter := 
 expr_object
-(objattrs_intro (expr_string "Object") expr_true expr_null expr_null
- expr_undefined) []
+(objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+[]
 [("%AppExprCheck", property_data
                    (data_intro (expr_id "%AppExprCheck") expr_true expr_false
                     expr_false));
@@ -1430,7 +1430,7 @@ expr_label "ret"
   (expr_let "rtnobj"
    (expr_object
     (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-     expr_null expr_undefined) []
+     expr_null) []
     [("length", property_data
                 (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                  expr_false expr_false))])
@@ -1471,12 +1471,12 @@ expr_label "ret"
      (expr_app (expr_id "%JSError")
       [expr_object
        (objattrs_intro (expr_string "Object") expr_true
-        (expr_id "%RangeErrorProto") expr_null expr_undefined) [] []]))
+        (expr_id "%RangeErrorProto") expr_null) [] []]))
     (expr_if (expr_id "c1")
      (expr_break "ret"
       (expr_object
        (objattrs_intro (expr_string "Array") expr_true
-        (expr_id "%ArrayProto") expr_null expr_undefined) []
+        (expr_id "%ArrayProto") expr_null) []
        [("length", property_data
                    (data_intro
                     (expr_app (expr_id "%ToUint32")
@@ -1485,7 +1485,7 @@ expr_label "ret"
      (expr_let "rtn"
       (expr_object
        (objattrs_intro (expr_string "Array") expr_true
-        (expr_id "%ArrayProto") expr_null expr_undefined) []
+        (expr_id "%ArrayProto") expr_null) []
        [("length", property_data
                    (data_intro
                     (expr_get_field (expr_id "args") (expr_string "length"))
@@ -1495,8 +1495,8 @@ expr_label "ret"
         [expr_id "rtn";
          expr_string "0";
          expr_object
-         (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-          expr_undefined) []
+         (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
+         []
          [("value", property_data
                     (data_intro
                      (expr_get_field (expr_id "args") (expr_string "0"))
@@ -1626,19 +1626,19 @@ expr_let "calledAsFunction"
    (expr_let "o"
     (expr_object
      (objattrs_intro (expr_string "Date") expr_true (expr_id "%DateProto")
-      expr_null (expr_id "v")) [] [])
+      expr_null) [("primval", expr_id "v")] [])
     (expr_app (expr_id "%dateToStringLambda")
      [expr_id "o";
       expr_object
-      (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-       expr_undefined) [] []])))
+      (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
+      [] []])))
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "nargs")
     (expr_number (JsNumber.of_int (0))))
    (expr_let "v" (expr_app (expr_id "%getCurrentUTC") [])
     (expr_object
      (objattrs_intro (expr_string "Date") expr_true (expr_id "%DateProto")
-      expr_null (expr_id "v")) [] []))
+      expr_null) [("primval", expr_id "v")] []))
    (expr_if
     (expr_op2 binary_op_stx_eq (expr_id "nargs")
      (expr_number (JsNumber.of_int (1))))
@@ -1653,7 +1653,7 @@ expr_let "calledAsFunction"
       (expr_let "clipped" (expr_app (expr_id "%TimeClip") [expr_id "V"])
        (expr_object
         (objattrs_intro (expr_string "Date") expr_true (expr_id "%DateProto")
-         expr_null (expr_id "clipped")) [] []))))
+         expr_null) [("primval", expr_id "clipped")] []))))
     (expr_let "y"
      (expr_app (expr_id "%ToNumber")
       [expr_get_field (expr_id "args") (expr_string "0")])
@@ -1732,8 +1732,8 @@ expr_let "calledAsFunction"
                [expr_app (expr_id "%UTC") [expr_id "finalDate"]])
               (expr_object
                (objattrs_intro (expr_string "Date") expr_true
-                (expr_id "%DateProto") expr_null (expr_id "primval")) 
-               [] [])))))))))))))))
+                (expr_id "%DateProto") expr_null)
+               [("primval", expr_id "primval")] [])))))))))))))))
 .
 Definition ex_privDateFromTime := 
 expr_let "mft" (expr_app (expr_id "%MonthFromTime") [expr_id "t"])
@@ -2069,7 +2069,7 @@ Definition ex_privErrorConstructor :=
 expr_let "o"
 (expr_object
  (objattrs_intro (expr_string "Error") expr_true (expr_id "%ErrorProto")
-  expr_null expr_undefined) [] [])
+  expr_null) [] [])
 (expr_if
  (expr_op2 binary_op_ge
   (expr_get_field (expr_id "args") (expr_string "length"))
@@ -2154,8 +2154,8 @@ expr_let "argCount" (expr_get_field (expr_id "args") (expr_string "length"))
      (expr_app (expr_id "%evallambda")
       [expr_undefined;
        expr_object
-       (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-        expr_undefined) []
+       (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
+       []
        [("0", property_data
               (data_intro (expr_id "final") expr_false expr_false expr_false))]]))))))
 .
@@ -2229,8 +2229,8 @@ expr_recc "searchChain"
 .
 Definition ex_privJSError := 
 expr_object
-(objattrs_intro (expr_string "JSError") expr_false expr_null expr_null
- expr_undefined) []
+(objattrs_intro (expr_string "JSError") expr_false expr_null expr_null) 
+[]
 [("%js-exn", property_data
              (data_intro (expr_id "err") expr_false expr_false expr_false))]
 .
@@ -2256,7 +2256,7 @@ Definition ex_privLocalTime :=  expr_id "t" .
 Definition ex_privMakeBoolean := 
 expr_object
 (objattrs_intro (expr_string "Boolean") expr_true (expr_id "%BooleanProto")
- expr_null (expr_id "v")) [("virtual", expr_false)] []
+ expr_null) [("primval", expr_id "v"); ("virtual", expr_false)] []
 .
 Definition ex_privMakeDate := 
 expr_op2 binary_op_add
@@ -2328,13 +2328,13 @@ Definition ex_privMakeFunctionObject :=
 expr_let "fobj"
 (expr_object
  (objattrs_intro (expr_string "Function") expr_true
-  (expr_id "%FunctionProto") (expr_id "body") expr_undefined) []
+  (expr_id "%FunctionProto") (expr_id "body")) []
  [("length", property_data
              (data_intro (expr_id "len") expr_false expr_false expr_false))])
 (expr_let "proto"
  (expr_object
   (objattrs_intro (expr_string "Object") expr_true (expr_id "%ObjectProto")
-   expr_null expr_undefined) []
+   expr_null) []
   [("constructor", property_data
                    (data_intro (expr_id "fobj") expr_true expr_false
                     expr_true))])
@@ -2381,16 +2381,16 @@ expr_object
   (expr_app (expr_id "f")
    [expr_app (expr_id "%devirtualize") [expr_id "this"];
     expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-     expr_undefined) [] []])) expr_undefined) []
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    [] []]))) []
 [("func", property_data
           (data_intro (expr_id "f") expr_false expr_false expr_false))]
 .
 Definition ex_privMakeNativeError := 
 expr_let "exc"
 (expr_object
- (objattrs_intro (expr_string "Error") expr_true (expr_id "proto") expr_null
-  expr_undefined) [] [])
+ (objattrs_intro (expr_string "Error") expr_true (expr_id "proto") expr_null)
+ [] [])
 (expr_seq
  (expr_if
   (expr_op1 unary_op_not
@@ -2404,7 +2404,7 @@ expr_let "exc"
 Definition ex_privMakeNativeErrorProto := 
 expr_object
 (objattrs_intro (expr_string "Error") expr_true (expr_id "%ErrorProto")
- expr_null expr_undefined) []
+ expr_null) []
 [("name", property_data
           (data_intro (expr_id "name") expr_true expr_false expr_true));
  ("message", property_data
@@ -2413,7 +2413,7 @@ expr_object
 Definition ex_privMakeNumber := 
 expr_object
 (objattrs_intro (expr_string "Number") expr_true (expr_id "%NumberProto")
- expr_null (expr_id "v")) [("virtual", expr_false)] []
+ expr_null) [("primval", expr_id "v"); ("virtual", expr_false)] []
 .
 Definition ex_privMakeSetter := 
 expr_object
@@ -2422,11 +2422,11 @@ expr_object
   (expr_app (expr_id "f")
    [expr_app (expr_id "%devirtualize") [expr_id "this"];
     expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-     expr_undefined) []
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    []
     [("0", property_data
-           (data_intro (expr_id "arg") expr_false expr_false expr_false))]]))
- expr_undefined) []
+           (data_intro (expr_id "arg") expr_false expr_false expr_false))]])))
+[]
 [("func", property_data
           (data_intro (expr_id "f") expr_false expr_false expr_false))]
 .
@@ -2434,7 +2434,7 @@ Definition ex_privMakeString :=
 expr_let "obj"
 (expr_object
  (objattrs_intro (expr_string "String") expr_true (expr_id "%StringProto")
-  expr_null (expr_id "v")) [("virtual", expr_false)]
+  expr_null) [("primval", expr_id "v"); ("virtual", expr_false)]
  [("length", property_data
              (data_intro (expr_op1 unary_op_strlen (expr_id "v")) expr_true
               expr_false expr_false))])
@@ -2604,7 +2604,7 @@ expr_let "calledAsFunction"
     (expr_let "defaultRtn"
      (expr_object
       (objattrs_intro (expr_string "Object") expr_true
-       (expr_id "%ObjectProto") expr_null expr_undefined) [] [])
+       (expr_id "%ObjectProto") expr_null) [] [])
      (expr_if (expr_id "shouldReturnEarly")
       (expr_app (expr_id "%ToObject")
        [expr_get_field (expr_id "args") (expr_string "0")])
@@ -2716,7 +2716,7 @@ expr_seq
   (expr_let "newobj"
    (expr_object
     (objattrs_intro (expr_string "Object") expr_true (expr_id "cproto")
-     expr_null expr_undefined) [] [])
+     expr_null) [] [])
    (expr_let "constr_ret"
     (expr_app (expr_id "%AppExprCheck")
      [expr_id "constr"; expr_id "newobj"; expr_id "args"])
@@ -2747,7 +2747,7 @@ expr_app (expr_id "%MakeNativeError")
 Definition ex_privRegExpConstructor := 
 expr_object
 (objattrs_intro (expr_string "Object") expr_true (expr_id "%RegExpProto")
- expr_null expr_undefined) [] []
+ expr_null) [] []
 .
 Definition ex_privSetterValue := 
 expr_get_field (expr_id "o") (expr_string "func")
@@ -2769,7 +2769,7 @@ expr_let "S"
  (expr_let "obj"
   (expr_object
    (objattrs_intro (expr_string "String") expr_true (expr_id "%StringProto")
-    expr_null (expr_id "S")) []
+    expr_null) [("primval", expr_id "S")]
    [("length", property_data
                (data_intro (expr_op1 unary_op_strlen (expr_id "S")) expr_true
                 expr_false expr_false))])
@@ -2985,8 +2985,8 @@ expr_if (expr_op1 unary_op_is_object (expr_id "val"))
       (expr_app (expr_id "f")
        [expr_id "val";
         expr_object
-        (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-         expr_undefined) [] []])
+        (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
+        [] []])
       (expr_if (expr_op1 unary_op_is_primitive (expr_id "res"))
        (expr_id "res") (expr_app (expr_id "next") [])))
      (expr_app (expr_id "next") [])))))
@@ -3280,8 +3280,8 @@ expr_let "applyArgs1" (expr_get_field (expr_id "args") (expr_string "1"))
    (expr_if (expr_id "%or") (expr_id "%or")
     (expr_op2 binary_op_stx_eq (expr_id "applyArgs1") expr_null)))
   (expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-    expr_undefined) [] []) (expr_id "applyArgs1"))
+   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+   [] []) (expr_id "applyArgs1"))
  (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "applyArgs"])
   (expr_app (expr_id "this")
    [expr_get_field (expr_id "args") (expr_string "0");
@@ -3335,7 +3335,7 @@ expr_let "isCallable"
              [expr_id "elementObj";
               expr_object
               (objattrs_intro (expr_string "Object") expr_true expr_null
-               expr_null expr_undefined) [] []])))))
+               expr_null) [] []])))))
         (expr_recc "inner"
          (expr_lambda ["k"; "r"]
           (expr_if (expr_op2 binary_op_ge (expr_id "k") (expr_id "len"))
@@ -3367,13 +3367,13 @@ expr_let "isCallable"
                     (expr_app (expr_id "%JSError")
                      [expr_object
                       (objattrs_intro (expr_string "Object") expr_true
-                       (expr_id "%TypeErrorProto") expr_null expr_undefined)
-                      [] []])) expr_null)
+                       (expr_id "%TypeErrorProto") expr_null) [] []]))
+                   expr_null)
                   (expr_app (expr_id "funcc")
                    [expr_id "elementObj";
                     expr_object
                     (objattrs_intro (expr_string "Object") expr_true
-                     expr_null expr_null expr_undefined) [] []])))))
+                     expr_null expr_null) [] []])))))
               (expr_app (expr_id "inner")
                [expr_op2 binary_op_add (expr_id "k")
                 (expr_number (JsNumber.of_int (1)));
@@ -3398,8 +3398,8 @@ expr_let "array" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_app (expr_id "ffunc")
    [expr_id "array";
     expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-     expr_undefined) [] []])))
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    [] []])))
 .
 Definition ex_privasinLambda :=  expr_string "asin NYI" .
 Definition ex_privassert := 
@@ -3426,7 +3426,7 @@ expr_label "ret"
        (expr_id "proto") (expr_id "%ObjectProto"))
       (expr_object
        (objattrs_intro (expr_string "Object") expr_true (expr_id "proto")
-        expr_null expr_undefined) [] [])))
+        expr_null) [] [])))
     (expr_let "Flambda"
      (expr_lambda ["this_inner"; "args_inner"]
       (expr_let "thisArg"
@@ -3441,8 +3441,7 @@ expr_label "ret"
      (expr_let "F"
       (expr_object
        (objattrs_intro (expr_string "Function") expr_true
-        (expr_id "%FunctionProto") (expr_id "Flambda") expr_undefined) 
-       [] [])
+        (expr_id "%FunctionProto") (expr_id "Flambda")) [] [])
       (expr_let "addthrower"
        (expr_lambda ["name"]
         (expr_app (expr_id "%defineOwnProperty")
@@ -3450,7 +3449,7 @@ expr_label "ret"
           expr_id "name";
           expr_object
           (objattrs_intro (expr_string "Object") expr_true expr_null
-           expr_null expr_undefined) []
+           expr_null) []
           [("get", property_data
                    (data_intro (expr_id "%ThrowTypeError") expr_true
                     expr_false expr_false));
@@ -3481,7 +3480,7 @@ expr_label "ret"
            expr_string "length";
            expr_object
            (objattrs_intro (expr_string "Object") expr_true expr_null
-            expr_null expr_undefined) []
+            expr_null) []
            [("value", property_data
                       (data_intro (expr_id "FLength") expr_true expr_false
                        expr_false));
@@ -3508,7 +3507,7 @@ expr_let "t" (expr_op1 unary_op_typeof (expr_id "this"))
    (expr_if
     (expr_op2 binary_op_stx_eq
      (expr_get_obj_attr oattr_class (expr_id "this")) (expr_string "Boolean"))
-    (expr_get_obj_attr oattr_primval (expr_id "this"))
+    (expr_get_internal "primval" (expr_id "this"))
     (expr_app (expr_id "%TypeError")
      [expr_string "Boolean.prototype.toString got non-boolean object"]))
    (expr_app (expr_id "%TypeError")
@@ -3562,8 +3561,8 @@ Definition ex_privconcatLambda :=
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "emptyobj"
  (expr_object
-  (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-   expr_undefined) [] [])
+  (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+  [] [])
  (expr_let "A"
   (expr_app (expr_id "%ArrayConstructor")
    [expr_id "emptyobj"; expr_id "emptyobj"])
@@ -3658,8 +3657,7 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
      (expr_set_field (expr_id "globalEnv") (expr_string "%strictContext")
       (expr_object
        (objattrs_intro (expr_string "DeclEnvRec") expr_true expr_null
-        expr_null expr_undefined) [("parent", expr_id "evalContext")] 
-       []))
+        expr_null) [("parent", expr_id "evalContext")] []))
      (expr_if
       (expr_op2 binary_op_stx_eq
        (expr_op1 unary_op_typeof (expr_id "evalStr")) (expr_string "string"))
@@ -3680,8 +3678,8 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
   (expr_app (expr_id "%TypeError") [expr_string "Object.create failed"])
   (expr_let "obj"
    (expr_object
-    (objattrs_intro (expr_string "Object") expr_true (expr_id "O") expr_null
-     expr_undefined) [] [])
+    (objattrs_intro (expr_string "Object") expr_true (expr_id "O") expr_null)
+    [] [])
    (expr_if
     (expr_if
      (expr_op2 binary_op_ge
@@ -3696,8 +3694,8 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
       [expr_get_field (expr_id "args") (expr_string "1")])
      (expr_let "argsObj"
       (expr_object
-       (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-        expr_undefined) [] [])
+       (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
+       [] [])
       (expr_seq
        (expr_set_field (expr_id "argsObj") (expr_string "0") (expr_id "obj"))
        (expr_seq
@@ -3712,17 +3710,17 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
     (expr_id "obj")))))
 .
 Definition ex_privdateGetTimezoneOffsetLambda := 
-expr_let "t" (expr_get_obj_attr oattr_primval (expr_id "this"))
+expr_let "t" (expr_get_internal "primval" (expr_id "this"))
 (expr_if
  (expr_op2 binary_op_stx_eq (expr_id "t") (expr_number (JsNumber.of_int (0))))
  (expr_number (JsNumber.of_int (0))) (expr_number (JsNumber.of_int (0))))
 .
 Definition ex_privdateToStringLambda :=  expr_string "Date toString NYI" .
 Definition ex_privdateValueOfLambda := 
-expr_get_obj_attr oattr_primval (expr_id "this")
+expr_get_internal "primval" (expr_id "this")
 .
 Definition ex_privdategetDateLambda := 
-expr_let "t" (expr_get_obj_attr oattr_primval (expr_id "this"))
+expr_let "t" (expr_get_internal "primval" (expr_id "this"))
 (expr_if
  (expr_op2 binary_op_stx_eq (expr_id "t") (expr_number (JsNumber.of_int (0))))
  (expr_id "t")
@@ -3732,7 +3730,7 @@ expr_let "t" (expr_get_obj_attr oattr_primval (expr_id "this"))
 Definition ex_privdategetDayLambda := 
 expr_let "day"
 (expr_op1 unary_op_floor
- (expr_op2 binary_op_div (expr_get_obj_attr oattr_primval (expr_id "this"))
+ (expr_op2 binary_op_div (expr_get_internal "primval" (expr_id "this"))
   (expr_id "%msPerDay")))
 (expr_let "weekday"
  (expr_op2 binary_op_mod
@@ -3750,8 +3748,8 @@ expr_let "%mkPropObj"
   (expr_op1 unary_op_not
    (expr_op2 binary_op_stx_eq (expr_id "value") expr_null))
   (expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-    expr_undefined) []
+   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+   []
    [("value", property_data
               (data_intro (expr_id "value") expr_true expr_false expr_false));
     ("writable", property_data
@@ -3764,8 +3762,8 @@ expr_let "%mkPropObj"
                      (data_intro (expr_id "configurable") expr_true
                       expr_false expr_false))])
   (expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-    expr_undefined) []
+   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+   []
    [("writable", property_data
                  (data_intro (expr_id "writable") expr_true expr_false
                   expr_false));
@@ -3852,7 +3850,7 @@ expr_let "unimplFunc"
 (expr_let "unimplObj"
  (expr_object
   (objattrs_intro (expr_string "Object") expr_true (expr_id "%FunctionProto")
-   (expr_id "unimplFunc") expr_undefined) [] [])
+   (expr_id "unimplFunc")) [] [])
  (expr_app (expr_id "%define15Property")
   [expr_id "base"; expr_id "name"; expr_id "unimplObj"]))
 .
@@ -3904,8 +3902,8 @@ expr_seq
      "(defineOwnProperty) Attempt to add a property to a non-extensible object."]))
   (expr_let "current-prop"
    (expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-     expr_undefined) []
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    []
     [("configurable", property_data
                       (data_intro
                        (expr_get_attr pattr_config (expr_id "obj")
@@ -4100,7 +4098,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
             (expr_let "argsObj"
              (expr_object
               (objattrs_intro (expr_string "Object") expr_true expr_null
-               expr_null expr_undefined) [] [])
+               expr_null) [] [])
              (expr_seq
               (expr_set_field (expr_id "argsObj") (expr_string "0")
                (expr_id "O"))
@@ -4137,8 +4135,8 @@ expr_let "obj" (expr_get_field (expr_id "args") (expr_string "0"))
     [expr_string "defineProperty didn't get object"])
    (expr_let "attrobj"
     (expr_object
-     (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-      expr_undefined) [] [])
+     (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+     [] [])
     (expr_seq
      (expr_let "enumerable"
       (expr_get_field (expr_id "propobj") (expr_string "enumerable"))
@@ -4231,7 +4229,7 @@ expr_if
 (expr_if
  (expr_op2 binary_op_has_internal (expr_id "obj") (expr_string "virtual"))
  (expr_if (expr_get_internal "virtual" (expr_id "obj"))
-  (expr_get_obj_attr oattr_primval (expr_id "obj")) (expr_id "obj"))
+  (expr_get_internal "primval" (expr_id "obj")) (expr_id "obj"))
  (expr_id "obj")) (expr_id "obj")
 .
 Definition ex_privencodeURIComponentLambda := 
@@ -4303,7 +4301,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
-                expr_null expr_undefined) [] [])
+                expr_null) [] [])
               (expr_seq
                (expr_set_field (expr_id "argsObj") (expr_string "0")
                 (expr_id "kValue"))
@@ -4349,7 +4347,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       (expr_let "A"
        (expr_object
         (objattrs_intro (expr_string "Array") expr_true
-         (expr_id "%ArrayProto") expr_null expr_undefined) []
+         (expr_id "%ArrayProto") expr_null) []
         [("length", property_data
                     (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                      expr_false expr_false))])
@@ -4363,7 +4361,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
-                expr_null expr_undefined) [] [])
+                expr_null) [] [])
               (expr_seq
                (expr_set_field (expr_id "argsObj") (expr_string "0")
                 (expr_id "kValue"))
@@ -4387,7 +4385,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                        expr_app (expr_id "%ToString") [expr_id "to"];
                        expr_object
                        (objattrs_intro (expr_string "Object") expr_true
-                        expr_null expr_null expr_undefined) []
+                        expr_null expr_null) []
                        [("value", property_data
                                   (data_intro (expr_id "kValue") expr_true
                                    expr_false expr_false));
@@ -4445,7 +4443,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
               (expr_let "argslist"
                (expr_object
                 (objattrs_intro (expr_string "Object") expr_true expr_null
-                 expr_null expr_undefined) []
+                 expr_null) []
                 [("0", property_data
                        (data_intro (expr_id "kValue") expr_true expr_false
                         expr_false));
@@ -4541,14 +4539,14 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
     (expr_let "obj"
      (expr_object
       (objattrs_intro (expr_string "Object") expr_true
-       (expr_id "%ObjectProto") expr_null expr_undefined) [] [])
+       (expr_id "%ObjectProto") expr_null) [] [])
      (expr_seq
       (expr_app (expr_id "%defineOwnProperty")
        [expr_id "obj";
         expr_string "enumerable";
         expr_object
-        (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-         expr_undefined) []
+        (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
+        []
         [("value", property_data
                    (data_intro
                     (expr_get_attr pattr_enum (expr_id "O") (expr_id "name"))
@@ -4565,8 +4563,8 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
         [expr_id "obj";
          expr_string "configurable";
          expr_object
-         (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-          expr_undefined) []
+         (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
+         []
          [("value", property_data
                     (data_intro
                      (expr_get_attr pattr_config (expr_id "O")
@@ -4588,7 +4586,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            expr_string "value";
            expr_object
            (objattrs_intro (expr_string "Object") expr_true expr_null
-            expr_null expr_undefined) []
+            expr_null) []
            [("value", property_data
                       (data_intro
                        (expr_get_field (expr_id "O") (expr_id "name"))
@@ -4608,7 +4606,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
             expr_string "writable";
             expr_object
             (objattrs_intro (expr_string "Object") expr_true expr_null
-             expr_null expr_undefined) []
+             expr_null) []
             [("value", property_data
                        (data_intro
                         (expr_get_attr pattr_writable (expr_id "O")
@@ -4629,7 +4627,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            expr_string "get";
            expr_object
            (objattrs_intro (expr_string "Object") expr_true expr_null
-            expr_null expr_undefined) []
+            expr_null) []
            [("value", property_data
                       (data_intro
                        (expr_get_attr pattr_getter (expr_id "O")
@@ -4649,7 +4647,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
             expr_string "set";
             expr_object
             (objattrs_intro (expr_string "Object") expr_true expr_null
-             expr_null expr_undefined) []
+             expr_null) []
             [("value", property_data
                        (data_intro
                         (expr_get_attr pattr_setter (expr_id "O")
@@ -4671,7 +4669,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_let "A"
   (expr_object
    (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-    expr_null expr_undefined) []
+    expr_null) []
    [("length", property_data
                (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                 expr_false expr_false))])
@@ -4877,7 +4875,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_let "A"
   (expr_object
    (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-    expr_null expr_undefined) []
+    expr_null) []
    [("length", property_data
                (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                 expr_false expr_false))])
@@ -4893,7 +4891,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            (expr_let "pd"
             (expr_object
              (objattrs_intro (expr_string "Object") expr_true expr_null
-              expr_null expr_undefined) []
+              expr_null) []
              [("value", property_data
                         (data_intro (expr_id "name") expr_true expr_false
                          expr_false));
@@ -4977,7 +4975,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       (expr_let "A"
        (expr_object
         (objattrs_intro (expr_string "Array") expr_true
-         (expr_id "%ArrayProto") expr_null expr_undefined) [] [])
+         (expr_id "%ArrayProto") expr_null) [] [])
        (expr_recc "loop"
         (expr_lambda ["k"]
          (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
@@ -4988,7 +4986,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
-                expr_null expr_undefined) [] [])
+                expr_null) [] [])
               (expr_seq
                (expr_set_field (expr_id "argsObj") (expr_string "0")
                 (expr_id "kValue"))
@@ -5010,7 +5008,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                       expr_id "Pk";
                       expr_object
                       (objattrs_intro (expr_string "Object") expr_true
-                       expr_null expr_null expr_undefined) []
+                       expr_null expr_null) []
                       [("value", property_data
                                  (data_intro (expr_id "mappedValue")
                                   expr_true expr_false expr_false));
@@ -5384,7 +5382,7 @@ Definition ex_privmkArgsObj :=
 expr_let "argsObj"
 (expr_object
  (objattrs_intro (expr_string "Arguments") expr_true (expr_id "%ObjectProto")
-  expr_null expr_undefined) []
+  expr_null) []
  [("callee", property_accessor
              (accessor_intro
               (expr_app (expr_id "%MakeGetter") [expr_id "%ThrowTypeError"])
@@ -5416,8 +5414,8 @@ expr_let "argsObj"
 .
 Definition ex_privnewObjEnvRec := 
 expr_object
-(objattrs_intro (expr_string "ObjEnvRec") expr_true expr_null expr_null
- expr_undefined) [("parent", expr_id "parent")]
+(objattrs_intro (expr_string "ObjEnvRec") expr_true expr_null expr_null)
+[("parent", expr_id "parent")]
 [("bindings", property_data
               (data_intro (expr_id "obj") expr_false expr_false expr_false));
  ("provideThis", property_data
@@ -5428,16 +5426,17 @@ expr_let "x"
 (expr_if
  (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
   (expr_string "number")) (expr_id "this")
- (expr_get_obj_attr oattr_primval (expr_id "this")))
+ (expr_get_internal "primval" (expr_id "this")))
 (expr_let "obj"
  (expr_object
   (objattrs_intro (expr_string "Object") expr_true (expr_id "%StringProto")
-   expr_null (expr_op1 unary_op_prim_to_str (expr_id "x"))) [] [])
+   expr_null) [("primval", expr_op1 unary_op_prim_to_str (expr_id "x"))] 
+  [])
  (expr_app (expr_id "%toLocaleStringlambda")
   [expr_id "obj";
    expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-    expr_undefined) [] []]))
+   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+   [] []]))
 .
 Definition ex_privnumToStringAbstract := 
 expr_recc "nts"
@@ -5491,7 +5490,7 @@ expr_let "notNumProto"
  (expr_throw
   (expr_object
    (objattrs_intro (expr_string "Object") expr_true
-    (expr_id "%TypeErrorProto") expr_null expr_undefined) [] []))
+    (expr_id "%TypeErrorProto") expr_null) [] []))
  (expr_let "rint"
   (expr_if
    (expr_op2 binary_op_stx_eq
@@ -5503,7 +5502,7 @@ expr_let "notNumProto"
    (expr_op2 binary_op_stx_eq (expr_id "rint")
     (expr_number (JsNumber.of_int (10))))
    (expr_app (expr_id "%numToStringAbstract")
-    [expr_get_obj_attr oattr_primval (expr_id "this");
+    [expr_get_internal "primval" (expr_id "this");
      expr_number (JsNumber.of_int (10))])
    (expr_if
     (expr_op1 unary_op_not
@@ -5518,7 +5517,7 @@ expr_let "notNumProto"
         (expr_number (JsNumber.of_int (36))))))
      (expr_throw (expr_string "RangeError"))
      (expr_app (expr_id "%numToStringAbstract")
-      [expr_get_obj_attr oattr_primval (expr_id "this"); expr_id "rint"]))))))
+      [expr_get_internal "primval" (expr_id "this"); expr_id "rint"]))))))
 .
 Definition ex_privobjectToStringlambda := 
 expr_label "ret"
@@ -5537,8 +5536,8 @@ expr_label "ret"
 Definition ex_privoneArgObj := 
 expr_app (expr_id "%mkArgsObj")
 [expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-  expr_undefined) []
+ (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+ []
  [("0", property_data
         (data_intro (expr_id "arg") expr_false expr_false expr_false))]]
 .
@@ -5617,8 +5616,8 @@ expr_let "getOwnProperty"
 Definition ex_privpropertyNames := 
 expr_let "aux"
 (expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-  expr_undefined) [] [])
+ (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+ [] [])
 (expr_recc "helper"
  (expr_lambda ["obj"]
   (expr_if (expr_op2 binary_op_stx_eq (expr_id "obj") expr_null)
@@ -5744,7 +5743,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                 (expr_let "argsObj"
                  (expr_object
                   (objattrs_intro (expr_string "Object") expr_true expr_null
-                   expr_null expr_undefined) [] [])
+                   expr_null) [] [])
                  (expr_seq
                   (expr_set_field (expr_id "argsObj") (expr_string "0")
                    (expr_id "accumulator"))
@@ -5836,7 +5835,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                 (expr_let "argsObj"
                  (expr_object
                   (objattrs_intro (expr_string "Object") expr_true expr_null
-                   expr_null expr_undefined) [] [])
+                   expr_null) [] [])
                  (expr_seq
                   (expr_set_field (expr_id "argsObj") (expr_string "0")
                    (expr_id "accumulator"))
@@ -6055,8 +6054,7 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
               (expr_app (expr_id "%JSError")
                [expr_object
                 (objattrs_intro (expr_string "Object") expr_true
-                 (expr_id "%RangeErrorProto") expr_null expr_undefined) 
-                [] []]))
+                 (expr_id "%RangeErrorProto") expr_null) [] []]))
              (expr_if
               (expr_op2 binary_op_lt (expr_id "newLen")
                (expr_get_field (expr_id "obj") (expr_string "length")))
@@ -6168,8 +6166,8 @@ expr_let "n"
 Definition ex_privslice_internal := 
 expr_let "retObj"
 (expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-  expr_undefined) [] [])
+ (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+ [] [])
 (expr_seq
  (expr_recc "inner_slice"
   (expr_lambda ["iter"; "ix"]
@@ -6197,7 +6195,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "A"
  (expr_object
   (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-   expr_null expr_undefined) []
+   expr_null) []
   [("length", property_data
               (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                expr_false expr_false))])
@@ -6257,7 +6255,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   expr_app (expr_id "%ToString") [expr_id "n"];
                   expr_object
                   (objattrs_intro (expr_string "Object") expr_true expr_null
-                   expr_null expr_undefined) []
+                   expr_null) []
                   [("value", property_data
                              (data_intro (expr_id "kValue") expr_true
                               expr_false expr_false));
@@ -6379,7 +6377,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
-                expr_null expr_undefined) [] [])
+                expr_null) [] [])
               (expr_seq
                (expr_set_field (expr_id "argsObj") (expr_string "0")
                 (expr_id "kValue"))
@@ -6468,15 +6466,15 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                     (expr_app (expr_id "%JSError")
                      [expr_object
                       (objattrs_intro (expr_string "Object") expr_true
-                       (expr_id "%TypeErrorProto") expr_null expr_undefined)
-                      [] []])) expr_null)
+                       (expr_id "%TypeErrorProto") expr_null) [] []]))
+                   expr_null)
                   (expr_break "ret"
                    (expr_app
                     (expr_get_field (expr_id "args") (expr_string "0"))
                     [expr_undefined;
                      expr_object
                      (objattrs_intro (expr_string "Object") expr_true
-                      expr_null expr_null expr_undefined) []
+                      expr_null expr_null) []
                      [("0", property_data
                             (data_intro (expr_id "x") expr_true expr_false
                              expr_false));
@@ -6558,12 +6556,12 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_let "emptyobj"
    (expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-     expr_undefined) [] [])
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    [] [])
    (expr_let "A"
     (expr_object
      (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-      expr_null expr_undefined) []
+      expr_null) []
      [("length", property_data
                  (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                   expr_false expr_false))])
@@ -6605,7 +6603,7 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                    expr_app (expr_id "%ToString") [expr_id "k"];
                    expr_object
                    (objattrs_intro (expr_string "Object") expr_true expr_null
-                    expr_null expr_undefined) []
+                    expr_null) []
                    [("value", property_data
                               (data_intro (expr_id "fromValue") expr_true
                                expr_false expr_false));
@@ -6825,7 +6823,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
           [expr_number (JsNumber.of_int (0)); expr_string ""]))))))))))
 .
 Definition ex_privstringToStringlambda := 
-expr_get_obj_attr oattr_primval (expr_id "this")
+expr_get_internal "primval" (expr_id "this")
 .
 Definition ex_privsubstringlambda := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
@@ -6891,13 +6889,12 @@ expr_let "f"
     (expr_app (expr_id "%JSError")
      [expr_object
       (objattrs_intro (expr_string "Object") expr_true
-       (expr_id "%RangeErrorProto") expr_null expr_undefined) [] []]))
-   expr_null)
+       (expr_id "%RangeErrorProto") expr_null) [] []])) expr_null)
   (expr_let "x"
    (expr_if
     (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
      (expr_string "number")) (expr_id "this")
-    (expr_get_obj_attr oattr_primval (expr_id "this")))
+    (expr_get_internal "primval" (expr_id "this")))
    (expr_seq
     (expr_if
      (expr_op1 unary_op_not
@@ -6922,8 +6919,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_app (expr_id "toString")
    [expr_id "O";
     expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-     expr_undefined) [] []])))
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    [] []])))
 .
 Definition ex_privtoPrecisionLambda :=  expr_string "toPrecision NYI" .
 Definition ex_privtuclambda := 
@@ -6934,8 +6931,8 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 Definition ex_privtwoArgObj := 
 expr_app (expr_id "%mkArgsObj")
 [expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_null
-  expr_undefined) []
+ (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+ []
  [("0", property_data
         (data_intro (expr_id "arg1") expr_false expr_false expr_false));
   ("1", property_data
@@ -7018,7 +7015,7 @@ expr_let "hasWrongProto"
     (expr_id "isntProto") expr_false)
    (expr_app (expr_id "%TypeError") [expr_string "valueOf"])
    (expr_if (expr_id "hasWrongTypeof")
-    (expr_get_obj_attr oattr_primval (expr_id "this")) (expr_id "this")))))
+    (expr_get_internal "primval" (expr_id "this")) (expr_id "this")))))
 .
 Definition ex_privvalueOflambda := 
 expr_app (expr_id "%ToObject") [expr_id "this"]
@@ -9660,7 +9657,6 @@ Definition store_items := [
       {|oattrs_proto := value_null;
         oattrs_class := "Object";
         oattrs_extensible := true;
-        oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
       from_list [("make", 
@@ -10076,7 +10072,6 @@ Definition store_items := [
       {|oattrs_proto := value_null;
         oattrs_class := "Object";
         oattrs_extensible := true;
-        oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
       from_list [("constructor", 
@@ -10126,7 +10121,6 @@ Definition store_items := [
       {|oattrs_proto := value_object 1;
         oattrs_class := "GlobalObject";
         oattrs_extensible := true;
-        oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
       from_list [("Array", 
@@ -10332,7 +10326,6 @@ Definition store_items := [
       {|oattrs_proto := value_object 1;
         oattrs_class := "Function";
         oattrs_extensible := true;
-        oattrs_prim_value := value_undefined;
         oattrs_code := objCode1|};
       object_properties :=
       from_list [("apply", 
@@ -10376,7 +10369,6 @@ Definition store_items := [
       {|oattrs_proto := value_object 3;
         oattrs_class := "Function";
         oattrs_extensible := true;
-        oattrs_prim_value := value_undefined;
         oattrs_code := privfunctionToStringlambda|};
       object_properties :=
       from_list [("length", 
@@ -10390,7 +10382,6 @@ Definition store_items := [
       {|oattrs_proto := value_object 1;
         oattrs_class := "Error";
         oattrs_extensible := true;
-        oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
       from_list [("constructor", 
@@ -10422,7 +10413,6 @@ Definition store_items := [
       {|oattrs_proto := value_object 5;
         oattrs_class := "Error";
         oattrs_extensible := true;
-        oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
       from_list [("constructor", 
@@ -10448,7 +10438,6 @@ Definition store_items := [
       {|oattrs_proto := value_object 5;
         oattrs_class := "Error";
         oattrs_extensible := true;
-        oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
       from_list [("constructor", 
@@ -10474,7 +10463,6 @@ Definition store_items := [
       {|oattrs_proto := value_object 5;
         oattrs_class := "Error";
         oattrs_extensible := true;
-        oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
       from_list [("constructor", 
@@ -10500,7 +10488,6 @@ Definition store_items := [
       {|oattrs_proto := value_object 5;
         oattrs_class := "Error";
         oattrs_extensible := true;
-        oattrs_prim_value := value_undefined;
         oattrs_code := objCode|};
       object_properties :=
       from_list [("constructor", 
@@ -10526,7 +10513,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 5;
          oattrs_class := "Error";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("constructor", 
@@ -10552,7 +10538,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := false;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privThrowTypeErrorFun|};
        object_properties :=
        from_list [("length", 
@@ -10566,7 +10551,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 1;
          oattrs_class := "Boolean";
          oattrs_extensible := true;
-         oattrs_prim_value := value_false;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("constructor", 
@@ -10587,12 +10571,11 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})];
-       object_internal := from_list []|});
+       object_internal := from_list [("primval",  value_false)]|});
 (13, {|object_attrs :=
        {|oattrs_proto := value_object 1;
          oattrs_class := "Number";
          oattrs_extensible := true;
-         oattrs_prim_value := value_number (JsNumber.of_int (0));
          oattrs_code := objCode|};
        object_properties :=
        from_list [("constructor", 
@@ -10637,12 +10620,12 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})];
-       object_internal := from_list []|});
+       object_internal :=
+       from_list [("primval",  value_number (JsNumber.of_int (0)))]|});
 (14, {|object_attrs :=
        {|oattrs_proto := value_object 1;
          oattrs_class := "String";
          oattrs_extensible := true;
-         oattrs_prim_value := value_string "";
          oattrs_code := objCode|};
        object_properties :=
        from_list [("charAt", 
@@ -10753,12 +10736,11 @@ Definition store_items := [
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})];
-       object_internal := from_list []|});
+       object_internal := from_list [("primval",  value_string "")]|});
 (15, {|object_attrs :=
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privprintlambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -10766,7 +10748,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privdefinePropertylambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -10774,7 +10755,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privcalllambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -10782,7 +10762,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privapplylambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -10790,7 +10769,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -10814,7 +10792,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -10838,7 +10815,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privisNaNlambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -10846,7 +10822,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privErrorConstructor|};
        object_properties :=
        from_list [("prototype", 
@@ -10860,7 +10835,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privetslambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -10868,7 +10842,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -10887,7 +10860,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privNumberConstructor|};
        object_properties :=
        from_list [("MAX_VALUE", 
@@ -10937,7 +10909,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privstringToStringlambda|};
        object_properties :=
        from_list [("length", 
@@ -10951,7 +10922,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -10975,7 +10945,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privStringConstructor|};
        object_properties :=
        from_list [("fromCharCode", 
@@ -11001,7 +10970,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privbooleanToStringlambda|};
        object_properties :=
        from_list [("length", 
@@ -11015,7 +10983,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11044,7 +11011,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11073,7 +11039,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privBooleanConstructor|};
        object_properties :=
        from_list [("length", 
@@ -11093,7 +11058,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11112,7 +11076,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privObjectConstructor|};
        object_properties :=
        from_list [("create", 
@@ -11210,7 +11173,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privgpoLambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11218,7 +11180,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11237,7 +11198,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privgopdLambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11245,7 +11205,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11264,7 +11223,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privobjectToStringlambda|};
        object_properties :=
        from_list [("length", 
@@ -11278,7 +11236,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privpropEnumlambda|};
        object_properties :=
        from_list [("length", 
@@ -11292,7 +11249,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privtoLocaleStringlambda|};
        object_properties :=
        from_list [("length", 
@@ -11306,7 +11262,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privvalueOflambda|};
        object_properties :=
        from_list [("length", 
@@ -11320,7 +11275,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privhasOwnPropertylambda|};
        object_properties :=
        from_list [("length", 
@@ -11334,7 +11288,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privIsPrototypeOflambda|};
        object_properties :=
        from_list [("length", 
@@ -11348,7 +11301,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 8;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privSyntaxErrorConstructor|};
        object_properties :=
        from_list [("prototype", 
@@ -11362,7 +11314,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privEvalErrorConstructor|};
        object_properties :=
        from_list [("prototype", 
@@ -11376,7 +11327,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 10;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privRangeErrorConstructor|};
        object_properties :=
        from_list [("prototype", 
@@ -11390,7 +11340,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 7;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privReferenceErrorConstructor|};
        object_properties :=
        from_list [("prototype", 
@@ -11404,7 +11353,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 6;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privTypeErrorConstructor|};
        object_properties :=
        from_list [("prototype", 
@@ -11418,7 +11366,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 5;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("constructor", 
@@ -11438,7 +11385,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privURIErrorConstructor|};
        object_properties :=
        from_list [("prototype", 
@@ -11452,7 +11398,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 1;
          oattrs_class := "Array";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("concat", 
@@ -11598,7 +11543,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privgopnLambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11606,7 +11550,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11635,7 +11578,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11664,7 +11606,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privdefinePropertiesLambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11672,7 +11613,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11691,7 +11631,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privcreateLambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11699,7 +11638,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11718,7 +11656,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privsealLambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11726,7 +11663,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11755,7 +11691,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privfreezelambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11763,7 +11698,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11792,7 +11726,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privpreventExtensionsLambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11800,7 +11733,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11829,7 +11761,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privisFrozenLambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11837,7 +11768,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11866,7 +11796,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privisSealedLambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11874,7 +11803,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11903,7 +11831,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privisExtensibleLambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11911,7 +11838,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11940,7 +11866,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privkeysLambda|};
        object_properties := from_list [];
        object_internal := from_list []|});
@@ -11948,7 +11873,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -11967,7 +11891,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privfromcclambda|};
        object_properties :=
        from_list [("length", 
@@ -11981,7 +11904,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12005,7 +11927,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privjoinlambda|};
        object_properties :=
        from_list [("length", 
@@ -12019,7 +11940,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12043,7 +11963,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privpoplambda|};
        object_properties :=
        from_list [("length", 
@@ -12057,7 +11976,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12076,7 +11994,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12095,7 +12012,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privpushlambda|};
        object_properties :=
        from_list [("length", 
@@ -12109,7 +12025,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12128,7 +12043,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12147,7 +12061,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privreverselambda|};
        object_properties :=
        from_list [("length", 
@@ -12161,7 +12074,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12180,7 +12092,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12199,7 +12110,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privshiftlambda|};
        object_properties :=
        from_list [("length", 
@@ -12213,7 +12123,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12232,7 +12141,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12251,7 +12159,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privarrayToStringlambda|};
        object_properties :=
        from_list [("length", 
@@ -12265,7 +12172,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12289,7 +12195,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12308,7 +12213,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privarrayTLSlambda|};
        object_properties :=
        from_list [("length", 
@@ -12322,7 +12226,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("configurable", 
@@ -12341,7 +12244,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privconcatLambda|};
        object_properties :=
        from_list [("length", 
@@ -12355,7 +12257,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("enumerable", 
@@ -12374,7 +12275,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("value", 
@@ -12388,7 +12288,6 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := privsortlambda|};
        object_properties :=
        from_list [("length", 
@@ -12402,7 +12301,6 @@ Definition store_items := [
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
          oattrs_extensible := true;
-         oattrs_prim_value := value_undefined;
          oattrs_code := objCode|};
        object_properties :=
        from_list [("enumerable", 
@@ -12421,7 +12319,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -12454,7 +12351,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privArrayConstructor|};
         object_properties :=
         from_list [("length", 
@@ -12482,7 +12378,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -12509,7 +12404,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privcharatlambda|};
         object_properties :=
         from_list [("length", 
@@ -12524,7 +12418,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -12545,7 +12438,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -12566,7 +12458,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privcharcodeatlambda|};
         object_properties :=
         from_list [("length", 
@@ -12581,7 +12472,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -12602,7 +12492,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -12623,7 +12512,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privstrconcatlambda|};
         object_properties :=
         from_list [("length", 
@@ -12638,7 +12526,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -12659,7 +12546,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -12680,7 +12566,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privsubstringlambda|};
         object_properties :=
         from_list [("length", 
@@ -12695,7 +12580,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -12716,7 +12600,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -12737,7 +12620,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privsplicelambda|};
         object_properties :=
         from_list [("length", 
@@ -12752,7 +12634,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -12773,7 +12654,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -12794,7 +12674,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privunshiftlambda|};
         object_properties :=
         from_list [("length", 
@@ -12809,7 +12688,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -12830,7 +12708,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -12851,7 +12728,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privaiolambda|};
         object_properties :=
         from_list [("length", 
@@ -12866,7 +12742,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -12887,7 +12762,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -12908,7 +12782,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privaliolambda|};
         object_properties :=
         from_list [("length", 
@@ -12923,7 +12796,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -12944,7 +12816,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -12965,7 +12836,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privforeachlambda|};
         object_properties :=
         from_list [("length", 
@@ -12980,7 +12850,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -13001,7 +12870,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13034,7 +12902,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privmaplambda|};
         object_properties :=
         from_list [("length", 
@@ -13049,7 +12916,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -13070,7 +12936,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13091,7 +12956,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privfilterlambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -13099,7 +12963,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13120,7 +12983,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privreducelambda|};
         object_properties :=
         from_list [("length", 
@@ -13135,7 +12997,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -13156,7 +13017,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13177,7 +13037,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := priveverylambda|};
         object_properties :=
         from_list [("length", 
@@ -13192,7 +13051,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -13213,7 +13071,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13234,7 +13091,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privsomelambda|};
         object_properties :=
         from_list [("length", 
@@ -13249,7 +13105,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -13270,7 +13125,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13291,7 +13145,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privreduceRightLambda|};
         object_properties :=
         from_list [("length", 
@@ -13306,7 +13159,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("enumerable", 
@@ -13327,7 +13179,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13348,7 +13199,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privslicelambda|};
         object_properties :=
         from_list [("length", 
@@ -13363,7 +13213,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13384,7 +13233,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13405,7 +13253,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privbindLambda|};
         object_properties :=
         from_list [("length", 
@@ -13420,7 +13267,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13441,7 +13287,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13474,7 +13319,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privnumberToStringlambda|};
         object_properties :=
         from_list [("length", 
@@ -13489,7 +13333,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13522,7 +13365,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13555,7 +13397,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privStringIndexOflambda|};
         object_properties :=
         from_list [("length", 
@@ -13570,7 +13411,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privreplacelambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -13578,7 +13418,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privsliolambda|};
         object_properties :=
         from_list [("length", 
@@ -13593,7 +13432,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privlocaleCompareLambda|};
         object_properties :=
         from_list [("length", 
@@ -13608,7 +13446,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privstringSliceLambda|};
         object_properties :=
         from_list [("length", 
@@ -13623,7 +13460,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privtlclambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -13631,7 +13467,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privtuclambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -13639,7 +13474,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privsplitLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -13647,7 +13481,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13668,7 +13501,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privgetYearlambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -13676,7 +13508,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privgetMonthlambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -13684,7 +13515,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 1;
           oattrs_class := "Date";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("getDate", 
@@ -13928,7 +13758,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privdateToStringLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -13936,7 +13765,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -13969,7 +13797,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privdateValueOfLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -13977,7 +13804,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privDateConstructor|};
         object_properties :=
         from_list [("UTC", 
@@ -14004,7 +13830,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privdateGetTimezoneOffsetLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14012,7 +13837,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14045,7 +13869,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privdategetDayLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14053,7 +13876,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14086,7 +13908,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privdategetDateLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14094,7 +13915,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14127,7 +13947,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode2|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14135,7 +13954,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14168,7 +13986,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode3|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14176,7 +13993,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14209,7 +14025,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode4|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14217,7 +14032,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14250,7 +14064,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode5|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14258,7 +14071,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14291,7 +14103,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode6|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14299,7 +14110,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14332,7 +14142,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode7|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14340,7 +14149,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14373,7 +14181,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode8|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14381,7 +14188,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14414,7 +14220,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode9|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14422,7 +14227,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14455,7 +14259,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode10|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14463,7 +14266,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14496,7 +14298,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode11|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14504,7 +14305,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14537,7 +14337,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode12|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14545,7 +14344,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14578,7 +14376,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode13|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14586,7 +14383,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14619,7 +14415,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode14|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14627,7 +14422,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14660,7 +14454,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode15|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14668,7 +14461,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14701,7 +14493,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode16|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14709,7 +14500,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14742,7 +14532,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode17|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14750,7 +14539,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14783,7 +14571,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode18|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14791,7 +14578,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14824,7 +14610,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode19|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14832,7 +14617,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14865,7 +14649,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode20|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14873,7 +14656,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14906,7 +14688,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode21|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14914,7 +14695,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14947,7 +14727,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode22|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14955,7 +14734,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -14988,7 +14766,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode23|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -14996,7 +14773,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15029,7 +14805,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode24|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15037,7 +14812,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15070,7 +14844,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode25|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15078,7 +14851,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15111,7 +14883,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode26|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15119,7 +14890,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15152,7 +14922,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode27|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15160,7 +14929,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15193,7 +14961,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode28|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15201,7 +14968,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15234,7 +15000,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode29|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15242,7 +15007,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15275,7 +15039,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode30|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15283,7 +15046,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15316,7 +15078,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode31|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15324,7 +15085,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15357,7 +15117,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode32|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15365,7 +15124,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15398,7 +15156,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode33|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15406,7 +15163,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15439,7 +15195,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode34|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15447,7 +15202,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15480,7 +15234,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode35|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15488,7 +15241,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15521,7 +15273,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privtestlambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15529,7 +15280,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 1;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("constructor", 
@@ -15550,7 +15300,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privRegExpConstructor|};
         object_properties :=
         from_list [("length", 
@@ -15572,7 +15321,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privparseIntlambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15580,7 +15328,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privdecodeURILambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15588,7 +15335,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privdecodeURIComponentLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15596,7 +15342,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privencodeURILambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15604,7 +15349,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privencodeURIComponentLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15612,7 +15356,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privexplambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15620,7 +15363,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("E", 
@@ -15793,7 +15535,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privmathMinLambda|};
         object_properties :=
         from_list [("length", 
@@ -15808,7 +15549,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15835,7 +15575,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15856,7 +15595,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privmathMaxLambda|};
         object_properties :=
         from_list [("length", 
@@ -15871,7 +15609,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15898,7 +15635,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15919,7 +15655,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privmathAbsLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15927,7 +15662,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15948,7 +15682,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privacosLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15956,7 +15689,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -15977,7 +15709,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privasinLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -15985,7 +15716,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16006,7 +15736,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privatanLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16014,7 +15743,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16035,7 +15763,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privatan2Lambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16043,7 +15770,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16064,7 +15790,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privcosLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16072,7 +15797,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16093,7 +15817,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privrandomLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16101,7 +15824,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16122,7 +15844,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privroundLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16130,7 +15851,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16151,7 +15871,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privsinLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16159,7 +15878,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16180,7 +15898,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privsqrtLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16188,7 +15905,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16209,7 +15925,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privtanLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16217,7 +15932,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16238,7 +15952,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privmathLogLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16246,7 +15959,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16267,7 +15979,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privmathCeilLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16275,7 +15986,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16296,7 +16006,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privmathFloorLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16304,7 +16013,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16325,7 +16033,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privmathPowLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16333,7 +16040,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16354,7 +16060,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode36|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16362,7 +16067,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16389,7 +16093,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode37|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16397,7 +16100,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16424,7 +16126,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode38|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16432,7 +16133,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16459,7 +16159,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privtoFixedLambda|};
         object_properties :=
         from_list [("length", 
@@ -16473,7 +16172,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16500,7 +16198,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16527,7 +16224,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privnumTLSLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16535,7 +16231,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16562,7 +16257,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privtoExponentialLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16570,7 +16264,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16597,7 +16290,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privtoPrecisionLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16605,7 +16297,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16632,7 +16323,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "ObjEnvRec";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("bindings", 
@@ -16653,7 +16343,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privlogLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16661,7 +16350,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("error", 
@@ -16697,7 +16385,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privevallambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16705,7 +16392,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privFunctionConstructor|};
         object_properties :=
         from_list [("length", 
@@ -16727,7 +16413,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privisFiniteLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16735,7 +16420,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16768,7 +16452,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privparseFloatLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16776,7 +16459,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16809,7 +16491,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privescapeLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16817,7 +16498,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
@@ -16850,7 +16530,6 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := privunescapeLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
@@ -16858,7 +16537,6 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_prim_value := value_undefined;
           oattrs_code := objCode|};
         object_properties :=
         from_list [("configurable", 
