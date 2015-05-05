@@ -5447,7 +5447,7 @@ expr_let "argsObj"
    (expr_if
     (expr_op2 binary_op_has_own_property (expr_id "args") (expr_id "strx"))
     (expr_seq
-     (expr_set_attr pattr_value (expr_id "argsObj") (expr_string "value")
+     (expr_set_attr pattr_value (expr_id "argsObj") (expr_id "strx")
       (expr_get_field (expr_id "args") (expr_id "strx")))
      (expr_app (expr_id "loop")
       [expr_op2 binary_op_add (expr_id "iter")
