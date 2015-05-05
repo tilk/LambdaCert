@@ -117,9 +117,14 @@ expr_object
  ("%DaysInYear", property_data
                  (data_intro (expr_id "%DaysInYear") expr_true expr_false
                   expr_false));
+ ("%Delete", property_data
+             (data_intro (expr_id "%Delete") expr_true expr_false expr_false));
  ("%EnvCheckAssign", property_data
                      (data_intro (expr_id "%EnvCheckAssign") expr_true
                       expr_false expr_false));
+ ("%EnvDelete", property_data
+                (data_intro (expr_id "%EnvDelete") expr_true expr_false
+                 expr_false));
  ("%EnvGet", property_data
              (data_intro (expr_id "%EnvGet") expr_true expr_false expr_false));
  ("%EnvTypeof", property_data
@@ -1098,8 +1103,6 @@ expr_object
  ("%testlambda", property_data
                  (data_intro (expr_id "%testlambda") expr_true expr_false
                   expr_false));
- ("%this", property_data
-           (data_intro (expr_id "%this") expr_true expr_false expr_false));
  ("%tlclambda", property_data
                 (data_intro (expr_id "%tlclambda") expr_true expr_false
                  expr_false));
@@ -1881,6 +1884,16 @@ expr_if
      (expr_number (JsNumber.of_int (0)))))))
  (expr_number (JsNumber.of_int (366))) (expr_number (JsNumber.of_int (365))))
 .
+Definition ex_privDelete := 
+expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
+(expr_let "fld" (expr_app (expr_id "%ToString") [expr_id "fld"])
+ (expr_try_catch
+  (expr_seq (expr_delete_field (expr_id "obj") (expr_id "fld")) expr_true)
+  (expr_lambda ["e"]
+   (expr_if (expr_id "strict")
+    (expr_app (expr_id "%TypeError")
+     [expr_string "unconfigurable delete in strict mode"]) expr_false))))
+.
 Definition ex_privEnvCheckAssign := 
 expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
 (expr_if (expr_id "strict") (expr_app (expr_id "%UnboundId") [expr_id "id"])
@@ -1923,6 +1936,41 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
       expr_id "strict"])))
   (expr_throw
    (expr_string "[env] Context not well formed! In %EnvCheckAssign"))))
+.
+Definition ex_privEnvDelete := 
+expr_seq
+(expr_if (expr_id "strict")
+ (expr_app (expr_id "%SyntaxError")
+  [expr_string "unqualified name delete in strict mode"]) expr_undefined)
+(expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null) expr_true
+ (expr_if
+  (expr_op2 binary_op_stx_eq
+   (expr_get_obj_attr oattr_class (expr_id "context"))
+   (expr_string "DeclEnvRec"))
+  (expr_if
+   (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
+   (expr_try_catch
+    (expr_seq (expr_delete_field (expr_id "context") (expr_id "id"))
+     expr_true) (expr_lambda ["e"] expr_false))
+   (expr_app (expr_id "%EnvDelete")
+    [expr_get_internal "parent" (expr_id "context");
+     expr_id "id";
+     expr_id "strict"]))
+  (expr_if
+   (expr_op2 binary_op_stx_eq
+    (expr_get_obj_attr oattr_class (expr_id "context"))
+    (expr_string "ObjEnvRec"))
+   (expr_let "bindings"
+    (expr_get_field (expr_id "context") (expr_string "bindings"))
+    (expr_if
+     (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
+     (expr_app (expr_id "%Delete")
+      [expr_id "bindings"; expr_id "id"; expr_false])
+     (expr_app (expr_id "%EnvDelete")
+      [expr_get_internal "parent" (expr_id "context");
+       expr_id "id";
+       expr_id "strict"])))
+   (expr_throw (expr_string "[env] Context not well formed! In %EnvDelete")))))
 .
 Definition ex_privEnvGet := 
 expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
@@ -3648,7 +3696,7 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_let "globalEnv"
   (expr_get_field (expr_id "%makeGlobalEnv") (expr_string "make"))
   (expr_seq
-   (expr_set_field (expr_id "globalEnv") (expr_string "%this")
+   (expr_set_field (expr_id "globalEnv") (expr_string "$this")
     (expr_id "evalThis"))
    (expr_seq
     (expr_set_field (expr_id "globalEnv") (expr_string "%nonstrictContext")
@@ -7440,6 +7488,14 @@ value_closure
 Definition name_privDateConstructor :=  "%DateConstructor" .
 Definition privDateGlobalFuncObj :=  value_object 171 .
 Definition name_privDateGlobalFuncObj :=  "%DateGlobalFuncObj" .
+Definition privDelete := 
+value_closure
+(closure_intro
+ [("%ToObject", privToObject);
+  ("%ToString", privToString);
+  ("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"] ex_privDelete)
+.
+Definition name_privDelete :=  "%Delete" .
 Definition privReferenceErrorProto :=  value_object 7 .
 Definition name_privReferenceErrorProto :=  "%ReferenceErrorProto" .
 Definition privReferenceError := 
@@ -7499,6 +7555,22 @@ value_closure
  ["context"; "id"; "val"; "strict"] ex_privEnvCheckAssign)
 .
 Definition name_privEnvCheckAssign :=  "%EnvCheckAssign" .
+Definition privSyntaxErrorProto :=  value_object 8 .
+Definition name_privSyntaxErrorProto :=  "%SyntaxErrorProto" .
+Definition privSyntaxError := 
+value_closure
+(closure_intro
+ [("%NativeError", privNativeError);
+  ("%SyntaxErrorProto", privSyntaxErrorProto)] None ["msg"]
+ ex_privSyntaxError)
+.
+Definition name_privSyntaxError :=  "%SyntaxError" .
+Definition privEnvDelete := 
+value_closure
+(closure_intro [("%Delete", privDelete); ("%SyntaxError", privSyntaxError)]
+ (Some "%EnvDelete") ["context"; "id"; "strict"] ex_privEnvDelete)
+.
+Definition name_privEnvDelete :=  "%EnvDelete" .
 Definition privEnvGet := 
 value_closure
 (closure_intro [("%UnboundId", privUnboundId)] (Some "%EnvGet")
@@ -7802,16 +7874,6 @@ Definition privStxEq :=
 value_closure (closure_intro [] None ["x1"; "x2"] ex_privStxEq)
 .
 Definition name_privStxEq :=  "%StxEq" .
-Definition privSyntaxErrorProto :=  value_object 8 .
-Definition name_privSyntaxErrorProto :=  "%SyntaxErrorProto" .
-Definition privSyntaxError := 
-value_closure
-(closure_intro
- [("%NativeError", privNativeError);
-  ("%SyntaxErrorProto", privSyntaxErrorProto)] None ["msg"]
- ex_privSyntaxError)
-.
-Definition name_privSyntaxError :=  "%SyntaxError" .
 Definition privSyntaxErrorConstructor := 
 value_closure
 (closure_intro
@@ -9277,7 +9339,9 @@ Definition ctx_items :=
  (name_privDayWithinYear, privDayWithinYear);
  (name_privDaysInMonth, privDaysInMonth);
  (name_privDaysInYear, privDaysInYear);
+ (name_privDelete, privDelete);
  (name_privEnvCheckAssign, privEnvCheckAssign);
+ (name_privEnvDelete, privEnvDelete);
  (name_privEnvGet, privEnvGet);
  (name_privEnvTypeof, privEnvTypeof);
  (name_privEqEq, privEqEq);
@@ -9621,7 +9685,6 @@ Definition ctx_items :=
  (name_privtanLambda, privtanLambda);
  (name_privtest, privtest);
  (name_privtestlambda, privtestlambda);
- (name_privglobal, privglobal);
  (name_privtlclambda, privtlclambda);
  (name_privtoExponential, privtoExponential);
  (name_privtoExponentialLambda, privtoExponentialLambda);
@@ -9686,7 +9749,9 @@ Definition store_items := [
                                              ("%DayWithinYear", privDayWithinYear);
                                              ("%DaysInMonth", privDaysInMonth);
                                              ("%DaysInYear", privDaysInYear);
+                                             ("%Delete", privDelete);
                                              ("%EnvCheckAssign", privEnvCheckAssign);
+                                             ("%EnvDelete", privEnvDelete);
                                              ("%EnvGet", privEnvGet);
                                              ("%EnvTypeof", privEnvTypeof);
                                              ("%EqEq", privEqEq);
@@ -10030,7 +10095,6 @@ Definition store_items := [
                                              ("%tanLambda", privtanLambda);
                                              ("%test", privtest);
                                              ("%testlambda", privtestlambda);
-                                             ("%this", privglobal);
                                              ("%tlclambda", privtlclambda);
                                              ("%toExponential", privtoExponential);
                                              ("%toExponentialLambda", privtoExponentialLambda);

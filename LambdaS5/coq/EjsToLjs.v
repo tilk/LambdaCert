@@ -174,7 +174,7 @@ Definition make_func_stmt f i is p :=
 
 Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda [i] (
-        store_parent_in (make_var_decl [(i, L.expr_id i)] catch))).
+        store_parent_in (make_var_decl [(i, L.expr_get_field (L.expr_id i) (L.expr_string "%js-exn"))] catch))).
 
 Definition make_xfix s f e :=
     match e with
@@ -193,7 +193,9 @@ Definition make_typeof f e :=
 Definition make_delete f e :=
     match e with
     | E.expr_get_field obj fldexpr =>
-        L.expr_delete_field (f obj) (to_string (f fldexpr))
+        make_app_builtin "%Delete" [f obj; f fldexpr; L.expr_id "$strict"]
+    | E.expr_var_id fldexpr => 
+        make_app_builtin "%EnvDelete" [context; L.expr_string fldexpr; L.expr_id "$strict"]
     | _ => L.expr_true
     end.
 
@@ -405,4 +407,5 @@ Definition init_global i :=
 Definition ejs_prog_to_ljs ep :=
     let 'E.prog_intro strict is inner := ep in
     L.expr_let "$context" (L.expr_id (if strict then "%strictContext" else "%nonstrictContext")) 
-        (L.expr_seq (L.expr_seqs (List.map init_global is)) (make_strictness strict (ejs_to_ljs inner))). 
+        (L.expr_let "$this" (L.expr_id "$context") 
+            (L.expr_seq (L.expr_seqs (List.map init_global is)) (make_strictness strict (ejs_to_ljs inner)))). 
