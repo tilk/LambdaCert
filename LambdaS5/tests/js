@@ -10,6 +10,6 @@ OCAMLRUNPARAM="b" $BASE_PATH/build/eval.native -desugarBuiltin $PARSER_PATH -js 
 
 EX=$?
 
-echo $0 $@ > /dev/tty
+#echo $0 $@ > /dev/tty
 
 exit $EX
