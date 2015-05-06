@@ -43,7 +43,19 @@ Implicit Type jer : J.env_record.
 Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 
-(* Statements *)
+(** ** Statements *)
+
+(** *** debugger *)
+
+Lemma red_stat_debugger_ok : forall k,
+    th_stat k (J.stat_debugger).
+Proof.
+    introv Hinv Hlred.
+    repeat inv_fwd_ljs.
+    jauto_js.
+Qed.
+
+(** *** block *)
 
 Lemma stat_block_ejs_last_lemma : forall jts jt,
     E.js_stat_to_ejs (J.stat_block (jts & jt)) = 
@@ -82,6 +94,8 @@ Proof.
     res_related_invert; repeat inv_fwd_ljs; 
     ijauto_js.
 Qed.
+
+(** *** with *)
 
 (* TODO move *)
 Lemma new_env_record_object_lemma : forall BR k c st jlenv v jptr ptr b st' r,
@@ -148,7 +162,7 @@ Proof.
     eauto_js. eauto_js.
 Qed. 
 
-Lemma red_stat_with : forall k je jt,
+Lemma red_stat_with_ok : forall k je jt,
     ih_expr k ->
     ih_stat k ->
     th_stat k (J.stat_with je jt).
@@ -178,6 +192,8 @@ Proof.
     eauto_js.
 Qed.
 
+(** *** expression statement *)
+
 Lemma red_stat_expr_ok : forall k je, 
     ih_expr k ->
     th_stat k (J.stat_expr je).
@@ -187,6 +203,8 @@ Proof.
     apply_ih_expr.
     jauto_js.
 Qed.
+
+(** *** if *)
 
 Lemma red_stat_if2_ok : forall k je jt1 jt2,
     ih_stat k ->
@@ -244,6 +262,8 @@ Proof.
     applys red_stat_if2_ok; eassumption.
     applys red_stat_if1_ok; eassumption.
 Qed.
+
+(** *** while *)
 
 (* TODO move *)
 Lemma string_append_right_empty : forall s, s ++ "" = s.
@@ -805,7 +825,49 @@ Proof.
     substs.
     jauto_js.
 Qed.
-    
+ 
+(** *** switch *)
+
+Lemma red_stat_switch_nodefault_ok : forall k ls je cl,
+    ih_stat k -> 
+    ih_expr k -> 
+    th_stat k (J.stat_switch ls je (J.switchbody_nodefault cl)).
+Proof.
+    introv IHt IHe Hinv Hlred.
+    unfolds js_stat_to_ljs. simpls.
+    apply label_set_invert_lemma in Hlred.
+    destruct Hlred as (r'&Hlred&Hlabel).
+    repeat ljs_autoforward.
+    rewrite_all list_map_tlc in *.
+    destr_concl. 
+    repeat ljs_autoforward.
+    skip. (* TODO *)
+    (* TODO better tactic for abort through label sets? *)
+    ljs_abort_from_js. ljs_propagate_abort. 
+    inverts Hlabel; ljs_abort_inv; res_related_invert; tryfalse.
+    jauto_js. 
+Qed.
+
+Lemma red_stat_switch_withdefault_ok : forall k ls je cl1 cl2 sts,
+    ih_stat k -> 
+    ih_expr k -> 
+    th_stat k (J.stat_switch ls je (J.switchbody_withdefault cl1 sts cl2)).
+Proof.
+Admitted.
+
+Lemma red_stat_switch_ok : forall k ls je sb,
+    ih_stat k -> 
+    ih_expr k -> 
+    th_stat k (J.stat_switch ls je sb).
+Proof.
+    introv IHt IHe. 
+    destruct sb.
+    applys red_stat_switch_nodefault_ok; assumption.
+    applys red_stat_switch_withdefault_ok; assumption.
+Qed.
+
+(** *** return *)
+
 Lemma red_stat_return_ok : forall k oje,
     ih_expr k ->
     th_stat k (J.stat_return oje).
@@ -827,6 +889,8 @@ Proof.
     jauto_js.
 Qed.
 
+(** *** break *)
+
 Lemma red_stat_break_ok : forall k jl,
     th_stat k (J.stat_break jl).
 Proof.
@@ -835,6 +899,8 @@ Proof.
     jauto_js.
 Qed.
 
+(** *** continue *)
+
 Lemma red_stat_continue_ok : forall k jl,
     th_stat k (J.stat_continue jl).
 Proof.
@@ -842,6 +908,8 @@ Proof.
     repeat inv_fwd_ljs.
     jauto_js.
 Qed.
+
+(** *** label *)
 
 Lemma red_stat_label_ok : forall k s jt,
     ih_stat k ->
@@ -866,6 +934,167 @@ Proof.
     jauto_js.
 Qed.
 
+(** *** try-catch-finally *)
+
+(* TODO move *)
+Ltac js_exn_object_ptr_invert :=
+    match goal with
+    | H : js_exn_object_ptr _ _ _ |- _ => inverts H
+    end.
+
+Lemma js_exn_object_extract_lemma : forall obj v st oattr,
+    js_exn_object obj v ->
+    L.object_property_is st obj "%js-exn" oattr ->
+    oattr = Some (L.attributes_data_of (L.attributes_data_intro v false false false)).
+Proof.
+    introv Hex Hpis.
+    unfolds js_exn_object.
+    inverts Hpis; try (false; prove_bag).
+    binds_determine. reflexivity. 
+Qed.
+
+Ltac js_exn_object_extract :=
+    match goal with
+    | Hex : js_exn_object ?obj _, Hpis : L.object_property_is _ ?obj "%js-exn" _ |- _ =>
+        let H := fresh in
+        lets H : js_exn_object_extract_lemma Hex Hpis;
+        destruct_hyp H;
+        clear Hpis
+    end.
+
+Lemma decl_env_record_related_empty : forall BR,
+    decl_env_record_related BR \{} \{}.
+Proof.
+    introv. unfolds.
+    intro s.
+    left. splits; prove_bag.
+Qed.
+
+Hint Resolve decl_env_record_related_empty : js_ljs.
+
+(* TODO move *)
+Lemma new_env_record_decl_lemma : forall BR k c st jlenv v st' r,
+    lexical_env_related BR st jlenv v ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v]) (L.out_ter st' r) ->
+    exists obj,
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    binds (L.object_internal obj) "parent" v /\
+    env_record_related BR (J.env_record_decl J.decl_env_record_empty) obj.
+Proof.
+    introv Hlrel Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    eexists.
+    splits.
+    reflexivity.
+    reflexivity.
+    prove_bag.
+    econstructor; jauto_js.
+Qed.
+
+Lemma state_invariant_new_env_record_decl_lemma : forall BR k jst jc c st v st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v]) (L.out_ter st' r) ->
+    binds c "$context" v ->
+    state_invariant BR jst jc c st ->
+    exists obj,
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    state_invariant (\{(inr (fresh jst), fresh st)} \u BR) 
+        (J.state_next_fresh (jst \(fresh jst := J.env_record_decl J.decl_env_record_empty))) 
+        (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
+        (c \("$context" := L.value_object (fresh st))) 
+        (st \(fresh st := obj)).
+Proof.
+    introv Hlred Hbinds Hinv.
+    asserts Hsub : (BR \c (\{(inr (fresh jst), fresh st)} \u BR)). jauto_js.
+    asserts Hlerel : (lexical_env_related BR st (J.execution_ctx_lexical_env jc) v).
+    solve [eauto using lexical_env_related_get_lemma].
+    forwards Hx : new_env_record_decl_lemma; try eauto.
+    destruct_hyp Hx.
+    eexists. splits; try reflexivity.
+    eapply state_invariant_push_context_lemma.
+    eapply lexical_env_related_cons; eauto_js. 
+    eauto_js. eauto_js.
+Qed.
+
+Lemma decl_env_add_mutable_binding_lemma : forall BR k jst jc c st st' r jeptr ptr obj b jv v s,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDeclEnvAddMutableBinding 
+        [L.value_object ptr; L.value_string s; v; L.value_bool b]) (L.out_ter st' r) -> 
+    binds st ptr obj ->
+    state_invariant BR jst jc c st ->
+    value_related BR jv v ->
+    (inr jeptr, ptr) \in BR ->
+    st' = st \(ptr := L.set_object_property obj s (L.attributes_data_of 
+        (L.attributes_data_intro v true false b))) /\
+    r = L.res_value L.value_undefined /\
+    state_invariant BR (J.env_record_write_decl_env jst jeptr s (J.mutability_of_bool b) jv) jc c st'.
+Proof.
+(*
+    introv Hlred Hbinds Hinv.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    cases_decide.
+    repeat ljs_autoforward.
+    solve [inv_ljs].
+*)
+(*
+    repeat ljs_autoforward.
+    inv_ljs.
+    binds_determine. 
+    false. prove_bag.
+    repeat ljs_autoforward. 
+    inv_ljs. 
+    repeat ljs_autoforward.
+    inv_ljs. 
+    repeat ljs_autoforward.
+    simpls.
+
+    binds_inv. false. prove_bag 8.
+*)
+Admitted. (* TODO *)
+
+Lemma red_stat_try_catch_ok : forall k jt1 jt2 s,
+    ih_stat k ->
+    th_stat k (J.stat_try jt1 (Some (s, jt2)) None).
+Proof.
+    introv IHt Hinv Hlred.
+    repeat ljs_autoforward.
+    destr_concl.
+    inv_ljs. 
+    res_related_invert; jauto_js.
+    res_related_invert.
+    repeat ljs_autoforward.
+    inverts red_exprh H6. (* TODO *)
+    unfolds L.add_closure.
+    ljs_apply.
+    repeat ljs_autoforward.
+    forwards Hx : state_invariant_new_env_record_decl_lemma. 
+    eassumption. jauto_js. substs. jauto_js.
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    js_exn_object_ptr_invert.
+    repeat binds_determine.
+asserts Ha : (ptr0 <> fresh st0). intro. substs. eapply fresh_index. prove_bag. (* TODO *)
+    repeat ljs_autoforward.
+    js_exn_object_extract.
+    repeat ljs_autoforward.
+ 
+    (* resvalue_related_invert. *) inverts H3. skip. (* TODO formalize that exception is never empty *)
+    forwards Hx : decl_env_add_mutable_binding_lemma.
+    eassumption. prove_bag. prove_bag. skip. (* TODO *) prove_bag.
+    rew_bag_simpl in Hx.
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    destr_concl.
+
+    unfold_concl.
+    do 3 eexists. splits.
+(* TODO! *) 
+Admitted.
+
 Lemma red_stat_try_finally_ok : forall k jt1 jt2,
     ih_stat k ->
     th_stat k (J.stat_try jt1 None (Some jt2)).
@@ -881,6 +1110,8 @@ Proof.
     try ljs_abort;
     jauto_js 6.
 Qed.
+
+(** *** throw *)
 
 Lemma red_stat_throw_ok : forall k je,
     ih_expr k ->

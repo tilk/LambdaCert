@@ -70,7 +70,7 @@ Proof.
     (* stat_while *)
     skip.
     (* stat_with *)
-    skip.
+    applys red_stat_with_ok; eassumption.
     (* stat_throw *)
     applys red_stat_throw_ok; eassumption.
     (* stat_return *)
@@ -90,9 +90,9 @@ Proof.
     (* stat_for_in_var *)
     skip.
     (* stat_debugger *)
-    skip.
+    applys red_stat_debugger_ok.
     (* stat_switch *)
-    skip.
+    applys red_stat_switch_ok; eassumption.
     (* EXPRESSIONS *)
     destruct 0.
     (* expr_this *)

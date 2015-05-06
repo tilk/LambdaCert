@@ -60,6 +60,7 @@ Hint Constructors attributes_related : js_ljs.
 Hint Constructors value_related : js_ljs.
 Hint Constructors resvalue_related : js_ljs.
 Hint Constructors res_related : js_ljs.
+Hint Constructors env_record_related : js_ljs.
 Hint Constructors lexical_env_related : js_ljs.
 Hint Constructors object_related : js_ljs.
 Hint Constructors object_prim_related : js_ljs.
@@ -1669,7 +1670,7 @@ Ltac ljs_closure_body :=
 Ltac ljs_inv_closure_hyps :=
     match goal with
     | Hvcl : L.value_is_closure _ ?v ?clo,
-      Hcctx : L.closure_ctx ?clo _ ?c |- _ =>
+      Hcctx : L.closure_ctx ?clo _ ?c |- _ => 
         try unfold v in Hvcl; 
         inverts Hvcl;
         let Hz := fresh "H" in
@@ -1689,9 +1690,10 @@ Ltac ljs_inv_closure_hyps :=
                 assert (Hb : binds cdef0 s v) by prove_bag 100;
                 rewrite EQc in Hb;
                 to_binds cdef'
+            | ?c1 => is_var c1; idtac
             | \{} => idtac
-            end in
-        to_binds cdef0 
+            end in 
+        to_binds cdef0  
     end.
 
 Ltac ljs_apply := progress repeat (ljs_inv_closure_hyps || ljs_closure_body).
@@ -1704,7 +1706,19 @@ Ltac binds_inv H :=
         | binds ?M ?x ?v2 =>
             let He := fresh "H" in
             match M with
-                | ?v => is_var v; idtac
+                | ?v => 
+                    is_var v;
+                    match goal with
+                    | Heq : _ = v |- _ => 
+                        puts He : H;
+                        rewrite <- Heq in He; f He
+                    | _ => 
+                        match goal with
+                        | Hz : binds M x v2 |- _ =>
+                            not constr_eq Hz H; fail 1
+                        | _ => idtac
+                        end
+                    end 
                 | ?x' \:= ?v1 =>
                     lets He : (binds_single_bind_same_inv _ _ _ H);
                     (subst_hyp He || injects He); clear H    
@@ -1713,7 +1727,7 @@ Ltac binds_inv H :=
                     (subst_hyp He || injects He); clear H
                 | _ \(?x':=?v1) =>
                     let Ha := fresh "H" in
-                    asserts Ha : (x <> x'); [eauto | 
+                    asserts Ha : (x <> x'); [solve [eauto] | 
                     lets He : (binds_update_diff_inv _ _ _ _ _ Ha H);
                     clear H; clear Ha;
                     f He]
