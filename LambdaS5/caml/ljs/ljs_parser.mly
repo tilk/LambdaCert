@@ -38,6 +38,7 @@ let with_pos exp pos = match exp with
   | Lambda (_, ids, body) -> Lambda (pos, ids, body)
   | Eval (_, exp, obj) -> Eval (pos, exp, obj)
   | Hint (_, label, exp) -> Hint (pos, label, exp)
+  | Fail (_, str) -> Fail (pos, str)
 
 %}
 
@@ -49,7 +50,7 @@ let with_pos exp pos = match exp with
 %token <string> ID
 %token UNDEFINED EMPTY NULL FUNC LET DELETE LBRACE RBRACE LPAREN RPAREN LBRACK
   RBRACK EQUALS COMMA BANG REF COLON COLONEQ PRIM IF ELSE SEMI JSEMI
-  LABEL BREAK TRY CATCH FINALLY THROW EQEQEQUALS TYPEOF 
+  LABEL BREAK TRY CATCH FINALLY THROW EQEQEQUALS TYPEOF FAIL
   ISCLOSURE ISPRIMITIVE ISOBJECT
   PLUS MINUS MULT DIV
   AMPAMP PIPEPIPE RETURN BANGEQEQUALS FUNCTION REC WRITABLE GETTER SETTER
@@ -175,6 +176,8 @@ exp :
  | atom { $1 }
  | exp LPAREN exps RPAREN 
    { App (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $1, $3) }
+ | FAIL LPAREN STRING RPAREN
+   { Fail (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $3) }
  | GETFIELDS LPAREN exp RPAREN
    { OwnFieldNames (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $3) }
  | EVAL LPAREN exp COMMA exp RPAREN

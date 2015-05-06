@@ -134,6 +134,7 @@ rule token = parse
    | "#primval" { PRIMVAL }
    | "#class" { CLASS }
    | "get-own-field-names" { GETFIELDS }    
+   | "fail" { FAIL }    
 
    | ident as x { ID x }
  

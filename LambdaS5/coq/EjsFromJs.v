@@ -159,6 +159,7 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
             (List.map js_switchclause_to_ejs cl1)
             (E.expr_seqs (List.map js_stat_to_ejs sts))
             (List.map js_switchclause_to_ejs cl2)))
+    | J.stat_debugger => E.expr_empty
     | _ => E.expr_syntaxerror
     end
 with js_switchclause_to_ejs c := 

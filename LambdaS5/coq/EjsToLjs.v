@@ -115,28 +115,22 @@ Definition make_if e e1 e2 := L.expr_if (to_bool e) e1 e2.
 Definition make_throw e :=
     L.expr_throw (make_app_builtin "%JSError" [e]).
 
+Definition new_context_in ctx e :=
+    L.expr_let "$context" ctx e.
+
 Definition make_with e1 e2 := 
-    L.expr_let "$context" (make_app_builtin "%newObjEnvRec" [context; to_object e1; L.expr_true]) e2.
+    new_context_in (make_app_builtin "%newObjEnvRec" [context; to_object e1; L.expr_true]) e2.
 
 Definition if_strict e1 e2 := L.expr_if (L.expr_id "$strict") e1 e2.
 
 Definition syntax_error s := make_app_builtin "%SyntaxError" [L.expr_string s].
 
-Definition store_parent_in e :=
-    L.expr_let "$parent" context e.
-
-Definition new_context_in ctx e :=
-    L.expr_let "$context" ctx e.
-
-Definition derived_context_in flds e :=
-    let objattrs := L.objattrs_intro (L.expr_string "DeclEnvRec") 
-        L.expr_true L.expr_null L.expr_undefined in
-    new_context_in (L.expr_object objattrs [("parent", L.expr_id "$parent")] flds) e.
-
 Definition make_var_decl is e := 
     let flds := List.map (fun ip => 
-        let '(i, e) := ip in (i, L.property_data (L.data_intro e L.expr_true L.expr_false L.expr_false))) is in
-    derived_context_in flds e.
+        let '(i, e) := ip in 
+        make_app_builtin "%DeclEnvAddMutableBinding" [context; L.expr_string i; e; L.expr_false]) is in
+    new_context_in (make_app_builtin "%newDeclEnvRec" [context]) (
+    L.expr_seq (L.expr_seqs flds) e).
 
 Definition make_strictness b e := 
     L.expr_let "$strict" (L.expr_bool b) e.
@@ -161,20 +155,20 @@ Definition make_lambda f (is : list string) p :=
 Definition make_fobj f is p (ctx : L.expr) :=
     ifb Exists (fun nm => nm = "arguments" \/ nm = "eval") is \/ Has_dupes is then 
         if_strict (syntax_error "Illegal function definition") L.expr_undefined else
-    store_parent_in (make_app_builtin "%MakeFunctionObject" 
-        [make_lambda f is p; L.expr_number (length is); L.expr_id "$strict"]).
+    make_app_builtin "%MakeFunctionObject" 
+        [make_lambda f is p; L.expr_number (length is); L.expr_id "$strict"].
 
 Definition make_rec_fobj f i is p ctx :=
     let fobj := make_fobj f is p ctx in
-    store_parent_in (make_var_decl [(i, L.expr_undefined)] (make_var_set i fobj)).
+    make_var_decl [(i, L.expr_undefined)] (make_var_set i fobj).
 
 Definition make_func_stmt f i is p :=
     let fobj := make_fobj f is p context in
     make_app_builtin "%defineFunction" [context; L.expr_string i; fobj].
 
 Definition make_try_catch body i catch :=
-    L.expr_try_catch body (L.expr_lambda [i] (
-        store_parent_in (make_var_decl [(i, L.expr_get_field (L.expr_id i) (L.expr_string "%js-exn"))] catch))).
+    L.expr_try_catch body (L.expr_lambda ["exc"] (
+        make_var_decl [(i, L.expr_get_field (L.expr_id "exc") (L.expr_string "%js-exn"))] catch)).
 
 Definition make_xfix s f e :=
     match e with
@@ -321,27 +315,27 @@ Definition make_object ps :=
 Definition make_new e es := make_app_builtin "%PrimNew" [e; make_args_obj es].
 
 Definition make_case (tb : L.expr * L.expr) cont found := let (test, body) := tb in
-    L.expr_let "%found" (make_or (eq (L.expr_id "%disc") test) (L.expr_id found))
+    L.expr_let "found" (make_or (eq (L.expr_id "disc") test) (L.expr_id found))
         (L.expr_seq
-            (L.expr_if (L.expr_id "%found") body L.expr_undefined)
-            (cont "%found")).
+            (L.expr_if (L.expr_id "found") body L.expr_undefined)
+            (cont "found")).
 
 Definition make_cases cls last := fold_right make_case last cls.
 
 Definition make_switch_nodefault e cls :=
-    L.expr_let "%found" L.expr_false (
-    L.expr_let "%disc" e (
-    make_cases cls (fun _ => L.expr_empty) "%found")).
+    L.expr_let "disc" e (
+    L.expr_let "found" L.expr_false (
+    make_cases cls (fun _ => L.expr_empty) "found")).
 
 Definition make_switch_withdefault e acls def bcls :=
-    let last_case found := L.expr_if (L.expr_id found) L.expr_empty (L.expr_app (L.expr_id "%deflt") []) in
+    let last_case found := L.expr_if (L.expr_id found) L.expr_empty (L.expr_app (L.expr_id "deflt") []) in
     let deflt_case cont found := 
-        L.expr_seq (L.expr_if (L.expr_id found) (L.expr_app (L.expr_id "%deflt") []) L.expr_empty)
+        L.expr_seq (L.expr_if (L.expr_id found) (L.expr_app (L.expr_id "deflt") []) L.expr_empty)
                    (cont found) in
-    L.expr_let "%deflt" (L.expr_lambda [] def) (
-    L.expr_let "%found" L.expr_false (
-    L.expr_let "%disc" e (
-    make_cases acls (deflt_case (make_cases bcls last_case)) "%found"))).
+    L.expr_let "disc" e (
+    L.expr_let "deflt" (L.expr_lambda [] def) (
+    L.expr_let "found" L.expr_false (
+    make_cases acls (deflt_case (make_cases bcls last_case)) "found"))).
 
 (* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=

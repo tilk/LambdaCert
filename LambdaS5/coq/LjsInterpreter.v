@@ -635,6 +635,7 @@ Definition eval runs c st (e : expr) : result :=
   | expr_throw e => eval_throw runs c st e
   | expr_eval e bindings => eval_eval runs c st e bindings
   | expr_hint _ e => runs_type_eval runs c st e
+  | expr_fail s => result_fail s
   | expr_dump => result_dump c st
   end
 .

@@ -178,6 +178,7 @@ let rec format_expr b e = match e with
     | Coq_expr_lambda (il, e) -> coqconstr b "expr_lambda" [format_id_list il; format_expr true e]
     | Coq_expr_eval (e1, e2) -> coqconstr b "expr_eval" [format_expr true e1; format_expr true e2]
     | Coq_expr_hint (i, e) -> coqconstr b "expr_hint" [format_id i; format_expr true e]
+    | Coq_expr_fail s -> coqconstr b "expr_fail" [format_id s]
     | _ -> text "expr_dump"
 
 and format_objattrs b e = match e with

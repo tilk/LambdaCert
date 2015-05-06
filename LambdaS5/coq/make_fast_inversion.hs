@@ -102,6 +102,7 @@ patterns = [
     ("eval", "expr_eval ?e1 ?e2"),
     ("eval_1", "expr_eval_1 ?vs"),
     ("hint", "expr_hint ?s ?e"),
+    ("fail", "expr_fail ?s"),
     ("dump", "expr_dump")]
 
 is_basic :: String -> Bool

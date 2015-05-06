@@ -117,6 +117,10 @@ expr_object
  ("%DaysInYear", property_data
                  (data_intro (expr_id "%DaysInYear") expr_true expr_false
                   expr_false));
+ ("%DeclEnvAddMutableBinding", property_data
+                               (data_intro
+                                (expr_id "%DeclEnvAddMutableBinding")
+                                expr_true expr_false expr_false));
  ("%Delete", property_data
              (data_intro (expr_id "%Delete") expr_true expr_false expr_false));
  ("%EnvCheckAssign", property_data
@@ -890,6 +894,9 @@ expr_object
  ("%msPerSecond", property_data
                   (data_intro (expr_id "%msPerSecond") expr_true expr_false
                    expr_false));
+ ("%newDeclEnvRec", property_data
+                    (data_intro (expr_id "%newDeclEnvRec") expr_true
+                     expr_false expr_false));
  ("%newObjEnvRec", property_data
                    (data_intro (expr_id "%newObjEnvRec") expr_true expr_false
                     expr_false));
@@ -1883,6 +1890,21 @@ expr_if
       (expr_number (JsNumber.of_int (100))))
      (expr_number (JsNumber.of_int (0)))))))
  (expr_number (JsNumber.of_int (366))) (expr_number (JsNumber.of_int (365))))
+.
+Definition ex_privDeclEnvAddMutableBinding := 
+expr_seq
+(expr_if
+ (expr_op2 binary_op_has_own_property (expr_id "context") (expr_id "name"))
+ (expr_fail "property already exists in %DeclEnvAddMutableBinding")
+ expr_undefined)
+(expr_seq
+ (expr_set_attr pattr_value (expr_id "context") (expr_id "name")
+  (expr_id "val"))
+ (expr_seq
+  (expr_set_attr pattr_enum (expr_id "context") (expr_id "name") expr_false)
+  (expr_seq
+   (expr_set_attr pattr_config (expr_id "context") (expr_id "name")
+    (expr_id "deletable")) expr_undefined)))
 .
 Definition ex_privDelete := 
 expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
@@ -5460,6 +5482,11 @@ expr_let "argsObj"
  (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
   (expr_id "argsObj")))
 .
+Definition ex_privnewDeclEnvRec := 
+expr_object
+(objattrs_intro (expr_string "DeclEnvRec") expr_true expr_null expr_null)
+[("parent", expr_id "parent")] []
+.
 Definition ex_privnewObjEnvRec := 
 expr_object
 (objattrs_intro (expr_string "ObjEnvRec") expr_true expr_null expr_null)
@@ -7488,6 +7515,12 @@ value_closure
 Definition name_privDateConstructor :=  "%DateConstructor" .
 Definition privDateGlobalFuncObj :=  value_object 171 .
 Definition name_privDateGlobalFuncObj :=  "%DateGlobalFuncObj" .
+Definition privDeclEnvAddMutableBinding := 
+value_closure
+(closure_intro [] None ["context"; "name"; "val"; "deletable"]
+ ex_privDeclEnvAddMutableBinding)
+.
+Definition name_privDeclEnvAddMutableBinding :=  "%DeclEnvAddMutableBinding" .
 Definition privDelete := 
 value_closure
 (closure_intro
@@ -8582,6 +8615,10 @@ value_closure
  ex_privmaybeDirectEval)
 .
 Definition name_privmaybeDirectEval :=  "%maybeDirectEval" .
+Definition privnewDeclEnvRec := 
+value_closure (closure_intro [] None ["parent"] ex_privnewDeclEnvRec)
+.
+Definition name_privnewDeclEnvRec :=  "%newDeclEnvRec" .
 Definition privnewObjEnvRec := 
 value_closure
 (closure_intro [] None ["parent"; "obj"; "pt"] ex_privnewObjEnvRec)
@@ -9339,6 +9376,7 @@ Definition ctx_items :=
  (name_privDayWithinYear, privDayWithinYear);
  (name_privDaysInMonth, privDaysInMonth);
  (name_privDaysInYear, privDaysInYear);
+ (name_privDeclEnvAddMutableBinding, privDeclEnvAddMutableBinding);
  (name_privDelete, privDelete);
  (name_privEnvCheckAssign, privEnvCheckAssign);
  (name_privEnvDelete, privEnvDelete);
@@ -9608,6 +9646,7 @@ Definition ctx_items :=
  (name_privmsPerHour, privmsPerHour);
  (name_privmsPerMin, privmsPerMin);
  (name_privmsPerSecond, privmsPerSecond);
+ (name_privnewDeclEnvRec, privnewDeclEnvRec);
  (name_privnewObjEnvRec, privnewObjEnvRec);
  (name_privglobalContext, privglobalContext);
  (name_privnumTLS, privnumTLS);
@@ -9749,6 +9788,7 @@ Definition store_items := [
                                              ("%DayWithinYear", privDayWithinYear);
                                              ("%DaysInMonth", privDaysInMonth);
                                              ("%DaysInYear", privDaysInYear);
+                                             ("%DeclEnvAddMutableBinding", privDeclEnvAddMutableBinding);
                                              ("%Delete", privDelete);
                                              ("%EnvCheckAssign", privEnvCheckAssign);
                                              ("%EnvDelete", privEnvDelete);
@@ -10018,6 +10058,7 @@ Definition store_items := [
                                              ("%msPerHour", privmsPerHour);
                                              ("%msPerMin", privmsPerMin);
                                              ("%msPerSecond", privmsPerSecond);
+                                             ("%newDeclEnvRec", privnewDeclEnvRec);
                                              ("%newObjEnvRec", privnewObjEnvRec);
                                              ("%nonstrictContext", privglobalContext);
                                              ("%numTLS", privnumTLS);

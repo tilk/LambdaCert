@@ -169,6 +169,7 @@ let rec exp_helper exprec e = match e with
   | Coq_expr_hint (hint, e) ->
       parens (vert [squish [text "/*: "; text (String.of_list hint); text "*/"];
 	                 exprec e])
+  | Coq_expr_fail s -> squish [text "fail("; text ("\"" ^ (String.escaped (String.of_list s)) ^ "\""); text ")"]
   | Coq_expr_dump -> text "DUMP"
 
 and opt_braces exprec expr = match expr with

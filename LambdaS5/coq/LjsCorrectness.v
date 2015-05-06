@@ -1391,6 +1391,8 @@ Proof.
     (* hint *)
     eapply red_expr_hint.
     ljs_eval_ih.
+    (* fail *)
+    tryfalse.
     (* dump *)
     tryfalse.
 Qed.

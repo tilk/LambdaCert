@@ -128,6 +128,7 @@ Inductive expr : Type :=
 | expr_lambda : list id -> expr -> expr
 | expr_eval : expr -> expr -> expr (* string -> env_object -> expr *)
 | expr_hint : string -> expr -> expr
+| expr_fail : string -> expr (* used for asserts *)
 | expr_dump : expr (* special - for dumping the context in the interpreter *)
 with data : Type :=
 | data_intro : expr -> expr -> expr -> expr -> data (* expr -> writable -> enumerable -> configurable -> data *)
@@ -147,6 +148,7 @@ Fixpoint expr_fv e : finset id := match e with
 | expr_string _  
 | expr_number _ 
 | expr_bool _ 
+| expr_fail _
 | expr_dump => \{}
 | expr_id i => \{i}
 | expr_object oa ips ps => 
