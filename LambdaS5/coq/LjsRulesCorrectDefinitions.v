@@ -360,8 +360,9 @@ Record execution_ctx_related BR jc c st := {
         lexical_env_related BR st (J.execution_ctx_lexical_env jc) v
 }.
 
-Definition global_env_record_exists BR c := forall v ptr,
+Definition global_env_record_exists BR c := forall v,
         binds c "%globalContext" v ->
+        exists ptr,
         v = L.value_object ptr /\
         (inr J.env_loc_global_env_record, ptr) \in BR.
 
@@ -377,16 +378,16 @@ Record env_records_exist BR jc := {
     States that EcmaScript preallocated objects can be found in the LJS context. *)
 
 Definition prealloc_in_ctx_list := [
-    (J.prealloc_native_error_proto J.native_error_eval, "%EvalErrorGlobalFuncObj");
-    (J.prealloc_native_error_proto J.native_error_range, "%RangeErrorGlobalFuncObj");
-    (J.prealloc_native_error_proto J.native_error_ref, "%ReferenceErrorGlobalFuncObj");
-    (J.prealloc_native_error_proto J.native_error_syntax, "%SyntaxErrorGlobalFuncObj");
-    (J.prealloc_native_error_proto J.native_error_type, "%TypeErrorGlobalFuncObj");
-    (J.prealloc_native_error J.native_error_eval, "%EvalErrorProto");
-    (J.prealloc_native_error J.native_error_range, "%RangeErrorProto");
-    (J.prealloc_native_error J.native_error_ref, "%ReferenceErrorProto");
-    (J.prealloc_native_error J.native_error_syntax, "%SyntaxErrorProto");
-    (J.prealloc_native_error J.native_error_type, "%TypeErrorProto")
+    (J.prealloc_native_error J.native_error_eval, "%EvalErrorGlobalFuncObj");
+    (J.prealloc_native_error J.native_error_range, "%RangeErrorGlobalFuncObj");
+    (J.prealloc_native_error J.native_error_ref, "%ReferenceErrorGlobalFuncObj");
+    (J.prealloc_native_error J.native_error_syntax, "%SyntaxErrorGlobalFuncObj");
+    (J.prealloc_native_error J.native_error_type, "%TypeErrorGlobalFuncObj");
+    (J.prealloc_native_error_proto J.native_error_eval, "%EvalErrorProto");
+    (J.prealloc_native_error_proto J.native_error_range, "%RangeErrorProto");
+    (J.prealloc_native_error_proto J.native_error_ref, "%ReferenceErrorProto");
+    (J.prealloc_native_error_proto J.native_error_syntax, "%SyntaxErrorProto");
+    (J.prealloc_native_error_proto J.native_error_type, "%TypeErrorProto")
 ].
 
 Definition prealloc_in_ctx BR c := forall jpre s v, 

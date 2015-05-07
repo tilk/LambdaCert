@@ -1473,6 +1473,68 @@ Qed.
 
 Hint Resolve state_invariant_push_context_lemma : js_ljs.
 
+Lemma includes_init_ctx_add_init_ctx_preserved : forall c s v,
+    binds LjsInitEnv.init_ctx s v ->
+    includes_init_ctx c ->
+    includes_init_ctx (c \(s := v)).
+Proof.
+    introv Hbinds Hincl.
+    unfolds includes_init_ctx.
+    introv Hbinds1 Hbinds2.
+    rew_binds_eq in Hbinds1.
+    destruct_hyp Hbinds1.
+    binds_determine. reflexivity.
+    eauto.
+Qed.
+
+Hint Resolve includes_init_ctx_add_init_ctx_preserved : js_ljs.
+
+Lemma prealloc_in_ctx_add_init_ctx_preserved : forall BR c s v,
+    binds LjsInitEnv.init_ctx s v ->
+    initBR \c BR ->
+    prealloc_in_ctx BR c ->
+    prealloc_in_ctx BR (c \(s:=v)).
+Proof.
+    introv Hbinds Hincl Hpre.
+    unfolds prealloc_in_ctx.
+    introv Hpmem Hbinds1.
+    rew_binds_eq in Hbinds1.
+    destruct_hyp Hbinds1.
+    forwards Hx : prealloc_in_ctx_init_ctx Hincl Hpmem Hbinds. assumption.
+    eauto.
+Qed.
+
+Hint Resolve prealloc_in_ctx_add_init_ctx_preserved : js_ljs.
+
+Lemma global_env_record_exists_add_init_ctx_preserved : forall BR c s v,
+    binds LjsInitEnv.init_ctx s v ->
+    initBR \c BR ->
+    global_env_record_exists BR c ->
+    global_env_record_exists BR (c \(s:=v)).
+Proof.
+    introv Hbinds Hincl Hpre.
+    unfolds global_env_record_exists.
+    introv Hbinds1.
+    rew_binds_eq in Hbinds1.
+    destruct_hyp Hbinds1.
+    forwards Hx : global_env_record_exists_init_ctx Hincl Hbinds. assumption.
+    eauto.
+Qed.
+
+Hint Resolve global_env_record_exists_add_init_ctx_preserved : js_ljs.
+
+Lemma state_invariant_add_init_ctx_preserved : forall BR jst jc c st s v,
+    binds LjsInitEnv.init_ctx s v ->
+    state_invariant BR jst jc c st ->
+    state_invariant BR jst jc (c \(s := v)) st.
+Proof.
+    introv Hbinds Hinv.
+    lets Hpre : init_ctx_percent_prefix Hbinds.
+    destruct_hyp Hpre.
+    inverts Hinv.
+    constructor; eauto_js.
+Qed.
+
 Lemma lexical_ctx_chain_ok_bisim_incl_preserved : forall BR BR' st st',
     BR' \c BR ->
     lexical_ctx_chain_ok BR st st' ->
@@ -1621,6 +1683,55 @@ Hint Extern 0 (L.state_security_ok ?st1 ?st3) =>
         apply ((fun h1 h2 => @L.state_security_ok_trans st2 st1 st3 h2 h1) H)
     end : js_ljs.
 
+Lemma state_invariant_prealloc_in_ctx_lemma : forall BR jst jc c st s ptr jpre,
+    binds c s (L.value_object ptr) ->
+    state_invariant BR jst jc c st ->
+    Mem (jpre, s) prealloc_in_ctx_list ->
+    (inl (J.object_loc_prealloc jpre), ptr) \in BR.
+Proof.
+    introv Hbinds Hinv Hmem.
+    lets Hx : state_invariant_prealloc_related Hinv Hmem Hbinds.
+    destruct_hyp Hx.
+    injects.
+    assumption.
+Qed.
+
+Lemma state_invariant_includes_init_ctx_lemma : forall BR jst jc c st i v v',
+    state_invariant BR jst jc c st ->
+    binds c i v -> binds LjsInitEnv.init_ctx i v' -> v = v'.
+Proof.
+    introv Hinv.
+    inverts Hinv.
+    jauto.
+Qed.
+
+Lemma builtin_assoc : forall k BR jst jc c st st' i v r,
+    state_invariant BR jst jc c st ->
+    L.red_exprh k c st (L.expr_basic (L.expr_id i)) (L.out_ter st' r) ->
+    binds LjsInitEnv.init_ctx i v ->
+    st = st' /\ r = L.res_value v.
+Proof.
+    introv Hinv Hlred Hmem.
+    inverts Hlred.
+    forwards Hic : state_invariant_includes_init_ctx_lemma Hinv; eauto.
+    substs; eauto.
+Qed.
+
+Lemma init_ctx_mem_assoc : forall i v,
+    Mem (i, v) LjsInitEnv.ctx_items ->
+    Assoc i v LjsInitEnv.ctx_items.
+Proof.
+Admitted. (* because they are all different *)
+
+Lemma init_ctx_mem_binds : forall i v,
+    Mem (i, v) LjsInitEnv.ctx_items ->
+    binds LjsInitEnv.init_ctx i v.
+Proof.
+    introv Hmem.
+    eapply from_list_binds_inv.
+    eapply init_ctx_mem_assoc. assumption.
+Qed.
+
 (* Prerequisites *)
 
 Lemma ih_expr_leq : forall k k', (k' <= k)%nat -> ih_expr k -> ih_expr k'.
@@ -1698,6 +1809,30 @@ Ltac ljs_inv_closure_hyps :=
 
 Ltac ljs_apply := progress repeat (ljs_inv_closure_hyps || ljs_closure_body).
 
+Ltac ljs_state_invariant_after_apply :=
+    let rec f := 
+        match goal with
+        | |- state_invariant _ _ _ (_ \(?s := ?v)) _ =>
+            eapply state_invariant_add_nopercent_nodollar_id_preserved; 
+            [idtac | solve [eauto] | solve [eauto]]; f
+        | |- state_invariant _ _ _ (_ \(?s := ?v)) _ =>
+            eapply state_invariant_add_init_ctx_preserved; [
+            eapply init_ctx_mem_binds;
+            solve [repeat (eapply Mem_here || eapply Mem_next)] | idtac]; f
+        | |- state_invariant _ _ _ \{} _ =>
+            eapply state_invariant_replace_ctx_sub_init; [solve [eapply empty_incl] | eassumption]
+        | |- state_invariant _ _ _ _ _ => 
+            eassumption
+        end in
+    match goal with
+    | Hlred : L.red_exprh _ ?c' ?st _ _, Hinv : state_invariant ?BR ?jst ?jc ?c ?st, Heq : _ = ?c' |- _ =>
+        is_var c'; not (is_hyp (state_invariant BR jst jc c' st));
+        let Hinv' := fresh "Hinv" in
+        asserts Hinv' : (state_invariant BR jst jc c' st); 
+        [rewrite <- Heq; f 
+        |idtac]
+    end.
+
 Ltac binds_inv H :=
     repeat rewrite from_list_update, from_list_empty in H; (* TODO *)
     rew_bag_simpl in H;
@@ -1741,42 +1876,6 @@ Tactic Notation "binds_inv" :=
     match goal with
     | H : binds _ _ _ |- _ => binds_inv H
     end.
-
-Lemma state_invariant_includes_init_ctx_lemma : forall BR jst jc c st i v v',
-    state_invariant BR jst jc c st ->
-    binds c i v -> binds LjsInitEnv.init_ctx i v' -> v = v'.
-Proof.
-    introv Hinv.
-    inverts Hinv.
-    jauto.
-Qed.
-
-Lemma builtin_assoc : forall k BR jst jc c st st' i v r,
-    state_invariant BR jst jc c st ->
-    L.red_exprh k c st (L.expr_basic (L.expr_id i)) (L.out_ter st' r) ->
-    binds LjsInitEnv.init_ctx i v ->
-    st = st' /\ r = L.res_value v.
-Proof.
-    introv Hinv Hlred Hmem.
-    inverts Hlred.
-    forwards Hic : state_invariant_includes_init_ctx_lemma Hinv; eauto.
-    substs; eauto.
-Qed.
-
-Lemma init_ctx_mem_assoc : forall i v,
-    Mem (i, v) LjsInitEnv.ctx_items ->
-    Assoc i v LjsInitEnv.ctx_items.
-Proof.
-Admitted. (* because they are all different *)
-
-Lemma init_ctx_mem_binds : forall i v,
-    Mem (i, v) LjsInitEnv.ctx_items ->
-    binds LjsInitEnv.init_ctx i v.
-Proof.
-    introv Hmem.
-    eapply from_list_binds_inv.
-    eapply init_ctx_mem_assoc. assumption.
-Qed.
 
 Ltac ljs_get_builtin :=
     match goal with
@@ -1964,16 +2063,17 @@ Ltac ljs_autoforward := first [
 (** ** Lemmas about specification functions *)
 
 Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
-    (v2 = L.value_undefined \/ exists s, v2 = L.value_string s) ->
-    value_related BR jv1 v1 ->
-    value_related BR jv2 v2 ->
-    state_invariant BR jst jc c st ->
     L.red_exprh k c st 
        (L.expr_app_2 LjsInitEnv.privMakeNativeError [v1; v2]) 
        (L.out_ter st' r) ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_build_error jv1 jv2) (fun _ => True).
+    state_invariant BR jst jc c st ->
+    (v2 = L.value_undefined \/ exists s, v2 = L.value_string s) ->
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_build_error jv1 jv2) 
+        (fun jv => exists jptr, jv = J.value_object jptr).
 Proof.
-    introv Hv Hvrel1 Hvrel2 Hinv Hlred.
+    introv Hlred Hinv Hv Hvrel1 Hvrel2.
     inverts red_exprh Hlred.
     ljs_apply.
     repeat ljs_autoforward.
@@ -2004,24 +2104,45 @@ Proof.
     simpls. false. prove_bag 7.
 Qed.
 
-Lemma native_error_lemma : forall BR k jst jc c st st' jne ptr v r,
-    (v = L.value_undefined \/ exists s, v = L.value_string s) -> (* TODO error messages in jscert *)
-    (inl (J.object_loc_prealloc (J.prealloc_native_error_proto jne)), ptr) \in BR ->
-    state_invariant BR jst jc c st ->
-    L.red_exprh k c st 
-        (L.expr_app_2 LjsInitEnv.privNativeError [L.value_object ptr; v]) 
-        (L.out_ter st' r) ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_error jne) (fun _ => False).
+Lemma priv_js_error_lemma : forall k c st v st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privJSError [v]) (L.out_ter st' r) ->
+    exists obj,
+    r = L.res_value (L.value_object (fresh st)) /\
+    st' = st \(fresh st := obj) /\
+    js_exn_object obj v.
 Proof.
-    introv Hv Hbr Hinv Hlred.
+    introv Hlred.
     inverts red_exprh Hlred.
     ljs_apply.
     repeat ljs_autoforward.
-    destruct_hyp Hv;
-    forwards Hlol : make_native_error_lemma H0. jauto_js. jauto_js. jauto_js. skip.
-
     jauto_js.
-Admitted. (* TODO *)
+Qed.
+
+Lemma native_error_lemma : forall BR k jst jc c st st' jne ptr v r,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privNativeError [L.value_object ptr; v]) 
+        (L.out_ter st' r) ->
+    state_invariant BR jst jc c st ->
+    (v = L.value_undefined \/ exists s, v = L.value_string s) -> (* TODO error messages in jscert *)
+    (inl (J.object_loc_prealloc (J.prealloc_native_error_proto jne)), ptr) \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_error jne) (fun _ => False).
+Proof.
+    introv Hlred Hinv Hv Hbr.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_state_invariant_after_apply.
+    repeat ljs_autoforward.
+    destruct_hyp Hv;
+    forwards Hx : make_native_error_lemma H0; (destr_concl || jauto_js). (* TODO *)
+    res_related_invert.
+    repeat inv_fwd_ljs.
+    forwards Hy : priv_js_error_lemma. eassumption. destruct_hyp Hy.
+    repeat inv_fwd_ljs.
+    jauto_js 8.
+    ljs_handle_abort.
+    skip. (* TODO overspecification in jscert - https://github.com/resource-reasoning/jscert_dev/issues/14 *)
+    skip.
+Qed.
 
 Lemma type_error_lemma : forall BR k jst jc c st st' v r,
     L.red_exprh k c st 
@@ -2032,7 +2153,16 @@ Lemma type_error_lemma : forall BR k jst jc c st st' v r,
     concl_ext_expr_value BR jst jc c st st' r (J.spec_error J.native_error_type) (fun _ => False).
 Proof.
     introv Hlred Hv Hinv.
-Admitted. (* TODO *)
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_state_invariant_after_apply.
+    repeat ljs_autoforward.
+    forwards Hx : native_error_lemma; try eassumption.
+    eapply state_invariant_prealloc_in_ctx_lemma. eassumption. eassumption. 
+        repeat (eapply Mem_here || eapply Mem_next). (* TODO *)
+    destr_concl; tryfalse.
+    ljs_handle_abort.
+Qed.
 
 (** *** spec_expr_get_value_conv spec_to_boolean 
     It corresponds to [to_bool] in the desugaring. *)
@@ -2057,12 +2187,9 @@ Lemma red_spec_to_number_unary_ok : forall k,
 Proof.
     introv Hinv Hvrel Hlred.
     inverts red_exprh Hlred.
-(* NEXT STEP - BETTER ljs_apply *)
-
-
-
     ljs_apply.
-
+    ljs_state_invariant_after_apply.
+(* TODO *)
 Admitted.
 
 (* TODO move *)
@@ -2087,17 +2214,18 @@ Proof.
     introv Hinv Hvrel Hlred.
     inverts red_exprh Hlred.
     ljs_apply.
+    ljs_state_invariant_after_apply.
     repeat (ljs_autoforward || decide_stx_eq).
     (* null *)
     destruct Hvrel; invert_stx_eq.
-    asserts Hinv' : (state_invariant BR jst jc c' st). (* TODO fold it into ljs_apply *)
-        eapply state_invariant_replace_ctx_sub_init. skip. eassumption. 
     forwards Hx : type_error_lemma. eassumption. iauto. eauto_js.
     destr_concl; tryfalse.
     jauto_js.
     (* undefined *)
     destruct Hvrel; invert_stx_eq.
-    skip.
+    forwards Hx : type_error_lemma. eassumption. iauto. eauto_js.
+    destr_concl; tryfalse.
+    jauto_js.
     (* object *)
     destruct Hvrel; invert_stx_eq.
     jauto_js.
@@ -2140,18 +2268,4 @@ Proof.
     resvalue_related_invert.
     jauto_js. left. jauto_js.
     jauto_js. right. jauto_js.
-Qed.
-
-Lemma priv_js_error_lemma : forall k c st v st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privJSError [v]) (L.out_ter st' r) ->
-    exists obj,
-    r = L.res_value (L.value_object (fresh st)) /\
-    st' = st \(fresh st := obj) /\
-    js_exn_object obj v.
-Proof.
-    introv Hlred.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    repeat ljs_autoforward.
-    jauto_js.
 Qed.
