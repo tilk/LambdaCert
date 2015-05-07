@@ -11,6 +11,8 @@ let store = ref None
 
 let fprint = ref false
 
+let top_run = ref false
+
 let had_files = ref false
 
 let get_store () = if Option.is_none !store then store := Some (create_ctx, create_store); Option.get !store
@@ -58,6 +60,7 @@ let load_env filename =
     close_in ch
 
 let coq_save_store filename = 
+    had_files := true;
     let (c, st) = get_store () in
     File.with_file_out filename (fun ch -> 
         try PrettyPrintCoq.ctx_store_to_output ch c st
@@ -74,6 +77,8 @@ let format_js () = fformat := true
 let format_ljs () = fformat := false
 
 let print_not_eval () = fprint := true
+
+let run_toplevel () = top_run := true
 
 let _ =
     Arg.parse 
@@ -104,8 +109,12 @@ let _ =
          "-print",
          Arg.Unit print_not_eval,
          "print S5 code instead of interpreting";
+         "-top",
+         Arg.Unit run_toplevel,
+         "run the toplevel";
         ] 
         handle_parameter
         usage_msg;
+    if !top_run then Top.toplevel (get_store()) else
     if not !had_files then print_string "Use -help to get information on usage\n"
 

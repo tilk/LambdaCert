@@ -45,6 +45,12 @@ It is also possible to run LambdaJS code directly:
 tests/js -ljs file.ljs
 ```
 
+There is also a REPL toplevel:
+
+```
+tests/js -top
+```
+
 The `tests/js` file is a script. The actual interpreter can be found in
 `build/eval.native`; use `-help` to see the available options.
 
