@@ -8,10 +8,12 @@ This project consists of the following parts:
  * Proof of correctness of the said translation (work in progress).
 
 The work is based on the [S5 variant of LambdaJS](http://cs.brown.edu/research/plt/dl/s5/).
-For various reasons, we use a [[slightly modified version|Changes in the core calculus]]
+For various reasons, we use a [slightly modified version](https://github.com/tilk/LambdaCert/wiki/Changes-in-the-core-calculus)
 of the calculus.
 
-The [JSCert](http://jscert.org) project is used as the formal specification of EcmaScript:
+The [JSCert](http://jscert.org) project is used as the formal specification of EcmaScript.
+
+The initial version of the LambdaJS interpreter was written by [Martin Lorentz](https://progval.net/).
 
 # Usage
 
