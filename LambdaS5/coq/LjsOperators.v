@@ -97,6 +97,7 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
     | unary_op_not => nnot store v
     | unary_op_bnot => unary_int_arith int32_bitwise_not v
     | unary_op_to_int32 => unary_int_arith (fun x => x) v
+    | unary_op_neg => unary_arith JsNumber.neg v
     | unary_op_ascii_ntoc => ascii_ntoc v
     | unary_op_ascii_cton => ascii_cton v
     | _ => result_fail ("Unary operator " ++ " not implemented.")

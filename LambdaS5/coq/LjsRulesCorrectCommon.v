@@ -77,6 +77,12 @@ Hint Constructors J.red_expr : js_ljs.
 Hint Constructors J.red_stat : js_ljs.
 Hint Constructors J.red_spec : js_ljs.
 Hint Constructors J.abort : js_ljs.
+Hint Constructors J.lazy_op : js_ljs.
+Hint Constructors J.bitwise_op : js_ljs.
+Hint Constructors J.shift_op : js_ljs.
+Hint Constructors J.inequality_op : js_ljs.
+Hint Constructors J.puremath_op : js_ljs.
+Hint Constructors J.prepost_op : js_ljs.
 
 (** Unfolding hints *)
 

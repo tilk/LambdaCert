@@ -208,15 +208,16 @@ Definition make_op1 f op e :=
     | J.unary_op_void => make_app_builtin "%Void" [f e]
     end.
 
-Definition op2_func op := L.expr_lambda ["%x1";"%x2"] (L.expr_op2 op (L.expr_id "%x1") (L.expr_id "%x2")).
+Definition op2_func op := L.expr_lambda ["x1";"x2"] (L.expr_op2 op (L.expr_id "x1") (L.expr_id "x2")).
 
-Definition make_and e1 e2 := L.expr_let "%e" e1 (L.expr_if (to_bool e1) e2 (L.expr_id "%e")).
+Definition make_and e1 e2 := L.expr_let "e" e1 (L.expr_if (to_bool e1) e2 (L.expr_id "e")).
 
-Definition make_or e1 e2 := L.expr_let "%e" e1 (L.expr_if (to_bool e1) (L.expr_id "%e") e2).
+Definition make_or e1 e2 := L.expr_let "e" e1 (L.expr_if (to_bool e1) (L.expr_id "e") e2).
 
 Definition make_op2 op e1 e2 :=
     match op with
-    | J.binary_op_coma => syntax_error "Unknown infix operator"
+    | J.binary_op_coma => L.expr_seq e1 e2
+    | J.binary_op_sub => make_app_builtin "%PrimMultOp" [e1; e2; op2_func L.binary_op_sub] 
     | J.binary_op_mult => make_app_builtin "%PrimMultOp" [e1; e2; op2_func L.binary_op_mul]
     | J.binary_op_div => make_app_builtin "%PrimMultOp" [e1; e2; op2_func L.binary_op_div]
     | J.binary_op_mod => make_app_builtin "%PrimMultOp" [e1; e2; op2_func L.binary_op_mod]
@@ -226,7 +227,6 @@ Definition make_op2 op e1 e2 :=
     | J.binary_op_and => make_and e1 e2
     | J.binary_op_or => make_or e1 e2
     | J.binary_op_add => make_app_builtin "%PrimAdd" [e1; e2] 
-    | J.binary_op_sub => make_app_builtin "%PrimSub" [e1; e2] 
     | J.binary_op_left_shift => make_app_builtin "%LeftShift" [e1; e2] 
     | J.binary_op_right_shift => make_app_builtin "%SignedRightShift" [e1; e2] 
     | J.binary_op_unsigned_right_shift => make_app_builtin "%UnsignedRightShift" [e1; e2] 

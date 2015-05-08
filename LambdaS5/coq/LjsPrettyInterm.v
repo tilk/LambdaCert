@@ -156,6 +156,7 @@ Inductive int_unary_op : unary_op -> (int -> int) -> Prop :=
 Inductive num_unary_op : unary_op -> (number -> number) -> Prop :=
 | num_unary_op_abs : num_unary_op unary_op_abs absolute
 | num_unary_op_floor : num_unary_op unary_op_floor floor
+| num_unary_op_neg : num_unary_op unary_op_neg neg
 .
 
 Inductive eval_unary_op : unary_op -> store -> value -> value -> Prop :=

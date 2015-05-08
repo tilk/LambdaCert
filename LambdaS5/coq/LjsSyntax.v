@@ -32,6 +32,7 @@ Inductive unary_op : Type :=
 | unary_op_prim_to_bool
 | unary_op_not
 | unary_op_bnot
+| unary_op_neg
 | unary_op_to_int32
 | unary_op_ascii_ntoc
 | unary_op_ascii_cton
