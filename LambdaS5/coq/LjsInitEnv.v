@@ -128,6 +128,9 @@ expr_object
                  expr_false));
  ("%EnvGet", property_data
              (data_intro (expr_id "%EnvGet") expr_true expr_false expr_false));
+ ("%EnvPrepostOp", property_data
+                   (data_intro (expr_id "%EnvPrepostOp") expr_true expr_false
+                    expr_false));
  ("%EnvTypeof", property_data
                 (data_intro (expr_id "%EnvTypeof") expr_true expr_false
                  expr_false));
@@ -261,24 +264,9 @@ expr_object
  ("%ObjectTypeCheck", property_data
                       (data_intro (expr_id "%ObjectTypeCheck") expr_true
                        expr_false expr_false));
- ("%PostDecrement", property_data
-                    (data_intro (expr_id "%PostDecrement") expr_true
-                     expr_false expr_false));
- ("%PostIncrement", property_data
-                    (data_intro (expr_id "%PostIncrement") expr_true
-                     expr_false expr_false));
- ("%PostfixOp", property_data
-                (data_intro (expr_id "%PostfixOp") expr_true expr_false
+ ("%PrepostOp", property_data
+                (data_intro (expr_id "%PrepostOp") expr_true expr_false
                  expr_false));
- ("%PrefixDecrement", property_data
-                      (data_intro (expr_id "%PrefixDecrement") expr_true
-                       expr_false expr_false));
- ("%PrefixIncrement", property_data
-                      (data_intro (expr_id "%PrefixIncrement") expr_true
-                       expr_false expr_false));
- ("%PrefixOp", property_data
-               (data_intro (expr_id "%PrefixOp") expr_true expr_false
-                expr_false));
  ("%PrimAdd", property_data
               (data_intro (expr_id "%PrimAdd") expr_true expr_false
                expr_false));
@@ -287,9 +275,6 @@ expr_object
                   expr_false));
  ("%PrimNew", property_data
               (data_intro (expr_id "%PrimNew") expr_true expr_false
-               expr_false));
- ("%PrimSub", property_data
-              (data_intro (expr_id "%PrimSub") expr_true expr_false
                expr_false));
  ("%PrimitiveCompareOp", property_data
                          (data_intro (expr_id "%PrimitiveCompareOp")
@@ -1952,6 +1937,19 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
       expr_id "strict"])))
   (expr_throw (expr_string "[env] Context not well formed! In %EnvGet"))))
 .
+Definition ex_privEnvPrepostOp := 
+expr_let "oldValue"
+(expr_app (expr_id "%ToNumber")
+ [expr_app (expr_id "%EnvGet")
+  [expr_id "context"; expr_id "id"; expr_id "strict"]])
+(expr_let "newValue"
+ (expr_app (expr_id "op")
+  [expr_id "oldValue"; expr_number (JsNumber.of_int (1))])
+ (expr_seq
+  (expr_app (expr_id "%EnvCheckAssign")
+   [expr_id "context"; expr_id "id"; expr_id "newValue"; expr_id "strict"])
+  (expr_if (expr_id "is_pre") (expr_id "newValue") (expr_id "oldValue"))))
+.
 Definition ex_privEnvTypeof := 
 expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
 (expr_string "undefined")
@@ -2620,15 +2618,7 @@ expr_if (expr_op1 unary_op_is_object (expr_id "o")) expr_null
   (expr_op1 unary_op_prim_to_str (expr_id "o"))
   (expr_string " is not an object")])
 .
-Definition ex_privPostDecrement := 
-expr_app (expr_id "%PostfixOp")
-[expr_id "obj"; expr_id "fld"; expr_id "%PrimSub"]
-.
-Definition ex_privPostIncrement := 
-expr_app (expr_id "%PostfixOp")
-[expr_id "obj"; expr_id "fld"; expr_id "%PrimAdd"]
-.
-Definition ex_privPostfixOp := 
+Definition ex_privPrepostOp := 
 expr_let "oldValue"
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "obj") (expr_id "fld")])
@@ -2637,26 +2627,7 @@ expr_let "oldValue"
   [expr_id "oldValue"; expr_number (JsNumber.of_int (1))])
  (expr_seq
   (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "newValue"))
-  (expr_id "oldValue")))
-.
-Definition ex_privPrefixDecrement := 
-expr_app (expr_id "%PrefixOp")
-[expr_id "obj"; expr_id "fld"; expr_id "%PrimSub"]
-.
-Definition ex_privPrefixIncrement := 
-expr_app (expr_id "%PrefixOp")
-[expr_id "obj"; expr_id "fld"; expr_id "%PrimAdd"]
-.
-Definition ex_privPrefixOp := 
-expr_let "oldValue"
-(expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "obj") (expr_id "fld")])
-(expr_let "newValue"
- (expr_app (expr_id "op")
-  [expr_id "oldValue"; expr_number (JsNumber.of_int (1))])
- (expr_seq
-  (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "newValue"))
-  (expr_id "newValue")))
+  (expr_if (expr_id "is_pre") (expr_id "newValue") (expr_id "oldValue"))))
 .
 Definition ex_privPrimAdd := 
 expr_let "l" (expr_app (expr_id "%ToPrimitive") [expr_id "l"])
@@ -2702,11 +2673,6 @@ expr_seq
      [expr_id "constr"; expr_id "newobj"; expr_id "args"])
     (expr_if (expr_op1 unary_op_is_object (expr_id "constr_ret"))
      (expr_id "constr_ret") (expr_id "newobj"))))))
-.
-Definition ex_privPrimSub := 
-expr_let "l" (expr_app (expr_id "%ToNumber") [expr_id "l"])
-(expr_let "r" (expr_app (expr_id "%ToNumber") [expr_id "r"])
- (expr_op2 binary_op_sub (expr_id "l") (expr_id "r")))
 .
 Definition ex_privPrimitiveCompareOp := 
 expr_if
@@ -7521,6 +7487,15 @@ value_closure
  ["context"; "id"; "strict"] ex_privEnvGet)
 .
 Definition name_privEnvGet :=  "%EnvGet" .
+Definition privEnvPrepostOp := 
+value_closure
+(closure_intro
+ [("%EnvCheckAssign", privEnvCheckAssign);
+  ("%EnvGet", privEnvGet);
+  ("%ToNumber", privToNumber)] None
+ ["context"; "id"; "op"; "is_pre"; "strict"] ex_privEnvPrepostOp)
+.
+Definition name_privEnvPrepostOp :=  "%EnvPrepostOp" .
 Definition privEnvTypeof := 
 value_closure
 (closure_intro [("%Typeof", privTypeof)] (Some "%EnvTypeof")
@@ -7655,53 +7630,18 @@ value_closure
  ex_privObjectTypeCheck)
 .
 Definition name_privObjectTypeCheck :=  "%ObjectTypeCheck" .
-Definition privPostfixOp := 
+Definition privPrepostOp := 
 value_closure
-(closure_intro [("%ToNumber", privToNumber)] None ["obj"; "fld"; "op"]
- ex_privPostfixOp)
+(closure_intro [("%ToNumber", privToNumber)] None
+ ["obj"; "fld"; "op"; "is_pre"] ex_privPrepostOp)
 .
-Definition name_privPostfixOp :=  "%PostfixOp" .
-Definition privPrimSub := 
-value_closure
-(closure_intro [("%ToNumber", privToNumber)] None ["l"; "r"] ex_privPrimSub)
-.
-Definition name_privPrimSub :=  "%PrimSub" .
-Definition privPostDecrement := 
-value_closure
-(closure_intro [("%PostfixOp", privPostfixOp); ("%PrimSub", privPrimSub)]
- None ["obj"; "fld"] ex_privPostDecrement)
-.
-Definition name_privPostDecrement :=  "%PostDecrement" .
+Definition name_privPrepostOp :=  "%PrepostOp" .
 Definition privPrimAdd := 
 value_closure
 (closure_intro [("%ToPrimitive", privToPrimitive)] None ["l"; "r"]
  ex_privPrimAdd)
 .
 Definition name_privPrimAdd :=  "%PrimAdd" .
-Definition privPostIncrement := 
-value_closure
-(closure_intro [("%PostfixOp", privPostfixOp); ("%PrimAdd", privPrimAdd)]
- None ["obj"; "fld"] ex_privPostIncrement)
-.
-Definition name_privPostIncrement :=  "%PostIncrement" .
-Definition privPrefixOp := 
-value_closure
-(closure_intro [("%ToNumber", privToNumber)] None ["obj"; "fld"; "op"]
- ex_privPrefixOp)
-.
-Definition name_privPrefixOp :=  "%PrefixOp" .
-Definition privPrefixDecrement := 
-value_closure
-(closure_intro [("%PrefixOp", privPrefixOp); ("%PrimSub", privPrimSub)] 
- None ["obj"; "fld"] ex_privPrefixDecrement)
-.
-Definition name_privPrefixDecrement :=  "%PrefixDecrement" .
-Definition privPrefixIncrement := 
-value_closure
-(closure_intro [("%PrefixOp", privPrefixOp); ("%PrimAdd", privPrimAdd)] 
- None ["obj"; "fld"] ex_privPrefixIncrement)
-.
-Definition name_privPrefixIncrement :=  "%PrefixIncrement" .
 Definition privPrimMultOp := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["l"; "r"; "op"]
@@ -9267,6 +9207,7 @@ Definition ctx_items :=
  (name_privEnvCheckAssign, privEnvCheckAssign);
  (name_privEnvDelete, privEnvDelete);
  (name_privEnvGet, privEnvGet);
+ (name_privEnvPrepostOp, privEnvPrepostOp);
  (name_privEnvTypeof, privEnvTypeof);
  (name_privEqEq, privEqEq);
  (name_privErrorConstructor, privErrorConstructor);
@@ -9312,16 +9253,10 @@ Definition ctx_items :=
  (name_privObjectGlobalFuncObj, privObjectGlobalFuncObj);
  (name_privObjectProto, privObjectProto);
  (name_privObjectTypeCheck, privObjectTypeCheck);
- (name_privPostDecrement, privPostDecrement);
- (name_privPostIncrement, privPostIncrement);
- (name_privPostfixOp, privPostfixOp);
- (name_privPrefixDecrement, privPrefixDecrement);
- (name_privPrefixIncrement, privPrefixIncrement);
- (name_privPrefixOp, privPrefixOp);
+ (name_privPrepostOp, privPrepostOp);
  (name_privPrimAdd, privPrimAdd);
  (name_privPrimMultOp, privPrimMultOp);
  (name_privPrimNew, privPrimNew);
- (name_privPrimSub, privPrimSub);
  (name_privPrimitiveCompareOp, privPrimitiveCompareOp);
  (name_privRangeErrorConstructor, privRangeErrorConstructor);
  (name_privRangeErrorGlobalFuncObj, privRangeErrorGlobalFuncObj);
@@ -9676,6 +9611,7 @@ Definition store_items := [
                                              ("%EnvCheckAssign", privEnvCheckAssign);
                                              ("%EnvDelete", privEnvDelete);
                                              ("%EnvGet", privEnvGet);
+                                             ("%EnvPrepostOp", privEnvPrepostOp);
                                              ("%EnvTypeof", privEnvTypeof);
                                              ("%EqEq", privEqEq);
                                              ("%ErrorConstructor", privErrorConstructor);
@@ -9721,16 +9657,10 @@ Definition store_items := [
                                              ("%ObjectGlobalFuncObj", privObjectGlobalFuncObj);
                                              ("%ObjectProto", privObjectProto);
                                              ("%ObjectTypeCheck", privObjectTypeCheck);
-                                             ("%PostDecrement", privPostDecrement);
-                                             ("%PostIncrement", privPostIncrement);
-                                             ("%PostfixOp", privPostfixOp);
-                                             ("%PrefixDecrement", privPrefixDecrement);
-                                             ("%PrefixIncrement", privPrefixIncrement);
-                                             ("%PrefixOp", privPrefixOp);
+                                             ("%PrepostOp", privPrepostOp);
                                              ("%PrimAdd", privPrimAdd);
                                              ("%PrimMultOp", privPrimMultOp);
                                              ("%PrimNew", privPrimNew);
-                                             ("%PrimSub", privPrimSub);
                                              ("%PrimitiveCompareOp", privPrimitiveCompareOp);
                                              ("%RangeErrorConstructor", privRangeErrorConstructor);
                                              ("%RangeErrorGlobalFuncObj", privRangeErrorGlobalFuncObj);

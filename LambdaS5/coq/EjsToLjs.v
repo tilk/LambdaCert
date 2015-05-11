@@ -170,10 +170,13 @@ Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda ["exc"] (
         make_var_decl [(i, L.expr_get_field (L.expr_id "exc") (L.expr_string "%js-exn"))] catch)).
 
-Definition make_xfix s f e :=
+Definition op2_func op := L.expr_lambda ["x1";"x2"] (L.expr_op2 op (L.expr_id "x1") (L.expr_id "x2")).
+
+Definition make_xfix op b f e :=
     match e with
-    | E.expr_var_id fld => make_app_builtin s [context; L.expr_string fld]
-    | E.expr_get_field obj fld => make_app_builtin s [f obj; f fld]
+    | E.expr_var_id fld => 
+        make_app_builtin "%EnvPrepostOp" [context; L.expr_string fld; op2_func op; L.expr_bool b; L.expr_id "$strict"] 
+    | E.expr_get_field obj fld => make_app_builtin "%PrepostOp" [f obj; f fld; op2_func op; L.expr_bool b]
     | _ => syntax_error "Illegal use of an prefix/postfix operator"
     end.
 
@@ -196,10 +199,10 @@ Definition make_delete f e :=
 Definition make_op1 f op e :=
     match op with
     | J.unary_op_delete => make_delete f e
-    | J.unary_op_post_incr => make_xfix "%PostIncrement" f e
-    | J.unary_op_post_decr => make_xfix "%PostDecrement" f e
-    | J.unary_op_pre_incr => make_xfix "%PrefixIncrement" f e
-    | J.unary_op_pre_decr => make_xfix "%PrefixDecrement" f e
+    | J.unary_op_post_incr => make_xfix L.binary_op_add false f e
+    | J.unary_op_post_decr => make_xfix L.binary_op_sub false f e
+    | J.unary_op_pre_incr => make_xfix L.binary_op_add true f e
+    | J.unary_op_pre_decr => make_xfix L.binary_op_sub true f e
     | J.unary_op_neg => make_app_builtin "%UnaryNeg" [f e]
     | J.unary_op_add => make_app_builtin "%UnaryPlus" [f e]
     | J.unary_op_bitwise_not => make_app_builtin "%BitwiseNot" [f e]
@@ -207,8 +210,6 @@ Definition make_op1 f op e :=
     | J.unary_op_typeof => make_typeof f e
     | J.unary_op_void => make_app_builtin "%Void" [f e]
     end.
-
-Definition op2_func op := L.expr_lambda ["x1";"x2"] (L.expr_op2 op (L.expr_id "x1") (L.expr_id "x2")).
 
 Definition make_and e1 e2 := L.expr_let "e" e1 (L.expr_if (to_bool (L.expr_id "e")) e2 (L.expr_id "e")).
 
