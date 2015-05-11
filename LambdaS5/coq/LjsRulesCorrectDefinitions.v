@@ -457,14 +457,14 @@ Definition concl_stat BR jst jc c st st' r jt :=
 Definition concl_spec {A : Type} BR jst jc c st st' r jes 
     (P : object_bisim -> J.state -> A -> Prop) (Q : object_bisim -> J.state -> J.res -> Prop) :=
     exists BR' jst',
-    state_invariant BR' jst' jc c st' /\ 
-    BR \c BR' /\
-    lexical_ctx_chain_ok BR st st' /\
     ((exists x, J.red_spec jst jc jes (J.specret_val jst' x) /\ P BR' jst' x) \/
      (exists jr, 
         J.red_spec jst jc jes (@J.specret_out A (J.out_ter jst' jr)) /\ 
         J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw /\
-        res_related BR' jst' st' jr r /\ Q BR' jst' jr)).
+        res_related BR' jst' st' jr r /\ Q BR' jst' jr)) /\
+    state_invariant BR' jst' jc c st' /\ 
+    BR \c BR' /\
+    lexical_ctx_chain_ok BR st st'.
 
 Definition concl_expr_getvalue BR jst jc c st st' r je := 
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 

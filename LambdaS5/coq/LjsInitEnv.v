@@ -2733,9 +2733,9 @@ expr_let "l" (expr_app (expr_id "%ToPrimitive") [expr_id "l"])
      (expr_op2 binary_op_add (expr_id "lnum") (expr_id "rnum")))))))
 .
 Definition ex_privPrimMultOp := 
-expr_let "lNum" (expr_app (expr_id "%ToNumber") [expr_id "l"])
-(expr_let "rNum" (expr_app (expr_id "%ToNumber") [expr_id "r"])
- (expr_app (expr_id "op") [expr_id "lNum"; expr_id "rNum"]))
+expr_app (expr_id "op")
+[expr_app (expr_id "%ToNumber") [expr_id "l"];
+ expr_app (expr_id "%ToNumber") [expr_id "r"]]
 .
 Definition ex_privPrimNew := 
 expr_seq

@@ -1794,7 +1794,7 @@ Ltac ljs_inv_closure_hyps :=
         let c' := fresh "c" in
         remember c as c';
         inverts Hcctx as Hz; repeat (inverts Hz as Hz); (* crunching Zip *)
-        let EQc := match goal with H : _ = c' |- _ => constr:H end in
+        let EQc := match goal with H : _ = c |- _ => constr:H end in
         try fold v in EQc;
         repeat rewrite from_list_update in EQc;
         repeat rewrite from_list_empty in EQc;

@@ -469,6 +469,28 @@ Proof.
 *)
 Admitted.
 
+(* TODO move, ljs only *)
+Lemma eval_binary_op_num_lemma : forall op F st n1 n2 v,
+    L.num_binary_op op F ->
+    L.eval_binary_op op st (L.value_number n1) (L.value_number n2) v ->
+    v = L.value_number (F n1 n2).
+Proof.
+    introv Hnumop Hevop.
+    inverts Hevop as Hxop;
+    inverts Hnumop; try inverts Hxop;
+    reflexivity.
+Qed.
+
+(* TODO move *) 
+Lemma puremath_op_regular : forall jop F, 
+    J.puremath_op jop F ->
+    J.regular_binary_op jop.
+Proof.
+    introv Hpure. destruct Hpure; simpl; trivial.
+Qed.
+
+Hint Resolve puremath_op_regular : js_ljs.
+
 Lemma js_puremath_to_ljs : forall jop F,
     J.puremath_op jop F ->
     exists op,
@@ -483,7 +505,7 @@ Proof.
     eapply L.num_binary_op_div.
     eapply L.num_binary_op_mod.
     eapply L.num_binary_op_sub.
-Admitted. (* TODO *)
+Qed.
 
 Lemma red_expr_binary_op_puremath : forall k je1 je2 jop F,
     J.puremath_op jop F ->
@@ -507,11 +529,27 @@ Proof.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-(* TODO
     forwards_th red_spec_to_number_unary_ok.
     destr_concl(*; try ljs_handle_abort*).
     res_related_invert.
     resvalue_related_invert.
+    repeat ljs_autoforward.
+    inverts red_exprh H15. (* TODO *)
+    ljs_apply.
+    repeat ljs_autoforward.
+    autoforwards Hx : eval_binary_op_num_lemma. 
+    destruct_hyp Hx.
+    unfold_concl. 
+    do 2 eexists.
+    splits.
+    left. jauto_js 18.
+    applys state_invariant_restore_lexical_env Hinv H16. (* TODO *)
+    eauto_js 6.
+    eauto_js 6.
+    eauto_js 6.
+    eauto_js 6.
+(* TODO
+    jauto_js. right. jauto_js 8. ljs_handle_abort. 
 *)
 Admitted.
 
