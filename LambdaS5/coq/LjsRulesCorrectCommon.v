@@ -2158,6 +2158,7 @@ Proof.
     repeat inv_fwd_ljs.
     forwards Hy : priv_js_error_lemma. eassumption. destruct_hyp Hy.
     repeat inv_fwd_ljs.
+    resvalue_related_invert.
     jauto_js 8.
     ljs_handle_abort.
     skip. (* TODO overspecification in jscert - https://github.com/resource-reasoning/jscert_dev/issues/14 *)

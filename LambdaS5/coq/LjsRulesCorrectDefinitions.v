@@ -304,10 +304,10 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
     resvalue_related BR jrv v ->
     res_related BR jst st (J.res_intro J.restype_normal jrv J.label_empty) 
         (L.res_value v)
-| res_related_throw : forall jrv ptr v,
+| res_related_throw : forall jv ptr v,
     js_exn_object_ptr st ptr v ->
-    resvalue_related BR jrv v ->
-    res_related BR jst st (J.res_intro J.restype_throw jrv J.label_empty) 
+    value_related BR jv v ->
+    res_related BR jst st (J.res_intro J.restype_throw (J.resvalue_value jv) J.label_empty) 
         (L.res_exception (L.value_object ptr))
 | res_related_return : forall jv v,
     value_related BR jv v ->
