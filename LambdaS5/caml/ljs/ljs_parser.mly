@@ -50,10 +50,10 @@ let with_pos exp pos = match exp with
 %token <string> ID
 %token UNDEFINED EMPTY NULL FUNC LET DELETE LBRACE RBRACE LPAREN RPAREN LBRACK
   RBRACK EQUALS COMMA BANG REF COLON COLONEQ PRIM IF ELSE SEMI JSEMI
-  LABEL BREAK TRY CATCH FINALLY THROW EQEQEQUALS TYPEOF FAIL
+  LABEL BREAK TRY CATCH FINALLY THROW EQEQEQUALS EQEQUALS TYPEOF FAIL
   ISCLOSURE ISPRIMITIVE ISOBJECT
   PLUS MINUS MULT DIV
-  AMPAMP PIPEPIPE RETURN BANGEQEQUALS FUNCTION REC WRITABLE GETTER SETTER
+  AMPAMP PIPEPIPE RETURN BANGEQEQUALS BANGEQUALS FUNCTION REC WRITABLE GETTER SETTER
   CONFIG VALUE ENUM LT GT PROTO CODE EXTENSIBLE CLASS EVAL GETFIELDS PRIMVAL
 
 
@@ -61,7 +61,7 @@ let with_pos exp pos = match exp with
 %left COLONEQ
 %left PIPEPIPE
 %left AMPAMP
-%left EQEQEQUALS BANGEQEQUALS
+%left EQEQEQUALS BANGEQEQUALS EQEQUALS BANGEQUALS
 %left BANG
 %left PLUS MINUS
 %left MULT DIV
@@ -200,11 +200,16 @@ exp :
    { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8), "/", $1, $3) }
  | MINUS exp %prec UMINUS
    { Op1 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), "-", $2) }
- | exp EQEQEQUALS exp
+ | exp EQEQUALS exp
      { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), "stx=", $1, $3) }
- | exp BANGEQEQUALS exp
+ | exp BANGEQUALS exp
      { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3) in
          Op1(p, "!", Op2 (p, "stx=", $1, $3)) }
+ | exp EQEQEQUALS exp
+     { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), "sameValue", $1, $3) }
+ | exp BANGEQEQUALS exp
+     { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3) in
+         Op1(p, "!", Op2 (p, "sameValue", $1, $3)) }
  | exp LBRACK unbraced_seq_exp EQUALS unbraced_seq_exp RBRACK
    { SetField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), $1, $3, $5) }
  | exp LBRACK unbraced_seq_exp EQUALS unbraced_seq_exp COMMA unbraced_seq_exp RBRACK   

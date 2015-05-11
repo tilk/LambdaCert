@@ -67,9 +67,6 @@ expr_object
  ("%ArrayProto", property_data
                  (data_intro (expr_id "%ArrayProto") expr_true expr_false
                   expr_false));
- ("%BitwiseAnd", property_data
-                 (data_intro (expr_id "%BitwiseAnd") expr_true expr_false
-                  expr_false));
  ("%BitwiseInfix", property_data
                    (data_intro (expr_id "%BitwiseInfix") expr_true expr_false
                     expr_false));
@@ -172,12 +169,6 @@ expr_object
  ("%GetterValue", property_data
                   (data_intro (expr_id "%GetterValue") expr_true expr_false
                    expr_false));
- ("%GreaterEqual", property_data
-                   (data_intro (expr_id "%GreaterEqual") expr_true expr_false
-                    expr_false));
- ("%GreaterThan", property_data
-                  (data_intro (expr_id "%GreaterThan") expr_true expr_false
-                   expr_false));
  ("%InLeapYear", property_data
                  (data_intro (expr_id "%InLeapYear") expr_true expr_false
                   expr_false));
@@ -199,12 +190,6 @@ expr_object
  ("%LeftShift", property_data
                 (data_intro (expr_id "%LeftShift") expr_true expr_false
                  expr_false));
- ("%LessEqual", property_data
-                (data_intro (expr_id "%LessEqual") expr_true expr_false
-                 expr_false));
- ("%LessThan", property_data
-               (data_intro (expr_id "%LessThan") expr_true expr_false
-                expr_false));
  ("%LocalTime", property_data
                 (data_intro (expr_id "%LocalTime") expr_true expr_false
                  expr_false));
@@ -252,6 +237,9 @@ expr_object
  ("%NativeErrorConstructor", property_data
                              (data_intro (expr_id "%NativeErrorConstructor")
                               expr_true expr_false expr_false));
+ ("%NumberCompareOp", property_data
+                      (data_intro (expr_id "%NumberCompareOp") expr_true
+                       expr_false expr_false));
  ("%NumberConstructor", property_data
                         (data_intro (expr_id "%NumberConstructor") expr_true
                          expr_false expr_false));
@@ -303,6 +291,9 @@ expr_object
  ("%PrimSub", property_data
               (data_intro (expr_id "%PrimSub") expr_true expr_false
                expr_false));
+ ("%PrimitiveCompareOp", property_data
+                         (data_intro (expr_id "%PrimitiveCompareOp")
+                          expr_true expr_false expr_false));
  ("%RangeErrorConstructor", property_data
                             (data_intro (expr_id "%RangeErrorConstructor")
                              expr_true expr_false expr_false));
@@ -1536,10 +1527,6 @@ expr_let "oldlen"
       (expr_number (JsNumber.of_int (1)))])) expr_undefined))
  (expr_app (expr_id "fix") [expr_id "newlen"]))
 .
-Definition ex_privBitwiseAnd := 
-expr_op2 binary_op_band (expr_app (expr_id "%ToInt32") [expr_id "l"])
-(expr_app (expr_id "%ToInt32") [expr_id "r"])
-.
 Definition ex_privBitwiseInfix := 
 expr_let "lnum" (expr_app (expr_id "%ToInt32") [expr_id "l"])
 (expr_let "rnum" (expr_app (expr_id "%ToInt32") [expr_id "r"])
@@ -1564,67 +1551,16 @@ expr_if
 expr_undefined
 .
 Definition ex_privCompareOp := 
-expr_let "rest"
-(expr_lambda ["px"; "py"]
- (expr_let "pxtype" (expr_op1 unary_op_typeof (expr_id "px"))
-  (expr_let "pytype" (expr_op1 unary_op_typeof (expr_id "py"))
-   (expr_label "ret"
-    (expr_if
-     (expr_let "%or"
-      (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq (expr_id "pxtype") (expr_string "string")))
-      (expr_if (expr_id "%or") (expr_id "%or")
-       (expr_op1 unary_op_not
-        (expr_op2 binary_op_stx_eq (expr_id "pytype") (expr_string "string")))))
-     (expr_let "nx" (expr_app (expr_id "%ToNumber") [expr_id "px"])
-      (expr_let "ny" (expr_app (expr_id "%ToNumber") [expr_id "py"])
-       (expr_seq
-        (expr_if
-         (expr_let "%or"
-          (expr_op1 unary_op_not
-           (expr_op2 binary_op_stx_eq (expr_id "nx") (expr_id "nx")))
-          (expr_if (expr_id "%or") (expr_id "%or")
-           (expr_op1 unary_op_not
-            (expr_op2 binary_op_stx_eq (expr_id "ny") (expr_id "ny")))))
-         (expr_break "ret" expr_undefined) expr_null)
-        (expr_seq
-         (expr_if (expr_op2 binary_op_stx_eq (expr_id "nx") (expr_id "ny"))
-          (expr_break "ret" expr_false) expr_null)
-         (expr_seq
-          (expr_if
-           (expr_op2 binary_op_stx_eq (expr_id "nx")
-            (expr_number (JsNumber.of_int (0))))
-           (expr_break "ret" expr_false) expr_null)
-          (expr_seq
-           (expr_if
-            (expr_op2 binary_op_stx_eq (expr_id "ny")
-             (expr_number (JsNumber.of_int (0))))
-            (expr_break "ret" expr_true) expr_null)
-           (expr_seq
-            (expr_if
-             (expr_op2 binary_op_stx_eq (expr_id "ny")
-              (expr_number (JsNumber.of_int (0))))
-             (expr_break "ret" expr_false) expr_null)
-            (expr_seq
-             (expr_if
-              (expr_op2 binary_op_stx_eq (expr_id "nx")
-               (expr_number (JsNumber.of_int (0))))
-              (expr_break "ret" expr_true) expr_null)
-             (expr_break "ret"
-              (expr_op2 binary_op_lt (expr_id "nx") (expr_id "ny")))))))))))
-     (expr_break "ret"
-      (expr_op2 binary_op_string_lt (expr_id "px") (expr_id "py"))))))))
-(expr_if (expr_id "LeftFirst")
- (expr_let "px"
-  (expr_app (expr_id "%ToPrimitiveHint") [expr_id "l"; expr_string "number"])
-  (expr_let "py"
-   (expr_app (expr_id "%ToPrimitiveHint") [expr_id "r"; expr_string "number"])
-   (expr_app (expr_id "rest") [expr_id "px"; expr_id "py"])))
- (expr_let "py"
-  (expr_app (expr_id "%ToPrimitiveHint") [expr_id "r"; expr_string "number"])
-  (expr_let "px"
-   (expr_app (expr_id "%ToPrimitiveHint") [expr_id "l"; expr_string "number"])
-   (expr_app (expr_id "rest") [expr_id "px"; expr_id "py"]))))
+expr_let "px" (expr_app (expr_id "%ToPrimitive") [expr_id "l"])
+(expr_let "py" (expr_app (expr_id "%ToPrimitive") [expr_id "r"])
+ (expr_let "res"
+  (expr_if (expr_id "swap")
+   (expr_app (expr_id "%PrimitiveCompareOp") [expr_id "py"; expr_id "px"])
+   (expr_app (expr_id "%PrimitiveCompareOp") [expr_id "px"; expr_id "py"]))
+  (expr_if (expr_op2 binary_op_stx_eq (expr_id "res") expr_undefined)
+   expr_false
+   (expr_if (expr_id "neg") (expr_op1 unary_op_not (expr_id "res"))
+    (expr_id "res")))))
 .
 Definition ex_privDateConstructor := 
 expr_let "calledAsFunction"
@@ -2201,20 +2137,6 @@ expr_get_field (expr_app (expr_id "%ToObjectVirtual") [expr_id "v"])
 Definition ex_privGetterValue := 
 expr_get_field (expr_id "o") (expr_string "func")
 .
-Definition ex_privGreaterEqual := 
-expr_let "result"
-(expr_app (expr_id "%CompareOp") [expr_id "l"; expr_id "r"; expr_true])
-(expr_if
- (expr_op1 unary_op_not
-  (expr_op2 binary_op_stx_eq (expr_id "result") expr_undefined))
- (expr_op1 unary_op_not (expr_id "result")) expr_false)
-.
-Definition ex_privGreaterThan := 
-expr_let "result"
-(expr_app (expr_id "%CompareOp") [expr_id "r"; expr_id "l"; expr_false])
-(expr_if (expr_op2 binary_op_stx_eq (expr_id "result") expr_undefined)
- expr_false (expr_id "result"))
-.
 Definition ex_privInLeapYear := 
 expr_if
 (expr_op2 binary_op_stx_eq
@@ -2272,20 +2194,6 @@ expr_object
 Definition ex_privLeftShift := 
 expr_op2 binary_op_shiftl (expr_app (expr_id "%ToInt32") [expr_id "l"])
 (expr_app (expr_id "%ToUint32") [expr_id "r"])
-.
-Definition ex_privLessEqual := 
-expr_let "result"
-(expr_app (expr_id "%CompareOp") [expr_id "r"; expr_id "l"; expr_false])
-(expr_if
- (expr_op1 unary_op_not
-  (expr_op2 binary_op_stx_eq (expr_id "result") expr_undefined))
- (expr_op1 unary_op_not (expr_id "result")) expr_false)
-.
-Definition ex_privLessThan := 
-expr_let "result"
-(expr_app (expr_id "%CompareOp") [expr_id "l"; expr_id "r"; expr_true])
-(expr_if (expr_op2 binary_op_stx_eq (expr_id "result") expr_undefined)
- expr_false (expr_id "result"))
 .
 Definition ex_privLocalTime :=  expr_id "t" .
 Definition ex_privMakeBoolean := 
@@ -2595,6 +2503,43 @@ expr_lambda ["this"; "args"]
   expr_app (expr_id "%ToString")
   [expr_get_field (expr_id "args") (expr_string "0")]])
 .
+Definition ex_privNumberCompareOp := 
+expr_if
+(expr_let "%or"
+ (expr_op2 binary_op_same_value (expr_id "l")
+  (expr_number (JsNumber.of_int (0))))
+ (expr_if (expr_id "%or") (expr_id "%or")
+  (expr_op2 binary_op_same_value (expr_id "r")
+   (expr_number (JsNumber.of_int (0)))))) expr_undefined
+(expr_if (expr_op2 binary_op_same_value (expr_id "l") (expr_id "r"))
+ expr_false
+ (expr_if
+  (expr_if
+   (expr_op2 binary_op_same_value (expr_id "l")
+    (expr_number (JsNumber.of_int (0))))
+   (expr_op2 binary_op_same_value (expr_id "r")
+    (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (0))))) expr_false)
+  expr_false
+  (expr_if
+   (expr_if
+    (expr_op2 binary_op_same_value (expr_id "l")
+     (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (0)))))
+    (expr_op2 binary_op_same_value (expr_id "r")
+     (expr_number (JsNumber.of_int (0)))) expr_false) expr_false
+   (expr_if
+    (expr_op2 binary_op_same_value (expr_id "l")
+     (expr_number (JsNumber.of_int (0)))) expr_false
+    (expr_if
+     (expr_op2 binary_op_same_value (expr_id "r")
+      (expr_number (JsNumber.of_int (0)))) expr_true
+     (expr_if
+      (expr_op2 binary_op_same_value (expr_id "r")
+       (expr_number (JsNumber.of_int (0)))) expr_false
+      (expr_if
+       (expr_op2 binary_op_same_value (expr_id "l")
+        (expr_number (JsNumber.of_int (0)))) expr_true
+       (expr_op2 binary_op_lt (expr_id "l") (expr_id "r")))))))))
+.
 Definition ex_privNumberConstructor := 
 expr_if (expr_op2 binary_op_stx_eq (expr_id "this") expr_undefined)
 (expr_if
@@ -2762,6 +2707,18 @@ Definition ex_privPrimSub :=
 expr_let "l" (expr_app (expr_id "%ToNumber") [expr_id "l"])
 (expr_let "r" (expr_app (expr_id "%ToNumber") [expr_id "r"])
  (expr_op2 binary_op_sub (expr_id "l") (expr_id "r")))
+.
+Definition ex_privPrimitiveCompareOp := 
+expr_if
+(expr_if
+ (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "l"))
+  (expr_string "string"))
+ (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "r"))
+  (expr_string "string")) expr_false)
+(expr_op2 binary_op_string_lt (expr_id "l") (expr_id "r"))
+(expr_app (expr_id "%NumberCompareOp")
+ [expr_op1 unary_op_prim_to_num (expr_id "l");
+  expr_op1 unary_op_prim_to_num (expr_id "r")])
 .
 Definition ex_privRangeErrorConstructor := 
 expr_app (expr_id "%MakeNativeError")
@@ -4812,8 +4769,8 @@ Definition ex_privisNaNlambda :=
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "args") (expr_string "0")])
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n")))
+(expr_op2 binary_op_same_value (expr_id "n")
+ (expr_number (JsNumber.of_int (0))))
 .
 Definition ex_privisSealedLambda := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
@@ -7261,11 +7218,6 @@ value_closure
 (closure_intro [("%ToUint32", privToUint32)] None ["n"] ex_privToInt32)
 .
 Definition name_privToInt32 :=  "%ToInt32" .
-Definition privBitwiseAnd := 
-value_closure
-(closure_intro [("%ToInt32", privToInt32)] None ["l"; "r"] ex_privBitwiseAnd)
-.
-Definition name_privBitwiseAnd :=  "%BitwiseAnd" .
 Definition privBitwiseInfix := 
 value_closure
 (closure_intro [("%ToInt32", privToInt32)] None ["l"; "r"; "op"]
@@ -7292,11 +7244,28 @@ value_closure
  ex_privCheckObjectCoercible)
 .
 Definition name_privCheckObjectCoercible :=  "%CheckObjectCoercible" .
+Definition privNumberCompareOp := 
+value_closure (closure_intro [] None ["l"; "r"] ex_privNumberCompareOp)
+.
+Definition name_privNumberCompareOp :=  "%NumberCompareOp" .
+Definition privPrimitiveCompareOp := 
+value_closure
+(closure_intro [("%NumberCompareOp", privNumberCompareOp)] None ["l"; "r"]
+ ex_privPrimitiveCompareOp)
+.
+Definition name_privPrimitiveCompareOp :=  "%PrimitiveCompareOp" .
+Definition privToPrimitive := 
+value_closure
+(closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["val"]
+ ex_privToPrimitive)
+.
+Definition name_privToPrimitive :=  "%ToPrimitive" .
 Definition privCompareOp := 
 value_closure
 (closure_intro
- [("%ToNumber", privToNumber); ("%ToPrimitiveHint", privToPrimitiveHint)]
- None ["l"; "r"; "LeftFirst"] ex_privCompareOp)
+ [("%PrimitiveCompareOp", privPrimitiveCompareOp);
+  ("%ToPrimitive", privToPrimitive)] None ["l"; "r"; "swap"; "neg"]
+ ex_privCompareOp)
 .
 Definition name_privCompareOp :=  "%CompareOp" .
 Definition privDateProto :=  value_object 167 .
@@ -7421,12 +7390,6 @@ value_closure
  None ["t"] ex_privTimeClip)
 .
 Definition name_privTimeClip :=  "%TimeClip" .
-Definition privToPrimitive := 
-value_closure
-(closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["val"]
- ex_privToPrimitive)
-.
-Definition name_privToPrimitive :=  "%ToPrimitive" .
 Definition privUTC := 
 value_closure (closure_intro [] None ["t"] ex_privUTC)
 .
@@ -7625,18 +7588,6 @@ Definition privGetterValue :=
 value_closure (closure_intro [] None ["o"] ex_privGetterValue)
 .
 Definition name_privGetterValue :=  "%GetterValue" .
-Definition privGreaterEqual := 
-value_closure
-(closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"]
- ex_privGreaterEqual)
-.
-Definition name_privGreaterEqual :=  "%GreaterEqual" .
-Definition privGreaterThan := 
-value_closure
-(closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"]
- ex_privGreaterThan)
-.
-Definition name_privGreaterThan :=  "%GreaterThan" .
 Definition privIsPrototypeOflambda := 
 value_closure
 (closure_intro [("%ToObject", privToObject)] None ["this"; "args"]
@@ -7649,18 +7600,6 @@ value_closure
  None ["l"; "r"] ex_privLeftShift)
 .
 Definition name_privLeftShift :=  "%LeftShift" .
-Definition privLessEqual := 
-value_closure
-(closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"]
- ex_privLessEqual)
-.
-Definition name_privLessEqual :=  "%LessEqual" .
-Definition privLessThan := 
-value_closure
-(closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"]
- ex_privLessThan)
-.
-Definition name_privLessThan :=  "%LessThan" .
 Definition privLocalTime := 
 value_closure (closure_intro [] None ["t"] ex_privLocalTime)
 .
@@ -9307,7 +9246,6 @@ Definition ctx_items :=
  (name_privArrayGlobalFuncObj, privArrayGlobalFuncObj);
  (name_privArrayLengthChange, privArrayLengthChange);
  (name_privArrayProto, privArrayProto);
- (name_privBitwiseAnd, privBitwiseAnd);
  (name_privBitwiseInfix, privBitwiseInfix);
  (name_privBitwiseNot, privBitwiseNot);
  (name_privBooleanConstructor, privBooleanConstructor);
@@ -9343,8 +9281,6 @@ Definition ctx_items :=
  (name_privFunctionProto, privFunctionProto);
  (name_privGetField, privGetField);
  (name_privGetterValue, privGetterValue);
- (name_privGreaterEqual, privGreaterEqual);
- (name_privGreaterThan, privGreaterThan);
  (name_privInLeapYear, privInLeapYear);
  (name_privIsCallable, privIsCallable);
  (name_privIsFinite, privIsFinite);
@@ -9352,8 +9288,6 @@ Definition ctx_items :=
  (name_privIsPrototypeOflambda, privIsPrototypeOflambda);
  (name_privJSError, privJSError);
  (name_privLeftShift, privLeftShift);
- (name_privLessEqual, privLessEqual);
- (name_privLessThan, privLessThan);
  (name_privLocalTime, privLocalTime);
  (name_privMakeBoolean, privMakeBoolean);
  (name_privMakeDate, privMakeDate);
@@ -9370,6 +9304,7 @@ Definition ctx_items :=
  (name_privMonthFromTime, privMonthFromTime);
  (name_privNativeError, privNativeError);
  (name_privNativeErrorConstructor, privNativeErrorConstructor);
+ (name_privNumberCompareOp, privNumberCompareOp);
  (name_privNumberConstructor, privNumberConstructor);
  (name_privNumberGlobalFuncObj, privNumberGlobalFuncObj);
  (name_privNumberProto, privNumberProto);
@@ -9387,6 +9322,7 @@ Definition ctx_items :=
  (name_privPrimMultOp, privPrimMultOp);
  (name_privPrimNew, privPrimNew);
  (name_privPrimSub, privPrimSub);
+ (name_privPrimitiveCompareOp, privPrimitiveCompareOp);
  (name_privRangeErrorConstructor, privRangeErrorConstructor);
  (name_privRangeErrorGlobalFuncObj, privRangeErrorGlobalFuncObj);
  (name_privRangeErrorProto, privRangeErrorProto);
@@ -9719,7 +9655,6 @@ Definition store_items := [
                                              ("%ArrayGlobalFuncObj", privArrayGlobalFuncObj);
                                              ("%ArrayLengthChange", privArrayLengthChange);
                                              ("%ArrayProto", privArrayProto);
-                                             ("%BitwiseAnd", privBitwiseAnd);
                                              ("%BitwiseInfix", privBitwiseInfix);
                                              ("%BitwiseNot", privBitwiseNot);
                                              ("%BooleanConstructor", privBooleanConstructor);
@@ -9755,8 +9690,6 @@ Definition store_items := [
                                              ("%FunctionProto", privFunctionProto);
                                              ("%GetField", privGetField);
                                              ("%GetterValue", privGetterValue);
-                                             ("%GreaterEqual", privGreaterEqual);
-                                             ("%GreaterThan", privGreaterThan);
                                              ("%InLeapYear", privInLeapYear);
                                              ("%IsCallable", privIsCallable);
                                              ("%IsFinite", privIsFinite);
@@ -9764,8 +9697,6 @@ Definition store_items := [
                                              ("%IsPrototypeOflambda", privIsPrototypeOflambda);
                                              ("%JSError", privJSError);
                                              ("%LeftShift", privLeftShift);
-                                             ("%LessEqual", privLessEqual);
-                                             ("%LessThan", privLessThan);
                                              ("%LocalTime", privLocalTime);
                                              ("%MakeBoolean", privMakeBoolean);
                                              ("%MakeDate", privMakeDate);
@@ -9782,6 +9713,7 @@ Definition store_items := [
                                              ("%MonthFromTime", privMonthFromTime);
                                              ("%NativeError", privNativeError);
                                              ("%NativeErrorConstructor", privNativeErrorConstructor);
+                                             ("%NumberCompareOp", privNumberCompareOp);
                                              ("%NumberConstructor", privNumberConstructor);
                                              ("%NumberGlobalFuncObj", privNumberGlobalFuncObj);
                                              ("%NumberProto", privNumberProto);
@@ -9799,6 +9731,7 @@ Definition store_items := [
                                              ("%PrimMultOp", privPrimMultOp);
                                              ("%PrimNew", privPrimNew);
                                              ("%PrimSub", privPrimSub);
+                                             ("%PrimitiveCompareOp", privPrimitiveCompareOp);
                                              ("%RangeErrorConstructor", privRangeErrorConstructor);
                                              ("%RangeErrorGlobalFuncObj", privRangeErrorGlobalFuncObj);
                                              ("%RangeErrorProto", privRangeErrorProto);

@@ -110,6 +110,8 @@ rule token = parse
    | "finally" { FINALLY }
    | "throw" { THROW }
    | "@eval" { EVAL }
+   | "==" { EQEQUALS }
+   | "!=" { BANGEQUALS }
    | "===" { EQEQEQUALS }
    | "!==" { BANGEQEQUALS }
    | "typeof" { TYPEOF }
