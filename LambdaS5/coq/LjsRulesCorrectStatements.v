@@ -1081,17 +1081,51 @@ asserts Ha : (ptr0 <> fresh st0). intro. substs. eapply fresh_index. prove_bag. 
     repeat ljs_autoforward.
     js_exn_object_extract.
     repeat ljs_autoforward.
- 
-    (* resvalue_related_invert. *) inverts H3. skip. (* TODO formalize that exception is never empty *)
+
+Hint Extern 4 (value_related ?BR _ _) =>
+    match goal with
+    | H : value_related ?BR' _ _ |- _ =>
+        not constr_eq BR BR';
+        let Hsub := fresh "H" in
+        asserts Hsub : (BR' \c BR);
+        [prove_bag 10 | applys value_related_bisim_incl_preserved Hsub; clear Hsub]
+    end : js_ljs.
+
     forwards Hx : decl_env_add_mutable_binding_lemma.
-    eassumption. prove_bag. prove_bag. skip. (* TODO *) prove_bag.
+    eassumption. prove_bag. prove_bag. eauto_js. prove_bag.
     rew_bag_simpl in Hx.
     destruct_hyp Hx.
     repeat ljs_autoforward.
-    destr_concl.
+    destr_concl; try ljs_handle_abort.
 
     unfold_concl.
+(*
     do 3 eexists. splits.
+    eapply J.red_stat_try. eauto_js.
+    eapply J.red_stat_try_1_throw_catch. eauto_js. reflexivity. eauto_js. reflexivity. reflexivity.
+    eapply J.red_spec_env_record_create_set_mutable_binding.
+    eapply J.red_spec_env_record_create_mutable_binding. reflexivity. 
+
+Lemma qqnamuniu : forall jst jeptr jer, J.env_record_binds jst jeptr jer = binds jst jeptr jer.
+Proof. auto. Qed.
+
+    rewrite qqnamuniu. eauto_js. 
+    eapply J.red_spec_env_record_create_mutable_binding_1_decl_indom. 
+
+Lemma qqnamuniu2 : forall jder s, J.decl_env_record_indom jder s = index jder s.
+Proof. auto. Qed.
+Lemma qqnamuniu3 : J.decl_env_record_empty = \{}.
+Proof. auto. Qed.
+
+    rewrite qqnamuniu2. rewrite qqnamuniu3. eauto_js.
+    reflexivity.
+    eapply J.red_spec_env_record_create_set_mutable_binding_1.
+    eapply J.red_spec_env_record_set_mutable_binding. 
+    rewrite qqnamuniu. unfolds J.env_record_write_decl_env. prove_bag.
+
+    eauto_js.
+    jauto_js 20.
+*)
 (* TODO! *) 
 Admitted.
 

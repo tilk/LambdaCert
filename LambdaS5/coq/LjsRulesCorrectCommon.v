@@ -1540,7 +1540,7 @@ Hint Extern 4 (lexical_ctx_chain_ok ?BR ?st _) =>
         let Hsub := fresh "H" in
         asserts Hsub : (BR \c BR'); 
         [prove_bag 10 | applys lexical_ctx_chain_ok_bisim_incl_preserved Hsub; clear Hsub]
-    end.
+    end : js_ljs.
 
 Lemma lexical_ctx_chain_ok_left_state_incl_preserved : forall BR st0 st st',
     st \c st0 ->

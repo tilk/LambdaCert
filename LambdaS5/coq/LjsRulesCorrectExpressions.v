@@ -444,6 +444,32 @@ Proof.
     jauto_js. left. jauto_js 15. 
 Qed.
 
+(* TODO move *)
+Ltac find_last_invariant_then T :=
+    match goal with
+    | H : state_invariant ?BR ?jst _ _ _ |- _ =>
+        match goal with HS : BR \c _ |- _ => fail 1 | _ => idtac end; 
+        match goal with
+        | _ : J.abort (J.out_ter jst ?jr) |- _ => T BR jst jr
+        | _ => T BR jst true
+        end
+    end.
+
+Ltac unfold_concl_tac_with BR jst dir :=
+    match goal with
+    | |- concl_expr_getvalue _ _ _ _ _ _ _ _ => unfolds; unfold_concl_tac_with BR jst dir
+    | |- concl_spec _ _ _ _ _ _ _ _ _ _ => 
+        unfolds; exists BR jst; split; [match dir with true => left | _ => right; exists dir end | splits]
+    end.
+
+Ltac unfold_concl_tac := find_last_invariant_then unfold_concl_tac_with.
+
+Tactic Notation "ljs_handle_abort_tac" integer(k) := 
+    repeat (ljs_propagate_abort || ljs_abort_from_js); 
+    unfold_concl_tac; solve [jauto_set; eauto k with js_ljs bag typeclass_instances].
+
+Tactic Notation "ljs_handle_abort_tac" := ljs_handle_abort_tac 5.
+
 Lemma red_expr_binary_op_and_ok : forall k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 J.binary_op_and je2).
@@ -453,29 +479,13 @@ Proof.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
     forwards_th red_spec_to_boolean_unary_ok.
-    destr_concl(*; try ljs_handle_abort *).
+    destr_concl; [idtac | ljs_handle_abort_tac 14].
     res_related_invert.
     resvalue_related_invert.
     destruct b; repeat ljs_autoforward.
-    destr_concl(*; try ljs_handle_abort*).
-
-    unfold_concl; do 2 eexists; splits. (* TODO *)
-    left. jauto_js 8.
-    jauto_js. jauto_js. jauto_js.
-
-    unfold_concl. exists BR'1 jst'1. splits. (* TODO *)
-    right. exists jr. jauto_js 7. 
-    jauto_js. jauto_js. jauto_js.
-
-    unfold_concl. exists BR'0 jst'0. splits. (* TODO *)
-    left. jauto_js 8. (* TODO *)
-    jauto_js.
-    jauto_js.
-    jauto_js.
-    
-    ljs_abort_from_js. (* TODO! *)
-    ljs_propagate_abort.
-    unfold_concl. exists BR'0 jst'0. jauto_js 14. 
+    destr_concl; [idtac | ljs_handle_abort_tac 8].
+    unfold_concl_tac; jauto_js 8.
+    unfold_concl_tac; jauto_js 8. 
 Qed.
 
 Lemma red_expr_binary_op_or_ok : forall k je1 je2,
@@ -487,27 +497,13 @@ Proof.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
     forwards_th red_spec_to_boolean_unary_ok.
-    destr_concl(*; try ljs_handle_abort *).
+    destr_concl; [idtac | ljs_handle_abort_tac 14].
     res_related_invert.
     resvalue_related_invert.
     destruct b; repeat ljs_autoforward.
-
-    unfold_concl.  exists BR'0 jst'0. splits.
-    left. jauto_js 8.
-    jauto_js. jauto_js. jauto_js.
-
-    destr_concl(*; try ljs_handle_abort*).
-    unfold_concl; do 2 eexists; splits. (* TODO *)
-    left. jauto_js 8.
-    jauto_js. jauto_js. jauto_js.
-
-    unfold_concl. exists BR'1 jst'1. splits. (* TODO *)
-    right. exists jr. jauto_js 7. 
-    jauto_js. jauto_js. jauto_js.
-
-    ljs_abort_from_js. (* TODO! *)
-    ljs_propagate_abort.
-    unfold_concl. exists BR'0 jst'0. jauto_js 14. 
+    unfold_concl_tac; jauto_js 8. 
+    destr_concl; [idtac | ljs_handle_abort_tac 8].
+    unfold_concl_tac; jauto_js 8. 
 Qed.
 
 (* TODO move, ljs only *)
@@ -557,21 +553,21 @@ Proof.
     forwards (op&Hnumop&Heq) : js_puremath_to_ljs Hpure.
     rewrite Heq in Hlred.
     repeat ljs_autoforward.
-    destr_concl(*; try ljs_handle_abort*).
+    destr_concl; [idtac | ljs_handle_abort_tac 15].
     repeat ljs_autoforward.
-    destr_concl(*; try ljs_handle_abort*).
+    destr_concl; [idtac | ljs_handle_abort_tac 15].
     repeat ljs_autoforward.
     inverts red_exprh H7. (* TODO *)
     ljs_apply.
     ljs_state_invariant_after_apply. 
     repeat ljs_autoforward.
     forwards_th red_spec_to_number_unary_ok.
-    destr_concl(*; try ljs_handle_abort*).
+    destr_concl(*; try ljs_handle_abort*). 
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
     forwards_th red_spec_to_number_unary_ok.
-    destr_concl(*; try ljs_handle_abort*).
+    destr_concl(*; try ljs_handle_abort*). 
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
@@ -580,19 +576,32 @@ Proof.
     repeat ljs_autoforward.
     autoforwards Hx : eval_binary_op_num_lemma. 
     destruct_hyp Hx.
-    unfold_concl. 
-    do 2 eexists.
-    splits.
-    left. jauto_js 18.
+    unfold_concl_tac. 
+    jauto_js 18. 
     applys state_invariant_restore_lexical_env Hinv H16. (* TODO *)
     eauto_js 6.
     eauto_js 6.
     eauto_js 6.
     eauto_js 6.
-(* TODO
-    jauto_js. right. jauto_js 8. ljs_handle_abort. 
-*)
-Admitted.
+
+    (* TODO *)
+    repeat (ljs_propagate_abort || ljs_abort_from_js).
+    unfold_concl_tac. jauto_js 14. 
+    applys state_invariant_restore_lexical_env Hinv H16. (* TODO *)
+    eauto_js 6.
+    eauto_js 6.
+    eauto_js 6.
+    eauto_js 6.
+
+    (* TODO *)
+    repeat (ljs_propagate_abort || ljs_abort_from_js).
+    unfold_concl_tac. jauto_js 14. 
+    applys state_invariant_restore_lexical_env Hinv H10. (* TODO *)
+    eauto_js 6.
+    eauto_js 6.
+    eauto_js 6.
+    eauto_js 6.
+Qed.
 
 Lemma red_expr_binary_op_coma_ok : forall k je1 je2,
     ih_expr k ->
@@ -602,9 +611,8 @@ Proof.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
-    destr_concl(*; try ljs_handle_abort *). (* ??? *)
-    jauto_js. left. jauto_js 8.
-    jauto_js. right. jauto_js 8. (* TODO *)
+    destr_concl; [idtac | ljs_handle_abort_tac 15].
+    unfold_concl_tac; jauto_js 8.
 Qed.
 
 Lemma red_expr_binary_op_ok : forall op k je1 je2,
