@@ -221,25 +221,6 @@ Ltac js_abort_rel_contr := match goal with
 
 Hint Extern 10 => js_abort_rel_contr : js_ljs.
  
-Ltac apply_ih_expr := match goal with
-    | H : ih_expr ?k', HS : state_invariant _ _ _ ?c ?st, 
-      HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
-        let Hle := fresh "Hle" in
-        let Hih := fresh "IH" in
-        let Hsec := fresh "Hsec" in
-        asserts Hle : (k < k')%nat; [omega | 
-            lets Hih : H Hle HS HR; lets Hsec : L.red_exprh_state_security_ok HR; clear Hle; clear HR]
-    end.
-
-Ltac apply_ih_stat := match goal with
-    | H : ih_stat ?k', HS : state_invariant _ _ _ ?c ?st, 
-      HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
-        let Hle := fresh "Hle" in
-        let Hsec := fresh "Hsec" in
-        asserts Hle : (k < k')%nat; [omega | 
-            lets Hih : H Hle HS HR; lets Hsec : L.red_exprh_state_security_ok HR; clear Hle; clear HR]
-    end.
-
 Hint Extern 1 (J.regular_unary_op _) =>
     solve [let H := fresh "H" in intro H; unfolds in H; destruct_hyp H; inverts H] : js_ljs.
 
@@ -1815,28 +1796,52 @@ Ltac ljs_inv_closure_hyps :=
 
 Ltac ljs_apply := progress repeat (ljs_inv_closure_hyps || ljs_closure_body).
 
+Ltac ljs_state_invariant := 
+    match goal with
+    | |- state_invariant _ _ _ (_ \(?s := ?v)) _ =>
+        eapply state_invariant_add_nopercent_nodollar_id_preserved; 
+        [idtac | solve [eauto] | solve [eauto]]; ljs_state_invariant
+    | |- state_invariant _ _ _ (_ \(?s := ?v)) _ =>
+        eapply state_invariant_add_init_ctx_preserved; [
+        eapply init_ctx_mem_binds;
+        solve [repeat (eapply Mem_here || eapply Mem_next)] | idtac]; ljs_state_invariant
+    | |- state_invariant _ _ _ \{} _ =>
+        eapply state_invariant_replace_ctx_sub_init; [solve [eapply empty_incl] | eassumption]
+    | |- state_invariant _ _ _ _ _ => 
+        eassumption
+    end.
+
 Ltac ljs_state_invariant_after_apply :=
-    let rec f := 
-        match goal with
-        | |- state_invariant _ _ _ (_ \(?s := ?v)) _ =>
-            eapply state_invariant_add_nopercent_nodollar_id_preserved; 
-            [idtac | solve [eauto] | solve [eauto]]; f
-        | |- state_invariant _ _ _ (_ \(?s := ?v)) _ =>
-            eapply state_invariant_add_init_ctx_preserved; [
-            eapply init_ctx_mem_binds;
-            solve [repeat (eapply Mem_here || eapply Mem_next)] | idtac]; f
-        | |- state_invariant _ _ _ \{} _ =>
-            eapply state_invariant_replace_ctx_sub_init; [solve [eapply empty_incl] | eassumption]
-        | |- state_invariant _ _ _ _ _ => 
-            eassumption
-        end in
     match goal with
     | Hlred : L.red_exprh _ ?c' ?st _ _, Hinv : state_invariant ?BR ?jst ?jc ?c ?st, Heq : _ = ?c' |- _ =>
         is_var c'; not (is_hyp (state_invariant BR jst jc c' st));
         let Hinv' := fresh "Hinv" in
         asserts Hinv' : (state_invariant BR jst jc c' st); 
-        [rewrite <- Heq; f 
+        [rewrite <- Heq; ljs_state_invariant
         |idtac]
+    end.
+
+Ltac apply_ih_expr := match goal with
+    | H : ih_expr ?k', HS' : state_invariant ?BR ?jst ?jc ?c' ?st, 
+      HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
+        let Hle := fresh "Hle" in
+        let HS := fresh "HS" in
+        let Hih := fresh "IH" in
+        let Hsec := fresh "Hsec" in
+        asserts Hle : (k < k')%nat; [omega | idtac];
+        asserts HS : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
+        lets Hih : H Hle HS HR; lets Hsec : L.red_exprh_state_security_ok HR; clear Hle; clear HR
+    end.
+
+Ltac apply_ih_stat := match goal with
+    | H : ih_stat ?k', HS' : state_invariant ?BR ?jst ?jc ?c' ?st, 
+      HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
+        let Hle := fresh "Hle" in
+        let HS := fresh "HS" in
+        let Hsec := fresh "Hsec" in
+        asserts Hle : (k < k')%nat; [omega | idtac];
+        asserts HS : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
+        lets Hih : H Hle HS HR; lets Hsec : L.red_exprh_state_security_ok HR; clear Hle; clear HR
     end.
 
 Ltac binds_inv H :=
@@ -1954,13 +1959,15 @@ Ltac specialize_th_ext_expr_unary H :=
     match type of H with
     | th_ext_expr_unary _ ?e _ _ =>
     match goal with
-    | H1 : state_invariant ?BR _ _ ?c ?st, H2 : value_related ?BR1 ?jv ?v,
+    | H1' : state_invariant ?BR ?jst ?jc ?c' ?st, H2 : value_related ?BR1 ?jv ?v,
       H3 : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
         let Hsub := fresh "H" in
-        asserts Hsub : (BR1 \c BR); [prove_bag |
+        asserts Hsub : (BR1 \c BR); [prove_bag | idtac];
         unify e e'; unify [v] vl;
+        let H1 := fresh "H" in
+        asserts H1 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
         specializes H H1 (value_related_bisim_incl_preserved Hsub H2) H3; 
-        clear H1; clear H3; clear Hsub]
+        clear H1; clear H3; clear Hsub
     end
     end.
 
@@ -1968,15 +1975,18 @@ Ltac specialize_th_ext_expr_binary H :=
     match type of H with
     | th_ext_expr_binary _ ?e _ _ =>
     match goal with
-    | H1 : state_invariant ?BR _ _ ?c ?st, H2 : value_related ?BR1 ?jv1 ?v1, H3 : value_related ?BR2 ?jv2 ?v2,
+    | H1' : state_invariant ?BR ?jst ?jc ?c' ?st, 
+      H2 : value_related ?BR1 ?jv1 ?v1, H3 : value_related ?BR2 ?jv2 ?v2,
       H4 : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
         let Hsub1 := fresh "H" in let Hsub2 := fresh "H" in 
-        asserts Hsub1 : (BR1 \c BR); [prove_bag |
-        asserts Hsub2 : (BR2 \c BR); [prove_bag |
+        asserts Hsub1 : (BR1 \c BR); [prove_bag | idtac];
+        asserts Hsub2 : (BR2 \c BR); [prove_bag | idtac];
         unify e e'; unify [v1; v2] vl;
+        let H1 := fresh "H" in
+        asserts H1 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
         specializes H H1 (value_related_bisim_incl_preserved Hsub1 H2) 
             (value_related_bisim_incl_preserved Hsub2 H3) H4;
-        clear H1; clear H4; clear Hsub1; clear Hsub2]]
+        clear H1; clear H4; clear Hsub1; clear Hsub2
     end
     end.
 
@@ -1984,8 +1994,10 @@ Ltac specialize_th_spec H :=
     match type of H with
     | th_spec _ ?e _ _ => 
     match goal with
-    | H1 : L.red_exprh _ ?c ?st (L.expr_basic ?e') _, H2 : state_invariant _ _ _ ?c ?st |- _ => 
+    | H1 : L.red_exprh _ ?c ?st (L.expr_basic ?e') _, H2' : state_invariant ?BR ?jst ?jc ?c' ?st |- _ => 
         unify e e';
+        let H2 := fresh "H" in
+        asserts H2 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
         specializes H H2 H1;
         clear H2; clear H1
     end
@@ -1995,8 +2007,10 @@ Ltac specialize_th_stat H :=
     match type of H with
     | th_stat ?k ?jt => 
     match goal with
-    | H1 : L.red_exprh k ?c ?st (L.expr_basic ?e') _, H2 : state_invariant _ _ _ ?c ?st |- _ => 
+    | H1 : L.red_exprh k ?c ?st (L.expr_basic ?e') _, H2' : state_invariant ?BR ?jst ?jc ?c ?st |- _ => 
         unify (js_stat_to_ljs jt) e';
+        let H2 := fresh "H" in
+        asserts H2 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
         specializes H H2 H1;
         clear H2; clear H1 
     end 

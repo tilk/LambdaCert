@@ -210,9 +210,9 @@ Definition make_op1 f op e :=
 
 Definition op2_func op := L.expr_lambda ["x1";"x2"] (L.expr_op2 op (L.expr_id "x1") (L.expr_id "x2")).
 
-Definition make_and e1 e2 := L.expr_let "e" e1 (L.expr_if (to_bool e1) e2 (L.expr_id "e")).
+Definition make_and e1 e2 := L.expr_let "e" e1 (L.expr_if (to_bool (L.expr_id "e")) e2 (L.expr_id "e")).
 
-Definition make_or e1 e2 := L.expr_let "e" e1 (L.expr_if (to_bool e1) (L.expr_id "e") e2).
+Definition make_or e1 e2 := L.expr_let "e" e1 (L.expr_if (to_bool (L.expr_id "e")) (L.expr_id "e") e2).
 
 Definition make_op2 op e1 e2 :=
     match op with

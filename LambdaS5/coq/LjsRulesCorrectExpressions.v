@@ -448,7 +448,6 @@ Lemma red_expr_binary_op_and_ok : forall k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 J.binary_op_and je2).
 Proof.
-(*
     introv IHe Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
@@ -459,15 +458,57 @@ Proof.
     resvalue_related_invert.
     destruct b; repeat ljs_autoforward.
     destr_concl(*; try ljs_handle_abort*).
-    jauto_js. left. jauto_js 8. 
-    skip.
-    jauto_js. left. jauto_js 7.
-    eapply J.red_spec_expr_get_value.
-    eauto_js.
-    eapply J.red_spec_expr_get_value_1.
-    eauto_js.
-*)
-Admitted.
+
+    unfold_concl; do 2 eexists; splits. (* TODO *)
+    left. jauto_js 8.
+    jauto_js. jauto_js. jauto_js.
+
+    unfold_concl. exists BR'1 jst'1. splits. (* TODO *)
+    right. exists jr. jauto_js 7. 
+    jauto_js. jauto_js. jauto_js.
+
+    unfold_concl. exists BR'0 jst'0. splits. (* TODO *)
+    left. jauto_js 8. (* TODO *)
+    jauto_js.
+    jauto_js.
+    jauto_js.
+    
+    ljs_abort_from_js. (* TODO! *)
+    ljs_propagate_abort.
+    unfold_concl. exists BR'0 jst'0. jauto_js 14. 
+Qed.
+
+Lemma red_expr_binary_op_or_ok : forall k je1 je2,
+    ih_expr k ->
+    th_expr k (J.expr_binary_op je1 J.binary_op_or je2).
+Proof.
+    introv IHe Hinv Hlred.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    forwards_th red_spec_to_boolean_unary_ok.
+    destr_concl(*; try ljs_handle_abort *).
+    res_related_invert.
+    resvalue_related_invert.
+    destruct b; repeat ljs_autoforward.
+
+    unfold_concl.  exists BR'0 jst'0. splits.
+    left. jauto_js 8.
+    jauto_js. jauto_js. jauto_js.
+
+    destr_concl(*; try ljs_handle_abort*).
+    unfold_concl; do 2 eexists; splits. (* TODO *)
+    left. jauto_js 8.
+    jauto_js. jauto_js. jauto_js.
+
+    unfold_concl. exists BR'1 jst'1. splits. (* TODO *)
+    right. exists jr. jauto_js 7. 
+    jauto_js. jauto_js. jauto_js.
+
+    ljs_abort_from_js. (* TODO! *)
+    ljs_propagate_abort.
+    unfold_concl. exists BR'0 jst'0. jauto_js 14. 
+Qed.
 
 (* TODO move, ljs only *)
 Lemma eval_binary_op_num_lemma : forall op F st n1 n2 v,
@@ -593,6 +634,6 @@ Proof.
     skip.
     skip.
     apply red_expr_binary_op_and_ok.
-    skip.
+    apply red_expr_binary_op_or_ok.
     apply red_expr_binary_op_coma_ok.
 Qed.
