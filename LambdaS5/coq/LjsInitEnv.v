@@ -1175,56 +1175,52 @@ expr_object
                      expr_false expr_false))]
 .
 Definition ex_isAccessorDescriptor := 
-expr_let "%or"
+expr_if
 (expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq
   (expr_op1 unary_op_typeof
    (expr_get_field (expr_id "attr-obj") (expr_string "set")))
+  (expr_string "undefined"))) expr_true
+(expr_op1 unary_op_not
+ (expr_op2 binary_op_stx_eq
+  (expr_op1 unary_op_typeof
+   (expr_get_field (expr_id "attr-obj") (expr_string "get")))
   (expr_string "undefined")))
-(expr_if (expr_id "%or") (expr_id "%or")
- (expr_op1 unary_op_not
-  (expr_op2 binary_op_stx_eq
-   (expr_op1 unary_op_typeof
-    (expr_get_field (expr_id "attr-obj") (expr_string "get")))
-   (expr_string "undefined"))))
 .
 Definition ex_isAccessorField := 
-expr_let "%or"
+expr_if
 (expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq
   (expr_get_attr pattr_setter (expr_id "obj") (expr_id "field"))
+  expr_undefined)) expr_true
+(expr_op1 unary_op_not
+ (expr_op2 binary_op_stx_eq
+  (expr_get_attr pattr_getter (expr_id "obj") (expr_id "field"))
   expr_undefined))
-(expr_if (expr_id "%or") (expr_id "%or")
- (expr_op1 unary_op_not
-  (expr_op2 binary_op_stx_eq
-   (expr_get_attr pattr_getter (expr_id "obj") (expr_id "field"))
-   expr_undefined)))
 .
 Definition ex_isDataDescriptor := 
-expr_let "%or"
+expr_if
 (expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq
   (expr_op1 unary_op_typeof
    (expr_get_field (expr_id "attr-obj") (expr_string "value")))
+  (expr_string "undefined"))) expr_true
+(expr_op1 unary_op_not
+ (expr_op2 binary_op_stx_eq
+  (expr_op1 unary_op_typeof
+   (expr_get_field (expr_id "attr-obj") (expr_string "writable")))
   (expr_string "undefined")))
-(expr_if (expr_id "%or") (expr_id "%or")
- (expr_op1 unary_op_not
-  (expr_op2 binary_op_stx_eq
-   (expr_op1 unary_op_typeof
-    (expr_get_field (expr_id "attr-obj") (expr_string "writable")))
-   (expr_string "undefined"))))
 .
 Definition ex_isDataField := 
-expr_let "%or"
+expr_if
 (expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq
   (expr_get_attr pattr_value (expr_id "obj") (expr_id "field"))
+  expr_undefined)) expr_true
+(expr_op1 unary_op_not
+ (expr_op2 binary_op_stx_eq
+  (expr_get_attr pattr_writable (expr_id "obj") (expr_id "field"))
   expr_undefined))
-(expr_if (expr_id "%or") (expr_id "%or")
- (expr_op1 unary_op_not
-  (expr_op2 binary_op_stx_eq
-   (expr_get_attr pattr_writable (expr_id "obj") (expr_id "field"))
-   expr_undefined)))
 .
 Definition ex_isGenericDescriptor := 
 expr_if
@@ -1529,9 +1525,8 @@ expr_let "b"
 .
 Definition ex_privCheckObjectCoercible := 
 expr_if
-(expr_let "%or" (expr_op2 binary_op_stx_eq (expr_id "o") expr_undefined)
- (expr_if (expr_id "%or") (expr_id "%or")
-  (expr_op2 binary_op_stx_eq (expr_id "o") expr_null)))
+(expr_if (expr_op2 binary_op_stx_eq (expr_id "o") expr_undefined) expr_true
+ (expr_op2 binary_op_stx_eq (expr_id "o") expr_null))
 (expr_app (expr_id "%TypeError") [expr_string "Not object coercible"])
 expr_undefined
 .
@@ -1628,19 +1623,17 @@ expr_let "calledAsFunction"
            (expr_let "yr"
             (expr_let "tiy" (expr_app (expr_id "%ToInteger") [expr_id "y"])
              (expr_let "rangecond1"
-              (expr_let "%or"
+              (expr_if
                (expr_op2 binary_op_lt (expr_number (JsNumber.of_int (0)))
-                (expr_id "tiy"))
-               (expr_if (expr_id "%or") (expr_id "%or")
-                (expr_op2 binary_op_stx_eq
-                 (expr_number (JsNumber.of_int (0))) (expr_id "tiy"))))
+                (expr_id "tiy")) expr_true
+               (expr_op2 binary_op_stx_eq (expr_number (JsNumber.of_int (0)))
+                (expr_id "tiy")))
               (expr_let "rangecond2"
-               (expr_let "%or"
+               (expr_if
                 (expr_op2 binary_op_lt (expr_id "tiy")
-                 (expr_number (JsNumber.of_int (99))))
-                (expr_if (expr_id "%or") (expr_id "%or")
-                 (expr_op2 binary_op_stx_eq (expr_id "tiy")
-                  (expr_number (JsNumber.of_int (99))))))
+                 (expr_number (JsNumber.of_int (99)))) expr_true
+                (expr_op2 binary_op_stx_eq (expr_id "tiy")
+                 (expr_number (JsNumber.of_int (99)))))
                (expr_if
                 (expr_if
                  (expr_if
@@ -1770,20 +1763,17 @@ Definition ex_privDaysInMonth :=
 expr_let "m"
 (expr_op2 binary_op_mod (expr_id "m") (expr_number (JsNumber.of_int (12))))
 (expr_if
- (expr_let "%or"
-  (expr_let "%or"
-   (expr_let "%or"
+ (expr_if
+  (expr_if
+   (expr_if
     (expr_op2 binary_op_stx_eq (expr_id "m")
-     (expr_number (JsNumber.of_int (3))))
-    (expr_if (expr_id "%or") (expr_id "%or")
-     (expr_op2 binary_op_stx_eq (expr_id "m")
-      (expr_number (JsNumber.of_int (5))))))
-   (expr_if (expr_id "%or") (expr_id "%or")
+     (expr_number (JsNumber.of_int (3)))) expr_true
     (expr_op2 binary_op_stx_eq (expr_id "m")
-     (expr_number (JsNumber.of_int (8))))))
-  (expr_if (expr_id "%or") (expr_id "%or")
+     (expr_number (JsNumber.of_int (5))))) expr_true
    (expr_op2 binary_op_stx_eq (expr_id "m")
-    (expr_number (JsNumber.of_int (10))))))
+    (expr_number (JsNumber.of_int (8))))) expr_true
+  (expr_op2 binary_op_stx_eq (expr_id "m")
+   (expr_number (JsNumber.of_int (10)))))
  (expr_number (JsNumber.of_int (30)))
  (expr_if
   (expr_op2 binary_op_stx_eq (expr_id "m")
@@ -1798,17 +1788,16 @@ expr_if
   (expr_op2 binary_op_mod (expr_id "y") (expr_number (JsNumber.of_int (4))))
   (expr_number (JsNumber.of_int (0))))) (expr_number (JsNumber.of_int (365)))
 (expr_if
- (expr_let "%or"
+ (expr_if
   (expr_op2 binary_op_stx_eq
    (expr_op2 binary_op_mod (expr_id "y")
     (expr_number (JsNumber.of_int (400))))
-   (expr_number (JsNumber.of_int (0))))
-  (expr_if (expr_id "%or") (expr_id "%or")
-   (expr_op1 unary_op_not
-    (expr_op2 binary_op_stx_eq
-     (expr_op2 binary_op_mod (expr_id "y")
-      (expr_number (JsNumber.of_int (100))))
-     (expr_number (JsNumber.of_int (0)))))))
+   (expr_number (JsNumber.of_int (0)))) expr_true
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq
+    (expr_op2 binary_op_mod (expr_id "y")
+     (expr_number (JsNumber.of_int (100))))
+    (expr_number (JsNumber.of_int (0))))))
  (expr_number (JsNumber.of_int (366))) (expr_number (JsNumber.of_int (365))))
 .
 Definition ex_privDeclEnvAddMutableBinding := 
@@ -1983,12 +1972,12 @@ expr_let "t1" (expr_op1 unary_op_typeof (expr_id "x1"))
  (expr_if (expr_op2 binary_op_stx_eq (expr_id "t1") (expr_id "t2"))
   (expr_op2 binary_op_stx_eq (expr_id "x1") (expr_id "x2"))
   (expr_if
-   (expr_let "%or"
+   (expr_if
     (expr_if (expr_op2 binary_op_stx_eq (expr_id "x1") expr_undefined)
      (expr_op2 binary_op_stx_eq (expr_id "x2") expr_null) expr_false)
-    (expr_if (expr_id "%or") (expr_id "%or")
-     (expr_if (expr_op2 binary_op_stx_eq (expr_id "x1") expr_null)
-      (expr_op2 binary_op_stx_eq (expr_id "x2") expr_undefined) expr_false)))
+    expr_true
+    (expr_if (expr_op2 binary_op_stx_eq (expr_id "x1") expr_null)
+     (expr_op2 binary_op_stx_eq (expr_id "x2") expr_undefined) expr_false))
    expr_true
    (expr_if
     (expr_if
@@ -2014,20 +2003,20 @@ expr_let "t1" (expr_op1 unary_op_typeof (expr_id "x1"))
         [expr_id "x1"; expr_op1 unary_op_prim_to_num (expr_id "x2")])
        (expr_if
         (expr_if
-         (expr_let "%or"
+         (expr_if
           (expr_op2 binary_op_stx_eq (expr_id "t1") (expr_string "string"))
-          (expr_if (expr_id "%or") (expr_id "%or")
-           (expr_op2 binary_op_stx_eq (expr_id "t1") (expr_string "number"))))
+          expr_true
+          (expr_op2 binary_op_stx_eq (expr_id "t1") (expr_string "number")))
          (expr_op2 binary_op_stx_eq (expr_id "t2") (expr_string "object"))
          expr_false)
         (expr_app (expr_id "%EqEq")
          [expr_id "x1"; expr_app (expr_id "%ToPrimitive") [expr_id "x2"]])
         (expr_if
          (expr_if
-          (expr_let "%or"
+          (expr_if
            (expr_op2 binary_op_stx_eq (expr_id "t2") (expr_string "string"))
-           (expr_if (expr_id "%or") (expr_id "%or")
-            (expr_op2 binary_op_stx_eq (expr_id "t2") (expr_string "number"))))
+           expr_true
+           (expr_op2 binary_op_stx_eq (expr_id "t2") (expr_string "number")))
           (expr_op2 binary_op_stx_eq (expr_id "t1") (expr_string "object"))
           expr_false)
          (expr_app (expr_id "%EqEq")
@@ -2104,12 +2093,11 @@ expr_let "argCount" (expr_get_field (expr_id "args") (expr_string "length"))
       (expr_number (JsNumber.of_int (1)))))))
   (expr_let "P"
    (expr_if
-    (expr_let "%or"
+    (expr_if
      (expr_op2 binary_op_stx_eq (expr_id "argCount")
-      (expr_number (JsNumber.of_int (0))))
-     (expr_if (expr_id "%or") (expr_id "%or")
-      (expr_op2 binary_op_stx_eq (expr_id "argCount")
-       (expr_number (JsNumber.of_int (1)))))) (expr_string "")
+      (expr_number (JsNumber.of_int (0)))) expr_true
+     (expr_op2 binary_op_stx_eq (expr_id "argCount")
+      (expr_number (JsNumber.of_int (1))))) (expr_string "")
     (expr_app (expr_id "formArgString")
      [expr_number (JsNumber.of_int (0)); expr_string ""]))
    (expr_let "prefix"
@@ -2149,16 +2137,13 @@ expr_op2 binary_op_stx_eq (expr_app (expr_id "%Typeof") [expr_id "o"])
 .
 Definition ex_privIsFinite := 
 expr_op1 unary_op_not
-(expr_let "%or"
- (expr_let "%or"
+(expr_if
+ (expr_if
   (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n")))
-  (expr_if (expr_id "%or") (expr_id "%or")
-   (expr_op2 binary_op_stx_eq (expr_id "n")
-    (expr_number (JsNumber.of_int (0))))))
- (expr_if (expr_id "%or") (expr_id "%or")
+   (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n"))) expr_true
   (expr_op2 binary_op_stx_eq (expr_id "n")
-   (expr_number (JsNumber.of_int (0))))))
+   (expr_number (JsNumber.of_int (0))))) expr_true
+ (expr_op2 binary_op_stx_eq (expr_id "n") (expr_number (JsNumber.of_int (0)))))
 .
 Definition ex_privIsJSError := 
 expr_if (expr_op1 unary_op_is_object (expr_id "thing"))
@@ -2244,22 +2229,20 @@ expr_if
           expr_number (JsNumber.of_int (0));
           expr_app (expr_id "%InLeapYear") [expr_id "yt"]])
         (expr_if
-         (expr_let "%or"
-          (expr_let "%or"
+         (expr_if
+          (expr_if
            (expr_op1 unary_op_not
             (expr_op2 binary_op_stx_eq
              (expr_app (expr_id "%YearFromTime") [expr_id "t"])
-             (expr_id "ym")))
-           (expr_if (expr_id "%or") (expr_id "%or")
-            (expr_op1 unary_op_not
-             (expr_op2 binary_op_stx_eq
-              (expr_app (expr_id "%MonthFromTime") [expr_id "t"])
-              (expr_id "mn")))))
-          (expr_if (expr_id "%or") (expr_id "%or")
+             (expr_id "ym"))) expr_true
            (expr_op1 unary_op_not
             (expr_op2 binary_op_stx_eq
-             (expr_app (expr_id "%DateFromTime") [expr_id "t"])
-             (expr_number (JsNumber.of_int (1)))))))
+             (expr_app (expr_id "%MonthFromTime") [expr_id "t"])
+             (expr_id "mn")))) expr_true
+          (expr_op1 unary_op_not
+           (expr_op2 binary_op_stx_eq
+            (expr_app (expr_id "%DateFromTime") [expr_id "t"])
+            (expr_number (JsNumber.of_int (1))))))
          (expr_number (JsNumber.of_int (0)))
          (expr_op2 binary_op_sub
           (expr_op2 binary_op_add (expr_app (expr_id "%Day") [expr_id "t"])
@@ -2503,12 +2486,11 @@ expr_lambda ["this"; "args"]
 .
 Definition ex_privNumberCompareOp := 
 expr_if
-(expr_let "%or"
+(expr_if
  (expr_op2 binary_op_same_value (expr_id "l")
-  (expr_number (JsNumber.of_int (0))))
- (expr_if (expr_id "%or") (expr_id "%or")
-  (expr_op2 binary_op_same_value (expr_id "r")
-   (expr_number (JsNumber.of_int (0)))))) expr_undefined
+  (expr_number (JsNumber.of_int (0)))) expr_true
+ (expr_op2 binary_op_same_value (expr_id "r")
+  (expr_number (JsNumber.of_int (0))))) expr_undefined
 (expr_if (expr_op2 binary_op_same_value (expr_id "l") (expr_id "r"))
  expr_false
  (expr_if
@@ -2594,16 +2576,14 @@ expr_let "calledAsFunction"
          (expr_op2 binary_op_stx_eq (expr_id "argtype")
           (expr_string "object"))
          (expr_let "isArgSomething"
-          (expr_let "%or"
-           (expr_let "%or"
+          (expr_if
+           (expr_if
             (expr_op2 binary_op_stx_eq (expr_id "argtype")
-             (expr_string "boolean"))
-            (expr_if (expr_id "%or") (expr_id "%or")
-             (expr_op2 binary_op_stx_eq (expr_id "argtype")
-              (expr_string "string"))))
-           (expr_if (expr_id "%or") (expr_id "%or")
+             (expr_string "boolean")) expr_true
             (expr_op2 binary_op_stx_eq (expr_id "argtype")
-             (expr_string "number"))))
+             (expr_string "string"))) expr_true
+           (expr_op2 binary_op_stx_eq (expr_id "argtype")
+            (expr_string "number")))
           (expr_if (expr_id "isArgObject")
            (expr_get_field (expr_id "args") (expr_string "0"))
            (expr_if (expr_id "isArgSomething")
@@ -2859,16 +2839,14 @@ expr_label "ret"
    (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
   (expr_seq
    (expr_if
-    (expr_let "%or"
-     (expr_let "%or"
+    (expr_if
+     (expr_if
       (expr_op2 binary_op_stx_eq (expr_id "number")
-       (expr_number (JsNumber.of_int (0))))
-      (expr_if (expr_id "%or") (expr_id "%or")
-       (expr_op2 binary_op_stx_eq (expr_id "number")
-        (expr_number (JsNumber.of_int (0))))))
-     (expr_if (expr_id "%or") (expr_id "%or")
+       (expr_number (JsNumber.of_int (0)))) expr_true
       (expr_op2 binary_op_stx_eq (expr_id "number")
-       (expr_number (JsNumber.of_int (0))))))
+       (expr_number (JsNumber.of_int (0))))) expr_true
+     (expr_op2 binary_op_stx_eq (expr_id "number")
+      (expr_number (JsNumber.of_int (0)))))
     (expr_break "ret" (expr_id "number")) expr_null)
    (expr_let "sign"
     (expr_if
@@ -2972,21 +2950,18 @@ expr_op1 unary_op_prim_to_str
 Definition ex_privToUint := 
 expr_let "number" (expr_app (expr_id "%ToNumber") [expr_id "n"])
 (expr_if
- (expr_let "%or"
-  (expr_let "%or"
-   (expr_let "%or"
+ (expr_if
+  (expr_if
+   (expr_if
     (expr_op1 unary_op_not
      (expr_op2 binary_op_stx_eq (expr_id "number") (expr_id "number")))
-    (expr_if (expr_id "%or") (expr_id "%or")
-     (expr_op2 binary_op_stx_eq (expr_id "number")
-      (expr_number (JsNumber.of_int (0))))))
-   (expr_if (expr_id "%or") (expr_id "%or")
+    expr_true
     (expr_op2 binary_op_stx_eq (expr_id "number")
-     (expr_number (JsNumber.of_int (0))))))
-  (expr_if (expr_id "%or") (expr_id "%or")
+     (expr_number (JsNumber.of_int (0))))) expr_true
    (expr_op2 binary_op_stx_eq (expr_id "number")
-    (expr_number (JsNumber.of_int (0))))))
- (expr_number (JsNumber.of_int (0)))
+    (expr_number (JsNumber.of_int (0))))) expr_true
+  (expr_op2 binary_op_stx_eq (expr_id "number")
+   (expr_number (JsNumber.of_int (0))))) (expr_number (JsNumber.of_int (0)))
  (expr_let "sign"
   (expr_if
    (expr_op2 binary_op_lt (expr_id "number")
@@ -3219,12 +3194,11 @@ Definition ex_privapplylambda :=
 expr_let "applyArgs1" (expr_get_field (expr_id "args") (expr_string "1"))
 (expr_let "applyArgs"
  (expr_if
-  (expr_let "%or"
+  (expr_if
    (expr_op2 binary_op_stx_eq
     (expr_op1 unary_op_typeof (expr_id "applyArgs1"))
-    (expr_string "undefined"))
-   (expr_if (expr_id "%or") (expr_id "%or")
-    (expr_op2 binary_op_stx_eq (expr_id "applyArgs1") expr_null)))
+    (expr_string "undefined")) expr_true
+   (expr_op2 binary_op_stx_eq (expr_id "applyArgs1") expr_null))
   (expr_object
    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
    [] []) (expr_id "applyArgs1"))
@@ -3261,10 +3235,10 @@ expr_let "isCallable"
        (expr_get_field (expr_id "array") (expr_string "0"))
        (expr_let "R"
         (expr_if
-         (expr_let "%or"
+         (expr_if
           (expr_op2 binary_op_stx_eq (expr_id "firstElement") expr_null)
-          (expr_if (expr_id "%or") (expr_id "%or")
-           (expr_op2 binary_op_stx_eq (expr_id "firstElement") expr_undefined)))
+          expr_true
+          (expr_op2 binary_op_stx_eq (expr_id "firstElement") expr_undefined))
          (expr_string "")
          (expr_let "elementObj"
           (expr_app (expr_id "%ToObject") [expr_id "firstElement"])
@@ -3295,11 +3269,11 @@ expr_let "isCallable"
               (expr_op1 unary_op_prim_to_str (expr_id "k")))
              (expr_let "toAppend"
               (expr_if
-               (expr_let "%or"
+               (expr_if
                 (expr_op2 binary_op_stx_eq (expr_id "nextElement") expr_null)
-                (expr_if (expr_id "%or") (expr_id "%or")
-                 (expr_op2 binary_op_stx_eq (expr_id "nextElement")
-                  expr_undefined))) (expr_string "")
+                expr_true
+                (expr_op2 binary_op_stx_eq (expr_id "nextElement")
+                 expr_undefined)) (expr_string "")
                (expr_let "elementObj"
                 (expr_app (expr_id "%ToObject") [expr_id "nextElement"])
                 (expr_let "funcc"
@@ -3478,11 +3452,10 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
    [expr_get_field (expr_id "args") (expr_string "0")])
   (expr_let "size" (expr_op1 unary_op_strlen (expr_id "S"))
    (expr_if
-    (expr_let "%or"
+    (expr_if
      (expr_op2 binary_op_lt (expr_id "position")
-      (expr_number (JsNumber.of_int (0))))
-     (expr_if (expr_id "%or") (expr_id "%or")
-      (expr_op2 binary_op_ge (expr_id "position") (expr_id "size"))))
+      (expr_number (JsNumber.of_int (0)))) expr_true
+     (expr_op2 binary_op_ge (expr_id "position") (expr_id "size")))
     (expr_string "")
     (expr_op2 binary_op_char_at (expr_id "S") (expr_id "position"))))))
 .
@@ -3494,11 +3467,10 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
    [expr_get_field (expr_id "args") (expr_string "0")])
   (expr_let "size" (expr_op1 unary_op_strlen (expr_id "S"))
    (expr_if
-    (expr_let "%or"
+    (expr_if
      (expr_op2 binary_op_lt (expr_id "position")
-      (expr_number (JsNumber.of_int (0))))
-     (expr_if (expr_id "%or") (expr_id "%or")
-      (expr_op2 binary_op_ge (expr_id "position") (expr_id "size"))))
+      (expr_number (JsNumber.of_int (0)))) expr_true
+     (expr_op2 binary_op_ge (expr_id "position") (expr_id "size")))
     (expr_number (JsNumber.of_int (0)))
     (expr_op1 unary_op_ascii_cton
      (expr_op2 binary_op_char_at (expr_id "S") (expr_id "position")))))))
@@ -3952,18 +3924,17 @@ expr_seq
          (expr_get_field (expr_id "current-prop")
           (expr_string "configurable")) expr_false)
         (expr_if
-         (expr_let "%or"
+         (expr_if
           (expr_op2 binary_op_stx_eq
            (expr_op2 binary_op_same_value
             (expr_get_field (expr_id "current-prop") (expr_string "set"))
             (expr_get_field (expr_id "attr-obj") (expr_string "set")))
-           expr_false)
-          (expr_if (expr_id "%or") (expr_id "%or")
-           (expr_op2 binary_op_stx_eq
-            (expr_op2 binary_op_same_value
-             (expr_get_field (expr_id "current-prop") (expr_string "get"))
-             (expr_get_field (expr_id "attr-obj") (expr_string "get")))
-            expr_false)))
+           expr_false) expr_true
+          (expr_op2 binary_op_stx_eq
+           (expr_op2 binary_op_same_value
+            (expr_get_field (expr_id "current-prop") (expr_string "get"))
+            (expr_get_field (expr_id "attr-obj") (expr_string "get")))
+           expr_false))
          (expr_app (expr_id "%TypeError")
           [expr_op2 binary_op_string_plus
            (expr_string
@@ -4790,10 +4761,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
            (expr_app (expr_id "%ToString") [expr_id "k"]))
           (expr_let "next"
            (expr_if
-            (expr_let "%or"
+            (expr_if
              (expr_op2 binary_op_stx_eq (expr_id "element") expr_null)
-             (expr_if (expr_id "%or") (expr_id "%or")
-              (expr_op2 binary_op_stx_eq (expr_id "element") expr_undefined)))
+             expr_true
+             (expr_op2 binary_op_stx_eq (expr_id "element") expr_undefined))
             (expr_string "")
             (expr_app (expr_id "%ToString") [expr_id "element"]))
            (expr_app (expr_id "loop")
@@ -4802,12 +4773,12 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              expr_op2 binary_op_string_plus (expr_id "S") (expr_id "next")]))))))
       (expr_let "start"
        (expr_if
-        (expr_let "%or"
+        (expr_if
          (expr_op2 binary_op_stx_eq
           (expr_get_field (expr_id "O") (expr_string "0")) expr_undefined)
-         (expr_if (expr_id "%or") (expr_id "%or")
-          (expr_op2 binary_op_stx_eq
-           (expr_get_field (expr_id "O") (expr_string "0")) expr_null)))
+         expr_true
+         (expr_op2 binary_op_stx_eq
+          (expr_get_field (expr_id "O") (expr_string "0")) expr_null))
         (expr_string "")
         (expr_app (expr_id "%ToString")
          [expr_get_field (expr_id "O") (expr_string "0")]))
@@ -5002,20 +4973,17 @@ expr_let "x"
 (expr_label "ret"
  (expr_seq
   (expr_if
-   (expr_let "%or"
-    (expr_let "%or"
-     (expr_let "%or"
+   (expr_if
+    (expr_if
+     (expr_if
       (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x")))
-      (expr_if (expr_id "%or") (expr_id "%or")
-       (expr_op2 binary_op_stx_eq (expr_id "x")
-        (expr_number (JsNumber.of_int (0))))))
-     (expr_if (expr_id "%or") (expr_id "%or")
+       (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x"))) expr_true
       (expr_op2 binary_op_stx_eq (expr_id "x")
-       (expr_number (JsNumber.of_int (0))))))
-    (expr_if (expr_id "%or") (expr_id "%or")
+       (expr_number (JsNumber.of_int (0))))) expr_true
      (expr_op2 binary_op_stx_eq (expr_id "x")
-      (expr_number (JsNumber.of_int (0)))))) (expr_break "ret" (expr_id "x"))
+      (expr_number (JsNumber.of_int (0))))) expr_true
+    (expr_op2 binary_op_stx_eq (expr_id "x")
+     (expr_number (JsNumber.of_int (0))))) (expr_break "ret" (expr_id "x"))
    expr_null) (expr_break "ret" (expr_op1 unary_op_ceil (expr_id "x")))))
 .
 Definition ex_privmathFloorLambda := 
@@ -5025,20 +4993,17 @@ expr_let "x"
 (expr_label "ret"
  (expr_seq
   (expr_if
-   (expr_let "%or"
-    (expr_let "%or"
-     (expr_let "%or"
+   (expr_if
+    (expr_if
+     (expr_if
       (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x")))
-      (expr_if (expr_id "%or") (expr_id "%or")
-       (expr_op2 binary_op_stx_eq (expr_id "x")
-        (expr_number (JsNumber.of_int (0))))))
-     (expr_if (expr_id "%or") (expr_id "%or")
+       (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x"))) expr_true
       (expr_op2 binary_op_stx_eq (expr_id "x")
-       (expr_number (JsNumber.of_int (0))))))
-    (expr_if (expr_id "%or") (expr_id "%or")
+       (expr_number (JsNumber.of_int (0))))) expr_true
      (expr_op2 binary_op_stx_eq (expr_id "x")
-      (expr_number (JsNumber.of_int (0)))))) (expr_break "ret" (expr_id "x"))
+      (expr_number (JsNumber.of_int (0))))) expr_true
+    (expr_op2 binary_op_stx_eq (expr_id "x")
+     (expr_number (JsNumber.of_int (0))))) (expr_break "ret" (expr_id "x"))
    expr_null) (expr_break "ret" (expr_op1 unary_op_floor (expr_id "x")))))
 .
 Definition ex_privmathLogLambda := 
@@ -5134,12 +5099,11 @@ expr_let "x"
           (expr_if
            (expr_op2 binary_op_stx_eq (expr_id "absX")
             (expr_number (JsNumber.of_int (1))))
-           (expr_let "%or"
+           (expr_if
             (expr_op2 binary_op_stx_eq (expr_id "y")
-             (expr_number (JsNumber.of_int (0))))
-            (expr_if (expr_id "%or") (expr_id "%or")
-             (expr_op2 binary_op_stx_eq (expr_id "y")
-              (expr_number (JsNumber.of_int (0)))))) expr_false)
+             (expr_number (JsNumber.of_int (0)))) expr_true
+            (expr_op2 binary_op_stx_eq (expr_id "y")
+             (expr_number (JsNumber.of_int (0))))) expr_false)
           (expr_break "ret" (expr_number (JsNumber.of_int (0)))) expr_null)
          (expr_seq
           (expr_if
@@ -5458,12 +5422,11 @@ expr_let "notNumProto"
      (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "rint"))
       (expr_string "number"))) (expr_throw (expr_string "RangeError"))
     (expr_if
-     (expr_let "%or"
+     (expr_if
       (expr_op2 binary_op_lt (expr_id "rint")
-       (expr_number (JsNumber.of_int (2))))
-      (expr_if (expr_id "%or") (expr_id "%or")
-       (expr_op2 binary_op_gt (expr_id "rint")
-        (expr_number (JsNumber.of_int (36))))))
+       (expr_number (JsNumber.of_int (2)))) expr_true
+      (expr_op2 binary_op_gt (expr_id "rint")
+       (expr_number (JsNumber.of_int (36)))))
      (expr_throw (expr_string "RangeError"))
      (expr_app (expr_id "%numToStringAbstract")
       [expr_get_internal "primval" (expr_id "this"); expr_id "rint"]))))))
@@ -5581,11 +5544,10 @@ expr_let "aux"
          (expr_let "istr" (expr_op1 unary_op_prim_to_str (expr_id "i"))
           (expr_seq
            (expr_if
-            (expr_let "%or"
+            (expr_if
              (expr_get_attr pattr_enum (expr_id "obj")
-              (expr_get_field (expr_id "cur") (expr_id "istr")))
-             (expr_if (expr_id "%or") (expr_id "%or")
-              (expr_id "get-non-enumerable")))
+              (expr_get_field (expr_id "cur") (expr_id "istr"))) expr_true
+             (expr_id "get-non-enumerable"))
             (expr_set_field (expr_id "aux")
              (expr_get_field (expr_id "cur") (expr_id "istr")) expr_true)
             expr_undefined)
@@ -5861,9 +5823,8 @@ expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
 Definition ex_privresolveThis := 
 expr_if (expr_id "strict") (expr_id "obj")
 (expr_if
- (expr_let "%or" (expr_op2 binary_op_stx_eq (expr_id "obj") expr_null)
-  (expr_if (expr_id "%or") (expr_id "%or")
-   (expr_op2 binary_op_stx_eq (expr_id "obj") expr_undefined)))
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "obj") expr_null) expr_true
+  (expr_op2 binary_op_stx_eq (expr_id "obj") expr_undefined))
  (expr_id "%global") (expr_app (expr_id "%ToObject") [expr_id "obj"]))
 .
 Definition ex_privreverselambda := 
@@ -6826,11 +6787,10 @@ expr_let "f"
 (expr_label "ret"
  (expr_seq
   (expr_if
-   (expr_let "%or"
+   (expr_if
     (expr_op2 binary_op_lt (expr_id "f") (expr_number (JsNumber.of_int (0))))
-    (expr_if (expr_id "%or") (expr_id "%or")
-     (expr_op2 binary_op_gt (expr_id "f")
-      (expr_number (JsNumber.of_int (20))))))
+    expr_true
+    (expr_op2 binary_op_gt (expr_id "f") (expr_number (JsNumber.of_int (20)))))
    (expr_throw
     (expr_app (expr_id "%JSError")
      [expr_object

@@ -237,12 +237,11 @@ exp :
      { SetInternal(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8),
                   $4, $1, $7) } 
  | exp AMPAMP exp
-     { If (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $1, 
-            $3, False (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3))) }
+     { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3) in
+         If (p, $1, $3, False(p)) }
  | exp PIPEPIPE exp
      { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3) in
-         Let (p, "%or", $1,
-               If (p, Id (p, "%or"), Id (p, "%or"), $3)) }
+         If (p, $1, True(p), $3) }
 
 
 cexp :
