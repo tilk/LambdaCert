@@ -13,7 +13,7 @@ install:
         - opam init -a
         - opam update -u
         - eval `opam config env`
-        - opam install -y js_of_ocaml bisect lwt batteries yojson
+        - opam install -y js_of_ocaml bisect lwt batteries yojson xml-light
         - ./get_deps.sh
         - make -C LambdaS5/ 
 script:
