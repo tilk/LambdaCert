@@ -1,0 +1,22 @@
+language: c
+env:
+        global:
+                - OPAMYES=true
+git:
+        submodules: false
+before_install:
+        - sudo add-apt-repository -y ppa:grand-edgemaster/coq-ocaml41
+        - sudo add-apt-repository -y ppa:avsm/ocaml41+opam12
+        - sudo apt-get update
+install:
+        - sudo apt-get install -y coq ocaml-compiler-libs ocaml-interp ocaml-base-nox ocaml-base ocaml ocaml-nox ocaml-native-compilers camlp4 camlp4-extra opam
+        - opam init -a
+        - opam update -u
+        - eval `opam config env`
+        - opam install -y js_of_ocaml bisect lwt batteries yojson
+        - ./get_deps.sh
+        - make -C LambdaS5/ 
+script:
+        - make -C LambdaS5/ tests
+        - make -C LambdaS5/ coq-all
+
