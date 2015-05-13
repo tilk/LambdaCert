@@ -232,7 +232,7 @@ Inductive eval_binary_op : binary_op -> store -> value -> value -> value -> Prop
 | eval_binary_op_has_property : forall st ptr obj s,
     binds st ptr obj -> 
     eval_binary_op binary_op_has_property st (value_object ptr) (value_string s) 
-        (value_bool (!isTrue (object_property_is st obj s None)))
+        (value_bool (isTrue (exists attrs, object_property_is st obj s (Some attrs))))
 | eval_binary_op_has_own_property : forall st ptr obj s,
     binds st ptr obj -> 
     eval_binary_op binary_op_has_own_property st (value_object ptr) (value_string s) 

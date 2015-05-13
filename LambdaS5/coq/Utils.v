@@ -139,6 +139,23 @@ Tactic Notation "cases_decide" "as" simple_intropattern(Eq) :=
 Tactic Notation "cases_decide" :=
   let Eq := fresh in cases_decide as Eq.
 
+Tactic Notation "cases_isTrue" "as" simple_intropattern(Eq) :=
+  match goal with
+  | |- context [isTrue ?B] => case_if_on (isTrue B) as Eq
+  | K: context [isTrue ?B] |- _ => case_if_on (isTrue B) as Eq
+  end.
+
+Tactic Notation "cases_isTrue" "in" "*" "as" simple_intropattern(Eq) :=
+  match goal with
+  | K: context [isTrue ?B] |- _ => case_if_on (isTrue B) as Eq
+  end.
+
+Tactic Notation "cases_isTrue" "in" "*" :=
+  let Eq := fresh in cases_isTrue in * as Eq.
+
+Tactic Notation "cases_isTrue" :=
+  let Eq := fresh in cases_isTrue as Eq.
+
 Tactic Notation "injects" :=
     match goal with
     | H : _ = _ |- _ => injects H
