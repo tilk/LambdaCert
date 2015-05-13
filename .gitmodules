@@ -1,3 +1,3 @@
 [submodule "jscert"]
 	path = jscert
-	url = https://github.com/jscert/jscert.git
+	url = https://github.com/tilk/jscert.git
