@@ -139,15 +139,19 @@ Tactic Notation "cases_decide" "as" simple_intropattern(Eq) :=
 Tactic Notation "cases_decide" :=
   let Eq := fresh in cases_decide as Eq.
 
-Tactic Notation "cases_isTrue" "as" simple_intropattern(Eq) :=
+Ltac cases_isTrue_after H := 
+    ((apply eq_false_r in H; rewrite istrue_neg in H) || apply eq_true_r in H); rewrite istrue_isTrue in H.
+
+Tactic Notation "cases_isTrue" "as" ident(Eq) :=
   match goal with
-  | |- context [isTrue ?B] => case_if_on (isTrue B) as Eq
-  | K: context [isTrue ?B] |- _ => case_if_on (isTrue B) as Eq
+  | |- context [isTrue ?B] => case_if_on (isTrue B) as Eq; cases_isTrue_after Eq
+  | K: context [isTrue ?B] |- _ => case_if_on (isTrue B) as Eq; cases_isTrue_after Eq
   end.
 
-Tactic Notation "cases_isTrue" "in" "*" "as" simple_intropattern(Eq) :=
+Tactic Notation "cases_isTrue" "in" "*" "as" ident(Eq) :=
   match goal with
-  | K: context [isTrue ?B] |- _ => case_if_on (isTrue B) as Eq
+  | K: context [isTrue ?B] |- _ => case_if_on (isTrue B) as Eq; cases_isTrue_after Eq
+  | |- context [isTrue ?B] => case_if_on (isTrue B) as Eq; cases_isTrue_after Eq
   end.
 
 Tactic Notation "cases_isTrue" "in" "*" :=

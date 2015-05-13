@@ -405,7 +405,7 @@ Proof.
     rew_unreflect.
     cases_isTrue in * as Eq;
     rew_bool;
-    (inverts Hr2 as Hr2; [idtac | false_abort]).
+    (inverts Hr2 as Hr2; [idtac | false_abort]). 
     specializes IHHpe2 Hr2. destruct_hyp IHHpe2. jauto.
     specializes IHHpe3 Hr2. destruct_hyp IHHpe3. jauto.
     (* let *)
@@ -569,7 +569,14 @@ Ltac ljs_out_red_ter Hred :=
 Tactic Notation "ljs_out_red_ter" "in" constr(Hred) := ljs_out_red_ter Hred.
 
 Tactic Notation "ljs_out_red_ter" := match goal with 
-    | H : red_expr _ _ _ (out_ter _ _) |- _ => ljs_out_red_ter in H
+    | H : red_expr _ _ _ (out_ter _ _) |- _ => ljs_out_red_ter H
     end.
+
+Ltac ljs_bool_red_expr Hred :=
+    let H := fresh in 
+    lets H : bool_red_expr_lemma Hred; [solve [eauto 20 with ljs] | idtac];
+    simpl in H; rew_logic in H; destruct_hyp H.
+
+Tactic Notation "ljs_bool_red_expr" "in" hyp(Hred) := ljs_bool_red_expr Hred; clear Hred.
 
 End Tactics.

@@ -100,6 +100,12 @@ Tactic Notation "ljs_out_redh_ter" := match goal with
     | H : red_exprh _ _ _ _ (out_ter _ _) |- _ => ljs_out_redh_ter in H
     end.
 
+Tactic Notation "ljs_bool_red_exprh" "in" hyp(Hred) := ljs_bool_red_expr (red_expr_forget_h Hred); clear Hred.
+
+Tactic Notation "ljs_bool_red_exprh" := match goal with
+    | H : red_exprh _ _ _ _ (out_ter _ _) |- _ => ljs_bool_red_exprh in H 
+    end.
+
 End Tactics.
 
 (***** WEAKENING *****)
