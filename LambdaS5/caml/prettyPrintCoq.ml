@@ -2,7 +2,6 @@
 open Batteries
 open Format
 open FormatExt
-open HeapUtils
 open LjsSyntax
 
 let vals_store = ref Map.empty
