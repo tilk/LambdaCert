@@ -18,5 +18,4 @@ install:
         - make -C LambdaS5/ 
 script:
         - make -C LambdaS5/ tests
-        - make -C LambdaS5/ coq-all
 
