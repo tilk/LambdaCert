@@ -9,7 +9,7 @@ before_install:
         - sudo add-apt-repository -y ppa:avsm/ocaml41+opam12
         - sudo apt-get update
 install:
-        - sudo apt-get install -y coq ocaml-compiler-libs ocaml-interp ocaml-base-nox ocaml-base ocaml ocaml-nox ocaml-native-compilers camlp4 camlp4-extra opam
+        - sudo apt-get install -y coq ocaml-compiler-libs ocaml-interp ocaml-base-nox ocaml-base ocaml ocaml-nox ocaml-native-compilers camlp4 camlp4-extra opam python3
         - opam init -a
         - opam update -u
         - eval `opam config env`
