@@ -753,8 +753,6 @@ Proof.
     cases_match_option; repeat injects; substs; eexists; (split; [prove_bag | idtac]);
     apply func_eq_2; try reflexivity; apply func_eq_1; apply func_eq_1;
     fold_bool; rew_refl; eauto.
-    forwards Hx : object_property_is_from_get_property. eassumption. 
-    intro Hy. destruct Hy. object_property_is_determine. tryfalse.
     (* has_own_property *)
     unfolds has_own_property.
     ljs_run_push_post_auto. 

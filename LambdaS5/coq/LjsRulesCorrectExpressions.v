@@ -396,6 +396,26 @@ Lemma red_spec_equal_ok : forall k,
     th_ext_expr_binary k LjsInitEnv.privEqEq J.spec_equal
         (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
+    intro k.
+    induction_wf IH : lt_wf k.
+    introv Hinv Hvrel1 Hvrel2 Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_state_invariant_after_apply.
+    repeat inv_fwd_ljs.
+    inv_ljs.
+    (* same type *)
+    repeat inv_fwd_ljs.
+    skip.
+    (* diff type *)
+    inv_fwd_ljs.
+    ljs_out_redh_ter.
+    ljs_bool_red_exprh.
+(*
+    cases_isTrue as Hx; inv_ljs. destruct_hyp Hx.
+    (* null-undefined, undefined-null *)
+    skip. skip. skip.
+*)
 Admitted.
 
 Lemma red_expr_binary_op_3_equal_ok : forall k,
@@ -602,6 +622,32 @@ Proof.
     eauto_js 6.
     eauto_js 6.
 Qed.
+
+(* TODO move *) 
+Lemma inequality_op_regular : forall jop b1 b2, 
+    J.inequality_op jop b1 b2 ->
+    J.regular_binary_op jop.
+Proof.
+    introv Hop. destruct Hop; simpl; trivial.
+Qed.
+
+Hint Resolve inequality_op_regular : js_ljs.
+
+Lemma js_inequality_to_ljs : forall jop b1 b2 je1 je2,
+    J.inequality_op jop b1 b2 ->
+    js_expr_to_ljs (J.expr_binary_op je1 jop je2) = 
+        E.make_app_builtin "%CompareOp" [js_expr_to_ljs je1; js_expr_to_ljs je2; L.expr_bool b1; L.expr_bool b2].
+Proof.
+    introv Hop.
+    inverts Hop; reflexivity.
+Qed.
+
+Lemma red_expr_binary_op_inequality : forall k je1 je2 jop b1 b2,
+    J.inequality_op jop b1 b2 ->
+    ih_expr k ->
+    th_expr k (J.expr_binary_op je1 jop je2).
+Proof.
+Admitted.
 
 Lemma red_expr_binary_op_coma_ok : forall k je1 je2,
     ih_expr k ->

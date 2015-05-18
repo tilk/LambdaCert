@@ -121,7 +121,7 @@ Admitted. (* TODO *)
 
 (***** DETERMINISM *****)
 
-Local Ltac determine := 
+Local Ltac eqdetermine := 
     match goal with
     | H1 : ?a = _, H2 : ?a = _ |- _ => rewrite H1 in H2; injects H2
     | H1 : _ = ?a, H2 : _ = ?a |- _ => rewrite <- H1 in H2; injects H2
@@ -149,8 +149,6 @@ Proof.
     induction Hr1; introv Hr2;
     try (
         inverts red_exprh Hr2; rew_refl in *;
-        repeat first [ injects | determine | (progress substs) | inst_hyps_det | binds_determine 
-                     | object_property_is_determine | value_is_closure_determine | closure_ctx_determine 
-                     | eval_unary_op_determine | eval_binary_op_determine]; 
+        repeat first [ injects | determine | eqdetermine | (progress substs) | inst_hyps_det | binds_determine]; 
         eauto; try ljs_abort_false; try index_binds_false; tryfalse; try solve [false; jauto]).
 Qed.

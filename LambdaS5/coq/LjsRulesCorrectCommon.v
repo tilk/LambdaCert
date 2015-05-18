@@ -882,7 +882,8 @@ Proof.
     introv Hsub.
     unfolds.
     introv Hb1 Hb2.
-    eapply binds_deterministic; [idtac | eassumption]. prove_bag.
+    determine.
+    reflexivity.
 Qed.
 
 Hint Resolve includes_init_ctx_init_ctx : js_ljs.

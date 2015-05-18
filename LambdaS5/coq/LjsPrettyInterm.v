@@ -229,10 +229,11 @@ Inductive eval_binary_op : binary_op -> store -> value -> value -> value -> Prop
     eval_binary_op binary_op_same_value st v1 v2 (value_bool (decide (same_value v1 v2)))
 | eval_binary_op_string_plus : forall st s1 s2,
     eval_binary_op binary_op_string_plus st (value_string s1) (value_string s2) (value_string (s1++s2))
-| eval_binary_op_has_property : forall st ptr obj s,
+| eval_binary_op_has_property : forall st ptr obj s oattrs,
     binds st ptr obj -> 
+    object_property_is st obj s oattrs ->
     eval_binary_op binary_op_has_property st (value_object ptr) (value_string s) 
-        (value_bool (isTrue (exists attrs, object_property_is st obj s (Some attrs))))
+        (value_bool (is_some oattrs))
 | eval_binary_op_has_own_property : forall st ptr obj s,
     binds st ptr obj -> 
     eval_binary_op binary_op_has_own_property st (value_object ptr) (value_string s) 

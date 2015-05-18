@@ -6,6 +6,7 @@ Require Import String.
 Require Import JsNumber.
 Require Import Coq.Numbers.Natural.Peano.NPeano.
 Require LibStream.
+Require Import LibEpsilon.
 Open Scope list_scope.
 Open Scope string_scope.
 Open Scope char_scope.
@@ -281,6 +282,59 @@ Proof.
     rewrite IHl.
     skip. (* TODO *)
 Defined.
+
+Class Deterministic `(P : A -> Prop) : Prop := {
+    deterministic : forall {a a'}, P a -> P a' -> a = a'
+}.
+
+Instance eq_deterministic : forall `(a : A), Deterministic (eq a).
+Proof. introv. constructor. introv Heq1 Heq2. substs. reflexivity. Qed.
+
+Section Det.
+Context `{Inhab A} `{@Deterministic A P}. 
+
+Lemma deterministic_epsilon : forall {a}, P a -> epsilon P = a.
+Proof. introv Hp. spec_epsilon* as b. Qed.
+
+End Det.
+
+Tactic Notation "determine_eq" constr(H1) constr(H2) "as" ident(H) :=
+    lets H : (deterministic H1 H2).
+
+Tactic Notation "determine" constr(H1) constr(H2) :=
+    let H := fresh in determine_eq H1 H2 as H; 
+    first [subst_hyp H; try clear H2 | injects H; try clear H2 | idtac].
+
+Tactic Notation "determine" := 
+    match goal with
+    | H1 : ?P ?x1, H2 : ?P ?x2 |- _ => 
+        not (first [constr_eq H1 H2 | constr_eq x1 x2 | is_hyp (x1 = x2) | is_hyp (x2 = x1)]); determine H1 H2
+    end.
+
+Tactic Notation "determine_epsilon" := 
+    match goal with
+    | H1 : ?P ?x, H2 : context [ @epsilon _ _ ?P ] |- _ => 
+        rewrite (deterministic_epsilon H1) in H2 
+    | H1 : ?P ?x |- context [ @epsilon _ _ ?P ] => 
+        rewrite (deterministic_epsilon H1) 
+    end.
+
+Tactic Notation "determine_epsilon" "using" hyp(H) := rewrite_all (deterministic_epsilon H) in *.
+
+(* TODO move *)
+Lemma impl_True_l : forall P : Prop, (True -> P) = P.
+Proof. intro. apply* prop_ext. Qed.
+
+Lemma impl_False_l : forall P : Prop, (False -> P) = True.
+Proof. intro. apply* prop_ext. Qed.
+
+Lemma impl_True_r : forall P : Prop, (P -> True) = True.
+Proof. intro. apply* prop_ext. Qed.
+
+Lemma impl_False_r : forall P : Prop, (P -> False) = ~P.
+Proof. intro. apply* prop_ext. Qed.
+
+Hint Rewrite impl_True_l impl_False_l impl_True_r impl_False_r : rew_logic.
 
 (* instances *)
 
