@@ -6,10 +6,6 @@ BASE_PATH=`dirname $0`/..
 
 PARSER_PATH=$BASE_PATH/tests/jsparser.sh
 
-OCAMLRUNPARAM="b" $BASE_PATH/build/eval.native -desugarBuiltin $PARSER_PATH -js -load $BASE_PATH/tests/es5.dump $@
+OCAMLRUNPARAM="b" exec $BASE_PATH/build/eval.native -desugarBuiltin $PARSER_PATH -js -load $BASE_PATH/tests/es5.dump $@
 
-EX=$?
 
-#echo $0 $@ > /dev/tty
-
-exit $EX

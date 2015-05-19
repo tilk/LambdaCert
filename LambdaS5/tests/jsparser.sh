@@ -1,6 +1,9 @@
 #!/bin/bash
 
-js -e "print(JSON.stringify(Reflect.parse(read('$1'),{loc:true}),function(key,value){if(key==='value'&&(value)instanceof(RegExp)){return{re_lit:String(value)}}return(value)},2))"
+BASE_PATH=`dirname $0`/..
 
-exit $?
+cd $BASE_PATH/tests
+
+#NODE_PATH=/usr/lib/node_modules/ exec node $BASE_PATH/tests/jsparser_node.js $1
+exec js jsparser_js.js esprima.js $1
 

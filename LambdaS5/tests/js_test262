@@ -1,0 +1,8 @@
+#!/bin/bash
+
+BASE_PATH=`dirname $0`/..
+
+JS_EXEC=$BASE_PATH/tests/js
+
+exec $JS_EXEC $BASE_PATH/tests/test_prelude.js $1 $BASE_PATH/tests/test_epilogue.js
+

@@ -15,6 +15,8 @@ let top_run = ref false
 
 let had_files = ref false
 
+let retval = ref 0
+
 let get_store () = if Option.is_none !store then store := Some (create_ctx, create_store); Option.get !store
 
 let get_channel filename =
@@ -32,7 +34,11 @@ let handle_parameter filename =
             close_in ch; Translate.translate_expr ret in
     try
         if !fprint then (print_string (Ljs_pretty.exp_to_string ast); print_string "\n")
-        else Run.print_result (Run.eval_ast (get_store ()) ast)
+        else let res = Run.eval_ast (get_store ()) ast in
+        Run.print_result res; 
+        if Run.result_fail res then retval := 1
+        else if Run.result_abort res then retval := 2;
+        if not (Run.result_abort res) then store := Some (fst (get_store ()), Run.result_store res)
     with e -> 
         Printexc.print_backtrace stderr;
         raise e
@@ -116,5 +122,6 @@ let _ =
         handle_parameter
         usage_msg;
     if !top_run then Top.toplevel (get_store()) else
-    if not !had_files then print_string "Use -help to get information on usage\n"
+    if not !had_files then print_string "Use -help to get information on usage\n";
+    exit !retval
 

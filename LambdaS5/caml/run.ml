@@ -44,9 +44,28 @@ let result_to_string_as b result =
         else exception_to_string store e
       | Coq_res_break (l, v) -> Printf.sprintf "Uncaught break %s: %s" (String.of_list l) (PrettyPrint.string_of_value 5 store v)
   
-let result_to_string result = result_to_string_as true result
+let result_to_string result = result_to_string_as false result
 
 let print_result_as b result = print_string (result_to_string_as b result); print_string "\n"
 
-let print_result result = print_result_as true result
+let print_result result = print_result_as false result
+
+let result_fail result = 
+  match result with
+  | Coq_result_some (Coq_out_ter (_, Coq_res_exception _)) 
+  | Coq_result_some (Coq_out_ter (_, Coq_res_break (_, _))) -> true
+  | _ -> false
+
+let result_abort result =
+  match result with
+  | Coq_result_bottom
+  | Coq_result_fail _ 
+  | Coq_result_impossible _
+  | Coq_result_dump (_, _)
+  | Coq_result_some Coq_out_div -> true
+  | _ -> false
+
+let result_store result =
+  match result with
+  | Coq_result_some (Coq_out_ter (st, _)) -> st
 
