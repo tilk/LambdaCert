@@ -67,6 +67,7 @@ Extract Constant Z.sub => "(-.)".
 Extract Constant Z.mul => "( *. )".
 Extract Constant Z.opp => "(~-.)".
 Extract Constant Z.abs => "abs_float".
+Extract Constant Z.abs_nat => "int_of_float".
 Extract Constant Z.min => "min".
 Extract Constant Z.max => "max".
 Extract Constant Z.compare =>

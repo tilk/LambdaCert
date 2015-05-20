@@ -128,5 +128,5 @@ and translate_attrs a = Cs.Coq_objattrs_intro
     (Cs.Coq_expr_string (String.to_list a.Ljs.klass), 
      translate_bool a.Ljs.extensible,
      Option.map_default translate_expr (Cs.Coq_expr_null) a.Ljs.proto, 
-     Option.map_default translate_expr (Cs.Coq_expr_null) a.Ljs.code
+     Option.map_default translate_expr (Cs.Coq_expr_undefined) a.Ljs.code
      )

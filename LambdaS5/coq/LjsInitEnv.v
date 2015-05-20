@@ -47,7 +47,7 @@ expr_if
 .
 Definition ex_getter := 
 expr_object
-(objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+(objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined) 
 []
 [("%AppExprCheck", property_data
                    (data_intro (expr_id "%AppExprCheck") expr_true expr_false
@@ -88,6 +88,9 @@ expr_object
  ("%CompareOp", property_data
                 (data_intro (expr_id "%CompareOp") expr_true expr_false
                  expr_false));
+ ("%ComputeLength", property_data
+                    (data_intro (expr_id "%ComputeLength") expr_true
+                     expr_false expr_false));
  ("%DateConstructor", property_data
                       (data_intro (expr_id "%DateConstructor") expr_true
                        expr_false expr_false));
@@ -279,6 +282,9 @@ expr_object
  ("%PrimitiveCompareOp", property_data
                          (data_intro (expr_id "%PrimitiveCompareOp")
                           expr_true expr_false expr_false));
+ ("%RangeError", property_data
+                 (data_intro (expr_id "%RangeError") expr_true expr_false
+                  expr_false));
  ("%RangeErrorConstructor", property_data
                             (data_intro (expr_id "%RangeErrorConstructor")
                              expr_true expr_false expr_false));
@@ -893,6 +899,9 @@ expr_object
  ("%numValueOf", property_data
                  (data_intro (expr_id "%numValueOf") expr_true expr_false
                   expr_false));
+ ("%numberPrimval", property_data
+                    (data_intro (expr_id "%numberPrimval") expr_true
+                     expr_false expr_false));
  ("%numberToString", property_data
                      (data_intro (expr_id "%numberToString") expr_true
                       expr_false expr_false));
@@ -1089,6 +1098,8 @@ expr_object
  ("%testlambda", property_data
                  (data_intro (expr_id "%testlambda") expr_true expr_false
                   expr_false));
+ ("%this", property_data
+           (data_intro (expr_id "%this") expr_true expr_false expr_false));
  ("%tlclambda", property_data
                 (data_intro (expr_id "%tlclambda") expr_true expr_false
                  expr_false));
@@ -1406,95 +1417,92 @@ expr_let "fun"
  [expr_id "fun"; expr_id "obj"; expr_id "args"])
 .
 Definition ex_privArrayConstructor := 
-expr_label "ret"
-(expr_seq
- (expr_if
-  (expr_op2 binary_op_ge
-   (expr_get_field (expr_id "args") (expr_string "length"))
-   (expr_number (JsNumber.of_int (2))))
-  (expr_let "rtnobj"
-   (expr_object
-    (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-     expr_null) []
-    [("length", property_data
-                (data_intro (expr_number (JsNumber.of_int (0))) expr_true
-                 expr_false expr_false))])
-   (expr_recc "init"
-    (expr_lambda ["n"]
-     (expr_seq
-      (expr_set_field (expr_id "rtnobj")
-       (expr_op1 unary_op_prim_to_str (expr_id "n"))
-       (expr_get_field (expr_id "args")
-        (expr_op1 unary_op_prim_to_str (expr_id "n"))))
-      (expr_if
-       (expr_op2 binary_op_gt (expr_id "n")
-        (expr_number (JsNumber.of_int (0))))
-       (expr_app (expr_id "init")
-        [expr_op2 binary_op_sub (expr_id "n")
-         (expr_number (JsNumber.of_int (1)))]) expr_undefined)))
-    (expr_seq
-     (expr_app (expr_id "init")
-      [expr_get_field (expr_id "args") (expr_string "length")])
-     (expr_seq
-      (expr_set_field (expr_id "rtnobj") (expr_string "length")
-       (expr_get_field (expr_id "args") (expr_string "length")))
-      (expr_break "ret" (expr_id "rtnobj")))))) expr_null)
- (expr_let "c1"
-  (expr_op2 binary_op_stx_eq
-   (expr_op1 unary_op_typeof
-    (expr_get_field (expr_id "args") (expr_string "0")))
-   (expr_string "number"))
-  (expr_let "c2"
-   (expr_if (expr_id "c1")
-    (expr_op1 unary_op_not
-     (expr_op2 binary_op_stx_eq
-      (expr_app (expr_id "%ToUint32")
-       [expr_get_field (expr_id "args") (expr_string "0")])
-      (expr_get_field (expr_id "args") (expr_string "0")))) expr_false)
-   (expr_if (expr_id "c2")
-    (expr_throw
-     (expr_app (expr_id "%JSError")
-      [expr_object
-       (objattrs_intro (expr_string "Object") expr_true
-        (expr_id "%RangeErrorProto") expr_null) [] []]))
-    (expr_if (expr_id "c1")
-     (expr_break "ret"
-      (expr_object
-       (objattrs_intro (expr_string "Array") expr_true
-        (expr_id "%ArrayProto") expr_null) []
-       [("length", property_data
-                   (data_intro
-                    (expr_app (expr_id "%ToUint32")
-                     [expr_get_field (expr_id "args") (expr_string "0")])
-                    expr_true expr_false expr_false))]))
-     (expr_let "rtn"
-      (expr_object
-       (objattrs_intro (expr_string "Array") expr_true
-        (expr_id "%ArrayProto") expr_null) []
-       [("length", property_data
-                   (data_intro
-                    (expr_get_field (expr_id "args") (expr_string "length"))
-                    expr_true expr_false expr_false))])
+expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+(expr_label "ret"
+ (expr_seq
+  (expr_if
+   (expr_op2 binary_op_ge (expr_id "argCount")
+    (expr_number (JsNumber.of_int (2))))
+   (expr_let "rtnobj"
+    (expr_object
+     (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
+      expr_undefined) []
+     [("length", property_data
+                 (data_intro (expr_number (JsNumber.of_int (0))) expr_true
+                  expr_false expr_false))])
+    (expr_recc "init"
+     (expr_lambda ["n"]
       (expr_seq
-       (expr_app (expr_id "%defineOwnProperty")
-        [expr_id "rtn";
-         expr_string "0";
-         expr_object
-         (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
-         []
-         [("value", property_data
+       (expr_set_field (expr_id "rtnobj")
+        (expr_op1 unary_op_prim_to_str (expr_id "n"))
+        (expr_get_field (expr_id "args")
+         (expr_op1 unary_op_prim_to_str (expr_id "n"))))
+       (expr_if
+        (expr_op2 binary_op_gt (expr_id "n")
+         (expr_number (JsNumber.of_int (0))))
+        (expr_app (expr_id "init")
+         [expr_op2 binary_op_sub (expr_id "n")
+          (expr_number (JsNumber.of_int (1)))]) expr_undefined)))
+     (expr_seq (expr_app (expr_id "init") [expr_id "argCount"])
+      (expr_seq
+       (expr_set_field (expr_id "rtnobj") (expr_string "length")
+        (expr_id "argCount")) (expr_break "ret" (expr_id "rtnobj"))))))
+   expr_null)
+  (expr_let "c1"
+   (expr_op2 binary_op_stx_eq
+    (expr_op1 unary_op_typeof
+     (expr_get_field (expr_id "args") (expr_string "0")))
+    (expr_string "number"))
+   (expr_let "c2"
+    (expr_if (expr_id "c1")
+     (expr_op1 unary_op_not
+      (expr_op2 binary_op_stx_eq
+       (expr_app (expr_id "%ToUint32")
+        [expr_get_field (expr_id "args") (expr_string "0")])
+       (expr_get_field (expr_id "args") (expr_string "0")))) expr_false)
+    (expr_if (expr_id "c2")
+     (expr_throw
+      (expr_app (expr_id "%JSError")
+       [expr_object
+        (objattrs_intro (expr_string "Object") expr_true
+         (expr_id "%RangeErrorProto") expr_undefined) [] []]))
+     (expr_if (expr_id "c1")
+      (expr_break "ret"
+       (expr_object
+        (objattrs_intro (expr_string "Array") expr_true
+         (expr_id "%ArrayProto") expr_undefined) []
+        [("length", property_data
                     (data_intro
-                     (expr_get_field (expr_id "args") (expr_string "0"))
-                     expr_true expr_false expr_false));
-          ("writable", property_data
-                       (data_intro expr_true expr_true expr_false expr_false));
-          ("enumerable", property_data
-                         (data_intro expr_true expr_true expr_false
-                          expr_false));
-          ("configurable", property_data
-                           (data_intro expr_true expr_true expr_false
-                            expr_false))]])
-       (expr_break "ret" (expr_id "rtn")))))))))
+                     (expr_app (expr_id "%ToUint32")
+                      [expr_get_field (expr_id "args") (expr_string "0")])
+                     expr_true expr_false expr_false))]))
+      (expr_let "rtn"
+       (expr_object
+        (objattrs_intro (expr_string "Array") expr_true
+         (expr_id "%ArrayProto") expr_undefined) []
+        [("length", property_data
+                    (data_intro (expr_id "argCount") expr_true expr_false
+                     expr_false))])
+       (expr_seq
+        (expr_app (expr_id "%defineOwnProperty")
+         [expr_id "rtn";
+          expr_string "0";
+          expr_object
+          (objattrs_intro (expr_string "Object") expr_true expr_null
+           expr_undefined) []
+          [("value", property_data
+                     (data_intro
+                      (expr_get_field (expr_id "args") (expr_string "0"))
+                      expr_true expr_false expr_false));
+           ("writable", property_data
+                        (data_intro expr_true expr_true expr_false expr_false));
+           ("enumerable", property_data
+                          (data_intro expr_true expr_true expr_false
+                           expr_false));
+           ("configurable", property_data
+                            (data_intro expr_true expr_true expr_false
+                             expr_false))]])
+        (expr_break "ret" (expr_id "rtn"))))))))))
 .
 Definition ex_privArrayLengthChange := 
 expr_let "oldlen"
@@ -1545,6 +1553,17 @@ expr_let "px" (expr_app (expr_id "%ToPrimitive") [expr_id "l"])
    (expr_if (expr_id "neg") (expr_op1 unary_op_not (expr_id "res"))
     (expr_id "res")))))
 .
+Definition ex_privComputeLength := 
+expr_recc "loop"
+(expr_lambda ["iter"]
+ (expr_let "strx" (expr_op1 unary_op_prim_to_str (expr_id "iter"))
+  (expr_if
+   (expr_op2 binary_op_has_own_property (expr_id "args") (expr_id "strx"))
+   (expr_app (expr_id "loop")
+    [expr_op2 binary_op_add (expr_id "iter")
+     (expr_number (JsNumber.of_int (1)))]) (expr_id "iter"))))
+(expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
+.
 Definition ex_privDateConstructor := 
 expr_let "calledAsFunction"
 (expr_op2 binary_op_stx_eq (expr_id "this") expr_undefined)
@@ -1554,19 +1573,19 @@ expr_let "calledAsFunction"
    (expr_let "o"
     (expr_object
      (objattrs_intro (expr_string "Date") expr_true (expr_id "%DateProto")
-      expr_null) [("primval", expr_id "v")] [])
+      expr_undefined) [("primval", expr_id "v")] [])
     (expr_app (expr_id "%dateToStringLambda")
      [expr_id "o";
       expr_object
-      (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
-      [] []])))
+      (objattrs_intro (expr_string "Object") expr_true expr_null
+       expr_undefined) [] []])))
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "nargs")
     (expr_number (JsNumber.of_int (0))))
    (expr_let "v" (expr_app (expr_id "%getCurrentUTC") [])
     (expr_object
      (objattrs_intro (expr_string "Date") expr_true (expr_id "%DateProto")
-      expr_null) [("primval", expr_id "v")] []))
+      expr_undefined) [("primval", expr_id "v")] []))
    (expr_if
     (expr_op2 binary_op_stx_eq (expr_id "nargs")
      (expr_number (JsNumber.of_int (1))))
@@ -1581,7 +1600,7 @@ expr_let "calledAsFunction"
       (expr_let "clipped" (expr_app (expr_id "%TimeClip") [expr_id "V"])
        (expr_object
         (objattrs_intro (expr_string "Date") expr_true (expr_id "%DateProto")
-         expr_null) [("primval", expr_id "clipped")] []))))
+         expr_undefined) [("primval", expr_id "clipped")] []))))
     (expr_let "y"
      (expr_app (expr_id "%ToNumber")
       [expr_get_field (expr_id "args") (expr_string "0")])
@@ -1658,7 +1677,7 @@ expr_let "calledAsFunction"
                [expr_app (expr_id "%UTC") [expr_id "finalDate"]])
               (expr_object
                (objattrs_intro (expr_string "Date") expr_true
-                (expr_id "%DateProto") expr_null)
+                (expr_id "%DateProto") expr_undefined)
                [("primval", expr_id "primval")] [])))))))))))))))
 .
 Definition ex_privDateFromTime := 
@@ -2057,7 +2076,7 @@ expr_let "msg"
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_privFunctionConstructor := 
-expr_let "argCount" (expr_get_field (expr_id "args") (expr_string "length"))
+expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
 (expr_recc "formArgString"
  (expr_lambda ["n"; "result"]
   (expr_if
@@ -2110,8 +2129,8 @@ expr_let "argCount" (expr_get_field (expr_id "args") (expr_string "length"))
      (expr_app (expr_id "%evallambda")
       [expr_undefined;
        expr_object
-       (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
-       []
+       (objattrs_intro (expr_string "Object") expr_true expr_null
+        expr_undefined) []
        [("0", property_data
               (data_intro (expr_id "final") expr_false expr_false expr_false))]]))))))
 .
@@ -2168,7 +2187,7 @@ expr_recc "searchChain"
 .
 Definition ex_privJSError := 
 expr_object
-(objattrs_intro (expr_string "JSError") expr_false expr_null expr_null) 
+(objattrs_intro (expr_string "JSError") expr_false expr_null expr_undefined)
 []
 [("%js-exn", property_data
              (data_intro (expr_id "err") expr_false expr_false expr_false))]
@@ -2181,7 +2200,8 @@ Definition ex_privLocalTime :=  expr_id "t" .
 Definition ex_privMakeBoolean := 
 expr_object
 (objattrs_intro (expr_string "Boolean") expr_true (expr_id "%BooleanProto")
- expr_null) [("primval", expr_id "v"); ("virtual", expr_false)] []
+ expr_undefined) [("primval", expr_id "v"); ("virtual", expr_false)] 
+[]
 .
 Definition ex_privMakeDate := 
 expr_op2 binary_op_add
@@ -2257,7 +2277,7 @@ expr_let "fobj"
 (expr_let "proto"
  (expr_object
   (objattrs_intro (expr_string "Object") expr_true (expr_id "%ObjectProto")
-   expr_null) []
+   expr_undefined) []
   [("constructor", property_data
                    (data_intro (expr_id "fobj") expr_true expr_false
                     expr_true))])
@@ -2301,10 +2321,11 @@ Definition ex_privMakeGetter :=
 expr_object
 (objattrs_intro (expr_string "Object") expr_false expr_null
  (expr_lambda ["this"]
-  (expr_app (expr_id "f")
-   [expr_app (expr_id "%devirtualize") [expr_id "this"];
+  (expr_app (expr_id "%AppExprCheck")
+   [expr_id "f";
+    expr_app (expr_id "%devirtualize") [expr_id "this"];
     expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
     [] []]))) []
 [("func", property_data
           (data_intro (expr_id "f") expr_false expr_false expr_false))]
@@ -2312,8 +2333,8 @@ expr_object
 Definition ex_privMakeNativeError := 
 expr_let "exc"
 (expr_object
- (objattrs_intro (expr_string "Error") expr_true (expr_id "proto") expr_null)
- [] [])
+ (objattrs_intro (expr_string "Error") expr_true (expr_id "proto")
+  expr_undefined) [] [])
 (expr_seq
  (expr_if
   (expr_op1 unary_op_not
@@ -2327,7 +2348,7 @@ expr_let "exc"
 Definition ex_privMakeNativeErrorProto := 
 expr_object
 (objattrs_intro (expr_string "Error") expr_true (expr_id "%ErrorProto")
- expr_null) []
+ expr_undefined) []
 [("name", property_data
           (data_intro (expr_id "name") expr_true expr_false expr_true));
  ("message", property_data
@@ -2336,16 +2357,18 @@ expr_object
 Definition ex_privMakeNumber := 
 expr_object
 (objattrs_intro (expr_string "Number") expr_true (expr_id "%NumberProto")
- expr_null) [("primval", expr_id "v"); ("virtual", expr_false)] []
+ expr_undefined) [("primval", expr_id "v"); ("virtual", expr_false)] 
+[]
 .
 Definition ex_privMakeSetter := 
 expr_object
 (objattrs_intro (expr_string "Object") expr_false expr_null
  (expr_lambda ["this"; "arg"]
-  (expr_app (expr_id "f")
-   [expr_app (expr_id "%devirtualize") [expr_id "this"];
+  (expr_app (expr_id "%AppExprCheck")
+   [expr_id "f";
+    expr_app (expr_id "%devirtualize") [expr_id "this"];
     expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
     []
     [("0", property_data
            (data_intro (expr_id "arg") expr_false expr_false expr_false))]])))
@@ -2357,7 +2380,7 @@ Definition ex_privMakeString :=
 expr_let "obj"
 (expr_object
  (objattrs_intro (expr_string "String") expr_true (expr_id "%StringProto")
-  expr_null) [("primval", expr_id "v"); ("virtual", expr_false)]
+  expr_undefined) [("primval", expr_id "v"); ("virtual", expr_false)]
  [("length", property_data
              (data_intro (expr_op1 unary_op_strlen (expr_id "v")) expr_true
               expr_false expr_false))])
@@ -2545,52 +2568,52 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "this") expr_undefined)
 Definition ex_privObjectConstructor := 
 expr_let "calledAsFunction"
 (expr_op2 binary_op_stx_eq (expr_id "this") expr_undefined)
-(expr_let "hasArg"
- (expr_op2 binary_op_gt
-  (expr_get_field (expr_id "args") (expr_string "length"))
-  (expr_number (JsNumber.of_int (0))))
- (expr_let "notNull"
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq
-    (expr_get_field (expr_id "args") (expr_string "0")) expr_null))
-  (expr_let "notUndefined"
+(expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+ (expr_let "hasArg"
+  (expr_op2 binary_op_gt (expr_id "argCount")
+   (expr_number (JsNumber.of_int (0))))
+  (expr_let "notNull"
    (expr_op1 unary_op_not
     (expr_op2 binary_op_stx_eq
-     (expr_get_field (expr_id "args") (expr_string "0")) expr_undefined))
-   (expr_let "shouldReturnEarly"
-    (expr_if
+     (expr_get_field (expr_id "args") (expr_string "0")) expr_null))
+   (expr_let "notUndefined"
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_stx_eq
+      (expr_get_field (expr_id "args") (expr_string "0")) expr_undefined))
+    (expr_let "shouldReturnEarly"
      (expr_if
-      (expr_if (expr_id "calledAsFunction") (expr_id "hasArg") expr_false)
-      (expr_id "notNull") expr_false) (expr_id "notUndefined") expr_false)
-    (expr_let "defaultRtn"
-     (expr_object
-      (objattrs_intro (expr_string "Object") expr_true
-       (expr_id "%ObjectProto") expr_null) [] [])
-     (expr_if (expr_id "shouldReturnEarly")
-      (expr_app (expr_id "%ToObject")
-       [expr_get_field (expr_id "args") (expr_string "0")])
-      (expr_if (expr_id "hasArg")
-       (expr_let "argtype"
-        (expr_op1 unary_op_typeof
-         (expr_get_field (expr_id "args") (expr_string "0")))
-        (expr_let "isArgObject"
-         (expr_op2 binary_op_stx_eq (expr_id "argtype")
-          (expr_string "object"))
-         (expr_let "isArgSomething"
-          (expr_if
+      (expr_if
+       (expr_if (expr_id "calledAsFunction") (expr_id "hasArg") expr_false)
+       (expr_id "notNull") expr_false) (expr_id "notUndefined") expr_false)
+     (expr_let "defaultRtn"
+      (expr_object
+       (objattrs_intro (expr_string "Object") expr_true
+        (expr_id "%ObjectProto") expr_undefined) [] [])
+      (expr_if (expr_id "shouldReturnEarly")
+       (expr_app (expr_id "%ToObject")
+        [expr_get_field (expr_id "args") (expr_string "0")])
+       (expr_if (expr_id "hasArg")
+        (expr_let "argtype"
+         (expr_op1 unary_op_typeof
+          (expr_get_field (expr_id "args") (expr_string "0")))
+         (expr_let "isArgObject"
+          (expr_op2 binary_op_stx_eq (expr_id "argtype")
+           (expr_string "object"))
+          (expr_let "isArgSomething"
            (expr_if
+            (expr_if
+             (expr_op2 binary_op_stx_eq (expr_id "argtype")
+              (expr_string "boolean")) expr_true
+             (expr_op2 binary_op_stx_eq (expr_id "argtype")
+              (expr_string "string"))) expr_true
             (expr_op2 binary_op_stx_eq (expr_id "argtype")
-             (expr_string "boolean")) expr_true
-            (expr_op2 binary_op_stx_eq (expr_id "argtype")
-             (expr_string "string"))) expr_true
-           (expr_op2 binary_op_stx_eq (expr_id "argtype")
-            (expr_string "number")))
-          (expr_if (expr_id "isArgObject")
-           (expr_get_field (expr_id "args") (expr_string "0"))
-           (expr_if (expr_id "isArgSomething")
-            (expr_app (expr_id "%ToObject")
-             [expr_get_field (expr_id "args") (expr_string "0")])
-            (expr_id "defaultRtn")))))) (expr_id "defaultRtn"))))))))
+             (expr_string "number")))
+           (expr_if (expr_id "isArgObject")
+            (expr_get_field (expr_id "args") (expr_string "0"))
+            (expr_if (expr_id "isArgSomething")
+             (expr_app (expr_id "%ToObject")
+              [expr_get_field (expr_id "args") (expr_string "0")])
+             (expr_id "defaultRtn")))))) (expr_id "defaultRtn")))))))))
 .
 Definition ex_privObjectTypeCheck := 
 expr_if (expr_op1 unary_op_is_object (expr_id "o")) expr_null
@@ -2602,12 +2625,13 @@ expr_if (expr_op1 unary_op_is_object (expr_id "o")) expr_null
 Definition ex_privPrepostOp := 
 expr_let "oldValue"
 (expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "obj") (expr_id "fld")])
+ [expr_app (expr_id "%GetField") [expr_id "obj"; expr_id "fld"]])
 (expr_let "newValue"
  (expr_app (expr_id "op")
   [expr_id "oldValue"; expr_number (JsNumber.of_int (1))])
  (expr_seq
-  (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "newValue"))
+  (expr_app (expr_id "%set-property")
+   [expr_id "obj"; expr_id "fld"; expr_id "newValue"])
   (expr_if (expr_id "is_pre") (expr_id "newValue") (expr_id "oldValue"))))
 .
 Definition ex_privPrimAdd := 
@@ -2648,7 +2672,7 @@ expr_seq
   (expr_let "newobj"
    (expr_object
     (objattrs_intro (expr_string "Object") expr_true (expr_id "cproto")
-     expr_null) [] [])
+     expr_undefined) [] [])
    (expr_let "constr_ret"
     (expr_app (expr_id "%AppExprCheck")
      [expr_id "constr"; expr_id "newobj"; expr_id "args"])
@@ -2666,6 +2690,9 @@ expr_if
 (expr_app (expr_id "%NumberCompareOp")
  [expr_op1 unary_op_prim_to_num (expr_id "l");
   expr_op1 unary_op_prim_to_num (expr_id "r")])
+.
+Definition ex_privRangeError := 
+expr_app (expr_id "%NativeError") [expr_id "%RangeErrorProto"; expr_id "msg"]
 .
 Definition ex_privRangeErrorConstructor := 
 expr_let "msg"
@@ -2690,7 +2717,7 @@ expr_let "msg"
 Definition ex_privRegExpConstructor := 
 expr_object
 (objattrs_intro (expr_string "Object") expr_true (expr_id "%RegExpProto")
- expr_null) [] []
+ expr_undefined) [] []
 .
 Definition ex_privSetterValue := 
 expr_get_field (expr_id "o") (expr_string "func")
@@ -2700,25 +2727,15 @@ expr_op2 binary_op_shiftr (expr_app (expr_id "%ToInt32") [expr_id "l"])
 (expr_app (expr_id "%ToUint32") [expr_id "r"])
 .
 Definition ex_privStringConstructor := 
-expr_let "S"
-(expr_if
- (expr_op2 binary_op_stx_eq
-  (expr_get_field (expr_id "args") (expr_string "length"))
-  (expr_number (JsNumber.of_int (0)))) (expr_string "")
- (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]))
-(expr_if (expr_op2 binary_op_stx_eq (expr_id "this") expr_undefined)
- (expr_id "S")
- (expr_let "obj"
-  (expr_object
-   (objattrs_intro (expr_string "String") expr_true (expr_id "%StringProto")
-    expr_null) [("primval", expr_id "S")]
-   [("length", property_data
-               (data_intro (expr_op1 unary_op_strlen (expr_id "S")) expr_true
-                expr_false expr_false))])
-  (expr_seq
-   (expr_app (expr_id "%StringIndices") [expr_id "obj"; expr_id "S"])
-   (expr_id "obj"))))
+expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+(expr_let "S"
+ (expr_if
+  (expr_op2 binary_op_stx_eq (expr_id "argCount")
+   (expr_number (JsNumber.of_int (0)))) (expr_string "")
+  (expr_app (expr_id "%ToString")
+   [expr_get_field (expr_id "args") (expr_string "0")]))
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "this") expr_undefined)
+  (expr_id "S") (expr_app (expr_id "%MakeString") [expr_id "S"])))
 .
 Definition ex_privStringIndexOflambda := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
@@ -2926,8 +2943,8 @@ expr_if (expr_op1 unary_op_is_object (expr_id "val"))
       (expr_app (expr_id "f")
        [expr_id "val";
         expr_object
-        (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
-        [] []])
+        (objattrs_intro (expr_string "Object") expr_true expr_null
+         expr_undefined) [] []])
       (expr_if (expr_op1 unary_op_is_primitive (expr_id "res"))
        (expr_id "res") (expr_app (expr_id "next") [])))
      (expr_app (expr_id "next") [])))))
@@ -2954,7 +2971,7 @@ Definition ex_privToPropertyDescriptor :=
 expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
 (expr_let "attrobj"
  (expr_object
-  (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+  (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
   [] [])
  (expr_seq
   (expr_let "enumerable"
@@ -3307,7 +3324,7 @@ expr_let "applyArgs1" (expr_get_field (expr_id "args") (expr_string "1"))
     (expr_string "undefined")) expr_true
    (expr_op2 binary_op_stx_eq (expr_id "applyArgs1") expr_null))
   (expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+   (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
    [] []) (expr_id "applyArgs1"))
  (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "applyArgs"])
   (expr_app (expr_id "this")
@@ -3362,7 +3379,7 @@ expr_let "isCallable"
              [expr_id "elementObj";
               expr_object
               (objattrs_intro (expr_string "Object") expr_true expr_null
-               expr_null) [] []])))))
+               expr_undefined) [] []])))))
         (expr_recc "inner"
          (expr_lambda ["k"; "r"]
           (expr_if (expr_op2 binary_op_ge (expr_id "k") (expr_id "len"))
@@ -3394,13 +3411,13 @@ expr_let "isCallable"
                     (expr_app (expr_id "%JSError")
                      [expr_object
                       (objattrs_intro (expr_string "Object") expr_true
-                       (expr_id "%TypeErrorProto") expr_null) [] []]))
-                   expr_null)
+                       (expr_id "%TypeErrorProto") expr_undefined) [] 
+                      []])) expr_null)
                   (expr_app (expr_id "funcc")
                    [expr_id "elementObj";
                     expr_object
                     (objattrs_intro (expr_string "Object") expr_true
-                     expr_null expr_null) [] []])))))
+                     expr_null expr_undefined) [] []])))))
               (expr_app (expr_id "inner")
                [expr_op2 binary_op_add (expr_id "k")
                 (expr_number (JsNumber.of_int (1)));
@@ -3425,7 +3442,7 @@ expr_let "array" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_app (expr_id "ffunc")
    [expr_id "array";
     expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
     [] []])))
 .
 Definition ex_privasinLambda :=  expr_string "asin NYI" .
@@ -3453,7 +3470,7 @@ expr_label "ret"
        (expr_id "proto") (expr_id "%ObjectProto"))
       (expr_object
        (objattrs_intro (expr_string "Object") expr_true (expr_id "proto")
-        expr_null) [] [])))
+        expr_undefined) [] [])))
     (expr_let "Flambda"
      (expr_lambda ["this_inner"; "args_inner"]
       (expr_let "thisArg"
@@ -3476,7 +3493,7 @@ expr_label "ret"
           expr_id "name";
           expr_object
           (objattrs_intro (expr_string "Object") expr_true expr_null
-           expr_null) []
+           expr_undefined) []
           [("get", property_data
                    (data_intro (expr_id "%ThrowTypeError") expr_true
                     expr_false expr_false));
@@ -3507,7 +3524,7 @@ expr_label "ret"
            expr_string "length";
            expr_object
            (objattrs_intro (expr_string "Object") expr_true expr_null
-            expr_null) []
+            expr_undefined) []
            [("value", property_data
                       (data_intro (expr_id "FLength") expr_true expr_false
                        expr_false));
@@ -3586,7 +3603,7 @@ Definition ex_privconcatLambda :=
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "emptyobj"
  (expr_object
-  (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+  (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
   [] [])
  (expr_let "A"
   (expr_app (expr_id "%ArrayConstructor")
@@ -3673,7 +3690,7 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_let "globalEnv"
   (expr_get_field (expr_id "%makeGlobalEnv") (expr_string "make"))
   (expr_seq
-   (expr_set_field (expr_id "globalEnv") (expr_string "$this")
+   (expr_set_field (expr_id "globalEnv") (expr_string "%this")
     (expr_id "evalThis"))
    (expr_seq
     (expr_set_field (expr_id "globalEnv") (expr_string "%nonstrictContext")
@@ -3682,7 +3699,7 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
      (expr_set_field (expr_id "globalEnv") (expr_string "%strictContext")
       (expr_object
        (objattrs_intro (expr_string "DeclEnvRec") expr_true expr_null
-        expr_null) [("parent", expr_id "evalContext")] []))
+        expr_undefined) [("parent", expr_id "evalContext")] []))
      (expr_if
       (expr_op2 binary_op_stx_eq
        (expr_op1 unary_op_typeof (expr_id "evalStr")) (expr_string "string"))
@@ -3704,8 +3721,8 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
   (expr_app (expr_id "%TypeError") [expr_string "Object.create failed"])
   (expr_let "obj"
    (expr_object
-    (objattrs_intro (expr_string "Object") expr_true (expr_id "O") expr_null)
-    [] [])
+    (objattrs_intro (expr_string "Object") expr_true (expr_id "O")
+     expr_undefined) [] [])
    (expr_if
     (expr_if
      (expr_op2 binary_op_ge
@@ -3720,8 +3737,8 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
       [expr_get_field (expr_id "args") (expr_string "1")])
      (expr_let "argsObj"
       (expr_object
-       (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
-       [] [])
+       (objattrs_intro (expr_string "Object") expr_true expr_null
+        expr_undefined) [] [])
       (expr_seq
        (expr_set_field (expr_id "argsObj") (expr_string "0") (expr_id "obj"))
        (expr_seq
@@ -3774,7 +3791,7 @@ expr_let "%mkPropObj"
   (expr_op1 unary_op_not
    (expr_op2 binary_op_stx_eq (expr_id "value") expr_null))
   (expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+   (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
    []
    [("value", property_data
               (data_intro (expr_id "value") expr_true expr_false expr_false));
@@ -3788,7 +3805,7 @@ expr_let "%mkPropObj"
                      (data_intro (expr_id "configurable") expr_true
                       expr_false expr_false))])
   (expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+   (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
    []
    [("writable", property_data
                  (data_intro (expr_id "writable") expr_true expr_false
@@ -3928,7 +3945,7 @@ expr_seq
      "(defineOwnProperty) Attempt to add a property to a non-extensible object."]))
   (expr_let "current-prop"
    (expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
     []
     [("configurable", property_data
                       (data_intro
@@ -4123,7 +4140,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
             (expr_let "argsObj"
              (expr_object
               (objattrs_intro (expr_string "Object") expr_true expr_null
-               expr_null) [] [])
+               expr_undefined) [] [])
              (expr_seq
               (expr_set_field (expr_id "argsObj") (expr_string "0")
                (expr_id "O"))
@@ -4240,7 +4257,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
-                expr_null) [] [])
+                expr_undefined) [] [])
               (expr_seq
                (expr_set_field (expr_id "argsObj") (expr_string "0")
                 (expr_id "kValue"))
@@ -4286,7 +4303,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       (expr_let "A"
        (expr_object
         (objattrs_intro (expr_string "Array") expr_true
-         (expr_id "%ArrayProto") expr_null) []
+         (expr_id "%ArrayProto") expr_undefined) []
         [("length", property_data
                     (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                      expr_false expr_false))])
@@ -4300,7 +4317,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
-                expr_null) [] [])
+                expr_undefined) [] [])
               (expr_seq
                (expr_set_field (expr_id "argsObj") (expr_string "0")
                 (expr_id "kValue"))
@@ -4324,7 +4341,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                        expr_app (expr_id "%ToString") [expr_id "to"];
                        expr_object
                        (objattrs_intro (expr_string "Object") expr_true
-                        expr_null expr_null) []
+                        expr_null expr_undefined) []
                        [("value", property_data
                                   (data_intro (expr_id "kValue") expr_true
                                    expr_false expr_false));
@@ -4382,7 +4399,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
               (expr_let "argslist"
                (expr_object
                 (objattrs_intro (expr_string "Object") expr_true expr_null
-                 expr_null) []
+                 expr_undefined) []
                 [("0", property_data
                        (data_intro (expr_id "kValue") expr_true expr_false
                         expr_false));
@@ -4478,14 +4495,14 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
     (expr_let "obj"
      (expr_object
       (objattrs_intro (expr_string "Object") expr_true
-       (expr_id "%ObjectProto") expr_null) [] [])
+       (expr_id "%ObjectProto") expr_undefined) [] [])
      (expr_seq
       (expr_app (expr_id "%defineOwnProperty")
        [expr_id "obj";
         expr_string "enumerable";
         expr_object
-        (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
-        []
+        (objattrs_intro (expr_string "Object") expr_true expr_null
+         expr_undefined) []
         [("value", property_data
                    (data_intro
                     (expr_get_attr pattr_enum (expr_id "O") (expr_id "name"))
@@ -4502,8 +4519,8 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
         [expr_id "obj";
          expr_string "configurable";
          expr_object
-         (objattrs_intro (expr_string "Object") expr_true expr_null expr_null)
-         []
+         (objattrs_intro (expr_string "Object") expr_true expr_null
+          expr_undefined) []
          [("value", property_data
                     (data_intro
                      (expr_get_attr pattr_config (expr_id "O")
@@ -4525,7 +4542,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            expr_string "value";
            expr_object
            (objattrs_intro (expr_string "Object") expr_true expr_null
-            expr_null) []
+            expr_undefined) []
            [("value", property_data
                       (data_intro
                        (expr_get_field (expr_id "O") (expr_id "name"))
@@ -4545,7 +4562,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
             expr_string "writable";
             expr_object
             (objattrs_intro (expr_string "Object") expr_true expr_null
-             expr_null) []
+             expr_undefined) []
             [("value", property_data
                        (data_intro
                         (expr_get_attr pattr_writable (expr_id "O")
@@ -4566,7 +4583,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            expr_string "get";
            expr_object
            (objattrs_intro (expr_string "Object") expr_true expr_null
-            expr_null) []
+            expr_undefined) []
            [("value", property_data
                       (data_intro
                        (expr_get_attr pattr_getter (expr_id "O")
@@ -4586,7 +4603,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
             expr_string "set";
             expr_object
             (objattrs_intro (expr_string "Object") expr_true expr_null
-             expr_null) []
+             expr_undefined) []
             [("value", property_data
                        (data_intro
                         (expr_get_attr pattr_setter (expr_id "O")
@@ -4608,7 +4625,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_let "A"
   (expr_object
    (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-    expr_null) []
+    expr_undefined) []
    [("length", property_data
                (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                 expr_false expr_false))])
@@ -4814,7 +4831,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_let "A"
   (expr_object
    (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-    expr_null) []
+    expr_undefined) []
    [("length", property_data
                (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                 expr_false expr_false))])
@@ -4830,7 +4847,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            (expr_let "pd"
             (expr_object
              (objattrs_intro (expr_string "Object") expr_true expr_null
-              expr_null) []
+              expr_undefined) []
              [("value", property_data
                         (data_intro (expr_id "name") expr_true expr_false
                          expr_false));
@@ -4914,7 +4931,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       (expr_let "A"
        (expr_object
         (objattrs_intro (expr_string "Array") expr_true
-         (expr_id "%ArrayProto") expr_null) [] [])
+         (expr_id "%ArrayProto") expr_undefined) [] [])
        (expr_recc "loop"
         (expr_lambda ["k"]
          (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
@@ -4925,7 +4942,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
-                expr_null) [] [])
+                expr_undefined) [] [])
               (expr_seq
                (expr_set_field (expr_id "argsObj") (expr_string "0")
                 (expr_id "kValue"))
@@ -4947,7 +4964,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                       expr_id "Pk";
                       expr_object
                       (objattrs_intro (expr_string "Object") expr_true
-                       expr_null expr_null) []
+                       expr_null expr_undefined) []
                       [("value", property_data
                                  (data_intro (expr_id "mappedValue")
                                   expr_true expr_false expr_false));
@@ -5314,7 +5331,7 @@ Definition ex_privmkArgsObj :=
 expr_let "argsObj"
 (expr_object
  (objattrs_intro (expr_string "Arguments") expr_true (expr_id "%ObjectProto")
-  expr_null) []
+  expr_undefined) []
  [("callee", property_accessor
              (accessor_intro
               (expr_app (expr_id "%MakeGetter") [expr_id "%ThrowTypeError"])
@@ -5346,12 +5363,12 @@ expr_let "argsObj"
 .
 Definition ex_privnewDeclEnvRec := 
 expr_object
-(objattrs_intro (expr_string "DeclEnvRec") expr_true expr_null expr_null)
+(objattrs_intro (expr_string "DeclEnvRec") expr_true expr_null expr_undefined)
 [("parent", expr_id "parent")] []
 .
 Definition ex_privnewObjEnvRec := 
 expr_object
-(objattrs_intro (expr_string "ObjEnvRec") expr_true expr_null expr_null)
+(objattrs_intro (expr_string "ObjEnvRec") expr_true expr_null expr_undefined)
 [("parent", expr_id "parent")]
 [("bindings", property_data
               (data_intro (expr_id "obj") expr_false expr_false expr_false));
@@ -5367,12 +5384,12 @@ expr_let "x"
 (expr_let "obj"
  (expr_object
   (objattrs_intro (expr_string "Object") expr_true (expr_id "%StringProto")
-   expr_null) [("primval", expr_op1 unary_op_prim_to_str (expr_id "x"))] 
+   expr_undefined) [("primval", expr_op1 unary_op_prim_to_str (expr_id "x"))]
   [])
  (expr_app (expr_id "%toLocaleStringlambda")
   [expr_id "obj";
    expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+   (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
    [] []]))
 .
 Definition ex_privnumToStringAbstract := 
@@ -5412,46 +5429,37 @@ expr_recc "nts"
         (expr_op2 binary_op_base (expr_id "n") (expr_id "r"))))))))))
 (expr_app (expr_id "nts") [expr_id "n"; expr_id "r"])
 .
-Definition ex_privnumberToStringlambda := 
-expr_let "notNumProto"
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq (expr_id "this") (expr_id "%NumberProto")))
+Definition ex_privnumberPrimval := 
+expr_if
+(expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
+ (expr_string "number")) (expr_id "this")
 (expr_if
- (expr_if (expr_id "notNumProto")
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq
-    (expr_get_obj_attr oattr_proto (expr_id "this")) (expr_id "%NumberProto")))
-  expr_false)
- (expr_throw
-  (expr_object
-   (objattrs_intro (expr_string "Object") expr_true
-    (expr_id "%TypeErrorProto") expr_null) [] []))
- (expr_let "rint"
+ (expr_if
+  (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
+   (expr_string "object"))
+  (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_class (expr_id "this"))
+   (expr_string "Number")) expr_false)
+ (expr_get_internal "primval" (expr_id "this"))
+ (expr_app (expr_id "%TypeError") [expr_string "not a number"]))
+.
+Definition ex_privnumberToStringlambda := 
+expr_let "val" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
+(expr_let "rint"
+ (expr_if
+  (expr_op2 binary_op_stx_eq
+   (expr_get_field (expr_id "args") (expr_string "0")) expr_undefined)
+  (expr_number (JsNumber.of_int (10)))
+  (expr_app (expr_id "%ToInteger")
+   [expr_get_field (expr_id "args") (expr_string "0")]))
+ (expr_if
   (expr_if
-   (expr_op2 binary_op_stx_eq
-    (expr_get_field (expr_id "args") (expr_string "0")) expr_undefined)
-   (expr_number (JsNumber.of_int (10)))
-   (expr_app (expr_id "%ToInteger")
-    [expr_get_field (expr_id "args") (expr_string "0")]))
-  (expr_if
-   (expr_op2 binary_op_stx_eq (expr_id "rint")
-    (expr_number (JsNumber.of_int (10))))
-   (expr_app (expr_id "%numToStringAbstract")
-    [expr_get_internal "primval" (expr_id "this");
-     expr_number (JsNumber.of_int (10))])
-   (expr_if
-    (expr_op1 unary_op_not
-     (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "rint"))
-      (expr_string "number"))) (expr_throw (expr_string "RangeError"))
-    (expr_if
-     (expr_if
-      (expr_op2 binary_op_lt (expr_id "rint")
-       (expr_number (JsNumber.of_int (2)))) expr_true
-      (expr_op2 binary_op_gt (expr_id "rint")
-       (expr_number (JsNumber.of_int (36)))))
-     (expr_throw (expr_string "RangeError"))
-     (expr_app (expr_id "%numToStringAbstract")
-      [expr_get_internal "primval" (expr_id "this"); expr_id "rint"]))))))
+   (expr_op2 binary_op_lt (expr_id "rint")
+    (expr_number (JsNumber.of_int (2)))) expr_true
+   (expr_op2 binary_op_gt (expr_id "rint")
+    (expr_number (JsNumber.of_int (36)))))
+  (expr_app (expr_id "%RangeError")
+   [expr_string "Number.toString received invalid radix"])
+  (expr_app (expr_id "%numToStringAbstract") [expr_id "val"; expr_id "rint"])))
 .
 Definition ex_privobjectToStringlambda := 
 expr_label "ret"
@@ -5470,7 +5478,7 @@ expr_label "ret"
 Definition ex_privoneArgObj := 
 expr_app (expr_id "%mkArgsObj")
 [expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+ (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
  []
  [("0", property_data
         (data_intro (expr_id "arg") expr_false expr_false expr_false))]]
@@ -5550,7 +5558,7 @@ expr_let "getOwnProperty"
 Definition ex_privpropertyNames := 
 expr_let "aux"
 (expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+ (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
  [] [])
 (expr_recc "helper"
  (expr_lambda ["obj"]
@@ -5676,7 +5684,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                 (expr_let "argsObj"
                  (expr_object
                   (objattrs_intro (expr_string "Object") expr_true expr_null
-                   expr_null) [] [])
+                   expr_undefined) [] [])
                  (expr_seq
                   (expr_set_field (expr_id "argsObj") (expr_string "0")
                    (expr_id "accumulator"))
@@ -5767,7 +5775,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                 (expr_let "argsObj"
                  (expr_object
                   (objattrs_intro (expr_string "Object") expr_true expr_null
-                   expr_null) [] [])
+                   expr_undefined) [] [])
                  (expr_seq
                   (expr_set_field (expr_id "argsObj") (expr_string "0")
                    (expr_id "accumulator"))
@@ -5985,7 +5993,7 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
               (expr_app (expr_id "%JSError")
                [expr_object
                 (objattrs_intro (expr_string "Object") expr_true
-                 (expr_id "%RangeErrorProto") expr_null) [] []]))
+                 (expr_id "%RangeErrorProto") expr_undefined) [] []]))
              (expr_if
               (expr_op2 binary_op_lt (expr_id "newLen")
                (expr_get_field (expr_id "obj") (expr_string "length")))
@@ -6097,7 +6105,7 @@ expr_let "n"
 Definition ex_privslice_internal := 
 expr_let "retObj"
 (expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+ (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
  [] [])
 (expr_seq
  (expr_recc "inner_slice"
@@ -6126,7 +6134,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "A"
  (expr_object
   (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-   expr_null) []
+   expr_undefined) []
   [("length", property_data
               (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                expr_false expr_false))])
@@ -6186,7 +6194,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   expr_app (expr_id "%ToString") [expr_id "n"];
                   expr_object
                   (objattrs_intro (expr_string "Object") expr_true expr_null
-                   expr_null) []
+                   expr_undefined) []
                   [("value", property_data
                              (data_intro (expr_id "kValue") expr_true
                               expr_false expr_false));
@@ -6307,7 +6315,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
-                expr_null) [] [])
+                expr_undefined) [] [])
               (expr_seq
                (expr_set_field (expr_id "argsObj") (expr_string "0")
                 (expr_id "kValue"))
@@ -6396,15 +6404,15 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                     (expr_app (expr_id "%JSError")
                      [expr_object
                       (objattrs_intro (expr_string "Object") expr_true
-                       (expr_id "%TypeErrorProto") expr_null) [] []]))
-                   expr_null)
+                       (expr_id "%TypeErrorProto") expr_undefined) [] 
+                      []])) expr_null)
                   (expr_break "ret"
                    (expr_app
                     (expr_get_field (expr_id "args") (expr_string "0"))
                     [expr_undefined;
                      expr_object
                      (objattrs_intro (expr_string "Object") expr_true
-                      expr_null expr_null) []
+                      expr_null expr_undefined) []
                      [("0", property_data
                             (data_intro (expr_id "x") expr_true expr_false
                              expr_false));
@@ -6485,12 +6493,12 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_let "emptyobj"
    (expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
     [] [])
    (expr_let "A"
     (expr_object
      (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-      expr_null) []
+      expr_undefined) []
      [("length", property_data
                  (data_intro (expr_number (JsNumber.of_int (0))) expr_true
                   expr_false expr_false))])
@@ -6532,7 +6540,7 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                    expr_app (expr_id "%ToString") [expr_id "k"];
                    expr_object
                    (objattrs_intro (expr_string "Object") expr_true expr_null
-                    expr_null) []
+                    expr_undefined) []
                    [("value", property_data
                               (data_intro (expr_id "fromValue") expr_true
                                expr_false expr_false));
@@ -6803,39 +6811,25 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 .
 Definition ex_privtoExponentialLambda :=  expr_string "toExponential NYI" .
 Definition ex_privtoFixedLambda := 
-expr_let "f"
-(expr_app (expr_id "%ToInteger")
- [expr_get_field (expr_id "args") (expr_string "0")])
-(expr_label "ret"
+expr_let "x" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
+(expr_let "f"
+ (expr_app (expr_id "%ToInteger")
+  [expr_get_field (expr_id "args") (expr_string "0")])
  (expr_seq
   (expr_if
    (expr_if
     (expr_op2 binary_op_lt (expr_id "f") (expr_number (JsNumber.of_int (0))))
     expr_true
     (expr_op2 binary_op_gt (expr_id "f") (expr_number (JsNumber.of_int (20)))))
-   (expr_throw
-    (expr_app (expr_id "%JSError")
-     [expr_object
-      (objattrs_intro (expr_string "Object") expr_true
-       (expr_id "%RangeErrorProto") expr_null) [] []])) expr_null)
-  (expr_let "x"
+   (expr_app (expr_id "%RangeError")
+    [expr_string "invalid fractionDigits in Number.toFixed"]) expr_undefined)
+  (expr_if
+   (expr_op2 binary_op_same_value (expr_id "x")
+    (expr_number (JsNumber.of_int (0)))) (expr_string "NaN")
    (expr_if
-    (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
-     (expr_string "number")) (expr_id "this")
-    (expr_get_internal "primval" (expr_id "this")))
-   (expr_seq
-    (expr_if
-     (expr_op1 unary_op_not
-      (expr_op2 binary_op_stx_eq (expr_id "x") (expr_id "x")))
-     (expr_break "ret" (expr_string "NaN")) expr_null)
-    (expr_seq
-     (expr_if
-      (expr_op2 binary_op_ge (expr_id "x")
-       (expr_number (JsNumber.of_int (0))))
-      (expr_break "ret" (expr_app (expr_id "%ToString") [expr_id "x"]))
-      expr_null)
-     (expr_break "ret"
-      (expr_op2 binary_op_to_fixed (expr_id "x") (expr_id "f"))))))))
+    (expr_op2 binary_op_ge (expr_id "x") (expr_number (JsNumber.of_int (0))))
+    (expr_app (expr_id "%ToString") [expr_id "x"])
+    (expr_op2 binary_op_to_fixed (expr_id "x") (expr_id "f"))))))
 .
 Definition ex_privtoLocaleStringlambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -6847,7 +6841,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_app (expr_id "toString")
    [expr_id "O";
     expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+    (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
     [] []])))
 .
 Definition ex_privtoPrecisionLambda :=  expr_string "toPrecision NYI" .
@@ -6859,7 +6853,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 Definition ex_privtwoArgObj := 
 expr_app (expr_id "%mkArgsObj")
 [expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+ (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
  []
  [("0", property_data
         (data_intro (expr_id "arg1") expr_false expr_false expr_false));
@@ -6871,8 +6865,7 @@ Definition ex_privunshiftlambda :=
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
-  (expr_let "argCount"
-   (expr_get_field (expr_id "args") (expr_string "length"))
+  (expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
    (expr_seq
     (expr_recc "Oloop"
      (expr_lambda ["k"]
@@ -6902,7 +6895,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_number (JsNumber.of_int (1)))]))))) expr_undefined))
      (expr_app (expr_id "Oloop") [expr_id "len"]))
     (expr_seq
-     (expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
+     (expr_let "end" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
       (expr_recc "argsLoop"
        (expr_lambda ["argsIndex"; "j"]
         (expr_if
@@ -6948,7 +6941,7 @@ expr_let "hasWrongProto"
 Definition ex_privvalueOflambda := 
 expr_app (expr_id "%ToObject") [expr_id "this"]
 .
-Definition objCode :=  value_null .
+Definition objCode :=  value_undefined .
 Definition name_objCode :=  "objCode" .
 Definition privTypeof := 
 value_closure (closure_intro [] None ["val"] ex_privTypeof)
@@ -7063,6 +7056,10 @@ value_closure
 Definition name_privAppMethod :=  "%AppMethod" .
 Definition privArrayProto :=  value_object 52 .
 Definition name_privArrayProto :=  "%ArrayProto" .
+Definition privComputeLength := 
+value_closure (closure_intro [] None ["args"] ex_privComputeLength)
+.
+Definition name_privComputeLength :=  "%ComputeLength" .
 Definition privRangeErrorProto :=  value_object 10 .
 Definition name_privRangeErrorProto :=  "%RangeErrorProto" .
 Definition privToNumber := 
@@ -7088,14 +7085,16 @@ value_closure (closure_intro [] None ["obj"] ex_privdevirtualize)
 Definition name_privdevirtualize :=  "%devirtualize" .
 Definition privMakeGetter := 
 value_closure
-(closure_intro [("%devirtualize", privdevirtualize)] None ["f"]
- ex_privMakeGetter)
+(closure_intro
+ [("%AppExprCheck", privAppExprCheck); ("%devirtualize", privdevirtualize)]
+ None ["f"] ex_privMakeGetter)
 .
 Definition name_privMakeGetter :=  "%MakeGetter" .
 Definition privMakeSetter := 
 value_closure
-(closure_intro [("%devirtualize", privdevirtualize)] None ["f"]
- ex_privMakeSetter)
+(closure_intro
+ [("%AppExprCheck", privAppExprCheck); ("%devirtualize", privdevirtualize)]
+ None ["f"] ex_privMakeSetter)
 .
 Definition name_privMakeSetter :=  "%MakeSetter" .
 Definition privToBoolean := 
@@ -7146,6 +7145,7 @@ Definition privArrayConstructor :=
 value_closure
 (closure_intro
  [("%ArrayProto", privArrayProto);
+  ("%ComputeLength", privComputeLength);
   ("%JSError", privJSError);
   ("%RangeErrorProto", privRangeErrorProto);
   ("%ToUint32", privToUint32);
@@ -7535,8 +7535,11 @@ value_closure
 Definition name_privevallambda :=  "%evallambda" .
 Definition privFunctionConstructor := 
 value_closure
-(closure_intro [("%ToString", privToString); ("%evallambda", privevallambda)]
- None ["this"; "args"] ex_privFunctionConstructor)
+(closure_intro
+ [("%ComputeLength", privComputeLength);
+  ("%ToString", privToString);
+  ("%evallambda", privevallambda)] None ["this"; "args"]
+ ex_privFunctionConstructor)
 .
 Definition name_privFunctionConstructor :=  "%FunctionConstructor" .
 Definition privFunctionGlobalFuncObj :=  value_object 311 .
@@ -7602,8 +7605,9 @@ Definition name_privNumberGlobalFuncObj :=  "%NumberGlobalFuncObj" .
 Definition privObjectConstructor := 
 value_closure
 (closure_intro
- [("%ObjectProto", privObjectProto); ("%ToObject", privToObject)] None
- ["this"; "args"] ex_privObjectConstructor)
+ [("%ComputeLength", privComputeLength);
+  ("%ObjectProto", privObjectProto);
+  ("%ToObject", privToObject)] None ["this"; "args"] ex_privObjectConstructor)
 .
 Definition name_privObjectConstructor :=  "%ObjectConstructor" .
 Definition privObjectGlobalFuncObj :=  value_object 33 .
@@ -7616,8 +7620,11 @@ value_closure
 Definition name_privObjectTypeCheck :=  "%ObjectTypeCheck" .
 Definition privPrepostOp := 
 value_closure
-(closure_intro [("%ToNumber", privToNumber)] None
- ["obj"; "fld"; "op"; "is_pre"] ex_privPrepostOp)
+(closure_intro
+ [("%GetField", privGetField);
+  ("%ToNumber", privToNumber);
+  ("%set-property", privset_property)] None ["obj"; "fld"; "op"; "is_pre"]
+ ex_privPrepostOp)
 .
 Definition name_privPrepostOp :=  "%PrepostOp" .
 Definition privPrimAdd := 
@@ -7640,6 +7647,13 @@ value_closure
   ("%TypeError", privTypeError)] None ["constr"; "args"] ex_privPrimNew)
 .
 Definition name_privPrimNew :=  "%PrimNew" .
+Definition privRangeError := 
+value_closure
+(closure_intro
+ [("%NativeError", privNativeError);
+  ("%RangeErrorProto", privRangeErrorProto)] None ["msg"] ex_privRangeError)
+.
+Definition name_privRangeError :=  "%RangeError" .
 Definition privRangeErrorConstructor := 
 value_closure
 (closure_intro
@@ -7685,8 +7699,8 @@ Definition name_privSignedRightShift :=  "%SignedRightShift" .
 Definition privStringConstructor := 
 value_closure
 (closure_intro
- [("%StringIndices", privStringIndices);
-  ("%StringProto", privStringProto);
+ [("%ComputeLength", privComputeLength);
+  ("%MakeString", privMakeString);
   ("%ToString", privToString)] None ["this"; "args"] ex_privStringConstructor)
 .
 Definition name_privStringConstructor :=  "%StringConstructor" .
@@ -8468,15 +8482,21 @@ value_closure (closure_intro [] None ["n"; "r"] ex_privnumToStringAbstract)
 Definition name_privnumToStringAbstract :=  "%numToStringAbstract" .
 Definition privnumValueOf :=  value_object 294 .
 Definition name_privnumValueOf :=  "%numValueOf" .
+Definition privnumberPrimval := 
+value_closure
+(closure_intro [("%TypeError", privTypeError)] None ["this"]
+ ex_privnumberPrimval)
+.
+Definition name_privnumberPrimval :=  "%numberPrimval" .
 Definition privnumberToString :=  value_object 153 .
 Definition name_privnumberToString :=  "%numberToString" .
 Definition privnumberToStringlambda := 
 value_closure
 (closure_intro
- [("%NumberProto", privNumberProto);
+ [("%RangeError", privRangeError);
   ("%ToInteger", privToInteger);
-  ("%TypeErrorProto", privTypeErrorProto);
-  ("%numToStringAbstract", privnumToStringAbstract)] None ["this"; "args"]
+  ("%numToStringAbstract", privnumToStringAbstract);
+  ("%numberPrimval", privnumberPrimval)] None ["this"; "args"]
  ex_privnumberToStringlambda)
 .
 Definition name_privnumberToStringlambda :=  "%numberToStringlambda" .
@@ -8798,10 +8818,11 @@ Definition name_privtoFixed :=  "%toFixed" .
 Definition privtoFixedLambda := 
 value_closure
 (closure_intro
- [("%JSError", privJSError);
-  ("%RangeErrorProto", privRangeErrorProto);
+ [("%RangeError", privRangeError);
   ("%ToInteger", privToInteger);
-  ("%ToString", privToString)] None ["this"; "args"] ex_privtoFixedLambda)
+  ("%ToString", privToString);
+  ("%numberPrimval", privnumberPrimval)] None ["this"; "args"]
+ ex_privtoFixedLambda)
 .
 Definition name_privtoFixedLambda :=  "%toFixedLambda" .
 Definition privtoLocaleString :=  value_object 40 .
@@ -8835,7 +8856,8 @@ Definition name_privunshift :=  "%unshift" .
 Definition privunshiftlambda := 
 value_closure
 (closure_intro
- [("%ToObject", privToObject);
+ [("%ComputeLength", privComputeLength);
+  ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["this"; "args"] ex_privunshiftlambda)
 .
@@ -9188,6 +9210,7 @@ Definition ctx_items :=
  (name_privBooleanProto, privBooleanProto);
  (name_privCheckObjectCoercible, privCheckObjectCoercible);
  (name_privCompareOp, privCompareOp);
+ (name_privComputeLength, privComputeLength);
  (name_privDateConstructor, privDateConstructor);
  (name_privDateFromTime, privDateFromTime);
  (name_privDateGlobalFuncObj, privDateGlobalFuncObj);
@@ -9253,6 +9276,7 @@ Definition ctx_items :=
  (name_privPrimMultOp, privPrimMultOp);
  (name_privPrimNew, privPrimNew);
  (name_privPrimitiveCompareOp, privPrimitiveCompareOp);
+ (name_privRangeError, privRangeError);
  (name_privRangeErrorConstructor, privRangeErrorConstructor);
  (name_privRangeErrorGlobalFuncObj, privRangeErrorGlobalFuncObj);
  (name_privRangeErrorProto, privRangeErrorProto);
@@ -9468,6 +9492,7 @@ Definition ctx_items :=
  (name_privnumTLSLambda, privnumTLSLambda);
  (name_privnumToStringAbstract, privnumToStringAbstract);
  (name_privnumValueOf, privnumValueOf);
+ (name_privnumberPrimval, privnumberPrimval);
  (name_privnumberToString, privnumberToString);
  (name_privnumberToStringlambda, privnumberToStringlambda);
  (name_privobjectToString, privobjectToString);
@@ -9539,6 +9564,7 @@ Definition ctx_items :=
  (name_privtanLambda, privtanLambda);
  (name_privtest, privtest);
  (name_privtestlambda, privtestlambda);
+ (name_privglobal, privglobal);
  (name_privtlclambda, privtlclambda);
  (name_privtoExponential, privtoExponential);
  (name_privtoExponentialLambda, privtoExponentialLambda);
@@ -9593,6 +9619,7 @@ Definition store_items := [
                                              ("%BooleanProto", privBooleanProto);
                                              ("%CheckObjectCoercible", privCheckObjectCoercible);
                                              ("%CompareOp", privCompareOp);
+                                             ("%ComputeLength", privComputeLength);
                                              ("%DateConstructor", privDateConstructor);
                                              ("%DateFromTime", privDateFromTime);
                                              ("%DateGlobalFuncObj", privDateGlobalFuncObj);
@@ -9658,6 +9685,7 @@ Definition store_items := [
                                              ("%PrimMultOp", privPrimMultOp);
                                              ("%PrimNew", privPrimNew);
                                              ("%PrimitiveCompareOp", privPrimitiveCompareOp);
+                                             ("%RangeError", privRangeError);
                                              ("%RangeErrorConstructor", privRangeErrorConstructor);
                                              ("%RangeErrorGlobalFuncObj", privRangeErrorGlobalFuncObj);
                                              ("%RangeErrorProto", privRangeErrorProto);
@@ -9873,6 +9901,7 @@ Definition store_items := [
                                              ("%numTLSLambda", privnumTLSLambda);
                                              ("%numToStringAbstract", privnumToStringAbstract);
                                              ("%numValueOf", privnumValueOf);
+                                             ("%numberPrimval", privnumberPrimval);
                                              ("%numberToString", privnumberToString);
                                              ("%numberToStringlambda", privnumberToStringlambda);
                                              ("%objectToString", privobjectToString);
@@ -9944,6 +9973,7 @@ Definition store_items := [
                                              ("%tanLambda", privtanLambda);
                                              ("%test", privtest);
                                              ("%testlambda", privtestlambda);
+                                             ("%this", privglobal);
                                              ("%tlclambda", privtlclambda);
                                              ("%toExponential", privtoExponential);
                                              ("%toExponentialLambda", privtoExponentialLambda);
