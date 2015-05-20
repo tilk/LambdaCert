@@ -393,6 +393,9 @@ expr_object
  ("%ToPrimitiveHint", property_data
                       (data_intro (expr_id "%ToPrimitiveHint") expr_true
                        expr_false expr_false));
+ ("%ToPropertyDescriptor", property_data
+                           (data_intro (expr_id "%ToPropertyDescriptor")
+                            expr_true expr_false expr_false));
  ("%ToString", property_data
                (data_intro (expr_id "%ToString") expr_true expr_false
                 expr_false));
@@ -2947,6 +2950,102 @@ expr_if (expr_op1 unary_op_is_object (expr_id "val"))
         [expr_string "valueOf and toString both absent in toPrimitive"])]])
     [])))) (expr_id "val")
 .
+Definition ex_privToPropertyDescriptor := 
+expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
+(expr_let "attrobj"
+ (expr_object
+  (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
+  [] [])
+ (expr_seq
+  (expr_let "enumerable"
+   (expr_app (expr_id "%GetField")
+    [expr_id "propobj"; expr_string "enumerable"])
+   (expr_if
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_stx_eq
+      (expr_op1 unary_op_typeof (expr_id "enumerable"))
+      (expr_string "undefined")))
+    (expr_set_field (expr_id "attrobj") (expr_string "enumerable")
+     (expr_app (expr_id "%ToBoolean") [expr_id "enumerable"])) expr_undefined))
+  (expr_seq
+   (expr_let "configurable"
+    (expr_app (expr_id "%GetField")
+     [expr_id "propobj"; expr_string "configurable"])
+    (expr_if
+     (expr_op1 unary_op_not
+      (expr_op2 binary_op_stx_eq
+       (expr_op1 unary_op_typeof (expr_id "configurable"))
+       (expr_string "undefined")))
+     (expr_set_field (expr_id "attrobj") (expr_string "configurable")
+      (expr_app (expr_id "%ToBoolean") [expr_id "configurable"]))
+     expr_undefined))
+   (expr_seq
+    (expr_let "writable"
+     (expr_app (expr_id "%GetField")
+      [expr_id "propobj"; expr_string "writable"])
+     (expr_if
+      (expr_op1 unary_op_not
+       (expr_op2 binary_op_stx_eq
+        (expr_op1 unary_op_typeof (expr_id "writable"))
+        (expr_string "undefined")))
+      (expr_set_field (expr_id "attrobj") (expr_string "writable")
+       (expr_app (expr_id "%ToBoolean") [expr_id "writable"])) expr_undefined))
+    (expr_seq
+     (expr_let "value"
+      (expr_app (expr_id "%GetField")
+       [expr_id "propobj"; expr_string "value"])
+      (expr_if
+       (expr_op1 unary_op_not
+        (expr_op2 binary_op_stx_eq
+         (expr_op1 unary_op_typeof (expr_id "value"))
+         (expr_string "undefined")))
+       (expr_set_field (expr_id "attrobj") (expr_string "value")
+        (expr_id "value")) expr_undefined))
+     (expr_seq
+      (expr_let "get"
+       (expr_app (expr_id "%GetField") [expr_id "propobj"; expr_string "get"])
+       (expr_if
+        (expr_if
+         (expr_op1 unary_op_not
+          (expr_op2 binary_op_stx_eq
+           (expr_op1 unary_op_typeof (expr_id "get"))
+           (expr_string "undefined")))
+         (expr_op1 unary_op_not
+          (expr_op2 binary_op_stx_eq
+           (expr_app (expr_id "%Typeof") [expr_id "get"])
+           (expr_string "function"))) expr_false)
+        (expr_app (expr_id "%TypeError")
+         [expr_string "defineProperty given a non-function getter"])
+        (expr_set_field (expr_id "attrobj") (expr_string "get")
+         (expr_id "get"))))
+      (expr_seq
+       (expr_let "set"
+        (expr_app (expr_id "%GetField")
+         [expr_id "propobj"; expr_string "set"])
+        (expr_if
+         (expr_if
+          (expr_op1 unary_op_not
+           (expr_op2 binary_op_stx_eq
+            (expr_op1 unary_op_typeof (expr_id "set"))
+            (expr_string "undefined")))
+          (expr_op1 unary_op_not
+           (expr_op2 binary_op_stx_eq
+            (expr_app (expr_id "%Typeof") [expr_id "set"])
+            (expr_string "function"))) expr_false)
+         (expr_app (expr_id "%TypeError")
+          [expr_string "defineProperty given a non-function setter"])
+         (expr_set_field (expr_id "attrobj") (expr_string "set")
+          (expr_id "set"))))
+       (expr_seq
+        (expr_if
+         (expr_if (expr_app (expr_id "isDataDescriptor") [expr_id "attrobj"])
+          (expr_app (expr_id "isAccessorDescriptor") [expr_id "attrobj"])
+          expr_false)
+         (expr_app (expr_id "%TypeError")
+          [expr_string
+           "The attributes given to defineProperty were inconsistent"])
+         expr_undefined) (expr_id "attrobj")))))))))
+.
 Definition ex_privToString := 
 expr_op1 unary_op_prim_to_str
 (expr_app (expr_id "%ToPrimitiveHint") [expr_id "val"; expr_string "string"])
@@ -4056,97 +4155,11 @@ Definition ex_privdefinePropertylambda :=
 expr_let "obj" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_let "field" (expr_get_field (expr_id "args") (expr_string "1"))
  (expr_let "propobj" (expr_get_field (expr_id "args") (expr_string "2"))
-  (expr_if (expr_app (expr_id "%ObjectTypeCheck") [expr_id "obj"])
-   (expr_app (expr_id "%TypeError")
-    [expr_string "defineProperty didn't get object"])
-   (expr_let "attrobj"
-    (expr_object
-     (objattrs_intro (expr_string "Object") expr_true expr_null expr_null) 
-     [] [])
-    (expr_seq
-     (expr_let "enumerable"
-      (expr_get_field (expr_id "propobj") (expr_string "enumerable"))
-      (expr_if
-       (expr_op1 unary_op_not
-        (expr_op2 binary_op_stx_eq
-         (expr_op1 unary_op_typeof (expr_id "enumerable"))
-         (expr_string "undefined")))
-       (expr_set_field (expr_id "attrobj") (expr_string "enumerable")
-        (expr_id "enumerable")) (expr_id "attrobj")))
-     (expr_seq
-      (expr_let "configurable"
-       (expr_get_field (expr_id "propobj") (expr_string "configurable"))
-       (expr_if
-        (expr_op1 unary_op_not
-         (expr_op2 binary_op_stx_eq
-          (expr_op1 unary_op_typeof (expr_id "configurable"))
-          (expr_string "undefined")))
-        (expr_set_field (expr_id "attrobj") (expr_string "configurable")
-         (expr_id "configurable")) (expr_id "attrobj")))
-      (expr_seq
-       (expr_let "writable"
-        (expr_get_field (expr_id "propobj") (expr_string "writable"))
-        (expr_if
-         (expr_op1 unary_op_not
-          (expr_op2 binary_op_stx_eq
-           (expr_op1 unary_op_typeof (expr_id "writable"))
-           (expr_string "undefined")))
-         (expr_set_field (expr_id "attrobj") (expr_string "writable")
-          (expr_id "writable")) (expr_id "attrobj")))
-       (expr_seq
-        (expr_let "value"
-         (expr_get_field (expr_id "propobj") (expr_string "value"))
-         (expr_if
-          (expr_op1 unary_op_not
-           (expr_op2 binary_op_stx_eq
-            (expr_op1 unary_op_typeof (expr_id "value"))
-            (expr_string "undefined")))
-          (expr_set_field (expr_id "attrobj") (expr_string "value")
-           (expr_id "value")) (expr_id "attrobj")))
-        (expr_seq
-         (expr_let "get"
-          (expr_get_field (expr_id "propobj") (expr_string "get"))
-          (expr_if
-           (expr_if
-            (expr_op1 unary_op_not
-             (expr_op2 binary_op_stx_eq
-              (expr_op1 unary_op_typeof (expr_id "get"))
-              (expr_string "undefined")))
-            (expr_op1 unary_op_not
-             (expr_op2 binary_op_stx_eq
-              (expr_app (expr_id "%Typeof") [expr_id "get"])
-              (expr_string "function"))) expr_false)
-           (expr_app (expr_id "%TypeError")
-            [expr_string "defineProperty given a non-function getter"])
-           (expr_set_field (expr_id "attrobj") (expr_string "get")
-            (expr_id "get"))))
-         (expr_seq
-          (expr_let "set"
-           (expr_get_field (expr_id "propobj") (expr_string "set"))
-           (expr_if
-            (expr_if
-             (expr_op1 unary_op_not
-              (expr_op2 binary_op_stx_eq
-               (expr_op1 unary_op_typeof (expr_id "set"))
-               (expr_string "undefined")))
-             (expr_op1 unary_op_not
-              (expr_op2 binary_op_stx_eq
-               (expr_app (expr_id "%Typeof") [expr_id "set"])
-               (expr_string "function"))) expr_false)
-            (expr_app (expr_id "%TypeError")
-             [expr_string "defineProperty given a non-function setter"])
-            (expr_set_field (expr_id "attrobj") (expr_string "set")
-             (expr_id "set"))))
-          (expr_if
-           (expr_if
-            (expr_app (expr_id "isDataDescriptor") [expr_id "attrobj"])
-            (expr_app (expr_id "isAccessorDescriptor") [expr_id "attrobj"])
-            expr_false)
-           (expr_app (expr_id "%TypeError")
-            [expr_string
-             "The attributes given to defineProperty were inconsistent"])
-           (expr_app (expr_id "%defineOwnProperty")
-            [expr_id "obj"; expr_id "field"; expr_id "attrobj"]))))))))))))
+  (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "obj"])
+   (expr_app (expr_id "%defineOwnProperty")
+    [expr_id "obj";
+     expr_app (expr_id "%ToString") [expr_id "field"];
+     expr_app (expr_id "%ToPropertyDescriptor") [expr_id "propobj"]]))))
 .
 Definition ex_privdevirtualize := 
 expr_if
@@ -7727,6 +7740,19 @@ value_closure
 (closure_intro [("%msPerDay", privmsPerDay)] None ["t"] ex_privTimeWithinDay)
 .
 Definition name_privTimeWithinDay :=  "%TimeWithinDay" .
+Definition privToPropertyDescriptor := 
+value_closure
+(closure_intro
+ [("%GetField", privGetField);
+  ("%ObjectTypeCheck", privObjectTypeCheck);
+  ("%ToBoolean", privToBoolean);
+  ("%TypeError", privTypeError);
+  ("%Typeof", privTypeof);
+  ("isAccessorDescriptor", isAccessorDescriptor);
+  ("isDataDescriptor", isDataDescriptor)] None ["propobj"]
+ ex_privToPropertyDescriptor)
+.
+Definition name_privToPropertyDescriptor :=  "%ToPropertyDescriptor" .
 Definition privToUint16 := 
 value_closure
 (closure_intro [("%ToUint", privToUint)] None ["n"] ex_privToUint16)
@@ -7983,11 +8009,9 @@ Definition privdefinePropertylambda :=
 value_closure
 (closure_intro
  [("%ObjectTypeCheck", privObjectTypeCheck);
-  ("%TypeError", privTypeError);
-  ("%Typeof", privTypeof);
-  ("%defineOwnProperty", privdefineOwnProperty);
-  ("isAccessorDescriptor", isAccessorDescriptor);
-  ("isDataDescriptor", isDataDescriptor)] None ["this"; "args"]
+  ("%ToPropertyDescriptor", privToPropertyDescriptor);
+  ("%ToString", privToString);
+  ("%defineOwnProperty", privdefineOwnProperty)] None ["this"; "args"]
  ex_privdefinePropertylambda)
 .
 Definition name_privdefinePropertylambda :=  "%definePropertylambda" .
@@ -9266,6 +9290,7 @@ Definition ctx_items :=
  (name_privToObjectVirtual, privToObjectVirtual);
  (name_privToPrimitive, privToPrimitive);
  (name_privToPrimitiveHint, privToPrimitiveHint);
+ (name_privToPropertyDescriptor, privToPropertyDescriptor);
  (name_privToString, privToString);
  (name_privToUint, privToUint);
  (name_privToUint16, privToUint16);
@@ -9670,6 +9695,7 @@ Definition store_items := [
                                              ("%ToObjectVirtual", privToObjectVirtual);
                                              ("%ToPrimitive", privToPrimitive);
                                              ("%ToPrimitiveHint", privToPrimitiveHint);
+                                             ("%ToPropertyDescriptor", privToPropertyDescriptor);
                                              ("%ToString", privToString);
                                              ("%ToUint", privToUint);
                                              ("%ToUint16", privToUint16);
