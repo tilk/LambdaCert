@@ -246,7 +246,7 @@ Extract Constant EjsFromJs.parse_js_expr => "JsPreliminary.parse_pickable".
 
 Extract Constant JsPreliminary.parse_pickable => "(fun s ->
     let str = Batteries.String.of_list s in
-    Some (JsParser.parse str)
+    JsParser.parse str
   )".
 Extract Constant JsSyntaxAux.prealloc_comparable => "(=)".
 

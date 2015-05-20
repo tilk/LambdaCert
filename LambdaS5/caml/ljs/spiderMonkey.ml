@@ -336,11 +336,12 @@ and srcElt (v : json) : element = match string (get "type" v) with
 and srcElts (v : json) : element list =
     List.map srcElt (list v)
 
-let program (v : json) : prog = 
+let program (v : json) : prog option = 
   match string (get "type" v) with
-    | "Program" -> Coq_prog_intro (false, List.map srcElt (list (get "body" v)))
+    | "Program" -> Some (Coq_prog_intro (false, List.map srcElt (list (get "body" v))))
+    | "ParseError" -> None (* TODO error message *)
     | typ -> failwith (sprintf "expected Program, got %s" typ)
 
-let parse_spidermonkey (cin : in_channel) : prog = 
+let parse_spidermonkey (cin : in_channel) : prog option = 
     program (from_channel cin)
 

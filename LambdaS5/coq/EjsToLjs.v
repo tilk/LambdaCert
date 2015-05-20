@@ -391,9 +391,9 @@ with property_to_ljs (p : E.property) : L.property :=
     | E.property_data d => 
         L.property_data (L.data_intro (ejs_to_ljs d) L.expr_true L.expr_true L.expr_true)
     | E.property_getter d => 
-        L.property_accessor (L.accessor_intro (make_getter (ejs_to_ljs d)) L.expr_undefined L.expr_false L.expr_false)
+        L.property_accessor (L.accessor_intro (make_getter (ejs_to_ljs d)) L.expr_undefined L.expr_true L.expr_true)
     | E.property_setter d =>
-        L.property_accessor (L.accessor_intro L.expr_undefined (make_setter (ejs_to_ljs d)) L.expr_false L.expr_false)
+        L.property_accessor (L.accessor_intro L.expr_undefined (make_setter (ejs_to_ljs d)) L.expr_true L.expr_true)
     end.
 
 Definition init_global i :=

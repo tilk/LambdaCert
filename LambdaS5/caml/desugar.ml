@@ -1,5 +1,6 @@
 
 open Batteries
+open LjsSyntax
 
 let js_parser = ref None 
 
@@ -18,7 +19,7 @@ let builtin_js_parser jsfile =
     let data = File.with_file_in jsfile (fun ch -> IO.read_all ch) in
     match EjsFromJs.desugar_expr (String.to_list data) with
     | Some e -> e 
-    | None -> failwith "desugar failure"
+    | None -> Coq_expr_app (Coq_expr_id (String.to_list "%SyntaxError"), [Coq_expr_string (String.to_list "Unknown parser error TODO")])
 
 let set_js_parser_builtin parsecmd = 
     JsParser.set_parsecmd parsecmd;
