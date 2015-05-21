@@ -49,7 +49,9 @@ Definition ex_getter :=
 expr_object
 (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined) 
 []
-[("%AppExprCheck", property_data
+[("$this", property_data
+           (data_intro (expr_id "$this") expr_true expr_false expr_false));
+ ("%AppExprCheck", property_data
                    (data_intro (expr_id "%AppExprCheck") expr_true expr_false
                     expr_false));
  ("%AppMethod", property_data
@@ -891,9 +893,6 @@ expr_object
  ("%newObjEnvRec", property_data
                    (data_intro (expr_id "%newObjEnvRec") expr_true expr_false
                     expr_false));
- ("%nonstrictContext", property_data
-                       (data_intro (expr_id "%nonstrictContext") expr_true
-                        expr_false expr_false));
  ("%numTLS", property_data
              (data_intro (expr_id "%numTLS") expr_true expr_false expr_false));
  ("%numTLSLambda", property_data
@@ -1070,9 +1069,6 @@ expr_object
  ("%strconcatlambda", property_data
                       (data_intro (expr_id "%strconcatlambda") expr_true
                        expr_false expr_false));
- ("%strictContext", property_data
-                    (data_intro (expr_id "%strictContext") expr_true
-                     expr_false expr_false));
  ("%stringSlice", property_data
                   (data_intro (expr_id "%stringSlice") expr_true expr_false
                    expr_false));
@@ -1104,8 +1100,6 @@ expr_object
  ("%testlambda", property_data
                  (data_intro (expr_id "%testlambda") expr_true expr_false
                   expr_false));
- ("%this", property_data
-           (data_intro (expr_id "%this") expr_true expr_false expr_false));
  ("%tlclambda", property_data
                 (data_intro (expr_id "%tlclambda") expr_true expr_false
                  expr_false));
@@ -1175,6 +1169,9 @@ expr_object
  ("copy-when-defined", property_data
                        (data_intro (expr_id "copy-when-defined") expr_true
                         expr_false expr_false));
+ ("evalCode", property_data
+              (data_intro (expr_id "evalCode") expr_true expr_false
+               expr_false));
  ("isAccessorDescriptor", property_data
                           (data_intro (expr_id "isAccessorDescriptor")
                            expr_true expr_false expr_false));
@@ -1192,7 +1189,13 @@ expr_object
                           expr_true expr_false expr_false));
  ("isGenericField", property_data
                     (data_intro (expr_id "isGenericField") expr_true
-                     expr_false expr_false))]
+                     expr_false expr_false));
+ ("nonstrictContext", property_data
+                      (data_intro (expr_id "nonstrictContext") expr_true
+                       expr_false expr_false));
+ ("strictContext", property_data
+                   (data_intro (expr_id "strictContext") expr_true expr_false
+                    expr_false))]
 .
 Definition ex_isAccessorDescriptor := 
 expr_if
@@ -3687,22 +3690,24 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_let "globalEnv"
   (expr_get_field (expr_id "%makeGlobalEnv") (expr_string "make"))
   (expr_seq
-   (expr_set_field (expr_id "globalEnv") (expr_string "%this")
+   (expr_set_attr pattr_value (expr_id "globalEnv") (expr_string "%this")
     (expr_id "evalThis"))
    (expr_seq
-    (expr_set_field (expr_id "globalEnv") (expr_string "%nonstrictContext")
-     (expr_id "evalContext"))
+    (expr_set_attr pattr_value (expr_id "globalEnv")
+     (expr_string "%nonstrictContext") (expr_id "evalContext"))
     (expr_seq
-     (expr_set_field (expr_id "globalEnv") (expr_string "%strictContext")
-      (expr_object
-       (objattrs_intro (expr_string "DeclEnvRec") expr_true expr_null
-        expr_undefined) [("parent", expr_id "evalContext")] []))
-     (expr_if
-      (expr_op2 binary_op_stx_eq
-       (expr_op1 unary_op_typeof (expr_id "evalStr")) (expr_string "string"))
-      (expr_let "ret" (expr_eval (expr_id "evalStr") (expr_id "globalEnv"))
-       (expr_if (expr_op2 binary_op_stx_eq (expr_id "ret") expr_dump)
-        expr_undefined (expr_id "ret"))) (expr_id "evalStr")))))))
+     (expr_set_attr pattr_value (expr_id "globalEnv")
+      (expr_string "%strictContext")
+      (expr_app (expr_id "%newDeclEnvRec") [expr_id "evalContext"]))
+     (expr_seq
+      (expr_set_attr pattr_value (expr_id "globalEnv")
+       (expr_string "evalCode") expr_true)
+      (expr_if
+       (expr_op2 binary_op_stx_eq
+        (expr_op1 unary_op_typeof (expr_id "evalStr")) (expr_string "string"))
+       (expr_let "ret" (expr_eval (expr_id "evalStr") (expr_id "globalEnv"))
+        (expr_if (expr_op2 binary_op_stx_eq (expr_id "ret") expr_dump)
+         expr_undefined (expr_id "ret"))) (expr_id "evalStr"))))))))
 .
 Definition ex_privcosLambda :=  expr_string "cos NYI" .
 Definition ex_privcreateLambda := 
@@ -3832,55 +3837,53 @@ expr_let "%mkPropObj"
 .
 Definition ex_privdefineFunction := 
 expr_seq
-(expr_app (expr_id "%defineGlobalVar") [expr_id "context"; expr_id "id"])
+(expr_app (expr_id "%defineGlobalVar")
+ [expr_id "context"; expr_id "id"; expr_id "configurableBindings"])
 (expr_app (expr_id "%EnvCheckAssign")
  [expr_id "context"; expr_id "id"; expr_id "fo"; expr_true])
 .
 Definition ex_privdefineGlobalVar := 
-expr_let "configurableBindings" expr_false
+expr_if
+(expr_op2 binary_op_stx_eq
+ (expr_get_obj_attr oattr_class (expr_id "context"))
+ (expr_string "DeclEnvRec"))
+(expr_if
+ (expr_op1 unary_op_not
+  (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id")))
+ (expr_seq
+  (expr_set_attr pattr_config (expr_id "context") (expr_id "id") expr_true)
+  (expr_seq
+   (expr_set_attr pattr_writable (expr_id "context") (expr_id "id") expr_true)
+   (expr_seq
+    (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
+     expr_undefined)
+    (expr_seq
+     (expr_set_attr pattr_enum (expr_id "context") (expr_id "id") expr_true)
+     (expr_set_attr pattr_config (expr_id "context") (expr_id "id")
+      (expr_id "configurableBindings")))))) expr_undefined)
 (expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))
-  (expr_string "DeclEnvRec"))
- (expr_if
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id")))
-  (expr_seq
-   (expr_set_attr pattr_config (expr_id "context") (expr_id "id") expr_true)
+  (expr_string "ObjEnvRec"))
+ (expr_let "bindings"
+  (expr_get_field (expr_id "context") (expr_string "bindings"))
+  (expr_if
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id")))
    (expr_seq
-    (expr_set_attr pattr_writable (expr_id "context") (expr_id "id")
-     expr_true)
+    (expr_set_attr pattr_config (expr_id "bindings") (expr_id "id") expr_true)
     (expr_seq
-     (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
-      expr_undefined)
-     (expr_seq
-      (expr_set_attr pattr_enum (expr_id "context") (expr_id "id") expr_true)
-      (expr_set_attr pattr_config (expr_id "context") (expr_id "id")
-       (expr_id "configurableBindings")))))) expr_undefined)
- (expr_if
-  (expr_op2 binary_op_stx_eq
-   (expr_get_obj_attr oattr_class (expr_id "context"))
-   (expr_string "ObjEnvRec"))
-  (expr_let "bindings"
-   (expr_get_field (expr_id "context") (expr_string "bindings"))
-   (expr_if
-    (expr_op1 unary_op_not
-     (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id")))
-    (expr_seq
-     (expr_set_attr pattr_config (expr_id "bindings") (expr_id "id")
+     (expr_set_attr pattr_writable (expr_id "bindings") (expr_id "id")
       expr_true)
      (expr_seq
-      (expr_set_attr pattr_writable (expr_id "bindings") (expr_id "id")
-       expr_true)
+      (expr_set_attr pattr_value (expr_id "bindings") (expr_id "id")
+       expr_undefined)
       (expr_seq
-       (expr_set_attr pattr_value (expr_id "bindings") (expr_id "id")
-        expr_undefined)
-       (expr_seq
-        (expr_set_attr pattr_enum (expr_id "bindings") (expr_id "id")
-         expr_true)
-        (expr_set_attr pattr_config (expr_id "bindings") (expr_id "id")
-         (expr_id "configurableBindings")))))) expr_undefined))
-  (expr_throw (expr_string "[env] Context not well formed!"))))
+       (expr_set_attr pattr_enum (expr_id "bindings") (expr_id "id")
+        expr_true)
+       (expr_set_attr pattr_config (expr_id "bindings") (expr_id "id")
+        (expr_id "configurableBindings")))))) expr_undefined))
+ (expr_throw (expr_string "[env] Context not well formed!")))
 .
 Definition ex_privdefineNYIProperty := 
 expr_let "unimplFunc"
@@ -6912,6 +6915,8 @@ expr_app (expr_id "%ToObject") [expr_id "this"]
 .
 Definition objCode :=  value_undefined .
 Definition name_objCode :=  "objCode" .
+Definition $this :=  value_object 2 .
+Definition name_$this :=  "$this" .
 Definition privTypeof := 
 value_closure (closure_intro [] None ["val"] ex_privTypeof)
 .
@@ -7403,8 +7408,6 @@ value_closure
  None ["id"] ex_privUnwritableDispatch)
 .
 Definition name_privUnwritableDispatch :=  "%UnwritableDispatch" .
-Definition privglobal :=  value_object 2 .
-Definition name_privglobal :=  "%global" .
 Definition privset_property := 
 value_closure
 (closure_intro
@@ -7424,7 +7427,7 @@ value_closure
 (closure_intro
  [("%UnboundId", privUnboundId);
   ("%UnwritableDispatch", privUnwritableDispatch);
-  ("%global", privglobal);
+  ("%global", $this);
   ("%set-property", privset_property)] (Some "%EnvCheckAssign")
  ["context"; "id"; "val"; "strict"] ex_privEnvCheckAssign)
 .
@@ -7498,9 +7501,15 @@ Definition privEvalErrorGlobalFuncObj :=  value_object 46 .
 Definition name_privEvalErrorGlobalFuncObj :=  "%EvalErrorGlobalFuncObj" .
 Definition privmakeGlobalEnv :=  value_object 0 .
 Definition name_privmakeGlobalEnv :=  "%makeGlobalEnv" .
+Definition privnewDeclEnvRec := 
+value_closure (closure_intro [] None ["parent"] ex_privnewDeclEnvRec)
+.
+Definition name_privnewDeclEnvRec :=  "%newDeclEnvRec" .
 Definition privconfigurableEval := 
 value_closure
-(closure_intro [("%makeGlobalEnv", privmakeGlobalEnv)] None
+(closure_intro
+ [("%makeGlobalEnv", privmakeGlobalEnv);
+  ("%newDeclEnvRec", privnewDeclEnvRec)] None
  ["evalThis"; "evalContext"; "useStrict"; "args"] ex_privconfigurableEval)
 .
 Definition name_privconfigurableEval :=  "%configurableEval" .
@@ -7510,7 +7519,7 @@ Definition privevallambda :=
 value_closure
 (closure_intro
  [("%configurableEval", privconfigurableEval);
-  ("%global", privglobal);
+  ("%global", $this);
   ("%globalContext", privglobalContext)] None ["this"; "args"]
  ex_privevallambda)
 .
@@ -8084,15 +8093,16 @@ value_closure
 Definition name_privdefine15Property :=  "%define15Property" .
 Definition privdefineGlobalVar := 
 value_closure
-(closure_intro [] None ["context"; "id"] ex_privdefineGlobalVar)
+(closure_intro [] None ["context"; "id"; "configurableBindings"]
+ ex_privdefineGlobalVar)
 .
 Definition name_privdefineGlobalVar :=  "%defineGlobalVar" .
 Definition privdefineFunction := 
 value_closure
 (closure_intro
  [("%EnvCheckAssign", privEnvCheckAssign);
-  ("%defineGlobalVar", privdefineGlobalVar)] None ["context"; "id"; "fo"]
- ex_privdefineFunction)
+  ("%defineGlobalVar", privdefineGlobalVar)] None
+ ["context"; "id"; "fo"; "configurableBindings"] ex_privdefineFunction)
 .
 Definition name_privdefineFunction :=  "%defineFunction" .
 Definition privdefineNYIProperty := 
@@ -8434,10 +8444,6 @@ value_closure
  ex_privmaybeDirectEval)
 .
 Definition name_privmaybeDirectEval :=  "%maybeDirectEval" .
-Definition privnewDeclEnvRec := 
-value_closure (closure_intro [] None ["parent"] ex_privnewDeclEnvRec)
-.
-Definition name_privnewDeclEnvRec :=  "%newDeclEnvRec" .
 Definition privnewObjEnvRec := 
 value_closure
 (closure_intro [] None ["parent"; "obj"; "pt"] ex_privnewObjEnvRec)
@@ -8626,8 +8632,8 @@ value_closure
 Definition name_privreplacelambda :=  "%replacelambda" .
 Definition privresolveThis := 
 value_closure
-(closure_intro [("%ToObject", privToObject); ("%global", privglobal)] 
- None ["strict"; "obj"] ex_privresolveThis)
+(closure_intro [("%ToObject", privToObject); ("%global", $this)] None
+ ["strict"; "obj"] ex_privresolveThis)
 .
 Definition name_privresolveThis :=  "%resolveThis" .
 Definition privreverse :=  value_object 84 .
@@ -8859,6 +8865,8 @@ value_closure
  ex_privvalueOflambda)
 .
 Definition name_privvalueOflambda :=  "%valueOflambda" .
+Definition evalCode :=  value_false .
+Definition name_evalCode :=  "evalCode" .
 Definition isAccessorField := 
 value_closure (closure_intro [] None ["obj"; "field"] ex_isAccessorField)
 .
@@ -9180,7 +9188,8 @@ value_closure
 .
 Definition name_objCode38 :=  "objCode" .
 Definition ctx_items := 
-[(name_privAppExprCheck, privAppExprCheck);
+[(name_$this, $this);
+ (name_privAppExprCheck, privAppExprCheck);
  (name_privAppMethod, privAppMethod);
  (name_privArrayConstructor, privArrayConstructor);
  (name_privArrayGlobalFuncObj, privArrayGlobalFuncObj);
@@ -9412,7 +9421,7 @@ Definition ctx_items :=
  (name_privgetMonthlambda, privgetMonthlambda);
  (name_privgetYear, privgetYear);
  (name_privgetYearlambda, privgetYearlambda);
- (name_privglobal, privglobal);
+ (name_$this, $this);
  (name_privglobalContext, privglobalContext);
  (name_privgopd, privgopd);
  (name_privgopdLambda, privgopdLambda);
@@ -9472,7 +9481,6 @@ Definition ctx_items :=
  (name_privmsPerSecond, privmsPerSecond);
  (name_privnewDeclEnvRec, privnewDeclEnvRec);
  (name_privnewObjEnvRec, privnewObjEnvRec);
- (name_privglobalContext, privglobalContext);
  (name_privnumTLS, privnumTLS);
  (name_privnumTLSLambda, privnumTLSLambda);
  (name_privnumToStringAbstract, privnumToStringAbstract);
@@ -9537,7 +9545,6 @@ Definition ctx_items :=
  (name_privsqrtLambda, privsqrtLambda);
  (name_privstrconcat, privstrconcat);
  (name_privstrconcatlambda, privstrconcatlambda);
- (name_privglobalContext, privglobalContext);
  (name_privstringSlice, privstringSlice);
  (name_privstringSliceLambda, privstringSliceLambda);
  (name_privstringToString, privstringToString);
@@ -9549,7 +9556,6 @@ Definition ctx_items :=
  (name_privtanLambda, privtanLambda);
  (name_privtest, privtest);
  (name_privtestlambda, privtestlambda);
- (name_privglobal, privglobal);
  (name_privtlclambda, privtlclambda);
  (name_privtoExponential, privtoExponential);
  (name_privtoExponentialLambda, privtoExponentialLambda);
@@ -9573,12 +9579,15 @@ Definition ctx_items :=
  (name_copy_access_desc, copy_access_desc);
  (name_copy_data_desc, copy_data_desc);
  (name_copy_when_defined, copy_when_defined);
+ (name_evalCode, evalCode);
  (name_isAccessorDescriptor, isAccessorDescriptor);
  (name_isAccessorField, isAccessorField);
  (name_isDataDescriptor, isDataDescriptor);
  (name_isDataField, isDataField);
  (name_isGenericDescriptor, isGenericDescriptor);
- (name_isGenericField, isGenericField)]
+ (name_isGenericField, isGenericField);
+ (name_privglobalContext, privglobalContext);
+ (name_privglobalContext, privglobalContext)]
 .
 Definition store_items := [
 (0, {|object_attrs :=
@@ -9591,7 +9600,8 @@ Definition store_items := [
                   attributes_accessor_of {|attributes_accessor_get :=
                                            value_closure
                                            (closure_intro
-                                            [("%AppExprCheck", privAppExprCheck);
+                                            [("$this", $this);
+                                             ("%AppExprCheck", privAppExprCheck);
                                              ("%AppMethod", privAppMethod);
                                              ("%ArrayConstructor", privArrayConstructor);
                                              ("%ArrayGlobalFuncObj", privArrayGlobalFuncObj);
@@ -9823,7 +9833,7 @@ Definition store_items := [
                                              ("%getMonthlambda", privgetMonthlambda);
                                              ("%getYear", privgetYear);
                                              ("%getYearlambda", privgetYearlambda);
-                                             ("%global", privglobal);
+                                             ("%global", $this);
                                              ("%globalContext", privglobalContext);
                                              ("%gopd", privgopd);
                                              ("%gopdLambda", privgopdLambda);
@@ -9883,7 +9893,6 @@ Definition store_items := [
                                              ("%msPerSecond", privmsPerSecond);
                                              ("%newDeclEnvRec", privnewDeclEnvRec);
                                              ("%newObjEnvRec", privnewObjEnvRec);
-                                             ("%nonstrictContext", privglobalContext);
                                              ("%numTLS", privnumTLS);
                                              ("%numTLSLambda", privnumTLSLambda);
                                              ("%numToStringAbstract", privnumToStringAbstract);
@@ -9948,7 +9957,6 @@ Definition store_items := [
                                              ("%sqrtLambda", privsqrtLambda);
                                              ("%strconcat", privstrconcat);
                                              ("%strconcatlambda", privstrconcatlambda);
-                                             ("%strictContext", privglobalContext);
                                              ("%stringSlice", privstringSlice);
                                              ("%stringSliceLambda", privstringSliceLambda);
                                              ("%stringToString", privstringToString);
@@ -9960,7 +9968,6 @@ Definition store_items := [
                                              ("%tanLambda", privtanLambda);
                                              ("%test", privtest);
                                              ("%testlambda", privtestlambda);
-                                             ("%this", privglobal);
                                              ("%tlclambda", privtlclambda);
                                              ("%toExponential", privtoExponential);
                                              ("%toExponentialLambda", privtoExponentialLambda);
@@ -9984,12 +9991,15 @@ Definition store_items := [
                                              ("copy-access-desc", copy_access_desc);
                                              ("copy-data-desc", copy_data_desc);
                                              ("copy-when-defined", copy_when_defined);
+                                             ("evalCode", evalCode);
                                              ("isAccessorDescriptor", isAccessorDescriptor);
                                              ("isAccessorField", isAccessorField);
                                              ("isDataDescriptor", isDataDescriptor);
                                              ("isDataField", isDataField);
                                              ("isGenericDescriptor", isGenericDescriptor);
-                                             ("isGenericField", isGenericField)]
+                                             ("isGenericField", isGenericField);
+                                             ("nonstrictContext", privglobalContext);
+                                             ("strictContext", privglobalContext)]
                                             None ["%"] ex_getter);
                                            attributes_accessor_set :=
                                            value_undefined;

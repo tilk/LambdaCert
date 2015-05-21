@@ -148,9 +148,10 @@ Definition make_lambda f (is : list string) p :=
     L.expr_lambda ["$this"; "%args"] (
     L.expr_label "%ret" (
     L.expr_let "$this" (make_resolve_this (L.expr_id "$this")) (
+    L.expr_let "evalCode" L.expr_false (
     make_var_decl (vdecls ++ ("arguments", make_app_builtin "%mkArgsObj" [args_obj]) :: argdecls) (
     make_strictness str (
-    L.expr_seq (f e) L.expr_undefined))))).
+    L.expr_seq (f e) L.expr_undefined)))))).
 
 Definition make_fobj f is p (ctx : L.expr) :=
     ifb Exists (fun nm => nm = "arguments" \/ nm = "eval") is \/ Has_dupes is then 
@@ -164,7 +165,7 @@ Definition make_rec_fobj f i is p ctx :=
 
 Definition make_func_stmt f i is p :=
     let fobj := make_fobj f is p context in
-    make_app_builtin "%defineFunction" [context; L.expr_string i; fobj].
+    make_app_builtin "%defineFunction" [context; L.expr_string i; fobj; L.expr_id "evalCode"].
 
 Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda ["exc"] (
@@ -398,11 +399,12 @@ with property_to_ljs (p : E.property) : L.property :=
         L.property_accessor (L.accessor_intro L.expr_undefined (make_setter (ejs_to_ljs d)) L.expr_true L.expr_true)
     end.
 
-Definition init_global i :=
-    make_app_builtin "%defineGlobalVar" [context; L.expr_string i].
+Definition init_global cb i :=
+    make_app_builtin "%defineGlobalVar" [context; L.expr_string i; cb].
 
 Definition ejs_prog_to_ljs ep :=
     let 'E.prog_intro strict is inner := ep in
-    L.expr_let "$context" (L.expr_id (if strict then "%strictContext" else "%nonstrictContext")) 
-        (L.expr_let "$this" (L.expr_id "%this") 
-            (L.expr_seq (L.expr_seqs (List.map init_global is)) (make_strictness strict (ejs_to_ljs inner)))). 
+    let initializers := List.map (init_global (L.expr_id "evalCode")) is in
+    L.expr_let "$context" (L.expr_id (if strict then "strictContext" else "nonstrictContext")) 
+        (L.expr_seq (L.expr_seqs initializers) (make_strictness strict (ejs_to_ljs inner))). 
+
