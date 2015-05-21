@@ -244,11 +244,13 @@ Definition make_op2 op e1 e2 :=
     end.
 
 Definition make_array es :=
-    let mkprop e := L.property_data (L.data_intro e L.expr_true L.expr_true L.expr_true) in
-    let exp_props := number_list_from 0 (map mkprop es) in
-    let l_prop := L.property_data (L.data_intro (L.expr_number (length exp_props)) L.expr_true L.expr_false L.expr_false) in
-    let attrs := L.objattrs_intro (L.expr_string "Array") L.expr_true (make_builtin "%ArrayProto") L.expr_null in 
-    L.expr_object attrs nil (("length", l_prop) :: exp_props).
+    let f oe :=
+        match oe with
+        | (k, Some e) => L.expr_set_attr L.pattr_value (L.expr_id "a") (L.expr_string k) e
+        | (k, None) => L.expr_undefined
+        end in
+    L.expr_let "a" (make_app_builtin "%MakeArray" [L.expr_number (length es)]) 
+      (L.expr_seq (L.expr_seqs (map f (number_list_from 0 es))) (L.expr_id "a")).
 
 Definition make_args_obj (es : list L.expr) := 
     let mkprop e := L.property_data (L.data_intro e L.expr_true L.expr_true L.expr_true) in
@@ -355,7 +357,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_var_set i e => make_var_set i (ejs_to_ljs e)
     | E.expr_this => make_builtin "$this"
     | E.expr_object ps => make_object (List.map (fun (p : string * E.property) => let (a,b) := p in (a, property_to_ljs b)) ps) 
-    | E.expr_array es => make_array (List.map ejs_to_ljs es)
+    | E.expr_array es => make_array (List.map (LibOption.map ejs_to_ljs) es)
     | E.expr_app e es => make_app ejs_to_ljs e (List.map ejs_to_ljs es)
     | E.expr_func None is p => make_fobj ejs_to_ljs is p context
     | E.expr_func (Some i) is p => make_rec_fobj ejs_to_ljs i is p context 
@@ -402,5 +404,5 @@ Definition init_global i :=
 Definition ejs_prog_to_ljs ep :=
     let 'E.prog_intro strict is inner := ep in
     L.expr_let "$context" (L.expr_id (if strict then "%strictContext" else "%nonstrictContext")) 
-        (L.expr_let "$this" (L.expr_id "$context") 
+        (L.expr_let "$this" (L.expr_id "%this") 
             (L.expr_seq (L.expr_seqs (List.map init_global is)) (make_strictness strict (ejs_to_ljs inner)))). 

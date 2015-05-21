@@ -23,7 +23,7 @@ Inductive expr : Type :=
 (* | expr_id : id -> expr *)
 | expr_var_id : id -> expr
 | expr_var_set : id -> expr -> expr
-| expr_array : list expr -> expr
+| expr_array : list (option expr) -> expr
 | expr_object : list (string * property) -> expr
 | expr_this : expr
 | expr_get_field : expr -> expr -> expr

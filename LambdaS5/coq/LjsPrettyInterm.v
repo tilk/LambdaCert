@@ -156,6 +156,7 @@ Inductive int_unary_op : unary_op -> (int -> int) -> Prop :=
 Inductive num_unary_op : unary_op -> (number -> number) -> Prop :=
 | num_unary_op_abs : num_unary_op unary_op_abs absolute
 | num_unary_op_floor : num_unary_op unary_op_floor floor
+| num_unary_op_ceil : num_unary_op unary_op_ceil ceil
 | num_unary_op_neg : num_unary_op unary_op_neg neg
 .
 
@@ -187,6 +188,8 @@ Inductive eval_unary_op : unary_op -> store -> value -> value -> Prop :=
         (value_string (String (_ascii_of_int (to_int32 n)) EmptyString))
 | eval_unary_op_ascii_cton : forall ch s st,
     eval_unary_op unary_op_ascii_cton st (value_string (String ch s)) (value_number (of_int (_int_of_ascii ch)))
+| eval_unary_op_current_utc_millis : forall st, 
+    eval_unary_op unary_op_current_utc_millis st value_undefined (value_number (current_utc tt))
 .
 
 Inductive num_binary_op : binary_op -> (number -> number -> number) -> Prop :=

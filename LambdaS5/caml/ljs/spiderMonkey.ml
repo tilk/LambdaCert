@@ -247,18 +247,17 @@ and expr (v : json) : expr =
     | "Literal" -> Coq_expr_literal (literal v)
     | "Identifier" -> Coq_expr_identifier (String.to_list (string (get "name" v)))
     | "This" -> Coq_expr_this 
-(*    | "Array" ->
+    | "Array" ->
       let f = function 
-        | `Null -> Coq_expr_identifier (String.to_list "undefined")
-        | e -> expr e in
-      Coq_expr_array (map f (list (get "elements" v))) *)
+        | `Null -> None
+        | e -> Some (expr e) in
+      Coq_expr_array (List.map f (list (get "elements" v))) 
     | ("Object" | "ObjectExpression") -> Coq_expr_object (List.map mem (list (get "properties" v)))
     | "Function" ->
       Coq_expr_function (maybe (fun x -> String.to_list (identifier x)) (get "id" v), 
 	    List.map (fun x -> String.to_list (identifier x)) (list (get "params" v)),
 	    (* Pull the body out of the BlockStatement *)
 	    Coq_funcbody_intro (Coq_prog_intro (false, srcElts (get "body" (get "body" v))), []))
-(*    | "Sequence" -> Coq_expr_list (map expr (list (get "expressions" v))) *)
     | "Unary" -> 
       if bool (get "prefix" v) then
         Coq_expr_unary_op (unary_op v, expr (get "argument" v))
@@ -287,6 +286,8 @@ and expr (v : json) : expr =
 	Coq_expr_access (expr (get "object" v), expr (get "property" v))
       else
 	Coq_expr_member (expr (get "object" v), String.to_list (identifier (get "property" v)))
+    | "Sequence" ->
+      List.reduce (fun x y -> Coq_expr_binary_op (x, Coq_binary_op_coma, y)) (List.map expr (list (get "expressions" v)))
     | typ -> failwith (sprintf "%s expressions are not in ES5" typ)
 
 and case (v : json) =

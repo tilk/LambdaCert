@@ -20,6 +20,10 @@ Implicit Type obj : object.
 
 (* Utility functions useful for both the interpreter and the semantics. *)
 
+(* get UTC *)
+
+Parameter current_utc : unit -> number.
+
 (* Overwriting empty *)
 
 Definition overwrite_value_if_empty v1 v2 :=
@@ -74,9 +78,8 @@ Definition value_to_num_cast v :=
   match v with
   | value_undefined => JsNumber.nan
   | value_null => JsNumber.zero
-  | value_bool b => ifb b then JsNumber.one else JsNumber.zero
+  | value_bool b => if b then JsNumber.one else JsNumber.zero
   | value_number n => n
-  | value_string "" => JsNumber.zero
   | value_string s => JsNumber.from_string s
   | value_empty => JsNumber.nan
   | value_object ptr => JsNumber.nan

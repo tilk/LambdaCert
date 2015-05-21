@@ -116,6 +116,7 @@ Extract Constant JsNumber.neg_infinity => "neg_infinity".
 Extract Constant JsNumber.max_value => "max_float".
 Extract Constant JsNumber.min_value => "(Int64.float_of_bits Int64.one)".
 Extract Constant JsNumber.floor => "floor".
+Extract Constant JsNumber.ceil => "ceil".
 Extract Constant JsNumber.absolute => "abs_float".
 Extract Constant JsNumber.from_string =>
   "(fun s ->
@@ -192,6 +193,8 @@ Extract Constant JsNumber.uint32_right_shift =>
   let newx = if x >= i31 then x -. i32 else x in
   let r = Int32.to_float (Int32.shift_right_logical (Int32.of_float newx) (int_of_float y)) in
   if r < 0. then r +. i32 else r)".
+
+Extract Constant LjsCommon.current_utc => "Unix.gettimeofday".
 
 Extract Constant int_of_char => "(fun c -> float_of_int (int_of_char c))".
 

@@ -199,12 +199,18 @@ expr_object
  ("%LocalTime", property_data
                 (data_intro (expr_id "%LocalTime") expr_true expr_false
                  expr_false));
+ ("%MakeArray", property_data
+                (data_intro (expr_id "%MakeArray") expr_true expr_false
+                 expr_false));
  ("%MakeBoolean", property_data
                   (data_intro (expr_id "%MakeBoolean") expr_true expr_false
                    expr_false));
  ("%MakeDate", property_data
                (data_intro (expr_id "%MakeDate") expr_true expr_false
                 expr_false));
+ ("%MakeDateDayTime", property_data
+                      (data_intro (expr_id "%MakeDateDayTime") expr_true
+                       expr_false expr_false));
  ("%MakeDay", property_data
               (data_intro (expr_id "%MakeDay") expr_true expr_false
                expr_false));
@@ -1424,12 +1430,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
    (expr_op2 binary_op_ge (expr_id "argCount")
     (expr_number (JsNumber.of_int (2))))
    (expr_let "rtnobj"
-    (expr_object
-     (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-      expr_undefined) []
-     [("length", property_data
-                 (data_intro (expr_number (JsNumber.of_int (0))) expr_true
-                  expr_false expr_false))])
+    (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
     (expr_recc "init"
      (expr_lambda ["n"]
       (expr_seq
@@ -1468,21 +1469,10 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
          (expr_id "%RangeErrorProto") expr_undefined) [] []]))
      (expr_if (expr_id "c1")
       (expr_break "ret"
-       (expr_object
-        (objattrs_intro (expr_string "Array") expr_true
-         (expr_id "%ArrayProto") expr_undefined) []
-        [("length", property_data
-                    (data_intro
-                     (expr_app (expr_id "%ToUint32")
-                      [expr_get_field (expr_id "args") (expr_string "0")])
-                     expr_true expr_false expr_false))]))
-      (expr_let "rtn"
-       (expr_object
-        (objattrs_intro (expr_string "Array") expr_true
-         (expr_id "%ArrayProto") expr_undefined) []
-        [("length", property_data
-                    (data_intro (expr_id "argCount") expr_true expr_false
-                     expr_false))])
+       (expr_app (expr_id "%MakeArray")
+        [expr_app (expr_id "%ToUint32")
+         [expr_get_field (expr_id "args") (expr_string "0")]]))
+      (expr_let "rtn" (expr_app (expr_id "%MakeArray") [expr_id "argCount"])
        (expr_seq
         (expr_app (expr_id "%defineOwnProperty")
          [expr_id "rtn";
@@ -1567,25 +1557,19 @@ expr_recc "loop"
 Definition ex_privDateConstructor := 
 expr_let "calledAsFunction"
 (expr_op2 binary_op_stx_eq (expr_id "this") expr_undefined)
-(expr_let "nargs" (expr_get_field (expr_id "args") (expr_string "length"))
+(expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
  (expr_if (expr_id "calledAsFunction")
-  (expr_let "v" (expr_app (expr_id "%getCurrentUTC") [])
-   (expr_let "o"
-    (expr_object
-     (objattrs_intro (expr_string "Date") expr_true (expr_id "%DateProto")
-      expr_undefined) [("primval", expr_id "v")] [])
-    (expr_app (expr_id "%dateToStringLambda")
-     [expr_id "o";
-      expr_object
-      (objattrs_intro (expr_string "Object") expr_true expr_null
-       expr_undefined) [] []])))
+  (expr_let "o"
+   (expr_app (expr_id "%MakeDate") [expr_app (expr_id "%getCurrentUTC") []])
+   (expr_app (expr_id "%dateToStringLambda")
+    [expr_id "o";
+     expr_object
+     (objattrs_intro (expr_string "Object") expr_true expr_null
+      expr_undefined) [] []]))
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "nargs")
     (expr_number (JsNumber.of_int (0))))
-   (expr_let "v" (expr_app (expr_id "%getCurrentUTC") [])
-    (expr_object
-     (objattrs_intro (expr_string "Date") expr_true (expr_id "%DateProto")
-      expr_undefined) [("primval", expr_id "v")] []))
+   (expr_app (expr_id "%MakeDate") [expr_app (expr_id "%getCurrentUTC") []])
    (expr_if
     (expr_op2 binary_op_stx_eq (expr_id "nargs")
      (expr_number (JsNumber.of_int (1))))
@@ -1667,7 +1651,7 @@ expr_let "calledAsFunction"
                  (expr_number (JsNumber.of_int (1900))) (expr_id "tiy"))
                 (expr_id "y")))))
             (expr_let "finalDate"
-             (expr_app (expr_id "%MakeDate")
+             (expr_app (expr_id "%MakeDateDayTime")
               [expr_app (expr_id "%MakeDay")
                [expr_id "yr"; expr_id "m"; expr_id "dt"];
                expr_app (expr_id "%MakeTime")
@@ -2197,6 +2181,13 @@ expr_op2 binary_op_shiftl (expr_app (expr_id "%ToInt32") [expr_id "l"])
 (expr_app (expr_id "%ToUint32") [expr_id "r"])
 .
 Definition ex_privLocalTime :=  expr_id "t" .
+Definition ex_privMakeArray := 
+expr_object
+(objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
+ expr_undefined) []
+[("length", property_data
+            (data_intro (expr_id "len") expr_true expr_false expr_false))]
+.
 Definition ex_privMakeBoolean := 
 expr_object
 (objattrs_intro (expr_string "Boolean") expr_true (expr_id "%BooleanProto")
@@ -2204,6 +2195,12 @@ expr_object
 []
 .
 Definition ex_privMakeDate := 
+expr_object
+(objattrs_intro (expr_string "Date") expr_true (expr_id "%DateProto")
+ expr_undefined) [("primval", expr_id "v"); ("virtual", expr_false)] 
+[]
+.
+Definition ex_privMakeDateDayTime := 
 expr_op2 binary_op_add
 (expr_op2 binary_op_mul (expr_id "day") (expr_id "%msPerDay"))
 (expr_id "time")
@@ -4301,12 +4298,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        [expr_string "Callback not a function in filter"]) expr_null)
      (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
       (expr_let "A"
-       (expr_object
-        (objattrs_intro (expr_string "Array") expr_true
-         (expr_id "%ArrayProto") expr_undefined) []
-        [("length", property_data
-                    (data_intro (expr_number (JsNumber.of_int (0))) expr_true
-                     expr_false expr_false))])
+       (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
        (expr_recc "loop"
         (expr_lambda ["k"; "to"]
          (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
@@ -4476,7 +4468,7 @@ Definition ex_privfunctionToStringlambda :=
 expr_string "function ToString"
 .
 Definition ex_privgetCurrentUTC := 
-expr_op1 unary_op_current_utc_millis (expr_string "ignored")
+expr_op1 unary_op_current_utc_millis expr_undefined
 .
 Definition ex_privgetMonthlambda :=  expr_number (JsNumber.of_int (3)) .
 Definition ex_privgetYearlambda :=  expr_number (JsNumber.of_int (78)) .
@@ -4622,15 +4614,9 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 Definition ex_privgopnLambda := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
- (expr_let "A"
-  (expr_object
-   (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-    expr_undefined) []
-   [("length", property_data
-               (data_intro (expr_number (JsNumber.of_int (0))) expr_true
-                expr_false expr_false))])
-  (expr_let "props" (expr_own_field_names (expr_id "O"))
-   (expr_let "len" (expr_get_field (expr_id "props") (expr_string "length"))
+ (expr_let "props" (expr_own_field_names (expr_id "O"))
+  (expr_let "len" (expr_get_field (expr_id "props") (expr_string "length"))
+   (expr_let "A" (expr_app (expr_id "%MakeArray") [expr_id "len"])
     (expr_recc "loop"
      (expr_lambda ["i"]
       (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "len"))
@@ -4641,12 +4627,11 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            (expr_op2 binary_op_sub (expr_id "len")
             (expr_op2 binary_op_add (expr_id "i")
              (expr_number (JsNumber.of_int (1))))))
-          (expr_set_field (expr_id "A") (expr_id "to")
+          (expr_set_attr pattr_value (expr_id "A") (expr_id "to")
            (expr_get_field (expr_id "props") (expr_id "from")))))
         (expr_app (expr_id "loop")
          [expr_op2 binary_op_add (expr_id "i")
-          (expr_number (JsNumber.of_int (1)))]))
-       (expr_set_field (expr_id "A") (expr_string "length") (expr_id "i"))))
+          (expr_number (JsNumber.of_int (1)))])) expr_undefined))
      (expr_seq
       (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
       (expr_id "A")))))))
@@ -4828,15 +4813,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 Definition ex_privkeysLambda := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
- (expr_let "A"
-  (expr_object
-   (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-    expr_undefined) []
-   [("length", property_data
-               (data_intro (expr_number (JsNumber.of_int (0))) expr_true
-                expr_false expr_false))])
-  (expr_let "names" (expr_own_field_names (expr_id "O"))
-   (expr_let "len" (expr_get_field (expr_id "names") (expr_string "length"))
+ (expr_let "names" (expr_own_field_names (expr_id "O"))
+  (expr_let "len" (expr_get_field (expr_id "names") (expr_string "length"))
+   (expr_let "A"
+    (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
     (expr_recc "loop"
      (expr_lambda ["i"; "enumCount"]
       (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "len"))
@@ -4929,9 +4909,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        [expr_string "Callback not a function in map"]) expr_null)
      (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
       (expr_let "A"
-       (expr_object
-        (objattrs_intro (expr_string "Array") expr_true
-         (expr_id "%ArrayProto") expr_undefined) [] [])
+       (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
        (expr_recc "loop"
         (expr_lambda ["k"]
          (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
@@ -6132,12 +6110,7 @@ expr_let "retObj"
 Definition ex_privslicelambda := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "A"
- (expr_object
-  (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-   expr_undefined) []
-  [("length", property_data
-              (data_intro (expr_number (JsNumber.of_int (0))) expr_true
-               expr_false expr_false))])
+ (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
  (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
   (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
    (expr_let "relativeStart"
@@ -6496,12 +6469,7 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
     (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
     [] [])
    (expr_let "A"
-    (expr_object
-     (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
-      expr_undefined) []
-     [("length", property_data
-                 (data_intro (expr_number (JsNumber.of_int (0))) expr_true
-                  expr_false expr_false))])
+    (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
     (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
      (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
       (expr_let "relativeStart"
@@ -7054,12 +7022,18 @@ value_closure
  ["obj"; "fld"; "args"] ex_privAppMethod)
 .
 Definition name_privAppMethod :=  "%AppMethod" .
-Definition privArrayProto :=  value_object 52 .
-Definition name_privArrayProto :=  "%ArrayProto" .
 Definition privComputeLength := 
 value_closure (closure_intro [] None ["args"] ex_privComputeLength)
 .
 Definition name_privComputeLength :=  "%ComputeLength" .
+Definition privArrayProto :=  value_object 52 .
+Definition name_privArrayProto :=  "%ArrayProto" .
+Definition privMakeArray := 
+value_closure
+(closure_intro [("%ArrayProto", privArrayProto)] None ["len"]
+ ex_privMakeArray)
+.
+Definition name_privMakeArray :=  "%MakeArray" .
 Definition privRangeErrorProto :=  value_object 10 .
 Definition name_privRangeErrorProto :=  "%RangeErrorProto" .
 Definition privToNumber := 
@@ -7144,9 +7118,9 @@ Definition name_privdefineOwnProperty :=  "%defineOwnProperty" .
 Definition privArrayConstructor := 
 value_closure
 (closure_intro
- [("%ArrayProto", privArrayProto);
-  ("%ComputeLength", privComputeLength);
+ [("%ComputeLength", privComputeLength);
   ("%JSError", privJSError);
+  ("%MakeArray", privMakeArray);
   ("%RangeErrorProto", privRangeErrorProto);
   ("%ToUint32", privToUint32);
   ("%defineOwnProperty", privdefineOwnProperty)] None ["this"; "args"]
@@ -7218,14 +7192,19 @@ value_closure
 Definition name_privCompareOp :=  "%CompareOp" .
 Definition privDateProto :=  value_object 167 .
 Definition name_privDateProto :=  "%DateProto" .
-Definition privmsPerDay :=  value_number (JsNumber.of_int (86400000)) .
-Definition name_privmsPerDay :=  "%msPerDay" .
 Definition privMakeDate := 
 value_closure
-(closure_intro [("%msPerDay", privmsPerDay)] None ["day"; "time"]
- ex_privMakeDate)
+(closure_intro [("%DateProto", privDateProto)] None ["v"] ex_privMakeDate)
 .
 Definition name_privMakeDate :=  "%MakeDate" .
+Definition privmsPerDay :=  value_number (JsNumber.of_int (86400000)) .
+Definition name_privmsPerDay :=  "%msPerDay" .
+Definition privMakeDateDayTime := 
+value_closure
+(closure_intro [("%msPerDay", privmsPerDay)] None ["day"; "time"]
+ ex_privMakeDateDayTime)
+.
+Definition name_privMakeDateDayTime :=  "%MakeDateDayTime" .
 Definition privDay := 
 value_closure
 (closure_intro [("%msPerDay", privmsPerDay)] None ["t"] ex_privDay)
@@ -7358,8 +7337,10 @@ Definition name_privparse :=  "%parse" .
 Definition privDateConstructor := 
 value_closure
 (closure_intro
- [("%DateProto", privDateProto);
+ [("%ComputeLength", privComputeLength);
+  ("%DateProto", privDateProto);
   ("%MakeDate", privMakeDate);
+  ("%MakeDateDayTime", privMakeDateDayTime);
   ("%MakeDay", privMakeDay);
   ("%MakeTime", privMakeTime);
   ("%TimeClip", privTimeClip);
@@ -7936,7 +7917,7 @@ Definition name_privoneArgObj :=  "%oneArgObj" .
 Definition privslicelambda := 
 value_closure
 (closure_intro
- [("%ArrayProto", privArrayProto);
+ [("%MakeArray", privMakeArray);
   ("%ToInteger", privToInteger);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -8179,8 +8160,8 @@ Definition name_privfilter :=  "%filter" .
 Definition privfilterlambda := 
 value_closure
 (closure_intro
- [("%ArrayProto", privArrayProto);
-  ("%IsCallable", privIsCallable);
+ [("%IsCallable", privIsCallable);
+  ("%MakeArray", privMakeArray);
   ("%ToBoolean", privToBoolean);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -8254,7 +8235,7 @@ Definition name_privgopn :=  "%gopn" .
 Definition privgopnLambda := 
 value_closure
 (closure_intro
- [("%ArrayProto", privArrayProto); ("%ObjectTypeCheck", privObjectTypeCheck)]
+ [("%MakeArray", privMakeArray); ("%ObjectTypeCheck", privObjectTypeCheck)]
  None ["this"; "args"] ex_privgopnLambda)
 .
 Definition name_privgopnLambda :=  "%gopnLambda" .
@@ -8342,7 +8323,7 @@ Definition name_privkeys :=  "%keys" .
 Definition privkeysLambda := 
 value_closure
 (closure_intro
- [("%ArrayProto", privArrayProto);
+ [("%MakeArray", privMakeArray);
   ("%ObjectTypeCheck", privObjectTypeCheck);
   ("%defineOwnProperty", privdefineOwnProperty)] None ["this"; "args"]
  ex_privkeysLambda)
@@ -8369,8 +8350,8 @@ Definition name_privmap :=  "%map" .
 Definition privmaplambda := 
 value_closure
 (closure_intro
- [("%ArrayProto", privArrayProto);
-  ("%IsCallable", privIsCallable);
+ [("%IsCallable", privIsCallable);
+  ("%MakeArray", privMakeArray);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
@@ -8733,7 +8714,7 @@ Definition name_privsplice :=  "%splice" .
 Definition privsplicelambda := 
 value_closure
 (closure_intro
- [("%ArrayProto", privArrayProto);
+ [("%MakeArray", privMakeArray);
   ("%ToInteger", privToInteger);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -9248,8 +9229,10 @@ Definition ctx_items :=
  (name_privJSError, privJSError);
  (name_privLeftShift, privLeftShift);
  (name_privLocalTime, privLocalTime);
+ (name_privMakeArray, privMakeArray);
  (name_privMakeBoolean, privMakeBoolean);
  (name_privMakeDate, privMakeDate);
+ (name_privMakeDateDayTime, privMakeDateDayTime);
  (name_privMakeDay, privMakeDay);
  (name_privMakeFunctionObject, privMakeFunctionObject);
  (name_privMakeGetter, privMakeGetter);
@@ -9657,8 +9640,10 @@ Definition store_items := [
                                              ("%JSError", privJSError);
                                              ("%LeftShift", privLeftShift);
                                              ("%LocalTime", privLocalTime);
+                                             ("%MakeArray", privMakeArray);
                                              ("%MakeBoolean", privMakeBoolean);
                                              ("%MakeDate", privMakeDate);
+                                             ("%MakeDateDayTime", privMakeDateDayTime);
                                              ("%MakeDay", privMakeDay);
                                              ("%MakeFunctionObject", privMakeFunctionObject);
                                              ("%MakeGetter", privMakeGetter);

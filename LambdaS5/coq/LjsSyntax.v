@@ -27,6 +27,7 @@ Inductive unary_op : Type :=
 | unary_op_is_object
 | unary_op_abs
 | unary_op_floor
+| unary_op_ceil
 | unary_op_prim_to_str
 | unary_op_prim_to_num
 | unary_op_prim_to_bool
@@ -36,14 +37,13 @@ Inductive unary_op : Type :=
 | unary_op_to_int32
 | unary_op_ascii_ntoc
 | unary_op_ascii_cton
+| unary_op_current_utc_millis
 (* not yet implemeted *)
 | unary_op_object_to_string
-| unary_op_ceil
 | unary_op_log
 | unary_op_to_lower
 | unary_op_to_upper
 | unary_op_sin
-| unary_op_current_utc_millis
 .
 
 Inductive binary_op : Type :=

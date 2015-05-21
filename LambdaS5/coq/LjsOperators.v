@@ -91,6 +91,7 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
     | unary_op_is_object => result_some (value_bool (decide (is_object v)))
     | unary_op_abs => unary_arith JsNumber.absolute v
     | unary_op_floor => unary_arith JsNumber.floor v
+    | unary_op_ceil => unary_arith JsNumber.ceil v
     | unary_op_prim_to_str => result_some (value_string (value_to_str_cast v))
     | unary_op_prim_to_num => result_some (value_number (value_to_num_cast v))
     | unary_op_prim_to_bool => result_some (value_bool (value_to_bool_cast v))
@@ -100,6 +101,11 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
     | unary_op_neg => unary_arith JsNumber.neg v
     | unary_op_ascii_ntoc => ascii_ntoc v
     | unary_op_ascii_cton => ascii_cton v
+    | unary_op_current_utc_millis => 
+        match v with
+        | value_undefined => result_some (value_number (current_utc tt))
+        | _ => result_fail "current-utc-millis got non-undefined parameter"
+        end
     | _ => result_fail ("Unary operator " ++ " not implemented.")
     end
 .

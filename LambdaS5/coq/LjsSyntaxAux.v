@@ -54,6 +54,7 @@ Inductive unary_op_type : unary_op -> type -> type -> Prop :=
 (* number operators *)
 | unary_op_type_abs : unary_op_type unary_op_abs type_number type_number
 | unary_op_type_floor : unary_op_type unary_op_floor type_number type_number
+| unary_op_type_ceil : unary_op_type unary_op_floor type_number type_number
 | unary_op_type_neg : unary_op_type unary_op_neg type_number type_number
 (* conversion operators *)
 | unary_op_type_prim_to_str : forall t, unary_op_type unary_op_prim_to_bool t type_string
@@ -64,6 +65,8 @@ Inductive unary_op_type : unary_op -> type -> type -> Prop :=
 (* int operators *)
 | unary_op_type_bnot : unary_op_type unary_op_bnot type_number type_number
 | unary_op_type_to_int32 : unary_op_type unary_op_to_int32 type_number type_number
+(* time operators *)
+| unary_op_type_current_utc_millis : unary_op_type unary_op_current_utc_millis type_undefined type_number
 .
 
 Definition unary_op_ret_type op :=
@@ -83,6 +86,7 @@ Definition unary_op_ret_type op :=
     (* number operators *)
     | unary_op_abs 
     | unary_op_floor 
+    | unary_op_ceil
     | unary_op_neg => type_number
     (* conversion operators *)
     | unary_op_prim_to_str => type_string
@@ -93,6 +97,8 @@ Definition unary_op_ret_type op :=
     (* int operators *)
     | unary_op_bnot => type_number
     | unary_op_to_int32 => type_number
+    (* time operators *)
+    | unary_op_current_utc_millis => type_number
     (* undefined operators *)
     | _ => type_undefined
     end.
