@@ -35,7 +35,7 @@ let handle_parameter filename =
     try
         if !fprint then (print_string (Ljs_pretty.exp_to_string ast); print_string "\n")
         else let res = Run.eval_ast (get_store ()) ast in
-        Run.print_result res; 
+        Run.print_result_as (not !fformat) res; 
         if Run.result_fail res then retval := 1
         else if Run.result_abort res then retval := 2;
         if not (Run.result_abort res) then store := Some (fst (get_store ()), Run.result_store res)

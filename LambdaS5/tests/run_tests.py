@@ -65,9 +65,11 @@ def run_test(test, ext):
         try:
             output = subprocess.check_output(command + [in_],
                 stdin=in_fd, stderr=subprocess.DEVNULL, timeout=TIMEOUT)
-        except subprocess.CalledProcessError:
-            fails.append(test)
-            return
+        except subprocess.CalledProcessError as ex: 
+            output = ex.output
+# TODO: handle error codes
+#            fails.append(test)
+#            return
     with tempfile.TemporaryFile() as out_fd:
         out_fd.write(output)
         out_fd.seek(0)
@@ -76,6 +78,7 @@ def run_test(test, ext):
             sys.stdout.flush()
             if subprocess.call(['diff', '-', out], stdin=out_fd):
                 fails.append(test)
+                print('failed.')
             else:
                 successes.append(test)
                 print('ok.')
