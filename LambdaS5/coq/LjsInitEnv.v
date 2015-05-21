@@ -119,10 +119,9 @@ expr_object
  ("%DaysInYear", property_data
                  (data_intro (expr_id "%DaysInYear") expr_true expr_false
                   expr_false));
- ("%DeclEnvAddMutableBinding", property_data
-                               (data_intro
-                                (expr_id "%DeclEnvAddMutableBinding")
-                                expr_true expr_false expr_false));
+ ("%DeclEnvAddBinding", property_data
+                        (data_intro (expr_id "%DeclEnvAddBinding") expr_true
+                         expr_false expr_false));
  ("%Delete", property_data
              (data_intro (expr_id "%Delete") expr_true expr_false expr_false));
  ("%EnvCheckAssign", property_data
@@ -1809,7 +1808,7 @@ expr_if
     (expr_number (JsNumber.of_int (0))))))
  (expr_number (JsNumber.of_int (366))) (expr_number (JsNumber.of_int (365))))
 .
-Definition ex_privDeclEnvAddMutableBinding := 
+Definition ex_privDeclEnvAddBinding := 
 expr_seq
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "context") (expr_id "name"))
@@ -1819,10 +1818,13 @@ expr_seq
  (expr_set_attr pattr_value (expr_id "context") (expr_id "name")
   (expr_id "val"))
  (expr_seq
-  (expr_set_attr pattr_enum (expr_id "context") (expr_id "name") expr_false)
+  (expr_set_attr pattr_writable (expr_id "context") (expr_id "name")
+   (expr_id "mutable"))
   (expr_seq
-   (expr_set_attr pattr_config (expr_id "context") (expr_id "name")
-    (expr_id "deletable")) expr_undefined)))
+   (expr_set_attr pattr_enum (expr_id "context") (expr_id "name") expr_false)
+   (expr_seq
+    (expr_set_attr pattr_config (expr_id "context") (expr_id "name")
+     (expr_id "deletable")) expr_undefined))))
 .
 Definition ex_privDelete := 
 expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
@@ -1845,9 +1847,13 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
   (expr_string "DeclEnvRec"))
  (expr_if
   (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
-  (expr_try_catch
-   (expr_set_field (expr_id "context") (expr_id "id") (expr_id "val"))
-   (expr_app (expr_id "%UnwritableDispatch") [expr_id "id"]))
+  (expr_if (expr_get_attr pattr_writable (expr_id "context") (expr_id "id"))
+   (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
+    (expr_id "val"))
+   (expr_if (expr_id "strict")
+    (expr_app (expr_id "%TypeError")
+     [expr_op2 binary_op_string_plus (expr_id "id")
+      (expr_string " is read-only")]) expr_undefined))
   (expr_app (expr_id "%EnvCheckAssign")
    [expr_get_internal "parent" (expr_id "context");
     expr_id "id";
@@ -7361,12 +7367,12 @@ value_closure
 Definition name_privDateConstructor :=  "%DateConstructor" .
 Definition privDateGlobalFuncObj :=  value_object 171 .
 Definition name_privDateGlobalFuncObj :=  "%DateGlobalFuncObj" .
-Definition privDeclEnvAddMutableBinding := 
+Definition privDeclEnvAddBinding := 
 value_closure
-(closure_intro [] None ["context"; "name"; "val"; "deletable"]
- ex_privDeclEnvAddMutableBinding)
+(closure_intro [] None ["context"; "name"; "val"; "mutable"; "deletable"]
+ ex_privDeclEnvAddBinding)
 .
-Definition name_privDeclEnvAddMutableBinding :=  "%DeclEnvAddMutableBinding" .
+Definition name_privDeclEnvAddBinding :=  "%DeclEnvAddBinding" .
 Definition privDelete := 
 value_closure
 (closure_intro
@@ -7391,23 +7397,6 @@ value_closure
  ex_privUnboundId)
 .
 Definition name_privUnboundId :=  "%UnboundId" .
-Definition privIsJSError := 
-value_closure (closure_intro [] None ["thing"] ex_privIsJSError)
-.
-Definition name_privIsJSError :=  "%IsJSError" .
-Definition privErrorDispatch := 
-value_closure
-(closure_intro [("%IsJSError", privIsJSError); ("%TypeError", privTypeError)]
- None ["maybe-js-error"] ex_privErrorDispatch)
-.
-Definition name_privErrorDispatch :=  "%ErrorDispatch" .
-Definition privUnwritableDispatch := 
-value_closure
-(closure_intro
- [("%ErrorDispatch", privErrorDispatch); ("%TypeError", privTypeError)] 
- None ["id"] ex_privUnwritableDispatch)
-.
-Definition name_privUnwritableDispatch :=  "%UnwritableDispatch" .
 Definition privset_property := 
 value_closure
 (closure_intro
@@ -7425,8 +7414,8 @@ Definition name_privset_property :=  "%set-property" .
 Definition privEnvCheckAssign := 
 value_closure
 (closure_intro
- [("%UnboundId", privUnboundId);
-  ("%UnwritableDispatch", privUnwritableDispatch);
+ [("%TypeError", privTypeError);
+  ("%UnboundId", privUnboundId);
   ("%global", $this);
   ("%set-property", privset_property)] (Some "%EnvCheckAssign")
  ["context"; "id"; "val"; "strict"] ex_privEnvCheckAssign)
@@ -7485,6 +7474,16 @@ value_closure
   ("proto", proto)] None ["this"; "args"] ex_privErrorConstructor)
 .
 Definition name_privErrorConstructor :=  "%ErrorConstructor" .
+Definition privIsJSError := 
+value_closure (closure_intro [] None ["thing"] ex_privIsJSError)
+.
+Definition name_privIsJSError :=  "%IsJSError" .
+Definition privErrorDispatch := 
+value_closure
+(closure_intro [("%IsJSError", privIsJSError); ("%TypeError", privTypeError)]
+ None ["maybe-js-error"] ex_privErrorDispatch)
+.
+Definition name_privErrorDispatch :=  "%ErrorDispatch" .
 Definition privErrorGlobalFuncObj :=  value_object 44 .
 Definition name_privErrorGlobalFuncObj :=  "%ErrorGlobalFuncObj" .
 Definition proto1 :=  value_object 9 .
@@ -7807,6 +7806,13 @@ value_closure
  ex_privUnsignedRightShift)
 .
 Definition name_privUnsignedRightShift :=  "%UnsignedRightShift" .
+Definition privUnwritableDispatch := 
+value_closure
+(closure_intro
+ [("%ErrorDispatch", privErrorDispatch); ("%TypeError", privTypeError)] 
+ None ["id"] ex_privUnwritableDispatch)
+.
+Definition name_privUnwritableDispatch :=  "%UnwritableDispatch" .
 Definition privVoid := 
 value_closure (closure_intro [] None ["val"] ex_privVoid)
 .
@@ -9212,7 +9218,7 @@ Definition ctx_items :=
  (name_privDayWithinYear, privDayWithinYear);
  (name_privDaysInMonth, privDaysInMonth);
  (name_privDaysInYear, privDaysInYear);
- (name_privDeclEnvAddMutableBinding, privDeclEnvAddMutableBinding);
+ (name_privDeclEnvAddBinding, privDeclEnvAddBinding);
  (name_privDelete, privDelete);
  (name_privEnvCheckAssign, privEnvCheckAssign);
  (name_privEnvDelete, privEnvDelete);
@@ -9624,7 +9630,7 @@ Definition store_items := [
                                              ("%DayWithinYear", privDayWithinYear);
                                              ("%DaysInMonth", privDaysInMonth);
                                              ("%DaysInYear", privDaysInYear);
-                                             ("%DeclEnvAddMutableBinding", privDeclEnvAddMutableBinding);
+                                             ("%DeclEnvAddBinding", privDeclEnvAddBinding);
                                              ("%Delete", privDelete);
                                              ("%EnvCheckAssign", privEnvCheckAssign);
                                              ("%EnvDelete", privEnvDelete);

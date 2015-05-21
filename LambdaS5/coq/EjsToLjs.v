@@ -127,8 +127,8 @@ Definition syntax_error s := make_app_builtin "%SyntaxError" [L.expr_string s].
 
 Definition make_var_decl is e := 
     let flds := List.map (fun ip => 
-        let '(i, e) := ip in 
-        make_app_builtin "%DeclEnvAddMutableBinding" [context; L.expr_string i; e; L.expr_false]) is in
+        let '(i, e, m) := ip in 
+        make_app_builtin "%DeclEnvAddBinding" [context; L.expr_string i; e; L.expr_bool m; L.expr_false]) is in
     new_context_in (make_app_builtin "%newDeclEnvRec" [context]) (
     L.expr_seq (L.expr_seqs flds) e).
 
@@ -142,34 +142,35 @@ Definition make_lambda f (is : list string) p :=
     let 'E.prog_intro str vis e := p in 
     let args_obj := L.expr_id "%args" in
     let argdecls := 
-        map (fun p => let '(vnum, vid) := p in (vid, L.expr_get_field (L.expr_id "%args") (L.expr_string vnum))) 
+        map (fun p => let '(vnum, vid) := p in 
+                      (vid, L.expr_get_field (L.expr_id "%args") (L.expr_string vnum), true)) 
             (zipl_stream (id_stream_from 0) is) in
-    let vdecls := map (fun i => (i, L.expr_undefined)) vis in
+    let vdecls := map (fun i => (i, L.expr_undefined, true)) vis in
     L.expr_lambda ["$this"; "%args"] (
     L.expr_label "%ret" (
     L.expr_let "$this" (make_resolve_this (L.expr_id "$this")) (
     L.expr_let "evalCode" L.expr_false (
-    make_var_decl (vdecls ++ ("arguments", make_app_builtin "%mkArgsObj" [args_obj]) :: argdecls) (
+    make_var_decl (vdecls ++ ("arguments", make_app_builtin "%mkArgsObj" [args_obj], !str) :: argdecls) (
     make_strictness str (
     L.expr_seq (f e) L.expr_undefined)))))).
 
-Definition make_fobj f is p (ctx : L.expr) :=
+Definition make_fobj f is p :=
     ifb Exists (fun nm => nm = "arguments" \/ nm = "eval") is \/ Has_dupes is then 
         if_strict (syntax_error "Illegal function definition") L.expr_undefined else
     make_app_builtin "%MakeFunctionObject" 
         [make_lambda f is p; L.expr_number (length is); L.expr_id "$strict"].
 
-Definition make_rec_fobj f i is p ctx :=
-    let fobj := make_fobj f is p ctx in
-    make_var_decl [(i, L.expr_undefined)] (make_var_set i fobj).
+Definition make_rec_fobj f i is p :=
+    let fobj := make_fobj f is p in
+    make_var_decl [(i, fobj, false)] (make_var_id i).
 
 Definition make_func_stmt f i is p :=
-    let fobj := make_fobj f is p context in
+    let fobj := make_fobj f is p in
     make_app_builtin "%defineFunction" [context; L.expr_string i; fobj; L.expr_id "evalCode"].
 
 Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda ["exc"] (
-        make_var_decl [(i, L.expr_get_field (L.expr_id "exc") (L.expr_string "%js-exn"))] catch)).
+        make_var_decl [(i, L.expr_get_field (L.expr_id "exc") (L.expr_string "%js-exn"), true)] catch)).
 
 Definition op2_func op := L.expr_lambda ["x1";"x2"] (L.expr_op2 op (L.expr_id "x1") (L.expr_id "x2")).
 
@@ -360,8 +361,8 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_object ps => make_object (List.map (fun (p : string * E.property) => let (a,b) := p in (a, property_to_ljs b)) ps) 
     | E.expr_array es => make_array (List.map (LibOption.map ejs_to_ljs) es)
     | E.expr_app e es => make_app ejs_to_ljs e (List.map ejs_to_ljs es)
-    | E.expr_func None is p => make_fobj ejs_to_ljs is p context
-    | E.expr_func (Some i) is p => make_rec_fobj ejs_to_ljs i is p context 
+    | E.expr_func None is p => make_fobj ejs_to_ljs is p 
+    | E.expr_func (Some i) is p => make_rec_fobj ejs_to_ljs i is p 
     | E.expr_func_stmt i is p => make_func_stmt ejs_to_ljs i is p
     | E.expr_fseq e1 e2 => L.expr_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_seq e1 e2 => make_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
