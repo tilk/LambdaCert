@@ -4642,9 +4642,10 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_get_obj_attr oattr_proto (expr_id "O")))
 .
 Definition ex_privhasOwnPropertylambda := 
-expr_if
-(expr_op2 binary_op_has_own_property (expr_id "this")
- (expr_get_field (expr_id "args") (expr_string "0"))) expr_true expr_false
+expr_op2 binary_op_has_own_property
+(expr_app (expr_id "%ToObject") [expr_id "this"])
+(expr_app (expr_id "%ToString")
+ [expr_get_field (expr_id "args") (expr_string "0")])
 .
 Definition ex_privin := 
 expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "r")))
@@ -8251,7 +8252,8 @@ Definition privhasOwnProperty :=  value_object 42 .
 Definition name_privhasOwnProperty :=  "%hasOwnProperty" .
 Definition privhasOwnPropertylambda := 
 value_closure
-(closure_intro [] None ["this"; "args"] ex_privhasOwnPropertylambda)
+(closure_intro [("%ToObject", privToObject); ("%ToString", privToString)]
+ None ["this"; "args"] ex_privhasOwnPropertylambda)
 .
 Definition name_privhasOwnPropertylambda :=  "%hasOwnPropertylambda" .
 Definition privin := 
