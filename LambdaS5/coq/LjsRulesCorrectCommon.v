@@ -57,6 +57,7 @@ Create HintDb js_ljs discriminated.
 Hint Constructors attributes_data_related : js_ljs.
 Hint Constructors attributes_accessor_related : js_ljs. 
 Hint Constructors attributes_related : js_ljs.
+Hint Constructors type_related : js_ljs.
 Hint Constructors value_related : js_ljs.
 Hint Constructors resvalue_related : js_ljs.
 Hint Constructors res_related : js_ljs.
@@ -93,7 +94,9 @@ Hint Extern 4 (J.ref_is_unresolvable _) => unfold J.ref_is_unresolvable : js_ljs
 
 (** Automatic deconstructing of ifs in goals *)
 
+(*
 Hint Extern 11 => match goal with |- context [If _ then _ else _] => case_if end : js_ljs.
+*)
 
 (* TODO logical hints - move? different database? *)
 
@@ -252,6 +255,13 @@ Ltac solve_jauto_js := solve [jauto_js 50].
 Ltac ijauto_js := repeat intuition jauto_js.
 
 Ltac solve_ijauto_js := solve [ijauto_js; solve_jauto_js].
+
+Ltac cases_if_auto_js :=
+    let Hif := fresh "Hif" in 
+    first [case_if as Hif; [try solve [destruct_hyp Hif; tryfalse] | try solve [false; apply Hif; eauto_js]] 
+          |case_if as Hif; [idtac]].
+
+Hint Extern 11 => cases_if_auto_js; [idtac].
 
 (* TODO move *)
 Lemma overwrite_value_if_empty_assoc : assoc L.overwrite_value_if_empty.
@@ -495,6 +505,14 @@ Hint Resolve res_label_in_inv_lemma : js_ljs.
 Hint Resolve res_label_in_lemma : js_ljs.
 
 (* HERE START PROOFS *)
+
+Lemma type_related_lemma : forall BR jv v,
+    value_related BR jv v ->
+    type_related (J.type_of jv) (L.value_type v).
+Proof.
+    introv Hvrel.
+    destruct Hvrel; eauto_js.
+Qed.
 
 (* Lemmas about invariants *)
 

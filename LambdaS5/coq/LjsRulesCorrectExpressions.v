@@ -98,6 +98,11 @@ Proof.
     skip.
 Qed.
 
+(* TODO Delete *)
+Ltac cases_if_auto_js ::=
+    let Hif := fresh "Hif" in 
+    first [case_if as Hif; [try solve [destruct_hyp Hif; tryfalse] | try solve [false; apply Hif; eauto_js]] 
+          |case_if as Hif; [idtac]].
 
 Lemma red_expr_conditional_ok : forall k je1 je2 je3,
     ih_expr k ->
@@ -114,7 +119,6 @@ Proof.
     inv_internal_fwd_ljs;
     apply_ih_expr.
     (* true *)
-    repeat destr_concl; unfold_concl.
     jauto_js 11.
     jauto_js 18.
     (* false *)
@@ -311,7 +315,61 @@ Proof.
     injects. reflexivity.
 Qed.
 
-Lemma strict_equality_test_lemma : forall BR jst jc jv1 v1 jv2 v2 k c st st' r,
+Lemma equality_test_for_same_type_lemma : forall BR jst jc c st jtp jv1 jv2 v1 v2,
+    state_invariant BR jst jc c st ->
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    J.type_of jv1 = jtp ->
+    J.type_of jv2 = jtp ->
+    decide (L.stx_eq v1 v2) = J.equality_test_for_same_type jtp jv1 jv2.
+Proof.
+    introv Hinv Hvrel1 Hvrel2 Heq1 Heq2. 
+    subst jtp.
+    destruct Hvrel1; destruct Hvrel2; tryfalse; try reflexivity.
+    (* number *) 
+    cases_decide as Hstx; fold_bool; rew_refl.
+    inverts Hstx as Hnumeq. unfolds L.eq_number. 
+    destruct_hyp Hnumeq; simpls; repeat cases_if; rew_refl; auto; solve [false; auto].
+    introv Heqtest.
+    apply Hstx.
+    eapply L.stx_eq_number. unfolds.
+    simpl in Heqtest.
+    repeat cases_if; rew_refl in *; auto.
+    (* string *)
+    simpls.
+    cases_decide; fold_bool; rew_refl; auto.
+    (* bool *) 
+    simpls.
+    repeat cases_if; fold_bool; rew_refl; auto.
+    (* object *)
+    simpls.
+    cases_decide as Hd; fold_bool; rew_refl.
+    eapply func_eq_1. 
+    eapply state_invariant_rfun_inl; eauto.
+    intro.
+    injects.
+    apply Hd.
+    applys state_invariant_lfun; eauto.
+Qed.
+
+Lemma strict_equality_test_lemma : forall BR jst jc c st jv1 jv2 v1 v2,
+    state_invariant BR jst jc c st ->
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    decide (L.stx_eq v1 v2) = J.strict_equality_test jv1 jv2.
+Proof.
+    introv Hinv Hvrel1 Hvrel2.
+    unfolds J.strict_equality_test.
+    cases_if.
+    (* same types *)
+    eauto using equality_test_for_same_type_lemma.
+    (* different types *)
+    fold_bool. rew_refl.
+    intro Hstx.
+    inverts Hstx; inverts Hvrel1; inverts Hvrel2; auto.
+Qed.
+
+Lemma red_strict_equality_test_lemma : forall BR jst jc jv1 v1 jv2 v2 k c st st' r,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privStxEq [v1; v2]) (L.out_ter st' r) ->
     state_invariant BR jst jc c st ->
     value_related BR jv2 v2 ->
@@ -326,39 +384,10 @@ Proof.
     ljs_apply.
     repeat ljs_autoforward.
     eexists.
-    splits; try reflexivity.
-    do 2 eapply func_eq_1.
-    unfold J.strict_equality_test.
-    cases_if.
-    destruct Hvrel1; destruct Hvrel2; tryfalse; repeat cases_if; repeat injects; substs; try reflexivity.
-    (* number *)
-    cases_decide as Hstx; fold_bool; rew_refl.
-    inverts Hstx as Hnumeq. unfolds L.eq_number. 
-    destruct_hyp Hnumeq; simpls; repeat cases_if; rew_refl; auto; solve [false; auto].
-    introv Heqtest.
-    apply Hstx.
-    eapply L.stx_eq_number. unfolds.
-    simpl in Heqtest.
-    repeat cases_if; rew_refl in *; jauto_js.
-    (* string *)
-    simpls.
-    cases_decide; fold_bool; rew_refl; auto.
-    (* bool *) 
-    simpls.
-    repeat cases_if; fold_bool; rew_refl; auto.
-    (* object *)
-    simpls.
-    cases_decide as Hd; fold_bool; rew_refl.
-    eapply func_eq_1.
-    eapply state_invariant_rfun_inl; eauto.
-    intro.
-    injects.
-    apply Hd.
-    applys state_invariant_lfun; eauto.
-    (* different types *)
-    fold_bool. rew_refl.
-    intro Hstx.
-    inverts Hstx; inverts Hvrel1; inverts Hvrel2; auto.
+    splits.
+    applys strict_equality_test_lemma; eauto.
+    reflexivity.
+    reflexivity.
 Qed.
 
 Lemma red_expr_binary_op_strict_equal_ok : forall k je1 je2,
@@ -371,7 +400,7 @@ Proof.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    forwards Heql : strict_equality_test_lemma.
+    forwards Heql : red_strict_equality_test_lemma.
     jauto_js. jauto_js. jauto_js. jauto_js. destruct_hyp Heql.
     jauto_js. left. jauto_js 8.
 Qed.
@@ -386,10 +415,78 @@ Proof.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    forwards Heql : strict_equality_test_lemma.
+    forwards Heql : red_strict_equality_test_lemma.
     jauto_js. jauto_js. jauto_js. jauto_js. destruct_hyp Heql. 
     repeat ljs_autoforward. 
     jauto_js. left. jauto_js 8.
+Qed.
+
+(* TODO move *)
+Lemma value_related_equality_test_same_type : forall BR jst jc c st jtp jv1 jv2 v1 v2,
+    state_invariant BR jst jc c st ->
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    J.type_of jv1 = jtp ->
+    J.type_of jv2 = jtp ->
+    value_related BR 
+        (J.value_prim (J.prim_bool (J.equality_test_for_same_type jtp jv1 jv2))) 
+        (L.value_bool (decide (L.stx_eq v1 v2))).
+Proof.
+    introv Hinv Hvrel1 Hvrel2 Heq1 Heq2.
+    erewrite equality_test_for_same_type_lemma; eauto_js.
+Qed.
+
+Hint Resolve value_related_equality_test_same_type : js_ljs.
+
+(* TODO move *)
+Ltac find_last_invariant_then T :=
+    match goal with
+    | H : state_invariant ?BR ?jst _ _ _ |- _ =>
+        match goal with HS : BR \c _ |- _ => fail 1 | _ => idtac end; 
+        match goal with
+        | _ : J.abort (J.out_ter jst ?jr) |- _ => T BR jst jr
+        | _ => T BR jst true
+        end
+    end.
+
+Ltac unfold_concl_tac_with BR jst dir :=
+    match goal with
+    | |- concl_expr_getvalue _ _ _ _ _ _ _ _ => unfolds; unfold_concl_tac_with BR jst dir
+    | |- concl_spec _ _ _ _ _ _ _ _ _ _ => 
+        unfolds; exists BR jst; split; [match dir with true => left | _ => right; exists dir end | splits]
+    end.
+
+Ltac unfold_concl_tac := find_last_invariant_then unfold_concl_tac_with.
+
+Tactic Notation "ljs_handle_abort_tac" integer(k) := 
+    repeat (ljs_propagate_abort || ljs_abort_from_js); 
+    unfold_concl_tac; solve [jauto_set; eauto k with js_ljs bag typeclass_instances].
+
+Tactic Notation "ljs_handle_abort_tac" := ljs_handle_abort_tac 5.
+
+(* TODO move *)
+Tactic Notation "determine_epsilon_binds" := 
+    match goal with
+    | H2 : context [ @epsilon _ _ (@binds ?a ?b ?t ?bb ?m ?k) ] |- _ => 
+        let H1 := fresh "H" in
+        forwards H1 : (@deterministic_epsilon _ _ (@binds a b t bb m k) _); [prove_bag 20 | idtac]; 
+        rewrite H1 in H2; clear H1
+    | |- context [ @epsilon _ _ (@binds ?a ?b ?t ?bb ?m ?k) ] => 
+        let H1 := fresh "H" in
+        forwards H1 : (@deterministic_epsilon _ _ (@binds a b t bb m k) _); [prove_bag 20 | idtac]; 
+        rewrite H1; clear H1
+    end. 
+
+(* TODO move *)
+Lemma js_equality_test_for_same_type_sym_eq : forall jtp jv1 jv2,
+    J.type_of jv1 = jtp -> J.type_of jv2 = jtp ->
+    J.equality_test_for_same_type jtp jv1 jv2 = J.equality_test_for_same_type jtp jv2 jv1.
+Proof.
+    introv Heq1 Heq2.
+    destruct jtp; tryfalse; simpls; repeat cases_decide; try reflexivity.
+    destruct jv1 as [p1|p1]; tryfalse; destruct jv2 as [p2|p2]; tryfalse.
+    destruct p1; tryfalse; destruct p2; tryfalse.
+    repeat cases_if; repeat cases_decide; substs; tryfalse; iauto.
 Qed.
 
 Lemma red_spec_equal_ok : forall k,
@@ -403,19 +500,111 @@ Proof.
     ljs_apply.
     ljs_state_invariant_after_apply.
     repeat inv_fwd_ljs.
+    repeat binds_inv.
     inv_ljs.
     (* same type *)
-    repeat inv_fwd_ljs.
-    skip.
+    repeat ljs_autoforward.
+    fold_bool.
+    rew_refl in H5. (* TODO *)
+    asserts Htpeq : (J.type_of jv1 = J.type_of jv2);
+        [inverts Hvrel1; inverts Hvrel2; tryfalse; reflexivity | idtac].
+    jauto_js.
     (* diff type *)
-    inv_fwd_ljs.
-    ljs_out_redh_ter.
-    ljs_bool_red_exprh.
-(*
-    cases_isTrue as Hx; inv_ljs. destruct_hyp Hx.
-    (* null-undefined, undefined-null *)
-    skip. skip. skip.
-*)
+
+Ltac munch_elseif Hx :=
+    inv_fwd_ljs;
+    ljs_out_redh_ter;
+    ljs_bool_red_exprh;
+    repeat binds_inv;
+    repeat determine_epsilon_binds;
+    repeat determine_epsilon;
+    cases_isTrue as Hx;
+    inv_ljs; [idtac | let Hx1 := fresh Hx in rename Hx into Hx1; try munch_elseif Hx].
+
+    munch_elseif Hx.
+
+    (* undefined-null, null-undefined *)
+    repeat ljs_autoforward;
+    destruct Hx as [(Hx1&Hx2)|(Hx0&Hx1&Hx2)];
+    repeat ljs_autoforward;
+    inverts Hx1; inverts Hx2;
+    inverts Hvrel1; tryfalse;
+    inverts Hvrel2; tryfalse;
+    jauto_js.
+    (* number-string *)
+    destruct Hx as (Hx1&Hx2);
+    inverts Hx1; inverts Hx2;
+    repeat ljs_autoforward. 
+    inverts Hvrel1; tryfalse;
+    inverts Hvrel2; tryfalse.
+    
+    unfold_concl.
+    do 3 eexists. split.
+    eauto_js 12.
+    split. left. eauto_js.
+    eauto_js 12.
+    (* string-number *)
+    destruct Hx as (HxA&HxB);
+    inverts HxA; inverts HxB;
+    repeat ljs_autoforward. 
+    inverts Hvrel1; tryfalse;
+    inverts Hvrel2; tryfalse.
+    
+    unfold_concl.
+    do 3 eexists. split.
+    eauto_js 12.
+    split. left. eauto_js.
+
+    rewrite js_equality_test_for_same_type_sym_eq by reflexivity.
+    jauto_js. 
+    (* left boolean *)
+    inverts Hx; 
+    repeat ljs_autoforward. 
+    inverts Hvrel1; tryfalse.
+    specializes IH H18. 
+    omega.
+    ljs_state_invariant.
+    eauto_js. eauto_js.
+    destr_concl. (* TODO handle abort *)
+
+    unfold_concl.
+    do 3 eexists. split. 
+    eapply J.red_spec_equal. simpl. reflexivity. reflexivity.
+    eapply J.red_spec_equal_1_diff_type. 
+    do 5 cases_if_auto_js.
+    reflexivity.
+    eapply J.red_spec_equal_3_convert_and_recurse.
+    eauto_js.
+    eapply J.red_spec_equal_4_recurse.
+    skip. skip. skip. (* symmetry, jscert problem *)
+    (* right boolean *)
+    inverts Hx; 
+    repeat ljs_autoforward. 
+    inverts Hvrel2; tryfalse.
+    specializes IH H9. (* TODO *)
+    omega. ljs_state_invariant. eauto_js. eauto_js.
+    destr_concl. (* TODO ljs_handle_abort *)
+
+    unfold_concl.
+    do 3 eexists. split. 
+    eapply J.red_spec_equal. simpl. reflexivity. reflexivity.
+    eapply J.red_spec_equal_1_diff_type. 
+    do 4 cases_if_auto_js. cases_if_auto_js. skip. (* TODO *) cases_if_auto_js.
+    reflexivity.
+    eapply J.red_spec_equal_3_convert_and_recurse.
+    eauto_js.
+    eapply J.red_spec_equal_4_recurse.
+    eassumption.
+    split. left.
+    eauto_js 12.
+    skip.  skip.
+    (* (string|number)-object *)
+    skip.
+    (* object-(string|number) *)
+    skip. 
+    (* otherwise false *)
+    repeat ljs_autoforward.
+    skip.
 Admitted.
 
 Lemma red_expr_binary_op_3_equal_ok : forall k,
@@ -463,32 +652,6 @@ Proof.
     repeat ljs_autoforward.
     jauto_js. left. jauto_js 15. 
 Qed.
-
-(* TODO move *)
-Ltac find_last_invariant_then T :=
-    match goal with
-    | H : state_invariant ?BR ?jst _ _ _ |- _ =>
-        match goal with HS : BR \c _ |- _ => fail 1 | _ => idtac end; 
-        match goal with
-        | _ : J.abort (J.out_ter jst ?jr) |- _ => T BR jst jr
-        | _ => T BR jst true
-        end
-    end.
-
-Ltac unfold_concl_tac_with BR jst dir :=
-    match goal with
-    | |- concl_expr_getvalue _ _ _ _ _ _ _ _ => unfolds; unfold_concl_tac_with BR jst dir
-    | |- concl_spec _ _ _ _ _ _ _ _ _ _ => 
-        unfolds; exists BR jst; split; [match dir with true => left | _ => right; exists dir end | splits]
-    end.
-
-Ltac unfold_concl_tac := find_last_invariant_then unfold_concl_tac_with.
-
-Tactic Notation "ljs_handle_abort_tac" integer(k) := 
-    repeat (ljs_propagate_abort || ljs_abort_from_js); 
-    unfold_concl_tac; solve [jauto_set; eauto k with js_ljs bag typeclass_instances].
-
-Tactic Notation "ljs_handle_abort_tac" := ljs_handle_abort_tac 5.
 
 Lemma red_expr_binary_op_and_ok : forall k je1 je2,
     ih_expr k ->

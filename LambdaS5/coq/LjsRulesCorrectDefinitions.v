@@ -21,6 +21,7 @@ Global Coercion JsNumber.of_int : Z >-> JsNumber.number.
 
 Module L. 
 Include LjsSyntax.
+Include LjsSyntaxAux.
 Include LjsPrettyRules.
 Include LjsPrettyRulesIndexed.
 Include LjsPrettyRulesIndexedAux.
@@ -108,6 +109,16 @@ Definition js_stat_to_ljs jt := E.ejs_to_ljs (E.js_stat_to_ejs jt).
 Definition object_bisim := J.object_loc + J.env_loc -> L.object_ptr -> Prop.
 
 Implicit Type BR : object_bisim.
+
+(** *** Relating types *)
+
+Inductive type_related : J.type -> L.type -> Prop :=
+| type_related_undef : type_related J.type_undef L.type_undefined
+| type_related_null : type_related J.type_null L.type_null
+| type_related_bool : type_related J.type_bool L.type_bool
+| type_related_number : type_related J.type_number L.type_number
+| type_related_string : type_related J.type_string L.type_string
+| type_related_object : type_related J.type_object L.type_object.
 
 (** *** Relating values
     Note that this definition implies that LJS lambdas and empty are never seen directly by JS code. 
@@ -297,7 +308,8 @@ Inductive js_exn_object_ptr st ptr v : Prop :=
     - Throws in JS translate to throws with a wrapper in S5.
     - Returns in JS translate to S5 breaks to a special label "%%ret".
     - Breaks in JS translate to S5 breaks, the label is tagged with "%%break".
-    - Continues in JS translate to S5 breaks, the label is tagged with "%%continue". *)
+    - Continues in JS translate to S5 breaks, the label is tagged with "%%continue". 
+    Note that exceptions and breaks are never empty. *)
 
 Inductive res_related BR jst st : J.res -> L.res -> Prop :=
 | res_related_normal : forall jrv v,
