@@ -4,6 +4,7 @@ This project consists of the following parts:
 
  * A formalized LambdaJS semantics, 
  * A certified LambdaJS interpreter,
+ * Proof of soundness and completeness of the LambdaJS interpreter with respect to the semantics,
  * A translation from EcmaScript 5.1 programs to LambdaJS,
  * Proof of correctness of the said translation (work in progress).
 
