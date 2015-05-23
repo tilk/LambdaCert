@@ -1476,7 +1476,8 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
 .
 Definition ex_internal2 := 
 expr_app (expr_id "%MakeBoolean")
-[expr_get_field (expr_id "args") (expr_string "0")]
+[expr_app (expr_id "%ToBoolean")
+ [expr_get_field (expr_id "args") (expr_string "0")]]
 .
 Definition ex_internal3 := 
 expr_app (expr_id "%ObjectCall") [expr_undefined; expr_id "args"]
@@ -1865,7 +1866,8 @@ expr_app (expr_id "%ToBoolean")
 .
 Definition ex_privBooleanConstructor := 
 expr_app (expr_id "%MakeBoolean")
-[expr_get_field (expr_id "args") (expr_string "0")]
+[expr_app (expr_id "%ToBoolean")
+ [expr_get_field (expr_id "args") (expr_string "0")]]
 .
 Definition ex_privCheckObjectCoercible := 
 expr_if
@@ -7459,8 +7461,9 @@ value_closure
 Definition name_privBooleanCall :=  "%BooleanCall" .
 Definition privBooleanConstructor := 
 value_closure
-(closure_intro [("%MakeBoolean", privMakeBoolean)] None ["constr"; "args"]
- ex_privBooleanConstructor)
+(closure_intro
+ [("%MakeBoolean", privMakeBoolean); ("%ToBoolean", privToBoolean)] None
+ ["constr"; "args"] ex_privBooleanConstructor)
 .
 Definition name_privBooleanConstructor :=  "%BooleanConstructor" .
 Definition privBooleanGlobalFuncObj :=  value_object 31 .
@@ -11344,8 +11347,10 @@ Definition store_items := [
        object_internal :=
        from_list [("construct", 
                    value_closure
-                   (closure_intro [("%MakeBoolean", privMakeBoolean)] 
-                    None ["constr"; "args"] ex_internal2))]|});
+                   (closure_intro
+                    [("%MakeBoolean", privMakeBoolean);
+                     ("%ToBoolean", privToBoolean)] None ["constr"; "args"]
+                    ex_internal2))]|});
 (32, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
