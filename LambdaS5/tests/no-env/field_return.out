@@ -1,1 +1,1 @@
-{[#proto: "Foobar", #class: Object, #extensible: true, #code: undefined] }
+{[#proto: null, #class: Foobar, #extensible: true, #code: undefined] }

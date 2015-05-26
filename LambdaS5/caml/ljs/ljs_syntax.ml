@@ -1,10 +1,10 @@
 
 module Pos = 
-    struct
-        type t = ()
-        let real _ = ()
-        let dummy = ()
-    end
+  struct
+    type t = Lexing.position * Lexing.position * bool (* start, end, is synthetic? *)
+    let dummy = (Lexing.dummy_pos, Lexing.dummy_pos, true)
+    let real (p_start, p_end) = (p_start, p_end, false)
+  end
 
 type id = string
 

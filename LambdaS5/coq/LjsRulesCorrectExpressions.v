@@ -92,11 +92,14 @@ Lemma red_expr_identifier_ok : forall k i,
 Proof.
     introv Hinv Hlred.
     repeat ljs_autoforward.
+Admitted.
+(*
     inverts H7. (* TODO *)
     ljs_inv_value_is_closure. 
     ljs_inv_closure_ctx. unfold L.closure_body in H12.
     skip.
 Qed.
+*)
 
 (* TODO Delete *)
 Ltac cases_if_auto_js ::=
@@ -506,6 +509,8 @@ Proof.
     repeat ljs_autoforward.
     fold_bool.
     rew_refl in H5. (* TODO *)
+Admitted.
+(*
     asserts Htpeq : (J.type_of jv1 = J.type_of jv2);
         [inverts Hvrel1; inverts Hvrel2; tryfalse; reflexivity | idtac].
     jauto_js.
@@ -606,6 +611,7 @@ Ltac munch_elseif Hx :=
     repeat ljs_autoforward.
     skip.
 Admitted.
+*)
 
 Lemma red_expr_binary_op_3_equal_ok : forall k,
     th_ext_expr_binary k LjsInitEnv.privEqEq (J.expr_binary_op_3 J.binary_op_equal)

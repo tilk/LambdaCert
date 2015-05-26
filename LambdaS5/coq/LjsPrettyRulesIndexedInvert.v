@@ -311,8 +311,8 @@ Tactic Notation "invert" "keep" "red_exprh" hyp(H) :=
         inversion H using inv_red_exprh_fail
     | expr_basic (expr_dump) =>
         inversion H using inv_red_exprh_dump
-    end end; clear H; intro H.
+    end end; tryfalse; clear H; intro H.
 Tactic Notation "inverts" "keep" "red_exprh" hyp(H) := 
-    inverts_tactic_general ltac:(fun H => invert keep red_exprh H) H.
+    inverts_tactic_general ltac:(fun H => invert keep red_exprh H) H; tryfalse.
 Tactic Notation "inverts" "red_exprh" hyp(H) := 
     inverts keep red_exprh H; clear H.

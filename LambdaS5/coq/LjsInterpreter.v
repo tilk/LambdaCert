@@ -106,13 +106,23 @@ Definition eval_arg_list runs c st (args_expr : list expr) (cont : store -> list
   fold_right (eval_arg_list_aux runs c) (fun st args => cont st (rev args)) args_expr st nil
 .
 
-Definition apply runs c st (f_loc : value) (args : list value) : result :=
-  if_result_some (get_closure st f_loc) (fun clo =>
+Definition apply runs c st v (args : list value) : result :=
+  match v with
+  | value_closure clo =>
     if_result_some (get_closure_ctx clo args) (fun vh =>
       runs_type_eval runs vh st (closure_body clo))
-  )
+  | value_object ptr =>
+    assert_get_object_from_ptr st ptr (fun obj =>
+      match object_code obj with
+      | value_closure clo =>
+        if_result_some (get_closure_ctx clo (value_object ptr :: args)) (fun vh =>
+          runs_type_eval runs vh st (closure_body clo))
+      | value_undefined => result_fail "applying an object without #code"
+      | _ => result_impossible "invalid code attribute when applying an object"
+      end)
+  | _ => result_fail "invalid type in apply"
+  end
 .
-
 
 (********* Evaluators ********)
 
@@ -209,7 +219,10 @@ Definition eval_object_decl runs c st (attrs : objattrs) (iattrs : list (string 
       if_eval_return runs c st extensible_expr (fun st extensible_v =>
         if_eval_return runs c st prototype_expr (fun st prototype_v =>
           if_eval_return runs c st code_expr (fun st code_v =>
-              assert_get_string class_v (fun class => assert_get_bool extensible_v (fun extensible =>
+              assert_get_string class_v (fun class => 
+              assert_get_bool extensible_v (fun extensible =>
+                ifb ~(object_oattr_valid oattr_code code_v /\ object_oattr_valid oattr_proto prototype_v)
+                then result_fail "invalid object attributes" else
                 let obj := {|
                     object_attrs := {|
                       oattrs_proto := prototype_v;

@@ -615,13 +615,13 @@ Proof.
     (* after returns a value *)
     repeat ljs_autoforward.
     inverts red_exprh H0. (* TODO! *)
-    (* ljs_apply. *) ljs_inv_value_is_closure; ljs_inv_closure_ctx; ljs_closure_body. (* TODO *)
-    rewrite from_list_empty in H8.
-    repeat rew_bag_simpl in H8.
+    (* ljs_apply. *) (*ljs_inv_value_is_closure;*) ljs_inv_closure_ctx; ljs_closure_body. (* TODO *)
+    rewrite from_list_empty in H6.
+    repeat rew_bag_simpl in H6.
     unfreeze Hctx.
-    rewrite <- Hctx in H8.
+    rewrite <- Hctx in H6.
     freeze Hctx.
-    specializes IH H8. omega.
+    specializes IH H6. omega.
     eapply while_unroll_step.
     repeat eexists. eauto. eauto. eauto.
     inv_internal_ljs. 
@@ -669,9 +669,9 @@ Proof.
     inverts H7. (* TODO *)
 
     unfolds L.add_closure.
-    (* ljs_apply. *) ljs_inv_value_is_closure; ljs_inv_closure_ctx; ljs_closure_body. (* TODO *)
-    rewrite from_list_empty in H9. (* TODO *)
-    rew_bag_simpl in H9.
+    (* ljs_apply. *) (*ljs_inv_value_is_closure;*) ljs_inv_closure_ctx; ljs_closure_body. (* TODO *)
+    rewrite from_list_empty in H8. (* TODO *)
+    rew_bag_simpl in H8.
     eexists. split.
     eapply ejs_while_body_lemma. reflexivity. eassumption.
     omega.
@@ -1019,6 +1019,7 @@ Proof.
     eauto_js. eauto_js.
 Qed.
 
+(* TODO 
 Lemma decl_env_add_mutable_binding_lemma : forall BR k jst jc c st st' r jeptr ptr obj b jv v s,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDeclEnvAddMutableBinding 
         [L.value_object ptr; L.value_string s; v; L.value_bool b]) (L.out_ter st' r) -> 
@@ -1127,7 +1128,7 @@ Proof. auto. Qed.
     jauto_js 20.
 *)
 (* TODO! *) 
-Admitted.
+Admitted.*)
 
 Lemma red_stat_try_finally_ok : forall k jt1 jt2,
     ih_stat k ->

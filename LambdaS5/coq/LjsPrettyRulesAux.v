@@ -198,16 +198,6 @@ Proof.
     auto.
 Qed.
 
-Instance value_is_closure_deterministic : forall st v, Deterministic (value_is_closure st v).
-Proof.
-    introv. constructor.
-    introv Hc1.
-    induction Hc1; introv Hc2; inverts Hc2.
-    reflexivity.
-    determine.
-    auto.
-Qed.
-
 Instance closure_ctx_deterministic : forall clo lv, Deterministic (closure_ctx clo lv).
 Proof.
     introv. constructor.
@@ -511,13 +501,6 @@ Tactic Notation "object_property_is_determine" :=
     match goal with
     | H1 : object_property_is ?st ?obj ?name ?oattr1, H2 : object_property_is ?st ?obj ?name ?oattr2 |- _ =>
         not (first [constr_eq H1 H2 | constr_eq oattr1 oattr2 | is_hyp (oattr1=oattr2) | is_hyp (oattr2=oattr1)]);
-        determine H1 H2
-    end.
-
-Tactic Notation "value_is_closure_determine" :=
-    match goal with
-    | H1 : value_is_closure ?st ?v ?clo1, H2 : value_is_closure ?st ?v ?clo2 |- _ =>
-        not (first [constr_eq H1 H2 | constr_eq clo1 clo2 | is_hyp (clo1=clo2) | is_hyp (clo2=clo1)]);
         determine H1 H2
     end.
 

@@ -273,6 +273,12 @@ Inductive object_oattr_valid : oattr -> value -> Prop :=
     object_oattr_valid oattr_proto (value_object ptr)
 | object_oattr_valid_extensible_bool : forall b,
     object_oattr_valid oattr_extensible (value_bool b)
+| object_oattr_valid_class_string : forall s,
+    object_oattr_valid oattr_class (value_string s)
+| object_oattr_valid_code_undefined : 
+    object_oattr_valid oattr_code value_undefined
+| object_oattr_valid_code_closure : forall clo,
+    object_oattr_valid oattr_code (value_closure clo)
 .
 
 Inductive oattrs_oattr_modifiable oas : oattr -> Prop :=
@@ -292,7 +298,10 @@ Definition object_oattr_valid_decide oa v :=
         match v with value_null | value_object _ => true | _ => false end
     | oattr_extensible =>
         match v with value_bool _ => true | _ => false end
-    | _ => false
+    | oattr_class =>
+        match v with value_string _ => true | _ => false end
+    | oattr_code =>
+        match v with value_undefined => true | value_closure _ => true | _ => false end
     end.
 
 Definition oattrs_oattr_modifiable_decide oas oa :=

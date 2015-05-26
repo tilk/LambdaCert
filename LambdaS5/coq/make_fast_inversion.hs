@@ -132,7 +132,7 @@ main = do
     putStr $ concat $ map make_inversion patterns
     putStr $ "Tactic Notation \"invert\" \"keep\" \"" ++ predicate_name ++ "\" hyp(H) := \n    match type of H with\n    | " ++ make_concl "?e" ++ " => match red_exprh_hnf e with\n"
     putStr $ concat $ map make_case patterns
-    putStr $ "    end end; clear H; intro H.\n"
-    putStr $ "Tactic Notation \"inverts\" \"keep\" \"" ++ predicate_name ++ "\" hyp(H) := \n    inverts_tactic_general ltac:(fun H => invert keep " ++ predicate_name ++ " H) H.\n"
+    putStr $ "    end end; tryfalse; clear H; intro H.\n"
+    putStr $ "Tactic Notation \"inverts\" \"keep\" \"" ++ predicate_name ++ "\" hyp(H) := \n    inverts_tactic_general ltac:(fun H => invert keep " ++ predicate_name ++ " H) H; tryfalse.\n"
     putStr $ "Tactic Notation \"inverts\" \"" ++ predicate_name ++ "\" hyp(H) := \n    inverts keep " ++ predicate_name ++ " H; clear H.\n"
 

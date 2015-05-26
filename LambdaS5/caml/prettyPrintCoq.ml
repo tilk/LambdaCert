@@ -14,6 +14,7 @@ let named_exprs = ref Map.empty
 
 let rfun c = match c with
     | '%' -> "priv" 
+    | '$' -> "dol" 
     | '-' -> "_"
     | _ -> String.of_char c
 

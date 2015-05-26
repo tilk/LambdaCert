@@ -131,14 +131,6 @@ Inductive object_property_is st : object -> prop_name -> option attributes -> Pr
     object_property_is st obj' name oattr ->
     object_property_is st (object_intro oas props iprops) name oattr.
 
-Inductive value_is_closure st : value -> closure -> Prop :=
-| value_is_closure_closure : forall clo, 
-    value_is_closure st (value_closure clo) clo
-| value_is_closure_code : forall ptr obj clo,
-    binds st ptr obj ->
-    value_is_closure st (object_code obj) clo ->
-    value_is_closure st (value_object ptr) clo.
-
 Inductive closure_ctx : closure -> list value -> ctx -> Prop :=
 | closure_ctx_nonrec : forall args_n args_v args lc body,
     Zip args_n args_v args ->

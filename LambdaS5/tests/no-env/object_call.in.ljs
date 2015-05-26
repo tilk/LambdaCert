@@ -1,1 +1,1 @@
-{[#code: (func (a, b) { a })]}('foo', 'bar')
+{[#code: (func (o, a, b) { a })]}('foo', 'bar')

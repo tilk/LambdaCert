@@ -58,6 +58,8 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     red_exprh k c st (expr_eval_many_1 [e1; e2; e3; e4] nil (expr_object_1 ia a)) o ->
     red_exprh (S k) c st (expr_object (objattrs_intro e1 e2 e3 e4) ia a) o
 | red_exprh_object_1 : forall k c st class ext proto code ia a o,
+    object_oattr_valid oattr_proto proto ->
+    object_oattr_valid oattr_code code ->
     red_exprh k c st (expr_object_2 ia a (object_intro (oattrs_intro proto class ext code) \{} \{})) o ->
     red_exprh k c st (expr_object_1 ia a [value_string class; value_bool ext; proto; code]) o
 | red_exprh_object_2 : forall k c st st1 obj,
@@ -308,11 +310,15 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
 | red_exprh_app_1_abort : forall k c st o el,
     abort o ->
     red_exprh k c st (expr_app_1 o el) o
-| red_exprh_app_2 : forall k c c' st v clo vl o,
-    value_is_closure st v clo ->
+| red_exprh_app_2 : forall k c c' st clo vl o,
     closure_ctx clo vl c' ->
     red_exprh k c' st (closure_body clo) o ->
-    red_exprh k c st (expr_app_2 v vl) o 
+    red_exprh k c st (expr_app_2 (value_closure clo) vl) o 
+| red_exprh_app_2_object : forall k c st ptr obj clo vl o,
+    binds st ptr obj ->
+    object_code obj = value_closure clo ->
+    red_exprh k c st (expr_app_2 (value_closure clo) (value_object ptr :: vl)) o ->
+    red_exprh k c st (expr_app_2 (value_object ptr) vl) o 
 
 (* seq *)
 | red_exprh_seq : forall k c st e1 e2 o o',

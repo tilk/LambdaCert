@@ -1763,14 +1763,6 @@ Proof.
 Qed.
 
 (* TODO move S5-only tactics! *)
-Ltac ljs_inv_value_is_closure :=
-    match goal with
-    | H : L.value_is_closure _ ?v _ |- _ => 
-        unfold v in H; ljs_inv_value_is_closure 
-    | H : L.value_is_closure _ (L.value_closure _) _ |- _ =>
-        inverts H
-    end.
-
 Ltac ljs_inv_closure_ctx :=
     match goal with
     | H : L.closure_ctx (L.closure_intro _ _ _ _) _ _ |- _ =>
@@ -1786,16 +1778,12 @@ Ltac ljs_closure_body :=
 
 Ltac ljs_inv_closure_hyps :=
     match goal with
-    | Hvcl : L.value_is_closure _ ?v ?clo,
-      Hcctx : L.closure_ctx ?clo _ ?c |- _ => 
-        try unfold v in Hvcl; 
-        inverts Hvcl;
+    | Hcctx : L.closure_ctx ?clo _ ?c |- _ => 
         let Hz := fresh "H" in
         let c' := fresh "c" in
         remember c as c';
         inverts Hcctx as Hz; repeat (inverts Hz as Hz); (* crunching Zip *)
         let EQc := match goal with H : _ = c |- _ => constr:H end in
-        try fold v in EQc;
         repeat rewrite from_list_update in EQc;
         repeat rewrite from_list_empty in EQc;
         rew_bag_simpl in EQc;
@@ -2112,8 +2100,8 @@ Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
     concl_ext_expr_value BR jst jc c st st' r (J.spec_build_error jv1 jv2) 
         (fun jv => exists jptr, jv = J.value_object jptr).
 Proof.
-    introv Hlred Hinv Hv Hvrel1 Hvrel2.
-    inverts red_exprh Hlred.
+    introv Hlred Hinv Hv Hvrel1 Hvrel2. 
+    inverts red_exprh Hlred; tryfalse.
     ljs_apply.
     repeat ljs_autoforward.
     destruct_hyp Hv;
@@ -2122,7 +2110,7 @@ Proof.
     jauto_js 8.
     (* has message *)
     inv_ljs;
-    binds_inv. (* TODO *) simpls. false. rewrite binds_empty_eq in H0. eauto.
+    binds_inv. (* TODO *) simpls. false. rewrite binds_empty_eq in H8. eauto.
     repeat ljs_autoforward.
     inv_ljs; binds_inv. 
     repeat ljs_autoforward.
@@ -2151,7 +2139,7 @@ Lemma priv_js_error_lemma : forall k c st v st' r,
     js_exn_object obj v.
 Proof.
     introv Hlred.
-    inverts red_exprh Hlred.
+    inverts red_exprh Hlred; tryfalse.
     ljs_apply.
     repeat ljs_autoforward.
     jauto_js.
@@ -2167,7 +2155,7 @@ Lemma native_error_lemma : forall BR k jst jc c st st' jne ptr v r,
     concl_ext_expr_value BR jst jc c st st' r (J.spec_error jne) (fun _ => False).
 Proof.
     introv Hlred Hinv Hv Hbr.
-    inverts red_exprh Hlred.
+    inverts red_exprh Hlred; tryfalse.
     ljs_apply.
     ljs_state_invariant_after_apply.
     repeat ljs_autoforward.
@@ -2193,7 +2181,7 @@ Lemma type_error_lemma : forall BR k jst jc c st st' v r,
     concl_ext_expr_value BR jst jc c st st' r (J.spec_error J.native_error_type) (fun _ => False).
 Proof.
     introv Hlred Hv Hinv.
-    inverts red_exprh Hlred.
+    inverts red_exprh Hlred; tryfalse.
     ljs_apply.
     ljs_state_invariant_after_apply.
     repeat ljs_autoforward.
@@ -2212,7 +2200,7 @@ Lemma red_spec_to_boolean_unary_ok : forall k,
         (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
     introv Hinv Hvrel Hlred.
-    inverts red_exprh Hlred.
+    inverts red_exprh Hlred; tryfalse.
 
     ljs_apply.
 
@@ -2226,7 +2214,7 @@ Lemma red_spec_to_number_unary_ok : forall k,
         (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
 Proof.
     introv Hinv Hvrel Hlred.
-    inverts red_exprh Hlred.
+    inverts red_exprh Hlred; tryfalse.
     ljs_apply.
     ljs_state_invariant_after_apply.
 (* TODO *)
@@ -2252,7 +2240,7 @@ Lemma red_spec_to_object_ok : forall k,
         (fun jv => exists jptr, jv = J.value_object jptr).
 Proof.
     introv Hinv Hvrel Hlred.
-    inverts red_exprh Hlred.
+    inverts red_exprh Hlred; tryfalse.
     ljs_apply.
     ljs_state_invariant_after_apply.
     repeat (ljs_autoforward || decide_stx_eq).

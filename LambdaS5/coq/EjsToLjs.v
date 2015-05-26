@@ -140,13 +140,13 @@ Definition make_resolve_this e :=
 
 Definition make_lambda f (is : list string) p := 
     let 'E.prog_intro str vis e := p in 
-    let args_obj := L.expr_id "%args" in
+    let args_obj := L.expr_id "args" in
     let argdecls := 
         map (fun p => let '(vnum, vid) := p in 
-                      (vid, L.expr_get_field (L.expr_id "%args") (L.expr_string vnum), true)) 
+                      (vid, L.expr_get_field (L.expr_id "args") (L.expr_string vnum), true)) 
             (zipl_stream (id_stream_from 0) is) in
     let vdecls := map (fun i => (i, L.expr_undefined, true)) vis in
-    L.expr_lambda ["$this"; "%args"] (
+    L.expr_lambda ["obj"; "$this"; "args"] (
     L.expr_label "%ret" (
     L.expr_let "$this" (make_resolve_this (L.expr_id "$this")) (
     L.expr_let "evalCode" L.expr_false (

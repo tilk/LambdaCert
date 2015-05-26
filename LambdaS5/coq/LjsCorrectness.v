@@ -223,24 +223,6 @@ Proof.
     eapply object_property_is_proto; eauto using read_option_binds.
 Qed.
 
-Lemma value_is_closure_from_get_closure : forall st v clo,
-    get_closure st v = result_some clo -> value_is_closure st v clo.
-Proof.
-    unfolds get_closure.
-    introv. gen v.
-    induction (card st); introv Hgc;
-    destruct v; tryfalse.
-    injects.
-    apply value_is_closure_closure.
-    simpl in Hgc.
-    apply assert_get_object_from_ptr_out in Hgc.
-    destruct_hyp Hgc.
-    eapply value_is_closure_code;
-    eauto using read_option_binds.
-    injects.
-    apply value_is_closure_closure.
-Qed.
-
 Lemma closure_ctx_from_get_closure_ctx : forall clo sl c,
     get_closure_ctx clo sl = result_some c -> closure_ctx clo sl c.
 Proof.
@@ -255,7 +237,6 @@ Qed.
 
 Hint Resolve 
     object_property_is_from_get_property
-    value_is_closure_from_get_closure 
     closure_ctx_from_get_closure_ctx.
 
 (* Tactics *)
@@ -403,8 +384,9 @@ Proof.
 Qed.
 
 Definition apply_post runs c st v vs o := exists clo c', 
-    get_closure st v = result_some clo /\ 
-    get_closure_ctx clo vs = result_some c' /\
+    (v = value_closure clo /\ get_closure_ctx clo vs = result_some c' \/
+     exists ptr obj, v = value_object ptr /\ binds st ptr obj /\ 
+         object_code obj = value_closure clo /\ get_closure_ctx clo (v::vs) = result_some c') /\
     runs_type_eval runs c' st (closure_body clo) = result_some o.
 
 Lemma apply_correct : forall runs c st v vs o,
@@ -414,9 +396,18 @@ Lemma apply_correct : forall runs c st v vs o,
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto.
-    destruct a; tryfalse.
+    destruct v; tryfalse.
+    (* object *)
     ljs_run_push_auto.
-    unfolds apply_post. jauto. 
+    destruct a; tryfalse. 
+    destruct object_attrs; tryfalse. 
+    destruct oattrs_code; tryfalse. 
+    simpls. 
+    ljs_run_push_auto.
+    unfolds apply_post. jauto_set; eauto. right. jauto_set; try prove_bag.
+    (* closure *)
+    ljs_run_push_auto.
+    unfolds apply_post. jauto.
 Qed.
 
 (* Lemmas for proving the main lemma *)
@@ -500,6 +491,7 @@ Definition is_some_eval_objattrs o runs c st attrs Pred : Prop :=
     is_some_value o (runs_type_eval runs c st2 e3) (fun st3 v3 =>
     is_some_value o (runs_type_eval runs c st3 e4) (fun st4 v4 =>
         exists b s, v1 = value_string s /\ value_to_bool v2 = Some b /\
+            object_oattr_valid oattr_code v4 /\ object_oattr_valid oattr_proto v3 /\
             Pred st4 s b v3 v4)))). 
 
 Definition is_some_eval_objprop o runs c st s prop Pred : Prop :=
@@ -587,8 +579,10 @@ Proof.
     cases_let.
     unfolds.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
+    case_if. destruct n.
+    substs.
     do 2 eexists; splits.
-    eassumption. substs; eauto.
+    reflexivity. reflexivity. assumption. assumption.
     eapply is_some_eval_internal_lemma; try eassumption.
     eapply is_some_eval_objprops_lemma; try eassumption.
     intros. cbv beta in H6. cases_let. ljs_run_inv. eauto.
@@ -1073,7 +1067,14 @@ Proof.
     introv IH R.
     unfolds in R.
     repeat destruct_exists R.
-    destruct R as (R1&R2&R3).
+    destruct R as ([(R1&R2)|(?&?&R1&R1b&R1c&R2)]&R3).
+    (* closure *)
+    substs.
+    eapply red_expr_app_2; eauto.
+    ljs_eval_ih.
+    (* object *)
+    substs.
+    eapply red_expr_app_2_object; eauto.
     eapply red_expr_app_2; eauto.
     ljs_eval_ih.
 Qed.
@@ -1178,7 +1179,7 @@ Proof.
     unfolds in H.
     eapply red_expr_object. 
     ljs_advance_eval_many.
-    destruct H as (b&s&Hs&Hb&H).
+    destruct H as (b&s&Hs&Hb&?H&?H&H).
     substs.
     value_to_bool.
     eapply red_expr_object_1; try eassumption.

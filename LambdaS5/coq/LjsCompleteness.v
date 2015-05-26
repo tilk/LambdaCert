@@ -103,6 +103,13 @@ Proof.
     introv H. unfolds. destruct v; inverts H; reflexivity.
 Qed.
 
+Lemma assert_get_bool_bool_lemma : forall {A} cont b,
+    @assert_get_bool A (value_bool b) cont = cont b.
+Proof.
+    intros. reflexivity.
+Qed.
+
+(*
 Lemma assert_get_bool_false_lemma : forall {A} cont,
     @assert_get_bool A value_false cont = cont false.
 Proof.
@@ -114,6 +121,7 @@ Lemma assert_get_bool_true_lemma : forall {A} cont,
 Proof.
     intros. reflexivity.
 Qed.
+*)
 
 Lemma if_result_some_lemma : forall {A B res a} cont,
     res = result_some a -> @if_result_some A B res cont = cont a.
@@ -164,11 +172,6 @@ Lemma get_property_from_object_property_is : forall st obj name oattr,
 Proof.
 Admitted. (* TODO *)
 
-Lemma get_closure_from_value_is_closure : forall st v clo,
-    value_is_closure st v clo -> get_closure st v = result_some clo.
-Proof.
-Admitted. (* TODO *)
-
 Lemma get_closure_ctx_from_closure_ctx : forall clo sl c,
     closure_ctx clo sl c -> get_closure_ctx clo sl = result_some c.
 Proof.
@@ -186,7 +189,6 @@ Qed.
 
 Ltac ljs_eval :=
     match goal with
-    | H : value_is_closure _ _ _ |- _ => apply get_closure_from_value_is_closure in H
     | H : object_property_is _ _ _ _ |- _ => apply get_property_from_object_property_is in H
     | H : closure_ctx _ _ _ |- _ => apply get_closure_ctx_from_closure_ctx in H
     | H : binds ?c ?i _ |- assert_deref ?c ?i _ = _ => rewrite (assert_deref_lemma _ H)
@@ -202,8 +204,11 @@ Ltac ljs_eval :=
     | H : binds ?st ?ptr _ |- change_object_cont ?st ?ptr _ = _ => 
         rewrite (change_object_cont_lemma _ H)
     | H : value_to_bool ?v = Some _ |- assert_get_bool ?v _ = _ => rewrite (assert_get_bool_lemma _ H)
+    | |- assert_get_bool (value_bool _) _ = _ => rewrite (assert_get_bool_bool_lemma _)
+(*
     | |- assert_get_bool value_true _ = _ => rewrite (assert_get_bool_true_lemma _)
     | |- assert_get_bool value_false _ = _ => rewrite (assert_get_bool_false_lemma _)
+*)
     | |- assert_get_string (value_string _) _ = _ => rewrite (assert_get_string_lemma _)
     | |- assert_get_object_ptr (value_object _) _ = _ => rewrite (assert_get_object_ptr_lemma _)
     | H : ?re = result_some (out_ter _ _) |- if_out_ter ?re _ = _ => rewrite (if_out_ter_lemma _ H)
@@ -329,7 +334,15 @@ Proof.
     introv IH H.
     substs.
     ljs_inv_red_internal.
+    (* function *)
     unfolds.
+    repeat ljs_eval_push.
+    (* object *)
+    unfolds.
+    repeat ljs_eval_push.
+    destruct (object_code obj); tryfalse.
+    injects.
+    ljs_inv_red_internal.
     repeat ljs_eval_push.
 Qed.
 
@@ -410,7 +423,9 @@ Proof.
     (* lambda *)
     reflexivity.
     (* object *)
-    abstract (repeat ljs_eval_push; eauto using object_properties_lemma).
+    repeat ljs_eval_push.  
+    cases_if. false. auto.
+    eauto using object_properties_lemma.
     (* get_attr *)
     unfolds.
     repeat ljs_eval_push.

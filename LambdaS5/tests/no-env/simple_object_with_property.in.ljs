@@ -1,1 +1,1 @@
-{[#proto: "Foo", #class: "Bar"] 'foo': {#value true, #writable true, #configurable true}}
+{[#class: "Bar"] 'foo': {#value true, #writable true, #configurable true}}
