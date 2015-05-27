@@ -103,6 +103,8 @@ Proof.
     eapply red_expr_literal_ok.
     (* expr_object *)
     skip.
+    (* expr_array *)
+    skip.
     (* expr_function *)
     skip.
     (* expr_access *)
