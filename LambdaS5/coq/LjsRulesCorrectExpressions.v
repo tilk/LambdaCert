@@ -291,31 +291,20 @@ Proof.
 Qed.
 
 (* TODO move *)
-Lemma state_invariant_rfun : forall BR jst jc c st,
+Lemma state_invariant_lfun_obj : forall BR jst jc c st,
     state_invariant BR jst jc c st ->
-    rel_functional (flip BR).
+    heaps_bisim_lfun_obj BR.
 Proof. 
     introv Hinv. 
-    eapply heaps_bisim_consistent_rfun. eapply state_invariant_heaps_bisim_consistent. eassumption.
+    eapply heaps_bisim_consistent_lfun_obj. eapply state_invariant_heaps_bisim_consistent. eassumption.
 Qed.
 
-Lemma state_invariant_lfun : forall BR jst jc c st,
+Lemma state_invariant_rfun_obj : forall BR jst jc c st,
     state_invariant BR jst jc c st ->
-    rel_functional BR.
+    heaps_bisim_rfun_obj BR.
 Proof. 
     introv Hinv. 
-    eapply heaps_bisim_consistent_lfun. eapply state_invariant_heaps_bisim_consistent. eassumption.
-Qed.
-
-Lemma state_invariant_rfun_inl : forall BR jst jc c st jptr1 jptr2 ptr,
-    state_invariant BR jst jc c st ->
-    (inl jptr1, ptr) \in BR -> 
-    (inl jptr2, ptr) \in BR -> 
-    jptr1 = jptr2.
-Proof.
-    introv Hinv Hi1 Hi2.
-    forwards Hx : state_invariant_rfun Hinv Hi1 Hi2.
-    injects. reflexivity.
+    eapply heaps_bisim_consistent_rfun_obj. eapply state_invariant_heaps_bisim_consistent. eassumption.
 Qed.
 
 Lemma equality_test_for_same_type_lemma : forall BR jst jc c st jtp jv1 jv2 v1 v2,
@@ -348,11 +337,11 @@ Proof.
     simpls.
     cases_decide as Hd; fold_bool; rew_refl.
     eapply func_eq_1. 
-    eapply state_invariant_rfun_inl; eauto.
+    eapply state_invariant_rfun_obj; eauto.
     intro.
     injects.
     apply Hd.
-    applys state_invariant_lfun; eauto.
+    applys state_invariant_lfun_obj; eauto.
 Qed.
 
 Lemma strict_equality_test_lemma : forall BR jst jc c st jv1 jv2 v1 v2,

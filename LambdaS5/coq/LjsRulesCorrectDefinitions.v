@@ -102,13 +102,19 @@ Definition js_stat_to_ljs jt := E.ejs_to_ljs (E.js_stat_to_ejs jt).
 
 (** ** Relating JS and S5 *)
 
-(** *** Heap bisimulations 
-    They relate JS objects to LJS objects. 
-    Properties they should satisfy will be defined later. *)
+(** *** State fact set
+    Used to carry information about the current state. Includes the heap bisimulation. *)
 
-Definition object_bisim := J.object_loc + J.env_loc -> L.object_ptr -> Prop.
+Inductive fact :=
+| fact_js_obj : J.object_loc -> L.object_ptr -> fact
+| fact_js_env : J.env_loc -> L.object_ptr -> fact
+| fact_getter_proxy : L.object_ptr -> L.value -> fact
+| fact_setter_proxy : L.object_ptr -> L.value -> fact
+.
 
-Implicit Type BR : object_bisim.
+Definition fact_set := finset fact. (* TODO: lib-bag-ize set *)
+
+Implicit Type BR : fact_set.
 
 (** *** Relating types *)
 
@@ -131,7 +137,7 @@ Inductive value_related BR : J.value -> L.value -> Prop :=
 | value_related_string : forall s, value_related BR (J.value_prim (J.prim_string s)) (L.value_string s)
 | value_related_bool : forall b, value_related BR (J.value_prim (J.prim_bool b)) (L.value_bool b)
 | value_related_object : forall jptr ptr, 
-    (inl jptr, ptr) \in BR -> value_related BR (J.value_object jptr) (L.value_object ptr) 
+    fact_js_obj jptr ptr \in BR -> value_related BR (J.value_object jptr) (L.value_object ptr) 
 .
 
 (** *** Relating object properties
@@ -140,18 +146,20 @@ Inductive value_related BR : J.value -> L.value -> Prop :=
 Inductive attributes_data_related BR : J.attributes_data -> L.attributes_data -> Prop := 
 | attributes_data_related_intro : forall jv v b1 b2 b3, 
     value_related BR jv v ->
-    attributes_data_related BR 
+    attributes_data_related BR
         (J.attributes_data_intro jv b1 b2 b3) 
         (L.attributes_data_intro v b1 b2 b3)
 .
 
 Inductive attributes_accessor_related BR : J.attributes_accessor -> L.attributes_accessor -> Prop := 
-| attributes_accessor_related_intro : forall jv1 jv2 v1 v2 b1 b2, 
+| attributes_accessor_related_intro : forall jv1 jv2 v1 v2 b1 b2 ptr1 ptr2, 
     value_related BR jv1 v1 ->
     value_related BR jv2 v2 ->
-    attributes_accessor_related BR 
+    fact_getter_proxy ptr1 v1 \in BR ->
+    fact_setter_proxy ptr2 v2 \in BR ->
+    attributes_accessor_related BR
         (J.attributes_accessor_intro jv1 jv2 b1 b2) 
-        (L.attributes_accessor_intro v1 v2 b1 b2)
+        (L.attributes_accessor_intro (L.value_object ptr1) (L.value_object ptr2) b1 b2)
 .
 
 Inductive attributes_related BR : J.attributes -> L.attributes -> Prop :=
@@ -225,9 +233,37 @@ Inductive env_record_related BR : J.env_record -> L.object -> Prop :=
         (L.attributes_data_of (L.attributes_data_intro (L.value_bool b) false false false)) ->
     binds (L.object_properties obj) "bindings" 
         (L.attributes_data_of (L.attributes_data_intro (L.value_object ptr) false false false)) ->
-    (inl jptr, ptr) \in BR ->
+    fact_js_obj jptr ptr \in BR ->
     env_record_related BR (J.env_record_object jptr b) obj
 .
+
+(** *** Definitions of helper objects *)
+
+Record getter_proxy obj v : Prop := {
+    getter_proxy_proto : L.object_proto obj = L.value_null;
+    getter_proxy_class : L.object_class obj = "GetterProxy";
+    getter_proxy_extensible : L.object_extensible obj = false;
+    getter_proxy_code : L.object_code obj = LjsInitEnv.privGetterProxyFun;
+    getter_proxy_func : binds (L.object_properties obj) "func"
+        (L.attributes_data_of (L.attributes_data_intro v false false false))
+}.
+
+Record setter_proxy obj v : Prop := {
+    setter_proxy_proto : L.object_proto obj = L.value_null;
+    setter_proxy_class : L.object_class obj = "SetterProxy";
+    setter_proxy_extensible : L.object_extensible obj = false;
+    setter_proxy_code : L.object_code obj = LjsInitEnv.privSetterProxyFun;
+    setter_proxy_func : binds (L.object_properties obj) "func"
+        (L.attributes_data_of (L.attributes_data_intro v false false false))
+}.
+
+Record js_exn_object obj v : Prop := { 
+    js_exn_object_proto : L.object_proto obj = L.value_null;
+    js_exn_object_class : L.object_class obj = "JSError";
+    js_exn_object_extensible : L.object_extensible obj = false;
+    js_exn_object_exn : binds (L.object_properties obj) "%js-exn" 
+        (L.attributes_data_of (L.attributes_data_intro v false false false))
+}.
 
 (** *** Properties of heap bisimulations
     Heap bisimulations must satisfy several properties in order to be useful
@@ -235,46 +271,66 @@ Inductive env_record_related BR : J.env_record -> L.object -> Prop :=
     - They must be injective - every JS object has an unique corresponding S5 object.
     - The mapped adresses must actually correspond to some object in JS and S5 heaps. *)
 
+(*
 Definition rel_functional A B (R : A -> B -> Prop) :=
   forall a b b', (a, b) \in R -> (a, b') \in R -> b = b'.
+*)
 
-Definition heaps_bisim_ltotal_inl BR jst :=
-    forall jptr, index jst jptr -> exists ptr, (inl jptr, ptr) \in BR.
+Definition heaps_bisim_lfun_obj BR :=
+     forall jptr ptr1 ptr2, fact_js_obj jptr ptr1 \in BR -> fact_js_obj jptr ptr2 \in BR -> ptr1 = ptr2.
 
-Definition heaps_bisim_ltotal_inr BR jst :=
-    forall jeptr, index jst jeptr -> exists ptr, (inr jeptr, ptr) \in BR.
+Definition heaps_bisim_lfun_env BR :=
+     forall jeptr ptr1 ptr2, fact_js_env jeptr ptr1 \in BR -> fact_js_env jeptr ptr2 \in BR -> ptr1 = ptr2.
 
-Definition heaps_bisim_lnoghost_inl BR jst :=
-    forall jptr ptr, (inl jptr, ptr) \in BR -> index jst jptr.
+Definition heaps_bisim_rfun_obj BR :=
+     forall jptr1 jptr2 ptr, fact_js_obj jptr1 ptr \in BR -> fact_js_obj jptr2 ptr \in BR -> jptr1 = jptr2.
 
-Definition heaps_bisim_lnoghost_inr BR jst :=
-    forall jeptr ptr, (inr jeptr, ptr) \in BR -> index jst jeptr.
+Definition heaps_bisim_rfun_env BR :=
+     forall jeptr1 jeptr2 ptr, fact_js_env jeptr1 ptr \in BR -> fact_js_env jeptr2 ptr \in BR -> jeptr1 = jeptr2.
 
-Definition heaps_bisim_rnoghost BR st :=
-    forall xptr ptr, (xptr, ptr) \in BR -> index st ptr.
+Definition heaps_bisim_ltotal_obj BR jst :=
+    forall jptr, index jst jptr -> exists ptr, fact_js_obj jptr ptr \in BR.
 
-Definition heaps_bisim_inl BR jst st := forall jptr ptr jobj obj, 
-     (inl jptr, ptr) \in BR -> 
+Definition heaps_bisim_ltotal_env BR jst :=
+    forall jeptr, index jst jeptr -> exists ptr, fact_js_env jeptr ptr \in BR.
+
+Definition heaps_bisim_lnoghost_obj BR jst :=
+    forall jptr ptr, fact_js_obj jptr ptr \in BR -> index jst jptr.
+
+Definition heaps_bisim_lnoghost_env BR jst :=
+    forall jeptr ptr, fact_js_env jeptr ptr \in BR -> index jst jeptr.
+
+Definition heaps_bisim_rnoghost_obj BR st :=
+    forall xptr ptr, fact_js_obj xptr ptr \in BR -> index st ptr.
+
+Definition heaps_bisim_rnoghost_env BR st :=
+    forall xptr ptr, fact_js_env xptr ptr \in BR -> index st ptr.
+
+Definition heaps_bisim_obj BR jst st := forall jptr ptr jobj obj, 
+     fact_js_obj jptr ptr \in BR -> 
      binds jst jptr jobj ->
      binds st ptr obj ->
      object_related BR jobj obj.
 
-Definition heaps_bisim_inr BR jst st := forall jeptr ptr jer obj, 
-     (inr jeptr, ptr) \in BR -> 
+Definition heaps_bisim_env BR jst st := forall jeptr ptr jer obj, 
+     fact_js_env jeptr ptr \in BR -> 
      binds jst jeptr jer ->
      binds st ptr obj ->
      env_record_related BR jer obj.
 
 Record heaps_bisim_consistent BR jst st : Prop := {
-    heaps_bisim_consistent_bisim_inl : heaps_bisim_inl BR jst st;
-    heaps_bisim_consistent_bisim_inr : heaps_bisim_inr BR jst st;
-    heaps_bisim_consistent_lfun : rel_functional BR;
-    heaps_bisim_consistent_rfun : rel_functional (flip BR);
-    heaps_bisim_consistent_ltotal_inl : heaps_bisim_ltotal_inl BR jst;
-    heaps_bisim_consistent_ltotal_inr : heaps_bisim_ltotal_inr BR jst;
-    heaps_bisim_consistent_lnoghost_inl : heaps_bisim_lnoghost_inl BR jst;
-    heaps_bisim_consistent_lnoghost_inr : heaps_bisim_lnoghost_inr BR jst;
-    heaps_bisim_consistent_rnoghost : heaps_bisim_rnoghost BR st
+    heaps_bisim_consistent_bisim_obj : heaps_bisim_obj BR jst st;
+    heaps_bisim_consistent_bisim_env : heaps_bisim_env BR jst st;
+    heaps_bisim_consistent_lfun_obj : heaps_bisim_lfun_obj BR;
+    heaps_bisim_consistent_lfun_env : heaps_bisim_lfun_env BR;
+    heaps_bisim_consistent_rfun_obj : heaps_bisim_rfun_obj BR;
+    heaps_bisim_consistent_rfun_env : heaps_bisim_rfun_env BR;
+    heaps_bisim_consistent_ltotal_obj : heaps_bisim_ltotal_obj BR jst;
+    heaps_bisim_consistent_ltotal_env : heaps_bisim_ltotal_env BR jst;
+    heaps_bisim_consistent_lnoghost_obj : heaps_bisim_lnoghost_obj BR jst;
+    heaps_bisim_consistent_lnoghost_env : heaps_bisim_lnoghost_env BR jst;
+    heaps_bisim_consistent_rnoghost_obj : heaps_bisim_rnoghost_obj BR st;
+    heaps_bisim_consistent_rnoghost_env : heaps_bisim_rnoghost_env BR st
 }.
 
 (** *** Relating result values
@@ -295,10 +351,6 @@ Inductive resvalue_related BR : J.resvalue -> L.value -> Prop :=
 
 (** JavaScript exceptions are wrapped in a S5 object, to be distinguished
     from internal S5 exceptions. *)
-
-Definition js_exn_object obj v := 
-    binds (L.object_properties obj) "%js-exn" 
-        (L.attributes_data_of (L.attributes_data_intro v false false false)).
 
 Inductive js_exn_object_ptr st ptr v : Prop :=
 | js_exn_object_ptr_intro : forall obj, binds st ptr obj -> js_exn_object obj v -> js_exn_object_ptr st ptr v.
@@ -352,7 +404,7 @@ Inductive lexical_env_related BR st : J.lexical_env -> L.value -> Prop :=
 | lexical_env_related_nil : 
     lexical_env_related BR st nil L.value_null
 | lexical_env_related_cons : forall jeptr jlenv ptr obj v,
-    (inr jeptr, ptr) \in BR ->
+    fact_js_env jeptr ptr \in BR ->
     binds st ptr obj ->
     binds (L.object_internal obj) "parent" v ->
     lexical_env_related BR st jlenv v ->
@@ -376,14 +428,14 @@ Definition global_env_record_exists BR c := forall v,
         binds c "%globalContext" v ->
         exists ptr,
         v = L.value_object ptr /\
-        (inr J.env_loc_global_env_record, ptr) \in BR.
+        fact_js_env J.env_loc_global_env_record ptr \in BR.
 
 (* States that the variable environment and lexical environment exist *)
 Record env_records_exist BR jc := { 
     env_record_exist_variable_env : 
-        forall jeptr, Mem jeptr (J.execution_ctx_variable_env jc) -> exists ptr, (inr jeptr, ptr) \in BR;
+        forall jeptr, Mem jeptr (J.execution_ctx_variable_env jc) -> exists ptr, fact_js_env jeptr ptr \in BR;
     env_record_exist_lexical_env : 
-        forall jeptr, Mem jeptr (J.execution_ctx_lexical_env jc) -> exists ptr, (inr jeptr, ptr) \in BR
+        forall jeptr, Mem jeptr (J.execution_ctx_lexical_env jc) -> exists ptr, fact_js_env jeptr ptr \in BR
 }.
 
 (** *** Preallocated objects invariant
@@ -407,11 +459,11 @@ Definition prealloc_in_ctx BR c := forall jpre s v,
     binds c s v ->
     exists ptr,
     v = L.value_object ptr /\
-    (inl (J.object_loc_prealloc jpre), ptr) \in BR.
+    fact_js_obj (J.object_loc_prealloc jpre) ptr \in BR.
 
 (** *** Initial bisimulation. *)
 
-Parameter initBR : object_bisim. (* TODO *)
+Parameter initBR : fact_set. (* TODO *)
 
 (** *** Invariant predicate
     The complete set of invariants, combined in one predicate to make proofs simpler. *)
@@ -431,7 +483,7 @@ Record state_invariant BR jst jc c st : Prop := {
 
 Definition lexical_ctx_chain_ok BR st st' :=
     forall jeptr ptr obj v,
-    (inr jeptr, ptr) \in BR ->
+    fact_js_env jeptr ptr \in BR ->
     binds st ptr obj -> 
     binds (L.object_internal obj) "parent" v ->
     exists obj',
@@ -467,7 +519,8 @@ Definition concl_stat BR jst jc c st st' r jt :=
     res_related BR' jst' st' jr r.
 
 Definition concl_spec {A : Type} BR jst jc c st st' r jes 
-    (P : object_bisim -> J.state -> A -> Prop) (Q : object_bisim -> J.state -> J.res -> Prop) :=
+    (P : fact_set -> J.state -> A -> Prop) 
+    (Q : fact_set -> J.state -> J.res -> Prop) :=
     exists BR' jst',
     ((exists x, J.red_spec jst jc jes (J.specret_val jst' x) /\ P BR' jst' x) \/
      (exists jr, 
@@ -495,7 +548,7 @@ Definition th_stat k jt := forall BR jst jc c st st' r,
     concl_stat BR jst jc c st st' r jt.
 
 Definition th_spec {A : Type} k e jes 
-    (P : object_bisim -> J.state -> J.execution_ctx -> L.ctx -> L.store -> L.res -> A -> Prop) := 
+    (P : fact_set -> J.state -> J.execution_ctx -> L.ctx -> L.store -> L.res -> A -> Prop) := 
     forall BR jst jc c st st' r, 
     state_invariant BR jst jc c st ->
     L.red_exprh k c st (L.expr_basic e) (L.out_ter st' r) ->

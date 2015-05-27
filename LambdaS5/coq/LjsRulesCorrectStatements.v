@@ -144,14 +144,14 @@ Lemma state_invariant_new_env_record_object_lemma : forall BR k jst jc c st v jp
     exists obj,
     st' = st \(fresh st := obj) /\
     r = L.res_value (L.value_object (fresh st)) /\
-    state_invariant (\{(inr (fresh jst), fresh st)} \u BR) 
+    state_invariant (\{fact_js_env (fresh jst) (fresh st)} \u BR) 
         (J.state_next_fresh (jst \(fresh jst := J.env_record_object jptr b))) 
         (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
         (c \("$context" := L.value_object (fresh st))) 
         (st \(fresh st := obj)).
 Proof.
     introv Hlred Hbinds Hvrel Hinv.
-    asserts Hsub : (BR \c (\{(inr (fresh jst), fresh st)} \u BR)). jauto_js.
+    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). jauto_js.
     asserts Hlerel : (lexical_env_related BR st (J.execution_ctx_lexical_env jc) v).
     solve [eauto using lexical_env_related_get_lemma].
     forwards Hx : new_env_record_object_lemma; try eauto.
@@ -948,7 +948,7 @@ Lemma js_exn_object_extract_lemma : forall obj v st oattr,
     oattr = Some (L.attributes_data_of (L.attributes_data_intro v false false false)).
 Proof.
     introv Hex Hpis.
-    unfolds js_exn_object.
+    destruct Hex.
     inverts Hpis; try (false; prove_bag).
     binds_determine. reflexivity. 
 Qed.
@@ -1001,14 +1001,14 @@ Lemma state_invariant_new_env_record_decl_lemma : forall BR k jst jc c st v st' 
     exists obj,
     st' = st \(fresh st := obj) /\
     r = L.res_value (L.value_object (fresh st)) /\
-    state_invariant (\{(inr (fresh jst), fresh st)} \u BR) 
+    state_invariant (\{fact_js_env (fresh jst) (fresh st)} \u BR) 
         (J.state_next_fresh (jst \(fresh jst := J.env_record_decl J.decl_env_record_empty))) 
         (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
         (c \("$context" := L.value_object (fresh st))) 
         (st \(fresh st := obj)).
 Proof.
     introv Hlred Hbinds Hinv.
-    asserts Hsub : (BR \c (\{(inr (fresh jst), fresh st)} \u BR)). jauto_js.
+    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). jauto_js.
     asserts Hlerel : (lexical_env_related BR st (J.execution_ctx_lexical_env jc) v).
     solve [eauto using lexical_env_related_get_lemma].
     forwards Hx : new_env_record_decl_lemma; try eauto.

@@ -66,6 +66,9 @@ Hint Constructors lexical_env_related : js_ljs.
 Hint Constructors object_related : js_ljs.
 Hint Constructors object_prim_related : js_ljs.
 Hint Constructors js_exn_object_ptr : js_ljs.
+Hint Constructors js_exn_object : js_ljs.
+Hint Constructors getter_proxy : js_ljs.
+Hint Constructors setter_proxy : js_ljs.
 
 (** The constructors for S5 *)
 
@@ -87,7 +90,6 @@ Hint Constructors J.prepost_op : js_ljs.
 
 (** Unfolding hints *)
 
-Hint Extern 4 (js_exn_object _ _) => unfold js_exn_object : js_ljs.
 Hint Extern 4 (res_related _ _ _ (J.res_throw _) _) => unfold J.res_throw : js_ljs.
 Hint Extern 4 (J.regular_binary_op _) => unfold J.regular_binary_op : js_ljs.
 Hint Extern 4 (J.ref_is_unresolvable _) => unfold J.ref_is_unresolvable : js_ljs.
@@ -524,22 +526,24 @@ Proof.
     introv Hni Hbi.
     inverts Hbi.
     constructor; auto.
-    unfolds heaps_bisim_inl.
+    unfolds heaps_bisim_obj.
     introv Hrel Hjb Hlb.
-    specializes heaps_bisim_consistent_rnoghost Hrel.
-    eapply heaps_bisim_consistent_bisim_inl; try eassumption.
-    apply index_binds in heaps_bisim_consistent_rnoghost.
-    destruct heaps_bisim_consistent_rnoghost as (?obj&Hb1).
+    specializes heaps_bisim_consistent_rnoghost_obj Hrel.
+    eapply heaps_bisim_consistent_bisim_obj; try eassumption.
+    apply index_binds in heaps_bisim_consistent_rnoghost_obj.
+    destruct heaps_bisim_consistent_rnoghost_obj as (?obj&Hb1).
     lets Hb2 : (incl_binds _ _ _ _ Hni Hb1). 
     binds_determine. assumption.
     introv Hrel Hjb Hlb.
-    specializes heaps_bisim_consistent_rnoghost Hrel.
-    eapply heaps_bisim_consistent_bisim_inr; try eassumption.
-    apply index_binds in heaps_bisim_consistent_rnoghost.
-    destruct heaps_bisim_consistent_rnoghost as (?obj&Hb1).
+    specializes heaps_bisim_consistent_rnoghost_env Hrel.
+    eapply heaps_bisim_consistent_bisim_env; try eassumption.
+    apply index_binds in heaps_bisim_consistent_rnoghost_env.
+    destruct heaps_bisim_consistent_rnoghost_env as (?obj&Hb1).
     lets Hb2 : (incl_binds _ _ _ _ Hni Hb1). 
     binds_determine. assumption.
-    unfolds heaps_bisim_rnoghost.
+    unfolds heaps_bisim_rnoghost_obj.
+    prove_bag.
+    unfolds heaps_bisim_rnoghost_env.
     prove_bag.
 Qed.
 
@@ -1095,7 +1099,7 @@ Lemma attributes_accessor_related_bisim_incl_preserved : forall BR1 BR2 jattrsa 
     attributes_accessor_related BR2 jattrsa attrsa.
 Proof.
     introv Hs Hrel.
-    inverts Hrel; constructor; jauto_js.
+    inverts Hrel; econstructor; jauto_js.
 Qed.
 
 Hint Resolve attributes_accessor_related_bisim_incl_preserved : js_ljs.
@@ -1199,13 +1203,13 @@ Hint Resolve object_properties_related_update : js_ljs.
 Lemma heaps_bisim_consistent_new_object_preserved : forall BR jst st jptr jobj ptr obj,
     ~index jst jptr ->
     ~index st ptr ->
-    object_related (\{(inl jptr, ptr)} \u BR) jobj obj ->
+    object_related (\{fact_js_obj jptr ptr} \u BR) jobj obj ->
     heaps_bisim_consistent BR jst st ->
-    heaps_bisim_consistent (\{(inl jptr, ptr)} \u BR) (jst \(jptr:=jobj)) (st \(ptr:=obj)).
+    heaps_bisim_consistent (\{fact_js_obj jptr ptr} \u BR) (jst \(jptr:=jobj)) (st \(ptr:=obj)).
 Proof.
     introv Hjnindex Hnindex Horel Hbisim.
     inverts Hbisim.
-    asserts Hsub : (BR \c \{(inl jptr, ptr)} \u BR). jauto_js.
+    asserts Hsub : (BR \c \{fact_js_obj jptr ptr} \u BR). jauto_js.
     constructor; unfolds.
     (* bisim_inl *)
     introv Hbi Hbinds1 Hbinds2.
@@ -1233,7 +1237,7 @@ Proof.
     destruct_hyp Hbinds2. 
     false. jauto_js.
     jauto_js.
-    (* lfun *)
+    (* lfun_obj *)
     introv Hbi1 Hbi2.
     rew_in_eq in Hbi1.
     rew_in_eq in Hbi2.
@@ -1242,7 +1246,13 @@ Proof.
     false; jauto_js.
     false; jauto_js.
     jauto_js.
-    (* rfun *)
+    (* lfun_env *)
+    introv Hbi1 Hbi2.
+    rew_in_eq in Hbi1.
+    rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2; tryfalse.
+    jauto_js.
+    (* rfun_obj *)
     introv Hbi1 Hbi2.
     rew_in_eq in Hbi1.
     rew_in_eq in Hbi2.
@@ -1250,18 +1260,24 @@ Proof.
     reflexivity.
     false; jauto_js.
     false; jauto_js.
+    jauto_js.
+    (* rfun_env *)
+    introv Hbi1 Hbi2.
+    rew_in_eq in Hbi1.
+    rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2; tryfalse.
     jauto_js.
     (* ltotal_inl *)
     introv Hindex.
     rew_index_eq in Hindex.
     destruct_hyp Hindex.
-    lets Hth : heaps_bisim_consistent_ltotal_inl Hindex. 
+    lets Hth : heaps_bisim_consistent_ltotal_obj Hindex. 
     destruct_hyp Hth. jauto_js. 
     jauto_js.
     (* ltotal_inr *)
     introv Hindex.
     rew_index_eq in Hindex.
-    lets Hth : heaps_bisim_consistent_ltotal_inr Hindex. 
+    lets Hth : heaps_bisim_consistent_ltotal_env Hindex. 
     destruct_hyp Hth. jauto_js. 
     (* lnoghost_inl *)
     introv Hbi.
@@ -1275,11 +1291,16 @@ Proof.
     destruct_hyp Hbi; tryfalse.
     rew_index_eq. 
     jauto_js.
-    (* rnoghost *)
+    (* rnoghost_obj *)
     introv Hbi.
     rew_in_eq in Hbi.
-    destruct_hyp Hbi.
-    injects. jauto_js.
+    destruct_hyp Hbi; repeat injects.
+    jauto_js.
+    jauto_js.
+    (* rnoghost_env *)
+    introv Hbi.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse.
     jauto_js.
 Qed.
 
@@ -1288,13 +1309,13 @@ Hint Resolve heaps_bisim_consistent_new_object_preserved : js_ljs.
 Lemma heaps_bisim_consistent_new_env_record_preserved : forall BR jst st jeptr jer ptr obj,
     ~index jst jeptr ->
     ~index st ptr ->
-    env_record_related (\{(inr jeptr, ptr)} \u BR) jer obj ->
+    env_record_related (\{fact_js_env jeptr ptr} \u BR) jer obj ->
     heaps_bisim_consistent BR jst st ->
-    heaps_bisim_consistent (\{(inr jeptr, ptr)} \u BR) (jst \(jeptr:=jer)) (st \(ptr:=obj)).
+    heaps_bisim_consistent (\{fact_js_env jeptr ptr} \u BR) (jst \(jeptr:=jer)) (st \(ptr:=obj)).
 Proof.
     introv Hjnindex Hnindex Horel Hbisim.
     inverts Hbisim.
-    asserts Hsub : (BR \c \{(inr jeptr, ptr)} \u BR). jauto_js.
+    asserts Hsub : (BR \c \{fact_js_env jeptr ptr} \u BR). jauto_js.
     constructor; unfolds.
     (* bisim_inl *)
     introv Hbi Hbinds1 Hbinds2.
@@ -1322,7 +1343,13 @@ Proof.
     false. jauto_js.
     false. jauto_js.
     jauto_js.
-    (* lfun *)
+    (* lfun_obj *)
+    introv Hbi1 Hbi2.
+    rew_in_eq in Hbi1.
+    rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2; tryfalse.
+    jauto_js.
+    (* lfun_env *)
     introv Hbi1 Hbi2.
     rew_in_eq in Hbi1.
     rew_in_eq in Hbi2.
@@ -1331,7 +1358,13 @@ Proof.
     false; jauto_js.
     false; jauto_js.
     jauto_js.
-    (* rfun *)
+    (* rfun_obj *)
+    introv Hbi1 Hbi2.
+    rew_in_eq in Hbi1.
+    rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2; tryfalse.
+    jauto_js.
+    (* rfun_env *)
     introv Hbi1 Hbi2.
     rew_in_eq in Hbi1.
     rew_in_eq in Hbi2.
@@ -1343,13 +1376,13 @@ Proof.
     (* ltotal_inl *)
     introv Hindex.
     rew_index_eq in Hindex.
-    lets Hth : heaps_bisim_consistent_ltotal_inl Hindex. 
+    lets Hth : heaps_bisim_consistent_ltotal_obj Hindex. 
     destruct_hyp Hth. jauto_js. 
     (* ltotal_inr *) 
     introv Hindex.
     rew_index_eq in Hindex.
     destruct_hyp Hindex.
-    lets Hth : heaps_bisim_consistent_ltotal_inr Hindex. 
+    lets Hth : heaps_bisim_consistent_ltotal_env Hindex. 
     destruct_hyp Hth. jauto_js. 
     jauto_js.
     (* lnoghost_inl *)
@@ -1364,11 +1397,16 @@ Proof.
     destruct_hyp Hbi.
     injects. jauto_js.
     jauto_js.
-    (* rnoghost *)
+    (* rnoghost_obj *)
     introv Hbi.
     rew_in_eq in Hbi.
-    destruct_hyp Hbi.
-    injects. jauto_js.
+    destruct_hyp Hbi; tryfalse.
+    jauto_js.
+    (* rnoghost_env *)
+    introv Hbi.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; repeat injects.
+    jauto_js.
     jauto_js.
 Qed.
 
@@ -1388,13 +1426,13 @@ Hint Resolve heaps_bisim_consistent_next_fresh_preserved : js_ljs.
 Lemma state_invariant_new_object_preserved : forall BR jst jc c st jobj ptr obj,
     state_invariant BR jst jc c st ->
     ~index st ptr ->
-    object_related (\{(inl (fresh jst), ptr)} \u BR) jobj obj ->
-    state_invariant (\{(inl (fresh jst), ptr)} \u BR) 
+    object_related (\{fact_js_obj (fresh jst) ptr} \u BR) jobj obj ->
+    state_invariant (\{fact_js_obj (fresh jst) ptr} \u BR) 
         (J.state_next_fresh (jst \(fresh jst:=jobj))) jc c (st \(ptr:=obj)).
 Proof.
     introv Hinv Hnindex Horel.
     inverts Hinv.
-    asserts Hsub : (BR \c \{(inl (fresh jst), ptr)} \u BR). jauto_js.
+    asserts Hsub : (BR \c \{fact_js_obj (fresh jst) ptr} \u BR). jauto_js.
     constructor; jauto_js. 
 Qed.
 
@@ -1403,13 +1441,13 @@ Hint Resolve state_invariant_new_object_preserved : js_ljs.
 Lemma state_invariant_new_env_record_preserved : forall BR jst jc c st jer ptr obj,
     state_invariant BR jst jc c st ->
     ~index st ptr ->
-    env_record_related (\{(inr (fresh jst), ptr)} \u BR) jer obj ->
-    state_invariant (\{(inr (fresh jst), ptr)} \u BR)
+    env_record_related (\{fact_js_env (fresh jst) ptr} \u BR) jer obj ->
+    state_invariant (\{fact_js_env (fresh jst) ptr} \u BR)
         (J.state_next_fresh (jst \(fresh jst:=jer))) jc c (st \(ptr:=obj)).
 Proof.
     introv Hinv Hnindex Horel.
     inverts Hinv.
-    asserts Hsub : (BR \c \{(inr (fresh jst), ptr)} \u BR). jauto_js.
+    asserts Hsub : (BR \c \{fact_js_env (fresh jst) ptr} \u BR). jauto_js.
     constructor; jauto_js.
 Qed.
 
@@ -1435,7 +1473,7 @@ Hint Resolve state_invariant_double_write_preserved : js_ljs.
 
 Lemma env_record_exist_push_context_lemma : forall BR jc jeptr ptr,
     env_records_exist BR jc ->
-    (inr jeptr, ptr) \in BR ->
+    fact_js_env jeptr ptr \in BR ->
     env_records_exist BR
         (J.execution_ctx_with_lex jc (jeptr :: J.execution_ctx_lexical_env jc)).
 Proof.
@@ -1466,7 +1504,7 @@ Hint Resolve execution_ctx_related_push_context_lemma : js_ljs.
 
 Lemma state_invariant_push_context_lemma : forall BR jst jc jeptr ptr c st,
     lexical_env_related BR st (jeptr :: J.execution_ctx_lexical_env jc) (L.value_object ptr) ->
-    (inr jeptr, ptr) \in BR ->
+    fact_js_env jeptr ptr \in BR ->
     state_invariant BR jst jc c st ->
     state_invariant BR jst
         (J.execution_ctx_with_lex jc (jeptr :: J.execution_ctx_lexical_env jc))
@@ -1670,8 +1708,12 @@ Proof.
     destruct Hsec as (?obj&Hbinds'&Hsec).
     econstructor. eassumption.
     destruct Hsec.
-    unfolds js_exn_object.
-    forwards Hok : object_security_ok_attributes Hexno.
+    destruct Hexno.
+    constructor. 
+    skip. (* TODO *)
+    skip. (* TODO *)
+    skip. (* TODO *)
+    forwards Hok : object_security_ok_attributes js_exn_object_exn.
     reflexivity.
     destruct Hok as (?attrs&Habinds'&Hconf&Hasec).
     inverts Hasec; tryfalse. assumption.
@@ -1693,7 +1735,7 @@ Lemma state_invariant_prealloc_in_ctx_lemma : forall BR jst jc c st s ptr jpre,
     binds c s (L.value_object ptr) ->
     state_invariant BR jst jc c st ->
     Mem (jpre, s) prealloc_in_ctx_list ->
-    (inl (J.object_loc_prealloc jpre), ptr) \in BR.
+    fact_js_obj (J.object_loc_prealloc jpre) ptr \in BR.
 Proof.
     introv Hbinds Hinv Hmem.
     lets Hx : state_invariant_prealloc_related Hinv Hmem Hbinds.
@@ -2151,7 +2193,7 @@ Lemma native_error_lemma : forall BR k jst jc c st st' jne ptr v r,
         (L.out_ter st' r) ->
     state_invariant BR jst jc c st ->
     (v = L.value_undefined \/ exists s, v = L.value_string s) -> (* TODO error messages in jscert *)
-    (inl (J.object_loc_prealloc (J.prealloc_native_error_proto jne)), ptr) \in BR ->
+    fact_js_obj (J.object_loc_prealloc (J.prealloc_native_error_proto jne)) ptr \in BR ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_error jne) (fun _ => False).
 Proof.
     introv Hlred Hinv Hv Hbr.
