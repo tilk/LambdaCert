@@ -57,7 +57,7 @@ Proof.
 Qed.
 
 Lemma get_identifier_value_lemma : forall jlenv k BR jst jc c st st' r b v i,
-    lexical_env_related BR st jlenv v ->
+    lexical_env_related BR jlenv v ->
     binds c "strict" (L.value_bool b) ->
     binds c "context" v ->
     binds c "id" (L.value_string i) ->
@@ -749,14 +749,14 @@ Proof.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    inverts red_exprh H15. (* TODO *)
+    inverts red_exprh H14. (* TODO *)
     ljs_apply.
     repeat ljs_autoforward.
     autoforwards Hx : eval_binary_op_num_lemma. 
     destruct_hyp Hx.
     unfold_concl_tac. 
     jauto_js 18. 
-    applys state_invariant_restore_lexical_env Hinv H16. (* TODO *)
+    applys state_invariant_restore_lexical_env Hinv H15. (* TODO *)
     eauto_js 6.
     eauto_js 6.
     eauto_js 6.
@@ -765,7 +765,7 @@ Proof.
     (* TODO *)
     repeat (ljs_propagate_abort || ljs_abort_from_js).
     unfold_concl_tac. jauto_js 14. 
-    applys state_invariant_restore_lexical_env Hinv H16. (* TODO *)
+    applys state_invariant_restore_lexical_env Hinv H15. (* TODO *)
     eauto_js 6.
     eauto_js 6.
     eauto_js 6.
@@ -775,8 +775,6 @@ Proof.
     repeat (ljs_propagate_abort || ljs_abort_from_js).
     unfold_concl_tac. jauto_js 14. 
     applys state_invariant_restore_lexical_env Hinv H10. (* TODO *)
-    eauto_js 6.
-    eauto_js 6.
     eauto_js 6.
     eauto_js 6.
 Qed.

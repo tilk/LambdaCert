@@ -110,6 +110,7 @@ Inductive fact :=
 | fact_js_env : J.env_loc -> L.object_ptr -> fact
 | fact_getter_proxy : L.object_ptr -> L.value -> fact
 | fact_setter_proxy : L.object_ptr -> L.value -> fact
+| fact_ctx_parent : L.object_ptr -> L.value -> fact
 .
 
 Definition fact_set := finset fact. (* TODO: lib-bag-ize set *)
@@ -400,19 +401,18 @@ Definition includes_init_ctx c :=
 (** *** Relating lexical environments *)
 
 (* Relates the lexical environment *)
-Inductive lexical_env_related BR st : J.lexical_env -> L.value -> Prop :=
+Inductive lexical_env_related BR : J.lexical_env -> L.value -> Prop :=
 | lexical_env_related_nil : 
-    lexical_env_related BR st nil L.value_null
-| lexical_env_related_cons : forall jeptr jlenv ptr obj v,
+    lexical_env_related BR nil L.value_null
+| lexical_env_related_cons : forall jeptr jlenv ptr v,
     fact_js_env jeptr ptr \in BR ->
-    binds st ptr obj ->
-    binds (L.object_internal obj) "parent" v ->
-    lexical_env_related BR st jlenv v ->
-    lexical_env_related BR st (jeptr::jlenv) (L.value_object ptr)
+    fact_ctx_parent ptr v \in BR ->
+    lexical_env_related BR jlenv v ->
+    lexical_env_related BR (jeptr::jlenv) (L.value_object ptr)
 .
 
 (* Relates the lexical contexts *)
-Record execution_ctx_related BR jc c st := {
+Record execution_ctx_related BR jc c := {
     execution_ctx_related_this_binding : forall v,
         binds c "$this" v ->
         value_related BR (J.execution_ctx_this_binding jc) v;
@@ -421,7 +421,7 @@ Record execution_ctx_related BR jc c st := {
         v = L.value_bool (J.execution_ctx_strict jc);
     execution_ctx_related_lexical_env : forall v,
         binds c "$context" v ->
-        lexical_env_related BR st (J.execution_ctx_lexical_env jc) v
+        lexical_env_related BR (J.execution_ctx_lexical_env jc) v
 }.
 
 Definition global_env_record_exists BR c := forall v,
@@ -461,6 +461,15 @@ Definition prealloc_in_ctx BR c := forall jpre s v,
     v = L.value_object ptr /\
     fact_js_obj (J.object_loc_prealloc jpre) ptr \in BR.
 
+(** *** Other invariants *)
+
+Definition ctx_parent_ok BR st :=
+    forall ptr v,
+    fact_ctx_parent ptr v \in BR ->
+    exists obj,
+    binds st ptr obj /\
+    binds (L.object_internal obj) "parent" v.
+
 (** *** Initial bisimulation. *)
 
 Parameter initBR : fact_set. (* TODO *)
@@ -471,24 +480,14 @@ Parameter initBR : fact_set. (* TODO *)
 Record state_invariant BR jst jc c st : Prop := {
     state_invariant_bisim_includes_init : initBR \c BR;
     state_invariant_heaps_bisim_consistent : heaps_bisim_consistent BR jst st;
-    state_invariant_execution_ctx_related : execution_ctx_related BR jc c st;
+    state_invariant_ctx_parent_ok : ctx_parent_ok BR st;
+    state_invariant_execution_ctx_related : execution_ctx_related BR jc c;
     state_invariant_includes_init_ctx : includes_init_ctx c;
     state_invariant_env_records_exist : env_records_exist BR jc;
     state_invariant_prealloc_related : prealloc_in_ctx BR c;
     state_invariant_global_env_record_exists : global_env_record_exists BR c;
     state_invariant_js_state_fresh_ok : J.state_fresh_ok jst
 }.
-
-(** *** Preserving lexical context chains *)
-
-Definition lexical_ctx_chain_ok BR st st' :=
-    forall jeptr ptr obj v,
-    fact_js_env jeptr ptr \in BR ->
-    binds st ptr obj -> 
-    binds (L.object_internal obj) "parent" v ->
-    exists obj',
-    binds st' ptr obj' /\
-    binds (L.object_internal obj') "parent" v.
 
 (** ** Theorem statement  
     Factored out, because it is used in many lemmas. *)
@@ -503,7 +502,6 @@ Definition concl_ext_expr_value BR jst jc c st st' r jee P :=
      J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw) /\
     state_invariant BR' jst' jc c st' /\
     BR \c BR' /\
-    lexical_ctx_chain_ok BR st st' /\
     res_related BR' jst' st' jr r.
 
 (* unused
@@ -515,7 +513,6 @@ Definition concl_stat BR jst jc c st st' r jt :=
     J.red_stat jst jc (J.stat_basic jt) (J.out_ter jst' jr) /\ 
     state_invariant BR' jst' jc c st' /\
     BR \c BR' /\
-    lexical_ctx_chain_ok BR st st' /\
     res_related BR' jst' st' jr r.
 
 Definition concl_spec {A : Type} BR jst jc c st st' r jes 
@@ -528,8 +525,7 @@ Definition concl_spec {A : Type} BR jst jc c st st' r jes
         J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw /\
         res_related BR' jst' st' jr r /\ Q BR' jst' jr)) /\
     state_invariant BR' jst' jc c st' /\ 
-    BR \c BR' /\
-    lexical_ctx_chain_ok BR st st'.
+    BR \c BR'.
 
 Definition concl_expr_getvalue BR jst jc c st st' r je := 
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 

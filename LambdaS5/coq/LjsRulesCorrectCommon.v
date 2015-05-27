@@ -549,29 +549,18 @@ Qed.
 
 Hint Resolve heaps_bisim_consistent_store_incl_preserved : js_ljs.
 
-Lemma lexical_env_related_store_incl_preserved : forall BR st st' jle v,
+Lemma ctx_parent_ok_store_incl_preserved : forall BR st st',
     st \c st' ->
-    lexical_env_related BR st jle v ->
-    lexical_env_related BR st' jle v.
+    ctx_parent_ok BR st ->
+    ctx_parent_ok BR st'.
 Proof.
-    introv Hni Hrel.
-    induction Hrel.
-    eapply lexical_env_related_nil. 
-    eapply lexical_env_related_cons; prove_bag.
+    introv Hni Hok Hf.
+    specializes Hok Hf.
+    destruct_hyp Hok.
+    jauto_js. 
 Qed.
 
-Hint Resolve lexical_env_related_store_incl_preserved : js_ljs.
-
-Lemma execution_ctx_related_store_incl_preserved : forall BR jc c st st',
-    st \c st' ->
-    execution_ctx_related BR jc c st ->
-    execution_ctx_related BR jc c st'.
-Proof.
-    introv Hni Hbi.
-    inverts Hbi; constructor; jauto_js.
-Qed.
-
-Hint Resolve execution_ctx_related_store_incl_preserved : js_ljs. 
+Hint Resolve ctx_parent_ok_store_incl_preserved : js_ljs.
 
 Lemma state_invariant_store_incl_preserved : forall BR jst jc c st st',
     st \c st' ->
@@ -603,10 +592,10 @@ Qed.
 
 Hint Resolve includes_init_ctx_incl_preserved : js_ljs.
 
-Lemma execution_ctx_related_incl_preserved : forall BR jc c c' st,
+Lemma execution_ctx_related_incl_preserved : forall BR jc c c',
     c' \c c ->
-    execution_ctx_related BR jc c st ->
-    execution_ctx_related BR jc c' st.
+    execution_ctx_related BR jc c ->
+    execution_ctx_related BR jc c'.
 Proof.
     introv Hincl Hrel.
     inverts Hrel.
@@ -680,10 +669,10 @@ Proof.
     inverts Hmem.
 Qed.
 
-Lemma execution_ctx_related_add_nodollar_id_preserved : forall BR jc c st s v ch,
+Lemma execution_ctx_related_add_nodollar_id_preserved : forall BR jc c s v ch,
     ch <> "$" ->
-    execution_ctx_related BR jc c st ->
-    execution_ctx_related BR jc (c \(String ch s := v)) st.
+    execution_ctx_related BR jc c ->
+    execution_ctx_related BR jc (c \(String ch s := v)).
 Proof.
     introv Hdif Hrel.
     inverts Hrel.
@@ -745,10 +734,10 @@ Proof.
     constructor; jauto_js.
 Qed.
 
-Lemma execution_ctx_related_unadd_nodollar_id_preserved : forall BR jc c st s v ch,
+Lemma execution_ctx_related_unadd_nodollar_id_preserved : forall BR jc c s v ch,
     ch <> "$" ->
-    execution_ctx_related BR jc (c \(String ch s := v)) st ->
-    execution_ctx_related BR jc c st.
+    execution_ctx_related BR jc (c \(String ch s := v)) ->
+    execution_ctx_related BR jc c.
 Proof.
     introv Hdif Hrel.
     inverts Hrel.
@@ -827,10 +816,10 @@ Hint Resolve global_env_record_exists_unadd_nopercent_id_preserved : js_ljs.
 Hint Resolve state_invariant_add_nopercent_nodollar_id_preserved : js_ljs.
 Hint Resolve state_invariant_unadd_nopercent_nodollar_id_preserved : js_ljs.
 
-Lemma execution_ctx_related_union_preserved : forall BR jc c c' st,
-    execution_ctx_related BR jc c st ->
-    execution_ctx_related BR jc c' st ->
-    execution_ctx_related BR jc (c \u c') st.
+Lemma execution_ctx_related_union_preserved : forall BR jc c c',
+    execution_ctx_related BR jc c ->
+    execution_ctx_related BR jc c' ->
+    execution_ctx_related BR jc (c \u c').
 Proof.
     introv Hrel1 Hrel2.
     inverts Hrel1.
@@ -910,8 +899,8 @@ Qed.
 
 Hint Resolve includes_init_ctx_init_ctx : js_ljs.
 
-Lemma execution_ctx_related_init_ctx : forall BR jc st,
-    execution_ctx_related BR jc LjsInitEnv.init_ctx st.
+Lemma execution_ctx_related_init_ctx : forall BR jc,
+    execution_ctx_related BR jc LjsInitEnv.init_ctx.
 Proof.
     constructor.
 Admitted. (* TODO *)
@@ -1023,21 +1012,21 @@ Qed.
 
 Hint Resolve global_env_record_exists_bisim_incl_preserved : js_ljs.
 
-Lemma lexical_env_related_bisim_incl_preserved : forall BR1 BR2 st jlenv v,
+Lemma lexical_env_related_bisim_incl_preserved : forall BR1 BR2 jlenv v,
     BR1 \c BR2 ->
-    lexical_env_related BR1 st jlenv v ->
-    lexical_env_related BR2 st jlenv v.
+    lexical_env_related BR1 jlenv v ->
+    lexical_env_related BR2 jlenv v.
 Proof.
     introv Hs Hpre.
-    induction Hpre; jauto_js.
+    induction Hpre; jauto_js 6.
 Qed.
 
 Hint Resolve lexical_env_related_bisim_incl_preserved : js_ljs.
 
-Lemma execution_ctx_related_bisim_incl_preserved : forall BR1 BR2 jc c st,
+Lemma execution_ctx_related_bisim_incl_preserved : forall BR1 BR2 jc c,
     BR1 \c BR2 ->
-    execution_ctx_related BR1 jc c st ->
-    execution_ctx_related BR2 jc c st.
+    execution_ctx_related BR1 jc c ->
+    execution_ctx_related BR2 jc c.
 Proof.
     introv Hs Hrel.
     inverts Hrel.
@@ -1139,6 +1128,149 @@ Proof.
 Qed.
 
 Hint Resolve object_related_bisim_incl_preserved : js_ljs.
+
+
+Lemma state_invariant_lexical_env_related : forall BR jst jc c st v,
+    state_invariant BR jst jc c st ->
+    binds c "$context" v ->
+    lexical_env_related BR (J.execution_ctx_lexical_env jc) v.
+Proof.
+    introv Hinv Hbinds.
+    inverts Hinv.
+    inverts state_invariant_execution_ctx_related.
+    auto.
+Qed.
+
+Lemma object_prim_related_add_fact_preserved : forall BR jobj obj f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    object_prim_related BR jobj obj ->
+    object_prim_related (\{f} \u BR) jobj obj.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    inverts Hrel.
+    constructor; eauto_js.
+Qed.
+
+Hint Resolve object_prim_related_add_fact_preserved : js_ljs.
+
+Lemma value_related_add_fact_preserved : forall BR jv v f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    value_related BR jv v ->
+    value_related (\{f} \u BR) jv v.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    inverts Hrel; eauto_js.
+Qed.
+
+Hint Resolve value_related_add_fact_preserved : js_ljs.
+
+Lemma attributes_data_related_add_fact_preserved : forall BR jattrsd attrsd f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    attributes_data_related BR jattrsd attrsd ->
+    attributes_data_related (\{f} \u BR) jattrsd attrsd.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    inverts Hrel.
+    constructor; eauto_js.
+Qed.
+
+Hint Resolve attributes_data_related_add_fact_preserved : js_ljs.
+
+Lemma attributes_accessor_related_add_fact_preserved : forall BR jattrsa attrsa f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    attributes_accessor_related BR jattrsa attrsa ->
+    attributes_accessor_related (\{f} \u BR) jattrsa attrsa.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    inverts Hrel.
+    econstructor; eauto_js.
+Qed.
+
+Hint Resolve attributes_accessor_related_add_fact_preserved : js_ljs.
+
+Lemma attributes_related_add_fact_preserved : forall BR jattrs attrs f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    attributes_related BR jattrs attrs ->
+    attributes_related (\{f} \u BR) jattrs attrs.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    inverts Hrel; eauto_js.
+Qed.
+
+Hint Resolve attributes_related_add_fact_preserved : js_ljs.
+
+Lemma object_properties_related_add_fact_preserved : forall BR jprops props f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    object_properties_related BR jprops props ->
+    object_properties_related (\{f} \u BR) jprops props.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    unfolds object_properties_related.
+    intro s. specializes Hrel s.
+    destruct_hyp Hrel; jauto_js 8.
+Qed.
+
+Hint Resolve object_properties_related_add_fact_preserved : js_ljs.
+
+Lemma object_related_add_fact_preserved : forall BR jobj obj f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    object_related BR jobj obj ->
+    object_related (\{f} \u BR) jobj obj.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    inverts Hrel.
+    constructor; eauto_js.
+Qed.
+
+Hint Resolve object_related_add_fact_preserved : js_ljs.
+
+Lemma decl_env_record_related_add_fact_preserved : forall BR jder props f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    decl_env_record_related BR jder props ->
+    decl_env_record_related (\{f} \u BR) jder props.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    unfolds decl_env_record_related.
+    intro s. specializes Hrel s.
+    destruct_hyp Hrel; jauto_js 8.
+Qed.
+
+Hint Resolve decl_env_record_related_add_fact_preserved : js_ljs.
+
+Lemma env_record_related_add_fact_preserved : forall BR jer obj f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    env_record_related BR jer obj ->
+    env_record_related (\{f} \u BR) jer obj.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    inverts Hrel; eauto_js.
+Qed.
+
+Hint Resolve env_record_related_add_fact_preserved : js_ljs.
+
+Lemma ctx_parent_ok_new_fact_preserved : forall BR st f,
+    (forall ptr v, f <> fact_ctx_parent ptr v) ->
+    ctx_parent_ok BR st ->
+    ctx_parent_ok (\{f} \u BR) st.
+Proof.
+    introv Hfact Hcp Hpar.
+    lets Hfact' : Hfact ptr v.
+    asserts Hpar' : (fact_ctx_parent ptr v \in BR).
+    rew_in_eq in Hpar. destruct_hyp Hpar; tryfalse. assumption.
+    specializes Hcp Hpar'.
+    assumption.
+Qed.
+
+Hint Resolve ctx_parent_ok_new_fact_preserved : js_ljs.
 
 Lemma object_prim_related_map_properties_preserved : forall BR jobj obj F,
     object_prim_related BR jobj obj ->
@@ -1423,6 +1555,81 @@ Qed.
 
 Hint Resolve heaps_bisim_consistent_next_fresh_preserved : js_ljs.
 
+Lemma heaps_bisim_consistent_add_fact_preserved : forall BR jst st f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    heaps_bisim_consistent BR jst st ->
+    heaps_bisim_consistent (\{f} \u BR) jst st.
+Proof.
+    introv Hdif1 Hdif2 Hbisim.
+    inverts Hbisim.
+    constructor; unfolds.
+    (* bisim_obj *)
+    introv Hbi Hbinds1 Hbinds2.
+    lets Hdif1' : Hdif1 jptr ptr.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse. 
+    jauto_js.
+    (* bisim_env *)
+    introv Hbi Hbinds1 Hbinds2.
+    lets Hdif2' : Hdif2 jeptr ptr.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse. 
+    jauto_js.
+    (* lfun_obj *)
+    introv Hbi1 Hbi2.
+    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects; try solve [false; eapply Hdif1; reflexivity]. 
+    eauto.
+    (* lfun_env *)
+    introv Hbi1 Hbi2.
+    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects; try solve [false; eapply Hdif2; reflexivity]. 
+    eauto.
+    (* rfun_obj *)
+    introv Hbi1 Hbi2.
+    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects; try solve [false; eapply Hdif1; reflexivity].
+    eauto. 
+    (* rfun_env *)
+    introv Hbi1 Hbi2.
+    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects; try solve [false; eapply Hdif2; reflexivity].
+    eauto. 
+    (* ltotal_obj *)
+    introv Hindex.
+    lets Hx : heaps_bisim_consistent_ltotal_obj Hindex.
+    destruct_hyp Hx.
+    jauto_js.
+    (* ltotal_env *)
+    introv Hindex.
+    lets Hx : heaps_bisim_consistent_ltotal_env Hindex.
+    destruct_hyp Hx.
+    jauto_js.
+    (* lnoghost_obj *)
+    introv Hbi.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; try solve [false; eapply Hdif1; reflexivity]. 
+    eauto.
+    (* lnoghost_env *)
+    introv Hbi.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; try solve [false; eapply Hdif2; reflexivity]. 
+    eauto.
+    (* rnoghost_obj *)
+    introv Hbi.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; try solve [false; eapply Hdif1; reflexivity].
+    eauto.
+    (* rnoghost_env *) 
+    introv Hbi.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; try solve [false; eapply Hdif2; reflexivity]. 
+    eauto.
+Qed.
+
+Hint Resolve heaps_bisim_consistent_add_fact_preserved : js_ljs.
+
 Lemma state_invariant_new_object_preserved : forall BR jst jc c st jobj ptr obj,
     state_invariant BR jst jc c st ->
     ~index st ptr ->
@@ -1471,6 +1678,33 @@ Qed.
 
 Hint Resolve state_invariant_double_write_preserved : js_ljs.
 
+Lemma ctx_parent_ok_new_env_parent_preserved : forall BR st ptr obj v,
+    binds st ptr obj ->
+    binds (L.object_internal obj) "parent" v ->
+    ctx_parent_ok BR st ->
+    ctx_parent_ok (\{fact_ctx_parent ptr v} \u BR) st.
+Proof.
+    introv Hbinds1 Hbinds2 Hcp Hf.
+    rew_in_eq in Hf.
+    destruct_hyp Hf; repeat injects; eauto.
+Qed.
+
+Hint Resolve ctx_parent_ok_new_env_parent_preserved : js_ljs.
+
+Lemma state_invariant_new_env_parent_preserved : forall BR jst jc c st v ptr obj,
+    binds st ptr obj ->
+    binds (L.object_internal obj) "parent" v ->
+    state_invariant BR jst jc c st ->
+    state_invariant (\{fact_ctx_parent ptr v} \u BR) jst jc c st.
+Proof.
+    introv Hbinds1 Hbinds2 Hinv.
+    inverts Hinv.
+    asserts Hsub : (BR \c \{fact_ctx_parent ptr v} \u BR). jauto_js.
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve state_invariant_new_env_parent_preserved : js_ljs.
+
 Lemma env_record_exist_push_context_lemma : forall BR jc jeptr ptr,
     env_records_exist BR jc ->
     fact_js_env jeptr ptr \in BR ->
@@ -1487,12 +1721,12 @@ Qed.
 
 Hint Resolve env_record_exist_push_context_lemma : js_ljs.
 
-Lemma execution_ctx_related_push_context_lemma : forall BR jc jeptr c ptr st,
-    lexical_env_related BR st (jeptr :: J.execution_ctx_lexical_env jc) (L.value_object ptr) ->
-    execution_ctx_related BR jc c st ->
+Lemma execution_ctx_related_push_context_lemma : forall BR jc jeptr c ptr,
+    lexical_env_related BR (jeptr :: J.execution_ctx_lexical_env jc) (L.value_object ptr) ->
+    execution_ctx_related BR jc c ->
     execution_ctx_related BR
         (J.execution_ctx_with_lex jc (jeptr :: J.execution_ctx_lexical_env jc))
-        (c\("$context":=L.value_object ptr)) st.
+        (c\("$context":=L.value_object ptr)).
 Proof.
     introv Hlrel Hrel.
     destruct Hrel.
@@ -1503,7 +1737,7 @@ Qed.
 Hint Resolve execution_ctx_related_push_context_lemma : js_ljs.
 
 Lemma state_invariant_push_context_lemma : forall BR jst jc jeptr ptr c st,
-    lexical_env_related BR st (jeptr :: J.execution_ctx_lexical_env jc) (L.value_object ptr) ->
+    lexical_env_related BR (jeptr :: J.execution_ctx_lexical_env jc) (L.value_object ptr) ->
     fact_js_env jeptr ptr \in BR ->
     state_invariant BR jst jc c st ->
     state_invariant BR jst
@@ -1579,104 +1813,25 @@ Proof.
     constructor; eauto_js.
 Qed.
 
-Lemma lexical_ctx_chain_ok_bisim_incl_preserved : forall BR BR' st st',
-    BR' \c BR ->
-    lexical_ctx_chain_ok BR st st' ->
-    lexical_ctx_chain_ok BR' st st'.
-Proof.
-    unfolds lexical_ctx_chain_ok.
-    introv Hlc Hsub Hbisim Hbinds.
-    prove_bag.
-Qed.
-
-(* Hint Resolve lexical_ctx_chain_ok_bisim_incl_preserved : js_ljs. *)
-Hint Extern 4 (lexical_ctx_chain_ok ?BR ?st _) =>
-    match goal with
-    | H : lexical_ctx_chain_ok ?BR' _ _ |- _ =>
-        not constr_eq BR BR';
-        let Hsub := fresh "H" in
-        asserts Hsub : (BR \c BR'); 
-        [prove_bag 10 | applys lexical_ctx_chain_ok_bisim_incl_preserved Hsub; clear Hsub]
-    end : js_ljs.
-
-Lemma lexical_ctx_chain_ok_left_state_incl_preserved : forall BR st0 st st',
-    st \c st0 ->
-    lexical_ctx_chain_ok BR st0 st' ->
-    lexical_ctx_chain_ok BR st st'.
-Proof.
-    unfolds lexical_ctx_chain_ok.
-    introv Hlc Hsub Hbisim Hbinds.
-    prove_bag.
-Qed.
-
-(* Hint Resolve lexical_ctx_chain_ok_left_state_incl_preserved : js_ljs. *)
-Hint Extern 4 (lexical_ctx_chain_ok ?BR ?st _) =>
-    match goal with
-    | H : lexical_ctx_chain_ok _ ?st' _ |- _ =>
-        not constr_eq st st';
-        let Hsub := fresh "H" in
-        asserts Hsub : (st \c st'); 
-        [prove_bag 10 | applys lexical_ctx_chain_ok_left_state_incl_preserved Hsub; clear Hsub]
-    end.
-
-Lemma lexical_ctx_chain_ok_trans : forall BR, trans (lexical_ctx_chain_ok BR).
-Proof.
-    introv Hlc1 Hlc2.
-    unfolds lexical_ctx_chain_ok.
-    introv Hbisim Hbinds Hpar.
-    specializes Hlc1 Hbisim Hbinds Hpar.
-    destruct Hlc1 as (?obj&Hbinds1&Hpar1).
-    specializes Hlc2 Hbisim Hbinds1 Hpar1.
-Qed.
-
-Lemma lexical_ctx_chain_ok_refl : forall BR, refl (lexical_ctx_chain_ok BR).
-Proof.
-    introv Hbisim Hbinds.
-    eauto.
-Qed.
-
-Hint Extern 0 (lexical_ctx_chain_ok ?BR ?st ?st) => apply (@lexical_ctx_chain_ok_refl BR st) : js_ljs.
-
-Hint Extern 0 (lexical_ctx_chain_ok ?BR ?st1 ?st3) =>
-    match goal with
-    | H : lexical_ctx_chain_ok ?BR' st1 ?st2 |- _ => 
-        apply (@lexical_ctx_chain_ok_trans BR st2 st1 st3); 
-        [apply ((fun x1 x2 => @lexical_ctx_chain_ok_bisim_incl_preserved BR' BR st1 st2 x2 x1) H) | idtac]
-    end : js_ljs.
-
-Lemma lexical_ctx_chain_ok_new_object : forall BR st ptr obj,
-    ~index st ptr ->
-    lexical_ctx_chain_ok BR st (st \(ptr := obj)).
-Proof.
-    introv Hnindex Hbisim Hbinds.
-    prove_bag 7.
-Qed.
-
-Hint Resolve lexical_ctx_chain_ok_new_object : js_ljs.
-
-Lemma lexical_env_related_restore_lexical_env : forall BR BR' jlenv v st st',
-    lexical_env_related BR st jlenv v ->
+Lemma lexical_env_related_restore_lexical_env : forall BR BR' jlenv v,
+    lexical_env_related BR jlenv v ->
     BR \c BR' ->
-    lexical_ctx_chain_ok BR st st' ->
-    lexical_env_related BR' st' jlenv v.
+    lexical_env_related BR' jlenv v.
 Proof.
-    introv Hrel Hsub Hlc.
-    induction Hrel as [|? ? ? ? ? Hbisim Hbinds Hpar].
+    introv Hrel Hsub.
+    induction Hrel as [|? ? ? ? ? Hbisim Hcpar].
     jauto_js.
-    specializes Hlc Hbisim Hbinds Hpar.
-    destruct Hlc as (?&Hbinds1&Hpar1). 
     eapply lexical_env_related_cons; eauto_js.
 Qed.
 
 Hint Resolve lexical_env_related_restore_lexical_env : js_ljs.
 
-Lemma execution_ctx_related_restore_lexical_env : forall BR BR' jc c st st',
-    execution_ctx_related BR jc c st ->
+Lemma execution_ctx_related_restore_lexical_env : forall BR BR' jc c,
+    execution_ctx_related BR jc c ->
     BR \c BR' ->
-    lexical_ctx_chain_ok BR st st' ->
-    execution_ctx_related BR' jc c st'.
+    execution_ctx_related BR' jc c.
 Proof.
-    introv Hrel Hsub Hlc.
+    introv Hrel Hsub.
     destruct Hrel.
     constructor; jauto_js.
 Qed.
@@ -1684,13 +1839,12 @@ Qed.
 Hint Resolve execution_ctx_related_restore_lexical_env : js_ljs.
 
 Lemma state_invariant_restore_lexical_env : forall BR BR' jst jst' jc jc' c c' st st',
-    lexical_ctx_chain_ok BR st st' ->
     BR \c BR' ->
     state_invariant BR jst jc c st ->
     state_invariant BR' jst' jc' c' st' ->
     state_invariant BR' jst' jc c st'.
 Proof.
-    introv Hlc Hsub Hinv1 Hinv2.
+    introv Hsub Hinv1 Hinv2.
     destruct Hinv1. destruct Hinv2.
     constructor; jauto_js.
 Qed.
@@ -1725,9 +1879,9 @@ Hint Extern 0 (L.state_security_ok ?st ?st) => apply (@L.state_security_ok_refl 
 
 Hint Extern 0 (L.state_security_ok ?st1 ?st3) =>
     match goal with
-    | H : lexical_ctx_chain_ok st1 ?st2 |- _ => 
+    | H : L.state_security_ok st1 ?st2 |- _ => 
         apply (@L.state_security_ok_trans st2 st1 st3 H)
-    | H : lexical_ctx_chain_ok ?st2 st3 |- _ => 
+    | H : L.state_security_ok ?st2 st3 |- _ => 
         apply ((fun h1 h2 => @L.state_security_ok_trans st2 st1 st3 h2 h1) H)
     end : js_ljs.
 
@@ -2339,3 +2493,152 @@ Proof.
     jauto_js. left. jauto_js.
     jauto_js. right. jauto_js.
 Qed.
+
+Lemma new_env_record_object_lemma : forall BR k c st jlenv v jptr ptr b st' r,
+    lexical_env_related BR jlenv v ->
+    value_related BR (J.value_object jptr) (L.value_object ptr) ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewObjEnvRec 
+        [v; L.value_object ptr; L.value_bool b]) (L.out_ter st' r) ->
+    exists obj,
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    binds (L.object_internal obj) "parent" v /\
+    env_record_related BR (J.env_record_object jptr b) obj.
+Proof.
+    introv Hlrel Hvrel Hlred.
+    inverts Hvrel.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    eexists.
+    splits.
+    reflexivity.
+    reflexivity.
+    prove_bag.
+    econstructor;
+    prove_bag 8.
+Qed.
+
+Lemma state_invariant_new_env_record_object_lemma : forall BR k jst jc c st v jptr ptr b st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewObjEnvRec 
+        [v; L.value_object ptr; L.value_bool b]) (L.out_ter st' r) ->
+    binds c "$context" v ->
+    value_related BR (J.value_object jptr) (L.value_object ptr) ->
+    state_invariant BR jst jc c st ->
+    exists obj,
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    state_invariant (\{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR) 
+        (J.state_next_fresh (jst \(fresh jst := J.env_record_object jptr b))) 
+        (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
+        (c \("$context" := L.value_object (fresh st))) 
+        (st \(fresh st := obj)).
+Proof.
+    introv Hlred Hbinds Hvrel Hinv.
+    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). 
+        prove_bag 10.
+    asserts Hlerel : (lexical_env_related BR (J.execution_ctx_lexical_env jc) v).
+    solve [eauto using state_invariant_lexical_env_related].
+    forwards Hx : new_env_record_object_lemma; try eauto.
+    destruct_hyp Hx.
+    eexists. splits; try reflexivity.
+    eapply state_invariant_push_context_lemma.
+    eapply lexical_env_related_cons; eauto_js 10. 
+    eauto_js 10. eauto_js 10.
+Qed. 
+
+Lemma decl_env_record_related_empty : forall BR,
+    decl_env_record_related BR \{} \{}.
+Proof.
+    introv. unfolds.
+    intro s.
+    left. splits; prove_bag.
+Qed.
+
+Hint Resolve decl_env_record_related_empty : js_ljs.
+
+(* TODO move *)
+Lemma new_env_record_decl_lemma : forall BR k c st jlenv v st' r,
+    lexical_env_related BR jlenv v ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v]) (L.out_ter st' r) ->
+    exists obj,
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    binds (L.object_internal obj) "parent" v /\
+    env_record_related BR (J.env_record_decl J.decl_env_record_empty) obj.
+Proof.
+    introv Hlrel Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    eexists.
+    splits.
+    reflexivity.
+    reflexivity.
+    prove_bag.
+    econstructor; jauto_js.
+Qed.
+
+Lemma state_invariant_new_env_record_decl_lemma : forall BR k jst jc c st v st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v]) (L.out_ter st' r) ->
+    binds c "$context" v ->
+    state_invariant BR jst jc c st ->
+    exists obj,
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    state_invariant (\{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR) 
+        (J.state_next_fresh (jst \(fresh jst := J.env_record_decl J.decl_env_record_empty))) 
+        (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
+        (c \("$context" := L.value_object (fresh st))) 
+        (st \(fresh st := obj)).
+Proof.
+    introv Hlred Hbinds Hinv.
+    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). jauto_js.
+    asserts Hlerel : (lexical_env_related BR (J.execution_ctx_lexical_env jc) v).
+    solve [eauto using state_invariant_lexical_env_related].
+    forwards Hx : new_env_record_decl_lemma; try eauto.
+    destruct_hyp Hx.
+    eexists. splits; try reflexivity.
+    eapply state_invariant_push_context_lemma.
+    eapply lexical_env_related_cons; eauto_js 15.
+    eauto_js 10. eauto_js 10.
+Qed.
+
+(* TODO 
+Lemma decl_env_add_mutable_binding_lemma : forall BR k jst jc c st st' r jeptr ptr obj b jv v s,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDeclEnvAddMutableBinding 
+        [L.value_object ptr; L.value_string s; v; L.value_bool b]) (L.out_ter st' r) -> 
+    binds st ptr obj ->
+    state_invariant BR jst jc c st ->
+    value_related BR jv v ->
+    (inr jeptr, ptr) \in BR ->
+    st' = st \(ptr := L.set_object_property obj s (L.attributes_data_of 
+        (L.attributes_data_intro v true false b))) /\
+    r = L.res_value L.value_undefined /\
+    state_invariant BR (J.env_record_write_decl_env jst jeptr s (J.mutability_of_bool b) jv) jc c st'.
+Proof.
+(*
+    introv Hlred Hbinds Hinv.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    cases_decide.
+    repeat ljs_autoforward.
+    solve [inv_ljs].
+*)
+(*
+    repeat ljs_autoforward.
+    inv_ljs.
+    binds_determine. 
+    false. prove_bag.
+    repeat ljs_autoforward. 
+    inv_ljs. 
+    repeat ljs_autoforward.
+    inv_ljs. 
+    repeat ljs_autoforward.
+    simpls.
+
+    binds_inv. false. prove_bag 8.
+*)
+Admitted. (* TODO *)
+*)
