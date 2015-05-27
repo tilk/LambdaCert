@@ -562,6 +562,32 @@ Qed.
 
 Hint Resolve ctx_parent_ok_store_incl_preserved : js_ljs.
 
+Lemma getter_proxy_ok_store_incl_preserved : forall BR st st',
+    st \c st' ->
+    getter_proxy_ok BR st ->
+    getter_proxy_ok BR st'.
+Proof.
+    introv Hni Hok Hf.
+    specializes Hok Hf.
+    destruct_hyp Hok.
+    jauto_js. 
+Qed.
+
+Hint Resolve getter_proxy_ok_store_incl_preserved : js_ljs.
+
+Lemma setter_proxy_ok_store_incl_preserved : forall BR st st',
+    st \c st' ->
+    setter_proxy_ok BR st ->
+    setter_proxy_ok BR st'.
+Proof.
+    introv Hni Hok Hf.
+    specializes Hok Hf.
+    destruct_hyp Hok.
+    jauto_js. 
+Qed.
+
+Hint Resolve setter_proxy_ok_store_incl_preserved : js_ljs.
+
 Lemma state_invariant_store_incl_preserved : forall BR jst jc c st st',
     st \c st' ->
     state_invariant BR jst jc c st ->
@@ -1271,6 +1297,36 @@ Proof.
 Qed.
 
 Hint Resolve ctx_parent_ok_new_fact_preserved : js_ljs.
+
+Lemma getter_proxy_ok_new_fact_preserved : forall BR st f,
+    (forall ptr v, f <> fact_getter_proxy ptr v) ->
+    getter_proxy_ok BR st ->
+    getter_proxy_ok (\{f} \u BR) st.
+Proof.
+    introv Hfact Hcp Hpar.
+    lets Hfact' : Hfact ptr v.
+    asserts Hpar' : (fact_getter_proxy ptr v \in BR).
+    rew_in_eq in Hpar. destruct_hyp Hpar; tryfalse. assumption.
+    specializes Hcp Hpar'.
+    assumption.
+Qed.
+
+Hint Resolve getter_proxy_ok_new_fact_preserved : js_ljs.
+
+Lemma setter_proxy_ok_new_fact_preserved : forall BR st f,
+    (forall ptr v, f <> fact_setter_proxy ptr v) ->
+    setter_proxy_ok BR st ->
+    setter_proxy_ok (\{f} \u BR) st.
+Proof.
+    introv Hfact Hcp Hpar.
+    lets Hfact' : Hfact ptr v.
+    asserts Hpar' : (fact_setter_proxy ptr v \in BR).
+    rew_in_eq in Hpar. destruct_hyp Hpar; tryfalse. assumption.
+    specializes Hcp Hpar'.
+    assumption.
+Qed.
+
+Hint Resolve setter_proxy_ok_new_fact_preserved : js_ljs.
 
 Lemma object_prim_related_map_properties_preserved : forall BR jobj obj F,
     object_prim_related BR jobj obj ->

@@ -470,6 +470,20 @@ Definition ctx_parent_ok BR st :=
     binds st ptr obj /\
     binds (L.object_internal obj) "parent" v.
 
+Definition getter_proxy_ok BR st :=
+    forall ptr v,
+    fact_getter_proxy ptr v \in BR ->
+    exists obj,
+    binds st ptr obj /\
+    getter_proxy obj v.
+
+Definition setter_proxy_ok BR st :=
+    forall ptr v,
+    fact_setter_proxy ptr v \in BR ->
+    exists obj,
+    binds st ptr obj /\
+    setter_proxy obj v.
+
 (** *** Initial bisimulation. *)
 
 Parameter initBR : fact_set. (* TODO *)
@@ -481,6 +495,8 @@ Record state_invariant BR jst jc c st : Prop := {
     state_invariant_bisim_includes_init : initBR \c BR;
     state_invariant_heaps_bisim_consistent : heaps_bisim_consistent BR jst st;
     state_invariant_ctx_parent_ok : ctx_parent_ok BR st;
+    state_invariant_getter_proxy_ok : getter_proxy_ok BR st;
+    state_invariant_setter_proxy_ok : setter_proxy_ok BR st;
     state_invariant_execution_ctx_related : execution_ctx_related BR jc c;
     state_invariant_includes_init_ctx : includes_init_ctx c;
     state_invariant_env_records_exist : env_records_exist BR jc;
