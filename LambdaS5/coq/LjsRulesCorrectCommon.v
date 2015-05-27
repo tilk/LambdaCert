@@ -962,44 +962,44 @@ Qed.
 Hint Resolve state_invariant_replace_ctx_sub_init : js_ljs.
 
 Lemma value_related_bisim_incl_preserved : forall BR1 BR2 jv v,
-    BR1 \c BR2 ->
     value_related BR1 jv v ->
+    BR1 \c BR2 ->
     value_related BR2 jv v.
 Proof.
-    introv Hs Hrel.
+    introv Hrel Hs.
     inverts Hrel; jauto_js. 
 Qed.
 
 Hint Resolve value_related_bisim_incl_preserved : js_ljs.
 
 Lemma resvalue_related_bisim_incl_preserved : forall BR1 BR2 jrv v,
-    BR1 \c BR2 ->
     resvalue_related BR1 jrv v ->
+    BR1 \c BR2 ->
     resvalue_related BR2 jrv v.
 Proof.
-    introv Hs Hrel.
+    introv Hrel Hs.
     inverts Hrel; jauto_js.
 Qed.
 
 Hint Resolve resvalue_related_bisim_incl_preserved : js_ljs.
 
 Lemma res_related_bisim_incl_preserved : forall BR1 BR2 jst st jr r,
-    BR1 \c BR2 ->
     res_related BR1 jst st jr r ->
+    BR1 \c BR2 ->
     res_related BR2 jst st jr r.
 Proof.
-    introv Hs Hrel.
+    introv Hrel Hs.
     inverts Hrel; jauto_js.
 Qed.
 
 Hint Resolve res_related_bisim_incl_preserved : js_ljs.
 
 Lemma env_records_exist_bisim_incl_preserved : forall BR1 BR2 jc,
-    BR1 \c BR2 ->
     env_records_exist BR1 jc ->
+    BR1 \c BR2 ->
     env_records_exist BR2 jc.
 Proof.
-    introv Hs Hex.
+    introv Hex Hs.
     inverts Hex. 
     constructor; introv Hmem.
     specializes env_record_exist_variable_env Hmem. destruct_hyp env_record_exist_variable_env. jauto_js.
@@ -1009,11 +1009,11 @@ Qed.
 Hint Resolve env_records_exist_bisim_incl_preserved : js_ljs.
 
 Lemma prealloc_in_ctx_bisim_incl_preserved : forall BR1 BR2 c,
-    BR1 \c BR2 ->
     prealloc_in_ctx BR1 c ->
+    BR1 \c BR2 ->
     prealloc_in_ctx BR2 c.
 Proof.
-    introv Hs Hpre.
+    introv Hpre Hs.
     unfolds prealloc_in_ctx.
     introv Hmem Hbinds.
     specializes Hpre Hmem Hbinds.
@@ -1024,11 +1024,11 @@ Qed.
 Hint Resolve prealloc_in_ctx_bisim_incl_preserved : js_ljs.
 
 Lemma global_env_record_exists_bisim_incl_preserved : forall BR1 BR2 c,
-    BR1 \c BR2 ->
     global_env_record_exists BR1 c ->
+    BR1 \c BR2 ->
     global_env_record_exists BR2 c.
 Proof.
-    introv Hs Hpre.
+    introv Hpre Hs.
     unfolds global_env_record_exists. 
     introv Hbinds.
     specializes Hpre Hbinds.
@@ -1039,22 +1039,22 @@ Qed.
 Hint Resolve global_env_record_exists_bisim_incl_preserved : js_ljs.
 
 Lemma lexical_env_related_bisim_incl_preserved : forall BR1 BR2 jlenv v,
-    BR1 \c BR2 ->
     lexical_env_related BR1 jlenv v ->
+    BR1 \c BR2 ->
     lexical_env_related BR2 jlenv v.
 Proof.
-    introv Hs Hpre.
+    introv Hpre Hs.
     induction Hpre; jauto_js 6.
 Qed.
 
 Hint Resolve lexical_env_related_bisim_incl_preserved : js_ljs.
 
 Lemma execution_ctx_related_bisim_incl_preserved : forall BR1 BR2 jc c,
-    BR1 \c BR2 ->
     execution_ctx_related BR1 jc c ->
+    BR1 \c BR2 ->
     execution_ctx_related BR2 jc c.
 Proof.
-    introv Hs Hrel.
+    introv Hrel Hs.
     inverts Hrel.
     constructor; jauto_js.
 Qed.
@@ -1062,11 +1062,11 @@ Qed.
 Hint Resolve execution_ctx_related_bisim_incl_preserved : js_ljs.
 
 Lemma decl_env_record_related_bisim_incl_preserved : forall BR1 BR2 jder props,
-    BR1 \c BR2 ->
     decl_env_record_related BR1 jder props -> 
+    BR1 \c BR2 ->
     decl_env_record_related BR2 jder props.
 Proof.
-    introv Hs Hrel.
+    introv Hrel Hs.
     unfolds decl_env_record_related.
     intro s. specializes Hrel s.
     destruct_hyp Hrel; ijauto_js.
@@ -1075,11 +1075,11 @@ Qed.
 Hint Resolve decl_env_record_related_bisim_incl_preserved : js_ljs.
 
 Lemma env_record_related_bisim_incl_preserved : forall BR1 BR2 jer obj,
-    BR1 \c BR2 ->
     env_record_related BR1 jer obj ->
+    BR1 \c BR2 ->
     env_record_related BR2 jer obj.
 Proof.
-    introv Hs Hrel.
+    introv Hrel Hs.
     inverts Hrel.
     eapply env_record_related_decl; jauto_js.
     eapply env_record_related_object; jauto_js.
@@ -1088,54 +1088,54 @@ Qed.
 Hint Resolve env_record_related_bisim_incl_preserved : js_ljs.
 
 Lemma object_prim_related_bisim_incl_preserved : forall BR1 BR2 jobj obj,
-    BR1 \c BR2 ->
     object_prim_related BR1 jobj obj ->
+    BR1 \c BR2 ->
     object_prim_related BR2 jobj obj.
 Proof.
     
-Admitted.
+Admitted. (* TODO *)
 
 Hint Resolve object_prim_related_bisim_incl_preserved : js_ljs.
 
 Lemma attributes_data_related_bisim_incl_preserved : forall BR1 BR2 jattrsd attrsd,
-    BR1 \c BR2 ->
     attributes_data_related BR1 jattrsd attrsd ->
+    BR1 \c BR2 ->
     attributes_data_related BR2 jattrsd attrsd.
 Proof.
-    introv Hs Hrel.
+    introv Hrel Hs.
     inverts Hrel; constructor; jauto_js.
 Qed.
 
 Hint Resolve attributes_data_related_bisim_incl_preserved : js_ljs.
 
 Lemma attributes_accessor_related_bisim_incl_preserved : forall BR1 BR2 jattrsa attrsa,
-    BR1 \c BR2 ->
     attributes_accessor_related BR1 jattrsa attrsa ->
+    BR1 \c BR2 ->
     attributes_accessor_related BR2 jattrsa attrsa.
 Proof.
-    introv Hs Hrel.
+    introv Hrel Hs.
     inverts Hrel; econstructor; jauto_js.
 Qed.
 
 Hint Resolve attributes_accessor_related_bisim_incl_preserved : js_ljs.
 
 Lemma attributes_related_bisim_incl_preserved : forall BR1 BR2 jattrs attrs,
-    BR1 \c BR2 ->
     attributes_related BR1 jattrs attrs ->
+    BR1 \c BR2 ->
     attributes_related BR2 jattrs attrs.
 Proof.
-    introv Hs Hrel.
+    introv Hrel Hs.
     inverts Hrel; constructor; jauto_js.
 Qed.
 
 Hint Resolve attributes_related_bisim_incl_preserved : js_ljs.
 
 Lemma object_properties_related_bisim_incl_preserved : forall BR1 BR2 jprops props,
-    BR1 \c BR2 ->
     object_properties_related BR1 jprops props ->
+    BR1 \c BR2 ->
     object_properties_related BR2 jprops props.
 Proof.
-    introv Hs Hrel.
+    introv Hrel Hs.
     unfolds object_properties_related.
     intro s. specializes Hrel s.
     destruct_hyp Hrel; ijauto_js.
@@ -1144,11 +1144,11 @@ Qed.
 Hint Resolve object_properties_related_bisim_incl_preserved : js_ljs.
 
 Lemma object_related_bisim_incl_preserved : forall BR1 BR2 jobj obj,
-    BR1 \c BR2 ->
     object_related BR1 jobj obj ->
+    BR1 \c BR2 ->
     object_related BR2 jobj obj.
 Proof. 
-    introv Hs Hrel.
+    introv Hrel Hs.
     inverts Hrel.
     constructor; jauto_js.
 Qed.
@@ -2225,7 +2225,7 @@ Ltac specialize_th_ext_expr_unary H :=
         unify e e'; unify [v] vl;
         let H1 := fresh "H" in
         asserts H1 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
-        specializes H H1 (value_related_bisim_incl_preserved Hsub H2) H3; 
+        specializes H H1 (value_related_bisim_incl_preserved H2 Hsub) H3; 
         clear H1; clear H3; clear Hsub
     end
     end.
@@ -2243,8 +2243,8 @@ Ltac specialize_th_ext_expr_binary H :=
         unify e e'; unify [v1; v2] vl;
         let H1 := fresh "H" in
         asserts H1 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
-        specializes H H1 (value_related_bisim_incl_preserved Hsub1 H2) 
-            (value_related_bisim_incl_preserved Hsub2 H3) H4;
+        specializes H H1 (value_related_bisim_incl_preserved H2 Hsub1) 
+            (value_related_bisim_incl_preserved H3 Hsub2) H4;
         clear H1; clear H4; clear Hsub1; clear Hsub2
     end
     end.
