@@ -185,9 +185,28 @@ Definition object_properties_related BR jprops props := forall s,
 (** *** Relating objects
     To be related, objects must have related property sets and internal properties. *)
 
+Inductive option_value_related BR : option J.value -> option L.value -> Prop :=
+| option_value_related_none : option_value_related BR None None
+| option_value_related_some : forall jv v,
+    value_related BR jv v ->
+    option_value_related BR (Some jv) (Some v)
+.
+
+Inductive primval_related BR : option J.value -> L.object -> Prop :=
+| primval_related_none : forall obj, 
+    ~index (L.object_internal obj) "primval" -> 
+    primval_related BR None obj
+| primval_related_some : forall obj jv v, 
+    binds (L.object_internal obj) "primval" v ->
+    value_related BR jv v ->
+    primval_related BR (Some jv) obj
+.
+
 Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_class : J.object_class_ jobj = L.object_class obj;
-    object_prim_related_extensible : J.object_extensible_ jobj = L.object_extensible obj
+    object_prim_related_extensible : J.object_extensible_ jobj = L.object_extensible obj;
+    object_prim_related_prototype : value_related BR (J.object_proto_ jobj) (L.object_proto obj);
+    object_prim_related_primval : primval_related BR (J.object_prim_value_ jobj) obj
 }.
 
 Record object_related BR jobj obj : Prop := {
@@ -505,6 +524,16 @@ Record state_invariant BR jst jc c st : Prop := {
     state_invariant_js_state_fresh_ok : J.state_fresh_ok jst
 }.
 
+(** *** For restoring invariants after function application *)
+
+Record context_invariant BR jc c : Prop := {
+    context_invariant_execution_ctx_related : execution_ctx_related BR jc c;
+    context_invariant_includes_init_ctx : includes_init_ctx c;
+    context_invariant_env_records_exist : env_records_exist BR jc;
+    context_invariant_prealloc_related : prealloc_in_ctx BR c;
+    context_invariant_global_env_record_exists : global_env_record_exists BR c
+}.
+
 (** ** Theorem statement  
     Factored out, because it is used in many lemmas. *)
 
@@ -532,20 +561,20 @@ Definition concl_stat BR jst jc c st st' r jt :=
     res_related BR' jst' st' jr r.
 
 Definition concl_spec {A : Type} BR jst jc c st st' r jes 
-    (P : fact_set -> J.state -> A -> Prop) 
-    (Q : fact_set -> J.state -> J.res -> Prop) :=
-    exists BR' jst',
-    ((exists x, J.red_spec jst jc jes (J.specret_val jst' x) /\ P BR' jst' x) \/
-     (exists jr, 
-        J.red_spec jst jc jes (@J.specret_out A (J.out_ter jst' jr)) /\ 
-        J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw /\
-        res_related BR' jst' st' jr r /\ Q BR' jst' jr)) /\
+    (P : fact_set -> J.state -> A -> Prop) :=
+    exists BR' jst' sr,
+    J.red_spec jst jc jes sr ->
+    ((exists x, sr = J.specret_val jst' x /\ P BR' jst' x) \/
+     (exists jr, sr = @J.specret_out A (J.out_ter jst' jr) /\ 
+        J.abort (J.out_ter jst' jr) /\ 
+        J.res_type jr = J.restype_throw /\
+        res_related BR' jst' st' jr r)) /\
     state_invariant BR' jst' jc c st' /\ 
     BR \c BR'.
 
 Definition concl_expr_getvalue BR jst jc c st st' r je := 
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
-       (fun BR' _ jv => exists v, r = L.res_value v /\ value_related BR' jv v) (fun _ _ _ => True).
+       (fun BR' _ jv => exists v, r = L.res_value v /\ value_related BR' jv v).
 
 (** *** Theorem statements *)
 
@@ -564,7 +593,7 @@ Definition th_spec {A : Type} k e jes
     forall BR jst jc c st st' r, 
     state_invariant BR jst jc c st ->
     L.red_exprh k c st (L.expr_basic e) (L.out_ter st' r) ->
-    concl_spec BR jst jc c st st' r jes (fun BR' jst' a => P BR' jst' jc c st' r a) (fun _ _ _ => True).
+    concl_spec BR jst jc c st st' r jes (fun BR' jst' a => P BR' jst' jc c st' r a).
 
 Definition th_ext_expr_unary k v jeef P :=
     forall BR jst jc c st st' r v1 jv1, 

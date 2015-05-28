@@ -27,6 +27,7 @@ LjsPrettyRules.v
 LjsRulesCorrectCommon.v
 LjsRulesCorrectDefinitions.v
 LjsRulesCorrectExpressions.v
+LjsRulesCorrectSpecFuns.v
 LjsRulesCorrectStatements.v
 LjsRulesCorrect.v
 LjsShared.v

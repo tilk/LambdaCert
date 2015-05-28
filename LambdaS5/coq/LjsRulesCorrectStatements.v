@@ -5,6 +5,7 @@ Require Import LjsShared.
 Require Import Utils.
 Require Import LjsRulesCorrectDefinitions.
 Require Import LjsRulesCorrectCommon.
+Require Import LjsRulesCorrectSpecFuns.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.

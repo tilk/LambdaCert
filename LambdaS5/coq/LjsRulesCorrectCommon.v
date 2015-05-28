@@ -52,6 +52,15 @@ Implicit Type jprops : J.object_properties_type.
 
 Create HintDb js_ljs discriminated.
 
+Create HintDb xcore discriminated.
+
+Hint Resolve conj or_introl or_intror ex_intro : xcore.
+Hint Extern 0 => reflexivity : xcore.
+Hint Extern 50 (~_) => progress rew_logic : xcore.
+Hint Extern 60 (~_) => solve [let H := fresh in intro H; inversion H] : xcore.
+
+Hint Extern 1 => solve [eauto 10 with nocore typeclass_instances] : js_ljs.
+
 (** The constructors for relating JS to S5 are used as hints. *)
 
 Hint Constructors attributes_data_related : js_ljs.
@@ -59,6 +68,8 @@ Hint Constructors attributes_accessor_related : js_ljs.
 Hint Constructors attributes_related : js_ljs.
 Hint Constructors type_related : js_ljs.
 Hint Constructors value_related : js_ljs.
+Hint Constructors option_value_related : js_ljs.
+Hint Constructors primval_related : js_ljs.
 Hint Constructors resvalue_related : js_ljs.
 Hint Constructors res_related : js_ljs.
 Hint Constructors env_record_related : js_ljs.
@@ -73,6 +84,7 @@ Hint Constructors setter_proxy : js_ljs.
 (** The constructors for S5 *)
 
 Hint Constructors L.stx_eq : js_ljs.
+Hint Constructors L.abort L.res_is_control L.res_is_value : js_ljs.
 
 (** The constructors of JSCert are used as hints, for automated building of
     the derivation trees for the semantics judgment. *)
@@ -243,12 +255,13 @@ Ltac destr_concl := match goal with
         unfold_concl in H; destruct_hyp H
     end.
 
-Tactic Notation "eauto_js" integer(k) := eauto k with js_ljs bag typeclass_instances.
+Tactic Notation "eauto_js" integer(k) := eauto k with js_ljs bag nocore xcore.
 
 Tactic Notation "eauto_js" := eauto_js 5.
 
-Tactic Notation "jauto_js" integer(k) := repeat destr_concl; jauto_set; eauto with js_ljs bag typeclass_instances; 
-    repeat (try unfold_concl; jauto_set; eauto k with js_ljs bag typeclass_instances).
+Tactic Notation "jauto_js" integer(k) := 
+    repeat destr_concl; jauto_set; eauto with js_ljs bag nocore xcore; 
+    repeat (try unfold_concl; jauto_set; eauto k with js_ljs bag nocore xcore).
 
 Tactic Notation "jauto_js" := jauto_js 5.
 
@@ -961,59 +974,107 @@ Qed.
 
 Hint Resolve state_invariant_replace_ctx_sub_init : js_ljs.
 
+Ltac sub_helper BR1 BR2 f :=
+    not constr_eq BR1 BR2;
+    let Hsub := fresh "H" in
+    asserts Hsub : (BR1 \c BR2); [prove_bag | idtac];
+    applys f Hsub;
+    clear Hsub.
+
 Lemma value_related_bisim_incl_preserved : forall BR1 BR2 jv v,
-    value_related BR1 jv v ->
     BR1 \c BR2 ->
+    value_related BR1 jv v ->
     value_related BR2 jv v.
 Proof.
-    introv Hrel Hs.
+    introv Hs Hrel.
     inverts Hrel; jauto_js. 
 Qed.
 
-Hint Resolve value_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve value_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (value_related ?BR2 _ _) => 
+    match goal with 
+    | H : value_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 value_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 value_related_bisim_incl_preserved
+    end 
+    : js_ljs.
+
+Lemma option_value_related_bisim_incl_preserved : forall BR1 BR2 jov ov,
+    BR1 \c BR2 ->
+    option_value_related BR1 jov ov ->
+    option_value_related BR2 jov ov.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel; jauto_js. 
+Qed.
+
+(* Hint Resolve option_value_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (option_value_related ?BR2 _ _) => 
+    match goal with 
+    | H : option_value_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 option_value_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 option_value_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma resvalue_related_bisim_incl_preserved : forall BR1 BR2 jrv v,
-    resvalue_related BR1 jrv v ->
     BR1 \c BR2 ->
+    resvalue_related BR1 jrv v ->
     resvalue_related BR2 jrv v.
 Proof.
-    introv Hrel Hs.
+    introv Hs Hrel.
     inverts Hrel; jauto_js.
 Qed.
 
-Hint Resolve resvalue_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve resvalue_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (resvalue_related ?BR2 _ _) => 
+    match goal with 
+    | H : resvalue_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 resvalue_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 resvalue_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma res_related_bisim_incl_preserved : forall BR1 BR2 jst st jr r,
-    res_related BR1 jst st jr r ->
     BR1 \c BR2 ->
+    res_related BR1 jst st jr r ->
     res_related BR2 jst st jr r.
 Proof.
-    introv Hrel Hs.
+    introv Hs Hrel.
     inverts Hrel; jauto_js.
 Qed.
 
-Hint Resolve res_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve res_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (res_related ?BR2 _ _ _ _) => 
+    match goal with 
+    | H : res_related ?BR1 _ _ _ _ |- _ => sub_helper BR1 BR2 res_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 res_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma env_records_exist_bisim_incl_preserved : forall BR1 BR2 jc,
-    env_records_exist BR1 jc ->
     BR1 \c BR2 ->
+    env_records_exist BR1 jc ->
     env_records_exist BR2 jc.
 Proof.
-    introv Hex Hs.
+    introv Hs Hex.
     inverts Hex. 
     constructor; introv Hmem.
     specializes env_record_exist_variable_env Hmem. destruct_hyp env_record_exist_variable_env. jauto_js.
     specializes env_record_exist_lexical_env Hmem. destruct_hyp env_record_exist_lexical_env. jauto_js.
 Qed.
 
-Hint Resolve env_records_exist_bisim_incl_preserved : js_ljs.
+(* Hint Resolve env_records_exist_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (env_records_exist ?BR2 _) => 
+    match goal with 
+    | H : env_records_exist ?BR1 _ |- _ => sub_helper BR1 BR2 env_records_exist_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 env_records_exist_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma prealloc_in_ctx_bisim_incl_preserved : forall BR1 BR2 c,
-    prealloc_in_ctx BR1 c ->
     BR1 \c BR2 ->
+    prealloc_in_ctx BR1 c ->
     prealloc_in_ctx BR2 c.
 Proof.
-    introv Hpre Hs.
+    introv Hs Hpre.
     unfolds prealloc_in_ctx.
     introv Hmem Hbinds.
     specializes Hpre Hmem Hbinds.
@@ -1021,14 +1082,20 @@ Proof.
     jauto_js.
 Qed.
 
-Hint Resolve prealloc_in_ctx_bisim_incl_preserved : js_ljs.
+(* Hint Resolve prealloc_in_ctx_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (prealloc_in_ctx ?BR2 _) => 
+    match goal with 
+    | H : prealloc_in_ctx ?BR1 _ |- _ => sub_helper BR1 BR2 prealloc_in_ctx_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 prealloc_in_ctx_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma global_env_record_exists_bisim_incl_preserved : forall BR1 BR2 c,
-    global_env_record_exists BR1 c ->
     BR1 \c BR2 ->
+    global_env_record_exists BR1 c ->
     global_env_record_exists BR2 c.
 Proof.
-    introv Hpre Hs.
+    introv Hs Hpre.
     unfolds global_env_record_exists. 
     introv Hbinds.
     specializes Hpre Hbinds.
@@ -1036,125 +1103,231 @@ Proof.
     jauto_js.
 Qed.
 
-Hint Resolve global_env_record_exists_bisim_incl_preserved : js_ljs.
+(* Hint Resolve global_env_record_exists_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (global_env_record_exists ?BR2 _) => 
+    match goal with 
+    | H : global_env_record_exists ?BR1 _ |- _ => sub_helper BR1 BR2 global_env_record_exists_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 global_env_record_exists_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma lexical_env_related_bisim_incl_preserved : forall BR1 BR2 jlenv v,
-    lexical_env_related BR1 jlenv v ->
     BR1 \c BR2 ->
+    lexical_env_related BR1 jlenv v ->
     lexical_env_related BR2 jlenv v.
 Proof.
-    introv Hpre Hs.
+    introv Hs Hpre.
     induction Hpre; jauto_js 6.
 Qed.
 
-Hint Resolve lexical_env_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve lexical_env_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (lexical_env_related ?BR2 _ _) => 
+    match goal with 
+    | H : lexical_env_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 lexical_env_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 lexical_env_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma execution_ctx_related_bisim_incl_preserved : forall BR1 BR2 jc c,
-    execution_ctx_related BR1 jc c ->
     BR1 \c BR2 ->
+    execution_ctx_related BR1 jc c ->
     execution_ctx_related BR2 jc c.
 Proof.
-    introv Hrel Hs.
+    introv Hs Hrel.
     inverts Hrel.
-    constructor; jauto_js.
+    constructor.
+    introv Hbinds. specializes execution_ctx_related_this_binding Hbinds. jauto_js.
+    jauto_js.
+    introv Hbinds. specializes execution_ctx_related_lexical_env Hbinds. jauto_js.
 Qed.
 
-Hint Resolve execution_ctx_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve execution_ctx_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (execution_ctx_related ?BR2 _ _) => 
+    match goal with 
+    | H : execution_ctx_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 execution_ctx_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 execution_ctx_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma decl_env_record_related_bisim_incl_preserved : forall BR1 BR2 jder props,
-    decl_env_record_related BR1 jder props -> 
     BR1 \c BR2 ->
+    decl_env_record_related BR1 jder props -> 
     decl_env_record_related BR2 jder props.
 Proof.
-    introv Hrel Hs.
+    introv Hs Hrel.
     unfolds decl_env_record_related.
     intro s. specializes Hrel s.
     destruct_hyp Hrel; ijauto_js.
 Qed.
 
-Hint Resolve decl_env_record_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve decl_env_record_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (decl_env_record_related ?BR2 _ _) => 
+    match goal with 
+    | H : decl_env_record_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 decl_env_record_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 decl_env_record_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma env_record_related_bisim_incl_preserved : forall BR1 BR2 jer obj,
-    env_record_related BR1 jer obj ->
     BR1 \c BR2 ->
+    env_record_related BR1 jer obj ->
     env_record_related BR2 jer obj.
 Proof.
-    introv Hrel Hs.
+    introv Hs Hrel.
     inverts Hrel.
     eapply env_record_related_decl; jauto_js.
     eapply env_record_related_object; jauto_js.
 Qed.
 
-Hint Resolve env_record_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve env_record_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (env_record_related ?BR2 _ _) => 
+    match goal with 
+    | H : env_record_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 env_record_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 env_record_related_bisim_incl_preserved
+    end 
+    : js_ljs.
+
+Lemma primval_related_bisim_incl_preserved : forall BR1 BR2 jov obj,
+    BR1 \c BR2 ->
+    primval_related BR1 jov obj ->
+    primval_related BR2 jov obj.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel; eauto_js.
+Qed.
+
+(* Hint Resolve primval_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (primval_related ?BR2 _ _) => 
+    match goal with 
+    | H : primval_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 primval_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 primval_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma object_prim_related_bisim_incl_preserved : forall BR1 BR2 jobj obj,
-    object_prim_related BR1 jobj obj ->
     BR1 \c BR2 ->
+    object_prim_related BR1 jobj obj ->
     object_prim_related BR2 jobj obj.
 Proof.
-    
-Admitted. (* TODO *)
+    introv Hs Hrel.
+    inverts Hrel.
+    constructor; eauto_js.
+Qed.
 
-Hint Resolve object_prim_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve object_prim_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (object_prim_related ?BR2 _ _) => 
+    match goal with 
+    | H : object_prim_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 object_prim_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 object_prim_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma attributes_data_related_bisim_incl_preserved : forall BR1 BR2 jattrsd attrsd,
-    attributes_data_related BR1 jattrsd attrsd ->
     BR1 \c BR2 ->
+    attributes_data_related BR1 jattrsd attrsd ->
     attributes_data_related BR2 jattrsd attrsd.
 Proof.
-    introv Hrel Hs.
+    introv Hs Hrel.
     inverts Hrel; constructor; jauto_js.
 Qed.
 
-Hint Resolve attributes_data_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve attributes_data_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (attributes_data_related ?BR2 _ _) => 
+    match goal with 
+    | H : attributes_data_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 attributes_data_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 attributes_data_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma attributes_accessor_related_bisim_incl_preserved : forall BR1 BR2 jattrsa attrsa,
-    attributes_accessor_related BR1 jattrsa attrsa ->
     BR1 \c BR2 ->
+    attributes_accessor_related BR1 jattrsa attrsa ->
     attributes_accessor_related BR2 jattrsa attrsa.
 Proof.
-    introv Hrel Hs.
+    introv Hs Hrel.
     inverts Hrel; econstructor; jauto_js.
 Qed.
 
-Hint Resolve attributes_accessor_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve attributes_accessor_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (attributes_accessor_related ?BR2 _ _) => 
+    match goal with 
+    | H : attributes_accessor_related ?BR1 _ _ |- _ => 
+        sub_helper BR1 BR2 attributes_accessor_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 attributes_accessor_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma attributes_related_bisim_incl_preserved : forall BR1 BR2 jattrs attrs,
-    attributes_related BR1 jattrs attrs ->
     BR1 \c BR2 ->
+    attributes_related BR1 jattrs attrs ->
     attributes_related BR2 jattrs attrs.
 Proof.
-    introv Hrel Hs.
+    introv Hs Hrel.
     inverts Hrel; constructor; jauto_js.
 Qed.
 
-Hint Resolve attributes_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve attributes_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (attributes_related ?BR2 _ _) => 
+    match goal with 
+    | H : attributes_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 attributes_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 attributes_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma object_properties_related_bisim_incl_preserved : forall BR1 BR2 jprops props,
-    object_properties_related BR1 jprops props ->
     BR1 \c BR2 ->
+    object_properties_related BR1 jprops props ->
     object_properties_related BR2 jprops props.
 Proof.
-    introv Hrel Hs.
+    introv Hs Hrel.
     unfolds object_properties_related.
     intro s. specializes Hrel s.
     destruct_hyp Hrel; ijauto_js.
 Qed.
 
-Hint Resolve object_properties_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve object_properties_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (object_properties_related ?BR2 _ _) => 
+    match goal with 
+    | H : object_properties_related ?BR1 _ _ |- _ => 
+        sub_helper BR1 BR2 object_properties_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 object_properties_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma object_related_bisim_incl_preserved : forall BR1 BR2 jobj obj,
-    object_related BR1 jobj obj ->
     BR1 \c BR2 ->
+    object_related BR1 jobj obj ->
     object_related BR2 jobj obj.
 Proof. 
-    introv Hrel Hs.
+    introv Hs Hrel.
     inverts Hrel.
     constructor; jauto_js.
 Qed.
 
-Hint Resolve object_related_bisim_incl_preserved : js_ljs.
+(* Hint Resolve object_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (object_related ?BR2 _ _) => 
+    match goal with 
+    | H : object_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 object_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 object_related_bisim_incl_preserved
+    end 
+    : js_ljs.
 
+Lemma context_invariant_bisim_incl_preserved : forall BR1 BR2 jc c,
+    BR1 \c BR2 ->
+    context_invariant BR1 jc c ->
+    context_invariant BR2 jc c.
+Proof.
+    introv Hs Hinv.
+    inverts Hinv.
+    constructor; jauto_js.
+Qed.
+
+Hint Extern 4 (context_invariant ?BR2 _ _) => 
+    match goal with 
+    | H : context_invariant ?BR1 _ _ |- _ => sub_helper BR1 BR2 context_invariant_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 context_invariant_bisim_incl_preserved
+    end 
+    : js_ljs.
 
 Lemma state_invariant_lexical_env_related : forall BR jst jc c st v,
     state_invariant BR jst jc c st ->
@@ -1166,6 +1339,42 @@ Proof.
     inverts state_invariant_execution_ctx_related.
     auto.
 Qed.
+
+Lemma value_related_add_fact_preserved : forall BR jv v f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    value_related BR jv v ->
+    value_related (\{f} \u BR) jv v.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    inverts Hrel; eauto_js.
+Qed.
+
+Hint Resolve value_related_add_fact_preserved : js_ljs.
+
+Lemma option_value_related_add_fact_preserved : forall BR jov ov f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    option_value_related BR jov ov ->
+    option_value_related (\{f} \u BR) jov ov.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    inverts Hrel; eauto_js.
+Qed.
+
+Hint Resolve option_value_related_add_fact_preserved : js_ljs.
+
+Lemma primval_related_add_fact_preserved : forall BR jov obj f,
+    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
+    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
+    primval_related BR jov obj ->
+    primval_related (\{f} \u BR) jov obj.
+Proof.
+    introv Hdif1 Hdif2 Hrel.
+    inverts Hrel; eauto_js.
+Qed.
+
+Hint Resolve primval_related_add_fact_preserved : js_ljs.
 
 Lemma object_prim_related_add_fact_preserved : forall BR jobj obj f,
     (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
@@ -1179,18 +1388,6 @@ Proof.
 Qed.
 
 Hint Resolve object_prim_related_add_fact_preserved : js_ljs.
-
-Lemma value_related_add_fact_preserved : forall BR jv v f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    value_related BR jv v ->
-    value_related (\{f} \u BR) jv v.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    inverts Hrel; eauto_js.
-Qed.
-
-Hint Resolve value_related_add_fact_preserved : js_ljs.
 
 Lemma attributes_data_related_add_fact_preserved : forall BR jattrsd attrsd f,
     (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
@@ -1239,7 +1436,7 @@ Proof.
     introv Hdif1 Hdif2 Hrel.
     unfolds object_properties_related.
     intro s. specializes Hrel s.
-    destruct_hyp Hrel; jauto_js 8.
+    destruct_hyp Hrel; intuition jauto_js 8.
 Qed.
 
 Hint Resolve object_properties_related_add_fact_preserved : js_ljs.
@@ -1266,7 +1463,7 @@ Proof.
     introv Hdif1 Hdif2 Hrel.
     unfolds decl_env_record_related.
     intro s. specializes Hrel s.
-    destruct_hyp Hrel; jauto_js 8.
+    destruct_hyp Hrel; intuition jauto_js 8.
 Qed.
 
 Hint Resolve decl_env_record_related_add_fact_preserved : js_ljs.
@@ -1350,19 +1547,25 @@ Qed.
 
 Hint Resolve object_related_map_properties_preserved : js_ljs.
 
+(*
 Lemma object_prim_related_object_new : forall BR jv v s obj,
     L.object_class obj = s ->
     L.object_extensible obj ->
+    L.object_proto obj = v ->
+    ~index (L.object_internal obj) "primval" ->
     value_related BR jv v ->
     object_prim_related BR (J.object_new jv s) obj.
 Proof.
-    introv Hcl Hrel.
+    introv Hcl Hext Hpro Hprim Hrel.
     constructor.
     rewrite Hcl. reflexivity.
-    rewrite Hrel. reflexivity. 
+    rewrite Hext. reflexivity. 
+    rewrite Hpro. assumption.
+    eauto_js.
 Qed.
 
 Hint Resolve object_prim_related_object_new : js_ljs.
+*)
 
 Lemma object_properties_related_new : forall BR,
     object_properties_related BR \{} \{}.
@@ -1894,9 +2097,9 @@ Qed.
 
 Hint Resolve execution_ctx_related_restore_lexical_env : js_ljs.
 
-Lemma state_invariant_restore_lexical_env : forall BR BR' jst jst' jc jc' c c' st st',
+Lemma state_invariant_restore_lexical_env : forall BR BR' jst' jc jc' c c' st',
     BR \c BR' ->
-    state_invariant BR jst jc c st ->
+    context_invariant BR jc c ->
     state_invariant BR' jst' jc' c' st' ->
     state_invariant BR' jst' jc c st'.
 Proof.
@@ -1990,6 +2193,15 @@ Proof.
     eapply init_ctx_mem_assoc. assumption.
 Qed.
 
+Lemma state_invariant_to_context_invariant : forall BR jst jc c st,
+    state_invariant BR jst jc c st ->
+    context_invariant BR jc c.
+Proof.
+    introv Hinv.
+    inverts Hinv.
+    constructor; assumption.
+Qed.
+
 (* Prerequisites *)
 
 Lemma ih_expr_leq : forall k k', (k' <= k)%nat -> ih_expr k -> ih_expr k'.
@@ -2077,7 +2289,7 @@ Ltac ljs_state_invariant_after_apply :=
         let Hinv' := fresh "Hinv" in
         asserts Hinv' : (state_invariant BR jst jc c' st); 
         [rewrite <- Heq; ljs_state_invariant
-        |idtac]
+        |apply state_invariant_to_context_invariant in Hinv]
     end.
 
 Ltac apply_ih_expr := match goal with
@@ -2225,7 +2437,7 @@ Ltac specialize_th_ext_expr_unary H :=
         unify e e'; unify [v] vl;
         let H1 := fresh "H" in
         asserts H1 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
-        specializes H H1 (value_related_bisim_incl_preserved H2 Hsub) H3; 
+        specializes H H1 (value_related_bisim_incl_preserved Hsub H2) H3; 
         clear H1; clear H3; clear Hsub
     end
     end.
@@ -2243,8 +2455,8 @@ Ltac specialize_th_ext_expr_binary H :=
         unify e e'; unify [v1; v2] vl;
         let H1 := fresh "H" in
         asserts H1 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
-        specializes H H1 (value_related_bisim_incl_preserved H2 Hsub1) 
-            (value_related_bisim_incl_preserved H3 Hsub2) H4;
+        specializes H H1 (value_related_bisim_incl_preserved Hsub1 H2) 
+            (value_related_bisim_incl_preserved Hsub2 H3) H4;
         clear H1; clear H4; clear Hsub1; clear Hsub2
     end
     end.
@@ -2331,370 +2543,3 @@ Ltac ljs_autoforward := first [
     apply_ih_stat | apply_ih_expr | ljs_autoinject | 
     binds_inv | binds_determine | ljs_get_builtin ].
 
-(** ** Lemmas about operators *)
-
-(* TODO *)
-
-(** ** Lemmas about the environment *)
-
-(* TODO *)
-
-(** ** Lemmas about specification functions *)
-
-Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
-    L.red_exprh k c st 
-       (L.expr_app_2 LjsInitEnv.privMakeNativeError [v1; v2]) 
-       (L.out_ter st' r) ->
-    state_invariant BR jst jc c st ->
-    (v2 = L.value_undefined \/ exists s, v2 = L.value_string s) ->
-    value_related BR jv1 v1 ->
-    value_related BR jv2 v2 ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_build_error jv1 jv2) 
-        (fun jv => exists jptr, jv = J.value_object jptr).
-Proof.
-    introv Hlred Hinv Hv Hvrel1 Hvrel2. 
-    inverts red_exprh Hlred; tryfalse.
-    ljs_apply.
-    repeat ljs_autoforward.
-    destruct_hyp Hv;
-    repeat ljs_autoforward.
-    inverts Hvrel2.
-    jauto_js 8.
-    (* has message *)
-    inv_ljs;
-    binds_inv. (* TODO *) simpls. false. rewrite binds_empty_eq in H8. eauto.
-    repeat ljs_autoforward.
-    inv_ljs; binds_inv. 
-    repeat ljs_autoforward.
-    rew_bag_simpl. 
-    simpls.
-    binds_inv.
-    inverts Hvrel2.
-    unfold_concl. do 3 eexists. split. 
-    jauto_js 15.
-    jauto_js.
-    eapply state_invariant_next_fresh_commute_object_preserved.
-    rew_bag_simpl.
-    eapply state_invariant_new_object_preserved.
-    eauto_js. eauto_js.
-    eauto_js 6.
-    jauto_js.
-    jauto_js 8.
-    simpls. false. prove_bag 7.
-Qed.
-
-Lemma priv_js_error_lemma : forall k c st v st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privJSError [v]) (L.out_ter st' r) ->
-    exists obj,
-    r = L.res_value (L.value_object (fresh st)) /\
-    st' = st \(fresh st := obj) /\
-    js_exn_object obj v.
-Proof.
-    introv Hlred.
-    inverts red_exprh Hlred; tryfalse.
-    ljs_apply.
-    repeat ljs_autoforward.
-    jauto_js.
-Qed.
-
-Lemma native_error_lemma : forall BR k jst jc c st st' jne ptr v r,
-    L.red_exprh k c st 
-        (L.expr_app_2 LjsInitEnv.privNativeError [L.value_object ptr; v]) 
-        (L.out_ter st' r) ->
-    state_invariant BR jst jc c st ->
-    (v = L.value_undefined \/ exists s, v = L.value_string s) -> (* TODO error messages in jscert *)
-    fact_js_obj (J.object_loc_prealloc (J.prealloc_native_error_proto jne)) ptr \in BR ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_error jne) (fun _ => False).
-Proof.
-    introv Hlred Hinv Hv Hbr.
-    inverts red_exprh Hlred; tryfalse.
-    ljs_apply.
-    ljs_state_invariant_after_apply.
-    repeat ljs_autoforward.
-    destruct_hyp Hv;
-    forwards Hx : make_native_error_lemma H0; (destr_concl || jauto_js). (* TODO *)
-    res_related_invert.
-    repeat inv_fwd_ljs.
-    forwards Hy : priv_js_error_lemma. eassumption. destruct_hyp Hy.
-    repeat inv_fwd_ljs.
-    resvalue_related_invert.
-    jauto_js 8.
-    ljs_handle_abort.
-    skip. (* TODO overspecification in jscert - https://github.com/resource-reasoning/jscert_dev/issues/14 *)
-    skip.
-Qed.
-
-Lemma type_error_lemma : forall BR k jst jc c st st' v r,
-    L.red_exprh k c st 
-        (L.expr_app_2 LjsInitEnv.privTypeError [v]) 
-        (L.out_ter st' r) ->
-    (v = L.value_undefined \/ exists s, v = L.value_string s) ->
-    state_invariant BR jst jc c st ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_error J.native_error_type) (fun _ => False).
-Proof.
-    introv Hlred Hv Hinv.
-    inverts red_exprh Hlred; tryfalse.
-    ljs_apply.
-    ljs_state_invariant_after_apply.
-    repeat ljs_autoforward.
-    forwards Hx : native_error_lemma; try eassumption.
-    eapply state_invariant_prealloc_in_ctx_lemma. eassumption. eassumption. 
-        repeat (eapply Mem_here || eapply Mem_next). (* TODO *)
-    destr_concl; tryfalse.
-    ljs_handle_abort.
-Qed.
-
-(** *** spec_expr_get_value_conv spec_to_boolean 
-    It corresponds to [to_bool] in the desugaring. *)
-
-Lemma red_spec_to_boolean_unary_ok : forall k,
-    th_ext_expr_unary k LjsInitEnv.privToBoolean J.spec_to_boolean 
-        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
-Proof.
-    introv Hinv Hvrel Hlred.
-    inverts red_exprh Hlred; tryfalse.
-
-    ljs_apply.
-
-    repeat ljs_autoforward. 
-
-    inverts Hvrel; try injects; jauto_js.
-Qed.
-
-Lemma red_spec_to_number_unary_ok : forall k,
-    th_ext_expr_unary k LjsInitEnv.privToNumber J.spec_to_number
-        (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
-Proof.
-    introv Hinv Hvrel Hlred.
-    inverts red_exprh Hlred; tryfalse.
-    ljs_apply.
-    ljs_state_invariant_after_apply.
-(* TODO *)
-Admitted.
-
-(* TODO move *)
-Ltac decide_stx_eq := 
-    match goal with
-    | H : context[decide (L.stx_eq ?v1 ?v2)] |- _ => 
-        let EQ := fresh "EQ" in
-        case_if_on (decide (L.stx_eq v1 v2)) as EQ;
-        [applys_to EQ eq_true_r; rew_refl in EQ; try solve [inverts EQ]
-        |applys_to EQ eq_false_r; rew_refl in EQ; try solve [false; apply EQ; jauto_js]]
-    end.
-
-Ltac invert_stx_eq :=
-    match goal with
-    | H : L.stx_eq _ _  |- _ => inverts H
-    end. 
-
-Lemma red_spec_to_object_ok : forall k,
-    th_ext_expr_unary k LjsInitEnv.privToObject J.spec_to_object
-        (fun jv => exists jptr, jv = J.value_object jptr).
-Proof.
-    introv Hinv Hvrel Hlred.
-    inverts red_exprh Hlred; tryfalse.
-    ljs_apply.
-    ljs_state_invariant_after_apply.
-    repeat (ljs_autoforward || decide_stx_eq).
-    (* null *)
-    destruct Hvrel; invert_stx_eq.
-    forwards Hx : type_error_lemma. eassumption. iauto. eauto_js.
-    destr_concl; tryfalse.
-    jauto_js.
-    (* undefined *)
-    destruct Hvrel; invert_stx_eq.
-    forwards Hx : type_error_lemma. eassumption. iauto. eauto_js.
-    destr_concl; tryfalse.
-    jauto_js.
-    (* object *)
-    destruct Hvrel; invert_stx_eq.
-    jauto_js.
-    (* string *)
-    destruct Hvrel; invert_stx_eq.
-    skip. (* TODO *)
-    (* number *)
-    destruct Hvrel; invert_stx_eq.
-    inverts red_exprh H7. (* TODO *)
-    ljs_apply.
-    repeat ljs_autoforward.
-    jauto_js 8.
-    (* boolean *)
-    destruct Hvrel; invert_stx_eq.
-    inverts red_exprh H7. (* TODO *)
-    ljs_apply.
-    repeat ljs_autoforward.
-    jauto_js 8.
-    (* impossible *)
-    destruct Hvrel; false; eauto_js.
-Qed.
-
-Lemma red_spec_to_boolean_ok : forall k je, 
-    ih_expr k ->
-    th_spec k (E.to_bool (js_expr_to_ljs je))
-              (J.spec_expr_get_value_conv J.spec_to_boolean je) 
-              (fun _ _ _ _ _ r jv => exists b, jv = J.value_prim (J.prim_bool b) /\ 
-                  r = L.res_value (L.value_bool b)).
-Proof.
-    introv IHe Hinv Hlred.
-    repeat ljs_autoforward.
-
-    destr_concl; try ljs_handle_abort.
-
-    repeat inv_internal_fwd_ljs.
-    forwards_th red_spec_to_boolean_unary_ok.
-
-    destr_concl.
-    res_related_invert.
-    resvalue_related_invert.
-    jauto_js. left. jauto_js.
-    jauto_js. right. jauto_js.
-Qed.
-
-Lemma new_env_record_object_lemma : forall BR k c st jlenv v jptr ptr b st' r,
-    lexical_env_related BR jlenv v ->
-    value_related BR (J.value_object jptr) (L.value_object ptr) ->
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewObjEnvRec 
-        [v; L.value_object ptr; L.value_bool b]) (L.out_ter st' r) ->
-    exists obj,
-    st' = st \(fresh st := obj) /\
-    r = L.res_value (L.value_object (fresh st)) /\
-    binds (L.object_internal obj) "parent" v /\
-    env_record_related BR (J.env_record_object jptr b) obj.
-Proof.
-    introv Hlrel Hvrel Hlred.
-    inverts Hvrel.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    repeat ljs_autoforward.
-    eexists.
-    splits.
-    reflexivity.
-    reflexivity.
-    prove_bag.
-    econstructor;
-    prove_bag 8.
-Qed.
-
-Lemma state_invariant_new_env_record_object_lemma : forall BR k jst jc c st v jptr ptr b st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewObjEnvRec 
-        [v; L.value_object ptr; L.value_bool b]) (L.out_ter st' r) ->
-    binds c "$context" v ->
-    value_related BR (J.value_object jptr) (L.value_object ptr) ->
-    state_invariant BR jst jc c st ->
-    exists obj,
-    st' = st \(fresh st := obj) /\
-    r = L.res_value (L.value_object (fresh st)) /\
-    state_invariant (\{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR) 
-        (J.state_next_fresh (jst \(fresh jst := J.env_record_object jptr b))) 
-        (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
-        (c \("$context" := L.value_object (fresh st))) 
-        (st \(fresh st := obj)).
-Proof.
-    introv Hlred Hbinds Hvrel Hinv.
-    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). 
-        prove_bag 10.
-    asserts Hlerel : (lexical_env_related BR (J.execution_ctx_lexical_env jc) v).
-    solve [eauto using state_invariant_lexical_env_related].
-    forwards Hx : new_env_record_object_lemma; try eauto.
-    destruct_hyp Hx.
-    eexists. splits; try reflexivity.
-    eapply state_invariant_push_context_lemma.
-    eapply lexical_env_related_cons; eauto_js 10. 
-    eauto_js 10. eauto_js 10.
-Qed. 
-
-Lemma decl_env_record_related_empty : forall BR,
-    decl_env_record_related BR \{} \{}.
-Proof.
-    introv. unfolds.
-    intro s.
-    left. splits; prove_bag.
-Qed.
-
-Hint Resolve decl_env_record_related_empty : js_ljs.
-
-(* TODO move *)
-Lemma new_env_record_decl_lemma : forall BR k c st jlenv v st' r,
-    lexical_env_related BR jlenv v ->
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v]) (L.out_ter st' r) ->
-    exists obj,
-    st' = st \(fresh st := obj) /\
-    r = L.res_value (L.value_object (fresh st)) /\
-    binds (L.object_internal obj) "parent" v /\
-    env_record_related BR (J.env_record_decl J.decl_env_record_empty) obj.
-Proof.
-    introv Hlrel Hlred.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    repeat ljs_autoforward.
-    eexists.
-    splits.
-    reflexivity.
-    reflexivity.
-    prove_bag.
-    econstructor; jauto_js.
-Qed.
-
-Lemma state_invariant_new_env_record_decl_lemma : forall BR k jst jc c st v st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v]) (L.out_ter st' r) ->
-    binds c "$context" v ->
-    state_invariant BR jst jc c st ->
-    exists obj,
-    st' = st \(fresh st := obj) /\
-    r = L.res_value (L.value_object (fresh st)) /\
-    state_invariant (\{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR) 
-        (J.state_next_fresh (jst \(fresh jst := J.env_record_decl J.decl_env_record_empty))) 
-        (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
-        (c \("$context" := L.value_object (fresh st))) 
-        (st \(fresh st := obj)).
-Proof.
-    introv Hlred Hbinds Hinv.
-    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). jauto_js.
-    asserts Hlerel : (lexical_env_related BR (J.execution_ctx_lexical_env jc) v).
-    solve [eauto using state_invariant_lexical_env_related].
-    forwards Hx : new_env_record_decl_lemma; try eauto.
-    destruct_hyp Hx.
-    eexists. splits; try reflexivity.
-    eapply state_invariant_push_context_lemma.
-    eapply lexical_env_related_cons; eauto_js 15.
-    eauto_js 10. eauto_js 10.
-Qed.
-
-(* TODO 
-Lemma decl_env_add_mutable_binding_lemma : forall BR k jst jc c st st' r jeptr ptr obj b jv v s,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDeclEnvAddMutableBinding 
-        [L.value_object ptr; L.value_string s; v; L.value_bool b]) (L.out_ter st' r) -> 
-    binds st ptr obj ->
-    state_invariant BR jst jc c st ->
-    value_related BR jv v ->
-    (inr jeptr, ptr) \in BR ->
-    st' = st \(ptr := L.set_object_property obj s (L.attributes_data_of 
-        (L.attributes_data_intro v true false b))) /\
-    r = L.res_value L.value_undefined /\
-    state_invariant BR (J.env_record_write_decl_env jst jeptr s (J.mutability_of_bool b) jv) jc c st'.
-Proof.
-(*
-    introv Hlred Hbinds Hinv.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    repeat ljs_autoforward.
-    cases_decide.
-    repeat ljs_autoforward.
-    solve [inv_ljs].
-*)
-(*
-    repeat ljs_autoforward.
-    inv_ljs.
-    binds_determine. 
-    false. prove_bag.
-    repeat ljs_autoforward. 
-    inv_ljs. 
-    repeat ljs_autoforward.
-    inv_ljs. 
-    repeat ljs_autoforward.
-    simpls.
-
-    binds_inv. false. prove_bag 8.
-*)
-Admitted. (* TODO *)
-*)
