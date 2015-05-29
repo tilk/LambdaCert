@@ -247,7 +247,7 @@ Tactic Notation "autoforwards" simple_intropattern(I) ":" constr(E) :=
     (forwards I : E; try eassumption; try omega); [idtac].
 
 Ltac destr_concl := match goal with
-    | H : concl_spec _ _ _ _ _ _ _ _ _ _ |- _ =>
+    | H : concl_spec _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_stat _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
@@ -331,7 +331,7 @@ Qed.
 Hint Rewrite resvalue_overwrite_value_if_empty_lemma : js_ljs.
 Hint Rewrite resvalue_overwrite_value_if_empty_hint1 : js_ljs.
 
-Hint Extern 20 => progress autorewrite with js_ljs.
+Hint Extern 20 => progress autorewrite with js_ljs : js_ljs.
 
 Lemma resvalue_related_overwrite_if_empty : forall BR jrv1 jrv2 v1 v2,
     resvalue_related BR jrv1 v1 ->
@@ -2288,7 +2288,7 @@ Ltac apply_ih_expr := match goal with
         asserts HC : (context_invariant BR jc c); 
             [applys context_invariant_bisim_incl_preserved Hsub; ljs_context_invariant | idtac]; 
         lets Hih : H Hle HC HS HR; lets Hsec : L.red_exprh_state_security_ok HR; 
-        clear Hle; clear Hsub; clear HS; clear HR
+        clear Hle; clear Hsub; clear HS; clear HR; clear HC
     end.
 
 Ltac apply_ih_stat := match goal with
@@ -2304,8 +2304,8 @@ Ltac apply_ih_stat := match goal with
         asserts Hsub : (BR' \c BR); [prove_bag | idtac];
         asserts HC : (context_invariant BR jc c); 
             [applys context_invariant_bisim_incl_preserved Hsub; ljs_context_invariant | idtac]; 
-        lets Hih : H Hle HS HR; lets Hsec : L.red_exprh_state_security_ok HR; 
-        clear Hle; clear Hsub; clear HS; clear HR
+        lets Hih : H Hle HC HS HR; lets Hsec : L.red_exprh_state_security_ok HR; 
+        clear Hle; clear Hsub; clear HS; clear HR; clear HC
     end.
 
 Ltac binds_inv H :=

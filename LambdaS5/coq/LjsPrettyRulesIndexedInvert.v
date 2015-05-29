@@ -162,7 +162,10 @@ Derive Inversion inv_red_exprh_dump with (forall k c st oo,
     red_exprh k c st (expr_dump) oo) Sort Prop.
 Tactic Notation "invert" "keep" "red_exprh" hyp(H) := 
     match type of H with
-    | red_exprh ?k ?c ?st (?e) ?oo => match red_exprh_hnf e with
+    | red_exprh ?k ?c ?st (?e) ?oo => 
+    let eh := red_exprh_hnf e in
+    try (asserts_rewrite (e = eh) in H; [reflexivity | idtac]); 
+    match eh with
     | expr_basic (expr_empty) =>
         inversion H using inv_red_exprh_empty
     | expr_basic (expr_null) =>

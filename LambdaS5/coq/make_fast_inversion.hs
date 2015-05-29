@@ -127,10 +127,15 @@ make_inversion (n, p) = "Derive Inversion " ++ inv_hyp_name n ++ " with (forall 
 
 make_case (n, p) = "    | " ++ add_basic p ++ " =>\n        inversion H using " ++ inv_hyp_name n ++ "\n"
 
+add_text = "\
+         \    let eh := red_exprh_hnf e in\n\
+         \    try (asserts_rewrite (e = eh) in H; [reflexivity | idtac]); \n\
+         \    match eh with\n"
+
 main = do
     putStr prefix
     putStr $ concat $ map make_inversion patterns
-    putStr $ "Tactic Notation \"invert\" \"keep\" \"" ++ predicate_name ++ "\" hyp(H) := \n    match type of H with\n    | " ++ make_concl "?e" ++ " => match red_exprh_hnf e with\n"
+    putStr $ "Tactic Notation \"invert\" \"keep\" \"" ++ predicate_name ++ "\" hyp(H) := \n    match type of H with\n    | " ++ make_concl "?e" ++ " => \n" ++ add_text
     putStr $ concat $ map make_case patterns
     putStr $ "    end end; tryfalse; clear H; intro H.\n"
     putStr $ "Tactic Notation \"inverts\" \"keep\" \"" ++ predicate_name ++ "\" hyp(H) := \n    inverts_tactic_general ltac:(fun H => invert keep " ++ predicate_name ++ " H) H; tryfalse.\n"
