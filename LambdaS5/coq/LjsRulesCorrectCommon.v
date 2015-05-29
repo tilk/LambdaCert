@@ -69,7 +69,6 @@ Hint Constructors attributes_related : js_ljs.
 Hint Constructors type_related : js_ljs.
 Hint Constructors value_related : js_ljs.
 Hint Constructors option_value_related : js_ljs.
-Hint Constructors primval_related : js_ljs.
 Hint Constructors resvalue_related : js_ljs.
 Hint Constructors res_related : js_ljs.
 Hint Constructors env_record_related : js_ljs.
@@ -80,6 +79,9 @@ Hint Constructors js_exn_object_ptr : js_ljs.
 Hint Constructors js_exn_object : js_ljs.
 Hint Constructors getter_proxy : js_ljs.
 Hint Constructors setter_proxy : js_ljs.
+
+Hint Extern 99 (value_related _ (J.object_proto_ _) (L.object_proto _)) => (* why is it needed? *)
+    first [eapply value_related_null | eapply value_related_object] : js_ljs.
 
 (** The constructors for S5 *)
 
@@ -601,10 +603,10 @@ Qed.
 
 Hint Resolve setter_proxy_ok_store_incl_preserved : js_ljs.
 
-Lemma state_invariant_store_incl_preserved : forall BR jst jc c st st',
+Lemma state_invariant_store_incl_preserved : forall BR jst st st',
     st \c st' ->
-    state_invariant BR jst jc c st ->
-    state_invariant BR jst jc c st'.
+    state_invariant BR jst st ->
+    state_invariant BR jst st'.
 Proof.
     introv Hni Hinv.
     inverts Hinv.
@@ -612,13 +614,13 @@ Proof.
 Qed.
 
 (* Hint Resolve state_invariant_store_incl_preserved : js_ljs. *)
-Hint Extern 4 (state_invariant _ _ _ _ ?st') =>
+Hint Extern 4 (state_invariant _ _ ?st') =>
     match goal with
-    | H : state_invariant _ _ _ _ ?st |- _ =>
+    | H : state_invariant _ _ ?st |- _ =>
         not constr_eq st st';
         let Hsub := fresh "H" in
-        asserts Hsub : (st \c st'); [idtac | applys state_invariant_store_incl_preserved Hsub; clear Hsub]
-    end.
+        asserts Hsub : (st \c st'); [prove_bag | applys state_invariant_store_incl_preserved Hsub; clear Hsub]
+    end : js_ljs.
 
 Lemma includes_init_ctx_incl_preserved : forall c c',
     c' \c c ->
@@ -667,10 +669,10 @@ Qed.
 
 Hint Resolve global_env_record_exists_ctx_incl_preserved : js_ljs.
 
-Lemma state_invariant_ctx_incl_preserved : forall BR jst jc c c' st,
+Lemma context_invariant_ctx_incl_preserved : forall BR jc c c',
     c' \c c ->
-    state_invariant BR jst jc c st ->
-    state_invariant BR jst jc c' st.
+    context_invariant BR jc c ->
+    context_invariant BR jc c'.
 Proof.
     introv Hincl Hinv.
     inverts Hinv.
@@ -678,13 +680,13 @@ Proof.
 Qed.
 
 (* Hint Resolve state_invariant_ctx_incl_preserved : js_ljs. *)
-Hint Extern 4 (state_invariant _ _ _ ?c' _) =>
+Hint Extern 4 (context_invariant _ _ ?c') =>
     match goal with
-    | H : state_invariant _ _ _ ?c _ |- _ =>
+    | H : context_invariant _ _ ?c |- _ =>
         not constr_eq c c';
         let Hsub := fresh "H" in
-        asserts Hsub : (c' \c c); [idtac | applys state_invariant_ctx_incl_preserved Hsub; clear Hsub]
-    end.
+        asserts Hsub : (c' \c c); [prove_bag | applys context_invariant_ctx_incl_preserved Hsub; clear Hsub]
+    end : js_ljs.
 
 Section prefixes.
 
@@ -763,10 +765,10 @@ Hint Resolve includes_init_ctx_add_nopercent_id_preserved : js_ljs.
 Hint Resolve prealloc_in_ctx_add_nopercent_id_preserved : js_ljs.
 Hint Resolve global_env_record_exists_add_nopercent_id_preserved : js_ljs.
 
-Lemma state_invariant_add_nopercent_nodollar_id_preserved : forall BR jst jc c st s v ch,
-    state_invariant BR jst jc c st ->
+Lemma context_invariant_add_nopercent_nodollar_id_preserved : forall BR jc c s v ch,
+    context_invariant BR jc c->
     ch <> "%" -> ch <> "$" ->
-    state_invariant BR jst jc (c \(String ch s := v)) st.
+    context_invariant BR jc (c \(String ch s := v)).
 Proof.
     introv Hinv Hdif1 Hdif2.
     inverts Hinv.
@@ -830,10 +832,10 @@ Hint Resolve includes_init_ctx_unadd_nopercent_id_preserved : js_ljs.
 Hint Resolve prealloc_in_ctx_unadd_nopercent_id_preserved : js_ljs.
 Hint Resolve global_env_record_exists_unadd_nopercent_id_preserved : js_ljs.
 
-Lemma state_invariant_unadd_nopercent_nodollar_id_preserved : forall BR jst jc c st s v ch,
-    state_invariant BR jst jc (c \(String ch s := v)) st ->
+Lemma context_invariant_unadd_nopercent_nodollar_id_preserved : forall BR jc c s v ch,
+    context_invariant BR jc (c \(String ch s := v)) ->
     ch <> "%" -> ch <> "$" ->
-    state_invariant BR jst jc c st.
+    context_invariant BR jc c.
 Proof.
     introv Hinv Hdif1.
     inverts Hinv.
@@ -847,13 +849,14 @@ Hint Resolve execution_ctx_related_add_nodollar_id_preserved : js_ljs.
 Hint Resolve includes_init_ctx_add_nopercent_id_preserved : js_ljs.
 Hint Resolve prealloc_in_ctx_add_nopercent_id_preserved : js_ljs.
 Hint Resolve global_env_record_exists_add_nopercent_id_preserved : js_ljs.
+(*
 Hint Resolve execution_ctx_related_unadd_nodollar_id_preserved : js_ljs.
 Hint Resolve includes_init_ctx_unadd_nopercent_id_preserved : js_ljs.
 Hint Resolve prealloc_in_ctx_unadd_nopercent_id_preserved : js_ljs.
 Hint Resolve global_env_record_exists_unadd_nopercent_id_preserved : js_ljs.
-
-Hint Resolve state_invariant_add_nopercent_nodollar_id_preserved : js_ljs.
-Hint Resolve state_invariant_unadd_nopercent_nodollar_id_preserved : js_ljs.
+*)
+Hint Resolve context_invariant_add_nopercent_nodollar_id_preserved : js_ljs.
+(* Hint Resolve state_invariant_unadd_nopercent_nodollar_id_preserved : js_ljs. *)
 
 Lemma execution_ctx_related_union_preserved : forall BR jc c c',
     execution_ctx_related BR jc c ->
@@ -913,10 +916,10 @@ Qed.
 
 Hint Resolve global_env_record_exists_union_preserved : js_ljs.
 
-Lemma state_invariant_union_preserved : forall BR jst jc c c' st,
-    state_invariant BR jst jc c st ->
-    state_invariant BR jst jc c' st ->
-    state_invariant BR jst jc (c \u c') st.
+Lemma context_invariant_union_preserved : forall BR jc c c',
+    context_invariant BR jc c ->
+    context_invariant BR jc c' ->
+    context_invariant BR jc (c \u c').
 Proof.
     introv Hinv1 Hinv2.
     inverts Hinv1.
@@ -924,7 +927,7 @@ Proof.
     constructor; jauto_js.
 Qed.
 
-Hint Resolve state_invariant_union_preserved : js_ljs.
+Hint Resolve context_invariant_union_preserved : js_ljs.
 
 Lemma includes_init_ctx_init_ctx : forall c,
     includes_init_ctx LjsInitEnv.init_ctx.
@@ -962,17 +965,17 @@ Admitted. (* TODO *)
 
 Hint Resolve prealloc_in_ctx_init_ctx : js_ljs.
 
-Lemma state_invariant_replace_ctx_sub_init : forall BR jst jc c c' st,
+Lemma context_invariant_replace_ctx_sub_init : forall BR jc c c',
     c' \c LjsInitEnv.init_ctx -> 
-    state_invariant BR jst jc c st ->
-    state_invariant BR jst jc c' st.
+    context_invariant BR jc c ->
+    context_invariant BR jc c'.
 Proof.
     introv Hii Hinv.
     inverts Hinv.
     constructor; jauto_js.
 Qed.
 
-Hint Resolve state_invariant_replace_ctx_sub_init : js_ljs.
+(*Hint Resolve context_invariant_replace_ctx_sub_init : js_ljs.*)
 
 Ltac sub_helper BR1 BR2 f :=
     not constr_eq BR1 BR2;
@@ -1187,23 +1190,6 @@ Hint Extern 4 (env_record_related ?BR2 _ _) =>
     end 
     : js_ljs.
 
-Lemma primval_related_bisim_incl_preserved : forall BR1 BR2 jov obj,
-    BR1 \c BR2 ->
-    primval_related BR1 jov obj ->
-    primval_related BR2 jov obj.
-Proof.
-    introv Hs Hrel.
-    inverts Hrel; eauto_js.
-Qed.
-
-(* Hint Resolve primval_related_bisim_incl_preserved : js_ljs. *)
-Hint Extern 4 (primval_related ?BR2 _ _) => 
-    match goal with 
-    | H : primval_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 primval_related_bisim_incl_preserved
-    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 primval_related_bisim_incl_preserved
-    end 
-    : js_ljs.
-
 Lemma object_prim_related_bisim_incl_preserved : forall BR1 BR2 jobj obj,
     BR1 \c BR2 ->
     object_prim_related BR1 jobj obj ->
@@ -1329,16 +1315,14 @@ Hint Extern 4 (context_invariant ?BR2 _ _) =>
     end 
     : js_ljs.
 
-Lemma state_invariant_lexical_env_related : forall BR jst jc c st v,
-    state_invariant BR jst jc c st ->
+Lemma context_invariant_lexical_env_related : forall BR jc c v,
+    context_invariant BR jc c ->
     binds c "$context" v ->
     lexical_env_related BR (J.execution_ctx_lexical_env jc) v.
 Proof.
     introv Hinv Hbinds.
-    inverts Hinv.
-    inverts state_invariant_execution_ctx_related.
-    auto.
-Qed.
+    eapply context_invariant_execution_ctx_related; eassumption.
+Defined.
 
 Lemma value_related_add_fact_preserved : forall BR jv v f,
     (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
@@ -1363,18 +1347,6 @@ Proof.
 Qed.
 
 Hint Resolve option_value_related_add_fact_preserved : js_ljs.
-
-Lemma primval_related_add_fact_preserved : forall BR jov obj f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    primval_related BR jov obj ->
-    primval_related (\{f} \u BR) jov obj.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    inverts Hrel; eauto_js.
-Qed.
-
-Hint Resolve primval_related_add_fact_preserved : js_ljs.
 
 Lemma object_prim_related_add_fact_preserved : forall BR jobj obj f,
     (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
@@ -1531,7 +1503,7 @@ Lemma object_prim_related_map_properties_preserved : forall BR jobj obj F,
 Proof.
     introv Hprim. 
     inverts Hprim. destruct jobj.
-    constructor; eauto.
+    constructor; eauto. 
 Qed.
 
 Hint Resolve object_prim_related_map_properties_preserved : js_ljs.
@@ -1889,12 +1861,12 @@ Qed.
 
 Hint Resolve heaps_bisim_consistent_add_fact_preserved : js_ljs.
 
-Lemma state_invariant_new_object_preserved : forall BR jst jc c st jobj ptr obj,
-    state_invariant BR jst jc c st ->
+Lemma state_invariant_new_object_preserved : forall BR jst st jobj ptr obj,
+    state_invariant BR jst st ->
     ~index st ptr ->
     object_related (\{fact_js_obj (fresh jst) ptr} \u BR) jobj obj ->
     state_invariant (\{fact_js_obj (fresh jst) ptr} \u BR) 
-        (J.state_next_fresh (jst \(fresh jst:=jobj))) jc c (st \(ptr:=obj)).
+        (J.state_next_fresh (jst \(fresh jst:=jobj))) (st \(ptr:=obj)).
 Proof.
     introv Hinv Hnindex Horel.
     inverts Hinv.
@@ -1904,12 +1876,12 @@ Qed.
 
 Hint Resolve state_invariant_new_object_preserved : js_ljs.
 
-Lemma state_invariant_new_env_record_preserved : forall BR jst jc c st jer ptr obj,
-    state_invariant BR jst jc c st ->
+Lemma state_invariant_new_env_record_preserved : forall BR jst st jer ptr obj,
+    state_invariant BR jst st ->
     ~index st ptr ->
     env_record_related (\{fact_js_env (fresh jst) ptr} \u BR) jer obj ->
     state_invariant (\{fact_js_env (fresh jst) ptr} \u BR)
-        (J.state_next_fresh (jst \(fresh jst:=jer))) jc c (st \(ptr:=obj)).
+        (J.state_next_fresh (jst \(fresh jst:=jer))) (st \(ptr:=obj)).
 Proof.
     introv Hinv Hnindex Horel.
     inverts Hinv.
@@ -1919,18 +1891,18 @@ Qed.
 
 Hint Resolve state_invariant_new_env_record_preserved : js_ljs.
 
-Lemma state_invariant_next_fresh_commute_object_preserved : forall BR jst jptr jobj jc c st,
-    state_invariant BR (J.state_next_fresh (jst \(jptr := jobj))) jc c st ->
-    state_invariant BR (J.state_next_fresh jst \(jptr := jobj)) jc c st.
+Lemma state_invariant_next_fresh_commute_object_preserved : forall BR jst jptr jobj st,
+    state_invariant BR (J.state_next_fresh (jst \(jptr := jobj))) st ->
+    state_invariant BR (J.state_next_fresh jst \(jptr := jobj)) st.
 Proof.
     introv Hinv. rewrite js_state_write_object_next_fresh_commute. assumption. 
 Qed.
 
 Hint Resolve state_invariant_next_fresh_commute_object_preserved : js_ljs.
 
-Lemma state_invariant_double_write_preserved : forall BR jst jptr jobj jobj' jc c st,
-    state_invariant BR (jst \(jptr := jobj)) jc c st ->
-    state_invariant BR (jst \(jptr := jobj') \(jptr := jobj)) jc c st.
+Lemma state_invariant_double_write_preserved : forall BR jst jptr jobj jobj' st,
+    state_invariant BR (jst \(jptr := jobj)) st ->
+    state_invariant BR (jst \(jptr := jobj') \(jptr := jobj)) st.
 Proof.
     introv Hinv. rew_bag_simpl. assumption. 
 Qed.
@@ -1950,11 +1922,11 @@ Qed.
 
 Hint Resolve ctx_parent_ok_new_env_parent_preserved : js_ljs.
 
-Lemma state_invariant_new_env_parent_preserved : forall BR jst jc c st v ptr obj,
+Lemma state_invariant_new_env_parent_preserved : forall BR jst st v ptr obj,
     binds st ptr obj ->
     binds (L.object_internal obj) "parent" v ->
-    state_invariant BR jst jc c st ->
-    state_invariant (\{fact_ctx_parent ptr v} \u BR) jst jc c st.
+    state_invariant BR jst st ->
+    state_invariant (\{fact_ctx_parent ptr v} \u BR) jst st.
 Proof.
     introv Hbinds1 Hbinds2 Hinv.
     inverts Hinv.
@@ -1962,7 +1934,9 @@ Proof.
     constructor; jauto_js.
 Qed.
 
-Hint Resolve state_invariant_new_env_parent_preserved : js_ljs.
+(* Hint Resolve state_invariant_new_env_parent_preserved : js_ljs. *)
+Hint Extern 4 (state_invariant (\{fact_ctx_parent _ _} \u _) _ _) => 
+    eapply state_invariant_new_env_parent_preserved : js_ljs.
 
 Lemma env_record_exist_push_context_lemma : forall BR jc jeptr ptr,
     env_records_exist BR jc ->
@@ -1995,20 +1969,20 @@ Qed.
 
 Hint Resolve execution_ctx_related_push_context_lemma : js_ljs.
 
-Lemma state_invariant_push_context_lemma : forall BR jst jc jeptr ptr c st,
+Lemma context_invariant_push_context_lemma : forall BR jc jeptr ptr c,
     lexical_env_related BR (jeptr :: J.execution_ctx_lexical_env jc) (L.value_object ptr) ->
     fact_js_env jeptr ptr \in BR ->
-    state_invariant BR jst jc c st ->
-    state_invariant BR jst
+    context_invariant BR jc c ->
+    context_invariant BR 
         (J.execution_ctx_with_lex jc (jeptr :: J.execution_ctx_lexical_env jc))
-        (c\("$context":=L.value_object ptr)) st.
+        (c\("$context":=L.value_object ptr)).
 Proof.
     introv Hlrel Hbisim Hinv.
     destruct Hinv.
     constructor; jauto_js.
 Qed.
 
-Hint Resolve state_invariant_push_context_lemma : js_ljs.
+Hint Resolve context_invariant_push_context_lemma : js_ljs.
 
 Lemma includes_init_ctx_add_init_ctx_preserved : forall c s v,
     binds LjsInitEnv.init_ctx s v ->
@@ -2060,10 +2034,10 @@ Qed.
 
 Hint Resolve global_env_record_exists_add_init_ctx_preserved : js_ljs.
 
-Lemma state_invariant_add_init_ctx_preserved : forall BR jst jc c st s v,
+Lemma context_invariant_add_init_ctx_preserved : forall BR jc c s v,
     binds LjsInitEnv.init_ctx s v ->
-    state_invariant BR jst jc c st ->
-    state_invariant BR jst jc (c \(s := v)) st.
+    context_invariant BR jc c ->
+    context_invariant BR jc (c \(s := v)).
 Proof.
     introv Hbinds Hinv.
     lets Hpre : init_ctx_percent_prefix Hbinds.
@@ -2096,19 +2070,6 @@ Proof.
 Qed.
 
 Hint Resolve execution_ctx_related_restore_lexical_env : js_ljs.
-
-Lemma state_invariant_restore_lexical_env : forall BR BR' jst' jc jc' c c' st',
-    BR \c BR' ->
-    context_invariant BR jc c ->
-    state_invariant BR' jst' jc' c' st' ->
-    state_invariant BR' jst' jc c st'.
-Proof.
-    introv Hsub Hinv1 Hinv2.
-    destruct Hinv1. destruct Hinv2.
-    constructor; jauto_js.
-Qed.
-
-Hint Resolve state_invariant_restore_lexical_env : js_ljs.
 
 Lemma js_exn_object_state_security_ok_preserved : forall st st' ptr v,
     L.state_security_ok st st' ->
@@ -2144,37 +2105,41 @@ Hint Extern 0 (L.state_security_ok ?st1 ?st3) =>
         apply ((fun h1 h2 => @L.state_security_ok_trans st2 st1 st3 h2 h1) H)
     end : js_ljs.
 
-Lemma state_invariant_prealloc_in_ctx_lemma : forall BR jst jc c st s ptr jpre,
-    binds c s (L.value_object ptr) ->
-    state_invariant BR jst jc c st ->
+Lemma context_invariant_prealloc_in_ctx_lemma : forall BR jc c s ptr jpre,
+    context_invariant BR jc c ->
     Mem (jpre, s) prealloc_in_ctx_list ->
+    binds c s (L.value_object ptr) ->
     fact_js_obj (J.object_loc_prealloc jpre) ptr \in BR.
 Proof.
-    introv Hbinds Hinv Hmem.
-    lets Hx : state_invariant_prealloc_related Hinv Hmem Hbinds.
+    introv Hinv Hmem Hbinds.
+    lets Hx : context_invariant_prealloc_related Hinv Hmem Hbinds.
     destruct_hyp Hx.
     injects.
     assumption.
 Qed.
 
-Lemma state_invariant_includes_init_ctx_lemma : forall BR jst jc c st i v v',
-    state_invariant BR jst jc c st ->
-    binds c i v -> binds LjsInitEnv.init_ctx i v' -> v = v'.
-Proof.
-    introv Hinv.
-    inverts Hinv.
-    jauto.
-Qed.
+Ltac context_invariant_prealloc :=
+    match goal with
+    | HC : context_invariant ?BR' _ _ |- fact_js_obj (J.object_loc_prealloc ?jpre) _ \in ?BR =>
+        let Hsub := fresh "H" in 
+        asserts Hsub : (BR' \c BR); [prove_bag | idtac];
+        applys context_invariant_prealloc_in_ctx_lemma (context_invariant_bisim_incl_preserved Hsub HC);
+            [solve [repeat (eapply Mem_here || eapply Mem_next)] | idtac];
+        clear Hsub 
+    end.
 
-Lemma builtin_assoc : forall k BR jst jc c st st' i v r,
-    state_invariant BR jst jc c st ->
+Hint Extern 4 (fact_js_obj (J.object_loc_prealloc _) _ \in _) =>
+    context_invariant_prealloc : js_ljs.
+
+Lemma builtin_assoc : forall k BR jc c st st' i v r,
+    context_invariant BR jc c ->
     L.red_exprh k c st (L.expr_basic (L.expr_id i)) (L.out_ter st' r) ->
     binds LjsInitEnv.init_ctx i v ->
     st = st' /\ r = L.res_value v.
 Proof.
     introv Hinv Hlred Hmem.
     inverts Hlred.
-    forwards Hic : state_invariant_includes_init_ctx_lemma Hinv; eauto.
+    forwards Hic : context_invariant_includes_init_ctx Hinv __; eauto.
     substs; eauto.
 Qed.
 
@@ -2193,14 +2158,30 @@ Proof.
     eapply init_ctx_mem_assoc. assumption.
 Qed.
 
-Lemma state_invariant_to_context_invariant : forall BR jst jc c st,
-    state_invariant BR jst jc c st ->
-    context_invariant BR jc c.
+Lemma object_prim_related_primval_none : forall BR jov obj,
+    jov = None ->
+    ~index (L.object_internal obj) "primval" ->
+    option_value_related BR jov (L.object_internal obj\("primval"?)).
 Proof.
-    introv Hinv.
-    inverts Hinv.
-    constructor; assumption.
+    introv H Hi.
+    substs.
+    rewrite read_option_not_index_inv; jauto_js.
 Qed.
+
+Hint Resolve object_prim_related_primval_none : js_ljs.
+
+Lemma object_prim_related_primval_some : forall BR jov obj jv v,
+    jov = Some jv ->
+    binds (L.object_internal obj) "primval" v ->
+    value_related BR jv v ->
+    option_value_related BR jov (L.object_internal obj\("primval"?)).
+Proof.
+    introv H Hi Hrel.
+    substs.
+    erewrite read_option_binds_inv; jauto_js.
+Qed.
+
+Hint Resolve object_prim_related_primval_some : js_ljs.
 
 (* Prerequisites *)
 
@@ -2267,52 +2248,64 @@ Ltac ljs_inv_closure_hyps :=
 
 Ltac ljs_apply := progress repeat (ljs_inv_closure_hyps || ljs_closure_body).
 
-Ltac ljs_state_invariant := 
+Ltac ljs_context_invariant := 
     match goal with
-    | |- state_invariant _ _ _ (_ \(?s := ?v)) _ =>
-        eapply state_invariant_add_nopercent_nodollar_id_preserved; 
-        [idtac | solve [eauto] | solve [eauto]]; ljs_state_invariant
-    | |- state_invariant _ _ _ (_ \(?s := ?v)) _ =>
-        eapply state_invariant_add_init_ctx_preserved; [
+    | |- context_invariant _ _ (_ \(?s := ?v)) =>
+        eapply context_invariant_add_nopercent_nodollar_id_preserved; 
+        [idtac | solve [eauto] | solve [eauto]]; ljs_context_invariant
+    | |- context_invariant _ _ (_ \(?s := ?v)) =>
+        eapply context_invariant_add_init_ctx_preserved; [
         eapply init_ctx_mem_binds;
-        solve [repeat (eapply Mem_here || eapply Mem_next)] | idtac]; ljs_state_invariant
-    | |- state_invariant _ _ _ \{} _ =>
-        eapply state_invariant_replace_ctx_sub_init; [solve [eapply empty_incl] | eassumption]
-    | |- state_invariant _ _ _ _ _ => 
+        solve [repeat (eapply Mem_here || eapply Mem_next)] | idtac]; ljs_context_invariant
+    | |- context_invariant _ _ \{} =>
+        eapply context_invariant_replace_ctx_sub_init; [solve [eapply empty_incl] | eassumption]
+    | |- context_invariant _ _ _ => 
         eassumption
     end.
 
-Ltac ljs_state_invariant_after_apply :=
+Ltac ljs_context_invariant_after_apply :=
     match goal with
-    | Hlred : L.red_exprh _ ?c' ?st _ _, Hinv : state_invariant ?BR ?jst ?jc ?c ?st, Heq : _ = ?c' |- _ =>
-        is_var c'; not (is_hyp (state_invariant BR jst jc c' st));
+    | Hlred : L.red_exprh _ ?c' ?st _ _, Hinv : context_invariant ?BR ?jc ?c, Heq : _ = ?c' |- _ =>
+        is_var c'; not (is_hyp (context_invariant BR jc c'));
         let Hinv' := fresh "Hinv" in
-        asserts Hinv' : (state_invariant BR jst jc c' st); 
-        [rewrite <- Heq; ljs_state_invariant
-        |apply state_invariant_to_context_invariant in Hinv]
+        asserts Hinv' : (context_invariant BR jc c'); 
+        [rewrite <- Heq; ljs_context_invariant
+        |idtac]
     end.
 
 Ltac apply_ih_expr := match goal with
-    | H : ih_expr ?k', HS' : state_invariant ?BR ?jst ?jc ?c' ?st, 
+    | H : ih_expr ?k', 
+      HS : state_invariant ?BR ?jst ?st,
+      HC' : context_invariant ?BR' ?jc ?c', 
       HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
         let Hle := fresh "Hle" in
-        let HS := fresh "HS" in
+        let HC := fresh "HC" in
         let Hih := fresh "IH" in
         let Hsec := fresh "Hsec" in
+        let Hsub := fresh "H" in
         asserts Hle : (k < k')%nat; [omega | idtac];
-        asserts HS : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
-        lets Hih : H Hle HS HR; lets Hsec : L.red_exprh_state_security_ok HR; clear Hle; clear HR
+        asserts Hsub : (BR' \c BR); [prove_bag | idtac];
+        asserts HC : (context_invariant BR jc c); 
+            [applys context_invariant_bisim_incl_preserved Hsub; ljs_context_invariant | idtac]; 
+        lets Hih : H Hle HC HS HR; lets Hsec : L.red_exprh_state_security_ok HR; 
+        clear Hle; clear Hsub; clear HS; clear HR
     end.
 
 Ltac apply_ih_stat := match goal with
-    | H : ih_stat ?k', HS' : state_invariant ?BR ?jst ?jc ?c' ?st, 
+    | H : ih_stat ?k', 
+      HS : state_invariant ?BR ?jst ?st,
+      HC' : context_invariant ?BR' ?jc ?c', 
       HR : L.red_exprh ?k ?c ?st (L.expr_basic _) _ |- _ => 
         let Hle := fresh "Hle" in
-        let HS := fresh "HS" in
+        let HC := fresh "HC" in
         let Hsec := fresh "Hsec" in
+        let Hsub := fresh "H" in
         asserts Hle : (k < k')%nat; [omega | idtac];
-        asserts HS : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
-        lets Hih : H Hle HS HR; lets Hsec : L.red_exprh_state_security_ok HR; clear Hle; clear HR
+        asserts Hsub : (BR' \c BR); [prove_bag | idtac];
+        asserts HC : (context_invariant BR jc c); 
+            [applys context_invariant_bisim_incl_preserved Hsub; ljs_context_invariant | idtac]; 
+        lets Hih : H Hle HS HR; lets Hsec : L.red_exprh_state_security_ok HR; 
+        clear Hle; clear Hsub; clear HS; clear HR
     end.
 
 Ltac binds_inv H :=
@@ -2362,16 +2355,16 @@ Tactic Notation "binds_inv" :=
 Ltac ljs_get_builtin :=
     match goal with
     | Hbinds : binds ?c (String (Ascii.Ascii true false true false false true false false) ?s) ?v, 
-      Hinv : state_invariant _ _ _ ?c ?st |- _ =>
+      Hinv : context_invariant _ _ ?c |- _ =>
         is_var v;
-        not (first [constr_eq s "strict" | constr_eq s "this" | constr_eq s "context"]); 
+(*        not (first [constr_eq s "strict" | constr_eq s "this" | constr_eq s "context"]); *)
         let H1 := fresh in
-        forwards H1 : state_invariant_includes_init_ctx_lemma Hinv Hbinds; [
+        forwards H1 : context_invariant_includes_init_ctx Hinv Hbinds; [
         eapply init_ctx_mem_binds;
         unfold LjsInitEnv.ctx_items;
         solve [repeat (eapply Mem_here || apply Mem_next)] | 
         subst_hyp H1 ]
-    | Hinv : state_invariant _ _ _ ?c ?st,
+    | Hinv : context_invariant _ _ ?c ,
       H : L.red_exprh _ ?c ?st (L.expr_basic (E.make_builtin _)) _ |- _ =>
         let H1 := fresh in
         let H2 := fresh in
@@ -2430,15 +2423,20 @@ Ltac specialize_th_ext_expr_unary H :=
     match type of H with
     | th_ext_expr_unary _ ?e _ _ =>
     match goal with
-    | H1' : state_invariant ?BR ?jst ?jc ?c' ?st, H2 : value_related ?BR1 ?jv ?v,
-      H3 : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
-        let Hsub := fresh "H" in
-        asserts Hsub : (BR1 \c BR); [prove_bag | idtac];
+    | HS : state_invariant ?BR ?jst ?st,
+      HC' : context_invariant ?BRc ?jc ?c',
+      HV : value_related ?BRv ?jv ?v,
+      HR : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
+        let Hsubv := fresh "H" in
+        let Hsubc := fresh "H" in
+        asserts Hsubv : (BRv \c BR); [prove_bag | idtac];
+        asserts Hsubc : (BRc \c BR); [prove_bag | idtac];
         unify e e'; unify [v] vl;
-        let H1 := fresh "H" in
-        asserts H1 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
-        specializes H H1 (value_related_bisim_incl_preserved Hsub H2) H3; 
-        clear H1; clear H3; clear Hsub
+        let HC := fresh "H" in
+        asserts HC : (context_invariant BR jc c); 
+            [applys context_invariant_bisim_incl_preserved Hsubc; ljs_context_invariant | idtac];
+        specializes H HC HS (value_related_bisim_incl_preserved Hsubv HV) HR; 
+        clear HC; clear HS; clear HR; clear Hsubv; clear Hsubc
     end
     end.
 
@@ -2446,18 +2444,22 @@ Ltac specialize_th_ext_expr_binary H :=
     match type of H with
     | th_ext_expr_binary _ ?e _ _ =>
     match goal with
-    | H1' : state_invariant ?BR ?jst ?jc ?c' ?st, 
-      H2 : value_related ?BR1 ?jv1 ?v1, H3 : value_related ?BR2 ?jv2 ?v2,
-      H4 : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
-        let Hsub1 := fresh "H" in let Hsub2 := fresh "H" in 
-        asserts Hsub1 : (BR1 \c BR); [prove_bag | idtac];
-        asserts Hsub2 : (BR2 \c BR); [prove_bag | idtac];
+    | HS : state_invariant ?BR ?jst ?st, 
+      HC' : context_invariant ?BRc ?jc ?c',
+      HV1 : value_related ?BRv1 ?jv1 ?v1, 
+      HV2 : value_related ?BRv2 ?jv2 ?v2,
+      HR : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
+        let Hsubv1 := fresh "H" in let Hsubv2 := fresh "H" in let Hsubc := fresh "H" in 
+        asserts Hsubv1 : (BRv1 \c BR); [prove_bag | idtac];
+        asserts Hsubv2 : (BRv2 \c BR); [prove_bag | idtac];
+        asserts Hsubc : (BRc \c BR); [prove_bag | idtac];
         unify e e'; unify [v1; v2] vl;
-        let H1 := fresh "H" in
-        asserts H1 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
-        specializes H H1 (value_related_bisim_incl_preserved Hsub1 H2) 
-            (value_related_bisim_incl_preserved Hsub2 H3) H4;
-        clear H1; clear H4; clear Hsub1; clear Hsub2
+        let HC := fresh "H" in
+        asserts HC : (context_invariant BR jc c); 
+            [applys context_invariant_bisim_incl_preserved Hsubc; ljs_context_invariant | idtac];
+        specializes H HC HS (value_related_bisim_incl_preserved Hsubv1 HV1) 
+            (value_related_bisim_incl_preserved Hsubv2 HV2) HR;
+        clear HC; clear HS; clear HR; clear Hsubv1; clear Hsubv2; clear Hsubc
     end
     end.
 
@@ -2465,12 +2467,17 @@ Ltac specialize_th_spec H :=
     match type of H with
     | th_spec _ ?e _ _ => 
     match goal with
-    | H1 : L.red_exprh _ ?c ?st (L.expr_basic ?e') _, H2' : state_invariant ?BR ?jst ?jc ?c' ?st |- _ => 
+    | HR : L.red_exprh _ ?c ?st (L.expr_basic ?e') _, 
+      HC' : context_invariant ?BRc ?jc ?c',
+      HS : state_invariant ?BR ?jst ?st |- _ => 
         unify e e';
-        let H2 := fresh "H" in
-        asserts H2 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
-        specializes H H2 H1;
-        clear H2; clear H1
+        let HC := fresh "H" in
+        let Hsubc := fresh "H" in
+        asserts Hsubc : (BRc \c BR); [prove_bag | idtac];
+        asserts HC : (context_invariant BR jc c); 
+            [applys context_invariant_bisim_incl_preserved Hsubc; ljs_context_invariant | idtac];
+        specializes H HC HS HR;
+        clear HS; clear HC; clear HR
     end
     end.
 
@@ -2478,12 +2485,17 @@ Ltac specialize_th_stat H :=
     match type of H with
     | th_stat ?k ?jt => 
     match goal with
-    | H1 : L.red_exprh k ?c ?st (L.expr_basic ?e') _, H2' : state_invariant ?BR ?jst ?jc ?c ?st |- _ => 
+    | HR : L.red_exprh k ?c ?st (L.expr_basic ?e') _, 
+      HC' : context_invariant ?BRc ?jc ?c',
+      HS : state_invariant ?BR ?jst ?st |- _ => 
         unify (js_stat_to_ljs jt) e';
-        let H2 := fresh "H" in
-        asserts H2 : (state_invariant BR jst jc c st); [ljs_state_invariant | idtac];
-        specializes H H2 H1;
-        clear H2; clear H1 
+        let HC := fresh "H" in
+        let Hsubc := fresh "H" in
+        asserts Hsubc : (BRc \c BR); [prove_bag | idtac];
+        asserts HC : (context_invariant BR jc c); 
+            [applys context_invariant_bisim_incl_preserved Hsubc; ljs_context_invariant | idtac];
+        specializes H HC HS HR;
+        clear HS; clear HC; clear HR 
     end 
     end.
 
