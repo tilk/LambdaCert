@@ -128,10 +128,11 @@ Proof.
     ljs_context_invariant_after_apply.
     repeat ljs_autoforward.
     destruct_hyp Hv;
-    forwards Hx : make_native_error_lemma H0; (destr_concl || jauto_js). (* TODO *)
+    (forwards_th : make_native_error_lemma; [eauto | idtac]);
+    destr_concl.
     res_related_invert.
     repeat inv_fwd_ljs.
-    forwards Hy : priv_js_error_lemma. eassumption. destruct_hyp Hy.
+    forwards_th Hy : priv_js_error_lemma. destruct_hyp Hy.
     repeat inv_fwd_ljs.
     resvalue_related_invert.
     jauto_js 8.
@@ -154,7 +155,7 @@ Proof.
     ljs_apply.
     ljs_context_invariant_after_apply. clear Hcinv.
     repeat ljs_autoforward.
-    forwards Hx : native_error_lemma; try eassumption.
+    forwards_th Hx : native_error_lemma; try eassumption.
     jauto_js.
 Qed.
 
@@ -212,12 +213,12 @@ Proof.
     repeat (ljs_autoforward || decide_stx_eq).
     (* null *)
     destruct Hvrel; invert_stx_eq.
-    forwards Hx : type_error_lemma. eassumption. iauto. eauto_js. eauto_js.
+    forwards_th Hx : type_error_lemma. iauto. 
     destr_concl; tryfalse.
     jauto_js.
     (* undefined *)
     destruct Hvrel; invert_stx_eq.
-    forwards Hx : type_error_lemma. eassumption. iauto. eauto_js. eauto_js.
+    forwards_th Hx : type_error_lemma. iauto. 
     destr_concl; tryfalse.
     jauto_js.
     (* object *)
@@ -257,7 +258,7 @@ Proof.
     destr_concl; try ljs_handle_abort.
 
     repeat inv_internal_fwd_ljs.
-    forwards_th red_spec_to_boolean_unary_ok.
+    forwards_th : red_spec_to_boolean_unary_ok.
 
     destr_concl.
     res_related_invert.
@@ -313,9 +314,9 @@ Proof.
         prove_bag 10.
     asserts Hlerel : (lexical_env_related BR (J.execution_ctx_lexical_env jc) v).
     solve [eauto using context_invariant_lexical_env_related].
-    forwards Hx : new_env_record_object_lemma; try eauto.
+    forwards_th Hx : new_env_record_object_lemma. eauto_js.
     destruct_hyp Hx.
-    eexists. splits; try reflexivity.
+    eexists. splits; try reflexivity. (* TODO *)
     jauto_js 7. 
     eapply context_invariant_push_context_lemma.
     eapply lexical_env_related_cons; eauto_js 10. eauto_js 10.
@@ -373,7 +374,7 @@ Proof.
     asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). jauto_js.
     asserts Hlerel : (lexical_env_related BR (J.execution_ctx_lexical_env jc) v).
     solve [eauto using context_invariant_lexical_env_related].
-    forwards Hx : new_env_record_decl_lemma; try eauto.
+    forwards_th Hx : new_env_record_decl_lemma. 
     destruct_hyp Hx.
     eexists. splits; try reflexivity.
     eauto_js 8.

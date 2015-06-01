@@ -2450,6 +2450,7 @@ Ltac ljs_propagate_abort :=
 
 Ltac ljs_handle_abort := progress (repeat (ljs_propagate_abort || ljs_abort_from_js)); solve_ijauto_js.
 
+(*
 Ltac specialize_th_ext_expr_unary H :=
     match type of H with
     | th_ext_expr_unary _ ?e _ _ =>
@@ -2529,19 +2530,72 @@ Ltac specialize_th_stat H :=
         clear HS; clear HC; clear HR 
     end 
     end.
+*)
 
-Ltac ih_expr_leq :=
+Ltac ih_leq :=
     match goal with
     | H : ih_expr ?k |- ih_expr ?k' => is_evar k'; eapply H
     | H : ih_expr ?k |- ih_expr ?k' => eapply ih_expr_leq; try eapply H; omega
+    | H : ih_stat ?k |- ih_stat ?k' => is_evar k'; eapply H
+    | H : ih_stat ?k |- ih_stat ?k' => eapply ih_stat_leq; try eapply H; omega
     end.
 
-Ltac forwards_th Hth := let H := fresh "H" in 
+(*
+Ltac forwards_th Hth := 
+    let H := fresh "H" in 
     (forwards H : Hth;
     first [is_var H; (specialize_th_spec H || specialize_th_stat H || 
            specialize_th_ext_expr_unary H || specialize_th_ext_expr_binary H) | idtac];
     try ih_expr_leq); 
     [idtac].
+*)
+
+Ltac specializes_th H :=
+    try unfold th_stat, th_spec, th_ext_expr_unary, th_ext_expr_binary in H;
+    let needs_state := match type of H with
+        | context [state_invariant _ _ _ -> _] => constr:true (* TODO better *)
+        | _ => constr:false
+    end in
+    specializes H ___;
+    try match goal with Hx : state_invariant _ _ _ |- state_invariant _ _ _ => eapply Hx end;
+    try match goal with |- L.red_exprh _ _ _ _ _ => eassumption end;
+    try match goal with 
+    | Hx : context_invariant ?BR' _ _ |- context_invariant ?BR _ _ =>  
+        let Hsub := fresh in
+        asserts Hsub : (BR' \c BR); [prove_bag 10 | idtac];
+        applys context_invariant_bisim_incl_preserved Hsub;
+        ljs_context_invariant 
+    end;
+    try match goal with 
+    | Hx : value_related ?BR' _ ?v |- value_related ?BR _ ?v =>
+        let Hsub := fresh in
+        asserts Hsub : (BR' \c BR); [prove_bag 10 | idtac];
+        applys value_related_bisim_incl_preserved Hsub; eauto_js
+    | Hx : resvalue_related ?BR' _ ?v |- resvalue_related ?BR _ ?v =>
+        let Hsub := fresh in
+        asserts Hsub : (BR' \c BR); [prove_bag 10 | idtac];
+        applys resvalue_related_bisim_incl_preserved Hsub; eauto_js
+    | Hx : lexical_env_related ?BR' _ ?v |- lexical_env_related ?BR _ ?v =>
+        let Hsub := fresh in
+        asserts Hsub : (BR' \c BR); [prove_bag 10 | idtac];
+        applys lexical_env_related_bisim_incl_preserved Hsub; eauto_js
+    | |- value_related _ _ ?v => not is_evar v; eauto_js
+    | |- resvalue_related _ _ ?v => not is_evar v; eauto_js
+    | |- lexical_env_related _ _ ?v => not is_evar v; eauto_js
+    end;
+    try ih_leq;
+    match needs_state with
+    | true => match goal with Hx : state_invariant _ _ _ |- _ => clear Hx end
+    | false => idtac
+    end.
+
+Tactic Notation "forwards_th" ident(H) ":" constr(th) :=
+    lets H : th;
+    specializes_th H.
+
+Tactic Notation "forwards_th" ":" constr(th) :=
+    let H := fresh "H" in 
+    forwards_th H : th.
 
 Lemma res_related_invert_abort_lemma : forall BR jst st jr r,
     res_related BR jst st jr r ->

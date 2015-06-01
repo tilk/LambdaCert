@@ -84,7 +84,7 @@ Proof.
     ljs_out_redh_ter.
     specializes IHjts (ih_stat_S IH). 
 
-    specialize_th_stat IHjts.
+    specializes_th IHjts.
     destr_concl_auto.
 
     inv_fwd_ljs.
@@ -107,12 +107,12 @@ Proof.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
-    forwards_th red_spec_to_object_ok.
+    forwards_th : red_spec_to_object_ok.
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    forwards Hx : state_invariant_new_env_record_object_lemma; 
+    forwards_th Hx : state_invariant_new_env_record_object_lemma; 
     eauto_js. (* TODO *)
     destruct_hyp Hx.
     repeat ljs_autoforward.
@@ -143,7 +143,7 @@ Proof.
     inverts red_exprh Hlred.
     ljs_out_redh_ter.
 
-    forwards_th red_spec_to_boolean_ok. 
+    forwards_th : red_spec_to_boolean_ok. 
 
     destr_concl; try ljs_handle_abort.
     destruct b.
@@ -166,7 +166,7 @@ Proof.
     inverts Hlred.
     ljs_out_redh_ter.
 
-    forwards_th red_spec_to_boolean_ok.
+    forwards_th : red_spec_to_boolean_ok.
  
     destr_concl; try ljs_handle_abort.
     destruct b.
@@ -634,23 +634,23 @@ Proof.
     (* final *)
     destruct H as [Hwf|[Hwf|[Hwf|(?st&Hcond&Hwf1)]]]; try destruct_hyp Hwf.
     (* condition throws *)
-    forwards_th red_spec_to_boolean_ok.
+    forwards_th : red_spec_to_boolean_ok.
     inverts Hlabel_brk. 
     destr_concl. tryfalse.
     jauto_js.
     (* condition breaks, IMPOSSIBLE *)
-    forwards_th red_spec_to_boolean_ok.
+    forwards_th : red_spec_to_boolean_ok.
     destr_concl. tryfalse.
     res_related_invert; tryfalse.
     (* condition false *)
-    forwards_th red_spec_to_boolean_ok.
+    forwards_th : red_spec_to_boolean_ok.
     inverts Hlabel_brk.
     destr_concl.   
     injects.
     jauto_js. 
     eauto_js. 
     (* condition true *)
-    forwards_th red_spec_to_boolean_ok.
+    forwards_th : red_spec_to_boolean_ok.
     destr_concl; try js_abort_rel_contr; [idtac].
     injects.
     destruct Hwf1 as [Hwf|[Hwf|(?st&?v&Hstat&Hwf1)]]; try destruct_hyp Hwf.
@@ -714,7 +714,7 @@ Proof.
     inverts Hafter. 
     apply label_set_invert_lemma in Hstat.
     destruct Hstat as (?r&Hstat&Hlabel_cont).
-    forwards_th red_spec_to_boolean_ok.
+    forwards_th : red_spec_to_boolean_ok.
     destr_concl. 
     injects.
     apply_ih_stat.
@@ -722,18 +722,15 @@ Proof.
     inverts Hlabel_cont.
     (* statement continued *)
     res_related_invert.
-    lets Hx : IHHwhile Hlabel_brk ___. 
-BOOM.
-    skip. (* TODO *)
-    skip.
-    jauto_js.
+    forwards_th : IHHwhile. 
+    eassumption.
+    eauto_js.
     jauto_js 8.
     (* statement not continued *)
     res_related_invert.
-    lets Hx : IHHwhile Hlabel_brk ___.
-    skip. (* TODO *)
-    skip.
-    jauto_js.
+    forwards_th : IHHwhile. 
+    eassumption.
+    eauto_js.
     jauto_js 15.
     res_related_invert. eauto_js. (* TODO *)
 Qed.
@@ -806,7 +803,7 @@ Lemma red_stat_return_ok : forall k oje,
     th_stat k (J.stat_return oje).
 Proof.
     introv IHe Hcinv Hinv Hlred.
-    inverts Hlred.
+    inverts red_exprh Hlred.
     ljs_out_redh_ter.
     destruct oje as [je|].
     apply_ih_expr.
@@ -978,6 +975,8 @@ Proof.
     repeat ljs_autoforward.
     destr_concl.
     repeat ljs_autoforward.
+    inv_fwd_ljs.
+    repeat ljs_autoforward.
     destr_concl.
     inv_ljs;
     res_related_invert;
@@ -996,7 +995,7 @@ Proof.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward. 
-    autoforwards H : priv_js_error_lemma.
+    forwards_th H : priv_js_error_lemma.
     destruct_hyp H.
     repeat ljs_autoforward.
     jauto_js.
