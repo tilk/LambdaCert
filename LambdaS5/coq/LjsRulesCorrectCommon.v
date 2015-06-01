@@ -1,9 +1,3 @@
-(* TODO:
-* REPLACE specialize_th's with one general tactic (state_invariant holds the most recent BR)
-* make fwd_ljs thingies only consider the currently evaluated part (based on the out value inside)
-  or consider it first
-* fast list membership testing
-*)
 Generalizable All Variables.
 Set Implicit Arguments.
 Require Import JsNumber.
@@ -2450,88 +2444,6 @@ Ltac ljs_propagate_abort :=
 
 Ltac ljs_handle_abort := progress (repeat (ljs_propagate_abort || ljs_abort_from_js)); solve_ijauto_js.
 
-(*
-Ltac specialize_th_ext_expr_unary H :=
-    match type of H with
-    | th_ext_expr_unary _ ?e _ _ =>
-    match goal with
-    | HS : state_invariant ?BR ?jst ?st,
-      HC' : context_invariant ?BRc ?jc ?c',
-      HV : value_related ?BRv ?jv ?v,
-      HR : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
-        let Hsubv := fresh "H" in
-        let Hsubc := fresh "H" in
-        asserts Hsubv : (BRv \c BR); [prove_bag | idtac];
-        asserts Hsubc : (BRc \c BR); [prove_bag | idtac];
-        unify e e'; unify [v] vl;
-        let HC := fresh "H" in
-        asserts HC : (context_invariant BR jc c); 
-            [applys context_invariant_bisim_incl_preserved Hsubc; ljs_context_invariant | idtac];
-        specializes H HC HS (value_related_bisim_incl_preserved Hsubv HV) HR; 
-        clear HC; clear HS; clear HR; clear Hsubv; clear Hsubc
-    end
-    end.
-
-Ltac specialize_th_ext_expr_binary H :=
-    match type of H with
-    | th_ext_expr_binary _ ?e _ _ =>
-    match goal with
-    | HS : state_invariant ?BR ?jst ?st, 
-      HC' : context_invariant ?BRc ?jc ?c',
-      HV1 : value_related ?BRv1 ?jv1 ?v1, 
-      HV2 : value_related ?BRv2 ?jv2 ?v2,
-      HR : L.red_exprh _ ?c ?st (L.expr_app_2 ?e' ?vl) _ |- _ => 
-        let Hsubv1 := fresh "H" in let Hsubv2 := fresh "H" in let Hsubc := fresh "H" in 
-        asserts Hsubv1 : (BRv1 \c BR); [prove_bag | idtac];
-        asserts Hsubv2 : (BRv2 \c BR); [prove_bag | idtac];
-        asserts Hsubc : (BRc \c BR); [prove_bag | idtac];
-        unify e e'; unify [v1; v2] vl;
-        let HC := fresh "H" in
-        asserts HC : (context_invariant BR jc c); 
-            [applys context_invariant_bisim_incl_preserved Hsubc; ljs_context_invariant | idtac];
-        specializes H HC HS (value_related_bisim_incl_preserved Hsubv1 HV1) 
-            (value_related_bisim_incl_preserved Hsubv2 HV2) HR;
-        clear HC; clear HS; clear HR; clear Hsubv1; clear Hsubv2; clear Hsubc
-    end
-    end.
-
-Ltac specialize_th_spec H :=
-    match type of H with
-    | th_spec _ ?e _ _ => 
-    match goal with
-    | HR : L.red_exprh _ ?c ?st (L.expr_basic ?e') _, 
-      HC' : context_invariant ?BRc ?jc ?c',
-      HS : state_invariant ?BR ?jst ?st |- _ => 
-        unify e e';
-        let HC := fresh "H" in
-        let Hsubc := fresh "H" in
-        asserts Hsubc : (BRc \c BR); [prove_bag | idtac];
-        asserts HC : (context_invariant BR jc c); 
-            [applys context_invariant_bisim_incl_preserved Hsubc; ljs_context_invariant | idtac];
-        specializes H HC HS HR;
-        clear HS; clear HC; clear HR
-    end
-    end.
-
-Ltac specialize_th_stat H :=
-    match type of H with
-    | th_stat ?k ?jt => 
-    match goal with
-    | HR : L.red_exprh k ?c ?st (L.expr_basic ?e') _, 
-      HC' : context_invariant ?BRc ?jc ?c',
-      HS : state_invariant ?BR ?jst ?st |- _ => 
-        unify (js_stat_to_ljs jt) e';
-        let HC := fresh "H" in
-        let Hsubc := fresh "H" in
-        asserts Hsubc : (BRc \c BR); [prove_bag | idtac];
-        asserts HC : (context_invariant BR jc c); 
-            [applys context_invariant_bisim_incl_preserved Hsubc; ljs_context_invariant | idtac];
-        specializes H HC HS HR;
-        clear HS; clear HC; clear HR 
-    end 
-    end.
-*)
-
 Ltac ih_leq :=
     match goal with
     | H : ih_expr ?k |- ih_expr ?k' => is_evar k'; eapply H
@@ -2539,16 +2451,6 @@ Ltac ih_leq :=
     | H : ih_stat ?k |- ih_stat ?k' => is_evar k'; eapply H
     | H : ih_stat ?k |- ih_stat ?k' => eapply ih_stat_leq; try eapply H; omega
     end.
-
-(*
-Ltac forwards_th Hth := 
-    let H := fresh "H" in 
-    (forwards H : Hth;
-    first [is_var H; (specialize_th_spec H || specialize_th_stat H || 
-           specialize_th_ext_expr_unary H || specialize_th_ext_expr_binary H) | idtac];
-    try ih_expr_leq); 
-    [idtac].
-*)
 
 Ltac specializes_th H :=
     try unfold th_stat, th_spec, th_ext_expr_unary, th_ext_expr_binary in H;
