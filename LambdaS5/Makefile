@@ -17,35 +17,25 @@ copy_ljs:
 	mkdir -p build/
 	cp caml/ljs/ljs_lexer.mll caml/ljs/ljs_parser.mly caml/ljs/*.ml build/
 
-edit_ljs:
-	# You might want the following commands if you want to use the latest
-	# version of LambdaJS' files. They are not enough to make the files
-	# compatible with our implementation, but they help a lot.
-	sed -i "s/open Prelude/(* open Prelude *)/" build/ljs_{parser.mly,lexer.mll}
-	sed -i "s/Pos.real/ignore/g" build/ljs_parser.mly
-	sed -i "s/Ljs_syntax/Interpreter/g" build/ljs_parser.mly
-	sed -i "s/Ljs_syntax/Interpreter/g" build/ljs_lexer.mll
-	sed -i "s/Prelude\.id/string/g" build/ljs_parser.mly
-
 copy: coq caml/ copy_ljs
 	mkdir -p build/
 	cp coq/*.ml coq/*.mli build/
 	cp caml/*.ml caml/*.mli caml/_tags build/
 
-ocamlbuild/eval.p.native: copy
+build/eval.p.native: copy
 	cd build/; ocamlbuild -use-ocamlfind eval.p.native
 
-profiling: ocamlbuild/eval.p.native
+profiling: build/eval.p.native
 
-ocamlbuild/eval.native: copy
+build/eval.native: copy
 	cd build/; ocamlbuild -use-ocamlfind eval.native
 
-native: ocamlbuild/eval.native 
+native: build/eval.native 
 
-ocamlbuild/eval.byte: copy
+build/eval.byte: copy
 	cd build/; ocamlbuild -use-ocamlfind eval.byte -tag debug
 
-byte: ocamlbuild/eval.byte 
+byte: build/eval.byte 
 
 interpreter: native
 
@@ -59,6 +49,11 @@ tests: snapshot
 
 quicktests:
 	tests/run_tests.py
+
+coq/LjsInitEnv.v: build/eval.native tests/es5.dump
+	./build/eval.native -load tests/es5.dump -coq-save coq/LjsInitEnv.v
+
+initenv: coq/LjsInitEnv.v
 
 clean:
 	make -C coq/ clean

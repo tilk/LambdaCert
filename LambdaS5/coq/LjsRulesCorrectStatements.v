@@ -648,7 +648,7 @@ Proof.
     destr_concl.   
     injects.
     jauto_js. 
-    eauto with js_ljs. (* jauto_js. EXISTENTIAL VARIABLES *) 
+    eauto_js. 
     (* condition true *)
     forwards_th red_spec_to_boolean_ok.
     destr_concl; try js_abort_rel_contr; [idtac].
@@ -722,7 +722,8 @@ Proof.
     inverts Hlabel_cont.
     (* statement continued *)
     res_related_invert.
-    lets Hx : IHHwhile Hlabel_brk ___.
+    lets Hx : IHHwhile Hlabel_brk ___. 
+BOOM.
     skip. (* TODO *)
     skip.
     jauto_js.

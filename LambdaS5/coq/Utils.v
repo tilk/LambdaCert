@@ -336,6 +336,37 @@ Proof. intro. apply* prop_ext. Qed.
 
 Hint Rewrite impl_True_l impl_False_l impl_True_r impl_False_r : rew_logic.
 
+Fixpoint fast_string_assoc {A} (k : string) (l : list (string * A)) : option A :=
+    match l with
+    | nil => None
+    | (k', v') :: l' => match string_dec k' k with left _ => Some v' | right _ => fast_string_assoc k l' end
+    end.
+
+(*
+Fixpoint fast_string_assoc2 {A} (k : string) (l : list (string * A)) : {A | Mem (k, A) l} + unit.
+Proof.
+    destruct l as [|(k'&v') l'].
+    right. exact tt.
+    destruct (string_dec k' k).
+    substs.
+    left. econstructor. eapply Mem_here.
+    destruct (fast_assoc2 A k l') as [(v''&M)|H].
+    left. econstructor. eapply Mem_next. eassumption.
+    right. eassumption.
+Defined.
+*)
+
+Lemma fast_string_assoc_mem : forall A k l (v : A), fast_string_assoc k l = Some v -> Mem (k, v) l.
+Proof.
+    introv Hf.
+    induction l.
+    tryfalse.
+    simpls. cases_let. cases_if.
+    injects.
+    eapply Mem_here.
+    eapply Mem_next. eapply IHl. assumption. 
+Qed.
+
 (* instances *)
 
 Global Instance le_string_inst : Le string.

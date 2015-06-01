@@ -8522,7 +8522,7 @@ value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privencodeURILambda)
 .
 Definition name_privencodeURILambda :=  "%encodeURILambda" .
-Definition privescape :=  value_object 316 .
+Definition privescape :=  value_object 314 .
 Definition name_privescape :=  "%escape" .
 Definition privescapeLambda := 
 value_closure
@@ -8882,7 +8882,7 @@ value_closure
 Definition name_privnumberToStringlambda :=  "%numberToStringlambda" .
 Definition privobjectToString :=  value_object 38 .
 Definition name_privobjectToString :=  "%objectToString" .
-Definition privparseFloat :=  value_object 314 .
+Definition privparseFloat :=  value_object 313 .
 Definition name_privparseFloat :=  "%parseFloat" .
 Definition privparseFloatLambda := 
 value_closure
@@ -9251,7 +9251,7 @@ value_closure
   ("%ToString", privToString)] None ["obj"; "this"; "args"] ex_privtuclambda)
 .
 Definition name_privtuclambda :=  "%tuclambda" .
-Definition privunescape :=  value_object 318 .
+Definition privunescape :=  value_object 316 .
 Definition name_privunescape :=  "%unescape" .
 Definition privunescapeLambda := 
 value_closure
@@ -10021,6 +10021,421 @@ Definition ctx_items :=
  (name_privglobalContext, privglobalContext);
  (name_privglobalContext, privglobalContext)]
 .
+Ltac ctx_compute := cbv beta iota zeta delta -[
+dolthis
+privAppExprCheck
+privAppMethod
+privArrayConstructor
+privArrayGlobalFuncObj
+privArrayLengthChange
+privArrayProto
+privBindCall
+privBindConstructor
+privBitwiseInfix
+privBitwiseNot
+privBooleanCall
+privBooleanConstructor
+privBooleanGlobalFuncObj
+privBooleanProto
+privCheckObjectCoercible
+privCompareOp
+privComputeLength
+privDateCall
+privDateConstructor
+privDateFromTime
+privDateGlobalFuncObj
+privDateProto
+privDay
+privDayFromYear
+privDayWithinYear
+privDaysInMonth
+privDaysInYear
+privDeclEnvAddBinding
+privDefaultConstruct
+privDelete
+privEnvCheckAssign
+privEnvDelete
+privEnvGet
+privEnvPrepostOp
+privEnvTypeof
+privEqEq
+privErrorConstructor
+privErrorDispatch
+privErrorGlobalFuncObj
+proto
+privEvalErrorConstructor
+privEvalErrorGlobalFuncObj
+proto1
+privFunctionConstructor
+privFunctionGlobalFuncObj
+privFunctionProto
+privGetField
+privGetterProxyFun
+privGetterValue
+privInLeapYear
+privIsCallable
+privIsFinite
+privIsJSError
+privIsPrototypeOflambda
+privJSError
+privLeftShift
+privLocalTime
+privMakeArray
+privMakeBind
+privMakeBoolean
+privMakeDate
+privMakeDateDayTime
+privMakeDay
+privMakeFunctionObject
+privMakeGetter
+privMakeNativeError
+privMakeNativeErrorProto
+privMakeNumber
+privMakeObject
+privMakeSetter
+privMakeString
+privMakeTime
+privMath
+privMonthFromTime
+privNativeError
+privNativeErrorConstructor
+privNumberCall
+privNumberCompareOp
+privNumberConstructor
+privNumberGlobalFuncObj
+privNumberProto
+privObjectCall
+privObjectConstructor
+privObjectGlobalFuncObj
+privObjectProto
+privObjectTypeCheck
+privPrepostOp
+privPrimAdd
+privPrimMultOp
+privPrimNew
+privPrimitiveCompareOp
+privRangeError
+privRangeErrorConstructor
+privRangeErrorGlobalFuncObj
+privRangeErrorProto
+privReferenceError
+privReferenceErrorConstructor
+privReferenceErrorGlobalFuncObj
+privReferenceErrorProto
+privRegExpConstructor
+privRegExpGlobalFuncObj
+privRegExpProto
+privRunSelfConstructorCall
+privSetterProxyFun
+privSetterValue
+privSignedRightShift
+privStringCall
+privStringConstructor
+privStringGlobalFuncObj
+privStringIndexOf
+privStringIndexOflambda
+privStringIndices
+privStringLastIndexOf
+privStringProto
+privStxEq
+privSyntaxError
+privSyntaxErrorConstructor
+privSyntaxErrorGlobalFuncObj
+privSyntaxErrorProto
+privThrowTypeError
+privThrowTypeErrorFun
+privTimeClip
+privTimeFromYear
+privTimeWithinDay
+privToBoolean
+privToInt32
+privToInteger
+privToNumber
+privToObject
+privToObjectVirtual
+privToPrimitive
+privToPrimitiveHint
+privToPropertyDescriptor
+privToString
+privToUint
+privToUint16
+privToUint32
+privTypeError
+privTypeErrorConstructor
+privTypeErrorGlobalFuncObj
+privTypeErrorProto
+privTypeof
+privURIErrorConstructor
+privURIErrorGlobalFuncObj
+proto2
+privUTC
+privUnaryNeg
+privUnaryNot
+privUnaryPlus
+privUnboundId
+privUnsignedRightShift
+privUnwritableDispatch
+privVoid
+privYearFromTime
+privacos
+privacosLambda
+privaiolambda
+privaliolambda
+privapply
+privapplylambda
+privarrayIndexOf
+privarrayLastIndexOf
+privarrayTLSlambda
+privarrayToLocaleString
+privarrayToString
+privarrayToStringlambda
+privasin
+privasinLambda
+privassert
+privatan
+privatan2
+privatan2Lambda
+privatanLambda
+privbind
+privbindLambda
+privbooleanToString
+privbooleanToStringlambda
+privbooleanValueOf
+privcall
+privcalllambda
+privcharat
+privcharatlambda
+privcharcodeat
+privcharcodeatlambda
+privconcat
+privconcatLambda
+privconfigurableEval
+privconsole
+privcos
+privcosLambda
+privcreate
+privcreateLambda
+privdateGetTimezoneOffset
+privdateGetTimezoneOffsetLambda
+privdateToString
+privdateToStringLambda
+privdateValueOf
+privdateValueOfLambda
+privdategetDate
+privdategetDateLambda
+privdategetDay
+privdategetDayLambda
+privdecodeURI
+privdecodeURIComponent
+privdecodeURIComponentLambda
+privdecodeURILambda
+privdefine15Property
+privdefineFunction
+privdefineGlobalVar
+privdefineNYIProperty
+privdefineOwnProperty
+privdefineProperties
+privdefinePropertiesLambda
+privdefineProperty
+privdefinePropertylambda
+privdevirtualize
+privencodeURI
+privencodeURIComponent
+privencodeURIComponentLambda
+privencodeURILambda
+privescape
+privescapeLambda
+privets
+privetslambda
+priveval
+privevallambda
+privevery
+priveverylambda
+privexp
+privexplambda
+privfilter
+privfilterlambda
+privforeach
+privforeachlambda
+privfreeze
+privfreezelambda
+privfromCharCode
+privfromcclambda
+privfunctionToString
+privfunctionToStringlambda
+privgetCurrentUTC
+privgetMonth
+privgetMonthlambda
+privgetYear
+privgetYearlambda
+dolthis
+privglobalContext
+privgopd
+privgopdLambda
+privgopn
+privgopnLambda
+privgpo
+privgpoLambda
+privhasOwnProperty
+privhasOwnPropertylambda
+privin
+privinstanceof
+privisExtensible
+privisExtensibleLambda
+privisFinite
+privisFiniteLambda
+privisFrozen
+privisFrozenLambda
+privisNaN
+privisNaNlambda
+privisPrototypeOf
+privisSealed
+privisSealedLambda
+privjoin
+privjoinlambda
+privkeys
+privkeysLambda
+privlen
+privlocaleCompare
+privlocaleCompareLambda
+privlog
+privlogLambda
+privmakeGlobalEnv
+privmap
+privmaplambda
+privmathAbs
+privmathAbsLambda
+privmathCeil
+privmathCeilLambda
+privmathFloor
+privmathFloorLambda
+privmathLog
+privmathLogLambda
+privmathMax
+privmathMaxLambda
+privmathMin
+privmathMinLambda
+privmathPow
+privmathPowLambda
+privmax
+privmaybeDirectEval
+privmin
+privminMaxLambda
+privmkArgsObj
+privmsPerDay
+privmsPerHour
+privmsPerMin
+privmsPerSecond
+privnewDeclEnvRec
+privnewObjEnvRec
+privnumTLS
+privnumTLSLambda
+privnumToStringAbstract
+privnumValueOf
+privnumberPrimval
+privnumberToString
+privnumberToStringlambda
+privobjectToString
+privobjectToStringlambda
+privoneArgObj
+privparse
+privparseFloat
+privparseFloatLambda
+privparseInt
+privparseIntlambda
+privpop
+privpoplambda
+privpreventExtensions
+privpreventExtensionsLambda
+privprimEach
+privprint
+privprintlambda
+privpropEnumlambda
+privpropertyIsEnumerable
+privpropertyNames
+privprotoOfField
+privpush
+privpushlambda
+privrandom
+privrandomLambda
+privreduce
+privreduceRight
+privreduceRightLambda
+privreducelambda
+privreplace
+privreplacelambda
+privresolveThis
+privreverse
+privreverselambda
+privround
+privroundLambda
+privseal
+privsealLambda
+privset_property
+privshift
+privshiftlambda
+privsin
+privsinLambda
+privslice
+privslice_internal
+privslicelambda
+privsliolambda
+privsome
+privsomelambda
+privsort
+privsortlambda
+privsplice
+privsplicelambda
+privsplit
+privsplitLambda
+privsqrt
+privsqrtLambda
+privstrconcat
+privstrconcatlambda
+privstringSlice
+privstringSliceLambda
+privstringToString
+privstringToStringlambda
+privstringValueOf
+privsubstring
+privsubstringlambda
+privtan
+privtanLambda
+privtest
+privtestlambda
+privtlclambda
+privtoExponential
+privtoExponentialLambda
+privtoFixed
+privtoFixedLambda
+privtoLocaleString
+privtoLocaleStringlambda
+privtoLowerCase
+privtoPrecision
+privtoPrecisionLambda
+privtoUpperCase
+privtuclambda
+privtwoArgObj
+privunescape
+privunescapeLambda
+privunshift
+privunshiftlambda
+privvalueOf
+privvalueOfLambda
+privvalueOflambda
+copy_access_desc
+copy_data_desc
+copy_when_defined
+evalCode
+isAccessorDescriptor
+isAccessorField
+isDataDescriptor
+isDataField
+isGenericDescriptor
+isGenericField
+privglobalContext
+privglobalContext
+].
 Definition store_items := [
 (0, {|object_attrs :=
       {|oattrs_proto := value_null;
@@ -10648,7 +11063,7 @@ Definition store_items := [
                                        attributes_data_configurable := true|});
                  ("escape", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 316;
+                                       value_object 314;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -10672,7 +11087,7 @@ Definition store_items := [
                                        attributes_data_configurable := true|});
                  ("parseFloat", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 314;
+                                       value_object 313;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -10696,7 +11111,7 @@ Definition store_items := [
                                        attributes_data_configurable := false|});
                  ("unescape", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 318;
+                                       value_object 316;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -16909,42 +17324,17 @@ Definition store_items := [
         object_properties := from_list [];
         object_internal := from_list []|});
 (313, {|object_attrs :=
-        {|oattrs_proto := value_null;
-          oattrs_class := "Object";
+        {|oattrs_proto := value_object 3;
+          oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 312;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+          oattrs_code := privparseFloatLambda|};
+        object_properties := from_list [];
         object_internal := from_list []|});
 (314, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privparseFloatLambda|};
+          oattrs_code := privescapeLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (315, {|object_attrs :=
@@ -16983,7 +17373,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privescapeLambda|};
+          oattrs_code := privunescapeLambda|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (317, {|object_attrs :=
@@ -17007,45 +17397,6 @@ Definition store_items := [
                    ("value", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 316;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(318, {|object_attrs :=
-        {|oattrs_proto := value_object 3;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privunescapeLambda|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(319, {|object_attrs :=
-        {|oattrs_proto := value_null;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 318;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=

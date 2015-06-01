@@ -1,3 +1,9 @@
+(* TODO:
+* REPLACE specialize_th's with one general tactic (state_invariant holds the most recent BR)
+* make fwd_ljs thingies only consider the currently evaluated part (based on the out value inside)
+  or consider it first
+* fast list membership testing
+*)
 Generalizable All Variables.
 Set Implicit Arguments.
 Require Import JsNumber.
@@ -155,6 +161,11 @@ Proof. intros. substs. eauto with js_ljs. Qed.
 Hint Resolve res_related_break_hint : js_ljs.
 Hint Resolve res_related_continue_hint : js_ljs.
 
+Ltac init_ctx_lookup :=
+    eapply fast_string_assoc_mem;
+    LjsInitEnv.ctx_compute;
+    reflexivity.
+
 Ltac ljs_abort := match goal with
     | H : L.abort (L.out_ter _ (L.res_value _)) |- _ => 
         let H1 := fresh "H" in 
@@ -171,6 +182,24 @@ Inductive inv_ljs_stop : L.ext_expr -> Prop := red_exprh_no_invert_intro : foral
 
 Ltac inv_ljs_stop ee := let STOP := fresh "STOP" in lets STOP : red_exprh_no_invert_intro ee.
  
+Ltac ljs_check_top ee :=
+    match eval hnf in (L.out_of_ext_expr ee) with
+    | Some (L.out_ter _ ?r) => not is_var r
+    | None => idtac
+    end.
+
+Ltac with_top_red_exprh T :=
+    match goal with
+    | H	: L.red_exprh _ _ _ ?ee _ |- _ => 
+        ljs_check_top ee;
+        unfold js_expr_to_ljs, js_stat_to_ljs in H; simpl in H;
+        match ee with 
+        | L.expr_app_2 _ _ => fail 1 (* so that lemmas can be easily applied *) 
+        | _ => is_hyp (inv_ljs_stop ee); fail 1
+        | _ => T H
+        end
+    end.
+
 Ltac with_red_exprh T :=
     match goal with
     | H	: L.red_exprh _ _ _ ?ee _ |- _ => 
@@ -201,6 +230,8 @@ Ltac inv_internal_ljs := with_internal_red_exprh inv_ljs_in.
 Ltac inv_fwd_ljs := with_red_exprh inv_fwd_ljs_in.
 
 Ltac inv_internal_fwd_ljs := with_internal_red_exprh inv_fwd_ljs_in.
+
+Ltac inv_top_fwd_ljs := with_top_red_exprh inv_fwd_ljs_in.
 
 Ltac inv_literal_ljs := 
     let H := match goal with
@@ -2124,7 +2155,7 @@ Ltac context_invariant_prealloc :=
         let Hsub := fresh "H" in 
         asserts Hsub : (BR' \c BR); [prove_bag | idtac];
         applys context_invariant_prealloc_in_ctx_lemma (context_invariant_bisim_incl_preserved Hsub HC);
-            [solve [repeat (eapply Mem_here || eapply Mem_next)] | idtac];
+            [solve [repeat (eapply Mem_here || eapply Mem_next)] | idtac]; (* TODO something faster *)
         clear Hsub 
     end.
 
@@ -2250,17 +2281,17 @@ Ltac ljs_apply := progress repeat (ljs_inv_closure_hyps || ljs_closure_body).
 
 Ltac ljs_context_invariant := 
     match goal with
+    | |- context_invariant _ _ _ => 
+        eassumption
+    | |- context_invariant _ _ \{} =>
+        eapply context_invariant_replace_ctx_sub_init; [solve [eapply empty_incl] | eassumption]
     | |- context_invariant _ _ (_ \(?s := ?v)) =>
         eapply context_invariant_add_nopercent_nodollar_id_preserved; 
         [idtac | solve [eauto] | solve [eauto]]; ljs_context_invariant
     | |- context_invariant _ _ (_ \(?s := ?v)) =>
         eapply context_invariant_add_init_ctx_preserved; [
         eapply init_ctx_mem_binds;
-        solve [repeat (eapply Mem_here || eapply Mem_next)] | idtac]; ljs_context_invariant
-    | |- context_invariant _ _ \{} =>
-        eapply context_invariant_replace_ctx_sub_init; [solve [eapply empty_incl] | eassumption]
-    | |- context_invariant _ _ _ => 
-        eassumption
+        solve [init_ctx_lookup] | idtac]; ljs_context_invariant
     end.
 
 Ltac ljs_context_invariant_after_apply :=
@@ -2362,7 +2393,7 @@ Ltac ljs_get_builtin :=
         forwards H1 : context_invariant_includes_init_ctx Hinv Hbinds; [
         eapply init_ctx_mem_binds;
         unfold LjsInitEnv.ctx_items;
-        solve [repeat (eapply Mem_here || apply Mem_next)] | 
+        solve [init_ctx_lookup] | 
         subst_hyp H1 ]
     | Hinv : context_invariant _ _ ?c ,
       H : L.red_exprh _ ?c ?st (L.expr_basic (E.make_builtin _)) _ |- _ =>
@@ -2371,7 +2402,7 @@ Ltac ljs_get_builtin :=
         forwards (H1&H2) : builtin_assoc Hinv H; [
         eapply init_ctx_mem_binds;
         unfold LjsInitEnv.ctx_items;
-        solve [repeat (eapply Mem_here || apply Mem_next)] | 
+        solve [init_ctx_lookup] | 
         clear H;
         subst_hyp H1; subst_hyp H2 ]
     end.
@@ -2551,7 +2582,7 @@ Ltac ljs_op_inv :=
 Ltac ljs_fwd_op_inv := ljs_op_inv; [idtac].
 
 Ltac ljs_autoforward := first [
-    inv_fwd_ljs | ljs_fwd_op_inv | ljs_out_redh_ter | 
+    inv_top_fwd_ljs | ljs_fwd_op_inv | ljs_out_redh_ter | 
     apply_ih_stat | apply_ih_expr | ljs_autoinject | 
     binds_inv | binds_determine | ljs_get_builtin ].
 

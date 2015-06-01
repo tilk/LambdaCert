@@ -298,6 +298,11 @@ let format_ctx_mems c =
         (f :: l, coqconstr true "Mem_next" [text "_"; m]) in
     vert (List.rev ((fst (List.fold_left format_ctx_mem ([], text "(Mem_here _ _)") (LibFinmap.FinmapImpl.to_list_impl c)))))
 
+let format_ctx_red c = 
+    let format_ctx_item (k, v) =
+        let ii = Map.find v !vals_store in text ii in
+    horzOrVert ([text ("Ltac ctx_compute := cbv beta iota zeta delta -[")] @ List.map format_ctx_item (LibFinmap.FinmapImpl.to_list_impl c) @ [text "]."])
+
 let header () = vert (List.map text [
     "Require Import Utils.";
     "Require Import LjsShared.";
@@ -312,7 +317,7 @@ let format_ctx_store (c, st) =
     let fst = format_store st in
     let fctx = format_ctx_def c in
     let fnv = format_named_vals () in
-    vert [header(); format_named_exprs(); fnv; fctx; (* format_ctx_mems c;*) fst; text "Definition init_ctx : ctx := from_list ctx_items."]
+    vert [header(); format_named_exprs(); fnv; fctx; format_ctx_red c; (* format_ctx_mems c;*) fst; text "Definition init_ctx : ctx := from_list ctx_items."]
 
 let ctx_store_to_output o c st = 
     Format.set_margin 200;
