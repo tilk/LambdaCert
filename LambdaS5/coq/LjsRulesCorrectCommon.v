@@ -309,7 +309,7 @@ Ltac cases_if_auto_js :=
     first [case_if as Hif; [try solve [destruct_hyp Hif; tryfalse] | try solve [false; apply Hif; eauto_js]] 
           |case_if as Hif; [idtac]].
 
-Hint Extern 11 => cases_if_auto_js; [idtac].
+Hint Extern 11 => cases_if_auto_js; [idtac] : js_ljs.
 
 (* TODO move *)
 Lemma overwrite_value_if_empty_assoc : assoc L.overwrite_value_if_empty.

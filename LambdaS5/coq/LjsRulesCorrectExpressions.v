@@ -53,10 +53,11 @@ Lemma red_expr_literal_ok : forall k l,
 Proof.
     introv.
     unfolds.
-    introv Hinv Hlred.
+    introv Hcinv Hinv Hlred.
     destruct l as [ | [ | ] | | ]; inverts red_exprh Hlred; ijauto_js.
 Qed.
 
+(*
 Lemma get_identifier_value_lemma : forall jlenv k BR jst jc c st st' r b v i,
     lexical_env_related BR jlenv v ->
     binds c "strict" (L.value_bool b) ->
@@ -101,33 +102,28 @@ Admitted.
     skip.
 Qed.
 *)
+*)
 
-(* TODO Delete *)
-Ltac cases_if_auto_js ::=
-    let Hif := fresh "Hif" in 
-    first [case_if as Hif; [try solve [destruct_hyp Hif; tryfalse] | try solve [false; apply Hif; eauto_js]] 
-          |case_if as Hif; [idtac]].
+(* TODO delete *)
+Hint Extern 11 => cases_if_auto_js; [idtac] : js_ljs.
 
 Lemma red_expr_conditional_ok : forall k je1 je2 je3,
     ih_expr k ->
     th_expr k (J.expr_conditional je1 je2 je3).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     inv_fwd_ljs.
     ljs_out_redh_ter.
 
-    forwards_th red_spec_to_boolean_ok. 
+    forwards_th : red_spec_to_boolean_ok. 
 
     destr_concl.
     destruct b;
     inv_internal_fwd_ljs;
     apply_ih_expr.
     (* true *)
-    jauto_js 11.
     jauto_js 18.
     (* false *)
-    repeat destr_concl; unfold_concl.
-    jauto_js 11.
     jauto_js 18. 
     (* abort *)
     ljs_handle_abort.
@@ -144,16 +140,14 @@ Lemma red_expr_unary_op_2_not_ok : forall k,
     th_ext_expr_unary k LjsInitEnv.privUnaryNot (J.expr_unary_op_2 J.unary_op_not)
         (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
-    introv IHe Hinv Hvrel Hlred.
+    introv IHe Hcinv Hinv Hvrel Hlred.
     inverts Hlred. 
     ljs_apply.
-    ljs_state_invariant_after_apply.
+    ljs_context_invariant_after_apply.
     simpls.  
     repeat ljs_autoforward.
-    forwards_th red_spec_to_boolean_unary_ok. 
-    destr_concl;
-    (asserts Hinv'' : (state_invariant BR' jst' jc c st0); [skip | idtac]); (* TODO *)
-    try ljs_handle_abort.
+    forwards_th : red_spec_to_boolean_unary_ok. 
+    destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
@@ -164,16 +158,15 @@ Lemma red_expr_unary_op_not_ok : forall k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_not je).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    forwards_th red_expr_unary_op_2_not_ok.
-    repeat destr_concl.
+    forwards_th : red_expr_unary_op_2_not_ok.
+    destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
-    jauto_js. left. jauto_js.
-    jauto_js 15.
+    jauto_js 8.
 Qed.
 
 Lemma red_expr_unary_op_2_add_ok : forall k,
@@ -181,17 +174,16 @@ Lemma red_expr_unary_op_2_add_ok : forall k,
     th_ext_expr_unary k LjsInitEnv.privUnaryPlus (J.expr_unary_op_2 J.unary_op_add)
         (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
 Proof.
-    introv IHe Hinv Hvrel Hlred.
+    introv IHe Hcinv Hinv Hvrel Hlred.
     inverts Hlred. 
     ljs_apply.
-    ljs_state_invariant_after_apply. 
+    ljs_context_invariant_after_apply. 
     repeat ljs_autoforward.
     repeat binds_inv.
-    forwards_th red_spec_to_number_unary_ok.
-    destr_concl.
+    forwards_th : red_spec_to_number_unary_ok.
+    destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
-    jauto_js. 
     jauto_js. 
 Qed.
 
@@ -199,16 +191,15 @@ Lemma red_expr_unary_op_add_ok : forall k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_add je).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    forwards_th red_expr_unary_op_2_add_ok.
-    repeat destr_concl.
+    forwards_th : red_expr_unary_op_2_add_ok.
+    destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
-    jauto_js. left. jauto_js.
-    jauto_js. right. jauto_js.
+    jauto_js 8.
 Qed.
 
 Lemma red_expr_unary_op_2_neg_ok : forall k,
@@ -216,32 +207,31 @@ Lemma red_expr_unary_op_2_neg_ok : forall k,
     th_ext_expr_unary k LjsInitEnv.privUnaryNeg (J.expr_unary_op_2 J.unary_op_neg)
         (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
 Proof.
-    introv IHe Hinv Hvrel Hlred.
+    introv IHe Hcinv Hinv Hvrel Hlred.
     inverts Hlred.
     ljs_apply.
-    ljs_state_invariant_after_apply. 
+    ljs_context_invariant_after_apply. 
     repeat ljs_autoforward.
-    forwards_th red_spec_to_number_unary_ok.
+    forwards_th : red_spec_to_number_unary_ok.
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    jauto_js.    
+    jauto_js.
 Qed.
 
 Lemma red_expr_unary_op_neg_ok : forall k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_neg je).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    forwards_th red_expr_unary_op_2_neg_ok.
-    repeat destr_concl.
+    forwards_th : red_expr_unary_op_2_neg_ok.
+    destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
-    jauto_js. left. jauto_js.
     jauto_js 15.
 Qed.
 
@@ -249,21 +239,21 @@ Lemma red_expr_unary_op_void_ok : forall k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_void je).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
     inverts red_exprh H7. (* TODO *)
     ljs_apply.
     repeat ljs_autoforward.
-    jauto_js. left. jauto_js.
+    jauto_js 8.
 Qed.
 
 Lemma red_expr_unary_op_bitwise_not_ok : forall k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_bitwise_not je).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
@@ -292,24 +282,24 @@ Proof.
 Qed.
 
 (* TODO move *)
-Lemma state_invariant_lfun_obj : forall BR jst jc c st,
-    state_invariant BR jst jc c st ->
+Lemma state_invariant_lfun_obj : forall BR jst st,
+    state_invariant BR jst st ->
     heaps_bisim_lfun_obj BR.
 Proof. 
     introv Hinv. 
     eapply heaps_bisim_consistent_lfun_obj. eapply state_invariant_heaps_bisim_consistent. eassumption.
-Qed.
+Defined.
 
-Lemma state_invariant_rfun_obj : forall BR jst jc c st,
-    state_invariant BR jst jc c st ->
+Lemma state_invariant_rfun_obj : forall BR jst st,
+    state_invariant BR jst st ->
     heaps_bisim_rfun_obj BR.
 Proof. 
     introv Hinv. 
     eapply heaps_bisim_consistent_rfun_obj. eapply state_invariant_heaps_bisim_consistent. eassumption.
-Qed.
+Defined.
 
-Lemma equality_test_for_same_type_lemma : forall BR jst jc c st jtp jv1 jv2 v1 v2,
-    state_invariant BR jst jc c st ->
+Lemma equality_test_for_same_type_lemma : forall BR jst st jtp jv1 jv2 v1 v2,
+    state_invariant BR jst st ->
     value_related BR jv1 v1 ->
     value_related BR jv2 v2 ->
     J.type_of jv1 = jtp ->
@@ -345,8 +335,8 @@ Proof.
     applys state_invariant_lfun_obj; eauto.
 Qed.
 
-Lemma strict_equality_test_lemma : forall BR jst jc c st jv1 jv2 v1 v2,
-    state_invariant BR jst jc c st ->
+Lemma strict_equality_test_lemma : forall BR jst st jv1 jv2 v1 v2,
+    state_invariant BR jst st ->
     value_related BR jv1 v1 ->
     value_related BR jv2 v2 ->
     decide (L.stx_eq v1 v2) = J.strict_equality_test jv1 jv2.
@@ -362,15 +352,15 @@ Proof.
     inverts Hstx; inverts Hvrel1; inverts Hvrel2; auto.
 Qed.
 
-Lemma red_strict_equality_test_lemma : forall BR jst jc jv1 v1 jv2 v2 k c st st' r,
+Lemma red_strict_equality_test_lemma : forall BR jst jv1 v1 jv2 v2 k c st st' r,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privStxEq [v1; v2]) (L.out_ter st' r) ->
-    state_invariant BR jst jc c st ->
+    state_invariant BR jst st ->
     value_related BR jv2 v2 ->
     value_related BR jv1 v1 ->
     exists b, 
     b = J.strict_equality_test jv1 jv2 /\
     r = L.res_value (L.value_bool b) /\
-    st = st'.
+    state_invariant BR jst st'.
 Proof.
     introv Hlred Hinv Hvrel1 Hvrel2.
     inverts red_exprh Hlred.
@@ -380,43 +370,43 @@ Proof.
     splits.
     applys strict_equality_test_lemma; eauto.
     reflexivity.
-    reflexivity.
+    assumption.
 Qed.
 
 Lemma red_expr_binary_op_strict_equal_ok : forall k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 J.binary_op_strict_equal je2).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    forwards Heql : red_strict_equality_test_lemma.
-    jauto_js. jauto_js. jauto_js. jauto_js. destruct_hyp Heql.
-    jauto_js. left. jauto_js 8.
+    forwards_th Heql : red_strict_equality_test_lemma.
+    destruct_hyp Heql.
+    jauto_js 12.
 Qed.
 
 Lemma red_expr_binary_op_strict_disequal_ok : forall k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 J.binary_op_strict_disequal je2).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    forwards Heql : red_strict_equality_test_lemma.
-    jauto_js. jauto_js. jauto_js. jauto_js. destruct_hyp Heql. 
-    repeat ljs_autoforward. 
-    jauto_js. left. jauto_js 8.
+    forwards_th Heql : red_strict_equality_test_lemma.
+    destruct_hyp Heql.
+    repeat ljs_autoforward.
+    jauto_js 12.
 Qed.
 
 (* TODO move *)
-Lemma value_related_equality_test_same_type : forall BR jst jc c st jtp jv1 jv2 v1 v2,
-    state_invariant BR jst jc c st ->
+Lemma value_related_equality_test_same_type : forall BR jst st jtp jv1 jv2 v1 v2,
+    state_invariant BR jst st ->
     value_related BR jv1 v1 ->
     value_related BR jv2 v2 ->
     J.type_of jv1 = jtp ->
@@ -432,31 +422,28 @@ Qed.
 Hint Resolve value_related_equality_test_same_type : js_ljs.
 
 (* TODO move *)
+
 Ltac find_last_invariant_then T :=
     match goal with
-    | H : state_invariant ?BR ?jst _ _ _ |- _ =>
-        match goal with HS : BR \c _ |- _ => fail 1 | _ => idtac end; 
-        match goal with
-        | _ : J.abort (J.out_ter jst ?jr) |- _ => T BR jst jr
-        | _ => T BR jst true
-        end
+    | H : state_invariant ?BR ?jst _ _ _ |- _ => T BR 
     end.
 
-Ltac unfold_concl_tac_with BR jst dir :=
+Ltac unfold_concl_tac_with BR :=
     match goal with
-    | |- concl_expr_getvalue _ _ _ _ _ _ _ _ => unfolds; unfold_concl_tac_with BR jst dir
+    | |- concl_expr_getvalue _ _ _ _ _ _ _ _ => unfolds; unfold_concl_tac_with BR 
     | |- concl_spec _ _ _ _ _ _ _ _ _ _ => 
-        unfolds; exists BR jst; split; [match dir with true => left | _ => right; exists dir end | splits]
+        unfolds; exists BR 
     end.
 
 Ltac unfold_concl_tac := find_last_invariant_then unfold_concl_tac_with.
 
+(*
 Tactic Notation "ljs_handle_abort_tac" integer(k) := 
     repeat (ljs_propagate_abort || ljs_abort_from_js); 
     unfold_concl_tac; solve [jauto_set; eauto k with js_ljs bag typeclass_instances].
 
 Tactic Notation "ljs_handle_abort_tac" := ljs_handle_abort_tac 5.
-
+*)
 (* TODO move *)
 Tactic Notation "determine_epsilon_binds" := 
     match goal with
@@ -488,11 +475,11 @@ Lemma red_spec_equal_ok : forall k,
 Proof.
     intro k.
     induction_wf IH : lt_wf k.
-    introv Hinv Hvrel1 Hvrel2 Hlred.
+    introv Hcinv Hinv Hvrel1 Hvrel2 Hlred.
     inverts red_exprh Hlred.
     ljs_apply.
-    ljs_state_invariant_after_apply.
-    repeat inv_fwd_ljs.
+    ljs_context_invariant_after_apply.
+    repeat inv_top_fwd_ljs.
     repeat binds_inv.
     inv_ljs.
     (* same type *)
@@ -607,8 +594,8 @@ Lemma red_expr_binary_op_3_equal_ok : forall k,
     th_ext_expr_binary k LjsInitEnv.privEqEq (J.expr_binary_op_3 J.binary_op_equal)
         (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
-    introv Hinv Hvrel1 Hvrel2 Hlred.
-    forwards_th red_spec_equal_ok.
+    introv Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    forwards_th : red_spec_equal_ok.
     destr_concl;
     jauto_js. 
 Qed.
@@ -617,72 +604,74 @@ Lemma red_expr_binary_op_equal_ok : forall k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 J.binary_op_equal je2).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    forwards_th red_expr_binary_op_3_equal_ok.
-    repeat destr_concl.
+    forwards_th : red_expr_binary_op_3_equal_ok.
+    destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
-    jauto_js. left. jauto_js 8.
-    jauto_js 15.
+    jauto_js 8.
 Qed.
 
 Lemma red_expr_binary_op_disequal_ok : forall k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 J.binary_op_disequal je2).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
-    forwards_th red_spec_equal_ok.
+    forwards_th : red_spec_equal_ok.
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    jauto_js. left. jauto_js 15. 
+    jauto_js 15. 
 Qed.
 
 Lemma red_expr_binary_op_and_ok : forall k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 J.binary_op_and je2).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
-    forwards_th red_spec_to_boolean_unary_ok.
-    destr_concl; [idtac | ljs_handle_abort_tac 14].
+    forwards_th : red_spec_to_boolean_unary_ok.
+    destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
     destruct b; repeat ljs_autoforward.
-    destr_concl; [idtac | ljs_handle_abort_tac 8].
-    unfold_concl_tac; jauto_js 8.
-    unfold_concl_tac; jauto_js 8. 
+    destr_concl.
+    jauto_js 8. 
+    jauto_js 8.
+    exists BR'0. (* TODO *)
+    jauto_js 8.
 Qed.
 
 Lemma red_expr_binary_op_or_ok : forall k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 J.binary_op_or je2).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
-    forwards_th red_spec_to_boolean_unary_ok.
-    destr_concl; [idtac | ljs_handle_abort_tac 14].
+    forwards_th : red_spec_to_boolean_unary_ok.
+    destr_concl; try ljs_handle_abort. 
     res_related_invert.
     resvalue_related_invert.
     destruct b; repeat ljs_autoforward.
-    unfold_concl_tac; jauto_js 8. 
-    destr_concl; [idtac | ljs_handle_abort_tac 8].
-    unfold_concl_tac; jauto_js 8. 
+    exists BR'0. jauto_js 8. (* TODO *) 
+    destr_concl. 
+    jauto_js 8.
+    jauto_js 8.
 Qed.
 
 (* TODO move, ljs only *)
@@ -728,56 +717,34 @@ Lemma red_expr_binary_op_puremath : forall k je1 je2 jop F,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 jop je2).
 Proof.
-    introv Hpure IHe Hinv Hlred.
+    introv Hpure IHe Hcinv Hinv Hlred.
     forwards (op&Hnumop&Heq) : js_puremath_to_ljs Hpure.
     rewrite Heq in Hlred.
     repeat ljs_autoforward.
-    destr_concl; [idtac | ljs_handle_abort_tac 15].
+    destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
-    destr_concl; [idtac | ljs_handle_abort_tac 15].
+    destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
     inverts red_exprh H7. (* TODO *)
     ljs_apply.
-    ljs_state_invariant_after_apply. 
+    ljs_context_invariant_after_apply. 
     repeat ljs_autoforward.
-    forwards_th red_spec_to_number_unary_ok.
-    destr_concl(*; try ljs_handle_abort*). 
+    forwards_th : red_spec_to_number_unary_ok.
+    destr_concl; try ljs_handle_abort. 
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    forwards_th red_spec_to_number_unary_ok.
-    destr_concl(*; try ljs_handle_abort*). 
+    forwards_th : red_spec_to_number_unary_ok.
+    destr_concl; try ljs_handle_abort. 
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    inverts red_exprh H14. (* TODO *)
+    inverts red_exprh H15. (* TODO *)
     ljs_apply.
     repeat ljs_autoforward.
-    autoforwards Hx : eval_binary_op_num_lemma. 
+    forwards_th Hx : eval_binary_op_num_lemma. eassumption. eassumption. 
     destruct_hyp Hx.
-    unfold_concl_tac. 
-    jauto_js 18. 
-    applys state_invariant_restore_lexical_env Hinv H15. (* TODO *)
-    eauto_js 6.
-    eauto_js 6.
-    eauto_js 6.
-    eauto_js 6.
-
-    (* TODO *)
-    repeat (ljs_propagate_abort || ljs_abort_from_js).
-    unfold_concl_tac. jauto_js 14. 
-    applys state_invariant_restore_lexical_env Hinv H15. (* TODO *)
-    eauto_js 6.
-    eauto_js 6.
-    eauto_js 6.
-    eauto_js 6.
-
-    (* TODO *)
-    repeat (ljs_propagate_abort || ljs_abort_from_js).
-    unfold_concl_tac. jauto_js 14. 
-    applys state_invariant_restore_lexical_env Hinv H10. (* TODO *)
-    eauto_js 6.
-    eauto_js 6.
+    jauto_js 18.
 Qed.
 
 (* TODO move *) 
@@ -804,18 +771,19 @@ Lemma red_expr_binary_op_inequality : forall k je1 je2 jop b1 b2,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 jop je2).
 Proof.
-Admitted.
+Admitted. (* TODO *)
 
 Lemma red_expr_binary_op_coma_ok : forall k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 J.binary_op_coma je2).
 Proof.
-    introv IHe Hinv Hlred.
+    introv IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
-    destr_concl; [idtac | ljs_handle_abort_tac 15].
-    unfold_concl_tac; jauto_js 8.
+    destr_concl. 
+    jauto_js 8. 
+    jauto_js 8.
 Qed.
 
 Lemma red_expr_binary_op_ok : forall op k je1 je2,
