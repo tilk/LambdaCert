@@ -361,13 +361,15 @@ Lemma state_invariant_new_env_record_decl_lemma : forall BR k jst jc c st v st' 
     binds c "$context" v ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
-    exists obj,
+    exists obj BR',
     st' = st \(fresh st := obj) /\
     r = L.res_value (L.value_object (fresh st)) /\
-    state_invariant (\{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR) 
+    BR' = \{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR /\
+    env_record_related BR' (J.env_record_decl J.decl_env_record_empty) obj /\
+    state_invariant BR'
         (J.state_next_fresh (jst \(fresh jst := J.env_record_decl J.decl_env_record_empty))) 
         (st \(fresh st := obj)) /\
-    context_invariant (\{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR)
+    context_invariant BR'
         (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
         (c \("$context" := L.value_object (fresh st))).
 Proof.
@@ -377,7 +379,8 @@ Proof.
     solve [eauto using context_invariant_lexical_env_related].
     forwards_th Hx : new_env_record_decl_lemma. 
     destruct_hyp Hx.
-    eexists. splits; try reflexivity.
+    do 2 eexists. splits; try reflexivity.
+    eauto_js.
     eauto_js 8.
     eapply context_invariant_push_context_lemma.
     eapply lexical_env_related_cons; eauto_js 15.
@@ -450,6 +453,7 @@ Lemma decl_env_add_binding_lemma : forall BR k jst jc c st st' r jder jeptr ptr 
     st' = st \(ptr := L.set_object_property obj s (L.attributes_data_of 
         (L.attributes_data_intro v b1 true b2))) /\
     r = L.res_value L.value_undefined /\
+    ~index (L.object_properties obj) s /\ ~index jder s /\
     state_invariant BR (J.env_record_write_decl_env jst jeptr s (mutability_of_bools b1 b2) jv) st'.
 Proof.
     introv Hlred Hboolcond Hbinds Hjbinds Hcinv Hinv Herel Hvrel Hfact.
@@ -477,12 +481,18 @@ Proof.
     simpls.
     rew_bag_simpl.
     jauto_js.
+    {
+    lets Hx : decl_env_record_related_vars Herel s0. 
+    destruct_hyp Hx; prove_bag.
+    }
+    {
     erewrite js_env_record_write_decl_env_lemma by eauto.
     eapply state_invariant_modify_env_record_preserved; try eassumption.
     eapply env_record_related_decl.
     lets Hx : decl_env_record_related_write_preserved Hboolcond Hvrel Herel. 
     eapply Hx. 
     reflexivity.
+    }
 Qed.
 
 Lemma decl_env_add_mutable_binding_lemma : forall BR k jst jc c st st' r jder jeptr ptr obj b2 jv v s,
@@ -498,7 +508,118 @@ Lemma decl_env_add_mutable_binding_lemma : forall BR k jst jc c st st' r jder je
     st' = st \(ptr := L.set_object_property obj s (L.attributes_data_of 
         (L.attributes_data_intro v true true b2))) /\
     r = L.res_value L.value_undefined /\
+    ~index (L.object_properties obj) s /\ ~index jder s /\
     state_invariant BR (J.env_record_write_decl_env jst jeptr s (J.mutability_of_bool b2) jv) st'.
 Proof.
     intros. eapply decl_env_add_binding_lemma; eauto.
 Qed.
+
+(* TODO move *)
+Lemma env_record_binds_to_libbag : forall jst jeptr jer, J.env_record_binds jst jeptr jer = binds jst jeptr jer.
+Proof. reflexivity. Qed.
+Lemma env_record_write_to_libbag : forall jst jeptr jer, J.env_record_write jst jeptr jer = jst\(jeptr := jer).
+Proof. reflexivity. Qed.
+
+Lemma decl_env_record_binds_to_libbag : forall jder s jmut jv, 
+    J.decl_env_record_binds jder s jmut jv = binds jder s (jmut, jv).
+Proof. reflexivity. Qed.
+Lemma decl_env_record_indom_to_libbag : forall jder s, 
+    J.decl_env_record_indom jder s = index jder s.
+Proof. reflexivity. Qed.
+Lemma decl_env_record_write_to_libbag : forall jder s jmut jv, 
+    J.decl_env_record_write jder s jmut jv = jder\(s := (jmut, jv)).
+Proof. reflexivity. Qed.
+Lemma decl_env_record_empty_to_libbag : J.decl_env_record_empty = \{}.
+Proof. reflexivity. Qed.
+
+Hint Rewrite 
+    env_record_binds_to_libbag env_record_write_to_libbag
+    decl_env_record_binds_to_libbag decl_env_record_write_to_libbag
+    decl_env_record_indom_to_libbag decl_env_record_empty_to_libbag 
+    using (eauto with typeclass_instances) : rew_heap_to_libbag.
+
+Lemma create_mutable_binding_some_lemma : forall jst jc jeptr s b2 jder,
+    binds jst jeptr (J.env_record_decl jder) ->
+    ~index jder s ->
+    J.red_expr jst jc (J.spec_env_record_create_mutable_binding jeptr s (Some b2)) 
+        (J.out_void (J.env_record_write_decl_env jst jeptr s (J.mutability_of_bool b2) 
+        (J.value_prim J.prim_undef))).
+Proof.
+    introv Hbinds Hnind. eauto_js.
+Qed. 
+
+Lemma create_mutable_binding_none_lemma : forall jst jc jeptr s jder,
+    binds jst jeptr (J.env_record_decl jder) ->
+    ~index jder s ->
+    J.red_expr jst jc (J.spec_env_record_create_mutable_binding jeptr s None) 
+        (J.out_void (J.env_record_write_decl_env jst jeptr s (J.mutability_of_bool false) 
+        (J.value_prim J.prim_undef))).
+Proof.
+    introv Hbinds Hnind. eauto_js.
+Qed. 
+
+Lemma js_mutability_of_bool_is_mutable : forall b,
+    J.mutability_is_mutable (J.mutability_of_bool b).
+Proof. destruct b; intro; tryfalse. Qed.
+
+Hint Resolve js_mutability_of_bool_is_mutable : js_ljs.
+
+Lemma js_mutability_of_bool_is_mutable_if_rewrite : forall T b (x1 : T) x2,
+    (If J.mutability_is_mutable (J.mutability_of_bool b) then x1 else x2) = x1.
+Proof.
+    introv. cases_if. reflexivity. false. eauto_js.
+Qed.
+
+Hint Rewrite js_mutability_of_bool_is_mutable_if_rewrite : js_ljs.
+
+Hint Extern 80 => progress rew_heap_to_libbag : js_ljs.
+
+Lemma create_set_mutable_binding_some_lemma : forall jst jc jeptr s b2 jder jv b,
+    binds jst jeptr (J.env_record_decl jder) ->
+    ~index jder s ->
+    J.red_expr jst jc (J.spec_env_record_create_set_mutable_binding jeptr s (Some b2) jv b) 
+        (J.out_void (J.env_record_write_decl_env jst jeptr s (J.mutability_of_bool b2) jv)).
+Proof.
+    introv Hbinds Hnind.
+    erewrite js_env_record_write_decl_env_lemma by eauto.
+    eapply J.red_spec_env_record_create_set_mutable_binding.
+    eauto_js.
+    erewrite js_env_record_write_decl_env_lemma by eauto.
+    eapply J.red_spec_env_record_create_set_mutable_binding_1.
+    eapply J.red_spec_env_record_set_mutable_binding.
+    eauto_js.
+    eapply J.red_spec_env_record_set_mutable_binding_1_decl.
+    eauto_js. eauto_js.
+    autorewrite with js_ljs. sets_eq_let x. 
+    erewrite js_env_record_write_decl_env_lemma in EQx by eauto_js.
+    rew_heap_to_libbag in EQx.
+    rew_bag_simpl in EQx.
+    substs. eauto_js.
+Qed. 
+
+Hint Resolve create_set_mutable_binding_some_lemma : js_ljs.
+
+Lemma create_set_mutable_binding_none_lemma : forall jst jc jeptr s jder jv b,
+    binds jst jeptr (J.env_record_decl jder) ->
+    ~index jder s ->
+    J.red_expr jst jc (J.spec_env_record_create_set_mutable_binding jeptr s None jv b) 
+        (J.out_void (J.env_record_write_decl_env jst jeptr s (J.mutability_of_bool false) jv)).
+Proof.
+    introv Hbinds Hnind.
+    erewrite js_env_record_write_decl_env_lemma by eauto.
+    eapply J.red_spec_env_record_create_set_mutable_binding.
+    eauto_js.
+    erewrite js_env_record_write_decl_env_lemma by eauto.
+    eapply J.red_spec_env_record_create_set_mutable_binding_1.
+    eapply J.red_spec_env_record_set_mutable_binding.
+    rew_heap_to_libbag. eauto_js.
+    eapply J.red_spec_env_record_set_mutable_binding_1_decl.
+    rew_heap_to_libbag. eauto_js. eauto_js.
+    autorewrite with js_ljs. sets_eq_let x. 
+    erewrite js_env_record_write_decl_env_lemma in EQx by eauto_js.
+    rew_heap_to_libbag in EQx.
+    rew_bag_simpl in EQx.
+    substs. eauto_js.
+Qed. 
+
+Hint Resolve create_set_mutable_binding_none_lemma : js_ljs.

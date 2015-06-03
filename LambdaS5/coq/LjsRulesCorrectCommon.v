@@ -61,6 +61,8 @@ Hint Extern 60 (~_) => solve [let H := fresh in intro H; inversion H] : xcore.
 
 Hint Extern 1 => solve [eauto 10 with nocore typeclass_instances] : js_ljs.
 
+(* Hint Extern 99 (~_) => solve [intro; eauto 4 with js_ljs bag nocore xcore] : js_ljs.*) (* potentially slow *) 
+
 (** The constructors for relating JS to S5 are used as hints. *)
 
 Hint Constructors attributes_data_related : js_ljs.
@@ -261,7 +263,6 @@ Ltac js_ljs_false_invert := match goal with
     end.
 
 Hint Extern 10 => js_ljs_false_invert : js_ljs.
-
 Hint Extern 10 (~_) => solve [intro; js_ljs_false_invert] : js_ljs. 
 
 Ltac js_abort_rel_contr := match goal with

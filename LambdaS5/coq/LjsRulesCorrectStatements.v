@@ -892,79 +892,62 @@ Ltac js_exn_object_extract :=
         clear Hpis
     end.
 
-(*
 Lemma red_stat_try_catch_ok : forall k jt1 jt2 s,
     ih_stat k ->
     th_stat k (J.stat_try jt1 (Some (s, jt2)) None).
 Proof.
-    introv IHt Hinv Hlred.
+    introv IHt Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl.
-    inv_ljs. 
-    res_related_invert; jauto_js.
+    inv_ljs.
+    res_related_invert; solve [false; jauto] || jauto_js.  
     res_related_invert.
     repeat ljs_autoforward.
     inverts red_exprh H6. (* TODO *)
-    unfolds L.add_closure.
     ljs_apply.
+    ljs_context_invariant_after_apply.
     repeat ljs_autoforward.
-    forwards Hx : state_invariant_new_env_record_decl_lemma. 
-    eassumption. jauto_js. substs. jauto_js.
+    forwards_th Hx : state_invariant_new_env_record_decl_lemma. 
+    eassumption.
     destruct_hyp Hx.
     repeat ljs_autoforward.
     js_exn_object_ptr_invert.
-    repeat binds_determine.
-asserts Ha : (ptr0 <> fresh st0). intro. substs. eapply fresh_index. prove_bag. (* TODO *)
-    repeat ljs_autoforward.
+    asserts Ha : (ptr0 <> fresh st0). { intro. substs. eapply fresh_index. prove_bag. } (* TODO *)
+    binds_inv. binds_determine.
     js_exn_object_extract.
     repeat ljs_autoforward.
-
-Hint Extern 4 (value_related ?BR _ _) =>
-    match goal with
-    | H : value_related ?BR' _ _ |- _ =>
-        not constr_eq BR BR';
-        let Hsub := fresh "H" in
-        asserts Hsub : (BR' \c BR);
-        [prove_bag 10 | applys value_related_bisim_incl_preserved Hsub; clear Hsub]
-    end : js_ljs.
-
-    forwards Hx : decl_env_add_mutable_binding_lemma.
-    eassumption. prove_bag. prove_bag. eauto_js. prove_bag.
-    rew_bag_simpl in Hx.
+    inverts Hx0. (* TODO *)
+    forwards_th Hx : decl_env_add_mutable_binding_lemma.
+    prove_bag. 
+    eapply js_state_next_fresh_binds_env_record_preserved. eapply binds_update_same.
+    eassumption.
+    jauto_js. 
     destruct_hyp Hx.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
+    jauto_js 8.
+Qed.
 
-    unfold_concl.
-(*
-    do 3 eexists. splits.
-    eapply J.red_stat_try. eauto_js.
-    eapply J.red_stat_try_1_throw_catch. eauto_js. reflexivity. eauto_js. reflexivity. reflexivity.
-    eapply J.red_spec_env_record_create_set_mutable_binding.
-    eapply J.red_spec_env_record_create_mutable_binding. reflexivity. 
+Lemma red_stat_try_catch_finally_ok : forall k jt1 jt2 jt3 s,
+    ih_stat k ->
+    th_stat k (J.stat_try jt1 (Some (s, jt2)) (Some jt3)).
+Proof.
+Admitted. (*
+    introv IHt Hcinv Hinv Hlred.
+    repeat ljs_autoforward.
+    destr_concl.
+    inv_fwd_ljs. 
+    inverts red_exprh H1. (* TODO *) (* try-catch *)
+    {
+    repeat ljs_autoforward.
+    
+    res_related_invert; tryfalse.
+    destr_concl.
+    inverts H0.
 
-Lemma qqnamuniu : forall jst jeptr jer, J.env_record_binds jst jeptr jer = binds jst jeptr jer.
-Proof. auto. Qed.
 
-    rewrite qqnamuniu. eauto_js. 
-    eapply J.red_spec_env_record_create_mutable_binding_1_decl_indom. 
-
-Lemma qqnamuniu2 : forall jder s, J.decl_env_record_indom jder s = index jder s.
-Proof. auto. Qed.
-Lemma qqnamuniu3 : J.decl_env_record_empty = \{}.
-Proof. auto. Qed.
-
-    rewrite qqnamuniu2. rewrite qqnamuniu3. eauto_js.
-    reflexivity.
-    eapply J.red_spec_env_record_create_set_mutable_binding_1.
-    eapply J.red_spec_env_record_set_mutable_binding. 
-    rewrite qqnamuniu. unfolds J.env_record_write_decl_env. prove_bag.
-
-    eauto_js.
-    jauto_js 20.
+Qed.
 *)
-(* TODO! *) 
-Admitted.*)
 
 Lemma red_stat_try_finally_ok : forall k jt1 jt2,
     ih_stat k ->
