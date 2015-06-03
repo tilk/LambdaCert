@@ -262,6 +262,8 @@ Ltac js_ljs_false_invert := match goal with
 
 Hint Extern 10 => js_ljs_false_invert : js_ljs.
 
+Hint Extern 10 (~_) => solve [intro; js_ljs_false_invert] : js_ljs. 
+
 Ltac js_abort_rel_contr := match goal with
     | Ha : J.abort (J.out_ter ?jst ?x), Hr : res_related _ ?jst _ ?x (L.res_value _) |- _ =>
         let Hisn := fresh "Hisn" in

@@ -856,14 +856,13 @@ Proof.
     unfolds E.js_label_to_ejs;
     repeat inv_fwd_ljs;
     try solve [jauto_js].
-Admitted. (*
     destruct jl;
     inv_internal_ljs; try injects;
     jauto_js.
     destruct (classic (s = s0)).
     substs. false. jauto_js. (* TODO *)
     jauto_js.
-Qed. *)
+Qed. 
 
 (** *** try-catch-finally *)
 
