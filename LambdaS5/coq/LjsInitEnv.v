@@ -2188,7 +2188,7 @@ expr_seq
   (expr_set_attr pattr_writable (expr_id "context") (expr_id "name")
    (expr_id "mutable"))
   (expr_seq
-   (expr_set_attr pattr_enum (expr_id "context") (expr_id "name") expr_false)
+   (expr_set_attr pattr_enum (expr_id "context") (expr_id "name") expr_true)
    (expr_seq
     (expr_set_attr pattr_config (expr_id "context") (expr_id "name")
      (expr_id "deletable")) expr_undefined))))

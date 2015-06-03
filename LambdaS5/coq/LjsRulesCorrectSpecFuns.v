@@ -288,6 +288,7 @@ Proof.
     reflexivity.
     reflexivity.
     prove_bag.
+    econstructor.
     econstructor;
     prove_bag 8.
 Qed.
@@ -324,7 +325,7 @@ Proof.
 Qed. 
 
 Lemma decl_env_record_related_empty : forall BR,
-    decl_env_record_related BR \{} \{}.
+    decl_env_record_vars_related BR \{} \{}.
 Proof.
     introv. unfolds.
     intro s.
@@ -383,41 +384,121 @@ Proof.
     eauto_js 10. eauto_js 10.
 Qed.
 
-(* TODO 
-Lemma decl_env_add_mutable_binding_lemma : forall BR k jst jc c st st' r jeptr ptr obj b jv v s,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDeclEnvAddMutableBinding 
-        [L.value_object ptr; L.value_string s; v; L.value_bool b]) (L.out_ter st' r) -> 
-    binds st ptr obj ->
-    state_invariant BR jst jc c st ->
-    value_related BR jv v ->
-    (inr jeptr, ptr) \in BR ->
-    st' = st \(ptr := L.set_object_property obj s (L.attributes_data_of 
-        (L.attributes_data_intro v true false b))) /\
-    r = L.res_value L.value_undefined /\
-    state_invariant BR (J.env_record_write_decl_env jst jeptr s (J.mutability_of_bool b) jv) jc c st'.
+(* TODO move *)
+Definition mutability_of_bools b1 b2 :=
+    if b1 then J.mutability_of_bool b2 else J.mutability_immutable.
+
+(* TODO move *)
+Lemma js_env_record_write_decl_env_lemma : forall jst jeptr s jmut jv jder,
+    binds jst jeptr (J.env_record_decl jder) ->
+    J.env_record_write_decl_env jst jeptr s jmut jv = 
+        jst \(jeptr := J.env_record_decl (J.decl_env_record_write jder s jmut jv)).
 Proof.
-(*
-    introv Hlred Hbinds Hinv.
+    introv Hbinds.
+    unfolds J.env_record_write_decl_env.
+    rew_heap_to_libbag.
+    simpl in Hbinds. unfolds J.env_record_binds. rew_heap_to_libbag in Hbinds.
+    erewrite read_binds_inv by eauto.
+    reflexivity.
+Qed.
+
+Lemma decl_env_record_related_write_preserved : forall BR jder obj s jv v b1 b2,
+    b1 || !b2 ->
+    value_related BR jv v ->
+    decl_env_record_related BR jder obj ->
+    decl_env_record_related BR (J.decl_env_record_write jder s (mutability_of_bools b1 b2) jv)
+        (L.set_object_property obj s (L.attributes_data_of (L.attributes_data_intro v b1 true b2))).
+Proof.
+    introv Hboolcond Hvrel Herel.
+    unfolds J.decl_env_record_write.
+    destruct obj.
+    simpls.
+    rew_heap_to_libbag.
+    destruct Herel.
+    constructor; try eassumption.
+    unfolds.
+    intro s'.
+    destruct (classic (s = s')).
+    (* equal *)
+    substs.
+    right.
+    do 3 eexists. split.
+    rew_binds_eq. iauto.
+    split; [idtac | eassumption].
+    simpls.
+    rewrite binds_update_same_eq.
+    destruct b1; destruct b2; simpl; tryfalse; try reflexivity. 
+    (* disequal *)
+    lets Hx : decl_env_record_related_vars s'.
+    destruct_hyp Hx.
+    left. split. rew_index_eq. iauto.
+    simpls. rew_index_eq. iauto.
+    right. simpls. do 3 eexists. rew_heap_to_libbag in *. rew_binds_eq. iauto.
+Qed.
+
+Lemma decl_env_add_binding_lemma : forall BR k jst jc c st st' r jder jeptr ptr obj b1 b2 jv v s,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDeclEnvAddBinding 
+        [L.value_object ptr; L.value_string s; v; L.value_bool b1; L.value_bool b2]) (L.out_ter st' r) -> 
+    b1 || !b2 ->
+    binds st ptr obj ->
+    binds jst jeptr (J.env_record_decl jder) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    decl_env_record_related BR jder obj ->
+    value_related BR jv v ->
+    fact_js_env jeptr ptr \in BR ->
+    st' = st \(ptr := L.set_object_property obj s (L.attributes_data_of 
+        (L.attributes_data_intro v b1 true b2))) /\
+    r = L.res_value L.value_undefined /\
+    state_invariant BR (J.env_record_write_decl_env jst jeptr s (mutability_of_bools b1 b2) jv) st'.
+Proof.
+    introv Hlred Hboolcond Hbinds Hjbinds Hcinv Hinv Herel Hvrel Hfact.
     inverts red_exprh Hlred.
     ljs_apply.
     repeat ljs_autoforward.
     cases_decide.
     repeat ljs_autoforward.
     solve [inv_ljs].
-*)
-(*
     repeat ljs_autoforward.
+    destruct obj.
     inv_ljs.
     binds_determine. 
-    false. prove_bag.
+    solve [false; prove_bag].
+    simpls.
     repeat ljs_autoforward. 
-    inv_ljs. 
+    inv_ljs; [idtac | binds_inv; false; prove_bag 7].
     repeat ljs_autoforward.
-    inv_ljs. 
+    inv_ljs; [idtac | binds_inv; false; prove_bag 7].
+    repeat ljs_autoforward.
+    inv_ljs; [idtac | binds_inv; false; prove_bag 7].
     repeat ljs_autoforward.
     simpls.
+    repeat binds_inv.
+    simpls.
+    rew_bag_simpl.
+    jauto_js.
+    erewrite js_env_record_write_decl_env_lemma by eauto.
+    eapply state_invariant_modify_env_record_preserved; try eassumption.
+    eapply env_record_related_decl.
+    lets Hx : decl_env_record_related_write_preserved Hboolcond Hvrel Herel. 
+    eapply Hx. 
+    reflexivity.
+Qed.
 
-    binds_inv. false. prove_bag 8.
-*)
-Admitted. (* TODO *)
-*)
+Lemma decl_env_add_mutable_binding_lemma : forall BR k jst jc c st st' r jder jeptr ptr obj b2 jv v s,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDeclEnvAddBinding 
+        [L.value_object ptr; L.value_string s; v; L.value_bool true; L.value_bool b2]) (L.out_ter st' r) -> 
+    binds st ptr obj ->
+    binds jst jeptr (J.env_record_decl jder) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    decl_env_record_related BR jder obj ->
+    value_related BR jv v ->
+    fact_js_env jeptr ptr \in BR ->
+    st' = st \(ptr := L.set_object_property obj s (L.attributes_data_of 
+        (L.attributes_data_intro v true true b2))) /\
+    r = L.res_value L.value_undefined /\
+    state_invariant BR (J.env_record_write_decl_env jst jeptr s (J.mutability_of_bool b2) jv) st'.
+Proof.
+    intros. eapply decl_env_add_binding_lemma; eauto.
+Qed.

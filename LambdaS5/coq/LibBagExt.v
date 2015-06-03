@@ -142,6 +142,16 @@ Class To_list_binds `{BagToList (A * B) T} `{BagBinds A B T} :=
 Class To_list_binds_inv `{BagToList (A * B) T} `{BagBinds A B T} := 
     { to_list_binds_inv : forall S k x, binds S k x -> Assoc k x (to_list S) }.
 
+(* read *)
+Class Read_binds_eq `{BagRead A B T} `{BagIndex T A} `{BagBinds A B T} :=
+    { read_binds_eq : forall M k x, index M k -> (M \(k) = x) = binds M k x }.
+
+Class Read_binds `{BagRead A B T} `{BagIndex T A} `{BagBinds A B T} :=
+    { read_binds : forall M k x, index M k -> M \(k) = x -> binds M k x }.
+
+Class Read_binds_inv `{BagRead A B T} `{BagBinds A B T} :=
+    { read_binds_inv : forall M k x, binds M k x -> M \(k) = x }.
+
 (* read_option *)
 Class Read_option_binds_eq `{BagReadOption A B T} `{BagBinds A B T} :=
     { read_option_binds_eq : forall M k x, (M \(k?) = Some x) = binds M k x }.
@@ -777,6 +787,16 @@ Proof.
     rewrite from_list_binds_eq. rewrite to_list_binds_eq.
     iauto.
 Qed.
+
+Global Instance read_binds_from_read_binds_eq :
+    forall `{BagRead A B T} `{BagIndex T A} `{BagBinds A B T},
+    Read_binds_eq -> Read_binds.
+Proof. constructor. introv Idx I. rewrite <- read_binds_eq by eauto. assumption. Qed.
+
+Global Instance read_binds_inv_from_read_binds_eq :
+    forall `{BagRead A B T} `{BagIndex T A} `{BagBinds A B T},
+    Read_binds_eq -> Index_binds_inv -> Read_binds_inv.
+Proof. constructor. introv I. rewrite read_binds_eq. assumption. eapply index_binds_inv. eassumption. Qed.
 
 Global Instance read_option_binds_from_read_option_binds_eq : 
     forall `{BagReadOption A B T} `{BagBinds A B T},

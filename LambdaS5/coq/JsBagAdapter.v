@@ -39,6 +39,8 @@ Section Instances.
 
 Variables (A B : Type).
 
+Context `{Comparable A} `{Inhab B}.
+
 Global Instance binds_heap_inst : BagBinds A B (Heap.heap A B) :=
     { binds := @Heap.binds _ _ }.
 
@@ -54,6 +56,12 @@ Global Instance empty_heap_inst : BagEmpty (Heap.heap A B) :=
 Global Instance update_heap_inst : BagUpdate A B (Heap.heap A B) :=
     { update := @Heap.write _ _ }.
 
+Global Instance read_heap_inst : (*Comparable A -> Inhab B ->*) BagRead A B (Heap.heap A B) :=
+    { read := @Heap.read _ _ _ _ }.
+
+Global Instance read_option_heap_inst : (* Comparable A ->*) BagReadOption A B (Heap.heap A B) :=
+    { read_option := @Heap.read_option _ _ _ }.
+
 Global Instance dom_index_eq_inst : Dom_index_eq.
 Admitted. (* TODO *)
 
@@ -64,6 +72,12 @@ Global Instance binds_empty_eq_inst : Binds_empty_eq.
 Admitted. (* TODO *)
 
 Global Instance binds_update_eq_inst : Binds_update_eq.
+Admitted. (* TODO *)
+
+Global Instance read_binds_eq_inst : Read_binds_eq.
+Admitted. (* TODO *)
+
+Global Instance read_option_binds_eq_inst : Read_option_binds_eq.
 Admitted. (* TODO *)
 
 Global Instance binds_double_inst : Binds_double.
@@ -139,6 +153,51 @@ Qed.
 
 End StateInstances.
 
+Section Rewriting.
+
+Variables (A B : Type).
+
+Context `{Comparable A} `{Inhab B}.
+
+Implicit Type a : A.
+Implicit Type b : B.
+Implicit Type m : Heap.heap A B.
+
+Lemma heap_binds_to_libbag_eq : forall a b m, Heap.binds m a b = binds m a b.
+Proof. reflexivity. Qed.
+
+Lemma heap_indom_to_libbag_eq : forall a m, Heap.indom m a = index m a.
+Proof. reflexivity. Qed.
+
+Lemma heap_dom_to_libbag : forall m, Heap.dom m = dom m.
+Proof. reflexivity. Qed.
+
+Lemma heap_empty_to_libbag : Heap.empty (K := A) (V := B) = empty.
+Proof. reflexivity. Qed.
+
+Lemma heap_write_to_libbag : forall m a b, Heap.write m a b = m\(a:=b).
+Proof. reflexivity. Qed.
+
+Lemma heap_read_to_libbag : forall m a, Heap.read m a = m\(a).
+Proof. reflexivity. Qed.
+
+Lemma heap_read_option_to_libbag : forall m a, Heap.read_option m a = m\(a?).
+Proof. reflexivity. Qed.
+
+End Rewriting.
+
+Hint Rewrite
+    @heap_binds_to_libbag_eq @heap_indom_to_libbag_eq @heap_dom_to_libbag @heap_empty_to_libbag
+    @heap_write_to_libbag @heap_read_to_libbag @heap_read_option_to_libbag
+    using (eauto with typeclass_instances) : rew_heap_to_libbag.
+
+Tactic Notation "rew_heap_to_libbag" :=
+    autorewrite with rew_heap_to_libbag.
+Tactic Notation "rew_heap_to_libbag" "in" hyp(H) :=
+    autorewrite with rew_heap_to_libbag in H.
+Tactic Notation "rew_heap_to_libbag" "in" "*" :=
+    autorewrite with rew_heap_to_libbag in *.
+
 Lemma js_state_fresh_ok_next_fresh_preserved : forall jst, 
     state_fresh_ok jst -> state_fresh_ok (state_next_fresh jst).
 Proof.
@@ -149,6 +208,16 @@ Proof.
     inverts Hfok.
     eauto.
 Qed.
+
+Lemma js_state_fresh_ok_update_object_preserved : forall jst jptr jobj,
+    index jst jptr -> state_fresh_ok jst -> state_fresh_ok (jst \(jptr := jobj)).
+Proof.
+Admitted. (* TODO *)
+
+Lemma js_state_fresh_ok_update_env_record_preserved : forall jst jeptr jer,
+    index jst jeptr -> state_fresh_ok jst -> state_fresh_ok (jst \(jeptr := jer)).
+Proof.
+Admitted. (* TODO *)
 
 Lemma js_state_fresh_ok_next_fresh_update_object_preserved : forall jst jobj,
     state_fresh_ok jst -> state_fresh_ok (state_next_fresh (jst \(fresh jst := jobj))).
