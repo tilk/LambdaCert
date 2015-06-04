@@ -56,6 +56,7 @@ Inductive unary_op_type : unary_op -> type -> type -> Prop :=
 | unary_op_type_floor : unary_op_type unary_op_floor type_number type_number
 | unary_op_type_ceil : unary_op_type unary_op_floor type_number type_number
 | unary_op_type_neg : unary_op_type unary_op_neg type_number type_number
+| unary_op_type_sign : unary_op_type unary_op_sign type_number type_number
 (* conversion operators *)
 | unary_op_type_prim_to_str : forall t, unary_op_type unary_op_prim_to_bool t type_string
 | unary_op_type_prim_to_num : forall t, unary_op_type unary_op_prim_to_bool t type_number
@@ -87,7 +88,8 @@ Definition unary_op_ret_type op :=
     | unary_op_abs 
     | unary_op_floor 
     | unary_op_ceil
-    | unary_op_neg => type_number
+    | unary_op_neg 
+    | unary_op_sign => type_number
     (* conversion operators *)
     | unary_op_prim_to_str => type_string
     | unary_op_prim_to_num => type_number

@@ -79,6 +79,7 @@ let format_unary_op o = match o with
     | Coq_unary_op_abs -> text "unary_op_abs"
     | Coq_unary_op_floor -> text "unary_op_floor"
     | Coq_unary_op_neg -> text "unary_op_neg"
+    | Coq_unary_op_sign -> text "unary_op_sign"
     | Coq_unary_op_prim_to_str -> text "unary_op_prim_to_str"
     | Coq_unary_op_prim_to_num -> text "unary_op_prim_to_num"
     | Coq_unary_op_prim_to_bool -> text "unary_op_prim_to_bool"
@@ -140,7 +141,9 @@ let format_oattr a = match a with
     | Coq_oattr_code -> text "oattr_code"
 
 let format_number n = 
-    if n == nan then text "JsNumber.nan"
+    if n <> n then text "JsNumber.nan"
+    else if n = infinity then text "JsNumber.infinity" 
+    else if n = -.infinity then text "JsNumber.neg_infinity" 
     else parens (squish [text "JsNumber.of_int ("; int (Float.to_int n); text ")"])
 
 (* TODO modify to give letrecs own identifiers! *)

@@ -150,6 +150,7 @@ Inductive num_unary_op : unary_op -> (number -> number) -> Prop :=
 | num_unary_op_floor : num_unary_op unary_op_floor floor
 | num_unary_op_ceil : num_unary_op unary_op_ceil ceil
 | num_unary_op_neg : num_unary_op unary_op_neg neg
+| num_unary_op_sign : num_unary_op unary_op_sign sign
 .
 
 Inductive eval_unary_op : unary_op -> store -> value -> value -> Prop :=

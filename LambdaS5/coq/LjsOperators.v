@@ -91,6 +91,7 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
     | unary_op_is_object => result_some (value_bool (decide (is_object v)))
     | unary_op_abs => unary_arith JsNumber.absolute v
     | unary_op_floor => unary_arith JsNumber.floor v
+    | unary_op_sign => unary_arith JsNumber.sign v
     | unary_op_ceil => unary_arith JsNumber.ceil v
     | unary_op_prim_to_str => result_some (value_string (value_to_str_cast v))
     | unary_op_prim_to_num => result_some (value_number (value_to_num_cast v))

@@ -28,6 +28,7 @@ Inductive unary_op : Type :=
 | unary_op_abs
 | unary_op_floor
 | unary_op_ceil
+| unary_op_sign
 | unary_op_prim_to_str
 | unary_op_prim_to_num
 | unary_op_prim_to_bool

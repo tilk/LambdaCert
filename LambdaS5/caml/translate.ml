@@ -36,6 +36,7 @@ let translate_unary_op s = match s with
     | "-" -> Cs.Coq_unary_op_neg
     | "ceil" -> Cs.Coq_unary_op_ceil
     | "abs" -> Cs.Coq_unary_op_abs
+    | "sign" -> Cs.Coq_unary_op_sign
     | "log" -> Cs.Coq_unary_op_log
     | "ascii_ntoc" -> Cs.Coq_unary_op_ascii_ntoc
     | "ascii_cton" -> Cs.Coq_unary_op_ascii_cton

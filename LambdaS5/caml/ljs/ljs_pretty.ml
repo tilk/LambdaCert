@@ -36,6 +36,7 @@ let string_of_unary_op s = match s with
     | Coq_unary_op_floor -> "floor"
     | Coq_unary_op_ceil -> "ceil"
     | Coq_unary_op_abs -> "abs"
+    | Coq_unary_op_sign -> "sign"
     | Coq_unary_op_log -> "log"
     | Coq_unary_op_ascii_ntoc -> "ascii_ntoc"
     | Coq_unary_op_ascii_cton -> "ascii_cton"
