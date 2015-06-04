@@ -72,12 +72,12 @@ expr_object
  ("%ArrayProto", property_data
                  (data_intro (expr_id "%ArrayProto") expr_true expr_false
                   expr_false));
- ("%BindCall", property_data
-               (data_intro (expr_id "%BindCall") expr_true expr_false
-                expr_false));
  ("%BindConstructor", property_data
                       (data_intro (expr_id "%BindConstructor") expr_true
                        expr_false expr_false));
+ ("%BindObjCall", property_data
+                  (data_intro (expr_id "%BindObjCall") expr_true expr_false
+                   expr_false));
  ("%BitwiseInfix", property_data
                    (data_intro (expr_id "%BitwiseInfix") expr_true expr_false
                     expr_false));
@@ -188,6 +188,9 @@ expr_object
  ("%FunctionProto", property_data
                     (data_intro (expr_id "%FunctionProto") expr_true
                      expr_false expr_false));
+ ("%FunctionProtoCall", property_data
+                        (data_intro (expr_id "%FunctionProtoCall") expr_true
+                         expr_false expr_false));
  ("%GetField", property_data
                (data_intro (expr_id "%GetField") expr_true expr_false
                 expr_false));
@@ -209,9 +212,6 @@ expr_object
  ("%IsJSError", property_data
                 (data_intro (expr_id "%IsJSError") expr_true expr_false
                  expr_false));
- ("%IsPrototypeOflambda", property_data
-                          (data_intro (expr_id "%IsPrototypeOflambda")
-                           expr_true expr_false expr_false));
  ("%JSError", property_data
               (data_intro (expr_id "%JSError") expr_true expr_false
                expr_false));
@@ -379,18 +379,9 @@ expr_object
  ("%StringGlobalFuncObj", property_data
                           (data_intro (expr_id "%StringGlobalFuncObj")
                            expr_true expr_false expr_false));
- ("%StringIndexOf", property_data
-                    (data_intro (expr_id "%StringIndexOf") expr_true
-                     expr_false expr_false));
- ("%StringIndexOflambda", property_data
-                          (data_intro (expr_id "%StringIndexOflambda")
-                           expr_true expr_false expr_false));
  ("%StringIndices", property_data
                     (data_intro (expr_id "%StringIndices") expr_true
                      expr_false expr_false));
- ("%StringLastIndexOf", property_data
-                        (data_intro (expr_id "%StringLastIndexOf") expr_true
-                         expr_false expr_false));
  ("%StringProto", property_data
                   (data_intro (expr_id "%StringProto") expr_true expr_false
                    expr_false));
@@ -512,90 +503,90 @@ expr_object
                     expr_false));
  ("%acos", property_data
            (data_intro (expr_id "%acos") expr_true expr_false expr_false));
- ("%acosLambda", property_data
-                 (data_intro (expr_id "%acosLambda") expr_true expr_false
-                  expr_false));
- ("%aiolambda", property_data
-                (data_intro (expr_id "%aiolambda") expr_true expr_false
-                 expr_false));
- ("%aliolambda", property_data
-                 (data_intro (expr_id "%aliolambda") expr_true expr_false
-                  expr_false));
+ ("%acosCall", property_data
+               (data_intro (expr_id "%acosCall") expr_true expr_false
+                expr_false));
  ("%apply", property_data
             (data_intro (expr_id "%apply") expr_true expr_false expr_false));
- ("%applylambda", property_data
-                  (data_intro (expr_id "%applylambda") expr_true expr_false
-                   expr_false));
+ ("%applyCall", property_data
+                (data_intro (expr_id "%applyCall") expr_true expr_false
+                 expr_false));
  ("%arrayIndexOf", property_data
                    (data_intro (expr_id "%arrayIndexOf") expr_true expr_false
                     expr_false));
+ ("%arrayIndexOfCall", property_data
+                       (data_intro (expr_id "%arrayIndexOfCall") expr_true
+                        expr_false expr_false));
  ("%arrayLastIndexOf", property_data
                        (data_intro (expr_id "%arrayLastIndexOf") expr_true
                         expr_false expr_false));
- ("%arrayTLSlambda", property_data
-                     (data_intro (expr_id "%arrayTLSlambda") expr_true
-                      expr_false expr_false));
+ ("%arrayLastIndexOfCall", property_data
+                           (data_intro (expr_id "%arrayLastIndexOfCall")
+                            expr_true expr_false expr_false));
+ ("%arrayTLSCall", property_data
+                   (data_intro (expr_id "%arrayTLSCall") expr_true expr_false
+                    expr_false));
  ("%arrayToLocaleString", property_data
                           (data_intro (expr_id "%arrayToLocaleString")
                            expr_true expr_false expr_false));
  ("%arrayToString", property_data
                     (data_intro (expr_id "%arrayToString") expr_true
                      expr_false expr_false));
- ("%arrayToStringlambda", property_data
-                          (data_intro (expr_id "%arrayToStringlambda")
-                           expr_true expr_false expr_false));
+ ("%arrayToStringCall", property_data
+                        (data_intro (expr_id "%arrayToStringCall") expr_true
+                         expr_false expr_false));
  ("%asin", property_data
            (data_intro (expr_id "%asin") expr_true expr_false expr_false));
- ("%asinLambda", property_data
-                 (data_intro (expr_id "%asinLambda") expr_true expr_false
-                  expr_false));
+ ("%asinCall", property_data
+               (data_intro (expr_id "%asinCall") expr_true expr_false
+                expr_false));
  ("%assert", property_data
              (data_intro (expr_id "%assert") expr_true expr_false expr_false));
  ("%atan", property_data
            (data_intro (expr_id "%atan") expr_true expr_false expr_false));
  ("%atan2", property_data
             (data_intro (expr_id "%atan2") expr_true expr_false expr_false));
- ("%atan2Lambda", property_data
-                  (data_intro (expr_id "%atan2Lambda") expr_true expr_false
-                   expr_false));
- ("%atanLambda", property_data
-                 (data_intro (expr_id "%atanLambda") expr_true expr_false
-                  expr_false));
+ ("%atan2Call", property_data
+                (data_intro (expr_id "%atan2Call") expr_true expr_false
+                 expr_false));
+ ("%atanCall", property_data
+               (data_intro (expr_id "%atanCall") expr_true expr_false
+                expr_false));
  ("%bind", property_data
            (data_intro (expr_id "%bind") expr_true expr_false expr_false));
- ("%bindLambda", property_data
-                 (data_intro (expr_id "%bindLambda") expr_true expr_false
-                  expr_false));
+ ("%bindCall", property_data
+               (data_intro (expr_id "%bindCall") expr_true expr_false
+                expr_false));
  ("%booleanToString", property_data
                       (data_intro (expr_id "%booleanToString") expr_true
                        expr_false expr_false));
- ("%booleanToStringlambda", property_data
-                            (data_intro (expr_id "%booleanToStringlambda")
-                             expr_true expr_false expr_false));
+ ("%booleanToStringCall", property_data
+                          (data_intro (expr_id "%booleanToStringCall")
+                           expr_true expr_false expr_false));
  ("%booleanValueOf", property_data
                      (data_intro (expr_id "%booleanValueOf") expr_true
                       expr_false expr_false));
  ("%call", property_data
            (data_intro (expr_id "%call") expr_true expr_false expr_false));
- ("%calllambda", property_data
-                 (data_intro (expr_id "%calllambda") expr_true expr_false
+ ("%callCall", property_data
+               (data_intro (expr_id "%callCall") expr_true expr_false
+                expr_false));
+ ("%charAt", property_data
+             (data_intro (expr_id "%charAt") expr_true expr_false expr_false));
+ ("%charAtCall", property_data
+                 (data_intro (expr_id "%charAtCall") expr_true expr_false
                   expr_false));
- ("%charat", property_data
-             (data_intro (expr_id "%charat") expr_true expr_false expr_false));
- ("%charatlambda", property_data
-                   (data_intro (expr_id "%charatlambda") expr_true expr_false
-                    expr_false));
- ("%charcodeat", property_data
-                 (data_intro (expr_id "%charcodeat") expr_true expr_false
+ ("%charCodeAt", property_data
+                 (data_intro (expr_id "%charCodeAt") expr_true expr_false
                   expr_false));
- ("%charcodeatlambda", property_data
-                       (data_intro (expr_id "%charcodeatlambda") expr_true
-                        expr_false expr_false));
+ ("%charCodeAtCall", property_data
+                     (data_intro (expr_id "%charCodeAtCall") expr_true
+                      expr_false expr_false));
  ("%concat", property_data
              (data_intro (expr_id "%concat") expr_true expr_false expr_false));
- ("%concatLambda", property_data
-                   (data_intro (expr_id "%concatLambda") expr_true expr_false
-                    expr_false));
+ ("%concatCall", property_data
+                 (data_intro (expr_id "%concatCall") expr_true expr_false
+                  expr_false));
  ("%configurableEval", property_data
                        (data_intro (expr_id "%configurableEval") expr_true
                         expr_false expr_false));
@@ -604,58 +595,57 @@ expr_object
                expr_false));
  ("%cos", property_data
           (data_intro (expr_id "%cos") expr_true expr_false expr_false));
- ("%cosLambda", property_data
-                (data_intro (expr_id "%cosLambda") expr_true expr_false
-                 expr_false));
+ ("%cosCall", property_data
+              (data_intro (expr_id "%cosCall") expr_true expr_false
+               expr_false));
  ("%create", property_data
              (data_intro (expr_id "%create") expr_true expr_false expr_false));
- ("%createLambda", property_data
-                   (data_intro (expr_id "%createLambda") expr_true expr_false
-                    expr_false));
+ ("%createCall", property_data
+                 (data_intro (expr_id "%createCall") expr_true expr_false
+                  expr_false));
  ("%dateGetTimezoneOffset", property_data
                             (data_intro (expr_id "%dateGetTimezoneOffset")
                              expr_true expr_false expr_false));
- ("%dateGetTimezoneOffsetLambda", property_data
-                                  (data_intro
-                                   (expr_id "%dateGetTimezoneOffsetLambda")
-                                   expr_true expr_false expr_false));
+ ("%dateGetTimezoneOffsetCall", property_data
+                                (data_intro
+                                 (expr_id "%dateGetTimezoneOffsetCall")
+                                 expr_true expr_false expr_false));
  ("%dateToString", property_data
                    (data_intro (expr_id "%dateToString") expr_true expr_false
                     expr_false));
- ("%dateToStringLambda", property_data
-                         (data_intro (expr_id "%dateToStringLambda")
-                          expr_true expr_false expr_false));
+ ("%dateToStringCall", property_data
+                       (data_intro (expr_id "%dateToStringCall") expr_true
+                        expr_false expr_false));
  ("%dateValueOf", property_data
                   (data_intro (expr_id "%dateValueOf") expr_true expr_false
                    expr_false));
- ("%dateValueOfLambda", property_data
-                        (data_intro (expr_id "%dateValueOfLambda") expr_true
-                         expr_false expr_false));
+ ("%dateValueOfCall", property_data
+                      (data_intro (expr_id "%dateValueOfCall") expr_true
+                       expr_false expr_false));
  ("%dategetDate", property_data
                   (data_intro (expr_id "%dategetDate") expr_true expr_false
                    expr_false));
- ("%dategetDateLambda", property_data
-                        (data_intro (expr_id "%dategetDateLambda") expr_true
-                         expr_false expr_false));
+ ("%dategetDateCall", property_data
+                      (data_intro (expr_id "%dategetDateCall") expr_true
+                       expr_false expr_false));
  ("%dategetDay", property_data
                  (data_intro (expr_id "%dategetDay") expr_true expr_false
                   expr_false));
- ("%dategetDayLambda", property_data
-                       (data_intro (expr_id "%dategetDayLambda") expr_true
-                        expr_false expr_false));
+ ("%dategetDayCall", property_data
+                     (data_intro (expr_id "%dategetDayCall") expr_true
+                      expr_false expr_false));
  ("%decodeURI", property_data
                 (data_intro (expr_id "%decodeURI") expr_true expr_false
                  expr_false));
+ ("%decodeURICall", property_data
+                    (data_intro (expr_id "%decodeURICall") expr_true
+                     expr_false expr_false));
  ("%decodeURIComponent", property_data
                          (data_intro (expr_id "%decodeURIComponent")
                           expr_true expr_false expr_false));
- ("%decodeURIComponentLambda", property_data
-                               (data_intro
-                                (expr_id "%decodeURIComponentLambda")
-                                expr_true expr_false expr_false));
- ("%decodeURILambda", property_data
-                      (data_intro (expr_id "%decodeURILambda") expr_true
-                       expr_false expr_false));
+ ("%decodeURIComponentCall", property_data
+                             (data_intro (expr_id "%decodeURIComponentCall")
+                              expr_true expr_false expr_false));
  ("%define15Property", property_data
                        (data_intro (expr_id "%define15Property") expr_true
                         expr_false expr_false));
@@ -674,99 +664,98 @@ expr_object
  ("%defineProperties", property_data
                        (data_intro (expr_id "%defineProperties") expr_true
                         expr_false expr_false));
- ("%definePropertiesLambda", property_data
-                             (data_intro (expr_id "%definePropertiesLambda")
-                              expr_true expr_false expr_false));
+ ("%definePropertiesCall", property_data
+                           (data_intro (expr_id "%definePropertiesCall")
+                            expr_true expr_false expr_false));
  ("%defineProperty", property_data
                      (data_intro (expr_id "%defineProperty") expr_true
                       expr_false expr_false));
- ("%definePropertylambda", property_data
-                           (data_intro (expr_id "%definePropertylambda")
-                            expr_true expr_false expr_false));
+ ("%definePropertyCall", property_data
+                         (data_intro (expr_id "%definePropertyCall")
+                          expr_true expr_false expr_false));
  ("%devirtualize", property_data
                    (data_intro (expr_id "%devirtualize") expr_true expr_false
                     expr_false));
  ("%encodeURI", property_data
                 (data_intro (expr_id "%encodeURI") expr_true expr_false
                  expr_false));
+ ("%encodeURICall", property_data
+                    (data_intro (expr_id "%encodeURICall") expr_true
+                     expr_false expr_false));
  ("%encodeURIComponent", property_data
                          (data_intro (expr_id "%encodeURIComponent")
                           expr_true expr_false expr_false));
- ("%encodeURIComponentLambda", property_data
-                               (data_intro
-                                (expr_id "%encodeURIComponentLambda")
-                                expr_true expr_false expr_false));
- ("%encodeURILambda", property_data
-                      (data_intro (expr_id "%encodeURILambda") expr_true
-                       expr_false expr_false));
+ ("%encodeURIComponentCall", property_data
+                             (data_intro (expr_id "%encodeURIComponentCall")
+                              expr_true expr_false expr_false));
  ("%escape", property_data
              (data_intro (expr_id "%escape") expr_true expr_false expr_false));
- ("%escapeLambda", property_data
-                   (data_intro (expr_id "%escapeLambda") expr_true expr_false
-                    expr_false));
+ ("%escapeCall", property_data
+                 (data_intro (expr_id "%escapeCall") expr_true expr_false
+                  expr_false));
  ("%ets", property_data
           (data_intro (expr_id "%ets") expr_true expr_false expr_false));
- ("%etslambda", property_data
-                (data_intro (expr_id "%etslambda") expr_true expr_false
-                 expr_false));
+ ("%etsCall", property_data
+              (data_intro (expr_id "%etsCall") expr_true expr_false
+               expr_false));
  ("%eval", property_data
            (data_intro (expr_id "%eval") expr_true expr_false expr_false));
- ("%evallambda", property_data
-                 (data_intro (expr_id "%evallambda") expr_true expr_false
-                  expr_false));
+ ("%evalCall", property_data
+               (data_intro (expr_id "%evalCall") expr_true expr_false
+                expr_false));
  ("%every", property_data
             (data_intro (expr_id "%every") expr_true expr_false expr_false));
- ("%everylambda", property_data
-                  (data_intro (expr_id "%everylambda") expr_true expr_false
-                   expr_false));
+ ("%everyCall", property_data
+                (data_intro (expr_id "%everyCall") expr_true expr_false
+                 expr_false));
  ("%exp", property_data
           (data_intro (expr_id "%exp") expr_true expr_false expr_false));
- ("%explambda", property_data
-                (data_intro (expr_id "%explambda") expr_true expr_false
-                 expr_false));
+ ("%expCall", property_data
+              (data_intro (expr_id "%expCall") expr_true expr_false
+               expr_false));
  ("%filter", property_data
              (data_intro (expr_id "%filter") expr_true expr_false expr_false));
- ("%filterlambda", property_data
-                   (data_intro (expr_id "%filterlambda") expr_true expr_false
-                    expr_false));
+ ("%filterCall", property_data
+                 (data_intro (expr_id "%filterCall") expr_true expr_false
+                  expr_false));
  ("%foreach", property_data
               (data_intro (expr_id "%foreach") expr_true expr_false
                expr_false));
- ("%foreachlambda", property_data
-                    (data_intro (expr_id "%foreachlambda") expr_true
-                     expr_false expr_false));
+ ("%foreachCall", property_data
+                  (data_intro (expr_id "%foreachCall") expr_true expr_false
+                   expr_false));
  ("%freeze", property_data
              (data_intro (expr_id "%freeze") expr_true expr_false expr_false));
- ("%freezelambda", property_data
-                   (data_intro (expr_id "%freezelambda") expr_true expr_false
-                    expr_false));
+ ("%freezeCall", property_data
+                 (data_intro (expr_id "%freezeCall") expr_true expr_false
+                  expr_false));
  ("%fromCharCode", property_data
                    (data_intro (expr_id "%fromCharCode") expr_true expr_false
                     expr_false));
- ("%fromcclambda", property_data
-                   (data_intro (expr_id "%fromcclambda") expr_true expr_false
-                    expr_false));
+ ("%fromccCall", property_data
+                 (data_intro (expr_id "%fromccCall") expr_true expr_false
+                  expr_false));
  ("%functionToString", property_data
                        (data_intro (expr_id "%functionToString") expr_true
                         expr_false expr_false));
- ("%functionToStringlambda", property_data
-                             (data_intro (expr_id "%functionToStringlambda")
-                              expr_true expr_false expr_false));
+ ("%functionToStringCall", property_data
+                           (data_intro (expr_id "%functionToStringCall")
+                            expr_true expr_false expr_false));
  ("%getCurrentUTC", property_data
                     (data_intro (expr_id "%getCurrentUTC") expr_true
                      expr_false expr_false));
  ("%getMonth", property_data
                (data_intro (expr_id "%getMonth") expr_true expr_false
                 expr_false));
- ("%getMonthlambda", property_data
-                     (data_intro (expr_id "%getMonthlambda") expr_true
-                      expr_false expr_false));
+ ("%getMonthCall", property_data
+                   (data_intro (expr_id "%getMonthCall") expr_true expr_false
+                    expr_false));
  ("%getYear", property_data
               (data_intro (expr_id "%getYear") expr_true expr_false
                expr_false));
- ("%getYearlambda", property_data
-                    (data_intro (expr_id "%getYearlambda") expr_true
-                     expr_false expr_false));
+ ("%getYearCall", property_data
+                  (data_intro (expr_id "%getYearCall") expr_true expr_false
+                   expr_false));
  ("%global", property_data
              (data_intro (expr_id "%global") expr_true expr_false expr_false));
  ("%globalContext", property_data
@@ -774,25 +763,25 @@ expr_object
                      expr_false expr_false));
  ("%gopd", property_data
            (data_intro (expr_id "%gopd") expr_true expr_false expr_false));
- ("%gopdLambda", property_data
-                 (data_intro (expr_id "%gopdLambda") expr_true expr_false
-                  expr_false));
+ ("%gopdCall", property_data
+               (data_intro (expr_id "%gopdCall") expr_true expr_false
+                expr_false));
  ("%gopn", property_data
            (data_intro (expr_id "%gopn") expr_true expr_false expr_false));
- ("%gopnLambda", property_data
-                 (data_intro (expr_id "%gopnLambda") expr_true expr_false
-                  expr_false));
+ ("%gopnCall", property_data
+               (data_intro (expr_id "%gopnCall") expr_true expr_false
+                expr_false));
  ("%gpo", property_data
           (data_intro (expr_id "%gpo") expr_true expr_false expr_false));
- ("%gpoLambda", property_data
-                (data_intro (expr_id "%gpoLambda") expr_true expr_false
-                 expr_false));
+ ("%gpoCall", property_data
+              (data_intro (expr_id "%gpoCall") expr_true expr_false
+               expr_false));
  ("%hasOwnProperty", property_data
                      (data_intro (expr_id "%hasOwnProperty") expr_true
                       expr_false expr_false));
- ("%hasOwnPropertylambda", property_data
-                           (data_intro (expr_id "%hasOwnPropertylambda")
-                            expr_true expr_false expr_false));
+ ("%hasOwnPropertyCall", property_data
+                         (data_intro (expr_id "%hasOwnPropertyCall")
+                          expr_true expr_false expr_false));
  ("%in", property_data
          (data_intro (expr_id "%in") expr_true expr_false expr_false));
  ("%instanceof", property_data
@@ -801,108 +790,111 @@ expr_object
  ("%isExtensible", property_data
                    (data_intro (expr_id "%isExtensible") expr_true expr_false
                     expr_false));
- ("%isExtensibleLambda", property_data
-                         (data_intro (expr_id "%isExtensibleLambda")
-                          expr_true expr_false expr_false));
+ ("%isExtensibleCall", property_data
+                       (data_intro (expr_id "%isExtensibleCall") expr_true
+                        expr_false expr_false));
  ("%isFinite", property_data
                (data_intro (expr_id "%isFinite") expr_true expr_false
                 expr_false));
- ("%isFiniteLambda", property_data
-                     (data_intro (expr_id "%isFiniteLambda") expr_true
-                      expr_false expr_false));
+ ("%isFiniteCall", property_data
+                   (data_intro (expr_id "%isFiniteCall") expr_true expr_false
+                    expr_false));
  ("%isFrozen", property_data
                (data_intro (expr_id "%isFrozen") expr_true expr_false
                 expr_false));
- ("%isFrozenLambda", property_data
-                     (data_intro (expr_id "%isFrozenLambda") expr_true
-                      expr_false expr_false));
+ ("%isFrozenCall", property_data
+                   (data_intro (expr_id "%isFrozenCall") expr_true expr_false
+                    expr_false));
  ("%isNaN", property_data
             (data_intro (expr_id "%isNaN") expr_true expr_false expr_false));
- ("%isNaNlambda", property_data
-                  (data_intro (expr_id "%isNaNlambda") expr_true expr_false
-                   expr_false));
+ ("%isNaNCall", property_data
+                (data_intro (expr_id "%isNaNCall") expr_true expr_false
+                 expr_false));
  ("%isPrototypeOf", property_data
                     (data_intro (expr_id "%isPrototypeOf") expr_true
                      expr_false expr_false));
+ ("%isPrototypeOfCall", property_data
+                        (data_intro (expr_id "%isPrototypeOfCall") expr_true
+                         expr_false expr_false));
  ("%isSealed", property_data
                (data_intro (expr_id "%isSealed") expr_true expr_false
                 expr_false));
- ("%isSealedLambda", property_data
-                     (data_intro (expr_id "%isSealedLambda") expr_true
-                      expr_false expr_false));
+ ("%isSealedCall", property_data
+                   (data_intro (expr_id "%isSealedCall") expr_true expr_false
+                    expr_false));
  ("%join", property_data
            (data_intro (expr_id "%join") expr_true expr_false expr_false));
- ("%joinlambda", property_data
-                 (data_intro (expr_id "%joinlambda") expr_true expr_false
-                  expr_false));
+ ("%joinCall", property_data
+               (data_intro (expr_id "%joinCall") expr_true expr_false
+                expr_false));
  ("%keys", property_data
            (data_intro (expr_id "%keys") expr_true expr_false expr_false));
- ("%keysLambda", property_data
-                 (data_intro (expr_id "%keysLambda") expr_true expr_false
-                  expr_false));
+ ("%keysCall", property_data
+               (data_intro (expr_id "%keysCall") expr_true expr_false
+                expr_false));
  ("%len", property_data
           (data_intro (expr_id "%len") expr_true expr_false expr_false));
  ("%localeCompare", property_data
                     (data_intro (expr_id "%localeCompare") expr_true
                      expr_false expr_false));
- ("%localeCompareLambda", property_data
-                          (data_intro (expr_id "%localeCompareLambda")
-                           expr_true expr_false expr_false));
+ ("%localeCompareCall", property_data
+                        (data_intro (expr_id "%localeCompareCall") expr_true
+                         expr_false expr_false));
  ("%log", property_data
           (data_intro (expr_id "%log") expr_true expr_false expr_false));
- ("%logLambda", property_data
-                (data_intro (expr_id "%logLambda") expr_true expr_false
-                 expr_false));
+ ("%logCall", property_data
+              (data_intro (expr_id "%logCall") expr_true expr_false
+               expr_false));
  ("%makeGlobalEnv", property_data
                     (data_intro (expr_id "%makeGlobalEnv") expr_true
                      expr_false expr_false));
  ("%map", property_data
           (data_intro (expr_id "%map") expr_true expr_false expr_false));
- ("%maplambda", property_data
-                (data_intro (expr_id "%maplambda") expr_true expr_false
-                 expr_false));
+ ("%mapCall", property_data
+              (data_intro (expr_id "%mapCall") expr_true expr_false
+               expr_false));
  ("%mathAbs", property_data
               (data_intro (expr_id "%mathAbs") expr_true expr_false
                expr_false));
- ("%mathAbsLambda", property_data
-                    (data_intro (expr_id "%mathAbsLambda") expr_true
-                     expr_false expr_false));
+ ("%mathAbsCall", property_data
+                  (data_intro (expr_id "%mathAbsCall") expr_true expr_false
+                   expr_false));
  ("%mathCeil", property_data
                (data_intro (expr_id "%mathCeil") expr_true expr_false
                 expr_false));
- ("%mathCeilLambda", property_data
-                     (data_intro (expr_id "%mathCeilLambda") expr_true
-                      expr_false expr_false));
+ ("%mathCeilCall", property_data
+                   (data_intro (expr_id "%mathCeilCall") expr_true expr_false
+                    expr_false));
  ("%mathFloor", property_data
                 (data_intro (expr_id "%mathFloor") expr_true expr_false
                  expr_false));
- ("%mathFloorLambda", property_data
-                      (data_intro (expr_id "%mathFloorLambda") expr_true
-                       expr_false expr_false));
+ ("%mathFloorCall", property_data
+                    (data_intro (expr_id "%mathFloorCall") expr_true
+                     expr_false expr_false));
  ("%mathLog", property_data
               (data_intro (expr_id "%mathLog") expr_true expr_false
                expr_false));
- ("%mathLogLambda", property_data
-                    (data_intro (expr_id "%mathLogLambda") expr_true
-                     expr_false expr_false));
+ ("%mathLogCall", property_data
+                  (data_intro (expr_id "%mathLogCall") expr_true expr_false
+                   expr_false));
  ("%mathMax", property_data
               (data_intro (expr_id "%mathMax") expr_true expr_false
                expr_false));
- ("%mathMaxLambda", property_data
-                    (data_intro (expr_id "%mathMaxLambda") expr_true
-                     expr_false expr_false));
+ ("%mathMaxCall", property_data
+                  (data_intro (expr_id "%mathMaxCall") expr_true expr_false
+                   expr_false));
  ("%mathMin", property_data
               (data_intro (expr_id "%mathMin") expr_true expr_false
                expr_false));
- ("%mathMinLambda", property_data
-                    (data_intro (expr_id "%mathMinLambda") expr_true
-                     expr_false expr_false));
+ ("%mathMinCall", property_data
+                  (data_intro (expr_id "%mathMinCall") expr_true expr_false
+                   expr_false));
  ("%mathPow", property_data
               (data_intro (expr_id "%mathPow") expr_true expr_false
                expr_false));
- ("%mathPowLambda", property_data
-                    (data_intro (expr_id "%mathPowLambda") expr_true
-                     expr_false expr_false));
+ ("%mathPowCall", property_data
+                  (data_intro (expr_id "%mathPowCall") expr_true expr_false
+                   expr_false));
  ("%max", property_data
           (data_intro (expr_id "%max") expr_true expr_false expr_false));
  ("%maybeDirectEval", property_data
@@ -910,9 +902,9 @@ expr_object
                        expr_false expr_false));
  ("%min", property_data
           (data_intro (expr_id "%min") expr_true expr_false expr_false));
- ("%minMaxLambda", property_data
-                   (data_intro (expr_id "%minMaxLambda") expr_true expr_false
-                    expr_false));
+ ("%minMaxCall", property_data
+                 (data_intro (expr_id "%minMaxCall") expr_true expr_false
+                  expr_false));
  ("%mkArgsObj", property_data
                 (data_intro (expr_id "%mkArgsObj") expr_true expr_false
                  expr_false));
@@ -936,9 +928,9 @@ expr_object
                     expr_false));
  ("%numTLS", property_data
              (data_intro (expr_id "%numTLS") expr_true expr_false expr_false));
- ("%numTLSLambda", property_data
-                   (data_intro (expr_id "%numTLSLambda") expr_true expr_false
-                    expr_false));
+ ("%numTLSCall", property_data
+                 (data_intro (expr_id "%numTLSCall") expr_true expr_false
+                  expr_false));
  ("%numToStringAbstract", property_data
                           (data_intro (expr_id "%numToStringAbstract")
                            expr_true expr_false expr_false));
@@ -951,15 +943,15 @@ expr_object
  ("%numberToString", property_data
                      (data_intro (expr_id "%numberToString") expr_true
                       expr_false expr_false));
- ("%numberToStringlambda", property_data
-                           (data_intro (expr_id "%numberToStringlambda")
-                            expr_true expr_false expr_false));
+ ("%numberToStringCall", property_data
+                         (data_intro (expr_id "%numberToStringCall")
+                          expr_true expr_false expr_false));
  ("%objectToString", property_data
                      (data_intro (expr_id "%objectToString") expr_true
                       expr_false expr_false));
- ("%objectToStringlambda", property_data
-                           (data_intro (expr_id "%objectToStringlambda")
-                            expr_true expr_false expr_false));
+ ("%objectToStringCall", property_data
+                         (data_intro (expr_id "%objectToStringCall")
+                          expr_true expr_false expr_false));
  ("%oneArgObj", property_data
                 (data_intro (expr_id "%oneArgObj") expr_true expr_false
                  expr_false));
@@ -968,38 +960,37 @@ expr_object
  ("%parseFloat", property_data
                  (data_intro (expr_id "%parseFloat") expr_true expr_false
                   expr_false));
- ("%parseFloatLambda", property_data
-                       (data_intro (expr_id "%parseFloatLambda") expr_true
-                        expr_false expr_false));
+ ("%parseFloatCall", property_data
+                     (data_intro (expr_id "%parseFloatCall") expr_true
+                      expr_false expr_false));
  ("%parseInt", property_data
                (data_intro (expr_id "%parseInt") expr_true expr_false
                 expr_false));
- ("%parseIntlambda", property_data
-                     (data_intro (expr_id "%parseIntlambda") expr_true
-                      expr_false expr_false));
+ ("%parseIntCall", property_data
+                   (data_intro (expr_id "%parseIntCall") expr_true expr_false
+                    expr_false));
  ("%pop", property_data
           (data_intro (expr_id "%pop") expr_true expr_false expr_false));
- ("%poplambda", property_data
-                (data_intro (expr_id "%poplambda") expr_true expr_false
-                 expr_false));
+ ("%popCall", property_data
+              (data_intro (expr_id "%popCall") expr_true expr_false
+               expr_false));
  ("%preventExtensions", property_data
                         (data_intro (expr_id "%preventExtensions") expr_true
                          expr_false expr_false));
- ("%preventExtensionsLambda", property_data
-                              (data_intro
-                               (expr_id "%preventExtensionsLambda") expr_true
-                               expr_false expr_false));
+ ("%preventExtensionsCall", property_data
+                            (data_intro (expr_id "%preventExtensionsCall")
+                             expr_true expr_false expr_false));
  ("%primEach", property_data
                (data_intro (expr_id "%primEach") expr_true expr_false
                 expr_false));
  ("%print", property_data
             (data_intro (expr_id "%print") expr_true expr_false expr_false));
- ("%printlambda", property_data
-                  (data_intro (expr_id "%printlambda") expr_true expr_false
-                   expr_false));
- ("%propEnumlambda", property_data
-                     (data_intro (expr_id "%propEnumlambda") expr_true
-                      expr_false expr_false));
+ ("%printCall", property_data
+                (data_intro (expr_id "%printCall") expr_true expr_false
+                 expr_false));
+ ("%propEnumCall", property_data
+                   (data_intro (expr_id "%propEnumCall") expr_true expr_false
+                    expr_false));
  ("%propertyIsEnumerable", property_data
                            (data_intro (expr_id "%propertyIsEnumerable")
                             expr_true expr_false expr_false));
@@ -1011,196 +1002,202 @@ expr_object
                     expr_false));
  ("%push", property_data
            (data_intro (expr_id "%push") expr_true expr_false expr_false));
- ("%pushlambda", property_data
-                 (data_intro (expr_id "%pushlambda") expr_true expr_false
-                  expr_false));
+ ("%pushCall", property_data
+               (data_intro (expr_id "%pushCall") expr_true expr_false
+                expr_false));
  ("%random", property_data
              (data_intro (expr_id "%random") expr_true expr_false expr_false));
- ("%randomLambda", property_data
-                   (data_intro (expr_id "%randomLambda") expr_true expr_false
-                    expr_false));
+ ("%randomCall", property_data
+                 (data_intro (expr_id "%randomCall") expr_true expr_false
+                  expr_false));
  ("%reduce", property_data
              (data_intro (expr_id "%reduce") expr_true expr_false expr_false));
+ ("%reduceCall", property_data
+                 (data_intro (expr_id "%reduceCall") expr_true expr_false
+                  expr_false));
  ("%reduceRight", property_data
                   (data_intro (expr_id "%reduceRight") expr_true expr_false
                    expr_false));
- ("%reduceRightLambda", property_data
-                        (data_intro (expr_id "%reduceRightLambda") expr_true
-                         expr_false expr_false));
- ("%reducelambda", property_data
-                   (data_intro (expr_id "%reducelambda") expr_true expr_false
-                    expr_false));
+ ("%reduceRightCall", property_data
+                      (data_intro (expr_id "%reduceRightCall") expr_true
+                       expr_false expr_false));
  ("%replace", property_data
               (data_intro (expr_id "%replace") expr_true expr_false
                expr_false));
- ("%replacelambda", property_data
-                    (data_intro (expr_id "%replacelambda") expr_true
-                     expr_false expr_false));
+ ("%replaceCall", property_data
+                  (data_intro (expr_id "%replaceCall") expr_true expr_false
+                   expr_false));
  ("%resolveThis", property_data
                   (data_intro (expr_id "%resolveThis") expr_true expr_false
                    expr_false));
  ("%reverse", property_data
               (data_intro (expr_id "%reverse") expr_true expr_false
                expr_false));
- ("%reverselambda", property_data
-                    (data_intro (expr_id "%reverselambda") expr_true
-                     expr_false expr_false));
+ ("%reverseCall", property_data
+                  (data_intro (expr_id "%reverseCall") expr_true expr_false
+                   expr_false));
  ("%round", property_data
             (data_intro (expr_id "%round") expr_true expr_false expr_false));
- ("%roundLambda", property_data
-                  (data_intro (expr_id "%roundLambda") expr_true expr_false
-                   expr_false));
+ ("%roundCall", property_data
+                (data_intro (expr_id "%roundCall") expr_true expr_false
+                 expr_false));
  ("%seal", property_data
            (data_intro (expr_id "%seal") expr_true expr_false expr_false));
- ("%sealLambda", property_data
-                 (data_intro (expr_id "%sealLambda") expr_true expr_false
-                  expr_false));
+ ("%sealCall", property_data
+               (data_intro (expr_id "%sealCall") expr_true expr_false
+                expr_false));
  ("%set-property", property_data
                    (data_intro (expr_id "%set-property") expr_true expr_false
                     expr_false));
  ("%shift", property_data
             (data_intro (expr_id "%shift") expr_true expr_false expr_false));
- ("%shiftlambda", property_data
-                  (data_intro (expr_id "%shiftlambda") expr_true expr_false
-                   expr_false));
+ ("%shiftCall", property_data
+                (data_intro (expr_id "%shiftCall") expr_true expr_false
+                 expr_false));
  ("%sin", property_data
           (data_intro (expr_id "%sin") expr_true expr_false expr_false));
- ("%sinLambda", property_data
-                (data_intro (expr_id "%sinLambda") expr_true expr_false
-                 expr_false));
+ ("%sinCall", property_data
+              (data_intro (expr_id "%sinCall") expr_true expr_false
+               expr_false));
  ("%slice", property_data
             (data_intro (expr_id "%slice") expr_true expr_false expr_false));
+ ("%sliceCall", property_data
+                (data_intro (expr_id "%sliceCall") expr_true expr_false
+                 expr_false));
  ("%slice_internal", property_data
                      (data_intro (expr_id "%slice_internal") expr_true
                       expr_false expr_false));
- ("%slicelambda", property_data
-                  (data_intro (expr_id "%slicelambda") expr_true expr_false
-                   expr_false));
- ("%sliolambda", property_data
-                 (data_intro (expr_id "%sliolambda") expr_true expr_false
-                  expr_false));
  ("%some", property_data
            (data_intro (expr_id "%some") expr_true expr_false expr_false));
- ("%somelambda", property_data
-                 (data_intro (expr_id "%somelambda") expr_true expr_false
-                  expr_false));
+ ("%someCall", property_data
+               (data_intro (expr_id "%someCall") expr_true expr_false
+                expr_false));
  ("%sort", property_data
            (data_intro (expr_id "%sort") expr_true expr_false expr_false));
- ("%sortlambda", property_data
-                 (data_intro (expr_id "%sortlambda") expr_true expr_false
-                  expr_false));
+ ("%sortCall", property_data
+               (data_intro (expr_id "%sortCall") expr_true expr_false
+                expr_false));
  ("%splice", property_data
              (data_intro (expr_id "%splice") expr_true expr_false expr_false));
- ("%splicelambda", property_data
-                   (data_intro (expr_id "%splicelambda") expr_true expr_false
-                    expr_false));
+ ("%spliceCall", property_data
+                 (data_intro (expr_id "%spliceCall") expr_true expr_false
+                  expr_false));
  ("%split", property_data
             (data_intro (expr_id "%split") expr_true expr_false expr_false));
- ("%splitLambda", property_data
-                  (data_intro (expr_id "%splitLambda") expr_true expr_false
-                   expr_false));
+ ("%splitCall", property_data
+                (data_intro (expr_id "%splitCall") expr_true expr_false
+                 expr_false));
  ("%sqrt", property_data
            (data_intro (expr_id "%sqrt") expr_true expr_false expr_false));
- ("%sqrtLambda", property_data
-                 (data_intro (expr_id "%sqrtLambda") expr_true expr_false
-                  expr_false));
- ("%strconcat", property_data
-                (data_intro (expr_id "%strconcat") expr_true expr_false
-                 expr_false));
- ("%strconcatlambda", property_data
-                      (data_intro (expr_id "%strconcatlambda") expr_true
-                       expr_false expr_false));
+ ("%sqrtCall", property_data
+               (data_intro (expr_id "%sqrtCall") expr_true expr_false
+                expr_false));
+ ("%stringConcat", property_data
+                   (data_intro (expr_id "%stringConcat") expr_true expr_false
+                    expr_false));
+ ("%stringConcatCall", property_data
+                       (data_intro (expr_id "%stringConcatCall") expr_true
+                        expr_false expr_false));
+ ("%stringIndexOf", property_data
+                    (data_intro (expr_id "%stringIndexOf") expr_true
+                     expr_false expr_false));
+ ("%stringIndexOfCall", property_data
+                        (data_intro (expr_id "%stringIndexOfCall") expr_true
+                         expr_false expr_false));
+ ("%stringLastIndexOf", property_data
+                        (data_intro (expr_id "%stringLastIndexOf") expr_true
+                         expr_false expr_false));
+ ("%stringLastIndexOfCall", property_data
+                            (data_intro (expr_id "%stringLastIndexOfCall")
+                             expr_true expr_false expr_false));
  ("%stringSlice", property_data
                   (data_intro (expr_id "%stringSlice") expr_true expr_false
                    expr_false));
- ("%stringSliceLambda", property_data
-                        (data_intro (expr_id "%stringSliceLambda") expr_true
-                         expr_false expr_false));
+ ("%stringSliceCall", property_data
+                      (data_intro (expr_id "%stringSliceCall") expr_true
+                       expr_false expr_false));
  ("%stringToString", property_data
                      (data_intro (expr_id "%stringToString") expr_true
                       expr_false expr_false));
- ("%stringToStringlambda", property_data
-                           (data_intro (expr_id "%stringToStringlambda")
-                            expr_true expr_false expr_false));
+ ("%stringToStringCall", property_data
+                         (data_intro (expr_id "%stringToStringCall")
+                          expr_true expr_false expr_false));
  ("%stringValueOf", property_data
                     (data_intro (expr_id "%stringValueOf") expr_true
                      expr_false expr_false));
  ("%substring", property_data
                 (data_intro (expr_id "%substring") expr_true expr_false
                  expr_false));
- ("%substringlambda", property_data
-                      (data_intro (expr_id "%substringlambda") expr_true
-                       expr_false expr_false));
+ ("%substringCall", property_data
+                    (data_intro (expr_id "%substringCall") expr_true
+                     expr_false expr_false));
  ("%tan", property_data
           (data_intro (expr_id "%tan") expr_true expr_false expr_false));
- ("%tanLambda", property_data
-                (data_intro (expr_id "%tanLambda") expr_true expr_false
-                 expr_false));
+ ("%tanCall", property_data
+              (data_intro (expr_id "%tanCall") expr_true expr_false
+               expr_false));
  ("%test", property_data
            (data_intro (expr_id "%test") expr_true expr_false expr_false));
- ("%testlambda", property_data
-                 (data_intro (expr_id "%testlambda") expr_true expr_false
-                  expr_false));
- ("%tlclambda", property_data
-                (data_intro (expr_id "%tlclambda") expr_true expr_false
-                 expr_false));
+ ("%testCall", property_data
+               (data_intro (expr_id "%testCall") expr_true expr_false
+                expr_false));
  ("%toExponential", property_data
                     (data_intro (expr_id "%toExponential") expr_true
                      expr_false expr_false));
- ("%toExponentialLambda", property_data
-                          (data_intro (expr_id "%toExponentialLambda")
-                           expr_true expr_false expr_false));
+ ("%toExponentialCall", property_data
+                        (data_intro (expr_id "%toExponentialCall") expr_true
+                         expr_false expr_false));
  ("%toFixed", property_data
               (data_intro (expr_id "%toFixed") expr_true expr_false
                expr_false));
- ("%toFixedLambda", property_data
-                    (data_intro (expr_id "%toFixedLambda") expr_true
-                     expr_false expr_false));
+ ("%toFixedCall", property_data
+                  (data_intro (expr_id "%toFixedCall") expr_true expr_false
+                   expr_false));
  ("%toLocaleString", property_data
                      (data_intro (expr_id "%toLocaleString") expr_true
                       expr_false expr_false));
- ("%toLocaleStringlambda", property_data
-                           (data_intro (expr_id "%toLocaleStringlambda")
-                            expr_true expr_false expr_false));
+ ("%toLocaleStringCall", property_data
+                         (data_intro (expr_id "%toLocaleStringCall")
+                          expr_true expr_false expr_false));
  ("%toLowerCase", property_data
                   (data_intro (expr_id "%toLowerCase") expr_true expr_false
                    expr_false));
+ ("%toLowerCaseCall", property_data
+                      (data_intro (expr_id "%toLowerCaseCall") expr_true
+                       expr_false expr_false));
  ("%toPrecision", property_data
                   (data_intro (expr_id "%toPrecision") expr_true expr_false
                    expr_false));
- ("%toPrecisionLambda", property_data
-                        (data_intro (expr_id "%toPrecisionLambda") expr_true
-                         expr_false expr_false));
+ ("%toPrecisionCall", property_data
+                      (data_intro (expr_id "%toPrecisionCall") expr_true
+                       expr_false expr_false));
  ("%toUpperCase", property_data
                   (data_intro (expr_id "%toUpperCase") expr_true expr_false
                    expr_false));
- ("%tuclambda", property_data
-                (data_intro (expr_id "%tuclambda") expr_true expr_false
-                 expr_false));
+ ("%toUpperCaseCall", property_data
+                      (data_intro (expr_id "%toUpperCaseCall") expr_true
+                       expr_false expr_false));
  ("%twoArgObj", property_data
                 (data_intro (expr_id "%twoArgObj") expr_true expr_false
                  expr_false));
  ("%unescape", property_data
                (data_intro (expr_id "%unescape") expr_true expr_false
                 expr_false));
- ("%unescapeLambda", property_data
-                     (data_intro (expr_id "%unescapeLambda") expr_true
-                      expr_false expr_false));
+ ("%unescapeCall", property_data
+                   (data_intro (expr_id "%unescapeCall") expr_true expr_false
+                    expr_false));
  ("%unshift", property_data
               (data_intro (expr_id "%unshift") expr_true expr_false
                expr_false));
- ("%unshiftlambda", property_data
-                    (data_intro (expr_id "%unshiftlambda") expr_true
-                     expr_false expr_false));
+ ("%unshiftCall", property_data
+                  (data_intro (expr_id "%unshiftCall") expr_true expr_false
+                   expr_false));
  ("%valueOf", property_data
               (data_intro (expr_id "%valueOf") expr_true expr_false
                expr_false));
- ("%valueOfLambda", property_data
-                    (data_intro (expr_id "%valueOfLambda") expr_true
-                     expr_false expr_false));
- ("%valueOflambda", property_data
-                    (data_intro (expr_id "%valueOflambda") expr_true
-                     expr_false expr_false));
+ ("%valueOfCall", property_data
+                  (data_intro (expr_id "%valueOfCall") expr_true expr_false
+                   expr_false));
  ("copy-access-desc", property_data
                       (data_intro (expr_id "copy-access-desc") expr_true
                        expr_false expr_false));
@@ -1239,6 +1236,22 @@ expr_object
                     expr_false))]
 .
 Definition ex_internal := 
+expr_let "cproto1"
+(expr_get_field (expr_id "constr") (expr_string "prototype"))
+(expr_let "cproto"
+ (expr_if (expr_op1 unary_op_is_object (expr_id "cproto1"))
+  (expr_id "cproto1") (expr_id "%ObjectProto"))
+ (expr_let "newobj"
+  (expr_object
+   (objattrs_intro (expr_string "Object") expr_true (expr_id "cproto")
+    expr_undefined) [] [])
+  (expr_let "constr_ret"
+   (expr_app (expr_id "%AppExpr")
+    [expr_id "constr"; expr_id "newobj"; expr_id "args"])
+   (expr_if (expr_op1 unary_op_is_object (expr_id "constr_ret"))
+    (expr_id "constr_ret") (expr_id "newobj")))))
+.
+Definition ex_internal1 := 
 expr_app (expr_id "%MakeNumber")
 [expr_if
  (expr_op2 binary_op_stx_eq
@@ -1246,10 +1259,6 @@ expr_app (expr_id "%MakeNumber")
   (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
  (expr_app (expr_id "%ToNumber")
   [expr_get_field (expr_id "args") (expr_string "0")])]
-.
-Definition ex_internal1 := 
-expr_app (expr_id "%MakeString")
-[expr_app (expr_id "%StringCall") [expr_undefined; expr_id "args"]]
 .
 Definition ex_internal10 := 
 expr_let "msg"
@@ -1260,6 +1269,14 @@ expr_let "msg"
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_internal11 := 
+expr_let "msg"
+(expr_if
+ (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
+ (expr_app (expr_id "%ToString")
+  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+.
+Definition ex_internal12 := 
 expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
 (expr_label "ret"
  (expr_seq
@@ -1331,7 +1348,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
                              expr_false))]])
         (expr_break "ret" (expr_id "rtn"))))))))))
 .
-Definition ex_internal12 := 
+Definition ex_internal13 := 
 expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
 (expr_if
  (expr_op2 binary_op_stx_eq (expr_id "nargs")
@@ -1430,12 +1447,12 @@ expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
               (expr_id "%DateProto") expr_undefined)
              [("primval", expr_id "primval")] [])))))))))))))
 .
-Definition ex_internal13 := 
+Definition ex_internal14 := 
 expr_object
 (objattrs_intro (expr_string "Object") expr_true (expr_id "%RegExpProto")
  expr_undefined) [] []
 .
-Definition ex_internal14 := 
+Definition ex_internal15 := 
 expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
 (expr_recc "formArgString"
  (expr_lambda ["n"; "result"]
@@ -1486,7 +1503,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
      (expr_op2 binary_op_string_plus (expr_id "prefix")
       (expr_op2 binary_op_string_plus (expr_id "body")
        (expr_string "}; })());")))
-     (expr_app (expr_id "%evallambda")
+     (expr_app (expr_id "%evalCall")
       [expr_undefined;
        expr_object
        (objattrs_intro (expr_string "Object") expr_true expr_null
@@ -1495,20 +1512,16 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
               (data_intro (expr_id "final") expr_false expr_false expr_false))]]))))))
 .
 Definition ex_internal2 := 
+expr_app (expr_id "%MakeString")
+[expr_app (expr_id "%StringCall") [expr_undefined; expr_id "args"]]
+.
+Definition ex_internal3 := 
 expr_app (expr_id "%MakeBoolean")
 [expr_app (expr_id "%ToBoolean")
  [expr_get_field (expr_id "args") (expr_string "0")]]
 .
-Definition ex_internal3 := 
-expr_app (expr_id "%ObjectCall") [expr_undefined; expr_id "args"]
-.
 Definition ex_internal4 := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%ObjectCall") [expr_undefined; expr_id "args"]
 .
 Definition ex_internal5 := 
 expr_let "msg"
@@ -1615,7 +1628,7 @@ expr_if
  (expr_app (expr_id "isAccessorField") [expr_id "obj"; expr_id "field"])
  expr_false) expr_false
 .
-Definition ex_objCode1 :=  expr_undefined .
+Definition ex_objCode1 :=  expr_app (expr_id "%ToObject") [expr_id "this"] .
 Definition ex_objCode10 := 
 expr_app (expr_id "%TypeError")
 [expr_op2 binary_op_string_plus (expr_id "name") (expr_string " NYI")]
@@ -1729,15 +1742,15 @@ expr_app (expr_id "%TypeError")
 [expr_op2 binary_op_string_plus (expr_id "name") (expr_string " NYI")]
 .
 Definition ex_objCode36 := 
-expr_app (expr_id "%valueOfLambda")
+expr_app (expr_id "%valueOfCall")
 [expr_id "this"; expr_id "args"; expr_id "%StringProto"; expr_string "string"]
 .
 Definition ex_objCode37 := 
-expr_app (expr_id "%valueOfLambda")
+expr_app (expr_id "%valueOfCall")
 [expr_id "this"; expr_id "args"; expr_id "%NumberProto"; expr_string "number"]
 .
 Definition ex_objCode38 := 
-expr_app (expr_id "%valueOfLambda")
+expr_app (expr_id "%valueOfCall")
 [expr_id "this";
  expr_id "args";
  expr_id "%BooleanProto";
@@ -1869,7 +1882,14 @@ expr_let "oldlen"
       (expr_number (JsNumber.of_int (1)))])) expr_undefined))
  (expr_app (expr_id "fix") [expr_id "newlen"]))
 .
-Definition ex_privBindCall := 
+Definition ex_privBindConstructor := 
+expr_let "concatted"
+(expr_app (expr_id "%concat")
+ [expr_get_internal "boundArgs" (expr_id "constr"); expr_id "args"])
+(expr_app (expr_id "%PrimNew")
+ [expr_get_internal "target" (expr_id "constr"); expr_id "concatted"])
+.
+Definition ex_privBindObjCall := 
 expr_let "concatted"
 (expr_app (expr_id "%concat")
  [expr_get_internal "boundArgs" (expr_id "obj"); expr_id "args"])
@@ -1877,13 +1897,6 @@ expr_let "concatted"
  [expr_get_internal "target" (expr_id "obj");
   expr_get_internal "boundThis" (expr_id "obj");
   expr_id "concatted"])
-.
-Definition ex_privBindConstructor := 
-expr_let "concatted"
-(expr_app (expr_id "%concat")
- [expr_get_internal "boundArgs" (expr_id "constr"); expr_id "args"])
-(expr_app (expr_id "%PrimNew")
- [expr_get_internal "target" (expr_id "constr"); expr_id "concatted"])
 .
 Definition ex_privBitwiseInfix := 
 expr_let "lnum" (expr_app (expr_id "%ToInt32") [expr_id "l"])
@@ -2211,7 +2224,7 @@ expr_let "cproto1"
    (objattrs_intro (expr_string "Object") expr_true (expr_id "cproto")
     expr_undefined) [] [])
   (expr_let "constr_ret"
-   (expr_app (expr_id "%AppExprCheck")
+   (expr_app (expr_id "%AppExpr")
     [expr_id "constr"; expr_id "newobj"; expr_id "args"])
    (expr_if (expr_op1 unary_op_is_object (expr_id "constr_ret"))
     (expr_id "constr_ret") (expr_id "newobj")))))
@@ -2509,7 +2522,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
      (expr_op2 binary_op_string_plus (expr_id "prefix")
       (expr_op2 binary_op_string_plus (expr_id "body")
        (expr_string "}; })());")))
-     (expr_app (expr_id "%evallambda")
+     (expr_app (expr_id "%evalCall")
       [expr_undefined;
        expr_object
        (objattrs_intro (expr_string "Object") expr_true expr_null
@@ -2517,6 +2530,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
        [("0", property_data
               (data_intro (expr_id "final") expr_false expr_false expr_false))]]))))))
 .
+Definition ex_privFunctionProtoCall :=  expr_undefined .
 Definition ex_privGetField := 
 expr_get_field (expr_app (expr_id "%ToObjectVirtual") [expr_id "v"])
 (expr_app (expr_id "%ToString") [expr_id "fld"])
@@ -2559,23 +2573,6 @@ expr_if (expr_op1 unary_op_is_object (expr_id "thing"))
 (expr_op2 binary_op_has_own_property (expr_id "thing")
  (expr_string "%js-exn")) expr_false
 .
-Definition ex_privIsPrototypeOflambda := 
-expr_recc "searchChain"
-(expr_lambda ["o"; "v"]
- (expr_let "vproto" (expr_get_obj_attr oattr_proto (expr_id "v"))
-  (expr_if (expr_op2 binary_op_stx_eq (expr_id "vproto") expr_null)
-   expr_false
-   (expr_if (expr_op2 binary_op_stx_eq (expr_id "o") (expr_id "vproto"))
-    expr_true
-    (expr_app (expr_id "searchChain") [expr_id "o"; expr_id "vproto"])))))
-(expr_if
- (expr_op1 unary_op_not
-  (expr_op1 unary_op_is_object
-   (expr_get_field (expr_id "args") (expr_string "0")))) expr_false
- (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-  (expr_app (expr_id "searchChain")
-   [expr_id "O"; expr_get_field (expr_id "args") (expr_string "0")])))
-.
 Definition ex_privJSError := 
 expr_object
 (objattrs_intro (expr_string "JSError") expr_false expr_null expr_undefined)
@@ -2608,7 +2605,7 @@ expr_let "len"
  (expr_number (JsNumber.of_int (0))))
 (expr_object
  (objattrs_intro (expr_string "Function") expr_true
-  (expr_id "%FunctionProto") (expr_id "%BindCall"))
+  (expr_id "%FunctionProto") (expr_id "%BindObjCall"))
  [("construct", expr_id "%BindConstructor");
   ("target", expr_id "obj");
   ("boundThis", expr_id "this");
@@ -3128,62 +3125,6 @@ Definition ex_privStringConstructor :=
 expr_app (expr_id "%MakeString")
 [expr_app (expr_id "%StringCall") [expr_undefined; expr_id "args"]]
 .
-Definition ex_privStringIndexOflambda := 
-expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
-(expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
- (expr_let "searchStr"
-  (expr_app (expr_id "%ToString")
-   [expr_get_field (expr_id "args") (expr_string "0")])
-  (expr_let "pos"
-   (expr_app (expr_id "%ToInteger")
-    [expr_get_field (expr_id "args") (expr_string "1")])
-   (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
-    (expr_let "start"
-     (expr_app (expr_id "%min")
-      [expr_app (expr_id "%max")
-       [expr_id "pos"; expr_number (JsNumber.of_int (0))];
-       expr_id "len"])
-     (expr_let "searchLen" (expr_op1 unary_op_strlen (expr_id "searchStr"))
-      (expr_let "check_k"
-       (expr_lambda ["k"]
-        (expr_recc "check_j"
-         (expr_lambda ["j"]
-          (expr_if
-           (expr_op2 binary_op_stx_eq (expr_id "j") (expr_id "searchLen"))
-           expr_true
-           (expr_if
-            (expr_op1 unary_op_not
-             (expr_op2 binary_op_stx_eq
-              (expr_op2 binary_op_char_at (expr_id "S")
-               (expr_op2 binary_op_add (expr_id "k") (expr_id "j")))
-              (expr_op2 binary_op_char_at (expr_id "searchStr") (expr_id "j"))))
-            expr_false
-            (expr_app (expr_id "check_j")
-             [expr_op2 binary_op_add (expr_id "j")
-              (expr_number (JsNumber.of_int (1)))]))))
-         (expr_if
-          (expr_op1 unary_op_not
-           (expr_op2 binary_op_le
-            (expr_op2 binary_op_add (expr_id "k") (expr_id "searchLen"))
-            (expr_id "len"))) expr_false
-          (expr_if
-           (expr_op1 unary_op_not
-            (expr_app (expr_id "check_j") [expr_number (JsNumber.of_int (0))]))
-           expr_false expr_true))))
-       (expr_recc "find_k"
-        (expr_lambda ["curr"]
-         (expr_if
-          (expr_op2 binary_op_gt
-           (expr_op2 binary_op_add (expr_id "curr") (expr_id "searchLen"))
-           (expr_id "len"))
-          (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (1))))
-          (expr_if (expr_app (expr_id "check_k") [expr_id "curr"])
-           (expr_id "curr")
-           (expr_app (expr_id "find_k")
-            [expr_op2 binary_op_add (expr_id "curr")
-             (expr_number (JsNumber.of_int (1)))]))))
-        (expr_app (expr_id "find_k") [expr_id "start"])))))))))
-.
 Definition ex_privStringIndices := 
 expr_let "len" (expr_op1 unary_op_strlen (expr_id "s"))
 (expr_recc "loop"
@@ -3556,8 +3497,25 @@ expr_let "sign" (expr_op1 unary_op_sign (expr_id "t"))
      [expr_op2 binary_op_add (expr_id "y") (expr_id "sign")])))
   (expr_app (expr_id "loop") [expr_id "start"])))
 .
-Definition ex_privacosLambda :=  expr_string "acos NYI" .
-Definition ex_privaiolambda := 
+Definition ex_privacosCall :=  expr_string "acos NYI" .
+Definition ex_privapplyCall := 
+expr_let "applyArgs1" (expr_get_field (expr_id "args") (expr_string "1"))
+(expr_let "applyArgs"
+ (expr_if
+  (expr_if
+   (expr_op2 binary_op_stx_eq
+    (expr_op1 unary_op_typeof (expr_id "applyArgs1"))
+    (expr_string "undefined")) expr_true
+   (expr_op2 binary_op_stx_eq (expr_id "applyArgs1") expr_null))
+  (expr_object
+   (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
+   [] []) (expr_id "applyArgs1"))
+ (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "applyArgs"])
+  (expr_app (expr_id "this")
+   [expr_get_field (expr_id "args") (expr_string "0");
+    expr_app (expr_id "%mkArgsObj") [expr_id "applyArgs"]])))
+.
+Definition ex_privarrayIndexOfCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
@@ -3613,7 +3571,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          (expr_break "ret"
           (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (1))))))))))))))
 .
-Definition ex_privaliolambda := 
+Definition ex_privarrayLastIndexOfCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
@@ -3667,24 +3625,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_break "ret"
       (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (1))))))))))
 .
-Definition ex_privapplylambda := 
-expr_let "applyArgs1" (expr_get_field (expr_id "args") (expr_string "1"))
-(expr_let "applyArgs"
- (expr_if
-  (expr_if
-   (expr_op2 binary_op_stx_eq
-    (expr_op1 unary_op_typeof (expr_id "applyArgs1"))
-    (expr_string "undefined")) expr_true
-   (expr_op2 binary_op_stx_eq (expr_id "applyArgs1") expr_null))
-  (expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
-   [] []) (expr_id "applyArgs1"))
- (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "applyArgs"])
-  (expr_app (expr_id "this")
-   [expr_get_field (expr_id "args") (expr_string "0");
-    expr_app (expr_id "%mkArgsObj") [expr_id "applyArgs"]])))
-.
-Definition ex_privarrayTLSlambda := 
+Definition ex_privarrayTLSCall := 
 expr_let "isCallable"
 (expr_lambda ["o"]
  (expr_label "ret"
@@ -3781,30 +3722,30 @@ expr_let "isCallable"
           (expr_app (expr_id "inner")
            [expr_number (JsNumber.of_int (1)); expr_id "R"])))))))))))
 .
-Definition ex_privarrayToStringlambda := 
+Definition ex_privarrayToStringCall := 
 expr_let "array" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "thefunc" (expr_get_field (expr_id "array") (expr_string "join"))
  (expr_let "ffunc"
   (expr_if
    (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "thefunc")))
-   (expr_id "%objectToStringlambda")
+   (expr_id "%objectToStringCall")
    (expr_if
     (expr_op2 binary_op_stx_eq
      (expr_get_obj_attr oattr_code (expr_id "thefunc")) expr_null)
-    (expr_id "%objectToStringlambda") (expr_id "thefunc")))
+    (expr_id "%objectToStringCall") (expr_id "thefunc")))
   (expr_app (expr_id "ffunc")
    [expr_id "array";
     expr_object
     (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
     [] []])))
 .
-Definition ex_privasinLambda :=  expr_string "asin NYI" .
+Definition ex_privasinCall :=  expr_string "asin NYI" .
 Definition ex_privassert := 
 expr_if (expr_id "b") expr_true (expr_throw (expr_id "s"))
 .
-Definition ex_privatan2Lambda :=  expr_string "atan2 NYI" .
-Definition ex_privatanLambda :=  expr_string "atan NYI" .
-Definition ex_privbindLambda := 
+Definition ex_privatan2Call :=  expr_string "atan2 NYI" .
+Definition ex_privatanCall :=  expr_string "atan NYI" .
+Definition ex_privbindCall := 
 expr_seq
 (expr_if
  (expr_op1 unary_op_not (expr_app (expr_id "%IsCallable") [expr_id "this"]))
@@ -3818,7 +3759,7 @@ expr_seq
   (expr_app (expr_id "%MakeBind")
    [expr_id "this"; expr_id "thisArg"; expr_id "A"])))
 .
-Definition ex_privbooleanToStringlambda := 
+Definition ex_privbooleanToStringCall := 
 expr_let "t" (expr_op1 unary_op_typeof (expr_id "this"))
 (expr_let "b"
  (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "boolean"))
@@ -3835,7 +3776,7 @@ expr_let "t" (expr_op1 unary_op_typeof (expr_id "this"))
      (expr_string "Boolean.prototype.toString got ") (expr_id "t")])))
  (expr_if (expr_id "b") (expr_string "true") (expr_string "false")))
 .
-Definition ex_privcalllambda := 
+Definition ex_privcallCall := 
 expr_let "callArgs"
 (expr_app (expr_id "%slice_internal")
  [expr_id "args";
@@ -3844,7 +3785,7 @@ expr_let "callArgs"
 (expr_app (expr_id "this")
  [expr_get_field (expr_id "args") (expr_string "0"); expr_id "callArgs"])
 .
-Definition ex_privcharatlambda := 
+Definition ex_privcharAtCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "position"
@@ -3859,7 +3800,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
     (expr_string "")
     (expr_op2 binary_op_char_at (expr_id "S") (expr_id "position"))))))
 .
-Definition ex_privcharcodeatlambda := 
+Definition ex_privcharCodeAtCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "position"
@@ -3875,7 +3816,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
     (expr_op1 unary_op_ascii_cton
      (expr_op2 binary_op_char_at (expr_id "S") (expr_id "position")))))))
 .
-Definition ex_privconcatLambda := 
+Definition ex_privconcatCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "emptyobj"
  (expr_object
@@ -3985,8 +3926,8 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
         (expr_if (expr_op2 binary_op_stx_eq (expr_id "ret") expr_dump)
          expr_undefined (expr_id "ret"))) (expr_id "evalStr"))))))))
 .
-Definition ex_privcosLambda :=  expr_string "cos NYI" .
-Definition ex_privcreateLambda := 
+Definition ex_privcosCall :=  expr_string "cos NYI" .
+Definition ex_privcreateCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_let "t" (expr_op1 unary_op_typeof (expr_id "O"))
  (expr_if
@@ -4030,23 +3971,23 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            [expr_null; expr_id "argsObj"]) (expr_id "obj")))))))
     (expr_id "obj")))))
 .
-Definition ex_privdateGetTimezoneOffsetLambda := 
+Definition ex_privdateGetTimezoneOffsetCall := 
 expr_let "t" (expr_get_internal "primval" (expr_id "this"))
 (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_number JsNumber.nan))
  (expr_number JsNumber.nan) (expr_number (JsNumber.of_int (0))))
 .
-Definition ex_privdateToStringLambda :=  expr_string "Date toString NYI" .
-Definition ex_privdateValueOfLambda := 
+Definition ex_privdateToStringCall :=  expr_string "Date toString NYI" .
+Definition ex_privdateValueOfCall := 
 expr_get_internal "primval" (expr_id "this")
 .
-Definition ex_privdategetDateLambda := 
+Definition ex_privdategetDateCall := 
 expr_let "t" (expr_get_internal "primval" (expr_id "this"))
 (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_number JsNumber.nan))
  (expr_id "t")
  (expr_app (expr_id "%DateFromTime")
   [expr_app (expr_id "%LocalTime") [expr_id "t"]]))
 .
-Definition ex_privdategetDayLambda := 
+Definition ex_privdategetDayCall := 
 expr_let "day"
 (expr_op1 unary_op_floor
  (expr_op2 binary_op_div (expr_get_internal "primval" (expr_id "this"))
@@ -4056,10 +3997,10 @@ expr_let "day"
   (expr_op2 binary_op_add (expr_id "day") (expr_number (JsNumber.of_int (4))))
   (expr_number (JsNumber.of_int (7)))) (expr_id "weekday"))
 .
-Definition ex_privdecodeURIComponentLambda := 
+Definition ex_privdecodeURICall :=  expr_string "decodeURI NYI" .
+Definition ex_privdecodeURIComponentCall := 
 expr_string "decodeURIComponent NYI"
 .
-Definition ex_privdecodeURILambda :=  expr_string "decodeURI NYI" .
 Definition ex_privdefine15Property := 
 expr_let "%mkPropObj"
 (expr_lambda ["value"; "writable"; "enumerable"; "configurable"]
@@ -4393,7 +4334,7 @@ expr_seq
            (expr_get_field (expr_id "current-prop")
             (expr_string "configurable"))) expr_undefined) expr_true)))))))))
 .
-Definition ex_privdefinePropertiesLambda := 
+Definition ex_privdefinePropertiesCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_seq
@@ -4442,7 +4383,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
       (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))
   (expr_id "O")))
 .
-Definition ex_privdefinePropertylambda := 
+Definition ex_privdefinePropertyCall := 
 expr_let "obj" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_let "field" (expr_get_field (expr_id "args") (expr_string "1"))
  (expr_let "propobj" (expr_get_field (expr_id "args") (expr_string "2"))
@@ -4462,12 +4403,12 @@ expr_if
   (expr_get_internal "primval" (expr_id "obj")) (expr_id "obj"))
  (expr_id "obj")) (expr_id "obj")
 .
-Definition ex_privencodeURIComponentLambda := 
+Definition ex_privencodeURICall :=  expr_string "encodeURI NYI" .
+Definition ex_privencodeURIComponentCall := 
 expr_string "encodeURIComponent NYI"
 .
-Definition ex_privencodeURILambda :=  expr_string "encodeURI NYI" .
-Definition ex_privescapeLambda :=  expr_string "escape NYI" .
-Definition ex_privetslambda := 
+Definition ex_privescapeCall :=  expr_string "escape NYI" .
+Definition ex_privetsCall := 
 expr_if
 (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "this")))
 (expr_app (expr_id "%TypeError")
@@ -4503,11 +4444,11 @@ expr_if
          (expr_break "ret"
           (expr_op2 binary_op_string_plus (expr_id "prefix") (expr_id "msg"))))))))))))
 .
-Definition ex_privevallambda := 
+Definition ex_privevalCall := 
 expr_app (expr_id "%configurableEval")
 [expr_id "%global"; expr_id "%globalContext"; expr_false; expr_id "args"]
 .
-Definition ex_priveverylambda := 
+Definition ex_priveveryCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
@@ -4560,8 +4501,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_break "ret"
         (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))))))
 .
-Definition ex_privexplambda :=  expr_undefined .
-Definition ex_privfilterlambda := 
+Definition ex_privexpCall :=  expr_undefined .
+Definition ex_privfilterCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
@@ -4643,7 +4584,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
            expr_number (JsNumber.of_int (0))])
          (expr_break "ret" (expr_id "A")))))))))))
 .
-Definition ex_privforeachlambda := 
+Definition ex_privforeachCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
@@ -4689,7 +4630,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))
       expr_undefined))))))
 .
-Definition ex_privfreezelambda := 
+Definition ex_privfreezeCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
@@ -4718,7 +4659,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
      (expr_seq (expr_set_obj_attr oattr_extensible (expr_id "O") expr_false)
       (expr_id "O")))))))
 .
-Definition ex_privfromcclambda := 
+Definition ex_privfromccCall := 
 expr_if
 (expr_op2 binary_op_stx_eq
  (expr_get_field (expr_id "args") (expr_string "length"))
@@ -4741,15 +4682,13 @@ expr_if
   (expr_app (expr_id "loop")
    [expr_number (JsNumber.of_int (0)); expr_string ""])))
 .
-Definition ex_privfunctionToStringlambda := 
-expr_string "function ToString"
-.
+Definition ex_privfunctionToStringCall :=  expr_string "function ToString" .
 Definition ex_privgetCurrentUTC := 
 expr_op1 unary_op_current_utc_millis expr_undefined
 .
-Definition ex_privgetMonthlambda :=  expr_number (JsNumber.of_int (3)) .
-Definition ex_privgetYearlambda :=  expr_number (JsNumber.of_int (78)) .
-Definition ex_privgopdLambda := 
+Definition ex_privgetMonthCall :=  expr_number (JsNumber.of_int (3)) .
+Definition ex_privgetYearCall :=  expr_number (JsNumber.of_int (78)) .
+Definition ex_privgopdCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "name"
@@ -4888,7 +4827,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
                                expr_false))]])
           (expr_break "ret" (expr_id "obj"))))))))))))
 .
-Definition ex_privgopnLambda := 
+Definition ex_privgopnCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "props" (expr_own_field_names (expr_id "O"))
@@ -4913,12 +4852,12 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
       (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
       (expr_id "A")))))))
 .
-Definition ex_privgpoLambda := 
+Definition ex_privgpoCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_get_obj_attr oattr_proto (expr_id "O")))
 .
-Definition ex_privhasOwnPropertylambda := 
+Definition ex_privhasOwnPropertyCall := 
 expr_op2 binary_op_has_own_property
 (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_app (expr_id "%ToString")
@@ -4960,18 +4899,18 @@ expr_label "ret"
          expr_true (expr_app (expr_id "search") [expr_id "vp"])))))
      (expr_break "ret" (expr_app (expr_id "search") [expr_id "l"])))))))
 .
-Definition ex_privisExtensibleLambda := 
+Definition ex_privisExtensibleCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_get_obj_attr oattr_extensible (expr_id "O")))
 .
-Definition ex_privisFiniteLambda := 
+Definition ex_privisFiniteCall := 
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "args") (expr_string "0")])
 (expr_app (expr_id "%IsFinite") [expr_id "n"])
 .
-Definition ex_privisFrozenLambda := 
+Definition ex_privisFrozenCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
@@ -5004,13 +4943,30 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
          (expr_get_obj_attr oattr_extensible (expr_id "O")))))))
     (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))
 .
-Definition ex_privisNaNlambda := 
+Definition ex_privisNaNCall := 
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "args") (expr_string "0")])
 (expr_op2 binary_op_same_value (expr_id "n") (expr_number JsNumber.nan))
 .
-Definition ex_privisSealedLambda := 
+Definition ex_privisPrototypeOfCall := 
+expr_recc "searchChain"
+(expr_lambda ["o"; "v"]
+ (expr_let "vproto" (expr_get_obj_attr oattr_proto (expr_id "v"))
+  (expr_if (expr_op2 binary_op_stx_eq (expr_id "vproto") expr_null)
+   expr_false
+   (expr_if (expr_op2 binary_op_stx_eq (expr_id "o") (expr_id "vproto"))
+    expr_true
+    (expr_app (expr_id "searchChain") [expr_id "o"; expr_id "vproto"])))))
+(expr_if
+ (expr_op1 unary_op_not
+  (expr_op1 unary_op_is_object
+   (expr_get_field (expr_id "args") (expr_string "0")))) expr_false
+ (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
+  (expr_app (expr_id "searchChain")
+   [expr_id "O"; expr_get_field (expr_id "args") (expr_string "0")])))
+.
+Definition ex_privisSealedCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
@@ -5034,7 +4990,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
          (expr_get_obj_attr oattr_extensible (expr_id "O")))))))
     (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))
 .
-Definition ex_privjoinlambda := 
+Definition ex_privjoinCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
@@ -5087,7 +5043,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         (expr_app (expr_id "loop")
          [expr_number (JsNumber.of_int (1)); expr_id "start"])))))))))
 .
-Definition ex_privkeysLambda := 
+Definition ex_privkeysCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
@@ -5149,7 +5105,7 @@ expr_recc "inner_len"
      (expr_id "iter")])) (expr_id "iter")))
 (expr_app (expr_id "inner_len") [expr_number (JsNumber.of_int (0))])
 .
-Definition ex_privlocaleCompareLambda := 
+Definition ex_privlocaleCompareCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "That"
@@ -5157,7 +5113,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
    [expr_get_field (expr_id "args") (expr_string "0")])
   (expr_op2 binary_op_locale_compare (expr_id "S") (expr_id "That"))))
 .
-Definition ex_privlogLambda := 
+Definition ex_privlogCall := 
 expr_recc "loop"
 (expr_lambda ["i"]
  (expr_if
@@ -5172,7 +5128,7 @@ expr_recc "loop"
   expr_undefined))
 (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
 .
-Definition ex_privmaplambda := 
+Definition ex_privmapCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
@@ -5243,7 +5199,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
          (expr_break "ret" (expr_id "A")))))))))))
 .
-Definition ex_privmathAbsLambda := 
+Definition ex_privmathAbsCall := 
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "args") (expr_string "0")])
@@ -5260,7 +5216,7 @@ expr_let "n"
     (expr_break "ret" (expr_number JsNumber.infinity)) expr_null)
    (expr_break "ret" (expr_op1 unary_op_abs (expr_id "n"))))))
 .
-Definition ex_privmathCeilLambda := 
+Definition ex_privmathCeilCall := 
 expr_let "x"
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "args") (expr_string "0")])
@@ -5280,7 +5236,7 @@ expr_let "x"
    (expr_break "ret" (expr_id "x")) expr_null)
   (expr_break "ret" (expr_op1 unary_op_ceil (expr_id "x")))))
 .
-Definition ex_privmathFloorLambda := 
+Definition ex_privmathFloorCall := 
 expr_let "x"
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "args") (expr_string "0")])
@@ -5300,7 +5256,7 @@ expr_let "x"
    (expr_break "ret" (expr_id "x")) expr_null)
   (expr_break "ret" (expr_op1 unary_op_floor (expr_id "x")))))
 .
-Definition ex_privmathLogLambda := 
+Definition ex_privmathLogCall := 
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "args") (expr_string "0")])
@@ -5330,21 +5286,21 @@ expr_let "n"
         (expr_number JsNumber.infinity)) (expr_break "ret" (expr_id "n"))
        expr_null) (expr_break "ret" (expr_op1 unary_op_log (expr_id "n")))))))))
 .
-Definition ex_privmathMaxLambda := 
-expr_app (expr_id "%minMaxLambda")
+Definition ex_privmathMaxCall := 
+expr_app (expr_id "%minMaxCall")
 [expr_id "this";
  expr_id "args";
  expr_id "%max";
  expr_number JsNumber.neg_infinity]
 .
-Definition ex_privmathMinLambda := 
-expr_app (expr_id "%minMaxLambda")
+Definition ex_privmathMinCall := 
+expr_app (expr_id "%minMaxCall")
 [expr_id "this";
  expr_id "args";
  expr_id "%min";
  expr_number JsNumber.infinity]
 .
-Definition ex_privmathPowLambda := 
+Definition ex_privmathPowCall := 
 expr_let "x"
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "args") (expr_string "0")])
@@ -5554,7 +5510,7 @@ Definition ex_privmin :=
 expr_if (expr_op2 binary_op_le (expr_id "a") (expr_id "b")) (expr_id "a")
 (expr_id "b")
 .
-Definition ex_privminMaxLambda := 
+Definition ex_privminMaxCall := 
 expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
 (expr_label "ret"
  (expr_seq
@@ -5630,7 +5586,7 @@ expr_object
  ("provideThis", property_data
                  (data_intro (expr_id "pt") expr_false expr_false expr_false))]
 .
-Definition ex_privnumTLSLambda := 
+Definition ex_privnumTLSCall := 
 expr_let "x"
 (expr_if
  (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "this"))
@@ -5697,7 +5653,7 @@ expr_if
  (expr_get_internal "primval" (expr_id "this"))
  (expr_app (expr_id "%TypeError") [expr_string "not a number"]))
 .
-Definition ex_privnumberToStringlambda := 
+Definition ex_privnumberToStringCall := 
 expr_let "val" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
 (expr_let "rint"
  (expr_if
@@ -5716,7 +5672,7 @@ expr_let "val" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
    [expr_string "Number.toString received invalid radix"])
   (expr_app (expr_id "%numToStringAbstract") [expr_id "val"; expr_id "rint"])))
 .
-Definition ex_privobjectToStringlambda := 
+Definition ex_privobjectToStringCall := 
 expr_label "ret"
 (expr_seq
  (expr_if (expr_op2 binary_op_stx_eq (expr_id "this") expr_undefined)
@@ -5739,14 +5695,14 @@ expr_app (expr_id "%mkArgsObj")
         (data_intro (expr_id "arg") expr_false expr_false expr_false))]]
 .
 Definition ex_privparse :=  expr_number (JsNumber.of_int (0)) .
-Definition ex_privparseFloatLambda :=  expr_string "parseFloat NYI" .
-Definition ex_privparseIntlambda := 
+Definition ex_privparseFloatCall :=  expr_string "parseFloat NYI" .
+Definition ex_privparseIntCall := 
 expr_let "numstr"
 (expr_app (expr_id "%ToString")
  [expr_get_field (expr_id "args") (expr_string "0")])
 (expr_op1 unary_op_prim_to_num (expr_id "numstr"))
 .
-Definition ex_privpoplambda := 
+Definition ex_privpopCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
@@ -5767,7 +5723,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         (expr_app (expr_id "%ToNumber") [expr_id "indx"]))
        (expr_id "element"))))))))
 .
-Definition ex_privpreventExtensionsLambda := 
+Definition ex_privpreventExtensionsCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_seq (expr_set_obj_attr oattr_extensible (expr_id "O") expr_false)
@@ -5787,12 +5743,12 @@ expr_recc "loop"
       (expr_number (JsNumber.of_int (1)))])) expr_undefined)))
 (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
 .
-Definition ex_privprintlambda := 
+Definition ex_privprintCall := 
 expr_op1 unary_op_print
 (expr_app (expr_id "%ToString")
  [expr_get_field (expr_id "s") (expr_string "0")])
 .
-Definition ex_privpropEnumlambda := 
+Definition ex_privpropEnumCall := 
 expr_let "getOwnProperty"
 (expr_lambda ["o"; "f"]
  (expr_if (expr_op2 binary_op_has_own_property (expr_id "o") (expr_id "f"))
@@ -5854,7 +5810,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "object") expr_null)
  (expr_app (expr_id "%protoOfField")
   [expr_get_obj_attr oattr_proto (expr_id "object"); expr_id "fld"]))
 .
-Definition ex_privpushlambda := 
+Definition ex_privpushCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
@@ -5877,8 +5833,99 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_app (expr_id "loop")
     [expr_number (JsNumber.of_int (0)); expr_id "len"]))))
 .
-Definition ex_privrandomLambda :=  expr_number (JsNumber.of_int (4)) .
-Definition ex_privreduceRightLambda := 
+Definition ex_privrandomCall :=  expr_number (JsNumber.of_int (4)) .
+Definition ex_privreduceCall := 
+expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
+(expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
+ (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
+  (expr_let "callbackfn" (expr_get_field (expr_id "args") (expr_string "0"))
+   (expr_let "has_initial"
+    (expr_op2 binary_op_ge
+     (expr_get_field (expr_id "args") (expr_string "length"))
+     (expr_number (JsNumber.of_int (2))))
+    (expr_label "ret"
+     (expr_seq
+      (expr_if
+       (expr_op1 unary_op_not
+        (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
+       (expr_app (expr_id "%TypeError")
+        [expr_string "Callback not a function in reduce"]) expr_null)
+      (expr_seq
+       (expr_if
+        (expr_if
+         (expr_op2 binary_op_stx_eq (expr_id "len")
+          (expr_number (JsNumber.of_int (0))))
+         (expr_op1 unary_op_not (expr_id "has_initial")) expr_false)
+        (expr_app (expr_id "%TypeError")
+         [expr_string "Reducing an empty list with not enough arguments."])
+        expr_null)
+       (expr_let "origK"
+        (expr_if (expr_id "has_initial")
+         (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (1))))
+         (expr_recc "accumLoop"
+          (expr_lambda ["k"]
+           (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
+            (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
+             (expr_let "kPresent"
+              (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
+              (expr_if (expr_id "kPresent") (expr_id "k")
+               (expr_app (expr_id "accumLoop")
+                [expr_op2 binary_op_add (expr_id "k")
+                 (expr_number (JsNumber.of_int (1)))]))))
+            (expr_app (expr_id "%TypeError") [expr_string "In Array reduce"])))
+          (expr_app (expr_id "accumLoop") [expr_number (JsNumber.of_int (0))])))
+        (expr_let "accumulator"
+         (expr_if (expr_id "has_initial")
+          (expr_get_field (expr_id "args") (expr_string "1"))
+          (expr_get_field (expr_id "O")
+           (expr_app (expr_id "%ToString") [expr_id "origK"])))
+         (expr_recc "outerLoop"
+          (expr_lambda ["k"; "accumulator"]
+           (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
+            (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
+             (expr_let "kPresent"
+              (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
+              (expr_if (expr_id "kPresent")
+               (expr_let "kValue"
+                (expr_get_field (expr_id "O") (expr_id "Pk"))
+                (expr_let "argsObj"
+                 (expr_object
+                  (objattrs_intro (expr_string "Object") expr_true expr_null
+                   expr_undefined) [] [])
+                 (expr_seq
+                  (expr_set_field (expr_id "argsObj") (expr_string "0")
+                   (expr_id "accumulator"))
+                  (expr_seq
+                   (expr_set_field (expr_id "argsObj") (expr_string "1")
+                    (expr_id "kValue"))
+                   (expr_seq
+                    (expr_set_field (expr_id "argsObj") (expr_string "2")
+                     (expr_id "k"))
+                    (expr_seq
+                     (expr_set_field (expr_id "argsObj") (expr_string "3")
+                      (expr_id "O"))
+                     (expr_seq
+                      (expr_set_field (expr_id "argsObj")
+                       (expr_string "length")
+                       (expr_number (JsNumber.of_int (4))))
+                      (expr_let "next"
+                       (expr_app (expr_id "callbackfn")
+                        [expr_undefined; expr_id "argsObj"])
+                       (expr_app (expr_id "outerLoop")
+                        [expr_op2 binary_op_add (expr_id "k")
+                         (expr_number (JsNumber.of_int (1)));
+                         expr_id "next"])))))))))
+               (expr_app (expr_id "outerLoop")
+                [expr_op2 binary_op_add (expr_id "k")
+                 (expr_number (JsNumber.of_int (1)));
+                 expr_id "accumulator"])))) (expr_id "accumulator")))
+          (expr_break "ret"
+           (expr_app (expr_id "outerLoop")
+            [expr_op2 binary_op_add (expr_id "origK")
+             (expr_number (JsNumber.of_int (1)));
+             expr_id "accumulator"]))))))))))))
+.
+Definition ex_privreduceRightCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
@@ -5973,98 +6020,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_number (JsNumber.of_int (1)));
              expr_id "accumulator"]))))))))))))
 .
-Definition ex_privreducelambda := 
-expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
- (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
-  (expr_let "callbackfn" (expr_get_field (expr_id "args") (expr_string "0"))
-   (expr_let "has_initial"
-    (expr_op2 binary_op_ge
-     (expr_get_field (expr_id "args") (expr_string "length"))
-     (expr_number (JsNumber.of_int (2))))
-    (expr_label "ret"
-     (expr_seq
-      (expr_if
-       (expr_op1 unary_op_not
-        (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
-       (expr_app (expr_id "%TypeError")
-        [expr_string "Callback not a function in reduce"]) expr_null)
-      (expr_seq
-       (expr_if
-        (expr_if
-         (expr_op2 binary_op_stx_eq (expr_id "len")
-          (expr_number (JsNumber.of_int (0))))
-         (expr_op1 unary_op_not (expr_id "has_initial")) expr_false)
-        (expr_app (expr_id "%TypeError")
-         [expr_string "Reducing an empty list with not enough arguments."])
-        expr_null)
-       (expr_let "origK"
-        (expr_if (expr_id "has_initial")
-         (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (1))))
-         (expr_recc "accumLoop"
-          (expr_lambda ["k"]
-           (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
-            (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
-             (expr_let "kPresent"
-              (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
-              (expr_if (expr_id "kPresent") (expr_id "k")
-               (expr_app (expr_id "accumLoop")
-                [expr_op2 binary_op_add (expr_id "k")
-                 (expr_number (JsNumber.of_int (1)))]))))
-            (expr_app (expr_id "%TypeError") [expr_string "In Array reduce"])))
-          (expr_app (expr_id "accumLoop") [expr_number (JsNumber.of_int (0))])))
-        (expr_let "accumulator"
-         (expr_if (expr_id "has_initial")
-          (expr_get_field (expr_id "args") (expr_string "1"))
-          (expr_get_field (expr_id "O")
-           (expr_app (expr_id "%ToString") [expr_id "origK"])))
-         (expr_recc "outerLoop"
-          (expr_lambda ["k"; "accumulator"]
-           (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
-            (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
-             (expr_let "kPresent"
-              (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
-              (expr_if (expr_id "kPresent")
-               (expr_let "kValue"
-                (expr_get_field (expr_id "O") (expr_id "Pk"))
-                (expr_let "argsObj"
-                 (expr_object
-                  (objattrs_intro (expr_string "Object") expr_true expr_null
-                   expr_undefined) [] [])
-                 (expr_seq
-                  (expr_set_field (expr_id "argsObj") (expr_string "0")
-                   (expr_id "accumulator"))
-                  (expr_seq
-                   (expr_set_field (expr_id "argsObj") (expr_string "1")
-                    (expr_id "kValue"))
-                   (expr_seq
-                    (expr_set_field (expr_id "argsObj") (expr_string "2")
-                     (expr_id "k"))
-                    (expr_seq
-                     (expr_set_field (expr_id "argsObj") (expr_string "3")
-                      (expr_id "O"))
-                     (expr_seq
-                      (expr_set_field (expr_id "argsObj")
-                       (expr_string "length")
-                       (expr_number (JsNumber.of_int (4))))
-                      (expr_let "next"
-                       (expr_app (expr_id "callbackfn")
-                        [expr_undefined; expr_id "argsObj"])
-                       (expr_app (expr_id "outerLoop")
-                        [expr_op2 binary_op_add (expr_id "k")
-                         (expr_number (JsNumber.of_int (1)));
-                         expr_id "next"])))))))))
-               (expr_app (expr_id "outerLoop")
-                [expr_op2 binary_op_add (expr_id "k")
-                 (expr_number (JsNumber.of_int (1)));
-                 expr_id "accumulator"])))) (expr_id "accumulator")))
-          (expr_break "ret"
-           (expr_app (expr_id "outerLoop")
-            [expr_op2 binary_op_add (expr_id "origK")
-             (expr_number (JsNumber.of_int (1)));
-             expr_id "accumulator"]))))))))))))
-.
-Definition ex_privreplacelambda := 
+Definition ex_privreplaceCall := 
 expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
 (expr_let "search"
  (expr_app (expr_id "%ToString")
@@ -6077,7 +6033,7 @@ expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
    (expr_recc "loop"
     (expr_lambda ["str"]
      (expr_let "start"
-      (expr_app (expr_id "%StringIndexOf")
+      (expr_app (expr_id "%stringIndexOf")
        [expr_id "str"; expr_app (expr_id "%oneArgObj") [expr_id "search"]])
       (expr_if
        (expr_op2 binary_op_stx_eq (expr_id "start")
@@ -6112,7 +6068,7 @@ expr_if (expr_id "strict") (expr_id "obj")
   (expr_op2 binary_op_stx_eq (expr_id "obj") expr_undefined))
  (expr_id "%global") (expr_app (expr_id "%ToObject") [expr_id "obj"]))
 .
-Definition ex_privreverselambda := 
+Definition ex_privreverseCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
@@ -6187,8 +6143,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
      (expr_id "O"))))))
 .
-Definition ex_privroundLambda :=  expr_string "round NYI" .
-Definition ex_privsealLambda := 
+Definition ex_privroundCall :=  expr_string "round NYI" .
+Definition ex_privsealCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_seq
@@ -6279,7 +6235,7 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
        (expr_app (expr_id "setArrayField") [])
        (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "val")))))))))
 .
-Definition ex_privshiftlambda := 
+Definition ex_privshiftCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
@@ -6330,7 +6286,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         (expr_set_field (expr_id "O") (expr_string "length")
          (expr_id "newLen")) (expr_id "first")))))))))
 .
-Definition ex_privsinLambda := 
+Definition ex_privsinCall := 
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "args") (expr_string "0")])
@@ -6356,34 +6312,7 @@ expr_let "n"
       (expr_break "ret" (expr_number JsNumber.nan)) expr_null)
      (expr_break "ret" (expr_op1 unary_op_sin (expr_id "n"))))))))
 .
-Definition ex_privslice_internal := 
-expr_let "retObj"
-(expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
- [] [])
-(expr_seq
- (expr_recc "inner_slice"
-  (expr_lambda ["iter"; "ix"]
-   (expr_if
-    (expr_op2 binary_op_has_own_property (expr_id "list")
-     (expr_op1 unary_op_prim_to_str (expr_id "iter")))
-    (expr_seq
-     (expr_set_field (expr_id "retObj")
-      (expr_op1 unary_op_prim_to_str (expr_id "ix"))
-      (expr_get_field (expr_id "list")
-       (expr_op1 unary_op_prim_to_str (expr_id "iter"))))
-     (expr_if (expr_op2 binary_op_gt (expr_id "iter") (expr_id "max"))
-      expr_undefined
-      (expr_app (expr_id "inner_slice")
-       [expr_op2 binary_op_add (expr_id "iter")
-        (expr_number (JsNumber.of_int (1)));
-        expr_op2 binary_op_add (expr_id "ix")
-        (expr_number (JsNumber.of_int (1)))])))
-    (expr_set_field (expr_id "retObj") (expr_string "length") (expr_id "ix"))))
-  (expr_app (expr_id "inner_slice")
-   [expr_id "min"; expr_number (JsNumber.of_int (0))])) (expr_id "retObj"))
-.
-Definition ex_privslicelambda := 
+Definition ex_privsliceCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "A"
  (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
@@ -6479,68 +6408,34 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
             expr_id "initk";
             expr_number (JsNumber.of_int (0))])) (expr_id "A"))))))))))
 .
-Definition ex_privsliolambda := 
-expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
-(expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
- (expr_let "searchStr"
-  (expr_app (expr_id "%ToString")
-   [expr_get_field (expr_id "args") (expr_string "0")])
-  (expr_let "numPos"
-   (expr_app (expr_id "%ToNumber")
-    [expr_get_field (expr_id "args") (expr_string "1")])
-   (expr_let "pos"
-    (expr_if
-     (expr_op1 unary_op_not
-      (expr_op2 binary_op_stx_eq (expr_id "numPos") (expr_id "numPos")))
-     (expr_number JsNumber.infinity)
-     (expr_app (expr_id "%ToInteger") [expr_id "numPos"]))
-    (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
-     (expr_let "start"
-      (expr_app (expr_id "%min")
-       [expr_app (expr_id "%max")
-        [expr_id "pos"; expr_number (JsNumber.of_int (0))];
-        expr_id "len"])
-      (expr_let "searchLen" (expr_op1 unary_op_strlen (expr_id "searchStr"))
-       (expr_let "check_k"
-        (expr_lambda ["k"]
-         (expr_recc "check_j"
-          (expr_lambda ["j"]
-           (expr_if
-            (expr_op2 binary_op_stx_eq (expr_id "j") (expr_id "searchLen"))
-            expr_true
-            (expr_if
-             (expr_op1 unary_op_not
-              (expr_op2 binary_op_stx_eq
-               (expr_op2 binary_op_char_at (expr_id "S")
-                (expr_op2 binary_op_add (expr_id "k") (expr_id "j")))
-               (expr_op2 binary_op_char_at (expr_id "searchStr")
-                (expr_id "j")))) expr_false
-             (expr_app (expr_id "check_j")
-              [expr_op2 binary_op_add (expr_id "j")
-               (expr_number (JsNumber.of_int (1)))]))))
-          (expr_if
-           (expr_op1 unary_op_not
-            (expr_op2 binary_op_le
-             (expr_op2 binary_op_add (expr_id "k") (expr_id "searchLen"))
-             (expr_id "len"))) expr_false
-           (expr_if
-            (expr_op1 unary_op_not
-             (expr_app (expr_id "check_j")
-              [expr_number (JsNumber.of_int (0))])) expr_false expr_true))))
-        (expr_recc "find_k"
-         (expr_lambda ["curr"]
-          (expr_if
-           (expr_op2 binary_op_lt (expr_id "curr")
-            (expr_number (JsNumber.of_int (0))))
-           (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (1))))
-           (expr_if (expr_app (expr_id "check_k") [expr_id "curr"])
-            (expr_id "curr")
-            (expr_app (expr_id "find_k")
-             [expr_op2 binary_op_sub (expr_id "curr")
-              (expr_number (JsNumber.of_int (1)))]))))
-         (expr_app (expr_id "find_k") [expr_id "start"]))))))))))
+Definition ex_privslice_internal := 
+expr_let "retObj"
+(expr_object
+ (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
+ [] [])
+(expr_seq
+ (expr_recc "inner_slice"
+  (expr_lambda ["iter"; "ix"]
+   (expr_if
+    (expr_op2 binary_op_has_own_property (expr_id "list")
+     (expr_op1 unary_op_prim_to_str (expr_id "iter")))
+    (expr_seq
+     (expr_set_field (expr_id "retObj")
+      (expr_op1 unary_op_prim_to_str (expr_id "ix"))
+      (expr_get_field (expr_id "list")
+       (expr_op1 unary_op_prim_to_str (expr_id "iter"))))
+     (expr_if (expr_op2 binary_op_gt (expr_id "iter") (expr_id "max"))
+      expr_undefined
+      (expr_app (expr_id "inner_slice")
+       [expr_op2 binary_op_add (expr_id "iter")
+        (expr_number (JsNumber.of_int (1)));
+        expr_op2 binary_op_add (expr_id "ix")
+        (expr_number (JsNumber.of_int (1)))])))
+    (expr_set_field (expr_id "retObj") (expr_string "length") (expr_id "ix"))))
+  (expr_app (expr_id "inner_slice")
+   [expr_id "min"; expr_number (JsNumber.of_int (0))])) (expr_id "retObj"))
 .
-Definition ex_privsomelambda := 
+Definition ex_privsomeCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
@@ -6593,7 +6488,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_break "ret"
         (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))))))
 .
-Definition ex_privsortlambda := 
+Definition ex_privsortCall := 
 expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "sortCompare"
  (expr_lambda ["j"; "k"]
@@ -6736,7 +6631,7 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
          (expr_number (JsNumber.of_int (1)))])) (expr_id "obj")))
     (expr_app (expr_id "isort") [expr_number (JsNumber.of_int (1))])))))
 .
-Definition ex_privsplicelambda := 
+Definition ex_privspliceCall := 
 expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_let "deleteCount" (expr_get_field (expr_id "args") (expr_string "1"))
  (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -6937,9 +6832,9 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                   (expr_id "actualDeleteCount")) (expr_id "itemCount")))
                (expr_id "A"))))))))))))))))
 .
-Definition ex_privsplitLambda :=  expr_string "String.prototype.split NYI" .
-Definition ex_privsqrtLambda :=  expr_string "sqrt NYI" .
-Definition ex_privstrconcatlambda := 
+Definition ex_privsplitCall :=  expr_string "String.prototype.split NYI" .
+Definition ex_privsqrtCall :=  expr_string "sqrt NYI" .
+Definition ex_privstringConcatCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
@@ -6958,7 +6853,124 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
    (expr_app (expr_id "loop")
     [expr_number (JsNumber.of_int (0)); expr_id "S"]))))
 .
-Definition ex_privstringSliceLambda := 
+Definition ex_privstringIndexOfCall := 
+expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
+(expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
+ (expr_let "searchStr"
+  (expr_app (expr_id "%ToString")
+   [expr_get_field (expr_id "args") (expr_string "0")])
+  (expr_let "pos"
+   (expr_app (expr_id "%ToInteger")
+    [expr_get_field (expr_id "args") (expr_string "1")])
+   (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
+    (expr_let "start"
+     (expr_app (expr_id "%min")
+      [expr_app (expr_id "%max")
+       [expr_id "pos"; expr_number (JsNumber.of_int (0))];
+       expr_id "len"])
+     (expr_let "searchLen" (expr_op1 unary_op_strlen (expr_id "searchStr"))
+      (expr_let "check_k"
+       (expr_lambda ["k"]
+        (expr_recc "check_j"
+         (expr_lambda ["j"]
+          (expr_if
+           (expr_op2 binary_op_stx_eq (expr_id "j") (expr_id "searchLen"))
+           expr_true
+           (expr_if
+            (expr_op1 unary_op_not
+             (expr_op2 binary_op_stx_eq
+              (expr_op2 binary_op_char_at (expr_id "S")
+               (expr_op2 binary_op_add (expr_id "k") (expr_id "j")))
+              (expr_op2 binary_op_char_at (expr_id "searchStr") (expr_id "j"))))
+            expr_false
+            (expr_app (expr_id "check_j")
+             [expr_op2 binary_op_add (expr_id "j")
+              (expr_number (JsNumber.of_int (1)))]))))
+         (expr_if
+          (expr_op1 unary_op_not
+           (expr_op2 binary_op_le
+            (expr_op2 binary_op_add (expr_id "k") (expr_id "searchLen"))
+            (expr_id "len"))) expr_false
+          (expr_if
+           (expr_op1 unary_op_not
+            (expr_app (expr_id "check_j") [expr_number (JsNumber.of_int (0))]))
+           expr_false expr_true))))
+       (expr_recc "find_k"
+        (expr_lambda ["curr"]
+         (expr_if
+          (expr_op2 binary_op_gt
+           (expr_op2 binary_op_add (expr_id "curr") (expr_id "searchLen"))
+           (expr_id "len"))
+          (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (1))))
+          (expr_if (expr_app (expr_id "check_k") [expr_id "curr"])
+           (expr_id "curr")
+           (expr_app (expr_id "find_k")
+            [expr_op2 binary_op_add (expr_id "curr")
+             (expr_number (JsNumber.of_int (1)))]))))
+        (expr_app (expr_id "find_k") [expr_id "start"])))))))))
+.
+Definition ex_privstringLastIndexOfCall := 
+expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
+(expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
+ (expr_let "searchStr"
+  (expr_app (expr_id "%ToString")
+   [expr_get_field (expr_id "args") (expr_string "0")])
+  (expr_let "numPos"
+   (expr_app (expr_id "%ToNumber")
+    [expr_get_field (expr_id "args") (expr_string "1")])
+   (expr_let "pos"
+    (expr_if
+     (expr_op1 unary_op_not
+      (expr_op2 binary_op_stx_eq (expr_id "numPos") (expr_id "numPos")))
+     (expr_number JsNumber.infinity)
+     (expr_app (expr_id "%ToInteger") [expr_id "numPos"]))
+    (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
+     (expr_let "start"
+      (expr_app (expr_id "%min")
+       [expr_app (expr_id "%max")
+        [expr_id "pos"; expr_number (JsNumber.of_int (0))];
+        expr_id "len"])
+      (expr_let "searchLen" (expr_op1 unary_op_strlen (expr_id "searchStr"))
+       (expr_let "check_k"
+        (expr_lambda ["k"]
+         (expr_recc "check_j"
+          (expr_lambda ["j"]
+           (expr_if
+            (expr_op2 binary_op_stx_eq (expr_id "j") (expr_id "searchLen"))
+            expr_true
+            (expr_if
+             (expr_op1 unary_op_not
+              (expr_op2 binary_op_stx_eq
+               (expr_op2 binary_op_char_at (expr_id "S")
+                (expr_op2 binary_op_add (expr_id "k") (expr_id "j")))
+               (expr_op2 binary_op_char_at (expr_id "searchStr")
+                (expr_id "j")))) expr_false
+             (expr_app (expr_id "check_j")
+              [expr_op2 binary_op_add (expr_id "j")
+               (expr_number (JsNumber.of_int (1)))]))))
+          (expr_if
+           (expr_op1 unary_op_not
+            (expr_op2 binary_op_le
+             (expr_op2 binary_op_add (expr_id "k") (expr_id "searchLen"))
+             (expr_id "len"))) expr_false
+           (expr_if
+            (expr_op1 unary_op_not
+             (expr_app (expr_id "check_j")
+              [expr_number (JsNumber.of_int (0))])) expr_false expr_true))))
+        (expr_recc "find_k"
+         (expr_lambda ["curr"]
+          (expr_if
+           (expr_op2 binary_op_lt (expr_id "curr")
+            (expr_number (JsNumber.of_int (0))))
+           (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (1))))
+           (expr_if (expr_app (expr_id "check_k") [expr_id "curr"])
+            (expr_id "curr")
+            (expr_app (expr_id "find_k")
+             [expr_op2 binary_op_sub (expr_id "curr")
+              (expr_number (JsNumber.of_int (1)))]))))
+         (expr_app (expr_id "find_k") [expr_id "start"]))))))))))
+.
+Definition ex_privstringSliceCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
@@ -7003,10 +7015,10 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
          (expr_app (expr_id "build")
           [expr_number (JsNumber.of_int (0)); expr_string ""]))))))))))
 .
-Definition ex_privstringToStringlambda := 
+Definition ex_privstringToStringCall := 
 expr_get_internal "primval" (expr_id "this")
 .
-Definition ex_privsubstringlambda := 
+Definition ex_privsubstringCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
@@ -7042,19 +7054,14 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
            (expr_id "soFar")))
          (expr_app (expr_id "loop") [expr_id "from"; expr_string ""]))))))))))
 .
-Definition ex_privtanLambda :=  expr_string "tan NYI" .
-Definition ex_privtestlambda := 
+Definition ex_privtanCall :=  expr_string "tan NYI" .
+Definition ex_privtestCall := 
 expr_op1 unary_op_print
 (expr_string
- "You used the es5.env testlambda.  Are you sure you didn't forget to include the regexp.js library, or regexp.env?")
+ "You used the es5.env testCall.  Are you sure you didn't forget to include the regexp.js library, or regexp.env?")
 .
-Definition ex_privtlclambda := 
-expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
-(expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
- (expr_op1 unary_op_to_lower (expr_id "S")))
-.
-Definition ex_privtoExponentialLambda :=  expr_string "toExponential NYI" .
-Definition ex_privtoFixedLambda := 
+Definition ex_privtoExponentialCall :=  expr_string "toExponential NYI" .
+Definition ex_privtoFixedCall := 
 expr_let "x" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
 (expr_let "f"
  (expr_app (expr_id "%ToInteger")
@@ -7075,7 +7082,7 @@ expr_let "x" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
     (expr_app (expr_id "%ToString") [expr_id "x"])
     (expr_op2 binary_op_to_fixed (expr_id "x") (expr_id "f"))))))
 .
-Definition ex_privtoLocaleStringlambda := 
+Definition ex_privtoLocaleStringCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "toString" (expr_get_field (expr_id "O") (expr_string "toString"))
  (expr_if
@@ -7088,8 +7095,13 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
     [] []])))
 .
-Definition ex_privtoPrecisionLambda :=  expr_string "toPrecision NYI" .
-Definition ex_privtuclambda := 
+Definition ex_privtoLowerCaseCall := 
+expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
+(expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
+ (expr_op1 unary_op_to_lower (expr_id "S")))
+.
+Definition ex_privtoPrecisionCall :=  expr_string "toPrecision NYI" .
+Definition ex_privtoUpperCaseCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_op1 unary_op_to_upper (expr_id "S")))
@@ -7104,8 +7116,8 @@ expr_app (expr_id "%mkArgsObj")
   ("1", property_data
         (data_intro (expr_id "arg2") expr_false expr_false expr_false))]]
 .
-Definition ex_privunescapeLambda :=  expr_string "unescape NYI" .
-Definition ex_privunshiftlambda := 
+Definition ex_privunescapeCall :=  expr_string "unescape NYI" .
+Definition ex_privunshiftCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
@@ -7162,7 +7174,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_set_field (expr_id "O") (expr_string "length")
         (expr_id "finalLen")) (expr_id "finalLen"))))))))
 .
-Definition ex_privvalueOfLambda := 
+Definition ex_privvalueOfCall := 
 expr_let "hasWrongProto"
 (expr_op1 unary_op_not
  (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_proto (expr_id "this"))
@@ -7181,9 +7193,6 @@ expr_let "hasWrongProto"
    (expr_app (expr_id "%TypeError") [expr_string "valueOf"])
    (expr_if (expr_id "hasWrongTypeof")
     (expr_get_internal "primval" (expr_id "this")) (expr_id "this")))))
-.
-Definition ex_privvalueOflambda := 
-expr_app (expr_id "%ToObject") [expr_id "this"]
 .
 Definition objCode :=  value_undefined .
 Definition name_objCode :=  "objCode" .
@@ -7432,26 +7441,26 @@ value_closure
  ex_privArrayLengthChange)
 .
 Definition name_privArrayLengthChange :=  "%ArrayLengthChange" .
-Definition privconcat :=  value_object 95 .
-Definition name_privconcat :=  "%concat" .
-Definition privBindCall := 
-value_closure
-(closure_intro [("%AppExprCheck", privAppExprCheck); ("%concat", privconcat)]
- None ["obj"; "this"; "args"] ex_privBindCall)
-.
-Definition name_privBindCall :=  "%BindCall" .
 Definition privPrimNew := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["constr"; "args"]
  ex_privPrimNew)
 .
 Definition name_privPrimNew :=  "%PrimNew" .
+Definition privconcat :=  value_object 95 .
+Definition name_privconcat :=  "%concat" .
 Definition privBindConstructor := 
 value_closure
 (closure_intro [("%PrimNew", privPrimNew); ("%concat", privconcat)] None
  ["constr"; "args"] ex_privBindConstructor)
 .
 Definition name_privBindConstructor :=  "%BindConstructor" .
+Definition privBindObjCall := 
+value_closure
+(closure_intro [("%AppExprCheck", privAppExprCheck); ("%concat", privconcat)]
+ None ["obj"; "this"; "args"] ex_privBindObjCall)
+.
+Definition name_privBindObjCall :=  "%BindObjCall" .
 Definition privToInt32 := 
 value_closure
 (closure_intro [("%ToUint32", privToUint32)] None ["n"] ex_privToInt32)
@@ -7693,8 +7702,7 @@ Definition privObjectProto :=  value_object 1 .
 Definition name_privObjectProto :=  "%ObjectProto" .
 Definition privDefaultConstruct := 
 value_closure
-(closure_intro
- [("%AppExprCheck", privAppExprCheck); ("%ObjectProto", privObjectProto)]
+(closure_intro [("%AppExpr", privAppExpr); ("%ObjectProto", privObjectProto)]
  None ["constr"; "args"] ex_privDefaultConstruct)
 .
 Definition name_privDefaultConstruct :=  "%DefaultConstruct" .
@@ -7839,21 +7847,21 @@ value_closure
 Definition name_privconfigurableEval :=  "%configurableEval" .
 Definition privglobalContext :=  value_object 307 .
 Definition name_privglobalContext :=  "%globalContext" .
-Definition privevallambda := 
+Definition privevalCall := 
 value_closure
 (closure_intro
  [("%configurableEval", privconfigurableEval);
   ("%global", dolthis);
   ("%globalContext", privglobalContext)] None ["obj"; "this"; "args"]
- ex_privevallambda)
+ ex_privevalCall)
 .
-Definition name_privevallambda :=  "%evallambda" .
+Definition name_privevalCall :=  "%evalCall" .
 Definition privFunctionConstructor := 
 value_closure
 (closure_intro
  [("%ComputeLength", privComputeLength);
   ("%ToString", privToString);
-  ("%evallambda", privevallambda)] None ["this"; "args"]
+  ("%evalCall", privevalCall)] None ["this"; "args"]
  ex_privFunctionConstructor)
 .
 Definition name_privFunctionConstructor :=  "%FunctionConstructor" .
@@ -7861,16 +7869,15 @@ Definition privFunctionGlobalFuncObj :=  value_object 311 .
 Definition name_privFunctionGlobalFuncObj :=  "%FunctionGlobalFuncObj" .
 Definition privFunctionProto :=  value_object 3 .
 Definition name_privFunctionProto :=  "%FunctionProto" .
+Definition privFunctionProtoCall := 
+value_closure
+(closure_intro [] None ["obj"; "this"; "args"] ex_privFunctionProtoCall)
+.
+Definition name_privFunctionProtoCall :=  "%FunctionProtoCall" .
 Definition privGetterValue := 
 value_closure (closure_intro [] None ["o"] ex_privGetterValue)
 .
 Definition name_privGetterValue :=  "%GetterValue" .
-Definition privIsPrototypeOflambda := 
-value_closure
-(closure_intro [("%ToObject", privToObject)] None ["obj"; "this"; "args"]
- ex_privIsPrototypeOflambda)
-.
-Definition name_privIsPrototypeOflambda :=  "%IsPrototypeOflambda" .
 Definition privLeftShift := 
 value_closure
 (closure_intro [("%ToInt32", privToInt32); ("%ToUint32", privToUint32)] 
@@ -7890,8 +7897,8 @@ Definition name_privmax :=  "%max" .
 Definition privMakeBind := 
 value_closure
 (closure_intro
- [("%BindCall", privBindCall);
-  ("%BindConstructor", privBindConstructor);
+ [("%BindConstructor", privBindConstructor);
+  ("%BindObjCall", privBindObjCall);
   ("%FunctionProto", privFunctionProto);
   ("%ThrowTypeError", privThrowTypeError);
   ("%max", privmax)] None ["obj"; "this"; "args"] ex_privMakeBind)
@@ -8058,24 +8065,6 @@ value_closure
 Definition name_privStringConstructor :=  "%StringConstructor" .
 Definition privStringGlobalFuncObj :=  value_object 27 .
 Definition name_privStringGlobalFuncObj :=  "%StringGlobalFuncObj" .
-Definition privStringIndexOf :=  value_object 156 .
-Definition name_privStringIndexOf :=  "%StringIndexOf" .
-Definition privmin := 
-value_closure (closure_intro [] None ["a"; "b"] ex_privmin)
-.
-Definition name_privmin :=  "%min" .
-Definition privStringIndexOflambda := 
-value_closure
-(closure_intro
- [("%CheckObjectCoercible", privCheckObjectCoercible);
-  ("%ToInteger", privToInteger);
-  ("%ToString", privToString);
-  ("%max", privmax);
-  ("%min", privmin)] None ["obj"; "this"; "args"] ex_privStringIndexOflambda)
-.
-Definition name_privStringIndexOflambda :=  "%StringIndexOflambda" .
-Definition privStringLastIndexOf :=  value_object 158 .
-Definition name_privStringLastIndexOf :=  "%StringLastIndexOf" .
 Definition privStxEq := 
 value_closure (closure_intro [] None ["x1"; "x2"] ex_privStxEq)
 .
@@ -8177,31 +8166,10 @@ value_closure (closure_intro [] None ["val"] ex_privVoid)
 Definition name_privVoid :=  "%Void" .
 Definition privacos :=  value_object 264 .
 Definition name_privacos :=  "%acos" .
-Definition privacosLambda := 
-value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privacosLambda)
+Definition privacosCall := 
+value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privacosCall)
 .
-Definition name_privacosLambda :=  "%acosLambda" .
-Definition privaiolambda := 
-value_closure
-(closure_intro
- [("%ToInteger", privToInteger);
-  ("%ToObject", privToObject);
-  ("%ToString", privToString);
-  ("%ToUint32", privToUint32);
-  ("%max", privmax)] None ["obj"; "this"; "args"] ex_privaiolambda)
-.
-Definition name_privaiolambda :=  "%aiolambda" .
-Definition privaliolambda := 
-value_closure
-(closure_intro
- [("%ToInteger", privToInteger);
-  ("%ToObject", privToObject);
-  ("%ToString", privToString);
-  ("%ToUint32", privToUint32);
-  ("%min", privmin)] None ["obj"; "this"; "args"] ex_privaliolambda)
-.
-Definition name_privaliolambda :=  "%aliolambda" .
+Definition name_privacosCall :=  "%acosCall" .
 Definition privapply :=  value_object 18 .
 Definition name_privapply :=  "%apply" .
 Definition privmkArgsObj := 
@@ -8213,18 +8181,42 @@ value_closure
   ("%ThrowTypeError", privThrowTypeError)] None ["args"] ex_privmkArgsObj)
 .
 Definition name_privmkArgsObj :=  "%mkArgsObj" .
-Definition privapplylambda := 
+Definition privapplyCall := 
 value_closure
 (closure_intro
  [("%ObjectTypeCheck", privObjectTypeCheck); ("%mkArgsObj", privmkArgsObj)]
- None ["this"; "args"] ex_privapplylambda)
+ None ["this"; "args"] ex_privapplyCall)
 .
-Definition name_privapplylambda :=  "%applylambda" .
+Definition name_privapplyCall :=  "%applyCall" .
 Definition privarrayIndexOf :=  value_object 121 .
 Definition name_privarrayIndexOf :=  "%arrayIndexOf" .
+Definition privarrayIndexOfCall := 
+value_closure
+(closure_intro
+ [("%ToInteger", privToInteger);
+  ("%ToObject", privToObject);
+  ("%ToString", privToString);
+  ("%ToUint32", privToUint32);
+  ("%max", privmax)] None ["obj"; "this"; "args"] ex_privarrayIndexOfCall)
+.
+Definition name_privarrayIndexOfCall :=  "%arrayIndexOfCall" .
 Definition privarrayLastIndexOf :=  value_object 124 .
 Definition name_privarrayLastIndexOf :=  "%arrayLastIndexOf" .
-Definition privarrayTLSlambda := 
+Definition privmin := 
+value_closure (closure_intro [] None ["a"; "b"] ex_privmin)
+.
+Definition name_privmin :=  "%min" .
+Definition privarrayLastIndexOfCall := 
+value_closure
+(closure_intro
+ [("%ToInteger", privToInteger);
+  ("%ToObject", privToObject);
+  ("%ToString", privToString);
+  ("%ToUint32", privToUint32);
+  ("%min", privmin)] None ["obj"; "this"; "args"] ex_privarrayLastIndexOfCall)
+.
+Definition name_privarrayLastIndexOfCall :=  "%arrayLastIndexOfCall" .
+Definition privarrayTLSCall := 
 value_closure
 (closure_intro
  [("%JSError", privJSError);
@@ -8232,34 +8224,33 @@ value_closure
   ("%ToUint32", privToUint32);
   ("%TypeError", privTypeError);
   ("%TypeErrorProto", privTypeErrorProto)] None ["obj"; "this"; "args"]
- ex_privarrayTLSlambda)
+ ex_privarrayTLSCall)
 .
-Definition name_privarrayTLSlambda :=  "%arrayTLSlambda" .
+Definition name_privarrayTLSCall :=  "%arrayTLSCall" .
 Definition privarrayToLocaleString :=  value_object 93 .
 Definition name_privarrayToLocaleString :=  "%arrayToLocaleString" .
 Definition privarrayToString :=  value_object 90 .
 Definition name_privarrayToString :=  "%arrayToString" .
-Definition privobjectToStringlambda := 
+Definition privobjectToStringCall := 
 value_closure
 (closure_intro [("%ToObject", privToObject)] None ["obj"; "this"; "args"]
- ex_privobjectToStringlambda)
+ ex_privobjectToStringCall)
 .
-Definition name_privobjectToStringlambda :=  "%objectToStringlambda" .
-Definition privarrayToStringlambda := 
+Definition name_privobjectToStringCall :=  "%objectToStringCall" .
+Definition privarrayToStringCall := 
 value_closure
 (closure_intro
  [("%ToObject", privToObject);
-  ("%objectToStringlambda", privobjectToStringlambda)] None
- ["obj"; "this"; "args"] ex_privarrayToStringlambda)
+  ("%objectToStringCall", privobjectToStringCall)] None
+ ["obj"; "this"; "args"] ex_privarrayToStringCall)
 .
-Definition name_privarrayToStringlambda :=  "%arrayToStringlambda" .
+Definition name_privarrayToStringCall :=  "%arrayToStringCall" .
 Definition privasin :=  value_object 266 .
 Definition name_privasin :=  "%asin" .
-Definition privasinLambda := 
-value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privasinLambda)
+Definition privasinCall := 
+value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privasinCall)
 .
-Definition name_privasinLambda :=  "%asinLambda" .
+Definition name_privasinCall :=  "%asinCall" .
 Definition privassert := 
 value_closure (closure_intro [] None ["b"; "s"] ex_privassert)
 .
@@ -8268,16 +8259,15 @@ Definition privatan :=  value_object 268 .
 Definition name_privatan :=  "%atan" .
 Definition privatan2 :=  value_object 270 .
 Definition name_privatan2 :=  "%atan2" .
-Definition privatan2Lambda := 
+Definition privatan2Call := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privatan2Lambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privatan2Call)
 .
-Definition name_privatan2Lambda :=  "%atan2Lambda" .
-Definition privatanLambda := 
-value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privatanLambda)
+Definition name_privatan2Call :=  "%atan2Call" .
+Definition privatanCall := 
+value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privatanCall)
 .
-Definition name_privatanLambda :=  "%atanLambda" .
+Definition name_privatanCall :=  "%atanCall" .
 Definition privbind :=  value_object 150 .
 Definition name_privbind :=  "%bind" .
 Definition privoneArgObj := 
@@ -8287,24 +8277,24 @@ value_closure
 Definition name_privoneArgObj :=  "%oneArgObj" .
 Definition privslice :=  value_object 147 .
 Definition name_privslice :=  "%slice" .
-Definition privbindLambda := 
+Definition privbindCall := 
 value_closure
 (closure_intro
  [("%IsCallable", privIsCallable);
   ("%MakeBind", privMakeBind);
   ("%TypeError", privTypeError);
   ("%oneArgObj", privoneArgObj);
-  ("%slice", privslice)] None ["obj"; "this"; "args"] ex_privbindLambda)
+  ("%slice", privslice)] None ["obj"; "this"; "args"] ex_privbindCall)
 .
-Definition name_privbindLambda :=  "%bindLambda" .
+Definition name_privbindCall :=  "%bindCall" .
 Definition privbooleanToString :=  value_object 28 .
 Definition name_privbooleanToString :=  "%booleanToString" .
-Definition privbooleanToStringlambda := 
+Definition privbooleanToStringCall := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
- ex_privbooleanToStringlambda)
+ ex_privbooleanToStringCall)
 .
-Definition name_privbooleanToStringlambda :=  "%booleanToStringlambda" .
+Definition name_privbooleanToStringCall :=  "%booleanToStringCall" .
 Definition privbooleanValueOf :=  value_object 296 .
 Definition name_privbooleanValueOf :=  "%booleanValueOf" .
 Definition privcall :=  value_object 17 .
@@ -8318,115 +8308,112 @@ value_closure
 (closure_intro [] None ["list"; "min"; "max"] ex_privslice_internal)
 .
 Definition name_privslice_internal :=  "%slice_internal" .
-Definition privcalllambda := 
+Definition privcallCall := 
 value_closure
 (closure_intro [("%len", privlen); ("%slice_internal", privslice_internal)]
- None ["this"; "args"] ex_privcalllambda)
+ None ["this"; "args"] ex_privcallCall)
 .
-Definition name_privcalllambda :=  "%calllambda" .
-Definition privcharat :=  value_object 103 .
-Definition name_privcharat :=  "%charat" .
-Definition privcharatlambda := 
+Definition name_privcallCall :=  "%callCall" .
+Definition privcharAt :=  value_object 103 .
+Definition name_privcharAt :=  "%charAt" .
+Definition privcharAtCall := 
+value_closure
+(closure_intro
+ [("%CheckObjectCoercible", privCheckObjectCoercible);
+  ("%ToInteger", privToInteger);
+  ("%ToString", privToString)] None ["obj"; "this"; "args"] ex_privcharAtCall)
+.
+Definition name_privcharAtCall :=  "%charAtCall" .
+Definition privcharCodeAt :=  value_object 106 .
+Definition name_privcharCodeAt :=  "%charCodeAt" .
+Definition privcharCodeAtCall := 
 value_closure
 (closure_intro
  [("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToInteger", privToInteger);
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
- ex_privcharatlambda)
+ ex_privcharCodeAtCall)
 .
-Definition name_privcharatlambda :=  "%charatlambda" .
-Definition privcharcodeat :=  value_object 106 .
-Definition name_privcharcodeat :=  "%charcodeat" .
-Definition privcharcodeatlambda := 
-value_closure
-(closure_intro
- [("%CheckObjectCoercible", privCheckObjectCoercible);
-  ("%ToInteger", privToInteger);
-  ("%ToString", privToString)] None ["obj"; "this"; "args"]
- ex_privcharcodeatlambda)
-.
-Definition name_privcharcodeatlambda :=  "%charcodeatlambda" .
-Definition privconcatLambda := 
+Definition name_privcharCodeAtCall :=  "%charCodeAtCall" .
+Definition privconcatCall := 
 value_closure
 (closure_intro
  [("%ArrayConstructor", privArrayConstructor); ("%ToObject", privToObject)]
- None ["obj"; "this"; "args"] ex_privconcatLambda)
+ None ["obj"; "this"; "args"] ex_privconcatCall)
 .
-Definition name_privconcatLambda :=  "%concatLambda" .
+Definition name_privconcatCall :=  "%concatCall" .
 Definition privconsole :=  value_object 309 .
 Definition name_privconsole :=  "%console" .
 Definition privcos :=  value_object 272 .
 Definition name_privcos :=  "%cos" .
-Definition privcosLambda := 
-value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privcosLambda)
+Definition privcosCall := 
+value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privcosCall)
 .
-Definition name_privcosLambda :=  "%cosLambda" .
+Definition name_privcosCall :=  "%cosCall" .
 Definition privcreate :=  value_object 58 .
 Definition name_privcreate :=  "%create" .
 Definition privdefineProperties :=  value_object 56 .
 Definition name_privdefineProperties :=  "%defineProperties" .
-Definition privcreateLambda := 
+Definition privcreateCall := 
 value_closure
 (closure_intro
  [("%ToObject", privToObject);
   ("%TypeError", privTypeError);
   ("%defineProperties", privdefineProperties)] None ["obj"; "this"; "args"]
- ex_privcreateLambda)
+ ex_privcreateCall)
 .
-Definition name_privcreateLambda :=  "%createLambda" .
+Definition name_privcreateCall :=  "%createCall" .
 Definition privdateGetTimezoneOffset :=  value_object 172 .
 Definition name_privdateGetTimezoneOffset :=  "%dateGetTimezoneOffset" .
-Definition privdateGetTimezoneOffsetLambda := 
+Definition privdateGetTimezoneOffsetCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"]
- ex_privdateGetTimezoneOffsetLambda)
+ ex_privdateGetTimezoneOffsetCall)
 .
-Definition name_privdateGetTimezoneOffsetLambda :=  "%dateGetTimezoneOffsetLambda" .
-Definition privdateToStringLambda := 
+Definition name_privdateGetTimezoneOffsetCall :=  "%dateGetTimezoneOffsetCall" .
+Definition privdateToStringCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privdateToStringLambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privdateToStringCall)
 .
-Definition name_privdateToStringLambda :=  "%dateToStringLambda" .
+Definition name_privdateToStringCall :=  "%dateToStringCall" .
 Definition privdateValueOf :=  value_object 170 .
 Definition name_privdateValueOf :=  "%dateValueOf" .
-Definition privdateValueOfLambda := 
+Definition privdateValueOfCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privdateValueOfLambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privdateValueOfCall)
 .
-Definition name_privdateValueOfLambda :=  "%dateValueOfLambda" .
+Definition name_privdateValueOfCall :=  "%dateValueOfCall" .
 Definition privdategetDate :=  value_object 176 .
 Definition name_privdategetDate :=  "%dategetDate" .
-Definition privdategetDateLambda := 
+Definition privdategetDateCall := 
 value_closure
 (closure_intro
  [("%DateFromTime", privDateFromTime); ("%LocalTime", privLocalTime)] 
- None ["obj"; "this"; "args"] ex_privdategetDateLambda)
+ None ["obj"; "this"; "args"] ex_privdategetDateCall)
 .
-Definition name_privdategetDateLambda :=  "%dategetDateLambda" .
+Definition name_privdategetDateCall :=  "%dategetDateCall" .
 Definition privdategetDay :=  value_object 174 .
 Definition name_privdategetDay :=  "%dategetDay" .
-Definition privdategetDayLambda := 
+Definition privdategetDayCall := 
 value_closure
 (closure_intro [("%msPerDay", privmsPerDay)] None ["obj"; "this"; "args"]
- ex_privdategetDayLambda)
+ ex_privdategetDayCall)
 .
-Definition name_privdategetDayLambda :=  "%dategetDayLambda" .
+Definition name_privdategetDayCall :=  "%dategetDayCall" .
 Definition privdecodeURI :=  value_object 250 .
 Definition name_privdecodeURI :=  "%decodeURI" .
+Definition privdecodeURICall := 
+value_closure
+(closure_intro [] None ["obj"; "this"; "args"] ex_privdecodeURICall)
+.
+Definition name_privdecodeURICall :=  "%decodeURICall" .
 Definition privdecodeURIComponent :=  value_object 251 .
 Definition name_privdecodeURIComponent :=  "%decodeURIComponent" .
-Definition privdecodeURIComponentLambda := 
+Definition privdecodeURIComponentCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"]
- ex_privdecodeURIComponentLambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privdecodeURIComponentCall)
 .
-Definition name_privdecodeURIComponentLambda :=  "%decodeURIComponentLambda" .
-Definition privdecodeURILambda := 
-value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privdecodeURILambda)
-.
-Definition name_privdecodeURILambda :=  "%decodeURILambda" .
+Definition name_privdecodeURIComponentCall :=  "%decodeURIComponentCall" .
 Definition privdefine15Property := 
 value_closure
 (closure_intro
@@ -8459,60 +8446,59 @@ value_closure
 Definition name_privdefineNYIProperty :=  "%defineNYIProperty" .
 Definition privdefineProperty :=  value_object 16 .
 Definition name_privdefineProperty :=  "%defineProperty" .
-Definition privdefinePropertiesLambda := 
+Definition privdefinePropertiesCall := 
 value_closure
 (closure_intro
  [("%ObjectTypeCheck", privObjectTypeCheck);
   ("%ToObject", privToObject);
   ("%defineProperty", privdefineProperty)] None ["obj"; "this"; "args"]
- ex_privdefinePropertiesLambda)
+ ex_privdefinePropertiesCall)
 .
-Definition name_privdefinePropertiesLambda :=  "%definePropertiesLambda" .
-Definition privdefinePropertylambda := 
+Definition name_privdefinePropertiesCall :=  "%definePropertiesCall" .
+Definition privdefinePropertyCall := 
 value_closure
 (closure_intro
  [("%ObjectTypeCheck", privObjectTypeCheck);
   ("%ToPropertyDescriptor", privToPropertyDescriptor);
   ("%ToString", privToString);
   ("%defineOwnProperty", privdefineOwnProperty)] None ["this"; "args"]
- ex_privdefinePropertylambda)
+ ex_privdefinePropertyCall)
 .
-Definition name_privdefinePropertylambda :=  "%definePropertylambda" .
+Definition name_privdefinePropertyCall :=  "%definePropertyCall" .
 Definition privencodeURI :=  value_object 252 .
 Definition name_privencodeURI :=  "%encodeURI" .
+Definition privencodeURICall := 
+value_closure
+(closure_intro [] None ["obj"; "this"; "args"] ex_privencodeURICall)
+.
+Definition name_privencodeURICall :=  "%encodeURICall" .
 Definition privencodeURIComponent :=  value_object 253 .
 Definition name_privencodeURIComponent :=  "%encodeURIComponent" .
-Definition privencodeURIComponentLambda := 
+Definition privencodeURIComponentCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"]
- ex_privencodeURIComponentLambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privencodeURIComponentCall)
 .
-Definition name_privencodeURIComponentLambda :=  "%encodeURIComponentLambda" .
-Definition privencodeURILambda := 
-value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privencodeURILambda)
-.
-Definition name_privencodeURILambda :=  "%encodeURILambda" .
+Definition name_privencodeURIComponentCall :=  "%encodeURIComponentCall" .
 Definition privescape :=  value_object 314 .
 Definition name_privescape :=  "%escape" .
-Definition privescapeLambda := 
+Definition privescapeCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privescapeLambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privescapeCall)
 .
-Definition name_privescapeLambda :=  "%escapeLambda" .
+Definition name_privescapeCall :=  "%escapeCall" .
 Definition privets :=  value_object 22 .
 Definition name_privets :=  "%ets" .
-Definition privetslambda := 
+Definition privetsCall := 
 value_closure
 (closure_intro [("%ToString", privToString); ("%TypeError", privTypeError)]
- None ["obj"; "this"; "args"] ex_privetslambda)
+ None ["obj"; "this"; "args"] ex_privetsCall)
 .
-Definition name_privetslambda :=  "%etslambda" .
+Definition name_privetsCall :=  "%etsCall" .
 Definition priveval :=  value_object 310 .
 Definition name_priveval :=  "%eval" .
 Definition privevery :=  value_object 138 .
 Definition name_privevery :=  "%every" .
-Definition priveverylambda := 
+Definition priveveryCall := 
 value_closure
 (closure_intro
  [("%IsCallable", privIsCallable);
@@ -8521,18 +8507,18 @@ value_closure
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
   ("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
- ex_priveverylambda)
+ ex_priveveryCall)
 .
-Definition name_priveverylambda :=  "%everylambda" .
+Definition name_priveveryCall :=  "%everyCall" .
 Definition privexp :=  value_object 254 .
 Definition name_privexp :=  "%exp" .
-Definition privexplambda := 
-value_closure (closure_intro [] None [] ex_privexplambda)
+Definition privexpCall := 
+value_closure (closure_intro [] None [] ex_privexpCall)
 .
-Definition name_privexplambda :=  "%explambda" .
+Definition name_privexpCall :=  "%expCall" .
 Definition privfilter :=  value_object 133 .
 Definition name_privfilter :=  "%filter" .
-Definition privfilterlambda := 
+Definition privfilterCall := 
 value_closure
 (closure_intro
  [("%IsCallable", privIsCallable);
@@ -8543,12 +8529,12 @@ value_closure
   ("%ToUint32", privToUint32);
   ("%TypeError", privTypeError);
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
- ex_privfilterlambda)
+ ex_privfilterCall)
 .
-Definition name_privfilterlambda :=  "%filterlambda" .
+Definition name_privfilterCall :=  "%filterCall" .
 Definition privforeach :=  value_object 127 .
 Definition name_privforeach :=  "%foreach" .
-Definition privforeachlambda := 
+Definition privforeachCall := 
 value_closure
 (closure_intro
  [("%IsCallable", privIsCallable);
@@ -8556,83 +8542,83 @@ value_closure
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
   ("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
- ex_privforeachlambda)
+ ex_privforeachCall)
 .
-Definition name_privforeachlambda :=  "%foreachlambda" .
+Definition name_privforeachCall :=  "%foreachCall" .
 Definition privfreeze :=  value_object 62 .
 Definition name_privfreeze :=  "%freeze" .
-Definition privfreezelambda := 
+Definition privfreezeCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privfreezelambda)
+ ["obj"; "this"; "args"] ex_privfreezeCall)
 .
-Definition name_privfreezelambda :=  "%freezelambda" .
+Definition name_privfreezeCall :=  "%freezeCall" .
 Definition privfromCharCode :=  value_object 74 .
 Definition name_privfromCharCode :=  "%fromCharCode" .
-Definition privfromcclambda := 
+Definition privfromccCall := 
 value_closure
 (closure_intro [("%ToUint16", privToUint16)] None ["obj"; "this"; "args"]
- ex_privfromcclambda)
+ ex_privfromccCall)
 .
-Definition name_privfromcclambda :=  "%fromcclambda" .
+Definition name_privfromccCall :=  "%fromccCall" .
 Definition privfunctionToString :=  value_object 4 .
 Definition name_privfunctionToString :=  "%functionToString" .
-Definition privfunctionToStringlambda := 
+Definition privfunctionToStringCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privfunctionToStringlambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privfunctionToStringCall)
 .
-Definition name_privfunctionToStringlambda :=  "%functionToStringlambda" .
+Definition name_privfunctionToStringCall :=  "%functionToStringCall" .
 Definition privgetMonth :=  value_object 166 .
 Definition name_privgetMonth :=  "%getMonth" .
-Definition privgetMonthlambda := 
+Definition privgetMonthCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privgetMonthlambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privgetMonthCall)
 .
-Definition name_privgetMonthlambda :=  "%getMonthlambda" .
+Definition name_privgetMonthCall :=  "%getMonthCall" .
 Definition privgetYear :=  value_object 165 .
 Definition name_privgetYear :=  "%getYear" .
-Definition privgetYearlambda := 
+Definition privgetYearCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privgetYearlambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privgetYearCall)
 .
-Definition name_privgetYearlambda :=  "%getYearlambda" .
+Definition name_privgetYearCall :=  "%getYearCall" .
 Definition privgopd :=  value_object 36 .
 Definition name_privgopd :=  "%gopd" .
-Definition privgopdLambda := 
+Definition privgopdCall := 
 value_closure
 (closure_intro
  [("%ObjectProto", privObjectProto);
   ("%ObjectTypeCheck", privObjectTypeCheck);
   ("%ToString", privToString);
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
- ex_privgopdLambda)
+ ex_privgopdCall)
 .
-Definition name_privgopdLambda :=  "%gopdLambda" .
+Definition name_privgopdCall :=  "%gopdCall" .
 Definition privgopn :=  value_object 53 .
 Definition name_privgopn :=  "%gopn" .
-Definition privgopnLambda := 
+Definition privgopnCall := 
 value_closure
 (closure_intro
  [("%MakeArray", privMakeArray); ("%ObjectTypeCheck", privObjectTypeCheck)]
- None ["obj"; "this"; "args"] ex_privgopnLambda)
+ None ["obj"; "this"; "args"] ex_privgopnCall)
 .
-Definition name_privgopnLambda :=  "%gopnLambda" .
+Definition name_privgopnCall :=  "%gopnCall" .
 Definition privgpo :=  value_object 34 .
 Definition name_privgpo :=  "%gpo" .
-Definition privgpoLambda := 
+Definition privgpoCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privgpoLambda)
+ ["obj"; "this"; "args"] ex_privgpoCall)
 .
-Definition name_privgpoLambda :=  "%gpoLambda" .
+Definition name_privgpoCall :=  "%gpoCall" .
 Definition privhasOwnProperty :=  value_object 42 .
 Definition name_privhasOwnProperty :=  "%hasOwnProperty" .
-Definition privhasOwnPropertylambda := 
+Definition privhasOwnPropertyCall := 
 value_closure
 (closure_intro [("%ToObject", privToObject); ("%ToString", privToString)]
- None ["obj"; "this"; "args"] ex_privhasOwnPropertylambda)
+ None ["obj"; "this"; "args"] ex_privhasOwnPropertyCall)
 .
-Definition name_privhasOwnPropertylambda :=  "%hasOwnPropertylambda" .
+Definition name_privhasOwnPropertyCall :=  "%hasOwnPropertyCall" .
 Definition privin := 
 value_closure
 (closure_intro [("%ToString", privToString); ("%TypeError", privTypeError)]
@@ -8647,86 +8633,92 @@ value_closure
 Definition name_privinstanceof :=  "%instanceof" .
 Definition privisExtensible :=  value_object 70 .
 Definition name_privisExtensible :=  "%isExtensible" .
-Definition privisExtensibleLambda := 
+Definition privisExtensibleCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privisExtensibleLambda)
+ ["obj"; "this"; "args"] ex_privisExtensibleCall)
 .
-Definition name_privisExtensibleLambda :=  "%isExtensibleLambda" .
+Definition name_privisExtensibleCall :=  "%isExtensibleCall" .
 Definition privisFinite :=  value_object 312 .
 Definition name_privisFinite :=  "%isFinite" .
-Definition privisFiniteLambda := 
+Definition privisFiniteCall := 
 value_closure
 (closure_intro [("%IsFinite", privIsFinite); ("%ToNumber", privToNumber)]
- None ["obj"; "this"; "args"] ex_privisFiniteLambda)
+ None ["obj"; "this"; "args"] ex_privisFiniteCall)
 .
-Definition name_privisFiniteLambda :=  "%isFiniteLambda" .
+Definition name_privisFiniteCall :=  "%isFiniteCall" .
 Definition privisFrozen :=  value_object 66 .
 Definition name_privisFrozen :=  "%isFrozen" .
-Definition privisFrozenLambda := 
+Definition privisFrozenCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privisFrozenLambda)
+ ["obj"; "this"; "args"] ex_privisFrozenCall)
 .
-Definition name_privisFrozenLambda :=  "%isFrozenLambda" .
+Definition name_privisFrozenCall :=  "%isFrozenCall" .
 Definition privisNaN :=  value_object 21 .
 Definition name_privisNaN :=  "%isNaN" .
-Definition privisNaNlambda := 
+Definition privisNaNCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privisNaNlambda)
+ ex_privisNaNCall)
 .
-Definition name_privisNaNlambda :=  "%isNaNlambda" .
+Definition name_privisNaNCall :=  "%isNaNCall" .
 Definition privisPrototypeOf :=  value_object 43 .
 Definition name_privisPrototypeOf :=  "%isPrototypeOf" .
+Definition privisPrototypeOfCall := 
+value_closure
+(closure_intro [("%ToObject", privToObject)] None ["obj"; "this"; "args"]
+ ex_privisPrototypeOfCall)
+.
+Definition name_privisPrototypeOfCall :=  "%isPrototypeOfCall" .
 Definition privisSealed :=  value_object 68 .
 Definition name_privisSealed :=  "%isSealed" .
-Definition privisSealedLambda := 
+Definition privisSealedCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privisSealedLambda)
+ ["obj"; "this"; "args"] ex_privisSealedCall)
 .
-Definition name_privisSealedLambda :=  "%isSealedLambda" .
+Definition name_privisSealedCall :=  "%isSealedCall" .
 Definition privjoin :=  value_object 76 .
 Definition name_privjoin :=  "%join" .
-Definition privjoinlambda := 
+Definition privjoinCall := 
 value_closure
 (closure_intro
  [("%ToObject", privToObject);
   ("%ToString", privToString);
-  ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privjoinlambda)
+  ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privjoinCall)
 .
-Definition name_privjoinlambda :=  "%joinlambda" .
+Definition name_privjoinCall :=  "%joinCall" .
 Definition privkeys :=  value_object 72 .
 Definition name_privkeys :=  "%keys" .
-Definition privkeysLambda := 
+Definition privkeysCall := 
 value_closure
 (closure_intro
  [("%MakeArray", privMakeArray);
   ("%ObjectTypeCheck", privObjectTypeCheck);
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
- ex_privkeysLambda)
+ ex_privkeysCall)
 .
-Definition name_privkeysLambda :=  "%keysLambda" .
+Definition name_privkeysCall :=  "%keysCall" .
 Definition privlocaleCompare :=  value_object 159 .
 Definition name_privlocaleCompare :=  "%localeCompare" .
-Definition privlocaleCompareLambda := 
+Definition privlocaleCompareCall := 
 value_closure
 (closure_intro
  [("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
- ex_privlocaleCompareLambda)
+ ex_privlocaleCompareCall)
 .
-Definition name_privlocaleCompareLambda :=  "%localeCompareLambda" .
+Definition name_privlocaleCompareCall :=  "%localeCompareCall" .
 Definition privlog :=  value_object 308 .
 Definition name_privlog :=  "%log" .
-Definition privlogLambda := 
-value_closure (closure_intro [] None ["o"; "s"] ex_privlogLambda)
+Definition privlogCall := 
+value_closure (closure_intro [] None ["o"; "s"] ex_privlogCall)
 .
-Definition name_privlogLambda :=  "%logLambda" .
+Definition name_privlogCall :=  "%logCall" .
 Definition privmap :=  value_object 130 .
 Definition name_privmap :=  "%map" .
-Definition privmaplambda := 
+Definition privmapCall := 
 value_closure
 (closure_intro
  [("%IsCallable", privIsCallable);
@@ -8736,71 +8728,71 @@ value_closure
   ("%ToUint32", privToUint32);
   ("%TypeError", privTypeError);
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
- ex_privmaplambda)
+ ex_privmapCall)
 .
-Definition name_privmaplambda :=  "%maplambda" .
+Definition name_privmapCall :=  "%mapCall" .
 Definition privmathAbs :=  value_object 262 .
 Definition name_privmathAbs :=  "%mathAbs" .
-Definition privmathAbsLambda := 
+Definition privmathAbsCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privmathAbsLambda)
+ ex_privmathAbsCall)
 .
-Definition name_privmathAbsLambda :=  "%mathAbsLambda" .
+Definition name_privmathAbsCall :=  "%mathAbsCall" .
 Definition privmathCeil :=  value_object 286 .
 Definition name_privmathCeil :=  "%mathCeil" .
-Definition privmathCeilLambda := 
+Definition privmathCeilCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privmathCeilLambda)
+ ex_privmathCeilCall)
 .
-Definition name_privmathCeilLambda :=  "%mathCeilLambda" .
+Definition name_privmathCeilCall :=  "%mathCeilCall" .
 Definition privmathFloor :=  value_object 288 .
 Definition name_privmathFloor :=  "%mathFloor" .
-Definition privmathFloorLambda := 
+Definition privmathFloorCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privmathFloorLambda)
+ ex_privmathFloorCall)
 .
-Definition name_privmathFloorLambda :=  "%mathFloorLambda" .
+Definition name_privmathFloorCall :=  "%mathFloorCall" .
 Definition privmathLog :=  value_object 284 .
 Definition name_privmathLog :=  "%mathLog" .
-Definition privmathLogLambda := 
+Definition privmathLogCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privmathLogLambda)
+ ex_privmathLogCall)
 .
-Definition name_privmathLogLambda :=  "%mathLogLambda" .
+Definition name_privmathLogCall :=  "%mathLogCall" .
 Definition privmathMax :=  value_object 259 .
 Definition name_privmathMax :=  "%mathMax" .
-Definition privminMaxLambda := 
+Definition privminMaxCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None
- ["this"; "args"; "op"; "init"] ex_privminMaxLambda)
+ ["this"; "args"; "op"; "init"] ex_privminMaxCall)
 .
-Definition name_privminMaxLambda :=  "%minMaxLambda" .
-Definition privmathMaxLambda := 
+Definition name_privminMaxCall :=  "%minMaxCall" .
+Definition privmathMaxCall := 
 value_closure
-(closure_intro [("%max", privmax); ("%minMaxLambda", privminMaxLambda)] 
- None ["obj"; "this"; "args"] ex_privmathMaxLambda)
+(closure_intro [("%max", privmax); ("%minMaxCall", privminMaxCall)] None
+ ["obj"; "this"; "args"] ex_privmathMaxCall)
 .
-Definition name_privmathMaxLambda :=  "%mathMaxLambda" .
+Definition name_privmathMaxCall :=  "%mathMaxCall" .
 Definition privmathMin :=  value_object 256 .
 Definition name_privmathMin :=  "%mathMin" .
-Definition privmathMinLambda := 
+Definition privmathMinCall := 
 value_closure
-(closure_intro [("%min", privmin); ("%minMaxLambda", privminMaxLambda)] 
- None ["obj"; "this"; "args"] ex_privmathMinLambda)
+(closure_intro [("%min", privmin); ("%minMaxCall", privminMaxCall)] None
+ ["obj"; "this"; "args"] ex_privmathMinCall)
 .
-Definition name_privmathMinLambda :=  "%mathMinLambda" .
+Definition name_privmathMinCall :=  "%mathMinCall" .
 Definition privmathPow :=  value_object 290 .
 Definition name_privmathPow :=  "%mathPow" .
-Definition privmathPowLambda := 
+Definition privmathPowCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privmathPowLambda)
+ ex_privmathPowCall)
 .
-Definition name_privmathPowLambda :=  "%mathPowLambda" .
+Definition name_privmathPowCall :=  "%mathPowCall" .
 Definition privmaybeDirectEval := 
 value_closure
 (closure_intro
@@ -8820,13 +8812,13 @@ Definition privnumTLS :=  value_object 301 .
 Definition name_privnumTLS :=  "%numTLS" .
 Definition privtoLocaleString :=  value_object 40 .
 Definition name_privtoLocaleString :=  "%toLocaleString" .
-Definition privnumTLSLambda := 
+Definition privnumTLSCall := 
 value_closure
 (closure_intro
  [("%StringProto", privStringProto); ("%toLocaleString", privtoLocaleString)]
- None ["obj"; "this"; "args"] ex_privnumTLSLambda)
+ None ["obj"; "this"; "args"] ex_privnumTLSCall)
 .
-Definition name_privnumTLSLambda :=  "%numTLSLambda" .
+Definition name_privnumTLSCall :=  "%numTLSCall" .
 Definition privnumToStringAbstract := 
 value_closure (closure_intro [] None ["n"; "r"] ex_privnumToStringAbstract)
 .
@@ -8841,52 +8833,52 @@ value_closure
 Definition name_privnumberPrimval :=  "%numberPrimval" .
 Definition privnumberToString :=  value_object 153 .
 Definition name_privnumberToString :=  "%numberToString" .
-Definition privnumberToStringlambda := 
+Definition privnumberToStringCall := 
 value_closure
 (closure_intro
  [("%RangeError", privRangeError);
   ("%ToInteger", privToInteger);
   ("%numToStringAbstract", privnumToStringAbstract);
   ("%numberPrimval", privnumberPrimval)] None ["obj"; "this"; "args"]
- ex_privnumberToStringlambda)
+ ex_privnumberToStringCall)
 .
-Definition name_privnumberToStringlambda :=  "%numberToStringlambda" .
+Definition name_privnumberToStringCall :=  "%numberToStringCall" .
 Definition privobjectToString :=  value_object 38 .
 Definition name_privobjectToString :=  "%objectToString" .
 Definition privparseFloat :=  value_object 313 .
 Definition name_privparseFloat :=  "%parseFloat" .
-Definition privparseFloatLambda := 
+Definition privparseFloatCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privparseFloatLambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privparseFloatCall)
 .
-Definition name_privparseFloatLambda :=  "%parseFloatLambda" .
+Definition name_privparseFloatCall :=  "%parseFloatCall" .
 Definition privparseInt :=  value_object 249 .
 Definition name_privparseInt :=  "%parseInt" .
-Definition privparseIntlambda := 
+Definition privparseIntCall := 
 value_closure
 (closure_intro [("%ToString", privToString)] None ["obj"; "this"; "args"]
- ex_privparseIntlambda)
+ ex_privparseIntCall)
 .
-Definition name_privparseIntlambda :=  "%parseIntlambda" .
+Definition name_privparseIntCall :=  "%parseIntCall" .
 Definition privpop :=  value_object 78 .
 Definition name_privpop :=  "%pop" .
-Definition privpoplambda := 
+Definition privpopCall := 
 value_closure
 (closure_intro
  [("%ToNumber", privToNumber);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
-  ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privpoplambda)
+  ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privpopCall)
 .
-Definition name_privpoplambda :=  "%poplambda" .
+Definition name_privpopCall :=  "%popCall" .
 Definition privpreventExtensions :=  value_object 64 .
 Definition name_privpreventExtensions :=  "%preventExtensions" .
-Definition privpreventExtensionsLambda := 
+Definition privpreventExtensionsCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privpreventExtensionsLambda)
+ ["obj"; "this"; "args"] ex_privpreventExtensionsCall)
 .
-Definition name_privpreventExtensionsLambda :=  "%preventExtensionsLambda" .
+Definition name_privpreventExtensionsCall :=  "%preventExtensionsCall" .
 Definition privprimEach := 
 value_closure
 (closure_intro [("%ToString", privToString)] None ["arr"; "fn"]
@@ -8895,18 +8887,18 @@ value_closure
 Definition name_privprimEach :=  "%primEach" .
 Definition privprint :=  value_object 15 .
 Definition name_privprint :=  "%print" .
-Definition privprintlambda := 
+Definition privprintCall := 
 value_closure
 (closure_intro [("%ToString", privToString)] None ["obj"; "o"; "s"]
- ex_privprintlambda)
+ ex_privprintCall)
 .
-Definition name_privprintlambda :=  "%printlambda" .
-Definition privpropEnumlambda := 
+Definition name_privprintCall :=  "%printCall" .
+Definition privpropEnumCall := 
 value_closure
 (closure_intro [("%ToObject", privToObject); ("%ToString", privToString)]
- None ["obj"; "this"; "args"] ex_privpropEnumlambda)
+ None ["obj"; "this"; "args"] ex_privpropEnumCall)
 .
-Definition name_privpropEnumlambda :=  "%propEnumlambda" .
+Definition name_privpropEnumCall :=  "%propEnumCall" .
 Definition privpropertyIsEnumerable :=  value_object 39 .
 Definition name_privpropertyIsEnumerable :=  "%propertyIsEnumerable" .
 Definition privpropertyNames := 
@@ -8922,28 +8914,39 @@ value_closure
 Definition name_privprotoOfField :=  "%protoOfField" .
 Definition privpush :=  value_object 81 .
 Definition name_privpush :=  "%push" .
-Definition privpushlambda := 
+Definition privpushCall := 
 value_closure
 (closure_intro
  [("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
   ("%set-property", privset_property)] None ["obj"; "this"; "args"]
- ex_privpushlambda)
+ ex_privpushCall)
 .
-Definition name_privpushlambda :=  "%pushlambda" .
+Definition name_privpushCall :=  "%pushCall" .
 Definition privrandom :=  value_object 274 .
 Definition name_privrandom :=  "%random" .
-Definition privrandomLambda := 
+Definition privrandomCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privrandomLambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privrandomCall)
 .
-Definition name_privrandomLambda :=  "%randomLambda" .
+Definition name_privrandomCall :=  "%randomCall" .
 Definition privreduce :=  value_object 135 .
 Definition name_privreduce :=  "%reduce" .
+Definition privreduceCall := 
+value_closure
+(closure_intro
+ [("%IsCallable", privIsCallable);
+  ("%ToObject", privToObject);
+  ("%ToString", privToString);
+  ("%ToUint32", privToUint32);
+  ("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
+ ex_privreduceCall)
+.
+Definition name_privreduceCall :=  "%reduceCall" .
 Definition privreduceRight :=  value_object 144 .
 Definition name_privreduceRight :=  "%reduceRight" .
-Definition privreduceRightLambda := 
+Definition privreduceRightCall := 
 value_closure
 (closure_intro
  [("%IsCallable", privIsCallable);
@@ -8951,22 +8954,13 @@ value_closure
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
   ("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
- ex_privreduceRightLambda)
+ ex_privreduceRightCall)
 .
-Definition name_privreduceRightLambda :=  "%reduceRightLambda" .
-Definition privreducelambda := 
-value_closure
-(closure_intro
- [("%IsCallable", privIsCallable);
-  ("%ToObject", privToObject);
-  ("%ToString", privToString);
-  ("%ToUint32", privToUint32);
-  ("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
- ex_privreducelambda)
-.
-Definition name_privreducelambda :=  "%reducelambda" .
+Definition name_privreduceRightCall :=  "%reduceRightCall" .
 Definition privreplace :=  value_object 157 .
 Definition name_privreplace :=  "%replace" .
+Definition privstringIndexOf :=  value_object 156 .
+Definition name_privstringIndexOf :=  "%stringIndexOf" .
 Definition privsubstring :=  value_object 112 .
 Definition name_privsubstring :=  "%substring" .
 Definition privtwoArgObj := 
@@ -8975,18 +8969,18 @@ value_closure
  ex_privtwoArgObj)
 .
 Definition name_privtwoArgObj :=  "%twoArgObj" .
-Definition privreplacelambda := 
+Definition privreplaceCall := 
 value_closure
 (closure_intro
  [("%IsCallable", privIsCallable);
-  ("%StringIndexOf", privStringIndexOf);
   ("%ToString", privToString);
   ("%oneArgObj", privoneArgObj);
+  ("%stringIndexOf", privstringIndexOf);
   ("%substring", privsubstring);
   ("%twoArgObj", privtwoArgObj)] None ["obj"; "this"; "args"]
- ex_privreplacelambda)
+ ex_privreplaceCall)
 .
-Definition name_privreplacelambda :=  "%replacelambda" .
+Definition name_privreplaceCall :=  "%replaceCall" .
 Definition privresolveThis := 
 value_closure
 (closure_intro [("%ToObject", privToObject); ("%global", dolthis)] None
@@ -8995,50 +8989,49 @@ value_closure
 Definition name_privresolveThis :=  "%resolveThis" .
 Definition privreverse :=  value_object 84 .
 Definition name_privreverse :=  "%reverse" .
-Definition privreverselambda := 
+Definition privreverseCall := 
 value_closure
 (closure_intro
  [("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"]
- ex_privreverselambda)
+ ex_privreverseCall)
 .
-Definition name_privreverselambda :=  "%reverselambda" .
+Definition name_privreverseCall :=  "%reverseCall" .
 Definition privround :=  value_object 276 .
 Definition name_privround :=  "%round" .
-Definition privroundLambda := 
+Definition privroundCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privroundLambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privroundCall)
 .
-Definition name_privroundLambda :=  "%roundLambda" .
+Definition name_privroundCall :=  "%roundCall" .
 Definition privseal :=  value_object 60 .
 Definition name_privseal :=  "%seal" .
-Definition privsealLambda := 
+Definition privsealCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privsealLambda)
+ ["obj"; "this"; "args"] ex_privsealCall)
 .
-Definition name_privsealLambda :=  "%sealLambda" .
+Definition name_privsealCall :=  "%sealCall" .
 Definition privshift :=  value_object 87 .
 Definition name_privshift :=  "%shift" .
-Definition privshiftlambda := 
+Definition privshiftCall := 
 value_closure
 (closure_intro
  [("%ToObject", privToObject);
   ("%ToString", privToString);
-  ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"]
- ex_privshiftlambda)
+  ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privshiftCall)
 .
-Definition name_privshiftlambda :=  "%shiftlambda" .
+Definition name_privshiftCall :=  "%shiftCall" .
 Definition privsin :=  value_object 278 .
 Definition name_privsin :=  "%sin" .
-Definition privsinLambda := 
+Definition privsinCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privsinLambda)
+ ex_privsinCall)
 .
-Definition name_privsinLambda :=  "%sinLambda" .
-Definition privslicelambda := 
+Definition name_privsinCall :=  "%sinCall" .
+Definition privsliceCall := 
 value_closure
 (closure_intro
  [("%MakeArray", privMakeArray);
@@ -9047,23 +9040,12 @@ value_closure
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
- ex_privslicelambda)
+ ex_privsliceCall)
 .
-Definition name_privslicelambda :=  "%slicelambda" .
-Definition privsliolambda := 
-value_closure
-(closure_intro
- [("%CheckObjectCoercible", privCheckObjectCoercible);
-  ("%ToInteger", privToInteger);
-  ("%ToNumber", privToNumber);
-  ("%ToString", privToString);
-  ("%max", privmax);
-  ("%min", privmin)] None ["obj"; "this"; "args"] ex_privsliolambda)
-.
-Definition name_privsliolambda :=  "%sliolambda" .
+Definition name_privsliceCall :=  "%sliceCall" .
 Definition privsome :=  value_object 141 .
 Definition name_privsome :=  "%some" .
-Definition privsomelambda := 
+Definition privsomeCall := 
 value_closure
 (closure_intro
  [("%IsCallable", privIsCallable);
@@ -9071,13 +9053,12 @@ value_closure
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
-  ("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
- ex_privsomelambda)
+  ("%TypeError", privTypeError)] None ["obj"; "this"; "args"] ex_privsomeCall)
 .
-Definition name_privsomelambda :=  "%somelambda" .
+Definition name_privsomeCall :=  "%someCall" .
 Definition privsort :=  value_object 98 .
 Definition name_privsort :=  "%sort" .
-Definition privsortlambda := 
+Definition privsortCall := 
 value_closure
 (closure_intro
  [("%IsCallable", privIsCallable);
@@ -9085,12 +9066,12 @@ value_closure
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%TypeErrorProto", privTypeErrorProto)] None ["obj"; "this"; "args"]
- ex_privsortlambda)
+ ex_privsortCall)
 .
-Definition name_privsortlambda :=  "%sortlambda" .
+Definition name_privsortCall :=  "%sortCall" .
 Definition privsplice :=  value_object 115 .
 Definition name_privsplice :=  "%splice" .
-Definition privsplicelambda := 
+Definition privspliceCall := 
 value_closure
 (closure_intro
  [("%MakeArray", privMakeArray);
@@ -9100,161 +9081,178 @@ value_closure
   ("%ToUint32", privToUint32);
   ("%defineOwnProperty", privdefineOwnProperty);
   ("%max", privmax);
-  ("%min", privmin)] None ["obj"; "this"; "args"] ex_privsplicelambda)
+  ("%min", privmin)] None ["obj"; "this"; "args"] ex_privspliceCall)
 .
-Definition name_privsplicelambda :=  "%splicelambda" .
+Definition name_privspliceCall :=  "%spliceCall" .
 Definition privsplit :=  value_object 163 .
 Definition name_privsplit :=  "%split" .
-Definition privsplitLambda := 
+Definition privsplitCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privsplitLambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privsplitCall)
 .
-Definition name_privsplitLambda :=  "%splitLambda" .
+Definition name_privsplitCall :=  "%splitCall" .
 Definition privsqrt :=  value_object 280 .
 Definition name_privsqrt :=  "%sqrt" .
-Definition privsqrtLambda := 
-value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privsqrtLambda)
+Definition privsqrtCall := 
+value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privsqrtCall)
 .
-Definition name_privsqrtLambda :=  "%sqrtLambda" .
-Definition privstrconcat :=  value_object 109 .
-Definition name_privstrconcat :=  "%strconcat" .
-Definition privstrconcatlambda := 
+Definition name_privsqrtCall :=  "%sqrtCall" .
+Definition privstringConcat :=  value_object 109 .
+Definition name_privstringConcat :=  "%stringConcat" .
+Definition privstringConcatCall := 
 value_closure
 (closure_intro
  [("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
- ex_privstrconcatlambda)
+ ex_privstringConcatCall)
 .
-Definition name_privstrconcatlambda :=  "%strconcatlambda" .
+Definition name_privstringConcatCall :=  "%stringConcatCall" .
+Definition privstringIndexOfCall := 
+value_closure
+(closure_intro
+ [("%CheckObjectCoercible", privCheckObjectCoercible);
+  ("%ToInteger", privToInteger);
+  ("%ToString", privToString);
+  ("%max", privmax);
+  ("%min", privmin)] None ["obj"; "this"; "args"] ex_privstringIndexOfCall)
+.
+Definition name_privstringIndexOfCall :=  "%stringIndexOfCall" .
+Definition privstringLastIndexOf :=  value_object 158 .
+Definition name_privstringLastIndexOf :=  "%stringLastIndexOf" .
+Definition privstringLastIndexOfCall := 
+value_closure
+(closure_intro
+ [("%CheckObjectCoercible", privCheckObjectCoercible);
+  ("%ToInteger", privToInteger);
+  ("%ToNumber", privToNumber);
+  ("%ToString", privToString);
+  ("%max", privmax);
+  ("%min", privmin)] None ["obj"; "this"; "args"]
+ ex_privstringLastIndexOfCall)
+.
+Definition name_privstringLastIndexOfCall :=  "%stringLastIndexOfCall" .
 Definition privstringSlice :=  value_object 160 .
 Definition name_privstringSlice :=  "%stringSlice" .
-Definition privstringSliceLambda := 
+Definition privstringSliceCall := 
 value_closure
 (closure_intro
  [("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToInteger", privToInteger);
   ("%ToString", privToString);
   ("%max", privmax);
-  ("%min", privmin)] None ["obj"; "this"; "args"] ex_privstringSliceLambda)
+  ("%min", privmin)] None ["obj"; "this"; "args"] ex_privstringSliceCall)
 .
-Definition name_privstringSliceLambda :=  "%stringSliceLambda" .
+Definition name_privstringSliceCall :=  "%stringSliceCall" .
 Definition privstringToString :=  value_object 25 .
 Definition name_privstringToString :=  "%stringToString" .
-Definition privstringToStringlambda := 
+Definition privstringToStringCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privstringToStringlambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privstringToStringCall)
 .
-Definition name_privstringToStringlambda :=  "%stringToStringlambda" .
+Definition name_privstringToStringCall :=  "%stringToStringCall" .
 Definition privstringValueOf :=  value_object 292 .
 Definition name_privstringValueOf :=  "%stringValueOf" .
-Definition privsubstringlambda := 
+Definition privsubstringCall := 
 value_closure
 (closure_intro
  [("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToInteger", privToInteger);
   ("%ToString", privToString);
   ("%max", privmax);
-  ("%min", privmin)] None ["obj"; "this"; "args"] ex_privsubstringlambda)
+  ("%min", privmin)] None ["obj"; "this"; "args"] ex_privsubstringCall)
 .
-Definition name_privsubstringlambda :=  "%substringlambda" .
+Definition name_privsubstringCall :=  "%substringCall" .
 Definition privtan :=  value_object 282 .
 Definition name_privtan :=  "%tan" .
-Definition privtanLambda := 
-value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privtanLambda)
+Definition privtanCall := 
+value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privtanCall)
 .
-Definition name_privtanLambda :=  "%tanLambda" .
+Definition name_privtanCall :=  "%tanCall" .
 Definition privtest :=  value_object 246 .
 Definition name_privtest :=  "%test" .
-Definition privtestlambda := 
-value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privtestlambda)
+Definition privtestCall := 
+value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privtestCall)
 .
-Definition name_privtestlambda :=  "%testlambda" .
-Definition privtlclambda := 
-value_closure
-(closure_intro
- [("%CheckObjectCoercible", privCheckObjectCoercible);
-  ("%ToString", privToString)] None ["obj"; "this"; "args"] ex_privtlclambda)
-.
-Definition name_privtlclambda :=  "%tlclambda" .
+Definition name_privtestCall :=  "%testCall" .
 Definition privtoExponential :=  value_object 303 .
 Definition name_privtoExponential :=  "%toExponential" .
-Definition privtoExponentialLambda := 
+Definition privtoExponentialCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privtoExponentialLambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privtoExponentialCall)
 .
-Definition name_privtoExponentialLambda :=  "%toExponentialLambda" .
+Definition name_privtoExponentialCall :=  "%toExponentialCall" .
 Definition privtoFixed :=  value_object 298 .
 Definition name_privtoFixed :=  "%toFixed" .
-Definition privtoFixedLambda := 
+Definition privtoFixedCall := 
 value_closure
 (closure_intro
  [("%RangeError", privRangeError);
   ("%ToInteger", privToInteger);
   ("%ToString", privToString);
   ("%numberPrimval", privnumberPrimval)] None ["obj"; "this"; "args"]
- ex_privtoFixedLambda)
+ ex_privtoFixedCall)
 .
-Definition name_privtoFixedLambda :=  "%toFixedLambda" .
-Definition privtoLocaleStringlambda := 
+Definition name_privtoFixedCall :=  "%toFixedCall" .
+Definition privtoLocaleStringCall := 
 value_closure
 (closure_intro [("%ToObject", privToObject); ("%TypeError", privTypeError)]
- None ["obj"; "this"; "args"] ex_privtoLocaleStringlambda)
+ None ["obj"; "this"; "args"] ex_privtoLocaleStringCall)
 .
-Definition name_privtoLocaleStringlambda :=  "%toLocaleStringlambda" .
+Definition name_privtoLocaleStringCall :=  "%toLocaleStringCall" .
 Definition privtoLowerCase :=  value_object 161 .
 Definition name_privtoLowerCase :=  "%toLowerCase" .
-Definition privtoPrecision :=  value_object 305 .
-Definition name_privtoPrecision :=  "%toPrecision" .
-Definition privtoPrecisionLambda := 
-value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privtoPrecisionLambda)
-.
-Definition name_privtoPrecisionLambda :=  "%toPrecisionLambda" .
-Definition privtoUpperCase :=  value_object 162 .
-Definition name_privtoUpperCase :=  "%toUpperCase" .
-Definition privtuclambda := 
+Definition privtoLowerCaseCall := 
 value_closure
 (closure_intro
  [("%CheckObjectCoercible", privCheckObjectCoercible);
-  ("%ToString", privToString)] None ["obj"; "this"; "args"] ex_privtuclambda)
+  ("%ToString", privToString)] None ["obj"; "this"; "args"]
+ ex_privtoLowerCaseCall)
 .
-Definition name_privtuclambda :=  "%tuclambda" .
+Definition name_privtoLowerCaseCall :=  "%toLowerCaseCall" .
+Definition privtoPrecision :=  value_object 305 .
+Definition name_privtoPrecision :=  "%toPrecision" .
+Definition privtoPrecisionCall := 
+value_closure
+(closure_intro [] None ["obj"; "this"; "args"] ex_privtoPrecisionCall)
+.
+Definition name_privtoPrecisionCall :=  "%toPrecisionCall" .
+Definition privtoUpperCase :=  value_object 162 .
+Definition name_privtoUpperCase :=  "%toUpperCase" .
+Definition privtoUpperCaseCall := 
+value_closure
+(closure_intro
+ [("%CheckObjectCoercible", privCheckObjectCoercible);
+  ("%ToString", privToString)] None ["obj"; "this"; "args"]
+ ex_privtoUpperCaseCall)
+.
+Definition name_privtoUpperCaseCall :=  "%toUpperCaseCall" .
 Definition privunescape :=  value_object 316 .
 Definition name_privunescape :=  "%unescape" .
-Definition privunescapeLambda := 
+Definition privunescapeCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privunescapeLambda)
+(closure_intro [] None ["obj"; "this"; "args"] ex_privunescapeCall)
 .
-Definition name_privunescapeLambda :=  "%unescapeLambda" .
+Definition name_privunescapeCall :=  "%unescapeCall" .
 Definition privunshift :=  value_object 118 .
 Definition name_privunshift :=  "%unshift" .
-Definition privunshiftlambda := 
+Definition privunshiftCall := 
 value_closure
 (closure_intro
  [("%ComputeLength", privComputeLength);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"]
- ex_privunshiftlambda)
+ ex_privunshiftCall)
 .
-Definition name_privunshiftlambda :=  "%unshiftlambda" .
+Definition name_privunshiftCall :=  "%unshiftCall" .
 Definition privvalueOf :=  value_object 41 .
 Definition name_privvalueOf :=  "%valueOf" .
-Definition privvalueOfLambda := 
+Definition privvalueOfCall := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("%Typeof", privTypeof)] 
- None ["this"; "args"; "proto"; "typestr"] ex_privvalueOfLambda)
+ None ["this"; "args"; "proto"; "typestr"] ex_privvalueOfCall)
 .
-Definition name_privvalueOfLambda :=  "%valueOfLambda" .
-Definition privvalueOflambda := 
-value_closure
-(closure_intro [("%ToObject", privToObject)] None ["obj"; "this"; "args"]
- ex_privvalueOflambda)
-.
-Definition name_privvalueOflambda :=  "%valueOflambda" .
+Definition name_privvalueOfCall :=  "%valueOfCall" .
 Definition evalCode :=  value_false .
 Definition name_evalCode :=  "evalCode" .
 Definition isAccessorField := 
@@ -9281,7 +9279,9 @@ value_closure
 .
 Definition name_isGenericField :=  "isGenericField" .
 Definition objCode1 := 
-value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_objCode1)
+value_closure
+(closure_intro [("%ToObject", privToObject)] None ["obj"; "this"; "args"]
+ ex_objCode1)
 .
 Definition name_objCode1 :=  "objCode" .
 Definition name :=  value_string "parse" .
@@ -9559,21 +9559,21 @@ Definition name_objCode35 :=  "objCode" .
 Definition objCode36 := 
 value_closure
 (closure_intro
- [("%StringProto", privStringProto); ("%valueOfLambda", privvalueOfLambda)]
+ [("%StringProto", privStringProto); ("%valueOfCall", privvalueOfCall)] 
  None ["obj"; "this"; "args"] ex_objCode36)
 .
 Definition name_objCode36 :=  "objCode" .
 Definition objCode37 := 
 value_closure
 (closure_intro
- [("%NumberProto", privNumberProto); ("%valueOfLambda", privvalueOfLambda)]
+ [("%NumberProto", privNumberProto); ("%valueOfCall", privvalueOfCall)] 
  None ["obj"; "this"; "args"] ex_objCode37)
 .
 Definition name_objCode37 :=  "objCode" .
 Definition objCode38 := 
 value_closure
 (closure_intro
- [("%BooleanProto", privBooleanProto); ("%valueOfLambda", privvalueOfLambda)]
+ [("%BooleanProto", privBooleanProto); ("%valueOfCall", privvalueOfCall)]
  None ["obj"; "this"; "args"] ex_objCode38)
 .
 Definition name_objCode38 :=  "objCode" .
@@ -9586,8 +9586,8 @@ Definition ctx_items :=
  (name_privArrayGlobalFuncObj, privArrayGlobalFuncObj);
  (name_privArrayLengthChange, privArrayLengthChange);
  (name_privArrayProto, privArrayProto);
- (name_privBindCall, privBindCall);
  (name_privBindConstructor, privBindConstructor);
+ (name_privBindObjCall, privBindObjCall);
  (name_privBitwiseInfix, privBitwiseInfix);
  (name_privBitwiseNot, privBitwiseNot);
  (name_privBooleanCall, privBooleanCall);
@@ -9626,6 +9626,7 @@ Definition ctx_items :=
  (name_privFunctionConstructor, privFunctionConstructor);
  (name_privFunctionGlobalFuncObj, privFunctionGlobalFuncObj);
  (name_privFunctionProto, privFunctionProto);
+ (name_privFunctionProtoCall, privFunctionProtoCall);
  (name_privGetField, privGetField);
  (name_privGetterProxyFun, privGetterProxyFun);
  (name_privGetterValue, privGetterValue);
@@ -9633,7 +9634,6 @@ Definition ctx_items :=
  (name_privIsCallable, privIsCallable);
  (name_privIsFinite, privIsFinite);
  (name_privIsJSError, privIsJSError);
- (name_privIsPrototypeOflambda, privIsPrototypeOflambda);
  (name_privJSError, privJSError);
  (name_privLeftShift, privLeftShift);
  (name_privLocalTime, privLocalTime);
@@ -9689,10 +9689,7 @@ Definition ctx_items :=
  (name_privStringCall, privStringCall);
  (name_privStringConstructor, privStringConstructor);
  (name_privStringGlobalFuncObj, privStringGlobalFuncObj);
- (name_privStringIndexOf, privStringIndexOf);
- (name_privStringIndexOflambda, privStringIndexOflambda);
  (name_privStringIndices, privStringIndices);
- (name_privStringLastIndexOf, privStringLastIndexOf);
  (name_privStringProto, privStringProto);
  (name_privStxEq, privStxEq);
  (name_privSyntaxError, privSyntaxError);
@@ -9735,149 +9732,150 @@ Definition ctx_items :=
  (name_privVoid, privVoid);
  (name_privYearFromTime, privYearFromTime);
  (name_privacos, privacos);
- (name_privacosLambda, privacosLambda);
- (name_privaiolambda, privaiolambda);
- (name_privaliolambda, privaliolambda);
+ (name_privacosCall, privacosCall);
  (name_privapply, privapply);
- (name_privapplylambda, privapplylambda);
+ (name_privapplyCall, privapplyCall);
  (name_privarrayIndexOf, privarrayIndexOf);
+ (name_privarrayIndexOfCall, privarrayIndexOfCall);
  (name_privarrayLastIndexOf, privarrayLastIndexOf);
- (name_privarrayTLSlambda, privarrayTLSlambda);
+ (name_privarrayLastIndexOfCall, privarrayLastIndexOfCall);
+ (name_privarrayTLSCall, privarrayTLSCall);
  (name_privarrayToLocaleString, privarrayToLocaleString);
  (name_privarrayToString, privarrayToString);
- (name_privarrayToStringlambda, privarrayToStringlambda);
+ (name_privarrayToStringCall, privarrayToStringCall);
  (name_privasin, privasin);
- (name_privasinLambda, privasinLambda);
+ (name_privasinCall, privasinCall);
  (name_privassert, privassert);
  (name_privatan, privatan);
  (name_privatan2, privatan2);
- (name_privatan2Lambda, privatan2Lambda);
- (name_privatanLambda, privatanLambda);
+ (name_privatan2Call, privatan2Call);
+ (name_privatanCall, privatanCall);
  (name_privbind, privbind);
- (name_privbindLambda, privbindLambda);
+ (name_privbindCall, privbindCall);
  (name_privbooleanToString, privbooleanToString);
- (name_privbooleanToStringlambda, privbooleanToStringlambda);
+ (name_privbooleanToStringCall, privbooleanToStringCall);
  (name_privbooleanValueOf, privbooleanValueOf);
  (name_privcall, privcall);
- (name_privcalllambda, privcalllambda);
- (name_privcharat, privcharat);
- (name_privcharatlambda, privcharatlambda);
- (name_privcharcodeat, privcharcodeat);
- (name_privcharcodeatlambda, privcharcodeatlambda);
+ (name_privcallCall, privcallCall);
+ (name_privcharAt, privcharAt);
+ (name_privcharAtCall, privcharAtCall);
+ (name_privcharCodeAt, privcharCodeAt);
+ (name_privcharCodeAtCall, privcharCodeAtCall);
  (name_privconcat, privconcat);
- (name_privconcatLambda, privconcatLambda);
+ (name_privconcatCall, privconcatCall);
  (name_privconfigurableEval, privconfigurableEval);
  (name_privconsole, privconsole);
  (name_privcos, privcos);
- (name_privcosLambda, privcosLambda);
+ (name_privcosCall, privcosCall);
  (name_privcreate, privcreate);
- (name_privcreateLambda, privcreateLambda);
+ (name_privcreateCall, privcreateCall);
  (name_privdateGetTimezoneOffset, privdateGetTimezoneOffset);
- (name_privdateGetTimezoneOffsetLambda, privdateGetTimezoneOffsetLambda);
+ (name_privdateGetTimezoneOffsetCall, privdateGetTimezoneOffsetCall);
  (name_privdateToString, privdateToString);
- (name_privdateToStringLambda, privdateToStringLambda);
+ (name_privdateToStringCall, privdateToStringCall);
  (name_privdateValueOf, privdateValueOf);
- (name_privdateValueOfLambda, privdateValueOfLambda);
+ (name_privdateValueOfCall, privdateValueOfCall);
  (name_privdategetDate, privdategetDate);
- (name_privdategetDateLambda, privdategetDateLambda);
+ (name_privdategetDateCall, privdategetDateCall);
  (name_privdategetDay, privdategetDay);
- (name_privdategetDayLambda, privdategetDayLambda);
+ (name_privdategetDayCall, privdategetDayCall);
  (name_privdecodeURI, privdecodeURI);
+ (name_privdecodeURICall, privdecodeURICall);
  (name_privdecodeURIComponent, privdecodeURIComponent);
- (name_privdecodeURIComponentLambda, privdecodeURIComponentLambda);
- (name_privdecodeURILambda, privdecodeURILambda);
+ (name_privdecodeURIComponentCall, privdecodeURIComponentCall);
  (name_privdefine15Property, privdefine15Property);
  (name_privdefineFunction, privdefineFunction);
  (name_privdefineGlobalVar, privdefineGlobalVar);
  (name_privdefineNYIProperty, privdefineNYIProperty);
  (name_privdefineOwnProperty, privdefineOwnProperty);
  (name_privdefineProperties, privdefineProperties);
- (name_privdefinePropertiesLambda, privdefinePropertiesLambda);
+ (name_privdefinePropertiesCall, privdefinePropertiesCall);
  (name_privdefineProperty, privdefineProperty);
- (name_privdefinePropertylambda, privdefinePropertylambda);
+ (name_privdefinePropertyCall, privdefinePropertyCall);
  (name_privdevirtualize, privdevirtualize);
  (name_privencodeURI, privencodeURI);
+ (name_privencodeURICall, privencodeURICall);
  (name_privencodeURIComponent, privencodeURIComponent);
- (name_privencodeURIComponentLambda, privencodeURIComponentLambda);
- (name_privencodeURILambda, privencodeURILambda);
+ (name_privencodeURIComponentCall, privencodeURIComponentCall);
  (name_privescape, privescape);
- (name_privescapeLambda, privescapeLambda);
+ (name_privescapeCall, privescapeCall);
  (name_privets, privets);
- (name_privetslambda, privetslambda);
+ (name_privetsCall, privetsCall);
  (name_priveval, priveval);
- (name_privevallambda, privevallambda);
+ (name_privevalCall, privevalCall);
  (name_privevery, privevery);
- (name_priveverylambda, priveverylambda);
+ (name_priveveryCall, priveveryCall);
  (name_privexp, privexp);
- (name_privexplambda, privexplambda);
+ (name_privexpCall, privexpCall);
  (name_privfilter, privfilter);
- (name_privfilterlambda, privfilterlambda);
+ (name_privfilterCall, privfilterCall);
  (name_privforeach, privforeach);
- (name_privforeachlambda, privforeachlambda);
+ (name_privforeachCall, privforeachCall);
  (name_privfreeze, privfreeze);
- (name_privfreezelambda, privfreezelambda);
+ (name_privfreezeCall, privfreezeCall);
  (name_privfromCharCode, privfromCharCode);
- (name_privfromcclambda, privfromcclambda);
+ (name_privfromccCall, privfromccCall);
  (name_privfunctionToString, privfunctionToString);
- (name_privfunctionToStringlambda, privfunctionToStringlambda);
+ (name_privfunctionToStringCall, privfunctionToStringCall);
  (name_privgetCurrentUTC, privgetCurrentUTC);
  (name_privgetMonth, privgetMonth);
- (name_privgetMonthlambda, privgetMonthlambda);
+ (name_privgetMonthCall, privgetMonthCall);
  (name_privgetYear, privgetYear);
- (name_privgetYearlambda, privgetYearlambda);
+ (name_privgetYearCall, privgetYearCall);
  (name_dolthis, dolthis);
  (name_privglobalContext, privglobalContext);
  (name_privgopd, privgopd);
- (name_privgopdLambda, privgopdLambda);
+ (name_privgopdCall, privgopdCall);
  (name_privgopn, privgopn);
- (name_privgopnLambda, privgopnLambda);
+ (name_privgopnCall, privgopnCall);
  (name_privgpo, privgpo);
- (name_privgpoLambda, privgpoLambda);
+ (name_privgpoCall, privgpoCall);
  (name_privhasOwnProperty, privhasOwnProperty);
- (name_privhasOwnPropertylambda, privhasOwnPropertylambda);
+ (name_privhasOwnPropertyCall, privhasOwnPropertyCall);
  (name_privin, privin);
  (name_privinstanceof, privinstanceof);
  (name_privisExtensible, privisExtensible);
- (name_privisExtensibleLambda, privisExtensibleLambda);
+ (name_privisExtensibleCall, privisExtensibleCall);
  (name_privisFinite, privisFinite);
- (name_privisFiniteLambda, privisFiniteLambda);
+ (name_privisFiniteCall, privisFiniteCall);
  (name_privisFrozen, privisFrozen);
- (name_privisFrozenLambda, privisFrozenLambda);
+ (name_privisFrozenCall, privisFrozenCall);
  (name_privisNaN, privisNaN);
- (name_privisNaNlambda, privisNaNlambda);
+ (name_privisNaNCall, privisNaNCall);
  (name_privisPrototypeOf, privisPrototypeOf);
+ (name_privisPrototypeOfCall, privisPrototypeOfCall);
  (name_privisSealed, privisSealed);
- (name_privisSealedLambda, privisSealedLambda);
+ (name_privisSealedCall, privisSealedCall);
  (name_privjoin, privjoin);
- (name_privjoinlambda, privjoinlambda);
+ (name_privjoinCall, privjoinCall);
  (name_privkeys, privkeys);
- (name_privkeysLambda, privkeysLambda);
+ (name_privkeysCall, privkeysCall);
  (name_privlen, privlen);
  (name_privlocaleCompare, privlocaleCompare);
- (name_privlocaleCompareLambda, privlocaleCompareLambda);
+ (name_privlocaleCompareCall, privlocaleCompareCall);
  (name_privlog, privlog);
- (name_privlogLambda, privlogLambda);
+ (name_privlogCall, privlogCall);
  (name_privmakeGlobalEnv, privmakeGlobalEnv);
  (name_privmap, privmap);
- (name_privmaplambda, privmaplambda);
+ (name_privmapCall, privmapCall);
  (name_privmathAbs, privmathAbs);
- (name_privmathAbsLambda, privmathAbsLambda);
+ (name_privmathAbsCall, privmathAbsCall);
  (name_privmathCeil, privmathCeil);
- (name_privmathCeilLambda, privmathCeilLambda);
+ (name_privmathCeilCall, privmathCeilCall);
  (name_privmathFloor, privmathFloor);
- (name_privmathFloorLambda, privmathFloorLambda);
+ (name_privmathFloorCall, privmathFloorCall);
  (name_privmathLog, privmathLog);
- (name_privmathLogLambda, privmathLogLambda);
+ (name_privmathLogCall, privmathLogCall);
  (name_privmathMax, privmathMax);
- (name_privmathMaxLambda, privmathMaxLambda);
+ (name_privmathMaxCall, privmathMaxCall);
  (name_privmathMin, privmathMin);
- (name_privmathMinLambda, privmathMinLambda);
+ (name_privmathMinCall, privmathMinCall);
  (name_privmathPow, privmathPow);
- (name_privmathPowLambda, privmathPowLambda);
+ (name_privmathPowCall, privmathPowCall);
  (name_privmax, privmax);
  (name_privmaybeDirectEval, privmaybeDirectEval);
  (name_privmin, privmin);
- (name_privminMaxLambda, privminMaxLambda);
+ (name_privminMaxCall, privminMaxCall);
  (name_privmkArgsObj, privmkArgsObj);
  (name_privmsPerDay, privmsPerDay);
  (name_privmsPerHour, privmsPerHour);
@@ -9886,100 +9884,102 @@ Definition ctx_items :=
  (name_privnewDeclEnvRec, privnewDeclEnvRec);
  (name_privnewObjEnvRec, privnewObjEnvRec);
  (name_privnumTLS, privnumTLS);
- (name_privnumTLSLambda, privnumTLSLambda);
+ (name_privnumTLSCall, privnumTLSCall);
  (name_privnumToStringAbstract, privnumToStringAbstract);
  (name_privnumValueOf, privnumValueOf);
  (name_privnumberPrimval, privnumberPrimval);
  (name_privnumberToString, privnumberToString);
- (name_privnumberToStringlambda, privnumberToStringlambda);
+ (name_privnumberToStringCall, privnumberToStringCall);
  (name_privobjectToString, privobjectToString);
- (name_privobjectToStringlambda, privobjectToStringlambda);
+ (name_privobjectToStringCall, privobjectToStringCall);
  (name_privoneArgObj, privoneArgObj);
  (name_privparse, privparse);
  (name_privparseFloat, privparseFloat);
- (name_privparseFloatLambda, privparseFloatLambda);
+ (name_privparseFloatCall, privparseFloatCall);
  (name_privparseInt, privparseInt);
- (name_privparseIntlambda, privparseIntlambda);
+ (name_privparseIntCall, privparseIntCall);
  (name_privpop, privpop);
- (name_privpoplambda, privpoplambda);
+ (name_privpopCall, privpopCall);
  (name_privpreventExtensions, privpreventExtensions);
- (name_privpreventExtensionsLambda, privpreventExtensionsLambda);
+ (name_privpreventExtensionsCall, privpreventExtensionsCall);
  (name_privprimEach, privprimEach);
  (name_privprint, privprint);
- (name_privprintlambda, privprintlambda);
- (name_privpropEnumlambda, privpropEnumlambda);
+ (name_privprintCall, privprintCall);
+ (name_privpropEnumCall, privpropEnumCall);
  (name_privpropertyIsEnumerable, privpropertyIsEnumerable);
  (name_privpropertyNames, privpropertyNames);
  (name_privprotoOfField, privprotoOfField);
  (name_privpush, privpush);
- (name_privpushlambda, privpushlambda);
+ (name_privpushCall, privpushCall);
  (name_privrandom, privrandom);
- (name_privrandomLambda, privrandomLambda);
+ (name_privrandomCall, privrandomCall);
  (name_privreduce, privreduce);
+ (name_privreduceCall, privreduceCall);
  (name_privreduceRight, privreduceRight);
- (name_privreduceRightLambda, privreduceRightLambda);
- (name_privreducelambda, privreducelambda);
+ (name_privreduceRightCall, privreduceRightCall);
  (name_privreplace, privreplace);
- (name_privreplacelambda, privreplacelambda);
+ (name_privreplaceCall, privreplaceCall);
  (name_privresolveThis, privresolveThis);
  (name_privreverse, privreverse);
- (name_privreverselambda, privreverselambda);
+ (name_privreverseCall, privreverseCall);
  (name_privround, privround);
- (name_privroundLambda, privroundLambda);
+ (name_privroundCall, privroundCall);
  (name_privseal, privseal);
- (name_privsealLambda, privsealLambda);
+ (name_privsealCall, privsealCall);
  (name_privset_property, privset_property);
  (name_privshift, privshift);
- (name_privshiftlambda, privshiftlambda);
+ (name_privshiftCall, privshiftCall);
  (name_privsin, privsin);
- (name_privsinLambda, privsinLambda);
+ (name_privsinCall, privsinCall);
  (name_privslice, privslice);
+ (name_privsliceCall, privsliceCall);
  (name_privslice_internal, privslice_internal);
- (name_privslicelambda, privslicelambda);
- (name_privsliolambda, privsliolambda);
  (name_privsome, privsome);
- (name_privsomelambda, privsomelambda);
+ (name_privsomeCall, privsomeCall);
  (name_privsort, privsort);
- (name_privsortlambda, privsortlambda);
+ (name_privsortCall, privsortCall);
  (name_privsplice, privsplice);
- (name_privsplicelambda, privsplicelambda);
+ (name_privspliceCall, privspliceCall);
  (name_privsplit, privsplit);
- (name_privsplitLambda, privsplitLambda);
+ (name_privsplitCall, privsplitCall);
  (name_privsqrt, privsqrt);
- (name_privsqrtLambda, privsqrtLambda);
- (name_privstrconcat, privstrconcat);
- (name_privstrconcatlambda, privstrconcatlambda);
+ (name_privsqrtCall, privsqrtCall);
+ (name_privstringConcat, privstringConcat);
+ (name_privstringConcatCall, privstringConcatCall);
+ (name_privstringIndexOf, privstringIndexOf);
+ (name_privstringIndexOfCall, privstringIndexOfCall);
+ (name_privstringLastIndexOf, privstringLastIndexOf);
+ (name_privstringLastIndexOfCall, privstringLastIndexOfCall);
  (name_privstringSlice, privstringSlice);
- (name_privstringSliceLambda, privstringSliceLambda);
+ (name_privstringSliceCall, privstringSliceCall);
  (name_privstringToString, privstringToString);
- (name_privstringToStringlambda, privstringToStringlambda);
+ (name_privstringToStringCall, privstringToStringCall);
  (name_privstringValueOf, privstringValueOf);
  (name_privsubstring, privsubstring);
- (name_privsubstringlambda, privsubstringlambda);
+ (name_privsubstringCall, privsubstringCall);
  (name_privtan, privtan);
- (name_privtanLambda, privtanLambda);
+ (name_privtanCall, privtanCall);
  (name_privtest, privtest);
- (name_privtestlambda, privtestlambda);
- (name_privtlclambda, privtlclambda);
+ (name_privtestCall, privtestCall);
  (name_privtoExponential, privtoExponential);
- (name_privtoExponentialLambda, privtoExponentialLambda);
+ (name_privtoExponentialCall, privtoExponentialCall);
  (name_privtoFixed, privtoFixed);
- (name_privtoFixedLambda, privtoFixedLambda);
+ (name_privtoFixedCall, privtoFixedCall);
  (name_privtoLocaleString, privtoLocaleString);
- (name_privtoLocaleStringlambda, privtoLocaleStringlambda);
+ (name_privtoLocaleStringCall, privtoLocaleStringCall);
  (name_privtoLowerCase, privtoLowerCase);
+ (name_privtoLowerCaseCall, privtoLowerCaseCall);
  (name_privtoPrecision, privtoPrecision);
- (name_privtoPrecisionLambda, privtoPrecisionLambda);
+ (name_privtoPrecisionCall, privtoPrecisionCall);
  (name_privtoUpperCase, privtoUpperCase);
- (name_privtuclambda, privtuclambda);
+ (name_privtoUpperCaseCall, privtoUpperCaseCall);
  (name_privtwoArgObj, privtwoArgObj);
  (name_privunescape, privunescape);
- (name_privunescapeLambda, privunescapeLambda);
+ (name_privunescapeCall, privunescapeCall);
  (name_privunshift, privunshift);
- (name_privunshiftlambda, privunshiftlambda);
+ (name_privunshiftCall, privunshiftCall);
  (name_privvalueOf, privvalueOf);
- (name_privvalueOfLambda, privvalueOfLambda);
- (name_privvalueOflambda, privvalueOflambda);
+ (name_privvalueOfCall, privvalueOfCall);
  (name_copy_access_desc, copy_access_desc);
  (name_copy_data_desc, copy_data_desc);
  (name_copy_when_defined, copy_when_defined);
@@ -10002,8 +10002,8 @@ privArrayConstructor
 privArrayGlobalFuncObj
 privArrayLengthChange
 privArrayProto
-privBindCall
 privBindConstructor
+privBindObjCall
 privBitwiseInfix
 privBitwiseNot
 privBooleanCall
@@ -10042,6 +10042,7 @@ proto1
 privFunctionConstructor
 privFunctionGlobalFuncObj
 privFunctionProto
+privFunctionProtoCall
 privGetField
 privGetterProxyFun
 privGetterValue
@@ -10049,7 +10050,6 @@ privInLeapYear
 privIsCallable
 privIsFinite
 privIsJSError
-privIsPrototypeOflambda
 privJSError
 privLeftShift
 privLocalTime
@@ -10105,10 +10105,7 @@ privSignedRightShift
 privStringCall
 privStringConstructor
 privStringGlobalFuncObj
-privStringIndexOf
-privStringIndexOflambda
 privStringIndices
-privStringLastIndexOf
 privStringProto
 privStxEq
 privSyntaxError
@@ -10151,149 +10148,150 @@ privUnwritableDispatch
 privVoid
 privYearFromTime
 privacos
-privacosLambda
-privaiolambda
-privaliolambda
+privacosCall
 privapply
-privapplylambda
+privapplyCall
 privarrayIndexOf
+privarrayIndexOfCall
 privarrayLastIndexOf
-privarrayTLSlambda
+privarrayLastIndexOfCall
+privarrayTLSCall
 privarrayToLocaleString
 privarrayToString
-privarrayToStringlambda
+privarrayToStringCall
 privasin
-privasinLambda
+privasinCall
 privassert
 privatan
 privatan2
-privatan2Lambda
-privatanLambda
+privatan2Call
+privatanCall
 privbind
-privbindLambda
+privbindCall
 privbooleanToString
-privbooleanToStringlambda
+privbooleanToStringCall
 privbooleanValueOf
 privcall
-privcalllambda
-privcharat
-privcharatlambda
-privcharcodeat
-privcharcodeatlambda
+privcallCall
+privcharAt
+privcharAtCall
+privcharCodeAt
+privcharCodeAtCall
 privconcat
-privconcatLambda
+privconcatCall
 privconfigurableEval
 privconsole
 privcos
-privcosLambda
+privcosCall
 privcreate
-privcreateLambda
+privcreateCall
 privdateGetTimezoneOffset
-privdateGetTimezoneOffsetLambda
+privdateGetTimezoneOffsetCall
 privdateToString
-privdateToStringLambda
+privdateToStringCall
 privdateValueOf
-privdateValueOfLambda
+privdateValueOfCall
 privdategetDate
-privdategetDateLambda
+privdategetDateCall
 privdategetDay
-privdategetDayLambda
+privdategetDayCall
 privdecodeURI
+privdecodeURICall
 privdecodeURIComponent
-privdecodeURIComponentLambda
-privdecodeURILambda
+privdecodeURIComponentCall
 privdefine15Property
 privdefineFunction
 privdefineGlobalVar
 privdefineNYIProperty
 privdefineOwnProperty
 privdefineProperties
-privdefinePropertiesLambda
+privdefinePropertiesCall
 privdefineProperty
-privdefinePropertylambda
+privdefinePropertyCall
 privdevirtualize
 privencodeURI
+privencodeURICall
 privencodeURIComponent
-privencodeURIComponentLambda
-privencodeURILambda
+privencodeURIComponentCall
 privescape
-privescapeLambda
+privescapeCall
 privets
-privetslambda
+privetsCall
 priveval
-privevallambda
+privevalCall
 privevery
-priveverylambda
+priveveryCall
 privexp
-privexplambda
+privexpCall
 privfilter
-privfilterlambda
+privfilterCall
 privforeach
-privforeachlambda
+privforeachCall
 privfreeze
-privfreezelambda
+privfreezeCall
 privfromCharCode
-privfromcclambda
+privfromccCall
 privfunctionToString
-privfunctionToStringlambda
+privfunctionToStringCall
 privgetCurrentUTC
 privgetMonth
-privgetMonthlambda
+privgetMonthCall
 privgetYear
-privgetYearlambda
+privgetYearCall
 dolthis
 privglobalContext
 privgopd
-privgopdLambda
+privgopdCall
 privgopn
-privgopnLambda
+privgopnCall
 privgpo
-privgpoLambda
+privgpoCall
 privhasOwnProperty
-privhasOwnPropertylambda
+privhasOwnPropertyCall
 privin
 privinstanceof
 privisExtensible
-privisExtensibleLambda
+privisExtensibleCall
 privisFinite
-privisFiniteLambda
+privisFiniteCall
 privisFrozen
-privisFrozenLambda
+privisFrozenCall
 privisNaN
-privisNaNlambda
+privisNaNCall
 privisPrototypeOf
+privisPrototypeOfCall
 privisSealed
-privisSealedLambda
+privisSealedCall
 privjoin
-privjoinlambda
+privjoinCall
 privkeys
-privkeysLambda
+privkeysCall
 privlen
 privlocaleCompare
-privlocaleCompareLambda
+privlocaleCompareCall
 privlog
-privlogLambda
+privlogCall
 privmakeGlobalEnv
 privmap
-privmaplambda
+privmapCall
 privmathAbs
-privmathAbsLambda
+privmathAbsCall
 privmathCeil
-privmathCeilLambda
+privmathCeilCall
 privmathFloor
-privmathFloorLambda
+privmathFloorCall
 privmathLog
-privmathLogLambda
+privmathLogCall
 privmathMax
-privmathMaxLambda
+privmathMaxCall
 privmathMin
-privmathMinLambda
+privmathMinCall
 privmathPow
-privmathPowLambda
+privmathPowCall
 privmax
 privmaybeDirectEval
 privmin
-privminMaxLambda
+privminMaxCall
 privmkArgsObj
 privmsPerDay
 privmsPerHour
@@ -10302,100 +10300,102 @@ privmsPerSecond
 privnewDeclEnvRec
 privnewObjEnvRec
 privnumTLS
-privnumTLSLambda
+privnumTLSCall
 privnumToStringAbstract
 privnumValueOf
 privnumberPrimval
 privnumberToString
-privnumberToStringlambda
+privnumberToStringCall
 privobjectToString
-privobjectToStringlambda
+privobjectToStringCall
 privoneArgObj
 privparse
 privparseFloat
-privparseFloatLambda
+privparseFloatCall
 privparseInt
-privparseIntlambda
+privparseIntCall
 privpop
-privpoplambda
+privpopCall
 privpreventExtensions
-privpreventExtensionsLambda
+privpreventExtensionsCall
 privprimEach
 privprint
-privprintlambda
-privpropEnumlambda
+privprintCall
+privpropEnumCall
 privpropertyIsEnumerable
 privpropertyNames
 privprotoOfField
 privpush
-privpushlambda
+privpushCall
 privrandom
-privrandomLambda
+privrandomCall
 privreduce
+privreduceCall
 privreduceRight
-privreduceRightLambda
-privreducelambda
+privreduceRightCall
 privreplace
-privreplacelambda
+privreplaceCall
 privresolveThis
 privreverse
-privreverselambda
+privreverseCall
 privround
-privroundLambda
+privroundCall
 privseal
-privsealLambda
+privsealCall
 privset_property
 privshift
-privshiftlambda
+privshiftCall
 privsin
-privsinLambda
+privsinCall
 privslice
+privsliceCall
 privslice_internal
-privslicelambda
-privsliolambda
 privsome
-privsomelambda
+privsomeCall
 privsort
-privsortlambda
+privsortCall
 privsplice
-privsplicelambda
+privspliceCall
 privsplit
-privsplitLambda
+privsplitCall
 privsqrt
-privsqrtLambda
-privstrconcat
-privstrconcatlambda
+privsqrtCall
+privstringConcat
+privstringConcatCall
+privstringIndexOf
+privstringIndexOfCall
+privstringLastIndexOf
+privstringLastIndexOfCall
 privstringSlice
-privstringSliceLambda
+privstringSliceCall
 privstringToString
-privstringToStringlambda
+privstringToStringCall
 privstringValueOf
 privsubstring
-privsubstringlambda
+privsubstringCall
 privtan
-privtanLambda
+privtanCall
 privtest
-privtestlambda
-privtlclambda
+privtestCall
 privtoExponential
-privtoExponentialLambda
+privtoExponentialCall
 privtoFixed
-privtoFixedLambda
+privtoFixedCall
 privtoLocaleString
-privtoLocaleStringlambda
+privtoLocaleStringCall
 privtoLowerCase
+privtoLowerCaseCall
 privtoPrecision
-privtoPrecisionLambda
+privtoPrecisionCall
 privtoUpperCase
-privtuclambda
+privtoUpperCaseCall
 privtwoArgObj
 privunescape
-privunescapeLambda
+privunescapeCall
 privunshift
-privunshiftlambda
+privunshiftCall
 privvalueOf
-privvalueOfLambda
-privvalueOflambda
+privvalueOfCall
 copy_access_desc
 copy_data_desc
 copy_when_defined
@@ -10428,8 +10428,8 @@ Definition store_items := [
                                              ("%ArrayGlobalFuncObj", privArrayGlobalFuncObj);
                                              ("%ArrayLengthChange", privArrayLengthChange);
                                              ("%ArrayProto", privArrayProto);
-                                             ("%BindCall", privBindCall);
                                              ("%BindConstructor", privBindConstructor);
+                                             ("%BindObjCall", privBindObjCall);
                                              ("%BitwiseInfix", privBitwiseInfix);
                                              ("%BitwiseNot", privBitwiseNot);
                                              ("%BooleanCall", privBooleanCall);
@@ -10468,6 +10468,7 @@ Definition store_items := [
                                              ("%FunctionConstructor", privFunctionConstructor);
                                              ("%FunctionGlobalFuncObj", privFunctionGlobalFuncObj);
                                              ("%FunctionProto", privFunctionProto);
+                                             ("%FunctionProtoCall", privFunctionProtoCall);
                                              ("%GetField", privGetField);
                                              ("%GetterProxyFun", privGetterProxyFun);
                                              ("%GetterValue", privGetterValue);
@@ -10475,7 +10476,6 @@ Definition store_items := [
                                              ("%IsCallable", privIsCallable);
                                              ("%IsFinite", privIsFinite);
                                              ("%IsJSError", privIsJSError);
-                                             ("%IsPrototypeOflambda", privIsPrototypeOflambda);
                                              ("%JSError", privJSError);
                                              ("%LeftShift", privLeftShift);
                                              ("%LocalTime", privLocalTime);
@@ -10531,10 +10531,7 @@ Definition store_items := [
                                              ("%StringCall", privStringCall);
                                              ("%StringConstructor", privStringConstructor);
                                              ("%StringGlobalFuncObj", privStringGlobalFuncObj);
-                                             ("%StringIndexOf", privStringIndexOf);
-                                             ("%StringIndexOflambda", privStringIndexOflambda);
                                              ("%StringIndices", privStringIndices);
-                                             ("%StringLastIndexOf", privStringLastIndexOf);
                                              ("%StringProto", privStringProto);
                                              ("%StxEq", privStxEq);
                                              ("%SyntaxError", privSyntaxError);
@@ -10577,149 +10574,150 @@ Definition store_items := [
                                              ("%Void", privVoid);
                                              ("%YearFromTime", privYearFromTime);
                                              ("%acos", privacos);
-                                             ("%acosLambda", privacosLambda);
-                                             ("%aiolambda", privaiolambda);
-                                             ("%aliolambda", privaliolambda);
+                                             ("%acosCall", privacosCall);
                                              ("%apply", privapply);
-                                             ("%applylambda", privapplylambda);
+                                             ("%applyCall", privapplyCall);
                                              ("%arrayIndexOf", privarrayIndexOf);
+                                             ("%arrayIndexOfCall", privarrayIndexOfCall);
                                              ("%arrayLastIndexOf", privarrayLastIndexOf);
-                                             ("%arrayTLSlambda", privarrayTLSlambda);
+                                             ("%arrayLastIndexOfCall", privarrayLastIndexOfCall);
+                                             ("%arrayTLSCall", privarrayTLSCall);
                                              ("%arrayToLocaleString", privarrayToLocaleString);
                                              ("%arrayToString", privarrayToString);
-                                             ("%arrayToStringlambda", privarrayToStringlambda);
+                                             ("%arrayToStringCall", privarrayToStringCall);
                                              ("%asin", privasin);
-                                             ("%asinLambda", privasinLambda);
+                                             ("%asinCall", privasinCall);
                                              ("%assert", privassert);
                                              ("%atan", privatan);
                                              ("%atan2", privatan2);
-                                             ("%atan2Lambda", privatan2Lambda);
-                                             ("%atanLambda", privatanLambda);
+                                             ("%atan2Call", privatan2Call);
+                                             ("%atanCall", privatanCall);
                                              ("%bind", privbind);
-                                             ("%bindLambda", privbindLambda);
+                                             ("%bindCall", privbindCall);
                                              ("%booleanToString", privbooleanToString);
-                                             ("%booleanToStringlambda", privbooleanToStringlambda);
+                                             ("%booleanToStringCall", privbooleanToStringCall);
                                              ("%booleanValueOf", privbooleanValueOf);
                                              ("%call", privcall);
-                                             ("%calllambda", privcalllambda);
-                                             ("%charat", privcharat);
-                                             ("%charatlambda", privcharatlambda);
-                                             ("%charcodeat", privcharcodeat);
-                                             ("%charcodeatlambda", privcharcodeatlambda);
+                                             ("%callCall", privcallCall);
+                                             ("%charAt", privcharAt);
+                                             ("%charAtCall", privcharAtCall);
+                                             ("%charCodeAt", privcharCodeAt);
+                                             ("%charCodeAtCall", privcharCodeAtCall);
                                              ("%concat", privconcat);
-                                             ("%concatLambda", privconcatLambda);
+                                             ("%concatCall", privconcatCall);
                                              ("%configurableEval", privconfigurableEval);
                                              ("%console", privconsole);
                                              ("%cos", privcos);
-                                             ("%cosLambda", privcosLambda);
+                                             ("%cosCall", privcosCall);
                                              ("%create", privcreate);
-                                             ("%createLambda", privcreateLambda);
+                                             ("%createCall", privcreateCall);
                                              ("%dateGetTimezoneOffset", privdateGetTimezoneOffset);
-                                             ("%dateGetTimezoneOffsetLambda", privdateGetTimezoneOffsetLambda);
+                                             ("%dateGetTimezoneOffsetCall", privdateGetTimezoneOffsetCall);
                                              ("%dateToString", privdateToString);
-                                             ("%dateToStringLambda", privdateToStringLambda);
+                                             ("%dateToStringCall", privdateToStringCall);
                                              ("%dateValueOf", privdateValueOf);
-                                             ("%dateValueOfLambda", privdateValueOfLambda);
+                                             ("%dateValueOfCall", privdateValueOfCall);
                                              ("%dategetDate", privdategetDate);
-                                             ("%dategetDateLambda", privdategetDateLambda);
+                                             ("%dategetDateCall", privdategetDateCall);
                                              ("%dategetDay", privdategetDay);
-                                             ("%dategetDayLambda", privdategetDayLambda);
+                                             ("%dategetDayCall", privdategetDayCall);
                                              ("%decodeURI", privdecodeURI);
+                                             ("%decodeURICall", privdecodeURICall);
                                              ("%decodeURIComponent", privdecodeURIComponent);
-                                             ("%decodeURIComponentLambda", privdecodeURIComponentLambda);
-                                             ("%decodeURILambda", privdecodeURILambda);
+                                             ("%decodeURIComponentCall", privdecodeURIComponentCall);
                                              ("%define15Property", privdefine15Property);
                                              ("%defineFunction", privdefineFunction);
                                              ("%defineGlobalVar", privdefineGlobalVar);
                                              ("%defineNYIProperty", privdefineNYIProperty);
                                              ("%defineOwnProperty", privdefineOwnProperty);
                                              ("%defineProperties", privdefineProperties);
-                                             ("%definePropertiesLambda", privdefinePropertiesLambda);
+                                             ("%definePropertiesCall", privdefinePropertiesCall);
                                              ("%defineProperty", privdefineProperty);
-                                             ("%definePropertylambda", privdefinePropertylambda);
+                                             ("%definePropertyCall", privdefinePropertyCall);
                                              ("%devirtualize", privdevirtualize);
                                              ("%encodeURI", privencodeURI);
+                                             ("%encodeURICall", privencodeURICall);
                                              ("%encodeURIComponent", privencodeURIComponent);
-                                             ("%encodeURIComponentLambda", privencodeURIComponentLambda);
-                                             ("%encodeURILambda", privencodeURILambda);
+                                             ("%encodeURIComponentCall", privencodeURIComponentCall);
                                              ("%escape", privescape);
-                                             ("%escapeLambda", privescapeLambda);
+                                             ("%escapeCall", privescapeCall);
                                              ("%ets", privets);
-                                             ("%etslambda", privetslambda);
+                                             ("%etsCall", privetsCall);
                                              ("%eval", priveval);
-                                             ("%evallambda", privevallambda);
+                                             ("%evalCall", privevalCall);
                                              ("%every", privevery);
-                                             ("%everylambda", priveverylambda);
+                                             ("%everyCall", priveveryCall);
                                              ("%exp", privexp);
-                                             ("%explambda", privexplambda);
+                                             ("%expCall", privexpCall);
                                              ("%filter", privfilter);
-                                             ("%filterlambda", privfilterlambda);
+                                             ("%filterCall", privfilterCall);
                                              ("%foreach", privforeach);
-                                             ("%foreachlambda", privforeachlambda);
+                                             ("%foreachCall", privforeachCall);
                                              ("%freeze", privfreeze);
-                                             ("%freezelambda", privfreezelambda);
+                                             ("%freezeCall", privfreezeCall);
                                              ("%fromCharCode", privfromCharCode);
-                                             ("%fromcclambda", privfromcclambda);
+                                             ("%fromccCall", privfromccCall);
                                              ("%functionToString", privfunctionToString);
-                                             ("%functionToStringlambda", privfunctionToStringlambda);
+                                             ("%functionToStringCall", privfunctionToStringCall);
                                              ("%getCurrentUTC", privgetCurrentUTC);
                                              ("%getMonth", privgetMonth);
-                                             ("%getMonthlambda", privgetMonthlambda);
+                                             ("%getMonthCall", privgetMonthCall);
                                              ("%getYear", privgetYear);
-                                             ("%getYearlambda", privgetYearlambda);
+                                             ("%getYearCall", privgetYearCall);
                                              ("%global", dolthis);
                                              ("%globalContext", privglobalContext);
                                              ("%gopd", privgopd);
-                                             ("%gopdLambda", privgopdLambda);
+                                             ("%gopdCall", privgopdCall);
                                              ("%gopn", privgopn);
-                                             ("%gopnLambda", privgopnLambda);
+                                             ("%gopnCall", privgopnCall);
                                              ("%gpo", privgpo);
-                                             ("%gpoLambda", privgpoLambda);
+                                             ("%gpoCall", privgpoCall);
                                              ("%hasOwnProperty", privhasOwnProperty);
-                                             ("%hasOwnPropertylambda", privhasOwnPropertylambda);
+                                             ("%hasOwnPropertyCall", privhasOwnPropertyCall);
                                              ("%in", privin);
                                              ("%instanceof", privinstanceof);
                                              ("%isExtensible", privisExtensible);
-                                             ("%isExtensibleLambda", privisExtensibleLambda);
+                                             ("%isExtensibleCall", privisExtensibleCall);
                                              ("%isFinite", privisFinite);
-                                             ("%isFiniteLambda", privisFiniteLambda);
+                                             ("%isFiniteCall", privisFiniteCall);
                                              ("%isFrozen", privisFrozen);
-                                             ("%isFrozenLambda", privisFrozenLambda);
+                                             ("%isFrozenCall", privisFrozenCall);
                                              ("%isNaN", privisNaN);
-                                             ("%isNaNlambda", privisNaNlambda);
+                                             ("%isNaNCall", privisNaNCall);
                                              ("%isPrototypeOf", privisPrototypeOf);
+                                             ("%isPrototypeOfCall", privisPrototypeOfCall);
                                              ("%isSealed", privisSealed);
-                                             ("%isSealedLambda", privisSealedLambda);
+                                             ("%isSealedCall", privisSealedCall);
                                              ("%join", privjoin);
-                                             ("%joinlambda", privjoinlambda);
+                                             ("%joinCall", privjoinCall);
                                              ("%keys", privkeys);
-                                             ("%keysLambda", privkeysLambda);
+                                             ("%keysCall", privkeysCall);
                                              ("%len", privlen);
                                              ("%localeCompare", privlocaleCompare);
-                                             ("%localeCompareLambda", privlocaleCompareLambda);
+                                             ("%localeCompareCall", privlocaleCompareCall);
                                              ("%log", privlog);
-                                             ("%logLambda", privlogLambda);
+                                             ("%logCall", privlogCall);
                                              ("%makeGlobalEnv", privmakeGlobalEnv);
                                              ("%map", privmap);
-                                             ("%maplambda", privmaplambda);
+                                             ("%mapCall", privmapCall);
                                              ("%mathAbs", privmathAbs);
-                                             ("%mathAbsLambda", privmathAbsLambda);
+                                             ("%mathAbsCall", privmathAbsCall);
                                              ("%mathCeil", privmathCeil);
-                                             ("%mathCeilLambda", privmathCeilLambda);
+                                             ("%mathCeilCall", privmathCeilCall);
                                              ("%mathFloor", privmathFloor);
-                                             ("%mathFloorLambda", privmathFloorLambda);
+                                             ("%mathFloorCall", privmathFloorCall);
                                              ("%mathLog", privmathLog);
-                                             ("%mathLogLambda", privmathLogLambda);
+                                             ("%mathLogCall", privmathLogCall);
                                              ("%mathMax", privmathMax);
-                                             ("%mathMaxLambda", privmathMaxLambda);
+                                             ("%mathMaxCall", privmathMaxCall);
                                              ("%mathMin", privmathMin);
-                                             ("%mathMinLambda", privmathMinLambda);
+                                             ("%mathMinCall", privmathMinCall);
                                              ("%mathPow", privmathPow);
-                                             ("%mathPowLambda", privmathPowLambda);
+                                             ("%mathPowCall", privmathPowCall);
                                              ("%max", privmax);
                                              ("%maybeDirectEval", privmaybeDirectEval);
                                              ("%min", privmin);
-                                             ("%minMaxLambda", privminMaxLambda);
+                                             ("%minMaxCall", privminMaxCall);
                                              ("%mkArgsObj", privmkArgsObj);
                                              ("%msPerDay", privmsPerDay);
                                              ("%msPerHour", privmsPerHour);
@@ -10728,100 +10726,102 @@ Definition store_items := [
                                              ("%newDeclEnvRec", privnewDeclEnvRec);
                                              ("%newObjEnvRec", privnewObjEnvRec);
                                              ("%numTLS", privnumTLS);
-                                             ("%numTLSLambda", privnumTLSLambda);
+                                             ("%numTLSCall", privnumTLSCall);
                                              ("%numToStringAbstract", privnumToStringAbstract);
                                              ("%numValueOf", privnumValueOf);
                                              ("%numberPrimval", privnumberPrimval);
                                              ("%numberToString", privnumberToString);
-                                             ("%numberToStringlambda", privnumberToStringlambda);
+                                             ("%numberToStringCall", privnumberToStringCall);
                                              ("%objectToString", privobjectToString);
-                                             ("%objectToStringlambda", privobjectToStringlambda);
+                                             ("%objectToStringCall", privobjectToStringCall);
                                              ("%oneArgObj", privoneArgObj);
                                              ("%parse", privparse);
                                              ("%parseFloat", privparseFloat);
-                                             ("%parseFloatLambda", privparseFloatLambda);
+                                             ("%parseFloatCall", privparseFloatCall);
                                              ("%parseInt", privparseInt);
-                                             ("%parseIntlambda", privparseIntlambda);
+                                             ("%parseIntCall", privparseIntCall);
                                              ("%pop", privpop);
-                                             ("%poplambda", privpoplambda);
+                                             ("%popCall", privpopCall);
                                              ("%preventExtensions", privpreventExtensions);
-                                             ("%preventExtensionsLambda", privpreventExtensionsLambda);
+                                             ("%preventExtensionsCall", privpreventExtensionsCall);
                                              ("%primEach", privprimEach);
                                              ("%print", privprint);
-                                             ("%printlambda", privprintlambda);
-                                             ("%propEnumlambda", privpropEnumlambda);
+                                             ("%printCall", privprintCall);
+                                             ("%propEnumCall", privpropEnumCall);
                                              ("%propertyIsEnumerable", privpropertyIsEnumerable);
                                              ("%propertyNames", privpropertyNames);
                                              ("%protoOfField", privprotoOfField);
                                              ("%push", privpush);
-                                             ("%pushlambda", privpushlambda);
+                                             ("%pushCall", privpushCall);
                                              ("%random", privrandom);
-                                             ("%randomLambda", privrandomLambda);
+                                             ("%randomCall", privrandomCall);
                                              ("%reduce", privreduce);
+                                             ("%reduceCall", privreduceCall);
                                              ("%reduceRight", privreduceRight);
-                                             ("%reduceRightLambda", privreduceRightLambda);
-                                             ("%reducelambda", privreducelambda);
+                                             ("%reduceRightCall", privreduceRightCall);
                                              ("%replace", privreplace);
-                                             ("%replacelambda", privreplacelambda);
+                                             ("%replaceCall", privreplaceCall);
                                              ("%resolveThis", privresolveThis);
                                              ("%reverse", privreverse);
-                                             ("%reverselambda", privreverselambda);
+                                             ("%reverseCall", privreverseCall);
                                              ("%round", privround);
-                                             ("%roundLambda", privroundLambda);
+                                             ("%roundCall", privroundCall);
                                              ("%seal", privseal);
-                                             ("%sealLambda", privsealLambda);
+                                             ("%sealCall", privsealCall);
                                              ("%set-property", privset_property);
                                              ("%shift", privshift);
-                                             ("%shiftlambda", privshiftlambda);
+                                             ("%shiftCall", privshiftCall);
                                              ("%sin", privsin);
-                                             ("%sinLambda", privsinLambda);
+                                             ("%sinCall", privsinCall);
                                              ("%slice", privslice);
+                                             ("%sliceCall", privsliceCall);
                                              ("%slice_internal", privslice_internal);
-                                             ("%slicelambda", privslicelambda);
-                                             ("%sliolambda", privsliolambda);
                                              ("%some", privsome);
-                                             ("%somelambda", privsomelambda);
+                                             ("%someCall", privsomeCall);
                                              ("%sort", privsort);
-                                             ("%sortlambda", privsortlambda);
+                                             ("%sortCall", privsortCall);
                                              ("%splice", privsplice);
-                                             ("%splicelambda", privsplicelambda);
+                                             ("%spliceCall", privspliceCall);
                                              ("%split", privsplit);
-                                             ("%splitLambda", privsplitLambda);
+                                             ("%splitCall", privsplitCall);
                                              ("%sqrt", privsqrt);
-                                             ("%sqrtLambda", privsqrtLambda);
-                                             ("%strconcat", privstrconcat);
-                                             ("%strconcatlambda", privstrconcatlambda);
+                                             ("%sqrtCall", privsqrtCall);
+                                             ("%stringConcat", privstringConcat);
+                                             ("%stringConcatCall", privstringConcatCall);
+                                             ("%stringIndexOf", privstringIndexOf);
+                                             ("%stringIndexOfCall", privstringIndexOfCall);
+                                             ("%stringLastIndexOf", privstringLastIndexOf);
+                                             ("%stringLastIndexOfCall", privstringLastIndexOfCall);
                                              ("%stringSlice", privstringSlice);
-                                             ("%stringSliceLambda", privstringSliceLambda);
+                                             ("%stringSliceCall", privstringSliceCall);
                                              ("%stringToString", privstringToString);
-                                             ("%stringToStringlambda", privstringToStringlambda);
+                                             ("%stringToStringCall", privstringToStringCall);
                                              ("%stringValueOf", privstringValueOf);
                                              ("%substring", privsubstring);
-                                             ("%substringlambda", privsubstringlambda);
+                                             ("%substringCall", privsubstringCall);
                                              ("%tan", privtan);
-                                             ("%tanLambda", privtanLambda);
+                                             ("%tanCall", privtanCall);
                                              ("%test", privtest);
-                                             ("%testlambda", privtestlambda);
-                                             ("%tlclambda", privtlclambda);
+                                             ("%testCall", privtestCall);
                                              ("%toExponential", privtoExponential);
-                                             ("%toExponentialLambda", privtoExponentialLambda);
+                                             ("%toExponentialCall", privtoExponentialCall);
                                              ("%toFixed", privtoFixed);
-                                             ("%toFixedLambda", privtoFixedLambda);
+                                             ("%toFixedCall", privtoFixedCall);
                                              ("%toLocaleString", privtoLocaleString);
-                                             ("%toLocaleStringlambda", privtoLocaleStringlambda);
+                                             ("%toLocaleStringCall", privtoLocaleStringCall);
                                              ("%toLowerCase", privtoLowerCase);
+                                             ("%toLowerCaseCall", privtoLowerCaseCall);
                                              ("%toPrecision", privtoPrecision);
-                                             ("%toPrecisionLambda", privtoPrecisionLambda);
+                                             ("%toPrecisionCall", privtoPrecisionCall);
                                              ("%toUpperCase", privtoUpperCase);
-                                             ("%tuclambda", privtuclambda);
+                                             ("%toUpperCaseCall", privtoUpperCaseCall);
                                              ("%twoArgObj", privtwoArgObj);
                                              ("%unescape", privunescape);
-                                             ("%unescapeLambda", privunescapeLambda);
+                                             ("%unescapeCall", privunescapeCall);
                                              ("%unshift", privunshift);
-                                             ("%unshiftlambda", privunshiftlambda);
+                                             ("%unshiftCall", privunshiftCall);
                                              ("%valueOf", privvalueOf);
-                                             ("%valueOfLambda", privvalueOfLambda);
-                                             ("%valueOflambda", privvalueOflambda);
+                                             ("%valueOfCall", privvalueOfCall);
                                              ("copy-access-desc", copy_access_desc);
                                              ("copy-data-desc", copy_data_desc);
                                              ("copy-when-defined", copy_when_defined);
@@ -11100,7 +11100,7 @@ Definition store_items := [
       {|oattrs_proto := value_object 1;
         oattrs_class := "Function";
         oattrs_extensible := true;
-        oattrs_code := objCode1|};
+        oattrs_code := privFunctionProtoCall|};
       object_properties :=
       from_list [("apply", 
                   attributes_data_of {|attributes_data_value :=
@@ -11138,12 +11138,18 @@ Definition store_items := [
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})];
-      object_internal := from_list []|});
+      object_internal :=
+      from_list [("construct", 
+                  value_closure
+                  (closure_intro
+                   [("%AppExpr", privAppExpr);
+                    ("%ObjectProto", privObjectProto)] None
+                   ["constr"; "args"] ex_internal))]|});
 (4, {|object_attrs :=
       {|oattrs_proto := value_object 3;
         oattrs_class := "Function";
         oattrs_extensible := true;
-        oattrs_code := privfunctionToStringlambda|};
+        oattrs_code := privfunctionToStringCall|};
       object_properties :=
       from_list [("length", 
                   attributes_data_of {|attributes_data_value :=
@@ -11515,28 +11521,28 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privprintlambda|};
+         oattrs_code := privprintCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (16, {|object_attrs :=
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privdefinePropertylambda|};
+         oattrs_code := privdefinePropertyCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (17, {|object_attrs :=
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privcalllambda|};
+         oattrs_code := privcallCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (18, {|object_attrs :=
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privapplylambda|};
+         oattrs_code := privapplyCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (19, {|object_attrs :=
@@ -11589,14 +11595,14 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privisNaNlambda|};
+         oattrs_code := privisNaNCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (22, {|object_attrs :=
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privetslambda|};
+         oattrs_code := privetsCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (23, {|object_attrs :=
@@ -11672,12 +11678,12 @@ Definition store_items := [
                     [("%ComputeLength", privComputeLength);
                      ("%MakeNumber", privMakeNumber);
                      ("%ToNumber", privToNumber)] None ["constr"; "args"]
-                    ex_internal))]|});
+                    ex_internal1))]|});
 (25, {|object_attrs :=
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privstringToStringlambda|};
+         oattrs_code := privstringToStringCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -11739,12 +11745,12 @@ Definition store_items := [
                    (closure_intro
                     [("%MakeString", privMakeString);
                      ("%StringCall", privStringCall)] None ["constr"; "args"]
-                    ex_internal1))]|});
+                    ex_internal2))]|});
 (28, {|object_attrs :=
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privbooleanToStringlambda|};
+         oattrs_code := privbooleanToStringCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -11833,7 +11839,7 @@ Definition store_items := [
                    (closure_intro
                     [("%MakeBoolean", privMakeBoolean);
                      ("%ToBoolean", privToBoolean)] None ["constr"; "args"]
-                    ex_internal2))]|});
+                    ex_internal3))]|});
 (32, {|object_attrs :=
        {|oattrs_proto := value_null;
          oattrs_class := "Object";
@@ -11952,12 +11958,12 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro [("%ObjectCall", privObjectCall)] None
-                    ["constr"; "args"] ex_internal3))]|});
+                    ["constr"; "args"] ex_internal4))]|});
 (34, {|object_attrs :=
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privgpoLambda|};
+         oattrs_code := privgpoCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (35, {|object_attrs :=
@@ -11982,7 +11988,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privgopdLambda|};
+         oattrs_code := privgopdCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (37, {|object_attrs :=
@@ -12007,7 +12013,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privobjectToStringlambda|};
+         oattrs_code := privobjectToStringCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12020,7 +12026,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privpropEnumlambda|};
+         oattrs_code := privpropEnumCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12033,7 +12039,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privtoLocaleStringlambda|};
+         oattrs_code := privtoLocaleStringCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12046,7 +12052,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privvalueOflambda|};
+         oattrs_code := objCode1|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12059,7 +12065,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privhasOwnPropertylambda|};
+         oattrs_code := privhasOwnPropertyCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12072,7 +12078,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privIsPrototypeOflambda|};
+         oattrs_code := privisPrototypeOfCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12099,7 +12105,7 @@ Definition store_items := [
                    (closure_intro
                     [("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
-                     ("proto", proto)] None ["this"; "args"] ex_internal4))]|});
+                     ("proto", proto)] None ["this"; "args"] ex_internal5))]|});
 (45, {|object_attrs :=
        {|oattrs_proto := value_object 8;
          oattrs_class := "Function";
@@ -12119,7 +12125,7 @@ Definition store_items := [
                     [("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
                      ("proto", privSyntaxErrorProto)] None ["this"; "args"]
-                    ex_internal5))]|});
+                    ex_internal6))]|});
 (46, {|object_attrs :=
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
@@ -12138,7 +12144,7 @@ Definition store_items := [
                    (closure_intro
                     [("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
-                     ("proto", proto1)] None ["this"; "args"] ex_internal6))]|});
+                     ("proto", proto1)] None ["this"; "args"] ex_internal7))]|});
 (47, {|object_attrs :=
        {|oattrs_proto := value_object 10;
          oattrs_class := "Function";
@@ -12158,7 +12164,7 @@ Definition store_items := [
                     [("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
                      ("proto", privRangeErrorProto)] None ["this"; "args"]
-                    ex_internal7))]|});
+                    ex_internal8))]|});
 (48, {|object_attrs :=
        {|oattrs_proto := value_object 7;
          oattrs_class := "Function";
@@ -12178,7 +12184,7 @@ Definition store_items := [
                     [("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
                      ("proto", privReferenceErrorProto)] None
-                    ["this"; "args"] ex_internal8))]|});
+                    ["this"; "args"] ex_internal9))]|});
 (49, {|object_attrs :=
        {|oattrs_proto := value_object 6;
          oattrs_class := "Function";
@@ -12198,7 +12204,7 @@ Definition store_items := [
                     [("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
                      ("proto", privTypeErrorProto)] None ["this"; "args"]
-                    ex_internal9))]|});
+                    ex_internal10))]|});
 (50, {|object_attrs :=
        {|oattrs_proto := value_object 5;
          oattrs_class := "Object";
@@ -12236,7 +12242,7 @@ Definition store_items := [
                    (closure_intro
                     [("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
-                     ("proto", proto2)] None ["this"; "args"] ex_internal10))]|});
+                     ("proto", proto2)] None ["this"; "args"] ex_internal11))]|});
 (52, {|object_attrs :=
        {|oattrs_proto := value_object 1;
          oattrs_class := "Array";
@@ -12386,7 +12392,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privgopnLambda|};
+         oattrs_code := privgopnCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (54, {|object_attrs :=
@@ -12449,7 +12455,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privdefinePropertiesLambda|};
+         oattrs_code := privdefinePropertiesCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (57, {|object_attrs :=
@@ -12474,7 +12480,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privcreateLambda|};
+         oattrs_code := privcreateCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (59, {|object_attrs :=
@@ -12499,7 +12505,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privsealLambda|};
+         oattrs_code := privsealCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (61, {|object_attrs :=
@@ -12534,7 +12540,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privfreezelambda|};
+         oattrs_code := privfreezeCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (63, {|object_attrs :=
@@ -12569,7 +12575,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privpreventExtensionsLambda|};
+         oattrs_code := privpreventExtensionsCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (65, {|object_attrs :=
@@ -12604,7 +12610,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privisFrozenLambda|};
+         oattrs_code := privisFrozenCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (67, {|object_attrs :=
@@ -12639,7 +12645,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privisSealedLambda|};
+         oattrs_code := privisSealedCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (69, {|object_attrs :=
@@ -12674,7 +12680,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privisExtensibleLambda|};
+         oattrs_code := privisExtensibleCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (71, {|object_attrs :=
@@ -12709,7 +12715,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privkeysLambda|};
+         oattrs_code := privkeysCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
 (73, {|object_attrs :=
@@ -12734,7 +12740,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privfromcclambda|};
+         oattrs_code := privfromccCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12770,7 +12776,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privjoinlambda|};
+         oattrs_code := privjoinCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12806,7 +12812,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privpoplambda|};
+         oattrs_code := privpopCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12855,7 +12861,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privpushlambda|};
+         oattrs_code := privpushCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12904,7 +12910,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privreverselambda|};
+         oattrs_code := privreverseCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12953,7 +12959,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privshiftlambda|};
+         oattrs_code := privshiftCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -13002,7 +13008,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privarrayToStringlambda|};
+         oattrs_code := privarrayToStringCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -13056,7 +13062,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privarrayTLSlambda|};
+         oattrs_code := privarrayTLSCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -13087,7 +13093,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privconcatLambda|};
+         oattrs_code := privconcatCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -13131,7 +13137,7 @@ Definition store_items := [
        {|oattrs_proto := value_object 3;
          oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := privsortlambda|};
+         oattrs_code := privsortCall|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -13226,7 +13232,7 @@ Definition store_items := [
                       ("%RangeErrorProto", privRangeErrorProto);
                       ("%ToUint32", privToUint32);
                       ("%defineOwnProperty", privdefineOwnProperty)] 
-                     None ["obj"; "this"; "args"] ex_internal11))]|});
+                     None ["obj"; "this"; "args"] ex_internal12))]|});
 (102, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -13257,7 +13263,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privcharatlambda|};
+          oattrs_code := privcharAtCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13311,7 +13317,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privcharcodeatlambda|};
+          oattrs_code := privcharCodeAtCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13365,7 +13371,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privstrconcatlambda|};
+          oattrs_code := privstringConcatCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13419,7 +13425,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privsubstringlambda|};
+          oattrs_code := privsubstringCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13473,7 +13479,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privsplicelambda|};
+          oattrs_code := privspliceCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13527,7 +13533,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privunshiftlambda|};
+          oattrs_code := privunshiftCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13581,7 +13587,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privaiolambda|};
+          oattrs_code := privarrayIndexOfCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13635,7 +13641,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privaliolambda|};
+          oattrs_code := privarrayLastIndexOfCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13689,7 +13695,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privforeachlambda|};
+          oattrs_code := privforeachCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13755,7 +13761,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privmaplambda|};
+          oattrs_code := privmapCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13809,7 +13815,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privfilterlambda|};
+          oattrs_code := privfilterCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (134, {|object_attrs :=
@@ -13836,7 +13842,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privreducelambda|};
+          oattrs_code := privreduceCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13890,7 +13896,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := priveverylambda|};
+          oattrs_code := priveveryCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13944,7 +13950,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privsomelambda|};
+          oattrs_code := privsomeCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13998,7 +14004,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privreduceRightLambda|};
+          oattrs_code := privreduceRightCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -14052,7 +14058,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privslicelambda|};
+          oattrs_code := privsliceCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -14106,7 +14112,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privbindLambda|};
+          oattrs_code := privbindCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -14172,7 +14178,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privnumberToStringlambda|};
+          oattrs_code := privnumberToStringCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -14250,7 +14256,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privStringIndexOflambda|};
+          oattrs_code := privstringIndexOfCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -14264,14 +14270,14 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privreplacelambda|};
+          oattrs_code := privreplaceCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (158, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privsliolambda|};
+          oattrs_code := privstringLastIndexOfCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -14285,7 +14291,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privlocaleCompareLambda|};
+          oattrs_code := privlocaleCompareCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -14299,7 +14305,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privstringSliceLambda|};
+          oattrs_code := privstringSliceCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -14313,21 +14319,21 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privtlclambda|};
+          oattrs_code := privtoLowerCaseCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (162, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privtuclambda|};
+          oattrs_code := privtoUpperCaseCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (163, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privsplitLambda|};
+          oattrs_code := privsplitCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (164, {|object_attrs :=
@@ -14354,14 +14360,14 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_code := privgetYearlambda|};
+          oattrs_code := privgetYearCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (166, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_code := privgetMonthlambda|};
+          oattrs_code := privgetMonthCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (167, {|object_attrs :=
@@ -14611,7 +14617,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privdateToStringLambda|};
+          oattrs_code := privdateToStringCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (169, {|object_attrs :=
@@ -14650,7 +14656,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privdateValueOfLambda|};
+          oattrs_code := privdateValueOfCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (171, {|object_attrs :=
@@ -14695,12 +14701,12 @@ Definition store_items := [
                       ("%UTC", privUTC);
                       ("%getCurrentUTC", privgetCurrentUTC);
                       ("%parse", privparse)] None ["constr"; "args"]
-                     ex_internal12))]|});
+                     ex_internal13))]|});
 (172, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_code := privdateGetTimezoneOffsetLambda|};
+          oattrs_code := privdateGetTimezoneOffsetCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (173, {|object_attrs :=
@@ -14739,7 +14745,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privdategetDayLambda|};
+          oattrs_code := privdategetDayCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (175, {|object_attrs :=
@@ -14778,7 +14784,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privdategetDateLambda|};
+          oattrs_code := privdategetDateCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (177, {|object_attrs :=
@@ -16143,7 +16149,7 @@ Definition store_items := [
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_code := privtestlambda|};
+          oattrs_code := privtestCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (247, {|object_attrs :=
@@ -16190,47 +16196,47 @@ Definition store_items := [
         from_list [("construct", 
                     value_closure
                     (closure_intro [("%RegExpProto", privRegExpProto)] 
-                     None ["obj"; "this"; "args"] ex_internal13))]|});
+                     None ["obj"; "this"; "args"] ex_internal14))]|});
 (249, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privparseIntlambda|};
+          oattrs_code := privparseIntCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (250, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privdecodeURILambda|};
+          oattrs_code := privdecodeURICall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (251, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privdecodeURIComponentLambda|};
+          oattrs_code := privdecodeURIComponentCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (252, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privencodeURILambda|};
+          oattrs_code := privencodeURICall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (253, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privencodeURIComponentLambda|};
+          oattrs_code := privencodeURIComponentCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (254, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
           oattrs_extensible := true;
-          oattrs_code := privexplambda|};
+          oattrs_code := privexpCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (255, {|object_attrs :=
@@ -16409,7 +16415,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privmathMinLambda|};
+          oattrs_code := privmathMinCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -16469,7 +16475,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privmathMaxLambda|};
+          oattrs_code := privmathMaxCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -16529,7 +16535,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privmathAbsLambda|};
+          oattrs_code := privmathAbsCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (263, {|object_attrs :=
@@ -16556,7 +16562,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privacosLambda|};
+          oattrs_code := privacosCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (265, {|object_attrs :=
@@ -16583,7 +16589,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privasinLambda|};
+          oattrs_code := privasinCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (267, {|object_attrs :=
@@ -16610,7 +16616,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privatanLambda|};
+          oattrs_code := privatanCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (269, {|object_attrs :=
@@ -16637,7 +16643,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privatan2Lambda|};
+          oattrs_code := privatan2Call|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (271, {|object_attrs :=
@@ -16664,7 +16670,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privcosLambda|};
+          oattrs_code := privcosCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (273, {|object_attrs :=
@@ -16691,7 +16697,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privrandomLambda|};
+          oattrs_code := privrandomCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (275, {|object_attrs :=
@@ -16718,7 +16724,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privroundLambda|};
+          oattrs_code := privroundCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (277, {|object_attrs :=
@@ -16745,7 +16751,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privsinLambda|};
+          oattrs_code := privsinCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (279, {|object_attrs :=
@@ -16772,7 +16778,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privsqrtLambda|};
+          oattrs_code := privsqrtCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (281, {|object_attrs :=
@@ -16799,7 +16805,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privtanLambda|};
+          oattrs_code := privtanCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (283, {|object_attrs :=
@@ -16826,7 +16832,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privmathLogLambda|};
+          oattrs_code := privmathLogCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (285, {|object_attrs :=
@@ -16853,7 +16859,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privmathCeilLambda|};
+          oattrs_code := privmathCeilCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (287, {|object_attrs :=
@@ -16880,7 +16886,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privmathFloorLambda|};
+          oattrs_code := privmathFloorCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (289, {|object_attrs :=
@@ -16907,7 +16913,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privmathPowLambda|};
+          oattrs_code := privmathPowCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (291, {|object_attrs :=
@@ -17033,7 +17039,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privtoFixedLambda|};
+          oattrs_code := privtoFixedCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -17098,7 +17104,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privnumTLSLambda|};
+          oattrs_code := privnumTLSCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (302, {|object_attrs :=
@@ -17131,7 +17137,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privtoExponentialLambda|};
+          oattrs_code := privtoExponentialCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (304, {|object_attrs :=
@@ -17164,7 +17170,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privtoPrecisionLambda|};
+          oattrs_code := privtoPrecisionCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (306, {|object_attrs :=
@@ -17217,7 +17223,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privlogLambda|};
+          oattrs_code := privlogCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (309, {|object_attrs :=
@@ -17259,7 +17265,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privevallambda|};
+          oattrs_code := privevalCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (311, {|object_attrs :=
@@ -17288,27 +17294,27 @@ Definition store_items := [
                     (closure_intro
                      [("%ComputeLength", privComputeLength);
                       ("%ToString", privToString);
-                      ("%evallambda", privevallambda)] None ["this"; "args"]
-                     ex_internal14))]|});
+                      ("%evalCall", privevalCall)] None ["this"; "args"]
+                     ex_internal15))]|});
 (312, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privisFiniteLambda|};
+          oattrs_code := privisFiniteCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (313, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privparseFloatLambda|};
+          oattrs_code := privparseFloatCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (314, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privescapeLambda|};
+          oattrs_code := privescapeCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (315, {|object_attrs :=
@@ -17347,7 +17353,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privunescapeLambda|};
+          oattrs_code := privunescapeCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
 (317, {|object_attrs :=

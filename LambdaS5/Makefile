@@ -50,10 +50,11 @@ tests: snapshot
 quicktests:
 	tests/run_tests.py
 
-coq/LjsInitEnv.v: build/eval.native tests/es5.dump
-	./build/eval.native -load tests/es5.dump -coq-save coq/LjsInitEnv.v
+#coq/LjsInitEnv.v: build/eval.native tests/es5.dump
+#	./build/eval.native -load tests/es5.dump -coq-save coq/LjsInitEnv.v
 
-initenv: coq/LjsInitEnv.v
+initenv: tests/es5.dump
+	./build/eval.native -load tests/es5.dump -coq-save coq/LjsInitEnv.v
 
 clean:
 	make -C coq/ clean

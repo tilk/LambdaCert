@@ -158,7 +158,7 @@ atom :
  | LBRACE LBRACK oattrsv RBRACK props RBRACE 
    { Object (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), fst $3, snd $3, $5 )}
  | LBRACE LBRACK RBRACK props RBRACE 
-   { Object (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), d_attrs, [], $4 )}
+   { Object (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5), d_attrs, [], $4 )}
  | braced_seq_exp
    { $1 }
  | LPAREN unbraced_seq_exp RPAREN { $2 }

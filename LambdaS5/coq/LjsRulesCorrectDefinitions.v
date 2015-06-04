@@ -135,7 +135,7 @@ Inductive type_related : J.type -> L.type -> Prop :=
 | type_related_object : type_related J.type_object L.type_object.
 
 (** *** Relating values
-    Note that this definition implies that LJS lambdas and empty are never seen directly by JS code. 
+    Note that this definition implies that LJS Calls and empty are never seen directly by JS code. 
     Also, relating objects is delegated to the bisimulation relation. *)
 
 Inductive value_related BR : J.value -> L.value -> Prop :=
@@ -203,12 +203,159 @@ Inductive option_value_related BR : option J.value -> option L.value -> Prop :=
     option_value_related BR (Some jv) (Some v)
 .
 
+(* TODO fix the naming scheme in CallJS! *)
+Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
+| call_prealloc_related_global_eval : 
+    call_prealloc_related J.prealloc_global_eval LjsInitEnv.privevalCall
+| call_prealloc_related_global_is_finite : 
+    call_prealloc_related J.prealloc_global_is_finite LjsInitEnv.privisFiniteCall
+| call_prealloc_related_global_is_nan : 
+    call_prealloc_related J.prealloc_global_is_nan LjsInitEnv.privisNaNCall
+| call_prealloc_related_global_parse_float : 
+    call_prealloc_related J.prealloc_global_parse_float LjsInitEnv.privparseFloatCall
+| call_prealloc_related_global_parse_int : 
+    call_prealloc_related J.prealloc_global_parse_int LjsInitEnv.privparseIntCall
+| call_prealloc_related_object : 
+    call_prealloc_related J.prealloc_object LjsInitEnv.privObjectCall
+| call_prealloc_related_object_get_proto_of : 
+    call_prealloc_related J.prealloc_object_get_proto_of LjsInitEnv.privgpoCall
+| call_prealloc_related_object_get_own_prop_descriptor : 
+    call_prealloc_related J.prealloc_object_get_own_prop_descriptor LjsInitEnv.privgopdCall
+| call_prealloc_related_object_get_own_prop_name : 
+    call_prealloc_related J.prealloc_object_get_own_prop_name LjsInitEnv.privgopnCall
+| call_prealloc_related_object_create : 
+    call_prealloc_related J.prealloc_object_create LjsInitEnv.privcreateCall
+| call_prealloc_related_object_define_prop : 
+    call_prealloc_related J.prealloc_object_define_prop LjsInitEnv.privdefinePropertyCall
+| call_prealloc_related_object_define_props : 
+    call_prealloc_related J.prealloc_object_define_props LjsInitEnv.privdefinePropertiesCall
+| call_prealloc_related_object_seal : 
+    call_prealloc_related J.prealloc_object_seal LjsInitEnv.privsealCall
+| call_prealloc_related_object_freeze : 
+    call_prealloc_related J.prealloc_object_freeze LjsInitEnv.privfreezeCall
+| call_prealloc_related_object_prevent_extensions : 
+    call_prealloc_related J.prealloc_object_prevent_extensions LjsInitEnv.privpreventExtensionsCall
+| call_prealloc_related_object_is_sealed : 
+    call_prealloc_related J.prealloc_object_is_sealed LjsInitEnv.privisSealedCall
+| call_prealloc_related_object_is_frozen : 
+    call_prealloc_related J.prealloc_object_is_frozen LjsInitEnv.privisFrozenCall
+| call_prealloc_related_object_is_extensible : 
+    call_prealloc_related J.prealloc_object_is_extensible LjsInitEnv.privisExtensibleCall
+| call_prealloc_related_object_keys : 
+    call_prealloc_related J.prealloc_object_keys LjsInitEnv.privkeysCall
+| call_prealloc_related_object_proto_to_string : 
+    call_prealloc_related J.prealloc_object_proto_to_string LjsInitEnv.privobjectToStringCall
+(* | call_prealloc_related_object_proto_value_of : 
+    call_prealloc_related J.prealloc_object_proto_value_of LjsInitEnv.privvalueOfCall *)
+| call_prealloc_related_object_proto_has_own_prop : 
+    call_prealloc_related J.prealloc_object_proto_has_own_prop LjsInitEnv.privhasOwnPropertyCall
+| call_prealloc_related_object_proto_is_prototype_of : 
+    call_prealloc_related J.prealloc_object_proto_is_prototype_of LjsInitEnv.privisPrototypeOfCall
+| call_prealloc_related_object_proto_prop_is_enumerable : 
+    call_prealloc_related J.prealloc_object_proto_prop_is_enumerable LjsInitEnv.privpropEnumCall
+| call_prealloc_related_function : 
+    call_prealloc_related J.prealloc_function LjsInitEnv.privRunSelfConstructorCall
+(* | call_prealloc_related_function_proto : 
+    call_prealloc_related J.prealloc_function_proto LjsInitEnv.privCall *)
+| call_prealloc_related_function_to_string : 
+    call_prealloc_related J.prealloc_function_proto_to_string LjsInitEnv.privfunctionToStringCall
+| call_prealloc_related_function_apply : 
+    call_prealloc_related J.prealloc_function_proto_apply LjsInitEnv.privapplyCall
+| call_prealloc_related_function_bind : 
+    call_prealloc_related J.prealloc_function_proto_bind LjsInitEnv.privbindCall
+| call_prealloc_related_bool : 
+    call_prealloc_related J.prealloc_bool LjsInitEnv.privBooleanCall
+| call_prealloc_related_bool_proto_to_string : 
+    call_prealloc_related J.prealloc_bool_proto_to_string LjsInitEnv.privbooleanToStringCall
+(* | call_prealloc_related_bool_proto_value_of : 
+    call_prealloc_related J.prealloc_bool_proto_value_of LjsInitEnv.privCall *)
+| call_prealloc_related_number : 
+    call_prealloc_related J.prealloc_number LjsInitEnv.privNumberCall
+| call_prealloc_related_number_proto_to_string : 
+    call_prealloc_related J.prealloc_number_proto_to_string LjsInitEnv.privnumberToStringCall
+(* | call_prealloc_related_number_proto_value_of : 
+    call_prealloc_related J.prealloc_number_proto_value_of LjsInitEnv.privCall *)
+| call_prealloc_related_number_proto_to_fixed : 
+    call_prealloc_related J.prealloc_number_proto_to_fixed LjsInitEnv.privtoFixedCall
+| call_prealloc_related_number_proto_to_exponential : 
+    call_prealloc_related J.prealloc_number_proto_to_exponential LjsInitEnv.privtoExponentialCall
+| call_prealloc_related_number_proto_to_precision : 
+    call_prealloc_related J.prealloc_number_proto_to_precision LjsInitEnv.privtoPrecisionCall
+(* | call_prealloc_related_array : 
+    call_prealloc_related J.prealloc_array LjsInitEnv.privCall
+| call_prealloc_related_array_is_array : 
+    call_prealloc_related J.prealloc_array_is_array LjsInitEnv.privCall
+| call_prealloc_related_array_proto_to_string : 
+    call_prealloc_related J.prealloc_array_proto_to_string LjsInitEnv.privCall *)
+| call_prealloc_related_string : 
+    call_prealloc_related J.prealloc_string LjsInitEnv.privStringCall
+| call_prealloc_related_string_proto_to_string : 
+    call_prealloc_related J.prealloc_string_proto_to_string LjsInitEnv.privstringToStringCall
+(* | call_prealloc_related_string_proto_value_of : 
+    call_prealloc_related J.prealloc_string_proto_value_of LjsInitEnv.privCall *)
+| call_prealloc_related_string_proto_char_at : 
+    call_prealloc_related J.prealloc_string_proto_char_at LjsInitEnv.privcharAtCall
+| call_prealloc_related_string_proto_char_code_at : 
+    call_prealloc_related J.prealloc_string_proto_char_code_at LjsInitEnv.privcharCodeAtCall
+| call_prealloc_related_error : 
+    call_prealloc_related J.prealloc_error LjsInitEnv.privRunSelfConstructorCall
+| call_prealloc_related_native_error_eval : 
+    call_prealloc_related (J.prealloc_native_error J.native_error_eval) LjsInitEnv.privRunSelfConstructorCall
+| call_prealloc_related_native_error_range : 
+    call_prealloc_related (J.prealloc_native_error J.native_error_range) LjsInitEnv.privRunSelfConstructorCall
+| call_prealloc_related_native_error_ref : 
+    call_prealloc_related (J.prealloc_native_error J.native_error_ref) LjsInitEnv.privRunSelfConstructorCall
+| call_prealloc_related_native_error_syntax : 
+    call_prealloc_related (J.prealloc_native_error J.native_error_syntax) LjsInitEnv.privRunSelfConstructorCall
+| call_prealloc_related_native_error_type : 
+    call_prealloc_related (J.prealloc_native_error J.native_error_type) LjsInitEnv.privRunSelfConstructorCall
+.
+
+Inductive call_related : J.call -> L.value -> Prop :=
+| call_related_prealloc : forall jpre v, call_prealloc_related jpre v -> call_related (J.call_prealloc jpre) v
+| call_related_default : forall v, call_related J.call_default v (* TODO enforce externally? *)
+| call_related_after_bind : call_related J.call_after_bind LjsInitEnv.privBindObjCall
+.
+
+Inductive option_call_related : option J.call -> option L.value -> Prop :=
+| option_call_related_some : forall jcall v, call_related jcall v -> option_call_related (Some jcall) (Some v)
+| option_call_related_none : option_call_related None None
+.
+
+Inductive construct_prealloc_related : J.prealloc -> L.value -> Prop :=
+| construct_prealloc_related_object : construct_prealloc_related J.prealloc_object LjsInitEnv.privObjectConstructor
+| construct_prealloc_related_function : construct_prealloc_related J.prealloc_function LjsInitEnv.privFunctionConstructor
+| construct_prealloc_related_bool : construct_prealloc_related J.prealloc_bool LjsInitEnv.privBooleanConstructor
+| construct_prealloc_related_number : construct_prealloc_related J.prealloc_number LjsInitEnv.privNumberConstructor
+| construct_prealloc_related_array : construct_prealloc_related J.prealloc_array LjsInitEnv.privArrayConstructor
+| construct_prealloc_related_string : construct_prealloc_related J.prealloc_string LjsInitEnv.privStringConstructor
+| construct_prealloc_related_error : construct_prealloc_related J.prealloc_error LjsInitEnv.privErrorConstructor
+| construct_prealloc_related_native_error_eval : 
+    construct_prealloc_related (J.prealloc_native_error J.native_error_eval) LjsInitEnv.privEvalErrorConstructor
+| construct_prealloc_related_native_error_range : 
+    construct_prealloc_related (J.prealloc_native_error J.native_error_range) LjsInitEnv.privRangeErrorConstructor
+| construct_prealloc_related_native_error_ref : 
+    construct_prealloc_related (J.prealloc_native_error J.native_error_ref) LjsInitEnv.privReferenceErrorConstructor
+| construct_prealloc_related_native_error_syntax : 
+    construct_prealloc_related (J.prealloc_native_error J.native_error_syntax) LjsInitEnv.privSyntaxErrorConstructor
+| construct_prealloc_related_native_error_type : 
+    construct_prealloc_related (J.prealloc_native_error J.native_error_type) LjsInitEnv.privTypeErrorConstructor
+.
+
+Inductive construct_related : J.construct -> L.value -> Prop :=
+| construct_related_prealloc : forall jpre v, construct_prealloc_related jpre v -> construct_related (J.construct_prealloc jpre) v
+| construct_related_default : construct_related J.construct_default LjsInitEnv.privDefaultConstruct
+| construct_related_after_bind : construct_related J.construct_after_bind LjsInitEnv.privBindConstructor
+.
+
 Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_class : J.object_class_ jobj = L.object_class obj;
     object_prim_related_extensible : J.object_extensible_ jobj = L.object_extensible obj;
     object_prim_related_prototype : value_related BR (J.object_proto_ jobj) (L.object_proto obj);
     object_prim_related_primval : 
         option_value_related BR (J.object_prim_value_ jobj) (L.object_internal obj\("primval"?))
+(* TODO call *)
+(* TODO construct *)
 }.
 
 Record object_related BR jobj obj : Prop := {
