@@ -148,6 +148,10 @@ Inductive value_related BR : J.value -> L.value -> Prop :=
     fact_js_obj jptr ptr \in BR -> value_related BR (J.value_object jptr) (L.value_object ptr) 
 .
 
+(** *** Relating lists of values
+    Useful for function arguments. *)
+Definition values_related BR : list J.value -> list L.value -> Prop := Forall2 (value_related BR).
+
 (** *** Relating object properties
     Individual properties are related in a natural way. *)
 
@@ -291,6 +295,26 @@ Record js_exn_object obj v : Prop := {
     js_exn_object_exn : binds (L.object_properties obj) "%js-exn" 
         (L.attributes_data_of (L.attributes_data_intro v false false false))
 }.
+
+Record arg_list_object obj vs : Prop := {
+    arg_list_object_has_args : forall k v, 
+        Nth k vs v -> 
+        binds (L.object_properties obj) (string_of_nat k) 
+            (L.attributes_data_of (L.attributes_data_intro v false false false));
+    arg_list_object_all_args : forall s,
+        index (L.object_properties obj) s -> 
+        exists k v, s = string_of_nat k /\ Nth k vs v
+}.
+
+Inductive preftype_name : J.preftype -> string -> Type :=
+| preftype_name_number : preftype_name J.preftype_number "number"
+| preftype_name_string : preftype_name J.preftype_string "string"
+.
+
+Inductive option_preftype_name : option J.preftype -> string -> Type :=
+| option_preftype_name_some : forall jprefo s, preftype_name jprefo s -> option_preftype_name (Some jprefo) s
+| option_preftype_name_none : option_preftype_name None "number"
+.
 
 (** *** Properties of heap bisimulations
     Heap bisimulations must satisfy several properties in order to be useful

@@ -51,6 +51,9 @@ expr_object
 []
 [("$this", property_data
            (data_intro (expr_id "$this") expr_true expr_false expr_false));
+ ("%AppExpr", property_data
+              (data_intro (expr_id "%AppExpr") expr_true expr_false
+               expr_false));
  ("%AppExprCheck", property_data
                    (data_intro (expr_id "%AppExprCheck") expr_true expr_false
                     expr_false));
@@ -1764,9 +1767,13 @@ Definition ex_objCode9 :=
 expr_app (expr_id "%TypeError")
 [expr_op2 binary_op_string_plus (expr_id "name") (expr_string " NYI")]
 .
+Definition ex_privAppExpr := 
+expr_app (expr_id "fun") [expr_id "this"; expr_id "args"]
+.
 Definition ex_privAppExprCheck := 
 expr_if (expr_app (expr_id "%IsCallable") [expr_id "fun"])
-(expr_app (expr_id "fun") [expr_id "this"; expr_id "args"])
+(expr_app (expr_id "%AppExpr")
+ [expr_id "fun"; expr_id "this"; expr_id "args"])
 (expr_app (expr_id "%TypeError") [expr_string "Not a function"])
 .
 Definition ex_privAppMethod := 
@@ -3269,24 +3276,8 @@ expr_label "ret"
        (expr_break "ret" (expr_id "r")))))))))
 .
 Definition ex_privToNumber := 
-expr_let "t" (expr_op1 unary_op_typeof (expr_id "x"))
-(expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "number"))
- (expr_id "x")
- (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "undefined"))
-  (expr_number (JsNumber.of_int (0)))
-  (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "null"))
-   (expr_number (JsNumber.of_int (0)))
-   (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "boolean"))
-    (expr_if (expr_id "x") (expr_number (JsNumber.of_int (1)))
-     (expr_number (JsNumber.of_int (0))))
-    (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "string"))
-     (expr_op1 unary_op_prim_to_num (expr_id "x"))
-     (expr_if
-      (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object"))
-      (expr_app (expr_id "%ToNumber")
-       [expr_app (expr_id "%ToPrimitiveHint")
-        [expr_id "x"; expr_string "number"]])
-      (expr_throw (expr_string "[env] Invalid type in %ToNumber"))))))))
+expr_op1 unary_op_prim_to_num
+(expr_app (expr_id "%ToPrimitiveHint") [expr_id "x"; expr_string "number"])
 .
 Definition ex_privToObject := 
 expr_let "t" (expr_op1 unary_op_typeof (expr_id "o"))
@@ -3325,8 +3316,9 @@ expr_if (expr_op1 unary_op_is_object (expr_id "val"))
    (expr_let "f" (expr_get_field (expr_id "val") (expr_id "str"))
     (expr_if (expr_app (expr_id "%IsCallable") [expr_id "f"])
      (expr_let "res"
-      (expr_app (expr_id "f")
-       [expr_id "val";
+      (expr_app (expr_id "%AppExpr")
+       [expr_id "f";
+        expr_id "val";
         expr_object
         (objattrs_intro (expr_string "Object") expr_true expr_null
          expr_undefined) [] []])
@@ -7225,6 +7217,10 @@ Definition objCode :=  value_undefined .
 Definition name_objCode :=  "objCode" .
 Definition dolthis :=  value_object 2 .
 Definition name_dolthis :=  "$this" .
+Definition privAppExpr := 
+value_closure (closure_intro [] None ["fun"; "this"; "args"] ex_privAppExpr)
+.
+Definition name_privAppExpr :=  "%AppExpr" .
 Definition privTypeof := 
 value_closure (closure_intro [] None ["val"] ex_privTypeof)
 .
@@ -7261,8 +7257,10 @@ Definition name_privTypeError :=  "%TypeError" .
 Definition privAppExprCheck := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable); ("%TypeError", privTypeError)] None
- ["fun"; "this"; "args"] ex_privAppExprCheck)
+ [("%AppExpr", privAppExpr);
+  ("%IsCallable", privIsCallable);
+  ("%TypeError", privTypeError)] None ["fun"; "this"; "args"]
+ ex_privAppExprCheck)
 .
 Definition name_privAppExprCheck :=  "%AppExprCheck" .
 Definition privBooleanProto :=  value_object 12 .
@@ -7312,8 +7310,9 @@ Definition name_privToObjectVirtual :=  "%ToObjectVirtual" .
 Definition privToPrimitiveHint := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable); ("%TypeError", privTypeError)] None
- ["val"; "hint"] ex_privToPrimitiveHint)
+ [("%AppExpr", privAppExpr);
+  ("%IsCallable", privIsCallable);
+  ("%TypeError", privTypeError)] None ["val"; "hint"] ex_privToPrimitiveHint)
 .
 Definition name_privToPrimitiveHint :=  "%ToPrimitiveHint" .
 Definition privToString := 
@@ -7352,8 +7351,8 @@ Definition privRangeErrorProto :=  value_object 10 .
 Definition name_privRangeErrorProto :=  "%RangeErrorProto" .
 Definition privToNumber := 
 value_closure
-(closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] (Some "%ToNumber")
- ["x"] ex_privToNumber)
+(closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["x"]
+ ex_privToNumber)
 .
 Definition name_privToNumber :=  "%ToNumber" .
 Definition privToUint := 
@@ -9608,6 +9607,7 @@ value_closure
 Definition name_objCode38 :=  "objCode" .
 Definition ctx_items := 
 [(name_dolthis, dolthis);
+ (name_privAppExpr, privAppExpr);
  (name_privAppExprCheck, privAppExprCheck);
  (name_privAppMethod, privAppMethod);
  (name_privArrayConstructor, privArrayConstructor);
@@ -10023,6 +10023,7 @@ Definition ctx_items :=
 .
 Ltac ctx_compute := cbv beta iota zeta delta -[
 dolthis
+privAppExpr
 privAppExprCheck
 privAppMethod
 privArrayConstructor
@@ -10448,6 +10449,7 @@ Definition store_items := [
                                            value_closure
                                            (closure_intro
                                             [("$this", dolthis);
+                                             ("%AppExpr", privAppExpr);
                                              ("%AppExprCheck", privAppExprCheck);
                                              ("%AppMethod", privAppMethod);
                                              ("%ArrayConstructor", privArrayConstructor);

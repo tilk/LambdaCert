@@ -45,15 +45,53 @@ Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
 
-(** ** Lemmas about operators *)
+Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 obj1 vs r jptr jv jvs,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privAppExpr [L.value_object ptr; v; L.value_object ptr1]) 
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    values_related BR jvs vs ->
+    binds st ptr1 obj1 ->
+    arg_list_object obj1 vs ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_call jptr jv jvs) (fun jv => True).
+Proof.
+Admitted. (* TODO *)
 
-(* TODO *)
+Definition post_to_primitive jv jv' := 
+    exists jp', jv' = J.value_prim jp' /\ forall jp, jv = J.value_prim jp -> jp = jp'.
 
-(** ** Lemmas about the environment *)
+Lemma red_spec_to_primitive_ok : forall BR k jst jc c st st' jv v jprefo r s,
+    L.red_exprh k c st
+        (L.expr_app_2 LjsInitEnv.privToPrimitiveHint [v; L.value_string s])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    option_preftype_name jprefo s ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_to_primitive jv jprefo) (post_to_primitive jv).
+Proof.
+Admitted.
 
-(* TODO *)
-
-(** ** Lemmas about specification functions *)
+Lemma red_spec_to_primitive_ok_default : forall BR k jst jc c st st' jv v r,
+    L.red_exprh k c st
+        (L.expr_app_2 LjsInitEnv.privToPrimitive [v])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_to_primitive jv None) (post_to_primitive jv).
+Proof.
+    introv Hlred Hcinv Hinv Hvrel.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : red_spec_to_primitive_ok. eapply option_preftype_name_none.
+    assumption.
+Qed.
 
 Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
     L.red_exprh k c st 
@@ -159,6 +197,42 @@ Proof.
     jauto_js.
 Qed.
 
+Lemma reference_error_lemma : forall BR k jst jc c st st' v r,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privReferenceError [v]) 
+        (L.out_ter st' r) ->
+    (v = L.value_undefined \/ exists s, v = L.value_string s) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_error J.native_error_ref) (fun _ => False).
+Proof.
+    introv Hlred Hv Hcinv Hinv.
+    inverts red_exprh Hlred; tryfalse.
+    ljs_apply.
+    ljs_context_invariant_after_apply. clear Hcinv.
+    repeat ljs_autoforward.
+    forwards_th Hx : native_error_lemma; try eassumption.
+    jauto_js.
+Qed.
+
+Lemma syntax_error_lemma : forall BR k jst jc c st st' v r,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privSyntaxError [v]) 
+        (L.out_ter st' r) ->
+    (v = L.value_undefined \/ exists s, v = L.value_string s) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_error J.native_error_syntax) (fun _ => False).
+Proof.
+    introv Hlred Hv Hcinv Hinv.
+    inverts red_exprh Hlred; tryfalse.
+    ljs_apply.
+    ljs_context_invariant_after_apply. clear Hcinv.
+    repeat ljs_autoforward.
+    forwards_th Hx : native_error_lemma; try eassumption.
+    jauto_js.
+Qed.
+
 (** *** spec_expr_get_value_conv spec_to_boolean 
     It corresponds to [to_bool] in the desugaring. *)
 
@@ -176,6 +250,42 @@ Proof.
     inverts Hvrel; try injects; jauto_js.
 Qed.
 
+(* TODO move *)
+Lemma to_primitive_primitive_noop_lemma : forall k c st st' r v s,
+    L.red_exprh k c st
+        (L.expr_app_2 LjsInitEnv.privToPrimitiveHint [v; L.value_string s])
+        (L.out_ter st' r) ->
+    L.is_primitive v ->
+    st = st' /\ r = L.res_value v.
+Proof.
+    introv Hlred Hprim.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    cases_decide as Hisobj. {
+        inverts Hisobj; inverts Hprim.
+    }
+    repeat ljs_autoforward.
+    eauto.
+Qed.
+
+Lemma value_related_primitive_lemma : forall BR jv v,
+    L.is_primitive v ->
+    value_related BR jv v ->
+    exists jpv, jv = J.value_prim jpv.
+Proof.
+    introv Hprim Hvrel.
+    inverts Hprim; inverts Hvrel; jauto.
+Qed.
+
+Lemma convert_prim_to_number_lemma : forall BR jpv v,
+    value_related BR (J.value_prim jpv) v ->
+    L.value_to_num_cast v = J.convert_prim_to_number jpv.
+Proof.
+    introv Hvrel.
+    inverts Hvrel; reflexivity.
+Qed.
+
 Lemma red_spec_to_number_unary_ok : forall k,
     th_ext_expr_unary k LjsInitEnv.privToNumber J.spec_to_number
         (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
@@ -184,8 +294,67 @@ Proof.
     inverts red_exprh Hlred; tryfalse.
     ljs_apply.
     ljs_context_invariant_after_apply.
-(* TODO *)
-Admitted.
+    repeat ljs_autoforward.
+    destruct (classic (L.is_primitive v0)) as [Hprim|Hprim]. {
+        forwards_th Hx : to_primitive_primitive_noop_lemma. { eassumption. }
+        destruct_hyp Hx.
+        repeat ljs_autoforward.
+        forwards Hx : value_related_primitive_lemma Hprim Hvrel.
+        destruct_hyp Hx.
+        erewrite convert_prim_to_number_lemma by eassumption.
+        jauto_js.
+    } 
+    forwards_th Hx : red_spec_to_primitive_ok. {
+        eapply option_preftype_name_some. eapply preftype_name_number.
+    }
+    inverts Hvrel; try solve [false; eauto_js].
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    repeat ljs_autoforward.
+    match goal with H : post_to_primitive _ _ |- _ => unfold post_to_primitive in H; destruct_hyp H end. (* TODO *)
+    resvalue_related_only_invert.
+    erewrite convert_prim_to_number_lemma by eassumption.
+    jauto_js.
+Qed.
+
+Lemma convert_prim_to_string_lemma : forall BR jpv v,
+    value_related BR (J.value_prim jpv) v ->
+    L.value_to_str_cast v = J.convert_prim_to_string jpv.
+Proof.
+    introv Hvrel.
+    inverts Hvrel; reflexivity.
+Qed.
+
+Lemma red_spec_to_string_unary_ok : forall k,
+    th_ext_expr_unary k LjsInitEnv.privToString J.spec_to_string
+        (fun jv => exists n, jv = J.value_prim (J.prim_string n)).
+Proof.
+    introv Hcinv Hinv Hvrel Hlred.
+    inverts red_exprh Hlred; tryfalse.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    destruct (classic (L.is_primitive v0)) as [Hprim|Hprim]. {
+        forwards_th Hx : to_primitive_primitive_noop_lemma. { eassumption. }
+        destruct_hyp Hx.
+        repeat ljs_autoforward.
+        forwards Hx : value_related_primitive_lemma Hprim Hvrel.
+        destruct_hyp Hx.
+        erewrite convert_prim_to_string_lemma by eassumption.
+        jauto_js.
+    } 
+    forwards_th Hx : red_spec_to_primitive_ok. {
+        eapply option_preftype_name_some. eapply preftype_name_string.
+    }
+    inverts Hvrel; try solve [false; eauto_js].
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    repeat ljs_autoforward.
+    match goal with H : post_to_primitive _ _ |- _ => unfold post_to_primitive in H; destruct_hyp H end. (* TODO *)
+    resvalue_related_only_invert.
+    erewrite convert_prim_to_string_lemma by eassumption.
+    jauto_js.
+Qed.
 
 (* TODO move *)
 Ltac decide_stx_eq := 
@@ -513,30 +682,6 @@ Lemma decl_env_add_mutable_binding_lemma : forall BR k jst jc c st st' r jder je
 Proof.
     intros. eapply decl_env_add_binding_lemma; eauto.
 Qed.
-
-(* TODO move *)
-Lemma env_record_binds_to_libbag : forall jst jeptr jer, J.env_record_binds jst jeptr jer = binds jst jeptr jer.
-Proof. reflexivity. Qed.
-Lemma env_record_write_to_libbag : forall jst jeptr jer, J.env_record_write jst jeptr jer = jst\(jeptr := jer).
-Proof. reflexivity. Qed.
-
-Lemma decl_env_record_binds_to_libbag : forall jder s jmut jv, 
-    J.decl_env_record_binds jder s jmut jv = binds jder s (jmut, jv).
-Proof. reflexivity. Qed.
-Lemma decl_env_record_indom_to_libbag : forall jder s, 
-    J.decl_env_record_indom jder s = index jder s.
-Proof. reflexivity. Qed.
-Lemma decl_env_record_write_to_libbag : forall jder s jmut jv, 
-    J.decl_env_record_write jder s jmut jv = jder\(s := (jmut, jv)).
-Proof. reflexivity. Qed.
-Lemma decl_env_record_empty_to_libbag : J.decl_env_record_empty = \{}.
-Proof. reflexivity. Qed.
-
-Hint Rewrite 
-    env_record_binds_to_libbag env_record_write_to_libbag
-    decl_env_record_binds_to_libbag decl_env_record_write_to_libbag
-    decl_env_record_indom_to_libbag decl_env_record_empty_to_libbag 
-    using (eauto with typeclass_instances) : rew_heap_to_libbag.
 
 Lemma create_mutable_binding_some_lemma : forall jst jc jeptr s b2 jder,
     binds jst jeptr (J.env_record_decl jder) ->

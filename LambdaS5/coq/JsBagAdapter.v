@@ -186,6 +186,35 @@ Proof. reflexivity. Qed.
 
 End Rewriting.
 
+Lemma object_binds_to_libbag : forall jst jptr jobj, object_binds jst jptr jobj = binds jst jptr jobj.
+Proof. reflexivity. Qed.
+Lemma object_write_to_libbag : forall jst jptr jobj, object_write jst jptr jobj = jst\(jptr := jobj).
+Proof. reflexivity. Qed.
+
+Lemma env_record_binds_to_libbag : forall jst jeptr jer, env_record_binds jst jeptr jer = binds jst jeptr jer.
+Proof. reflexivity. Qed.
+Lemma env_record_write_to_libbag : forall jst jeptr jer, env_record_write jst jeptr jer = jst\(jeptr := jer).
+Proof. reflexivity. Qed.
+
+Lemma decl_env_record_binds_to_libbag : forall jder s jmut jv, 
+    decl_env_record_binds jder s jmut jv = binds jder s (jmut, jv).
+Proof. reflexivity. Qed.
+Lemma decl_env_record_indom_to_libbag : forall jder s, 
+    decl_env_record_indom jder s = index jder s.
+Proof. reflexivity. Qed.
+Lemma decl_env_record_write_to_libbag : forall jder s jmut jv, 
+    decl_env_record_write jder s jmut jv = jder\(s := (jmut, jv)).
+Proof. reflexivity. Qed.
+Lemma decl_env_record_empty_to_libbag : decl_env_record_empty = \{}.
+Proof. reflexivity. Qed.
+
+Hint Rewrite 
+    object_binds_to_libbag object_write_to_libbag
+    env_record_binds_to_libbag env_record_write_to_libbag
+    decl_env_record_binds_to_libbag decl_env_record_write_to_libbag
+    decl_env_record_indom_to_libbag decl_env_record_empty_to_libbag 
+    using (eauto with typeclass_instances) : rew_heap_to_libbag.
+
 Hint Rewrite
     @heap_binds_to_libbag_eq @heap_indom_to_libbag_eq @heap_dom_to_libbag @heap_empty_to_libbag
     @heap_write_to_libbag @heap_read_to_libbag @heap_read_option_to_libbag

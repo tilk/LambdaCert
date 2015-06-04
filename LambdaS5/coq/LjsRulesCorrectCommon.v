@@ -92,6 +92,7 @@ Hint Extern 99 (value_related _ (J.object_proto_ _) (L.object_proto _)) => (* wh
 
 Hint Constructors L.stx_eq : js_ljs.
 Hint Constructors L.abort L.res_is_control L.res_is_value : js_ljs.
+Hint Constructors L.is_primitive : js_ljs. 
 
 (** The constructors of JSCert are used as hints, for automated building of
     the derivation trees for the semantics judgment. *)
@@ -501,6 +502,13 @@ Ltac res_related_invert :=
     | H : res_related ?BR ?jst ?st ?jr ?r |- _ =>
         is_var r; inverts keep H
     end. 
+
+Ltac resvalue_related_only_invert :=
+    match goal with
+    | H : resvalue_related _ ?jrv ?v |- _ =>
+        let H1 := fresh "H" in
+        (is_var jrv || is_var v); inverts keep H as H1; try (inverts keep H1; [idtac])
+    end.
 
 Ltac resvalue_related_invert :=
     match goal with
