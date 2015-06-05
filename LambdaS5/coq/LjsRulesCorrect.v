@@ -68,7 +68,7 @@ Proof.
     (* stat_do_while *)
     skip.
     (* stat_while *)
-    skip.
+    applys red_stat_while_ok; eassumption.
     (* stat_with *)
     applys red_stat_with_ok; eassumption.
     (* stat_throw *)
@@ -112,13 +112,13 @@ Proof.
     (* expr_member *)
     skip.
     (* expr_new *)
-    skip.
+    applys red_expr_new_ok; eassumption.
     (* expr_call *)
     skip.
     (* expr_unary_op *)
-    skip.
+    applys red_expr_unary_op_ok; eassumption.
     (* expr_binary_op *)
-    skip.
+    applys red_expr_binary_op_ok; eassumption.
     (* expr_conditional *)
     applys red_expr_conditional_ok; eassumption.
     (* expr_assign *)

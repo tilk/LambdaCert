@@ -48,13 +48,150 @@ Implicit Type jlenv : J.lexical_env.
 
 (* Expressions *)
 
+(** *** Literals *)
+
 Lemma red_expr_literal_ok : forall k l,
     th_expr k (J.expr_literal l).
 Proof.
-    introv.
-    unfolds.
     introv Hcinv Hinv Hlred.
     destruct l as [ | [ | ] | | ]; inverts red_exprh Hlred; ijauto_js.
+Qed.
+
+(** *** New *)
+
+Lemma red_spec_list_ok : forall BR k jst jc c st jel st' r,
+    ih_expr k ->
+    L.red_exprh k c st (L.expr_basic (E.make_args_obj
+        (List.map E.ejs_to_ljs (List.map E.js_expr_to_ejs jel)))) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    concl_spec BR jst jc c st st' r (J.spec_list_expr jel) 
+        (fun BR' jst' jvl => exists vl ptr obj, 
+            values_related BR jvl vl /\ 
+            binds st' ptr obj /\
+            arg_list_object obj vl /\
+            r = L.res_value (L.value_object ptr)).
+Proof.
+Admitted.
+
+(* TODO move *)
+Opaque L.is_object_decidable. (* TODO MOVE *)
+Opaque index_decidable_from_read_option. (* TODO move *)
+
+(* TODO move *)
+Lemma state_invariant_bisim_obj_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    exists jobj,
+    binds jst jptr jobj /\
+    object_related BR jobj obj.
+Proof.
+    introv Hinv Hbs Hbinds.
+    lets Hjbinds : heaps_bisim_consistent_lnoghost_obj (state_invariant_heaps_bisim_consistent Hinv) Hbs.
+    rewrite index_binds_eq in Hjbinds.
+    destruct Hjbinds as (jobj&Hjbinds).
+    lets Hrel : heaps_bisim_consistent_bisim_obj (state_invariant_heaps_bisim_consistent Hinv) Hbs Hjbinds Hbinds.
+    jauto.
+Qed.
+
+Lemma object_method_construct_lemma : forall BR jst st jptr ptr obj jcon,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    option_construct_related jcon (L.object_internal obj\("construct"?)) ->
+    J.object_method J.object_construct_ jst jptr jcon.
+Proof.
+    introv Hinv Hbs Hbinds Hocrel.
+    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs Hbinds.
+    destruct Hx as (?jobj&Hjbinds&Horel).
+    destruct Horel.
+    destruct object_related_prim.
+    inverts Hocrel as Ho1 Ho2. {
+        rewrite <- Ho2 in object_prim_related_construct.
+        inverts object_prim_related_construct as Hp1 Hp2.
+        asserts Heq : (jcall = jcall0). { 
+            inverts Ho1 as Ho3; inverts Hp1 as Hp3; try reflexivity;
+            try inverts Ho3; try inverts Hp3; reflexivity.
+        }
+        subst_hyp Heq.
+        unfolds. jauto.
+    }
+    rewrite <- Ho1 in object_prim_related_construct.
+    inverts object_prim_related_construct.
+    unfolds. jauto.
+Qed.
+
+Lemma construct_related_lemma : forall BR jst st jptr ptr obj v,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    binds (LjsSyntax.object_internal obj) "construct" v ->
+    exists jcon,
+    construct_related jcon v.
+Proof.
+    introv Hinv Hbs Hbinds Hcbinds.
+    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs Hbinds.
+    destruct Hx as (?jobj&Hjbinds&Horel).
+    destruct Horel.
+    destruct object_related_prim.
+    erewrite read_option_binds_inv in object_prim_related_construct by eassumption.
+    inverts object_prim_related_construct.
+    jauto.
+Qed.
+
+Lemma not_object_hint : forall BR jv v,
+    value_related BR jv v ->
+    ~L.is_object v ->
+    J.type_of jv <> J.type_object.
+Proof.
+    introv Hrel Hnobj Hjobj.
+    destruct Hrel; tryfalse.
+    apply Hnobj. constructor.
+Qed.
+
+Hint Resolve not_object_hint : js_ljs.
+
+Lemma red_expr_new_ok : forall k je jel,
+    ih_expr k ->
+    th_expr k (J.expr_new je jel).
+Proof.
+    introv IHe HCinv Hinv Hlred.
+    inverts red_exprh Hlred.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    inv_top_fwd_ljs.
+    inv_top_fwd_ljs.
+    ljs_out_redh_ter.
+    forwards_th : red_spec_list_ok.
+    destr_concl; try ljs_handle_abort.
+    clear H7. (* TODO fix forwards_th *)
+    repeat ljs_autoforward.
+    inverts red_exprh H7. (* TODO *)
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat (repeat ljs_autoforward || cases_decide). {
+        inverts IH2. (* TODO *)
+        rewrite index_binds_eq in H11. destruct H11 as (?x&H11). (* TODO *)
+        forwards Hc : construct_related_lemma; try eassumption. eauto_js.
+        destruct_hyp Hc.
+        forwards Hx : object_method_construct_lemma; try eassumption. eauto_js. eauto_js.
+        forwards_th : red_spec_construct_ok; try eassumption. eauto_js. eauto_js. (* TODO *)
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        jauto_js 12.
+    } { 
+        inverts IH2. (* TODO *)
+        forwards Hx : object_method_construct_lemma; try eauto_js.
+        forwards_th : type_error_lemma. iauto.
+        destr_concl; tryfalse.
+        jauto_js 12.
+    } {
+        forwards_th : type_error_lemma. iauto.
+        destr_concl; tryfalse.
+        jauto_js 12.
+    }
 Qed.
 
 (*
@@ -103,9 +240,6 @@ Admitted.
 Qed.
 *)
 *)
-
-(* TODO delete *)
-Hint Extern 11 => cases_if_auto_js; [idtac] : js_ljs.
 
 Lemma red_expr_conditional_ok : forall k je1 je2 je3,
     ih_expr k ->

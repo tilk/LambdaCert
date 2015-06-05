@@ -1077,6 +1077,28 @@ Hint Extern 4 (value_related ?BR2 _ _) =>
     end 
     : js_ljs.
 
+Lemma values_related_bisim_incl_preserved : forall BR1 BR2 jvs vs,
+    BR1 \c BR2 ->
+    values_related BR1 jvs vs ->
+    values_related BR2 jvs vs.
+Proof.
+    introv Hs Hrel.
+    unfolds values_related.
+    inductions jvs gen Hrel; inverts Hrel.
+    eapply Forall2_nil.
+    eapply Forall2_cons.
+    eauto_js.
+    eauto.
+Qed.
+
+(* Hint Resolve value_related_bisim_incl_preserved : js_ljs. *)
+Hint Extern 4 (values_related ?BR2 _ _) => 
+    match goal with 
+    | H : values_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 values_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 values_related_bisim_incl_preserved
+    end 
+    : js_ljs.
+
 Lemma option_value_related_bisim_incl_preserved : forall BR1 BR2 jov ov,
     BR1 \c BR2 ->
     option_value_related BR1 jov ov ->
@@ -2855,6 +2877,7 @@ Ltac ih_leq :=
     | H : ih_stat ?k |- ih_stat ?k' => eapply ih_stat_leq; try eapply H; omega
     end.
 
+(* TODO auto-clear the red_exprh hypothesis used *)
 Ltac specializes_th H :=
     try unfold th_stat, th_spec, th_ext_expr_unary, th_ext_expr_binary in H;
     let needs_state := match type of H with
