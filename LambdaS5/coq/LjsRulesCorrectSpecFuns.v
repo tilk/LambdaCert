@@ -45,6 +45,40 @@ Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
 
+(* TODO move *)
+(*
+Hint Extern 50 => erewrite read_option_not_index_inv by prove_bag : js_ljs.
+Hint Extern 50 => erewrite read_option_binds_inv by prove_bag : js_ljs.
+*)
+Lemma option_construct_related_none_lemma : forall (m : finmap _ _) s,
+    ~index m s ->
+    option_construct_related None (m\(s?)).
+Proof.
+    intros.
+    erewrite read_option_not_index_inv by prove_bag.
+    eauto_js.
+Qed.
+
+Lemma option_construct_related_some_lemma : forall jcall (m : finmap _ _) s v,
+    binds m s v ->
+    construct_related jcall v ->
+    option_construct_related (Some jcall) (m\(s?)).
+Proof.
+    intros.
+    erewrite read_option_binds_inv by prove_bag.
+    eauto_js.
+Qed.
+
+Hint Resolve option_construct_related_none_lemma option_construct_related_some_lemma : js_ljs.
+
+Lemma nindex_update_diff : forall `{Index_update_diff_eq} M k k' x', 
+    k <> k' -> ~index M k -> ~index (M \(k' := x')) k.
+Proof.
+    intros. rewrite index_update_diff_eq; eauto.
+Qed.
+
+Hint Resolve @nindex_update_diff : bag.
+
 Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 obj1 vs r jptr jv jvs,
     L.red_exprh k c st 
         (L.expr_app_2 LjsInitEnv.privAppExpr [L.value_object ptr; v; L.value_object ptr1]) 
@@ -57,6 +91,21 @@ Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 obj1 vs r jptr j
     arg_list_object obj1 vs ->
     fact_js_obj jptr ptr \in BR ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_call jptr jv jvs) (fun jv => True).
+Proof.
+Admitted. (* TODO *)
+
+
+Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 obj1 vs r jptr jvs,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privrunConstruct [L.value_object ptr; L.value_object ptr1]) 
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR jvs vs ->
+    binds st ptr1 obj1 ->
+    arg_list_object obj1 vs ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_construct jptr jvs) (fun jv => True).
 Proof.
 Admitted. (* TODO *)
 
@@ -110,9 +159,10 @@ Proof.
     ljs_apply.
     repeat ljs_autoforward.
     destruct_hyp Hv;
-    repeat ljs_autoforward.
-    inverts Hvrel2.
-    jauto_js 12.
+    repeat ljs_autoforward. {
+        inverts Hvrel2.
+        jauto_js 12.
+    }
     (* has message *)
     inv_ljs;
     binds_inv. (* TODO *) simpls. false. rewrite binds_empty_eq in H8. eauto.
@@ -402,14 +452,14 @@ Proof.
     ljs_apply.
     ljs_context_invariant_after_apply. 
     repeat ljs_autoforward.
-    jauto_js 11.
+    jauto_js 15.
     (* boolean *)
     destruct Hvrel; invert_stx_eq.
     inverts red_exprh H7. (* TODO *)
     ljs_apply.
     ljs_context_invariant_after_apply. 
     repeat ljs_autoforward.
-    jauto_js 11.
+    jauto_js 14.
     (* impossible *)
     destruct Hvrel; false; eauto_js.
 Qed.

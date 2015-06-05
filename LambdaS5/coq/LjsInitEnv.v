@@ -1041,6 +1041,9 @@ expr_object
  ("%roundCall", property_data
                 (data_intro (expr_id "%roundCall") expr_true expr_false
                  expr_false));
+ ("%runConstruct", property_data
+                   (data_intro (expr_id "%runConstruct") expr_true expr_false
+                    expr_false));
  ("%seal", property_data
            (data_intro (expr_id "%seal") expr_true expr_false expr_false));
  ("%sealCall", property_data
@@ -3049,8 +3052,7 @@ expr_if
   (expr_op2 binary_op_has_internal (expr_id "constr")
    (expr_string "construct")))
  (expr_app (expr_id "%TypeError") [expr_string "not a constructor"])
- (expr_app (expr_get_internal "construct" (expr_id "constr"))
-  [expr_id "constr"; expr_id "args"]))
+ (expr_app (expr_id "%runConstruct") [expr_id "constr"; expr_id "args"]))
 .
 Definition ex_privPrimitiveCompareOp := 
 expr_if
@@ -6144,6 +6146,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_id "O"))))))
 .
 Definition ex_privroundCall :=  expr_string "round NYI" .
+Definition ex_privrunConstruct := 
+expr_app (expr_get_internal "construct" (expr_id "constr"))
+[expr_id "constr"; expr_id "args"]
+.
 Definition ex_privsealCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
@@ -7441,10 +7447,15 @@ value_closure
  ex_privArrayLengthChange)
 .
 Definition name_privArrayLengthChange :=  "%ArrayLengthChange" .
+Definition privrunConstruct := 
+value_closure (closure_intro [] None ["constr"; "args"] ex_privrunConstruct)
+.
+Definition name_privrunConstruct :=  "%runConstruct" .
 Definition privPrimNew := 
 value_closure
-(closure_intro [("%TypeError", privTypeError)] None ["constr"; "args"]
- ex_privPrimNew)
+(closure_intro
+ [("%TypeError", privTypeError); ("%runConstruct", privrunConstruct)] 
+ None ["constr"; "args"] ex_privPrimNew)
 .
 Definition name_privPrimNew :=  "%PrimNew" .
 Definition privconcat :=  value_object 95 .
@@ -9924,6 +9935,7 @@ Definition ctx_items :=
  (name_privreverseCall, privreverseCall);
  (name_privround, privround);
  (name_privroundCall, privroundCall);
+ (name_privrunConstruct, privrunConstruct);
  (name_privseal, privseal);
  (name_privsealCall, privsealCall);
  (name_privset_property, privset_property);
@@ -10340,6 +10352,7 @@ privreverse
 privreverseCall
 privround
 privroundCall
+privrunConstruct
 privseal
 privsealCall
 privset_property
@@ -10766,6 +10779,7 @@ Definition store_items := [
                                              ("%reverseCall", privreverseCall);
                                              ("%round", privround);
                                              ("%roundCall", privroundCall);
+                                             ("%runConstruct", privrunConstruct);
                                              ("%seal", privseal);
                                              ("%sealCall", privsealCall);
                                              ("%set-property", privset_property);

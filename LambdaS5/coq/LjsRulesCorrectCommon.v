@@ -65,6 +65,12 @@ Hint Extern 1 => solve [eauto 10 with nocore typeclass_instances] : js_ljs.
 
 (** The constructors for relating JS to S5 are used as hints. *)
 
+Hint Constructors construct_prealloc_related : js_ljs.
+Hint Constructors construct_related : js_ljs.
+Hint Constructors option_construct_related : js_ljs.
+Hint Constructors call_prealloc_related : js_ljs.
+Hint Constructors call_related : js_ljs.
+Hint Constructors option_call_related : js_ljs.
 Hint Constructors attributes_data_related : js_ljs.
 Hint Constructors attributes_accessor_related : js_ljs. 
 Hint Constructors attributes_related : js_ljs.

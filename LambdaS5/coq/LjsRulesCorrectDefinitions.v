@@ -135,7 +135,7 @@ Inductive type_related : J.type -> L.type -> Prop :=
 | type_related_object : type_related J.type_object L.type_object.
 
 (** *** Relating values
-    Note that this definition implies that LJS Calls and empty are never seen directly by JS code. 
+    Note that this definition implies that LJS lambdas and empty are never seen directly by JS code. 
     Also, relating objects is delegated to the bisimulation relation. *)
 
 Inductive value_related BR : J.value -> L.value -> Prop :=
@@ -203,7 +203,6 @@ Inductive option_value_related BR : option J.value -> option L.value -> Prop :=
     option_value_related BR (Some jv) (Some v)
 .
 
-(* TODO fix the naming scheme in CallJS! *)
 Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
 | call_prealloc_related_global_eval : 
     call_prealloc_related J.prealloc_global_eval LjsInitEnv.privevalCall
@@ -317,9 +316,9 @@ Inductive call_related : J.call -> L.value -> Prop :=
 | call_related_after_bind : call_related J.call_after_bind LjsInitEnv.privBindObjCall
 .
 
-Inductive option_call_related : option J.call -> option L.value -> Prop :=
-| option_call_related_some : forall jcall v, call_related jcall v -> option_call_related (Some jcall) (Some v)
-| option_call_related_none : option_call_related None None
+Inductive option_call_related : option J.call -> L.value -> Prop :=
+| option_call_related_some : forall jcall v, call_related jcall v -> option_call_related (Some jcall) v
+| option_call_related_none : option_call_related None L.value_undefined
 .
 
 Inductive construct_prealloc_related : J.prealloc -> L.value -> Prop :=
@@ -348,14 +347,19 @@ Inductive construct_related : J.construct -> L.value -> Prop :=
 | construct_related_after_bind : construct_related J.construct_after_bind LjsInitEnv.privBindConstructor
 .
 
+Inductive option_construct_related : option J.construct -> option L.value -> Prop :=
+| option_construct_related_some : forall jcall v, construct_related jcall v -> option_construct_related (Some jcall) (Some v)
+| option_construct_related_none : option_construct_related None None
+.
+
 Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_class : J.object_class_ jobj = L.object_class obj;
     object_prim_related_extensible : J.object_extensible_ jobj = L.object_extensible obj;
     object_prim_related_prototype : value_related BR (J.object_proto_ jobj) (L.object_proto obj);
     object_prim_related_primval : 
-        option_value_related BR (J.object_prim_value_ jobj) (L.object_internal obj\("primval"?))
-(* TODO call *)
-(* TODO construct *)
+        option_value_related BR (J.object_prim_value_ jobj) (L.object_internal obj\("primval"?));
+    object_prim_related_call : option_call_related (J.object_call_ jobj) (L.object_code obj);
+    object_prim_related_construct : option_construct_related (J.object_construct_ jobj) (L.object_internal obj\("construct"?))
 }.
 
 Record object_related BR jobj obj : Prop := {
