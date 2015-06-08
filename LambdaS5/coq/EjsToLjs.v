@@ -269,11 +269,11 @@ Definition make_app f (e : E.expr) es :=
     let args_obj := make_args_obj es in 
     reference_match e
         (fun obj fld => make_app_builtin "%AppMethod" [f obj; f fld; args_obj])
-        (fun s => match s with
-            | "eval" => make_app_builtin "%maybeDirectEval" 
-                [L.expr_id "$this"; context; args_obj; L.expr_id "$strict"]
-            | _ => make_app_builtin "%AppExprCheck" [f e; make_app_builtin "%EnvImplicitThis" [context]; args_obj] 
-         end)
+        (fun s => 
+            ifb s = "eval" 
+            then make_app_builtin "%maybeDirectEval" 
+                [L.expr_id "$this"; context; args_obj; L.expr_id "$strict"] 
+            else make_app_builtin "%AppExprCheck" [f e; make_app_builtin "%EnvImplicitThis" [context]; args_obj])
         (fun e => make_app_builtin "%AppExprCheck" [f e; L.expr_undefined; args_obj]).
 
 (* TODO move to utils *)

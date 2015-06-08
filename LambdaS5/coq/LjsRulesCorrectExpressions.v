@@ -206,6 +206,91 @@ Proof.
     }
 Qed.
 
+(** *** Call *)
+
+(* TODO move *)
+Inductive ejs_reference_producing : E.expr -> Prop :=
+| ejs_reference_producing_get_field : forall ee1 ee2, ejs_reference_producing (E.expr_get_field ee1 ee2)
+| ejs_reference_producing_var_id : forall s, ejs_reference_producing (E.expr_var_id s)
+.
+
+Inductive js_reference_producing : J.expr -> Prop :=
+| js_reference_producing_access : forall je1 je2, js_reference_producing (J.expr_access je1 je2)
+| js_reference_producing_member : forall je s, js_reference_producing (J.expr_member je s)
+| js_reference_producing_identifier : forall s, js_reference_producing (J.expr_identifier s)
+.
+
+Hint Constructors ejs_reference_producing js_reference_producing : js_ljs.
+
+(* TODO move *)
+Lemma reference_match_lemma : forall (A : Type) (P : A -> Prop) ee f1 f2 f3,
+    P (E.reference_match ee f1 f2 f3) ->
+    (exists ee1 ee2, ee = E.expr_get_field ee1 ee2 /\ P (f1 ee1 ee2)) \/
+    (exists s, ee = E.expr_var_id s /\ P (f2 s)) \/
+    (~ejs_reference_producing ee /\ P (f3 ee)).
+Proof.
+    destruct ee; eauto.
+Qed.
+
+Definition exprjs_red_p k c st o e := L.red_exprh k c st (L.expr_basic e) o.
+
+Lemma reference_match_red_exprh_lemma : forall k c st o ee f1 f2 f3,
+    L.red_exprh k c st (L.expr_basic (E.reference_match ee f1 f2 f3)) o ->
+    (exists ee1 ee2, ee = E.expr_get_field ee1 ee2 /\ L.red_exprh k c st (L.expr_basic (f1 ee1 ee2)) o) \/
+    (exists s, ee = E.expr_var_id s /\ L.red_exprh k c st (L.expr_basic (f2 s)) o) \/
+    (~ejs_reference_producing ee /\ L.red_exprh k c st (L.expr_basic (f3 ee)) o).
+Proof.
+    introv Hlred.
+    applys reference_match_lemma (exprjs_red_p k c st o) Hlred.
+Qed.
+
+Lemma reference_match_red_exprh_js_lemma : forall k c st o je f1 f2 f3,
+    L.red_exprh k c st (L.expr_basic (E.reference_match (E.js_expr_to_ejs je) f1 f2 f3)) o ->
+    (exists je1 je2, (je = J.expr_access je1 je2 \/ 
+            exists s, je = J.expr_member je1 s /\ je2 = J.expr_literal (J.literal_string s)) /\ 
+        L.red_exprh k c st (L.expr_basic (f1 (E.js_expr_to_ejs je1) (E.js_expr_to_ejs je2))) o) \/
+    (exists s, je = J.expr_identifier s /\ L.red_exprh k c st (L.expr_basic (f2 s)) o) \/
+    (~js_reference_producing je /\ L.red_exprh k c st (L.expr_basic (f3 (E.js_expr_to_ejs je))) o).
+Proof.
+    introv Hlred.
+    lets Hx : reference_match_red_exprh_lemma Hlred.
+    destruct je; try destruct l; try destruct b; try destruct f; destruct_hyp Hx; tryfalse;
+    try match goal with H : ~ejs_reference_producing _ |- _ => false; apply H; solve [eauto_js 10] end;
+    eauto 9. 
+    simpls. destruct (E.js_expr_to_ejs je1); tryfalse.
+    simpls. destruct (E.js_expr_to_ejs je1); tryfalse.
+Qed.
+
+Lemma red_expr_call_ok : forall k je jel,
+    ih_expr k ->
+    th_expr k (J.expr_call je jel).
+Proof.
+    introv IHe HCinv Hinv Hlred. 
+    unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_app.
+    (* TODO make tactic - would be useful for delete, typeof etc. *)
+    lets Hx : (reference_match_red_exprh_js_lemma _ _ _ _ Hlred).
+    clear Hlred.
+    destruct Hx as [(?je&?je&Heq&Hlred)|[(?s&Heq&Hlred)|(Heq&Hx)]]; try subst_hyp Heq. 
+    {
+        skip.
+    } {
+        skip. 
+    } {
+        repeat ljs_autoforward.
+        destr_concl; try ljs_handle_abort.  (* TODO improve handling of references! *)
+        do 5 inv_top_fwd_ljs.
+        ljs_out_redh_ter.
+        forwards_th : red_spec_list_ok.
+        destr_concl; try ljs_handle_abort.
+        clear H7. (* TODO fix forwards_th *)
+        repeat ljs_autoforward.
+        inverts red_exprh H7. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        skip.
+    }
+Qed.
+
 (** *** Identifier *)
 
 (*
