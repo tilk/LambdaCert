@@ -96,7 +96,7 @@ Proof.
     (* EXPRESSIONS *)
     destruct 0.
     (* expr_this *)
-    skip.
+    eapply red_expr_this_ok.
     (* expr_identifier *)
     skip. (* eapply red_expr_identifier_ok. *)
     (* expr_literal *)

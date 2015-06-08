@@ -150,6 +150,9 @@ expr_object
                  expr_false));
  ("%EnvGet", property_data
              (data_intro (expr_id "%EnvGet") expr_true expr_false expr_false));
+ ("%EnvImplicitThis", property_data
+                      (data_intro (expr_id "%EnvImplicitThis") expr_true
+                       expr_false expr_false));
  ("%EnvPrepostOp", property_data
                    (data_intro (expr_id "%EnvPrepostOp") expr_true expr_false
                     expr_false));
@@ -2346,6 +2349,20 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
       expr_id "id";
       expr_id "strict"])))
   (expr_throw (expr_string "[env] Context not well formed! In %EnvGet"))))
+.
+Definition ex_privEnvImplicitThis := 
+expr_if
+(expr_op2 binary_op_stx_eq
+ (expr_get_obj_attr oattr_class (expr_id "context"))
+ (expr_string "DeclEnvRec")) expr_undefined
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_obj_attr oattr_class (expr_id "context"))
+  (expr_string "ObjEnvRec"))
+ (expr_if (expr_get_internal "provideThis" (expr_id "context"))
+  (expr_get_internal "bindings" (expr_id "context")) expr_undefined)
+ (expr_throw
+  (expr_string "[env] Context not well formed! In %EnvImplicitThis")))
 .
 Definition ex_privEnvPrepostOp := 
 expr_let "oldValue"
@@ -7787,6 +7804,10 @@ value_closure
  ["context"; "id"; "strict"] ex_privEnvGet)
 .
 Definition name_privEnvGet :=  "%EnvGet" .
+Definition privEnvImplicitThis := 
+value_closure (closure_intro [] None ["context"] ex_privEnvImplicitThis)
+.
+Definition name_privEnvImplicitThis :=  "%EnvImplicitThis" .
 Definition privEnvPrepostOp := 
 value_closure
 (closure_intro
@@ -9624,6 +9645,7 @@ Definition ctx_items :=
  (name_privEnvCheckAssign, privEnvCheckAssign);
  (name_privEnvDelete, privEnvDelete);
  (name_privEnvGet, privEnvGet);
+ (name_privEnvImplicitThis, privEnvImplicitThis);
  (name_privEnvPrepostOp, privEnvPrepostOp);
  (name_privEnvTypeof, privEnvTypeof);
  (name_privEqEq, privEqEq);
@@ -10041,6 +10063,7 @@ privDelete
 privEnvCheckAssign
 privEnvDelete
 privEnvGet
+privEnvImplicitThis
 privEnvPrepostOp
 privEnvTypeof
 privEqEq
@@ -10468,6 +10491,7 @@ Definition store_items := [
                                              ("%EnvCheckAssign", privEnvCheckAssign);
                                              ("%EnvDelete", privEnvDelete);
                                              ("%EnvGet", privEnvGet);
+                                             ("%EnvImplicitThis", privEnvImplicitThis);
                                              ("%EnvPrepostOp", privEnvPrepostOp);
                                              ("%EnvTypeof", privEnvTypeof);
                                              ("%EqEq", privEqEq);

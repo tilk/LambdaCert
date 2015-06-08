@@ -57,6 +57,18 @@ Proof.
     destruct l as [ | [ | ] | | ]; inverts red_exprh Hlred; ijauto_js.
 Qed.
 
+(** *** This *)
+
+Lemma red_expr_this_ok : forall k,
+    th_expr k J.expr_this.
+Proof.
+    introv Hcinv Hinv Hlred.
+    repeat ljs_autoforward.
+    forwards Hx : execution_ctx_related_this_binding (context_invariant_execution_ctx_related Hcinv).
+    { eassumption. }
+    jauto_js 8.
+Qed.
+
 (** *** New *)
 
 Lemma red_spec_list_ok : forall BR k jst jc c st jel st' r,
@@ -194,6 +206,8 @@ Proof.
     }
 Qed.
 
+(** *** Identifier *)
+
 (*
 Lemma get_identifier_value_lemma : forall jlenv k BR jst jc c st st' r b v i,
     lexical_env_related BR jlenv v ->
@@ -241,6 +255,8 @@ Qed.
 *)
 *)
 
+(** *** Conditional *)
+
 Lemma red_expr_conditional_ok : forall k je1 je2 je3,
     ih_expr k ->
     th_expr k (J.expr_conditional je1 je2 je3).
@@ -263,11 +279,15 @@ Proof.
     ljs_handle_abort.
 Qed.
 
+(** *** Assignment *)
+
 Lemma red_expr_assign0_ok : forall k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_assign je1 None je2).
 Proof.
 Admitted.
+
+(** *** Unary operators *)
 
 Lemma red_expr_unary_op_2_not_ok : forall k,
     ih_expr k ->
@@ -414,6 +434,8 @@ Proof.
     apply red_expr_unary_op_bitwise_not_ok.
     apply red_expr_unary_op_not_ok.
 Qed.
+
+(** *** Binary operators *)
 
 (* TODO move *)
 Lemma state_invariant_lfun_obj : forall BR jst st,

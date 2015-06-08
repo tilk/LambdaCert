@@ -174,29 +174,31 @@ Definition make_try_catch body i catch :=
 
 Definition op2_func op := L.expr_lambda ["x1";"x2"] (L.expr_op2 op (L.expr_id "x1") (L.expr_id "x2")).
 
-Definition make_xfix op b f e :=
+Definition reference_match {A : Type} (e : E.expr) f_get_field f_var_id f_other : A :=
     match e with
-    | E.expr_var_id fld => 
-        make_app_builtin "%EnvPrepostOp" [context; L.expr_string fld; op2_func op; L.expr_bool b; L.expr_id "$strict"] 
-    | E.expr_get_field obj fld => make_app_builtin "%PrepostOp" [f obj; f fld; op2_func op; L.expr_bool b]
-    | _ => syntax_error "Illegal use of an prefix/postfix operator"
+    | E.expr_get_field obj fld => f_get_field obj fld
+    | E.expr_var_id s => f_var_id s
+    | _ => f_other e
     end.
+
+Definition make_xfix op b f e :=
+    reference_match e
+        (fun obj fld => make_app_builtin "%PrepostOp" [f obj; f fld; op2_func op; L.expr_bool b])
+        (fun varid => make_app_builtin "%EnvPrepostOp" 
+            [context; L.expr_string varid; op2_func op; L.expr_bool b; L.expr_id "$strict"])
+        (fun _ => syntax_error "Illegal use of an prefix/postfix operator").
 
 Definition make_typeof f e :=
-    match e with
-    | E.expr_var_id fldexpr => 
-        make_app_builtin "%EnvTypeof" [context; L.expr_string fldexpr]
-    | _ => make_app_builtin "%Typeof" [f e]
-    end.
+    reference_match e
+        (fun obj fld => make_app_builtin "%Typeof" [f e])
+        (fun varid => make_app_builtin "%EnvTypeof" [context; L.expr_string varid])
+        (fun e => make_app_builtin "%Typeof" [f e]).
 
 Definition make_delete f e :=
-    match e with
-    | E.expr_get_field obj fldexpr =>
-        make_app_builtin "%Delete" [f obj; f fldexpr; L.expr_id "$strict"]
-    | E.expr_var_id fldexpr => 
-        make_app_builtin "%EnvDelete" [context; L.expr_string fldexpr; L.expr_id "$strict"]
-    | _ => L.expr_true
-    end.
+    reference_match e
+        (fun obj fld => make_app_builtin "%Delete" [f obj; f fld; L.expr_id "$strict"])
+        (fun varid => make_app_builtin "%EnvDelete" [context; L.expr_string varid; L.expr_id "$strict"])
+        (fun _ => L.expr_true).
 
 Definition make_op1 f op e :=
     match op with
@@ -265,14 +267,14 @@ Definition appexpr_check e1 e2 e3 := make_app_builtin "%AppExprCheck" [e1; e2; e
 
 Definition make_app f (e : E.expr) es := 
     let args_obj := make_args_obj es in 
-    match e with
-    | E.expr_var_id "eval" =>
-        make_app_builtin "%maybeDirectEval" [L.expr_id "$this"; L.expr_id "$context"; args_obj; L.expr_id "$strict"]
-    | E.expr_get_field obj fld =>
-        make_app_builtin "%AppMethod" [f obj; f fld; args_obj]
-    | _ => 
-        make_app_builtin "%AppExprCheck" [f e; L.expr_undefined; args_obj]
-    end.
+    reference_match e
+        (fun obj fld => make_app_builtin "%AppMethod" [f obj; f fld; args_obj])
+        (fun s => match s with
+            | "eval" => make_app_builtin "%maybeDirectEval" 
+                [L.expr_id "$this"; context; args_obj; L.expr_id "$strict"]
+            | _ => make_app_builtin "%AppExprCheck" [f e; make_app_builtin "%EnvImplicitThis" [context]; args_obj] 
+         end)
+        (fun e => make_app_builtin "%AppExprCheck" [f e; L.expr_undefined; args_obj]).
 
 (* TODO move to utils *)
 Fixpoint remove_dupes' `{c : Comparable A} (l : list A) (met : list A) :=
