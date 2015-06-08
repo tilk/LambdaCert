@@ -2272,8 +2272,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
   (expr_op2 binary_op_stx_eq
    (expr_get_obj_attr oattr_class (expr_id "context"))
    (expr_string "ObjEnvRec"))
-  (expr_let "bindings"
-   (expr_get_field (expr_id "context") (expr_string "bindings"))
+  (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
    (expr_if
     (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
     (expr_app (expr_id "%set-property")
@@ -2309,8 +2308,7 @@ expr_seq
    (expr_op2 binary_op_stx_eq
     (expr_get_obj_attr oattr_class (expr_id "context"))
     (expr_string "ObjEnvRec"))
-   (expr_let "bindings"
-    (expr_get_field (expr_id "context") (expr_string "bindings"))
+   (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
     (expr_if
      (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
      (expr_app (expr_id "%Delete")
@@ -2339,8 +2337,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
   (expr_op2 binary_op_stx_eq
    (expr_get_obj_attr oattr_class (expr_id "context"))
    (expr_string "ObjEnvRec"))
-  (expr_let "bindings"
-   (expr_get_field (expr_id "context") (expr_string "bindings"))
+  (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
    (expr_if
     (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
     (expr_get_field (expr_id "bindings") (expr_id "id"))
@@ -2394,8 +2391,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
   (expr_op2 binary_op_stx_eq
    (expr_get_obj_attr oattr_class (expr_id "context"))
    (expr_string "ObjEnvRec"))
-  (expr_let "bindings"
-   (expr_get_field (expr_id "context") (expr_string "bindings"))
+  (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
    (expr_if
     (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
     (expr_app (expr_id "%Typeof")
@@ -4099,8 +4095,7 @@ expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))
   (expr_string "ObjEnvRec"))
- (expr_let "bindings"
-  (expr_get_field (expr_id "context") (expr_string "bindings"))
+ (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
   (expr_if
    (expr_op1 unary_op_not
     (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id")))
@@ -5599,11 +5594,9 @@ expr_object
 Definition ex_privnewObjEnvRec := 
 expr_object
 (objattrs_intro (expr_string "ObjEnvRec") expr_true expr_null expr_undefined)
-[("parent", expr_id "parent")]
-[("bindings", property_data
-              (data_intro (expr_id "obj") expr_false expr_false expr_false));
- ("provideThis", property_data
-                 (data_intro (expr_id "pt") expr_false expr_false expr_false))]
+[("parent", expr_id "parent");
+ ("bindings", expr_id "obj");
+ ("provideThis", expr_id "pt")] []
 .
 Definition ex_privnumTLSCall := 
 expr_let "x"
@@ -17242,21 +17235,11 @@ Definition store_items := [
           oattrs_class := "ObjEnvRec";
           oattrs_extensible := true;
           oattrs_code := objCode|};
-        object_properties :=
-        from_list [("bindings", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 2;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("provideThis", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list [("parent",  value_null)]|});
+        object_properties := from_list [];
+        object_internal :=
+        from_list [("bindings",  value_object 2);
+                   ("parent",  value_null);
+                   ("provideThis",  value_false)]|});
 (308, {|object_attrs :=
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";

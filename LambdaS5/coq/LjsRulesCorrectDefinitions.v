@@ -403,10 +403,8 @@ Record decl_env_record_related BR jder obj : Prop := {
 Record object_env_record_related BR jptr b ptr obj : Prop := {
     object_env_record_related_proto : L.object_proto obj = L.value_null;
     object_env_record_related_class : L.object_class obj = "ObjEnvRec";
-    object_env_record_related_provideThis : binds (L.object_properties obj) "provideThis" 
-        (L.attributes_data_of (L.attributes_data_intro (L.value_bool b) false false false));
-    object_env_record_related_bindings : binds (L.object_properties obj) "bindings" 
-        (L.attributes_data_of (L.attributes_data_intro (L.value_object ptr) false false false));
+    object_env_record_related_provideThis : binds (L.object_internal obj) "provideThis" (L.value_bool b);
+    object_env_record_related_bindings : binds (L.object_internal obj) "bindings" (L.value_object ptr);
     object_env_record_related_bisim : fact_js_obj jptr ptr \in BR
 }.
 

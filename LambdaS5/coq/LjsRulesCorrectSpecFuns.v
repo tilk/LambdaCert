@@ -506,10 +506,10 @@ Proof.
     splits.
     reflexivity.
     reflexivity.
-    prove_bag.
+    prove_bag 10.
     econstructor.
     econstructor;
-    prove_bag 8.
+    prove_bag 10.
 Qed.
 
 Lemma state_invariant_new_env_record_object_lemma : forall BR k jst jc c st v jptr ptr b st' r,
