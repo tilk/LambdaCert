@@ -71,6 +71,90 @@ Qed.
 
 (** *** New *)
 
+(* TODO move *)
+Lemma values_related_snoc_lemma : forall BR jvl vl jv v,
+    values_related BR jvl vl ->
+    value_related BR jv v ->
+    values_related BR (jvl&jv) (vl&v).
+Proof.
+    introv Hvrels Hvrel.
+    induction Hvrels. {
+        constructor. assumption. apply Forall2_nil.
+    }
+    rew_app.
+    constructor; assumption.
+Qed.
+
+Lemma arg_list_object_snoc_lemma : forall obj vl v,
+    arg_list_object obj vl ->
+    arg_list_object (L.set_object_property obj (string_of_nat (length vl))
+             (LjsSyntax.attributes_data_of (L.attributes_data_intro v false false false))) (vl & v).
+Proof.
+    introv Halo.
+    destruct Halo.
+    destruct obj. simpl.
+    constructor. {
+        introv Hnth.
+        apply Nth_app_inv in Hnth.
+        destruct Hnth as [Hnth|Hnth]. {
+            lets Hlen : Nth_lt_length Hnth.
+            simpl. skip. (* TODO *) 
+        }
+        destruct Hnth as (m&Hk&Hnth).
+        inverts Hnth as Hnth; [idtac | inverts Hnth].
+        rew_nat in Hk.
+        subst_hyp Hk.
+        simpl.
+        prove_bag.
+    } {
+        introv Hidx.
+        simpl in Hidx.
+        rew_index_eq in Hidx.
+        destruct_hyp Hidx. { 
+            lets Hx : arg_list_object_all_args Hidx.
+            destruct Hx as (?k&?v&Heq&Hx).
+            eauto using Nth_app_l.
+        }
+        do 2 eexists. splits. reflexivity.
+        eapply Nth_app_r. eapply Nth_here. math.
+    }
+Qed.
+
+Lemma red_spec_list_lemma : forall k,
+    ih_expr k -> forall k' jel BR jst jc c st jvl vl st' r obj len,
+    (k' < k)%nat ->
+    len = length vl ->
+    L.red_exprh k' c st (L.expr_object_2 []
+          (zipl_stream (id_stream_from len)
+             (map E.make_args_obj_prop
+                (List.map E.ejs_to_ljs (List.map E.js_expr_to_ejs jel)))) obj) (L.out_ter st' r) ->
+    values_related BR jvl vl -> 
+    arg_list_object obj vl ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    concl_spec BR jst jc c st st' r (J.spec_list_expr_1 jvl jel) 
+        (fun BR' jst' jvl => exists vl ptr obj, 
+            values_related BR' jvl vl /\ 
+            binds st' ptr obj /\
+            arg_list_object obj vl /\
+            r = L.res_value (L.value_object ptr)).
+Proof.
+    introv IHe. 
+    inductions jel; introv Hlt Hlen Hlred Hvrel Halo Hcinv Hinv; subst len. {
+        repeat ljs_autoforward. 
+        jauto_js 12.
+    }
+    repeat ljs_autoforward. 
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    lets Hvrel' : values_related_bisim_incl_preserved Hvrel. eassumption.
+    forwards Hvrel'' : values_related_snoc_lemma Hvrel'. eassumption.
+    forwards Halo' : arg_list_object_snoc_lemma. eassumption.
+    forwards_th : IHjel; try eapply Hvrel''; try eapply Halo'. omega. rew_length. reflexivity.
+    destr_concl; try ljs_handle_abort.
+    jauto_js 12.
+Qed.
+
 Lemma red_spec_list_ok : forall BR k jst jc c st jel st' r,
     ih_expr k ->
     L.red_exprh k c st (L.expr_basic (E.make_args_obj
@@ -79,12 +163,21 @@ Lemma red_spec_list_ok : forall BR k jst jc c st jel st' r,
     state_invariant BR jst st ->
     concl_spec BR jst jc c st st' r (J.spec_list_expr jel) 
         (fun BR' jst' jvl => exists vl ptr obj, 
-            values_related BR jvl vl /\ 
+            values_related BR' jvl vl /\ 
             binds st' ptr obj /\
             arg_list_object obj vl /\
             r = L.res_value (L.value_object ptr)).
 Proof.
-Admitted.
+    introv IHe Hlred Hcinv Hinv.
+    repeat ljs_autoforward.
+    forwards_th Hx : red_spec_list_lemma; try eapply Forall2_nil. omega. rew_length. reflexivity. {
+        constructor.
+        introv Hnth. inverts Hnth.
+        introv Hidx. simpls. rew_index_eq in Hidx. tryfalse.
+    }
+    destr_concl; try ljs_handle_abort.
+    jauto_js 12.
+Qed.
 
 (* TODO move *)
 Opaque L.is_object_decidable. (* TODO MOVE *)
@@ -287,7 +380,7 @@ Proof.
         inverts red_exprh H7. (* TODO *)
         ljs_apply.
         ljs_context_invariant_after_apply.
-        skip.
+        skip. skip. skip.
     }
 Qed.
 

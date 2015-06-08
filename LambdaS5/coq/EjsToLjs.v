@@ -256,9 +256,10 @@ Definition make_array es :=
     L.expr_let "a" (make_app_builtin "%MakeArray" [L.expr_number (length es)]) 
       (L.expr_seq (L.expr_seqs (map f (number_list_from 0 es))) (L.expr_id "a")).
 
+Definition make_args_obj_prop e := L.property_data (L.data_intro e L.expr_false L.expr_false L.expr_false).
+
 Definition make_args_obj (es : list L.expr) := 
-    let mkprop e := L.property_data (L.data_intro e L.expr_true L.expr_true L.expr_true) in
-    let props := zipl_stream (id_stream_from 0) (map mkprop es) in
+    let props := zipl_stream (id_stream_from 0) (map make_args_obj_prop es) in
     L.expr_object L.default_objattrs nil props.
 
 Definition throw_typ_error msg := make_app_builtin "%TypeError" [L.expr_string msg].
