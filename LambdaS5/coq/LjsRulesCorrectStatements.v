@@ -41,8 +41,10 @@ Implicit Type jrv : J.resvalue.
 Implicit Type jref : J.ref.
 Implicit Type jl : J.label.
 Implicit Type jer : J.env_record.
+Implicit Type jeptr : J.env_loc.
 Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
+Implicit Type jlenv : J.lexical_env.
 
 (** ** Statements *)
 

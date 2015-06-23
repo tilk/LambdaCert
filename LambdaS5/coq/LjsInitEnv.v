@@ -60,6 +60,9 @@ expr_object
  ("%AppMethod", property_data
                 (data_intro (expr_id "%AppMethod") expr_true expr_false
                  expr_false));
+ ("%ArrayCall", property_data
+                (data_intro (expr_id "%ArrayCall") expr_true expr_false
+                 expr_false));
  ("%ArrayConstructor", property_data
                        (data_intro (expr_id "%ArrayConstructor") expr_true
                         expr_false expr_false));
@@ -352,6 +355,9 @@ expr_object
  ("%ReferenceErrorProto", property_data
                           (data_intro (expr_id "%ReferenceErrorProto")
                            expr_true expr_false expr_false));
+ ("%RegExpCode", property_data
+                 (data_intro (expr_id "%RegExpCode") expr_true expr_false
+                  expr_false));
  ("%RegExpConstructor", property_data
                         (data_intro (expr_id "%RegExpConstructor") expr_true
                          expr_false expr_false));
@@ -1801,6 +1807,9 @@ expr_let "fun"
 (expr_app (expr_id "%AppExprCheck")
  [expr_id "fun"; expr_id "obj"; expr_id "args"])
 .
+Definition ex_privArrayCall := 
+expr_app (expr_id "%ArrayConstructor") [expr_id "obj"; expr_id "args"]
+.
 Definition ex_privArrayConstructor := 
 expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
 (expr_label "ret"
@@ -3101,6 +3110,9 @@ expr_let "msg"
  (expr_app (expr_id "%ToString")
   [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+.
+Definition ex_privRegExpCode := 
+expr_app (expr_id "%RegExpConstructor") [expr_id "obj"; expr_id "args"]
 .
 Definition ex_privRegExpConstructor := 
 expr_object
@@ -7445,10 +7457,16 @@ value_closure
   ("%MakeArray", privMakeArray);
   ("%RangeErrorProto", privRangeErrorProto);
   ("%ToUint32", privToUint32);
-  ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
+  ("%defineOwnProperty", privdefineOwnProperty)] None ["this"; "args"]
  ex_privArrayConstructor)
 .
 Definition name_privArrayConstructor :=  "%ArrayConstructor" .
+Definition privArrayCall := 
+value_closure
+(closure_intro [("%ArrayConstructor", privArrayConstructor)] None
+ ["obj"; "this"; "args"] ex_privArrayCall)
+.
+Definition name_privArrayCall :=  "%ArrayCall" .
 Definition privArrayGlobalFuncObj :=  value_object 101 .
 Definition name_privArrayGlobalFuncObj :=  "%ArrayGlobalFuncObj" .
 Definition privArrayLengthChange := 
@@ -8057,6 +8075,12 @@ value_closure
  ["obj"; "this"; "args"] ex_privRegExpConstructor)
 .
 Definition name_privRegExpConstructor :=  "%RegExpConstructor" .
+Definition privRegExpCode := 
+value_closure
+(closure_intro [("%RegExpConstructor", privRegExpConstructor)] None
+ ["obj"; "this"; "args"] ex_privRegExpCode)
+.
+Definition name_privRegExpCode :=  "%RegExpCode" .
 Definition privRegExpGlobalFuncObj :=  value_object 248 .
 Definition name_privRegExpGlobalFuncObj :=  "%RegExpGlobalFuncObj" .
 Definition privRunSelfConstructorCall := 
@@ -9607,6 +9631,7 @@ Definition ctx_items :=
  (name_privAppExpr, privAppExpr);
  (name_privAppExprCheck, privAppExprCheck);
  (name_privAppMethod, privAppMethod);
+ (name_privArrayCall, privArrayCall);
  (name_privArrayConstructor, privArrayConstructor);
  (name_privArrayGlobalFuncObj, privArrayGlobalFuncObj);
  (name_privArrayLengthChange, privArrayLengthChange);
@@ -9705,6 +9730,7 @@ Definition ctx_items :=
  (name_privReferenceErrorConstructor, privReferenceErrorConstructor);
  (name_privReferenceErrorGlobalFuncObj, privReferenceErrorGlobalFuncObj);
  (name_privReferenceErrorProto, privReferenceErrorProto);
+ (name_privRegExpCode, privRegExpCode);
  (name_privRegExpConstructor, privRegExpConstructor);
  (name_privRegExpGlobalFuncObj, privRegExpGlobalFuncObj);
  (name_privRegExpProto, privRegExpProto);
@@ -10025,6 +10051,7 @@ dolthis
 privAppExpr
 privAppExprCheck
 privAppMethod
+privArrayCall
 privArrayConstructor
 privArrayGlobalFuncObj
 privArrayLengthChange
@@ -10123,6 +10150,7 @@ privReferenceError
 privReferenceErrorConstructor
 privReferenceErrorGlobalFuncObj
 privReferenceErrorProto
+privRegExpCode
 privRegExpConstructor
 privRegExpGlobalFuncObj
 privRegExpProto
@@ -10453,6 +10481,7 @@ Definition store_items := [
                                              ("%AppExpr", privAppExpr);
                                              ("%AppExprCheck", privAppExprCheck);
                                              ("%AppMethod", privAppMethod);
+                                             ("%ArrayCall", privArrayCall);
                                              ("%ArrayConstructor", privArrayConstructor);
                                              ("%ArrayGlobalFuncObj", privArrayGlobalFuncObj);
                                              ("%ArrayLengthChange", privArrayLengthChange);
@@ -10551,6 +10580,7 @@ Definition store_items := [
                                              ("%ReferenceErrorConstructor", privReferenceErrorConstructor);
                                              ("%ReferenceErrorGlobalFuncObj", privReferenceErrorGlobalFuncObj);
                                              ("%ReferenceErrorProto", privReferenceErrorProto);
+                                             ("%RegExpCode", privRegExpCode);
                                              ("%RegExpConstructor", privRegExpConstructor);
                                              ("%RegExpGlobalFuncObj", privRegExpGlobalFuncObj);
                                              ("%RegExpProto", privRegExpProto);
@@ -13231,7 +13261,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privArrayConstructor|};
+          oattrs_code := privArrayCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -13263,7 +13293,7 @@ Definition store_items := [
                       ("%RangeErrorProto", privRangeErrorProto);
                       ("%ToUint32", privToUint32);
                       ("%defineOwnProperty", privdefineOwnProperty)] 
-                     None ["obj"; "this"; "args"] ex_internal12))]|});
+                     None ["this"; "args"] ex_internal12))]|});
 (102, {|object_attrs :=
         {|oattrs_proto := value_null;
           oattrs_class := "Object";
@@ -16207,7 +16237,7 @@ Definition store_items := [
         {|oattrs_proto := value_object 3;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := privRegExpConstructor|};
+          oattrs_code := privRegExpCode|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=

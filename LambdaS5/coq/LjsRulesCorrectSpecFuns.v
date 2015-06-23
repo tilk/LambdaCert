@@ -79,7 +79,26 @@ Qed.
 
 Hint Resolve @nindex_update_diff : bag.
 
+(* TODO move *)
+Lemma state_invariant_bisim_obj_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    exists jobj,
+    binds jst jptr jobj /\
+    object_related BR jobj obj.
+Proof.
+    introv Hinv Hbs Hbinds.
+    lets Hjbinds : heaps_bisim_consistent_lnoghost_obj (state_invariant_heaps_bisim_consistent Hinv) Hbs.
+    rewrite index_binds_eq in Hjbinds.
+    destruct Hjbinds as (jobj&Hjbinds).
+    lets Hrel : heaps_bisim_consistent_bisim_obj (state_invariant_heaps_bisim_consistent Hinv) Hbs Hjbinds Hbinds.
+    jauto.
+Qed.
+
 Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 obj1 vs r jptr jv jvs,
+    ih_stat k ->
+    ih_call_prealloc k ->
     L.red_exprh k c st 
         (L.expr_app_2 LjsInitEnv.privAppExpr [L.value_object ptr; v; L.value_object ptr1]) 
         (L.out_ter st' r) ->
@@ -92,21 +111,14 @@ Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 obj1 vs r jptr j
     fact_js_obj jptr ptr \in BR ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_call jptr jv jvs) (fun jv => True).
 Proof.
-Admitted. (* TODO *)
-
-
-Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 obj1 vs r jptr jvs,
-    L.red_exprh k c st 
-        (L.expr_app_2 LjsInitEnv.privrunConstruct [L.value_object ptr; L.value_object ptr1]) 
-        (L.out_ter st' r) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    values_related BR jvs vs ->
-    binds st ptr1 obj1 ->
-    arg_list_object obj1 vs ->
-    fact_js_obj jptr ptr \in BR ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_construct jptr jvs) (fun jv => True).
-Proof.
+    introv IHt IHp Hlred Hcinv Hinv Hvrel Hvrels Hbinds Halo Hbs. 
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs ___. skip. (* TODO *)
+    destruct Hx as (jobj&Hobinds&Horel).
+    repeat ljs_autoforward.
+    inverts red_exprh H7. (* TODO *)
 Admitted. (* TODO *)
 
 Definition post_to_primitive jv jv' := 
@@ -484,6 +496,106 @@ Proof.
     resvalue_related_invert. 
     jauto_js 6.
     jauto_js 6.
+Qed.
+
+
+Lemma construct_related_lemma : forall BR jst st jptr ptr obj v,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    binds (LjsSyntax.object_internal obj) "construct" v ->
+    exists jcon,
+    construct_related jcon v.
+Proof.
+    introv Hinv Hbs Hbinds Hcbinds.
+    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs Hbinds.
+    destruct Hx as (?jobj&Hjbinds&Horel).
+    destruct Horel.
+    destruct object_related_prim.
+    erewrite read_option_binds_inv in object_prim_related_construct by eassumption.
+    inverts object_prim_related_construct.
+    jauto.
+Qed.
+
+Lemma object_method_construct_lemma : forall BR jst st jptr ptr obj jcon,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    option_construct_related jcon (L.object_internal obj\("construct"?)) ->
+    J.object_method J.object_construct_ jst jptr jcon.
+Proof.
+    introv Hinv Hbs Hbinds Hocrel.
+    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs Hbinds.
+    destruct Hx as (?jobj&Hjbinds&Horel).
+    destruct Horel.
+    destruct object_related_prim.
+    inverts Hocrel as Ho1 Ho2. {
+        rewrite <- Ho2 in object_prim_related_construct.
+        inverts object_prim_related_construct as Hp1 Hp2.
+        asserts Heq : (jcall = jcall0). { 
+            inverts Ho1 as Ho3; inverts Hp1 as Hp3; try reflexivity;
+            try inverts Ho3; try inverts Hp3; reflexivity.
+        }
+        subst_hyp Heq.
+        unfolds. jauto.
+    }
+    rewrite <- Ho1 in object_prim_related_construct.
+    inverts object_prim_related_construct.
+    unfolds. jauto.
+Qed.
+
+Lemma red_spec_construct_prealloc_ok : forall BR k jst jc c st st' ptr ptr1 obj1 vs r jpre v jvs,
+    L.red_exprh k c st 
+        (L.expr_app_2 v [L.value_object ptr; L.value_object ptr1])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR jvs vs ->
+    binds st ptr1 obj1 ->
+    arg_list_object obj1 vs ->
+    construct_prealloc_related jpre v ->
+    concl_ext_expr_value BR jst jc c st st' r 
+        (J.spec_construct_prealloc jpre jvs) (fun jv => True).
+Proof.
+    introv Hlred Hcinv Hinv Hvrels Hbinds Halo Hcpre.
+    inverts Hcpre;
+    inverts red_exprh Hlred;
+    ljs_apply;
+    ljs_context_invariant_after_apply.
+Admitted.
+
+Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 obj1 vs r jptr jvs,
+    ih_stat k ->
+    ih_call_prealloc k ->
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privrunConstruct [L.value_object ptr; L.value_object ptr1]) 
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR jvs vs ->
+    binds st ptr1 obj1 ->
+    arg_list_object obj1 vs ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_construct jptr jvs) (fun jv => True).
+Proof.
+    introv IHt IHp Hlred Hcinv Hinv Hvrels Hbinds Halo Hbs.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    forwards Hx : construct_related_lemma Hinv Hbs; try eassumption. 
+    destruct Hx as (jcon&Hcrel).
+    forwards Hmeth : object_method_construct_lemma; try eassumption. eauto_js.
+    inverts Hcrel. { (* prealloc *)
+        lets Hx : red_spec_construct_prealloc_ok.
+        specializes_th Hx; try eassumption.
+        destr_concl; try ljs_handle_abort.
+        jauto_js.
+    } { (* default *)
+        skip. (* TODO *)
+    } { (* bind *)
+        skip. (* TODO *) (* NOT YET IN JSCERT *)
+    }
 Qed.
 
 Lemma new_env_record_object_lemma : forall BR k c st jlenv v jptr ptr b st' r,

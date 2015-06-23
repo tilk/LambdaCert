@@ -183,68 +183,6 @@ Qed.
 Opaque L.is_object_decidable. (* TODO MOVE *)
 Opaque index_decidable_from_read_option. (* TODO move *)
 
-(* TODO move *)
-Lemma state_invariant_bisim_obj_lemma : forall BR jst st jptr ptr obj,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    binds st ptr obj ->
-    exists jobj,
-    binds jst jptr jobj /\
-    object_related BR jobj obj.
-Proof.
-    introv Hinv Hbs Hbinds.
-    lets Hjbinds : heaps_bisim_consistent_lnoghost_obj (state_invariant_heaps_bisim_consistent Hinv) Hbs.
-    rewrite index_binds_eq in Hjbinds.
-    destruct Hjbinds as (jobj&Hjbinds).
-    lets Hrel : heaps_bisim_consistent_bisim_obj (state_invariant_heaps_bisim_consistent Hinv) Hbs Hjbinds Hbinds.
-    jauto.
-Qed.
-
-Lemma object_method_construct_lemma : forall BR jst st jptr ptr obj jcon,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    binds st ptr obj ->
-    option_construct_related jcon (L.object_internal obj\("construct"?)) ->
-    J.object_method J.object_construct_ jst jptr jcon.
-Proof.
-    introv Hinv Hbs Hbinds Hocrel.
-    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs Hbinds.
-    destruct Hx as (?jobj&Hjbinds&Horel).
-    destruct Horel.
-    destruct object_related_prim.
-    inverts Hocrel as Ho1 Ho2. {
-        rewrite <- Ho2 in object_prim_related_construct.
-        inverts object_prim_related_construct as Hp1 Hp2.
-        asserts Heq : (jcall = jcall0). { 
-            inverts Ho1 as Ho3; inverts Hp1 as Hp3; try reflexivity;
-            try inverts Ho3; try inverts Hp3; reflexivity.
-        }
-        subst_hyp Heq.
-        unfolds. jauto.
-    }
-    rewrite <- Ho1 in object_prim_related_construct.
-    inverts object_prim_related_construct.
-    unfolds. jauto.
-Qed.
-
-Lemma construct_related_lemma : forall BR jst st jptr ptr obj v,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    binds st ptr obj ->
-    binds (LjsSyntax.object_internal obj) "construct" v ->
-    exists jcon,
-    construct_related jcon v.
-Proof.
-    introv Hinv Hbs Hbinds Hcbinds.
-    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs Hbinds.
-    destruct Hx as (?jobj&Hjbinds&Horel).
-    destruct Horel.
-    destruct object_related_prim.
-    erewrite read_option_binds_inv in object_prim_related_construct by eassumption.
-    inverts object_prim_related_construct.
-    jauto.
-Qed.
-
 Lemma not_object_hint : forall BR jv v,
     value_related BR jv v ->
     ~L.is_object v ->
@@ -259,9 +197,11 @@ Hint Resolve not_object_hint : js_ljs.
 
 Lemma red_expr_new_ok : forall k je jel,
     ih_expr k ->
+    ih_stat k ->
+    ih_call_prealloc k ->
     th_expr k (J.expr_new je jel).
 Proof.
-    introv IHe HCinv Hinv Hlred.
+    introv IHe IHt IHp HCinv Hinv Hlred.
     inverts red_exprh Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.

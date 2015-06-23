@@ -2691,6 +2691,12 @@ Proof.
     apply He. omega.
 Qed.
 
+Lemma ih_call_prealloc_leq : forall k k', (k' <= k)%nat -> ih_call_prealloc k -> ih_call_prealloc k'.
+Proof.
+    introv Hle He Hlt.
+    apply He. omega.
+Qed.
+
 Lemma ih_expr_S : forall k, ih_expr (S k) -> ih_expr k.
 Proof.
     introv He. eapply ih_expr_leq; try eassumption; omega.
@@ -2699,6 +2705,11 @@ Qed.
 Lemma ih_stat_S : forall k, ih_stat (S k) -> ih_stat k.
 Proof.
     introv He. eapply ih_stat_leq; try eassumption; omega.
+Qed.
+
+Lemma ih_call_prealloc_S : forall k, ih_call_prealloc (S k) -> ih_call_prealloc k.
+Proof.
+    introv He. eapply ih_call_prealloc_leq; try eassumption; omega.
 Qed.
 
 (* TODO move S5-only tactics! *)
@@ -2875,6 +2886,8 @@ Ltac ih_leq :=
     | H : ih_expr ?k |- ih_expr ?k' => eapply ih_expr_leq; try eapply H; omega
     | H : ih_stat ?k |- ih_stat ?k' => is_evar k'; eapply H
     | H : ih_stat ?k |- ih_stat ?k' => eapply ih_stat_leq; try eapply H; omega
+    | H : ih_call_prealloc ?k |- ih_call_prealloc ?k' => is_evar k'; eapply H
+    | H : ih_call_prealloc ?k |- ih_call_prealloc ?k' => eapply ih_call_prealloc_leq; try eapply H; omega
     end.
 
 (* TODO auto-clear the red_exprh hypothesis used *)

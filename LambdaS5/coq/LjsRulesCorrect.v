@@ -7,6 +7,7 @@ Require Import LjsRulesCorrectDefinitions.
 Require Import LjsRulesCorrectCommon.
 Require Import LjsRulesCorrectStatements.
 Require Import LjsRulesCorrectExpressions.
+Require Import LjsRulesCorrectCallPrealloc.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
@@ -45,14 +46,17 @@ Implicit Type jer : J.env_record.
 Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 
-Lemma main_lemma : forall k, (forall jt, th_stat k jt) /\ (forall je, th_expr k je).
+Lemma main_lemma : forall k, 
+    (forall jt, th_stat k jt) /\ (forall je, th_expr k je) /\ (forall jpre, th_call_prealloc k jpre).
 Proof.
     intro k.
     induction_wf IH : lt_wf k.
     asserts IHt : (ih_stat k). unfolds. introv Hle. specializes IH Hle. jauto.
     asserts IHe : (ih_expr k). unfolds. introv Hle. specializes IH Hle. jauto.
+    asserts IHp : (ih_call_prealloc k). unfolds. introv Hle. specializes IH Hle. jauto.
     clear IH.
     splits.
+    {
     (* STATEMENTS *)
     destruct 0.
     (* stat_expr *)
@@ -93,6 +97,7 @@ Proof.
     applys red_stat_debugger_ok.
     (* stat_switch *)
     applys red_stat_switch_ok; eassumption.
+    } {
     (* EXPRESSIONS *)
     destruct 0.
     (* expr_this *)
@@ -123,5 +128,72 @@ Proof.
     applys red_expr_conditional_ok; eassumption.
     (* expr_assign *)
     skip.
+    } {
+    (* BUILT-IN FUNCTIONS *)
+    destruct 0.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    }
 Qed.
 
