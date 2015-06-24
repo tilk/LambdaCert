@@ -48,6 +48,8 @@ Implicit Type jlenv : J.lexical_env.
 
 Lemma red_expr_call_global_is_finite_ok : forall k, th_call_prealloc k J.prealloc_global_is_finite.
 Proof.
+    introv Hcinv Hinv Hvrel Hvrels Halo Hcrel Hlred.
+    inverts red_exprh Hlred.
 Admitted.
 
 Lemma red_expr_call_global_is_nan_ok : forall k, th_call_prealloc k J.prealloc_global_is_nan.

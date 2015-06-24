@@ -96,30 +96,98 @@ Proof.
     jauto.
 Qed.
 
-Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 obj1 vs r jptr jv jvs,
+Lemma option_call_related_lemma : forall BR jst st jptr ptr obj v,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    L.object_code obj = v ->
+    exists jcon,
+    option_call_related jcon v.
+Proof.
+    introv Hinv Hbs Hbinds Hcode.
+    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs Hbinds.
+    destruct Hx as (?jobj&Hjbinds&Horel).
+    destruct Horel.
+    destruct object_related_prim.
+    rewrite Hcode in object_prim_related_call.
+    eauto.
+Qed.
+
+Lemma call_related_lemma : forall BR jst st jptr ptr obj clo,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    L.object_code obj = L.value_closure clo ->
+    exists jcon,
+    call_related jcon (L.value_closure clo).
+Proof.
+    introv Hinv Hbs Hbinds Hcode.
+    forwards (jcon&Hocall) : option_call_related_lemma; try eassumption.
+    inverts Hocall.
+    eauto.
+Qed.
+
+Lemma call_related_not_undefined_lemma : forall jcon v,
+    call_related jcon v -> v <> L.value_undefined.
+Proof.
+    introv Hrel Hv.
+    subst_hyp Hv.
+    inverts Hrel as Hx. inverts Hx.
+Qed.
+
+Lemma object_method_call_lemma : forall BR jst st jptr ptr obj jcall,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    call_related jcall (L.object_code obj) -> (* TODO option_call *)
+    J.object_method J.object_call_ jst jptr (Some jcall).
+Proof.
+    introv Hinv Hbs Hbinds Hcrel.
+    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs Hbinds.
+    destruct Hx as (?jobj&Hjbinds&Horel).
+    destruct Horel.
+    destruct object_related_prim.
+    inverts object_prim_related_call as Hp1 Hp2. {
+        skip. (* TODO *)
+    } {
+        rewrite <- Hp2 in Hcrel.
+        lets Hx : call_related_not_undefined_lemma Hcrel. tryfalse.
+    } 
+Qed.
+
+Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v v' vs r jptr jv jvs,
     ih_stat k ->
     ih_call_prealloc k ->
     L.red_exprh k c st 
-        (L.expr_app_2 LjsInitEnv.privAppExpr [L.value_object ptr; v; L.value_object ptr1]) 
+        (L.expr_app_2 LjsInitEnv.privAppExpr [L.value_object ptr; v; v']) 
         (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     value_related BR jv v ->
     values_related BR jvs vs ->
-    binds st ptr1 obj1 ->
-    arg_list_object obj1 vs ->
+    arg_list st vs v' ->
     fact_js_obj jptr ptr \in BR ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_call jptr jv jvs) (fun jv => True).
 Proof.
-    introv IHt IHp Hlred Hcinv Hinv Hvrel Hvrels Hbinds Halo Hbs. 
+    introv IHt IHp Hlred Hcinv Hinv Hvrel Hvrels Halo Hbs. 
     inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply.
-    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs ___. skip. (* TODO *)
-    destruct Hx as (jobj&Hobinds&Horel).
     repeat ljs_autoforward.
     inverts red_exprh H7. (* TODO *)
-Admitted. (* TODO *)
+    lets (jcon&Hcall) : call_related_lemma Hinv Hbs ___; try eassumption. (* TODO *)
+    lets Hmeth : object_method_call_lemma ___; try eassumption. rewrite H6. eassumption.
+    inverts Hcall. { (* prealloc *)
+        forwards Hx : IHp. skip.
+        forwards_th Hxx : Hx; try eassumption. (* TODO *)
+        destr_concl; try ljs_handle_abort.
+        jauto_js.
+    } { (* default *)
+        skip. (* TODO *)
+    } { (* bind *)
+        skip. (* TODO *) (* NOT YET IN JSCERT *)
+    }
+Qed.
 
 Definition post_to_primitive jv jv' := 
     exists jp', jv' = J.value_prim jp' /\ forall jp, jv = J.value_prim jp -> jp = jp'.
@@ -498,7 +566,6 @@ Proof.
     jauto_js 6.
 Qed.
 
-
 Lemma construct_related_lemma : forall BR jst st jptr ptr obj v,
     state_invariant BR jst st ->
     fact_js_obj jptr ptr \in BR ->
@@ -532,7 +599,7 @@ Proof.
     inverts Hocrel as Ho1 Ho2. {
         rewrite <- Ho2 in object_prim_related_construct.
         inverts object_prim_related_construct as Hp1 Hp2.
-        asserts Heq : (jcall = jcall0). { 
+        asserts Heq : (jcall = jcall0). { (* TODO determinism lemma *)
             inverts Ho1 as Ho3; inverts Hp1 as Hp3; try reflexivity;
             try inverts Ho3; try inverts Hp3; reflexivity.
         }
@@ -544,41 +611,39 @@ Proof.
     unfolds. jauto.
 Qed.
 
-Lemma red_spec_construct_prealloc_ok : forall BR k jst jc c st st' ptr ptr1 obj1 vs r jpre v jvs,
+Lemma red_spec_construct_prealloc_ok : forall BR k jst jc c st st' ptr v' vs r jpre v jvs,
     L.red_exprh k c st 
-        (L.expr_app_2 v [L.value_object ptr; L.value_object ptr1])
+        (L.expr_app_2 v [L.value_object ptr; v'])
         (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     values_related BR jvs vs ->
-    binds st ptr1 obj1 ->
-    arg_list_object obj1 vs ->
+    arg_list st vs v' ->
     construct_prealloc_related jpre v ->
     concl_ext_expr_value BR jst jc c st st' r 
         (J.spec_construct_prealloc jpre jvs) (fun jv => True).
 Proof.
-    introv Hlred Hcinv Hinv Hvrels Hbinds Halo Hcpre.
+    introv Hlred Hcinv Hinv Hvrels Halo Hcpre.
     inverts Hcpre;
     inverts red_exprh Hlred;
     ljs_apply;
     ljs_context_invariant_after_apply.
 Admitted.
 
-Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 obj1 vs r jptr jvs,
+Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr v' vs r jptr jvs,
     ih_stat k ->
     ih_call_prealloc k ->
     L.red_exprh k c st 
-        (L.expr_app_2 LjsInitEnv.privrunConstruct [L.value_object ptr; L.value_object ptr1]) 
+        (L.expr_app_2 LjsInitEnv.privrunConstruct [L.value_object ptr; v']) 
         (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     values_related BR jvs vs ->
-    binds st ptr1 obj1 ->
-    arg_list_object obj1 vs ->
+    arg_list st vs v' ->
     fact_js_obj jptr ptr \in BR ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_construct jptr jvs) (fun jv => True).
 Proof.
-    introv IHt IHp Hlred Hcinv Hinv Hvrels Hbinds Halo Hbs.
+    introv IHt IHp Hlred Hcinv Hinv Hvrels Halo Hbs.
     inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply.

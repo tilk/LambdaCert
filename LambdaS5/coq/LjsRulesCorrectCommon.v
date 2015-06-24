@@ -90,6 +90,7 @@ Hint Constructors js_exn_object : js_ljs.
 Hint Constructors getter_proxy : js_ljs.
 Hint Constructors setter_proxy : js_ljs.
 Hint Constructors fact_ptr : js_ljs.
+Hint Constructors arg_list : js_ljs.
 
 Hint Extern 99 (value_related _ (J.object_proto_ _) (L.object_proto _)) => (* why is it needed? *)
     first [eapply value_related_null | eapply value_related_object] : js_ljs.

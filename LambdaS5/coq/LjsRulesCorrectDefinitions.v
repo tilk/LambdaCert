@@ -312,7 +312,7 @@ Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
 
 Inductive call_related : J.call -> L.value -> Prop :=
 | call_related_prealloc : forall jpre v, call_prealloc_related jpre v -> call_related (J.call_prealloc jpre) v
-| call_related_default : forall v, call_related J.call_default v (* TODO enforce externally? *)
+| call_related_default : forall clo, call_related J.call_default (L.value_closure clo) (* TODO enforce externally? *)
 | call_related_after_bind : call_related J.call_after_bind LjsInitEnv.privBindObjCall
 .
 
@@ -817,24 +817,19 @@ Definition th_ext_expr_binary k v jeef P :=
     L.red_exprh k c st (L.expr_app_2 v [v1; v2]) (L.out_ter st' r) ->
     concl_ext_expr_value BR jst jc c st st' r (jeef jv1 jv2) P.
 
-Definition js_prealloc_callable jpre :=
-    match jpre with
-    | J.prealloc_global
-    | J.prealloc_math => False
-    | _ => True
-    end.
+Inductive arg_list st : list L.value -> L.value -> Prop := 
+| arg_list_intro : forall ptr obj vs, 
+    binds st ptr obj -> arg_list_object obj vs -> arg_list st vs (L.value_object ptr).
 
 Definition th_call_prealloc k jpre :=
-    forall BR jst jc c st st' r jv v jvs vs ptr ptr1 obj1,
-    js_prealloc_callable jpre ->
+    forall BR jst jc c st st' r jv v jvs vs v' v'' v''',
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     value_related BR jv v ->
     values_related BR jvs vs ->
-    binds st ptr1 obj1 ->
-    arg_list_object obj1 vs ->
-    fact_js_obj (J.object_loc_prealloc jpre) ptr \in BR ->
-    L.red_exprh k c st (L.expr_app_2 (L.value_object ptr) [v; L.value_object ptr1]) (L.out_ter st' r) ->
+    arg_list st vs v''' ->
+    call_prealloc_related jpre v' ->
+    L.red_exprh k c st (L.expr_app_2 v' [v''; v; v''']) (L.out_ter st' r) ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_call_prealloc jpre jv jvs) (fun _ => True).
 
 (** *** Inductive hypotheses 
