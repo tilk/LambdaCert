@@ -90,7 +90,7 @@ Hint Constructors js_exn_object : js_ljs.
 Hint Constructors getter_proxy : js_ljs.
 Hint Constructors setter_proxy : js_ljs.
 Hint Constructors fact_ptr : js_ljs.
-Hint Constructors arg_list : js_ljs.
+(* Hint Constructors arg_list : js_ljs. *)
 
 Hint Extern 99 (value_related _ (J.object_proto_ _) (L.object_proto _)) => (* why is it needed? *)
     first [eapply value_related_null | eapply value_related_object] : js_ljs.
@@ -658,6 +658,14 @@ Proof.
     lets Hb2 : (incl_binds _ _ _ _ Hni Hb1). 
     binds_determine. assumption.
 
+    introv Hrel Hbinds.
+    lets Hx : heaps_bisim_consistent_rnoghost Hrel ___. eauto_js.
+    applys heaps_bisim_consistent_iarray; try eassumption.
+    apply index_binds in Hx.
+    destruct Hx as (?obj&Hb1).
+    lets Hb2 : (incl_binds _ _ _ _ Hni Hb1). 
+    binds_determine. assumption.
+
     unfolds heaps_bisim_rnoghost.
     prove_bag.
 Qed.
@@ -688,6 +696,7 @@ Proof.
 Qed.
 
 (* Hint Resolve state_invariant_store_incl_preserved : js_ljs. *)
+(*
 Hint Extern 4 (state_invariant _ _ ?st') =>
     match goal with
     | H : state_invariant _ _ ?st |- _ =>
@@ -695,6 +704,7 @@ Hint Extern 4 (state_invariant _ _ ?st') =>
         let Hsub := fresh "H" in
         asserts Hsub : (st \c st'); [prove_bag | applys state_invariant_store_incl_preserved Hsub; clear Hsub]
     end : js_ljs.
+*)
 
 Lemma includes_init_ctx_incl_preserved : forall c c',
     c' \c c ->
@@ -1724,6 +1734,14 @@ Proof.
     destruct_hyp Hbinds.
     false. jauto_js.
     jauto_js.
+    (* iarray *)
+    introv Hbi Hbinds.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse. 
+    rew_binds_eq in Hbinds. 
+    destruct_hyp Hbinds.
+    false. jauto_js.
+    jauto_js.
     (* lfun_obj *)
     introv Hbi1 Hbi2.
     rew_in_eq in Hbi1.
@@ -1828,6 +1846,14 @@ Proof.
     false. jauto_js.
     jauto_js.
     (* setter *)
+    introv Hbi Hbinds.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse. 
+    rew_binds_eq in Hbinds. 
+    destruct_hyp Hbinds.
+    false. jauto_js.
+    jauto_js.
+    (* iarray *)
     introv Hbi Hbinds.
     rew_in_eq in Hbi.
     destruct_hyp Hbi; tryfalse. 
@@ -1980,6 +2006,13 @@ Proof.
     lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_setter_proxy fact_ptr_js_env. tryfalse. 
     rewrite binds_update_diff_eq in Hbinds by eauto.
     eauto.
+    (* iarray *)
+    introv Hbi Hbinds.
+    asserts He : (ptr0 <> ptr).
+    intro Heq. substs.
+    lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_iarray fact_ptr_js_env. tryfalse. 
+    rewrite binds_update_diff_eq in Hbinds by eauto.
+    eauto.
     (* lfun_obj *)
     jauto_js.
     (* lfun_env *)
@@ -2044,6 +2077,13 @@ Proof.
     asserts He : (ptr0 <> ptr).
     intro Heq. substs.
     lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_setter_proxy fact_ptr_js_obj. tryfalse. 
+    rewrite binds_update_diff_eq in Hbinds by eauto.
+    eauto.
+    (* iarray *)
+    introv Hbi Hbinds.
+    asserts He : (ptr0 <> ptr).
+    intro Heq. substs.
+    lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_iarray fact_ptr_js_obj. tryfalse. 
     rewrite binds_update_diff_eq in Hbinds by eauto.
     eauto.
     (* lfun_obj *)
@@ -2117,6 +2157,14 @@ Proof.
     false; eauto_js.
     eauto.    
     (* setter *)
+    introv Hbi Hbinds.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse.
+    rew_binds_eq in Hbinds.
+    destruct_hyp Hbinds.
+    false; eauto_js.
+    eauto.
+    (* iarray *)
     introv Hbi Hbinds.
     rew_in_eq in Hbi.
     destruct_hyp Hbi; tryfalse.
@@ -2214,6 +2262,14 @@ Proof.
     destruct_hyp Hbinds.
     false; eauto_js.
     eauto.
+    (* iarray *)
+    introv Hbi Hbinds.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse.
+    rew_binds_eq in Hbinds.
+    destruct_hyp Hbinds. 
+    false; eauto_js.
+    eauto.    
     (* lfun_obj *)
     introv Hbi1 Hbi2.
     rew_in_eq in Hbi1. rew_in_eq in Hbi2.
@@ -2261,6 +2317,104 @@ Qed.
 
 Hint Resolve heaps_bisim_consistent_add_setter_proxy_preserved : js_ljs.
 
+Lemma heaps_bisim_consistent_add_iarray_preserved : forall BR jst st ptr obj vs,
+    ~index st ptr ->
+    iarray_object obj vs ->
+    heaps_bisim_consistent BR jst st ->
+    heaps_bisim_consistent (\{fact_iarray ptr vs} \u BR) jst (st \(ptr := obj)).
+Proof.
+    introv Hnindex Hproxy Hbisim.
+    inverts Hbisim.
+    constructor; unfolds.
+    (* bisim_obj *)
+    introv Hbi Hbinds1 Hbinds2.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse.
+    rew_binds_eq in Hbinds2.
+    destruct_hyp Hbinds2. 
+    false; eauto_js.
+    specializes heaps_bisim_consistent_bisim_obj; try eassumption. 
+    jauto_js.
+    (* bisim_env *)
+    introv Hbi Hbinds1 Hbinds2.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse.
+    rew_binds_eq in Hbinds2.
+    destruct_hyp Hbinds2. 
+    false; eauto_js.
+    specializes heaps_bisim_consistent_bisim_env; try eassumption. 
+    jauto_js.
+    (* getter *)
+    introv Hbi Hbinds.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse.
+    rew_binds_eq in Hbinds.
+    destruct_hyp Hbinds. 
+    false; eauto_js.
+    eauto.    
+    (* setter *)
+    introv Hbi Hbinds.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse.
+    rew_binds_eq in Hbinds.
+    destruct_hyp Hbinds.
+    false; eauto_js.
+    eauto.
+    (* iarray *)
+    introv Hbi Hbinds.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi. injects. binds_inv. assumption.
+    rew_binds_eq in Hbinds.
+    destruct_hyp Hbinds. 
+    false; eauto_js.
+    eauto.    
+    (* lfun_obj *)
+    introv Hbi1 Hbi2.
+    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects; try solve [false; eapply Hdif1; reflexivity]. 
+    eauto.
+    (* lfun_env *)
+    introv Hbi1 Hbi2.
+    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects; try solve [false; eapply Hdif1; reflexivity]. 
+    eauto.
+    (* rfun *)
+    introv Hbi1 Hbi2 Hfp1 Hfp2.
+    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
+    destruct_hyp Hbi1; destruct_hyp Hbi2. 
+    reflexivity.
+    inverts Hfp1. false; eauto.
+    inverts Hfp2. false; eauto.
+    eauto.
+    (* ltotal_obj *)
+    introv Hindex.
+    lets Hx : heaps_bisim_consistent_ltotal_obj Hindex.
+    destruct_hyp Hx.
+    jauto_js.
+    (* ltotal_env *)
+    introv Hindex.
+    lets Hx : heaps_bisim_consistent_ltotal_env Hindex.
+    destruct_hyp Hx.
+    jauto_js.
+    (* lnoghost_obj *)
+    introv Hbi.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse.
+    eauto.
+    (* lnoghost_env *)
+    introv Hbi.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi; tryfalse.
+    eauto.
+    (* rnoghost *)
+    introv Hbi Hfp.
+    rew_in_eq in Hbi.
+    destruct_hyp Hbi. inverts Hfp. prove_bag. 
+    prove_bag.
+Qed.
+
+Hint Resolve heaps_bisim_consistent_add_iarray_preserved : js_ljs.
+
 Lemma heaps_bisim_consistent_add_ctx_parent_preserved : forall BR jst st ptr v,
     heaps_bisim_consistent BR jst st ->
     heaps_bisim_consistent (\{fact_ctx_parent ptr v} \u BR) jst st.
@@ -2286,6 +2440,11 @@ Proof.
     destruct Hbi; tryfalse.
     eauto_js.
     (* setter *)
+    introv Hbi Hbinds.
+    rew_in_eq in Hbi.
+    destruct Hbi; tryfalse.
+    eauto_js.
+    (* iarray *)
     introv Hbi Hbinds.
     rew_in_eq in Hbi.
     destruct Hbi; tryfalse.
@@ -2347,7 +2506,6 @@ Lemma state_invariant_new_object_preserved : forall BR jst st jobj ptr obj,
 Proof.
     introv Hinv Hnindex Horel.
     inverts Hinv.
-    asserts Hsub : (BR \c \{fact_js_obj (fresh jst) ptr} \u BR). jauto_js.
     constructor; jauto_js. 
 Qed.
 
@@ -2362,11 +2520,61 @@ Lemma state_invariant_new_env_record_preserved : forall BR jst st jer ptr obj,
 Proof.
     introv Hnindex Hinv Horel.
     inverts Hinv.
-    asserts Hsub : (BR \c \{fact_js_env (fresh jst) ptr} \u BR). jauto_js.
     constructor; jauto_js.
 Qed.
 
 Hint Resolve state_invariant_new_env_record_preserved : js_ljs.
+
+Lemma state_invariant_new_getter_proxy_preserved : forall BR jst st v ptr obj,
+    ~index st ptr ->
+    state_invariant BR jst st ->
+    getter_proxy obj v ->
+    state_invariant (\{fact_getter_proxy ptr v} \u BR) jst (st \(ptr:=obj)).
+Proof.
+    introv Hnindex Hinv Hinfo.
+    inverts Hinv.
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve state_invariant_new_getter_proxy_preserved : js_ljs.
+
+Lemma state_invariant_new_setter_proxy_preserved : forall BR jst st v ptr obj,
+    ~index st ptr ->
+    state_invariant BR jst st ->
+    setter_proxy obj v ->
+    state_invariant (\{fact_setter_proxy ptr v} \u BR) jst (st \(ptr:=obj)).
+Proof.
+    introv Hnindex Hinv Hinfo.
+    inverts Hinv.
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve state_invariant_new_setter_proxy_preserved : js_ljs.
+
+Lemma state_invariant_new_iarray_object_preserved : forall BR jst st vs ptr obj,
+    ~index st ptr ->
+    state_invariant BR jst st ->
+    iarray_object obj vs ->
+    state_invariant (\{fact_iarray ptr vs} \u BR) jst (st \(ptr:=obj)).
+Proof.
+    introv Hnindex Hinv Hinfo.
+    inverts Hinv.
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve state_invariant_new_iarray_object_preserved : js_ljs.
+
+Lemma state_invariant_new_exn_object_preserved : forall BR jst st ptr obj v,
+    state_invariant BR jst st ->
+    ~index st ptr ->
+    js_exn_object obj v ->
+    state_invariant BR jst (st \(ptr := obj)).
+Proof.
+    introv Hinv Hnindex Hexc.
+    eapply state_invariant_store_incl_preserved; try eassumption. prove_bag.
+Qed.
+
+Hint Resolve state_invariant_new_exn_object_preserved : js_ljs.
 
 Lemma state_invariant_modify_env_record_preserved : forall BR jst st jeptr jer ptr obj obj0,
     fact_js_env jeptr ptr \in BR ->

@@ -1533,7 +1533,8 @@ expr_app (expr_id "%MakeBoolean")
  [expr_get_field (expr_id "args") (expr_string "0")]]
 .
 Definition ex_internal4 := 
-expr_app (expr_id "%ObjectCall") [expr_undefined; expr_id "args"]
+expr_app (expr_id "%ObjectCall")
+[expr_id "constr"; expr_undefined; expr_id "args"]
 .
 Definition ex_internal5 := 
 expr_let "msg"
@@ -3020,7 +3021,8 @@ expr_if
  [expr_get_field (expr_id "args") (expr_string "0")])
 .
 Definition ex_privObjectConstructor := 
-expr_app (expr_id "%ObjectCall") [expr_undefined; expr_id "args"]
+expr_app (expr_id "%ObjectCall")
+[expr_id "constr"; expr_undefined; expr_id "args"]
 .
 Definition ex_privObjectTypeCheck := 
 expr_if (expr_op1 unary_op_is_object (expr_id "o")) expr_null
@@ -4931,10 +4933,9 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
  (expr_get_obj_attr oattr_extensible (expr_id "O")))
 .
 Definition ex_privisFiniteCall := 
-expr_let "n"
-(expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "args") (expr_string "0")])
-(expr_app (expr_id "%IsFinite") [expr_id "n"])
+expr_app (expr_id "%IsFinite")
+[expr_app (expr_id "%ToNumber")
+ [expr_get_field (expr_id "args") (expr_string "0")]]
 .
 Definition ex_privisFrozenCall := 
 expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
@@ -4970,10 +4971,10 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
     (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))
 .
 Definition ex_privisNaNCall := 
-expr_let "n"
+expr_op2 binary_op_same_value
 (expr_app (expr_id "%ToNumber")
  [expr_get_field (expr_id "args") (expr_string "0")])
-(expr_op2 binary_op_same_value (expr_id "n") (expr_number JsNumber.nan))
+(expr_number JsNumber.nan)
 .
 Definition ex_privisPrototypeOfCall := 
 expr_recc "searchChain"

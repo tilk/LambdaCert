@@ -85,9 +85,9 @@ Proof.
     constructor; assumption.
 Qed.
 
-Lemma arg_list_object_snoc_lemma : forall obj vl v,
-    arg_list_object obj vl ->
-    arg_list_object (L.set_object_property obj (string_of_nat (length vl))
+Lemma iarray_object_snoc_lemma : forall obj vl v,
+    iarray_object obj vl ->
+    iarray_object (L.set_object_property obj (string_of_nat (length vl))
              (LjsSyntax.attributes_data_of (L.attributes_data_intro v false false false))) (vl & v).
 Proof.
     introv Halo.
@@ -111,7 +111,7 @@ Proof.
         simpl in Hidx.
         rew_index_eq in Hidx.
         destruct_hyp Hidx. { 
-            lets Hx : arg_list_object_all_args Hidx.
+            lets Hx : iarray_all_args Hidx.
             destruct Hx as (?k&?v&Heq&Hx).
             eauto using Nth_app_l.
         }
@@ -129,19 +129,18 @@ Lemma red_spec_list_lemma : forall k,
              (map E.make_args_obj_prop
                 (List.map E.ejs_to_ljs (List.map E.js_expr_to_ejs jel)))) obj) (L.out_ter st' r) ->
     values_related BR jvl vl -> 
-    arg_list_object obj vl ->
+    iarray_object obj vl ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     concl_spec BR jst jc c st st' r (J.spec_list_expr_1 jvl jel) 
-        (fun BR' jst' jvl => exists vl ptr obj, 
+        (fun BR' jst' jvl => exists vl ptr, 
             values_related BR' jvl vl /\ 
-            binds st' ptr obj /\
-            arg_list_object obj vl /\
+            fact_iarray ptr vl \in BR' /\
             r = L.res_value (L.value_object ptr)).
 Proof.
     introv IHe. 
     inductions jel; introv Hlt Hlen Hlred Hvrel Halo Hcinv Hinv; subst len. {
-        repeat ljs_autoforward. 
+        repeat ljs_autoforward.
         jauto_js 12.
     }
     repeat ljs_autoforward. 
@@ -149,7 +148,7 @@ Proof.
     repeat ljs_autoforward.
     lets Hvrel' : values_related_bisim_incl_preserved Hvrel. eassumption.
     forwards Hvrel'' : values_related_snoc_lemma Hvrel'. eassumption.
-    forwards Halo' : arg_list_object_snoc_lemma. eassumption.
+    forwards Halo' : iarray_object_snoc_lemma. eassumption.
     forwards_th : IHjel; try eapply Hvrel''; try eapply Halo'. omega. rew_length. reflexivity.
     destr_concl; try ljs_handle_abort.
     jauto_js 12.
@@ -162,10 +161,9 @@ Lemma red_spec_list_ok : forall BR k jst jc c st jel st' r,
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     concl_spec BR jst jc c st st' r (J.spec_list_expr jel) 
-        (fun BR' jst' jvl => exists vl ptr obj, 
+        (fun BR' jst' jvl => exists vl ptr, 
             values_related BR' jvl vl /\ 
-            binds st' ptr obj /\
-            arg_list_object obj vl /\
+            fact_iarray ptr vl \in BR' /\
             r = L.res_value (L.value_object ptr)).
 Proof.
     introv IHe Hlred Hcinv Hinv.
@@ -216,8 +214,8 @@ Proof.
     ljs_apply.
     ljs_context_invariant_after_apply.
     repeat (repeat ljs_autoforward || cases_decide). {
-        inverts IH2. (* TODO *)
-        rewrite index_binds_eq in H11. destruct H11 as (?x&H11). (* TODO *)
+        inverts IH4. (* TODO *)
+        rewrite index_binds_eq in H10. destruct H10 as (?x&H10). (* TODO *)
         forwards Hc : construct_related_lemma; try eassumption. eauto_js.
         destruct_hyp Hc.
         forwards Hx : object_method_construct_lemma; try eassumption. eauto_js. eauto_js.
@@ -227,7 +225,7 @@ Proof.
         resvalue_related_only_invert.
         jauto_js 12.
     } { 
-        inverts IH2. (* TODO *)
+        inverts IH4. (* TODO *)
         forwards Hx : object_method_construct_lemma; try eauto_js.
         forwards_th : type_error_lemma. iauto.
         destr_concl; tryfalse.

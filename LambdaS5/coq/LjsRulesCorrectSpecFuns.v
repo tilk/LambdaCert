@@ -155,17 +155,17 @@ Proof.
     } 
 Qed.
 
-Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v v' vs r jptr jv jvs,
+Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 vs r jptr jv jvs,
     ih_stat k ->
     ih_call_prealloc k ->
     L.red_exprh k c st 
-        (L.expr_app_2 LjsInitEnv.privAppExpr [L.value_object ptr; v; v']) 
+        (L.expr_app_2 LjsInitEnv.privAppExpr [L.value_object ptr; v; L.value_object ptr1]) 
         (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     value_related BR jv v ->
     values_related BR jvs vs ->
-    arg_list st vs v' ->
+    fact_iarray ptr1 vs \in BR ->
     fact_js_obj jptr ptr \in BR ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_call jptr jv jvs) (fun jv => True).
 Proof.
@@ -611,35 +611,25 @@ Proof.
     unfolds. jauto.
 Qed.
 
-Lemma red_spec_construct_prealloc_ok : forall BR k jst jc c st st' ptr v' vs r jpre v jvs,
-    L.red_exprh k c st 
-        (L.expr_app_2 v [L.value_object ptr; v'])
-        (L.out_ter st' r) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    values_related BR jvs vs ->
-    arg_list st vs v' ->
-    construct_prealloc_related jpre v ->
-    concl_ext_expr_value BR jst jc c st st' r 
-        (J.spec_construct_prealloc jpre jvs) (fun jv => True).
+Lemma red_spec_construct_prealloc_ok : forall k jpre, th_construct_prealloc k jpre.
 Proof.
-    introv Hlred Hcinv Hinv Hvrels Halo Hcpre.
+    introv Hcinv Hinv Hvrels Halo Hcpre Hlred.
     inverts Hcpre;
     inverts red_exprh Hlred;
     ljs_apply;
     ljs_context_invariant_after_apply.
 Admitted.
 
-Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr v' vs r jptr jvs,
+Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 vs r jptr jvs,
     ih_stat k ->
     ih_call_prealloc k ->
     L.red_exprh k c st 
-        (L.expr_app_2 LjsInitEnv.privrunConstruct [L.value_object ptr; v']) 
+        (L.expr_app_2 LjsInitEnv.privrunConstruct [L.value_object ptr; L.value_object ptr1]) 
         (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     values_related BR jvs vs ->
-    arg_list st vs v' ->
+    fact_iarray ptr1 vs \in BR ->
     fact_js_obj jptr ptr \in BR ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_construct jptr jvs) (fun jv => True).
 Proof.
@@ -652,7 +642,7 @@ Proof.
     destruct Hx as (jcon&Hcrel).
     forwards Hmeth : object_method_construct_lemma; try eassumption. eauto_js.
     inverts Hcrel. { (* prealloc *)
-        lets Hx : red_spec_construct_prealloc_ok.
+        lets Hx : red_spec_construct_prealloc_ok ___.
         specializes_th Hx; try eassumption.
         destr_concl; try ljs_handle_abort.
         jauto_js.

@@ -110,6 +110,7 @@ Inductive fact :=
 | fact_js_env : J.env_loc -> L.object_ptr -> fact
 | fact_getter_proxy : L.object_ptr -> L.value -> fact
 | fact_setter_proxy : L.object_ptr -> L.value -> fact
+| fact_iarray : L.object_ptr -> list L.value -> fact
 | fact_ctx_parent : L.object_ptr -> L.value -> fact
 .
 
@@ -122,6 +123,7 @@ Inductive fact_ptr : fact -> L.object_ptr -> Prop :=
 | fact_ptr_js_env : forall jeptr ptr, fact_ptr (fact_js_env jeptr ptr) ptr
 | fact_ptr_getter_proxy : forall ptr v, fact_ptr (fact_getter_proxy ptr v) ptr
 | fact_ptr_setter_proxy : forall ptr v, fact_ptr (fact_setter_proxy ptr v) ptr
+| fact_ptr_iarray : forall ptr vs, fact_ptr (fact_iarray ptr vs) ptr
 .
 
 (** *** Relating types *)
@@ -445,15 +447,21 @@ Record js_exn_object obj v : Prop := {
         (L.attributes_data_of (L.attributes_data_intro v false false false))
 }.
 
-Record arg_list_object obj vs : Prop := {
-    arg_list_object_has_args : forall k v, 
+Record iarray_object obj vs : Prop := {
+    iarray_has_args : forall k v, 
         Nth k vs v -> 
         binds (L.object_properties obj) (string_of_nat k) 
             (L.attributes_data_of (L.attributes_data_intro v false false false));
-    arg_list_object_all_args : forall s,
+    iarray_all_args : forall s,
         index (L.object_properties obj) s -> 
         exists k v, s = string_of_nat k /\ Nth k vs v
 }.
+
+(*
+Inductive arg_list st : list L.value -> L.value -> Prop := 
+| arg_list_intro : forall ptr obj vs, 
+    binds st ptr obj -> arg_list_object obj vs -> arg_list st vs (L.value_object ptr).
+*)
 
 Inductive preftype_name : J.preftype -> string -> Type :=
 | preftype_name_number : preftype_name J.preftype_number "number"
@@ -536,11 +544,18 @@ Definition heaps_bisim_setter_proxy BR st :=
     binds st ptr obj ->
     setter_proxy obj v.
 
+Definition heaps_bisim_iarray BR st :=
+    forall ptr obj vs,
+    fact_iarray ptr vs \in BR ->
+    binds st ptr obj ->
+    iarray_object obj vs.
+
 Record heaps_bisim_consistent BR jst st : Prop := {
     heaps_bisim_consistent_bisim_obj : heaps_bisim_obj BR jst st;
     heaps_bisim_consistent_bisim_env : heaps_bisim_env BR jst st;
     heaps_bisim_consistent_getter_proxy : heaps_bisim_getter_proxy BR st;
     heaps_bisim_consistent_setter_proxy : heaps_bisim_setter_proxy BR st;
+    heaps_bisim_consistent_iarray : heaps_bisim_iarray BR st;
     heaps_bisim_consistent_lfun_obj : heaps_bisim_lfun_obj BR;
     heaps_bisim_consistent_lfun_env : heaps_bisim_lfun_env BR;
     heaps_bisim_consistent_rfun : heaps_bisim_rfun BR;    
@@ -764,13 +779,13 @@ Definition concl_spec {A : Type} BR jst jc c st st' r jes
     (P : fact_set -> J.state -> A -> Prop) :=
     exists BR' jst' sr,
     J.red_spec jst jc jes sr /\
+    state_invariant BR' jst' st' /\ 
+    BR \c BR' /\
     ((exists x, sr = J.specret_val jst' x /\ P BR' jst' x) \/
      (exists jr, sr = @J.specret_out A (J.out_ter jst' jr) /\ 
         J.abort (J.out_ter jst' jr) /\ 
         J.res_type jr = J.restype_throw /\
-        res_related BR' jst' st' jr r)) /\
-    state_invariant BR' jst' st' /\ 
-    BR \c BR'.
+        res_related BR' jst' st' jr r)).
 
 Definition concl_expr_getvalue BR jst jc c st st' r je := 
     concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
@@ -817,20 +832,26 @@ Definition th_ext_expr_binary k v jeef P :=
     L.red_exprh k c st (L.expr_app_2 v [v1; v2]) (L.out_ter st' r) ->
     concl_ext_expr_value BR jst jc c st st' r (jeef jv1 jv2) P.
 
-Inductive arg_list st : list L.value -> L.value -> Prop := 
-| arg_list_intro : forall ptr obj vs, 
-    binds st ptr obj -> arg_list_object obj vs -> arg_list st vs (L.value_object ptr).
-
 Definition th_call_prealloc k jpre :=
-    forall BR jst jc c st st' r jv v jvs vs v' v'' v''',
+    forall BR jst jc c st st' r jv v jvs vs v' v'' ptr,
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     value_related BR jv v ->
     values_related BR jvs vs ->
-    arg_list st vs v''' ->
+    fact_iarray ptr vs \in BR ->
     call_prealloc_related jpre v' ->
-    L.red_exprh k c st (L.expr_app_2 v' [v''; v; v''']) (L.out_ter st' r) ->
+    L.red_exprh k c st (L.expr_app_2 v' [v''; v; L.value_object ptr]) (L.out_ter st' r) ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_call_prealloc jpre jv jvs) (fun _ => True).
+
+Definition th_construct_prealloc k jpre :=
+    forall BR jst jc c st st' r jvs vs v' v'' ptr,
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR jvs vs ->
+    fact_iarray ptr vs \in BR ->
+    construct_prealloc_related jpre v' ->
+    L.red_exprh k c st (L.expr_app_2 v' [v''; L.value_object ptr]) (L.out_ter st' r) ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_construct_prealloc jpre jvs) (fun _ => True).
 
 (** *** Inductive hypotheses 
     The form of the induction hypotheses, as used in the proof. 
