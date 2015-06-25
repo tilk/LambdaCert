@@ -227,12 +227,20 @@ with closure :=
 Definition value_true := value_bool true.
 Definition value_false := value_bool false.
 
-Definition closure_body clo :=
-  let 'closure_intro _ _ _ body := clo in body.
-
 (* Lexical environments *)
 
 Definition ctx := finmap id value.
+
+(* Closure accessors *)
+
+Definition closure_context clo : ctx := 
+  let 'closure_intro l _ _ _ := clo in from_list l.
+Definition closure_rec_id clo :=
+  let 'closure_intro _ oi _ _ := clo in oi.
+Definition closure_formal_parameters clo :=
+  let 'closure_intro _ _ is _ := clo in is.
+Definition closure_body clo :=
+  let 'closure_intro _ _ _ body := clo in body.
 
 (* Named data property attributes *)
 Record attributes_data := attributes_data_intro {

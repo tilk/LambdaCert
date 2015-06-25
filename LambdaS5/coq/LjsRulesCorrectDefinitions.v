@@ -152,7 +152,83 @@ Inductive value_related BR : J.value -> L.value -> Prop :=
 
 (** *** Relating lists of values
     Useful for function arguments. *)
+
 Definition values_related BR : list J.value -> list L.value -> Prop := Forall2 (value_related BR).
+
+(** *** Relating the JS lexical environment 
+    Has to be defined early because of function objects. *)
+
+Inductive lexical_env_related BR : J.lexical_env -> L.value -> Prop :=
+| lexical_env_related_nil : 
+    lexical_env_related BR nil L.value_null
+| lexical_env_related_cons : forall jeptr jlenv ptr v,
+    fact_js_env jeptr ptr \in BR ->
+    fact_ctx_parent ptr v \in BR ->
+    lexical_env_related BR jlenv v ->
+    lexical_env_related BR (jeptr::jlenv) (L.value_object ptr)
+.
+
+(** *** Preallocated objects invariant
+    States that EcmaScript preallocated objects can be found in the LJS context. *)
+
+Definition prealloc_in_ctx_list := [
+    (J.prealloc_global, "%global");
+    (J.prealloc_global_eval, "%global");
+    (J.prealloc_global_is_finite, "%isFinite");
+    (J.prealloc_global_is_nan, "%isNaN");
+    (J.prealloc_global_parse_float, "%parseFloat");
+    (J.prealloc_global_parse_int, "%parseInt");
+    (J.prealloc_native_error J.native_error_eval, "%EvalErrorGlobalFuncObj");
+    (J.prealloc_native_error J.native_error_range, "%RangeErrorGlobalFuncObj");
+    (J.prealloc_native_error J.native_error_ref, "%ReferenceErrorGlobalFuncObj");
+    (J.prealloc_native_error J.native_error_syntax, "%SyntaxErrorGlobalFuncObj");
+    (J.prealloc_native_error J.native_error_type, "%TypeErrorGlobalFuncObj");
+    (J.prealloc_native_error_proto J.native_error_eval, "%EvalErrorProto");
+    (J.prealloc_native_error_proto J.native_error_range, "%RangeErrorProto");
+    (J.prealloc_native_error_proto J.native_error_ref, "%ReferenceErrorProto");
+    (J.prealloc_native_error_proto J.native_error_syntax, "%SyntaxErrorProto");
+    (J.prealloc_native_error_proto J.native_error_type, "%TypeErrorProto");
+    (J.prealloc_object, "%ObjectGlobalFuncObj");
+    (J.prealloc_object_proto, "%ObjectProto");
+    (J.prealloc_object_proto_to_string, "%objectToString");
+    (J.prealloc_function, "%FunctionGlobalFuncObj");
+    (J.prealloc_function_proto, "%FunctionProto");
+    (J.prealloc_function_proto_to_string, "%functionToString");
+    (J.prealloc_bool, "%BooleanGlobalFuncObj");
+    (J.prealloc_bool_proto, "%BooleanProto");
+    (J.prealloc_bool_proto_to_string, "%booleanToString");
+    (J.prealloc_number, "%NumberGlobalFuncObj");
+    (J.prealloc_number_proto, "%NumberProto");
+    (J.prealloc_number_proto_to_string, "%numberToString");
+    (J.prealloc_string, "%StringGlobalFuncObj");
+    (J.prealloc_string_proto, "%StringProto");
+    (J.prealloc_string_proto_to_string, "%stringToString");
+    (J.prealloc_array, "%ArrayGlobalFuncObj");
+    (J.prealloc_array_proto, "%ArrayProto");
+    (J.prealloc_array_proto_to_string, "%arrayToString");
+    (J.prealloc_math, "%Math");
+    (J.prealloc_throw_type_error, "%ThrowTypeError")
+].
+
+Definition prealloc_in_ctx BR c := forall jpre s v, 
+    Mem (jpre, s) prealloc_in_ctx_list ->
+    binds c s v ->
+    exists ptr,
+    v = L.value_object ptr /\
+    fact_js_obj (J.object_loc_prealloc jpre) ptr \in BR.
+
+Definition global_env_record_exists BR c := forall v,
+        binds c "%globalContext" v ->
+        exists ptr,
+        v = L.value_object ptr /\
+        fact_js_env J.env_loc_global_env_record ptr \in BR.
+
+(** *** S5 environment presence invariant 
+    States that the initial LJS context ("the environment") can always be accessed
+    (and thus is never shadowed). *)
+
+Definition includes_init_ctx c :=
+    forall i v v', binds c i v -> binds LjsInitEnv.init_ctx i v' -> v = v'. 
 
 (** *** Relating object properties
     Individual properties are related in a natural way. *)
@@ -198,12 +274,33 @@ Definition object_properties_related BR jprops props := forall s,
 (** *** Relating objects
     To be related, objects must have related property sets and internal properties. *)
 
-Inductive option_value_related BR : option J.value -> option L.value -> Prop :=
-| option_value_related_none : option_value_related BR None None
-| option_value_related_some : forall jv v,
-    value_related BR jv v ->
-    option_value_related BR (Some jv) (Some v)
+(* TODO move, should go to LibOption *)
+Section OptionPred.
+Variables A B C D : Type.
+
+Inductive Option (P : A -> Prop) : option A -> Prop :=
+| Option_some : forall a, P a -> Option P (Some a) 
+| Option_none : Option P None 
 .
+
+Inductive Option2 (P : A -> B -> Prop) : option A -> option B -> Prop :=
+| Option2_some : forall a a', P a a' -> Option2 P (Some a) (Some a')
+| Option2_none : Option2 P None None
+.
+
+Inductive Option3 (P : A -> B -> C -> Prop) : option A -> option B -> option C -> Prop :=
+| Option3_some : forall a a' a'', P a a' a'' -> Option3 P (Some a) (Some a') (Some a'')
+| Option3_none : Option3 P None None None
+.
+
+Inductive Option4 (P : A -> B -> C -> D -> Prop) : option A -> option B -> option C -> option D -> Prop :=
+| Option4_some : forall a a' a'' a''', P a a' a'' a''' -> Option4 P (Some a) (Some a') (Some a'') (Some a''')
+| Option4_none : Option4 P None None None None
+.
+
+End OptionPred.
+
+Definition option_value_related BR := Option2 (value_related BR).
 
 Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
 | call_prealloc_related_global_eval : 
@@ -314,7 +411,7 @@ Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
 
 Inductive call_related : J.call -> L.value -> Prop :=
 | call_related_prealloc : forall jpre v, call_prealloc_related jpre v -> call_related (J.call_prealloc jpre) v
-| call_related_default : forall clo, call_related J.call_default (L.value_closure clo) (* TODO enforce externally? *)
+| call_related_default : call_related J.call_default LjsInitEnv.privDefaultCall
 | call_related_after_bind : call_related J.call_after_bind LjsInitEnv.privBindObjCall
 .
 
@@ -344,15 +441,33 @@ Inductive construct_prealloc_related : J.prealloc -> L.value -> Prop :=
 .
 
 Inductive construct_related : J.construct -> L.value -> Prop :=
-| construct_related_prealloc : forall jpre v, construct_prealloc_related jpre v -> construct_related (J.construct_prealloc jpre) v
+| construct_related_prealloc : forall jpre v, 
+    construct_prealloc_related jpre v -> construct_related (J.construct_prealloc jpre) v
 | construct_related_default : construct_related J.construct_default LjsInitEnv.privDefaultConstruct
 | construct_related_after_bind : construct_related J.construct_after_bind LjsInitEnv.privBindConstructor
 .
 
-Inductive option_construct_related : option J.construct -> option L.value -> Prop :=
-| option_construct_related_some : forall jcall v, construct_related jcall v -> option_construct_related (Some jcall) (Some v)
-| option_construct_related_none : option_construct_related None None
+Definition option_construct_related := Option2 construct_related.
+
+Definition funcbody_expr is jp := E.make_lambda_expr E.ejs_to_ljs is (E.js_prog_to_ejs jp).
+
+Record usercode_context_invariant BR jle c : Prop := {
+    usercode_context_invariant_includes_init_ctx : includes_init_ctx c;
+    usercode_context_invariant_prealloc_related : prealloc_in_ctx BR c;
+    usercode_context_invariant_global_env_record_exists : global_env_record_exists BR c;
+    usercode_context_invariant_scope : lexical_env_related BR jle (c\("$context"))
+}.
+
+Inductive usercode_related BR : J.funcbody -> list string -> J.lexical_env -> L.value -> Prop :=
+| usercode_related_intro : forall jp s is jle ctxl, 
+    usercode_context_invariant BR jle (from_list ctxl) ->
+    usercode_related BR (J.funcbody_intro jp s) is jle 
+        (L.value_closure (L.closure_intro ctxl None ["obj"; "$this"; "args"] (funcbody_expr is jp)))
 .
+
+Definition option_usercode_related BR := Option4 (usercode_related BR).
+
+Definition option_scope_related BR := Option2 (lexical_env_related BR).
 
 Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_class : J.object_class_ jobj = L.object_class obj;
@@ -361,7 +476,11 @@ Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_primval : 
         option_value_related BR (J.object_prim_value_ jobj) (L.object_internal obj\("primval"?));
     object_prim_related_call : option_call_related (J.object_call_ jobj) (L.object_code obj);
-    object_prim_related_construct : option_construct_related (J.object_construct_ jobj) (L.object_internal obj\("construct"?))
+    object_prim_related_construct : 
+        option_construct_related (J.object_construct_ jobj) (L.object_internal obj\("construct"?));
+    object_prim_related_usercode :
+        option_usercode_related BR (J.object_code_ jobj) (J.object_formal_parameters_ jobj)
+            (J.object_scope_ jobj) (L.object_internal obj\("usercode"?))
 }.
 
 Record object_related BR jobj obj : Prop := {
@@ -623,25 +742,7 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
 (** ** Invariants 
     To relate JS and S5 programs, certain invariants must hold at all times. *)
 
-(** *** S5 environment presence invariant 
-    States that the initial LJS context ("the environment") can always be accessed
-    (and thus is never shadowed). *)
-
-Definition includes_init_ctx c :=
-    forall i v v', binds c i v -> binds LjsInitEnv.init_ctx i v' -> v = v'. 
-
 (** *** Relating lexical environments *)
-
-(* Relates the lexical environment *)
-Inductive lexical_env_related BR : J.lexical_env -> L.value -> Prop :=
-| lexical_env_related_nil : 
-    lexical_env_related BR nil L.value_null
-| lexical_env_related_cons : forall jeptr jlenv ptr v,
-    fact_js_env jeptr ptr \in BR ->
-    fact_ctx_parent ptr v \in BR ->
-    lexical_env_related BR jlenv v ->
-    lexical_env_related BR (jeptr::jlenv) (L.value_object ptr)
-.
 
 (* Relates the lexical contexts *)
 Record execution_ctx_related BR jc c := {
@@ -656,12 +757,6 @@ Record execution_ctx_related BR jc c := {
         lexical_env_related BR (J.execution_ctx_lexical_env jc) v
 }.
 
-Definition global_env_record_exists BR c := forall v,
-        binds c "%globalContext" v ->
-        exists ptr,
-        v = L.value_object ptr /\
-        fact_js_env J.env_loc_global_env_record ptr \in BR.
-
 (* States that the variable environment and lexical environment exist *)
 Record env_records_exist BR jc := { 
     env_record_exist_variable_env : 
@@ -669,54 +764,6 @@ Record env_records_exist BR jc := {
     env_record_exist_lexical_env : 
         forall jeptr, Mem jeptr (J.execution_ctx_lexical_env jc) -> exists ptr, fact_js_env jeptr ptr \in BR
 }.
-
-(** *** Preallocated objects invariant
-    States that EcmaScript preallocated objects can be found in the LJS context. *)
-
-Definition prealloc_in_ctx_list := [
-    (J.prealloc_global, "%global");
-    (J.prealloc_global_eval, "%global");
-    (J.prealloc_global_is_finite, "%isFinite");
-    (J.prealloc_global_is_nan, "%isNaN");
-    (J.prealloc_global_parse_float, "%parseFloat");
-    (J.prealloc_global_parse_int, "%parseInt");
-    (J.prealloc_native_error J.native_error_eval, "%EvalErrorGlobalFuncObj");
-    (J.prealloc_native_error J.native_error_range, "%RangeErrorGlobalFuncObj");
-    (J.prealloc_native_error J.native_error_ref, "%ReferenceErrorGlobalFuncObj");
-    (J.prealloc_native_error J.native_error_syntax, "%SyntaxErrorGlobalFuncObj");
-    (J.prealloc_native_error J.native_error_type, "%TypeErrorGlobalFuncObj");
-    (J.prealloc_native_error_proto J.native_error_eval, "%EvalErrorProto");
-    (J.prealloc_native_error_proto J.native_error_range, "%RangeErrorProto");
-    (J.prealloc_native_error_proto J.native_error_ref, "%ReferenceErrorProto");
-    (J.prealloc_native_error_proto J.native_error_syntax, "%SyntaxErrorProto");
-    (J.prealloc_native_error_proto J.native_error_type, "%TypeErrorProto");
-    (J.prealloc_object, "%ObjectGlobalFuncObj");
-    (J.prealloc_object_proto, "%ObjectProto");
-    (J.prealloc_object_proto_to_string, "%objectToString");
-    (J.prealloc_function, "%FunctionGlobalFuncObj");
-    (J.prealloc_function_proto, "%FunctionProto");
-    (J.prealloc_function_proto_to_string, "%functionToString");
-    (J.prealloc_bool, "%BooleanGlobalFuncObj");
-    (J.prealloc_bool_proto, "%BooleanProto");
-    (J.prealloc_bool_proto_to_string, "%booleanToString");
-    (J.prealloc_number, "%NumberGlobalFuncObj");
-    (J.prealloc_number_proto, "%NumberProto");
-    (J.prealloc_number_proto_to_string, "%numberToString");
-    (J.prealloc_string, "%StringGlobalFuncObj");
-    (J.prealloc_string_proto, "%StringProto");
-    (J.prealloc_string_proto_to_string, "%stringToString");
-    (J.prealloc_array, "%ArrayGlobalFuncObj");
-    (J.prealloc_array_proto, "%ArrayProto");
-    (J.prealloc_array_proto_to_string, "%arrayToString");
-    (J.prealloc_math, "%Math")
-].
-
-Definition prealloc_in_ctx BR c := forall jpre s v, 
-    Mem (jpre, s) prealloc_in_ctx_list ->
-    binds c s v ->
-    exists ptr,
-    v = L.value_object ptr /\
-    fact_js_obj (J.object_loc_prealloc jpre) ptr \in BR.
 
 (** *** Initial bisimulation. *)
 

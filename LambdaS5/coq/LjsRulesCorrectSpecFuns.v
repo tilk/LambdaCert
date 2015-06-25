@@ -71,6 +71,27 @@ Qed.
 
 Hint Resolve option_construct_related_none_lemma option_construct_related_some_lemma : js_ljs.
 
+Lemma option_usercode_related_none_lemma : forall BR (m : finmap _ _) s,
+     ~index m s ->
+     option_usercode_related BR None None None (m\(s?)).
+Proof.
+    intros.
+    erewrite read_option_not_index_inv by prove_bag.
+    eauto_js.
+Qed.
+
+Lemma option_usercode_related_some_lemma : forall BR (m : finmap _ _) s jfb is jle v,
+     binds m s v ->
+     usercode_related BR jfb is jle v ->
+     option_usercode_related BR (Some jfb) (Some is) (Some jle) (m\(s?)).
+Proof.
+    intros.
+    erewrite read_option_binds_inv by prove_bag.
+    eauto_js.
+Qed.
+
+Hint Resolve option_usercode_related_none_lemma option_usercode_related_some_lemma : js_ljs.
+
 Lemma nindex_update_diff : forall `{Index_update_diff_eq} M k k' x', 
     k <> k' -> ~index M k -> ~index (M \(k' := x')) k.
 Proof.
@@ -532,14 +553,14 @@ Proof.
     ljs_apply.
     ljs_context_invariant_after_apply. 
     repeat ljs_autoforward.
-    jauto_js 15.
+    jauto_js 18.
     (* boolean *)
     destruct Hvrel; invert_stx_eq.
     inverts red_exprh H7. (* TODO *)
     ljs_apply.
     ljs_context_invariant_after_apply. 
     repeat ljs_autoforward.
-    jauto_js 14.
+    jauto_js 18.
     (* impossible *)
     destruct Hvrel; false; eauto_js.
 Qed.
@@ -599,7 +620,7 @@ Proof.
     inverts Hocrel as Ho1 Ho2. {
         rewrite <- Ho2 in object_prim_related_construct.
         inverts object_prim_related_construct as Hp1 Hp2.
-        asserts Heq : (jcall = jcall0). { (* TODO determinism lemma *)
+        asserts Heq : (a = a0). { (* TODO determinism lemma *)
             inverts Ho1 as Ho3; inverts Hp1 as Hp3; try reflexivity;
             try inverts Ho3; try inverts Hp3; reflexivity.
         }
@@ -614,10 +635,7 @@ Qed.
 Lemma red_spec_construct_prealloc_ok : forall k jpre, th_construct_prealloc k jpre.
 Proof.
     introv Hcinv Hinv Hvrels Halo Hcpre Hlred.
-    inverts Hcpre;
-    inverts red_exprh Hlred;
-    ljs_apply;
-    ljs_context_invariant_after_apply.
+    inverts Hcpre.
 Admitted.
 
 Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 vs r jptr jvs,
@@ -825,6 +843,39 @@ Proof.
     right. simpls. do 3 eexists. rew_heap_to_libbag in *. rew_binds_eq. iauto.
 Qed.
 
+Lemma add_data_field_lemma : forall k c st st' r s v b0 b1 b2 ptr obj,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privAddDataField 
+        [L.value_object ptr; L.value_string s; v; L.value_bool b0; L.value_bool b1; L.value_bool b2])
+        (L.out_ter st' r) ->
+    binds st ptr obj ->
+    st' = st \(ptr := L.set_object_property obj s (L.attributes_data_of (L.attributes_data_intro v b0 b1 b2))) /\
+    r = L.res_value L.value_undefined /\
+    ~index (L.object_properties obj) s.
+Proof.
+    introv Hlred Hbinds.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    cases_decide. {
+        repeat ljs_autoforward. 
+        inv_ljs.
+    }
+    repeat ljs_autoforward.
+    destruct obj.
+    inv_ljs. {
+        binds_determine.
+        false. prove_bag.
+    }
+    simpls.
+    do 3 (repeat ljs_autoforward; inv_ljs; [idtac | binds_inv; false; prove_bag 7]). 
+    repeat ljs_autoforward. 
+    simpls.
+    repeat binds_inv.
+    simpls.
+    rew_bag_simpl.
+    eauto_js.
+Qed.
+
 Lemma decl_env_add_binding_lemma : forall BR k jst jc c st st' r jder jeptr ptr obj b1 b2 jv v s,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDeclEnvAddBinding 
         [L.value_object ptr; L.value_string s; v; L.value_bool b1; L.value_bool b2]) (L.out_ter st' r) -> 
@@ -846,32 +897,15 @@ Proof.
     inverts red_exprh Hlred.
     ljs_apply.
     repeat ljs_autoforward.
-    cases_decide.
-    repeat ljs_autoforward.
-    solve [inv_ljs].
-    repeat ljs_autoforward.
-    destruct obj.
-    inv_ljs.
-    binds_determine. 
-    solve [false; prove_bag].
-    simpls.
-    repeat ljs_autoforward. 
-    inv_ljs; [idtac | binds_inv; false; prove_bag 7].
-    repeat ljs_autoforward.
-    inv_ljs; [idtac | binds_inv; false; prove_bag 7].
-    repeat ljs_autoforward.
-    inv_ljs; [idtac | binds_inv; false; prove_bag 7].
-    repeat ljs_autoforward.
-    simpls.
-    repeat binds_inv.
-    simpls.
-    rew_bag_simpl.
-    jauto_js.
+    forwards_th Hx : add_data_field_lemma. eassumption.
+    destruct_hyp Hx.
+    splits; try eauto_js.
     {
-    lets Hx : decl_env_record_related_vars Herel s0. 
+    lets Hx : decl_env_record_related_vars Herel s. 
     destruct_hyp Hx; prove_bag.
     }
     {
+    destruct obj.
     erewrite js_env_record_write_decl_env_lemma by eauto.
     eapply state_invariant_modify_env_record_preserved; try eassumption.
     eapply env_record_related_decl.

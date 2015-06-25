@@ -51,6 +51,12 @@ expr_object
 []
 [("$this", property_data
            (data_intro (expr_id "$this") expr_true expr_false expr_false));
+ ("%AddAccessorField", property_data
+                       (data_intro (expr_id "%AddAccessorField") expr_true
+                        expr_false expr_false));
+ ("%AddDataField", property_data
+                   (data_intro (expr_id "%AddDataField") expr_true expr_false
+                    expr_false));
  ("%AppExpr", property_data
               (data_intro (expr_id "%AppExpr") expr_true expr_false
                expr_false));
@@ -140,6 +146,9 @@ expr_object
  ("%DeclEnvAddBinding", property_data
                         (data_intro (expr_id "%DeclEnvAddBinding") expr_true
                          expr_false expr_false));
+ ("%DefaultCall", property_data
+                  (data_intro (expr_id "%DefaultCall") expr_true expr_false
+                   expr_false));
  ("%DefaultConstruct", property_data
                        (data_intro (expr_id "%DefaultConstruct") expr_true
                         expr_false expr_false));
@@ -1793,6 +1802,39 @@ Definition ex_objCode9 :=
 expr_app (expr_id "%TypeError")
 [expr_op2 binary_op_string_plus (expr_id "name") (expr_string " NYI")]
 .
+Definition ex_privAddAccessorField := 
+expr_seq
+(expr_if
+ (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "name"))
+ (expr_fail "property already exists in %AddAccessorField") expr_undefined)
+(expr_seq
+ (expr_set_attr pattr_getter (expr_id "obj") (expr_id "name")
+  (expr_app (expr_id "%MakeGetter") [expr_id "g"]))
+ (expr_seq
+  (expr_set_attr pattr_setter (expr_id "obj") (expr_id "name")
+   (expr_app (expr_id "%MakeSetter") [expr_id "s"]))
+  (expr_seq
+   (expr_set_attr pattr_enum (expr_id "obj") (expr_id "name") (expr_id "e"))
+   (expr_seq
+    (expr_set_attr pattr_config (expr_id "obj") (expr_id "name")
+     (expr_id "c")) expr_undefined))))
+.
+Definition ex_privAddDataField := 
+expr_seq
+(expr_if
+ (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "name"))
+ (expr_fail "property already exists in %AddDataField") expr_undefined)
+(expr_seq
+ (expr_set_attr pattr_value (expr_id "obj") (expr_id "name") (expr_id "v"))
+ (expr_seq
+  (expr_set_attr pattr_writable (expr_id "obj") (expr_id "name")
+   (expr_id "w"))
+  (expr_seq
+   (expr_set_attr pattr_enum (expr_id "obj") (expr_id "name") (expr_id "e"))
+   (expr_seq
+    (expr_set_attr pattr_config (expr_id "obj") (expr_id "name")
+     (expr_id "c")) expr_undefined))))
+.
 Definition ex_privAppExpr := 
 expr_app (expr_id "fun") [expr_id "this"; expr_id "args"]
 .
@@ -2212,22 +2254,17 @@ expr_if
  (expr_number (JsNumber.of_int (366))) (expr_number (JsNumber.of_int (365))))
 .
 Definition ex_privDeclEnvAddBinding := 
-expr_seq
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "context") (expr_id "name"))
- (expr_fail "property already exists in %DeclEnvAddMutableBinding")
- expr_undefined)
-(expr_seq
- (expr_set_attr pattr_value (expr_id "context") (expr_id "name")
-  (expr_id "val"))
- (expr_seq
-  (expr_set_attr pattr_writable (expr_id "context") (expr_id "name")
-   (expr_id "mutable"))
-  (expr_seq
-   (expr_set_attr pattr_enum (expr_id "context") (expr_id "name") expr_true)
-   (expr_seq
-    (expr_set_attr pattr_config (expr_id "context") (expr_id "name")
-     (expr_id "deletable")) expr_undefined))))
+expr_app (expr_id "%AddDataField")
+[expr_id "context";
+ expr_id "name";
+ expr_id "val";
+ expr_id "mutable";
+ expr_true;
+ expr_id "deletable"]
+.
+Definition ex_privDefaultCall := 
+expr_app (expr_get_internal "usercode" (expr_id "obj"))
+[expr_id "obj"; expr_id "this"; expr_id "args"]
 .
 Definition ex_privDefaultConstruct := 
 expr_let "cproto1"
@@ -2724,8 +2761,8 @@ Definition ex_privMakeFunctionObject :=
 expr_let "fobj"
 (expr_object
  (objattrs_intro (expr_string "Function") expr_true
-  (expr_id "%FunctionProto") (expr_id "body"))
- [("construct", expr_id "%DefaultConstruct")]
+  (expr_id "%FunctionProto") (expr_id "%DefaultCall"))
+ [("construct", expr_id "%DefaultConstruct"); ("usercode", expr_id "body")]
  [("length", property_data
              (data_intro (expr_id "len") expr_false expr_false expr_false))])
 (expr_let "proto"
@@ -2736,40 +2773,30 @@ expr_let "fobj"
                    (data_intro (expr_id "fobj") expr_true expr_false
                     expr_true))])
  (expr_seq
-  (expr_set_attr pattr_value (expr_id "fobj") (expr_string "prototype")
-   (expr_id "proto"))
+  (expr_app (expr_id "%AddDataField")
+   [expr_id "fobj";
+    expr_string "prototype";
+    expr_id "proto";
+    expr_true;
+    expr_false;
+    expr_false])
   (expr_seq
-   (expr_set_attr pattr_enum (expr_id "fobj") (expr_string "prototype")
-    expr_false)
-   (expr_seq
-    (expr_set_attr pattr_config (expr_id "fobj") (expr_string "prototype")
-     expr_false)
+   (expr_if (expr_id "strict")
     (expr_seq
-     (expr_if (expr_id "strict")
-      (expr_seq
-       (expr_set_attr pattr_getter (expr_id "fobj") (expr_string "caller")
-        (expr_id "%ThrowTypeError"))
-       (expr_seq
-        (expr_set_attr pattr_setter (expr_id "fobj") (expr_string "caller")
-         (expr_id "%ThrowTypeError"))
-        (expr_seq
-         (expr_set_attr pattr_enum (expr_id "fobj") (expr_string "caller")
-          expr_false)
-         (expr_seq
-          (expr_set_attr pattr_config (expr_id "fobj") (expr_string "caller")
-           expr_false)
-          (expr_seq
-           (expr_set_attr pattr_getter (expr_id "fobj")
-            (expr_string "arguments") (expr_id "%ThrowTypeError"))
-           (expr_seq
-            (expr_set_attr pattr_setter (expr_id "fobj")
-             (expr_string "arguments") (expr_id "%ThrowTypeError"))
-            (expr_seq
-             (expr_set_attr pattr_enum (expr_id "fobj")
-              (expr_string "arguments") expr_false)
-             (expr_set_attr pattr_config (expr_id "fobj")
-              (expr_string "arguments") expr_false)))))))) expr_undefined)
-     (expr_id "fobj"))))))
+     (expr_app (expr_id "%AddAccessorField")
+      [expr_id "fobj";
+       expr_string "caller";
+       expr_id "%ThrowTypeError";
+       expr_id "%ThrowTypeError";
+       expr_false;
+       expr_false])
+     (expr_app (expr_id "%AddAccessorField")
+      [expr_id "fobj";
+       expr_string "arguments";
+       expr_id "%ThrowTypeError";
+       expr_id "%ThrowTypeError";
+       expr_false;
+       expr_false])) expr_undefined) (expr_id "fobj"))))
 .
 Definition ex_privMakeGetter := 
 expr_object
@@ -7273,6 +7300,49 @@ value_closure
  ex_privAppExprCheck)
 .
 Definition name_privAppExprCheck :=  "%AppExprCheck" .
+Definition privdevirtualize := 
+value_closure (closure_intro [] None ["obj"] ex_privdevirtualize)
+.
+Definition name_privdevirtualize :=  "%devirtualize" .
+Definition privGetterProxyFun := 
+value_closure
+(closure_intro
+ [("%AppExprCheck", privAppExprCheck); ("%devirtualize", privdevirtualize)]
+ None ["obj"; "this"] ex_privGetterProxyFun)
+.
+Definition name_privGetterProxyFun :=  "%GetterProxyFun" .
+Definition privMakeGetter := 
+value_closure
+(closure_intro [("%GetterProxyFun", privGetterProxyFun)] None ["f"]
+ ex_privMakeGetter)
+.
+Definition name_privMakeGetter :=  "%MakeGetter" .
+Definition privSetterProxyFun := 
+value_closure
+(closure_intro
+ [("%AppExprCheck", privAppExprCheck); ("%devirtualize", privdevirtualize)]
+ None ["obj"; "this"; "arg"] ex_privSetterProxyFun)
+.
+Definition name_privSetterProxyFun :=  "%SetterProxyFun" .
+Definition privMakeSetter := 
+value_closure
+(closure_intro [("%SetterProxyFun", privSetterProxyFun)] None ["f"]
+ ex_privMakeSetter)
+.
+Definition name_privMakeSetter :=  "%MakeSetter" .
+Definition privAddAccessorField := 
+value_closure
+(closure_intro
+ [("%MakeGetter", privMakeGetter); ("%MakeSetter", privMakeSetter)] None
+ ["obj"; "name"; "g"; "s"; "e"; "c"] ex_privAddAccessorField)
+.
+Definition name_privAddAccessorField :=  "%AddAccessorField" .
+Definition privAddDataField := 
+value_closure
+(closure_intro [] None ["obj"; "name"; "v"; "w"; "e"; "c"]
+ ex_privAddDataField)
+.
+Definition name_privAddDataField :=  "%AddDataField" .
 Definition privBooleanProto :=  value_object 12 .
 Definition name_privBooleanProto :=  "%BooleanProto" .
 Definition privMakeBoolean := 
@@ -7376,36 +7446,6 @@ value_closure
 (closure_intro [("%ToUint", privToUint)] None ["n"] ex_privToUint32)
 .
 Definition name_privToUint32 :=  "%ToUint32" .
-Definition privdevirtualize := 
-value_closure (closure_intro [] None ["obj"] ex_privdevirtualize)
-.
-Definition name_privdevirtualize :=  "%devirtualize" .
-Definition privGetterProxyFun := 
-value_closure
-(closure_intro
- [("%AppExprCheck", privAppExprCheck); ("%devirtualize", privdevirtualize)]
- None ["obj"; "this"] ex_privGetterProxyFun)
-.
-Definition name_privGetterProxyFun :=  "%GetterProxyFun" .
-Definition privMakeGetter := 
-value_closure
-(closure_intro [("%GetterProxyFun", privGetterProxyFun)] None ["f"]
- ex_privMakeGetter)
-.
-Definition name_privMakeGetter :=  "%MakeGetter" .
-Definition privSetterProxyFun := 
-value_closure
-(closure_intro
- [("%AppExprCheck", privAppExprCheck); ("%devirtualize", privdevirtualize)]
- None ["obj"; "this"; "arg"] ex_privSetterProxyFun)
-.
-Definition name_privSetterProxyFun :=  "%SetterProxyFun" .
-Definition privMakeSetter := 
-value_closure
-(closure_intro [("%SetterProxyFun", privSetterProxyFun)] None ["f"]
- ex_privMakeSetter)
-.
-Definition name_privMakeSetter :=  "%MakeSetter" .
 Definition privToBoolean := 
 value_closure (closure_intro [] None ["x"] ex_privToBoolean)
 .
@@ -7734,10 +7774,15 @@ Definition privDateGlobalFuncObj :=  value_object 171 .
 Definition name_privDateGlobalFuncObj :=  "%DateGlobalFuncObj" .
 Definition privDeclEnvAddBinding := 
 value_closure
-(closure_intro [] None ["context"; "name"; "val"; "mutable"; "deletable"]
- ex_privDeclEnvAddBinding)
+(closure_intro [("%AddDataField", privAddDataField)] None
+ ["context"; "name"; "val"; "mutable"; "deletable"] ex_privDeclEnvAddBinding)
 .
 Definition name_privDeclEnvAddBinding :=  "%DeclEnvAddBinding" .
+Definition privDefaultCall := 
+value_closure
+(closure_intro [] None ["obj"; "this"; "args"] ex_privDefaultCall)
+.
+Definition name_privDefaultCall :=  "%DefaultCall" .
 Definition privObjectProto :=  value_object 1 .
 Definition name_privObjectProto :=  "%ObjectProto" .
 Definition privDefaultConstruct := 
@@ -7951,7 +7996,10 @@ Definition name_privMakeBind :=  "%MakeBind" .
 Definition privMakeFunctionObject := 
 value_closure
 (closure_intro
- [("%DefaultConstruct", privDefaultConstruct);
+ [("%AddAccessorField", privAddAccessorField);
+  ("%AddDataField", privAddDataField);
+  ("%DefaultCall", privDefaultCall);
+  ("%DefaultConstruct", privDefaultConstruct);
   ("%FunctionProto", privFunctionProto);
   ("%ObjectProto", privObjectProto);
   ("%ThrowTypeError", privThrowTypeError)] None ["body"; "len"; "strict"]
@@ -9629,6 +9677,8 @@ value_closure
 Definition name_objCode38 :=  "objCode" .
 Definition ctx_items := 
 [(name_dolthis, dolthis);
+ (name_privAddAccessorField, privAddAccessorField);
+ (name_privAddDataField, privAddDataField);
  (name_privAppExpr, privAppExpr);
  (name_privAppExprCheck, privAppExprCheck);
  (name_privAppMethod, privAppMethod);
@@ -9659,6 +9709,7 @@ Definition ctx_items :=
  (name_privDaysInMonth, privDaysInMonth);
  (name_privDaysInYear, privDaysInYear);
  (name_privDeclEnvAddBinding, privDeclEnvAddBinding);
+ (name_privDefaultCall, privDefaultCall);
  (name_privDefaultConstruct, privDefaultConstruct);
  (name_privDelete, privDelete);
  (name_privEnvCheckAssign, privEnvCheckAssign);
@@ -10049,6 +10100,8 @@ Definition ctx_items :=
 .
 Ltac ctx_compute := cbv beta iota zeta delta -[
 dolthis
+privAddAccessorField
+privAddDataField
 privAppExpr
 privAppExprCheck
 privAppMethod
@@ -10079,6 +10132,7 @@ privDayWithinYear
 privDaysInMonth
 privDaysInYear
 privDeclEnvAddBinding
+privDefaultCall
 privDefaultConstruct
 privDelete
 privEnvCheckAssign
@@ -10479,6 +10533,8 @@ Definition store_items := [
                                            value_closure
                                            (closure_intro
                                             [("$this", dolthis);
+                                             ("%AddAccessorField", privAddAccessorField);
+                                             ("%AddDataField", privAddDataField);
                                              ("%AppExpr", privAppExpr);
                                              ("%AppExprCheck", privAppExprCheck);
                                              ("%AppMethod", privAppMethod);
@@ -10509,6 +10565,7 @@ Definition store_items := [
                                              ("%DaysInMonth", privDaysInMonth);
                                              ("%DaysInYear", privDaysInYear);
                                              ("%DeclEnvAddBinding", privDeclEnvAddBinding);
+                                             ("%DefaultCall", privDefaultCall);
                                              ("%DefaultConstruct", privDefaultConstruct);
                                              ("%Delete", privDelete);
                                              ("%EnvCheckAssign", privEnvCheckAssign);

@@ -67,7 +67,7 @@ Hint Extern 1 => solve [eauto 10 with nocore typeclass_instances] : js_ljs.
 
 Hint Constructors construct_prealloc_related : js_ljs.
 Hint Constructors construct_related : js_ljs.
-Hint Constructors option_construct_related : js_ljs.
+Hint Constructors usercode_related : js_ljs.
 Hint Constructors call_prealloc_related : js_ljs.
 Hint Constructors call_related : js_ljs.
 Hint Constructors option_call_related : js_ljs.
@@ -76,7 +76,6 @@ Hint Constructors attributes_accessor_related : js_ljs.
 Hint Constructors attributes_related : js_ljs.
 Hint Constructors type_related : js_ljs.
 Hint Constructors value_related : js_ljs.
-Hint Constructors option_value_related : js_ljs.
 Hint Constructors resvalue_related : js_ljs.
 Hint Constructors res_related : js_ljs.
 Hint Constructors env_record_related : js_ljs.
@@ -91,6 +90,8 @@ Hint Constructors getter_proxy : js_ljs.
 Hint Constructors setter_proxy : js_ljs.
 Hint Constructors fact_ptr : js_ljs.
 (* Hint Constructors arg_list : js_ljs. *)
+
+Hint Constructors Option Option2 Option3 Option4 Forall Forall2 Forall3 : js_ljs.
 
 Hint Extern 99 (value_related _ (J.object_proto_ _) (L.object_proto _)) => (* why is it needed? *)
     first [eapply value_related_null | eapply value_related_object] : js_ljs.
@@ -117,6 +118,9 @@ Hint Constructors J.prepost_op : js_ljs.
 
 (** Unfolding hints *)
 
+Hint Extern 4 (option_value_related _ _ _) => unfold option_value_related : js_ljs.
+Hint Extern 4 (option_construct_related _ _) => unfold option_construct_related : js_ljs.
+Hint Extern 4 (option_usercode_related _ _ _ _ _) => unfold option_usercode_related : js_ljs.
 Hint Extern 4 (res_related _ _ _ (J.res_throw _) _) => unfold J.res_throw : js_ljs.
 Hint Extern 4 (J.regular_binary_op _) => unfold J.regular_binary_op : js_ljs.
 Hint Extern 4 (J.ref_is_unresolvable _) => unfold J.ref_is_unresolvable : js_ljs.
@@ -1116,7 +1120,7 @@ Lemma option_value_related_bisim_incl_preserved : forall BR1 BR2 jov ov,
     option_value_related BR2 jov ov.
 Proof.
     introv Hs Hrel.
-    inverts Hrel; jauto_js. 
+    inverts Hrel; jauto_js.
 Qed.
 
 (* Hint Resolve option_value_related_bisim_incl_preserved : js_ljs. *)
@@ -1338,6 +1342,59 @@ Hint Extern 4 (env_record_related ?BR2 _ _) =>
     end 
     : js_ljs.
 
+Lemma usercode_context_invariant_bisim_incl_preserved : forall BR1 BR2 jle c,
+    BR1 \c BR2 ->
+    usercode_context_invariant BR1 jle c ->
+    usercode_context_invariant BR2 jle c.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel.
+    constructor; eauto_js.
+Qed.
+
+Hint Extern 4 (usercode_context_invariant ?BR2 _ _) => 
+    match goal with 
+    | H : usercode_context_invariant ?BR1 _ _ |- _ => 
+        sub_helper BR1 BR2 usercode_context_invariant_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 usercode_context_invariant_bisim_incl_preserved
+    end 
+    : js_ljs.
+
+Lemma usercode_related_bisim_incl_preserved : forall BR1 BR2 jfb is jle v,
+    BR1 \c BR2 ->
+    usercode_related BR1 jfb is jle v ->
+    usercode_related BR2 jfb is jle v.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel.
+    constructor; eauto_js.
+Qed.
+
+Hint Extern 4 (usercode_related ?BR2 _ _ _ _) => 
+    match goal with 
+    | H : usercode_related ?BR1 _ _ _ _ |- _ => sub_helper BR1 BR2 usercode_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 usercode_related_bisim_incl_preserved
+    end 
+    : js_ljs.
+
+Lemma option_usercode_related_bisim_incl_preserved : forall BR1 BR2 ojfb ois ojle ov,
+    BR1 \c BR2 ->
+    option_usercode_related BR1 ojfb ois ojle ov ->
+    option_usercode_related BR2 ojfb ois ojle ov.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel;
+    constructor; eauto_js.
+Qed.
+
+Hint Extern 4 (option_usercode_related ?BR2 _ _ _ _) => 
+    match goal with 
+    | H : option_usercode_related ?BR1 _ _ _ _ |- _ => 
+        sub_helper BR1 BR2 option_usercode_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 option_usercode_related_bisim_incl_preserved
+    end 
+    : js_ljs.
+
 Lemma object_prim_related_bisim_incl_preserved : forall BR1 BR2 jobj obj,
     BR1 \c BR2 ->
     object_prim_related BR1 jobj obj ->
@@ -1345,7 +1402,7 @@ Lemma object_prim_related_bisim_incl_preserved : forall BR1 BR2 jobj obj,
 Proof.
     introv Hs Hrel.
     inverts Hrel.
-    constructor; eauto_js.
+    constructor; eauto_js. 
 Qed.
 
 (* Hint Resolve object_prim_related_bisim_incl_preserved : js_ljs. *)

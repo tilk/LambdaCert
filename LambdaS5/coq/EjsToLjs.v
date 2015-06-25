@@ -138,25 +138,28 @@ Definition make_strictness b e :=
 Definition make_resolve_this e :=
     make_app_builtin "%resolveThis" [L.expr_id "$strict"; e].
 
-Definition make_lambda f (is : list string) p := 
+Definition make_lambda_expr f (is : list string) p :=
     let 'E.prog_intro str vis e := p in 
-    let args_obj := L.expr_id "args" in
     let argdecls := 
         map (fun p => let '(vnum, vid) := p in 
                       (vid, L.expr_get_field (L.expr_id "args") (L.expr_string vnum), true)) 
             (zipl_stream (id_stream_from 0) is) in
     let vdecls := map (fun i => (i, L.expr_undefined, true)) vis in
-    L.expr_lambda ["obj"; "$this"; "args"] (
     L.expr_label "%ret" (
     L.expr_let "$this" (make_resolve_this (L.expr_id "$this")) (
     L.expr_let "evalCode" L.expr_false (
-    make_var_decl (vdecls ++ ("arguments", make_app_builtin "%mkArgsObj" [args_obj], !str) :: argdecls) (
+    make_var_decl (vdecls ++ ("arguments", make_app_builtin "%mkArgsObj" [L.expr_id "args"], !str) :: argdecls) (
     make_strictness str (
-    L.expr_seq (f e) L.expr_undefined)))))).
+    L.expr_seq (f e) L.expr_undefined))))).
+
+Definition make_lambda f (is : list string) p := 
+    L.expr_lambda ["obj"; "$this"; "args"] (make_lambda_expr f is p).
 
 Definition make_fobj f is p :=
+(* should be really a parser check 
     ifb Exists (fun nm => nm = "arguments" \/ nm = "eval") is \/ Has_dupes is then 
         if_strict (syntax_error "Illegal function definition") L.expr_undefined else
+*)
     make_app_builtin "%MakeFunctionObject" 
         [make_lambda f is p; L.expr_number (length is); L.expr_id "$strict"].
 
