@@ -451,18 +451,22 @@ Definition option_construct_related := Option2 construct_related.
 
 Definition funcbody_expr is jp := E.make_lambda_expr E.ejs_to_ljs is (E.js_prog_to_ejs jp).
 
+Definition funcbody_closure ctxl is jp := L.closure_intro ctxl None ["obj"; "$this"; "args"] (funcbody_expr is jp).
+
 Record usercode_context_invariant BR jle c : Prop := {
     usercode_context_invariant_includes_init_ctx : includes_init_ctx c;
     usercode_context_invariant_prealloc_related : prealloc_in_ctx BR c;
     usercode_context_invariant_global_env_record_exists : global_env_record_exists BR c;
-    usercode_context_invariant_scope : lexical_env_related BR jle (c\("$context"))
+    usercode_context_invariant_context : index c "$context";
+    usercode_context_invariant_scope : 
+        forall v, binds c "$context" v -> lexical_env_related BR jle v
 }.
 
 Inductive usercode_related BR : J.funcbody -> list string -> J.lexical_env -> L.value -> Prop :=
 | usercode_related_intro : forall jp s is jle ctxl, 
     usercode_context_invariant BR jle (from_list ctxl) ->
     usercode_related BR (J.funcbody_intro jp s) is jle 
-        (L.value_closure (L.closure_intro ctxl None ["obj"; "$this"; "args"] (funcbody_expr is jp)))
+        (L.value_closure (funcbody_closure ctxl is jp))
 .
 
 Definition option_usercode_related BR := Option4 (usercode_related BR).

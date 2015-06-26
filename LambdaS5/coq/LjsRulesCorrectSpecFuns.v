@@ -574,14 +574,14 @@ Proof.
     ljs_apply.
     ljs_context_invariant_after_apply. 
     repeat ljs_autoforward.
-    jauto_js 18.
+    jauto_js 22.
     (* boolean *)
     destruct Hvrel; invert_stx_eq.
     inverts red_exprh H7. (* TODO *)
     ljs_apply.
     ljs_context_invariant_after_apply. 
     repeat ljs_autoforward.
-    jauto_js 18.
+    jauto_js 22.
     (* impossible *)
     destruct Hvrel; false; eauto_js.
 Qed.

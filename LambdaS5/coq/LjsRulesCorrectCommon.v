@@ -2691,7 +2691,9 @@ Proof.
     constructor; jauto_js.
 Qed.
 
-Hint Resolve state_invariant_modify_object_preserved : js_ljs.
+Hint Extern 4 (state_invariant _ ?jst _) =>
+    not is_evar jst; eapply state_invariant_modify_object_preserved : js_ljs.
+(* Hint Resolve state_invariant_modify_object_preserved : js_ljs. *)
 
 Lemma state_invariant_modify_env_record_preserved : forall BR jst st jeptr jer ptr obj obj0,
     fact_js_env jeptr ptr \in BR ->
@@ -2709,7 +2711,9 @@ Proof.
     (* TODO *) skip.
 Qed.
 
-Hint Resolve state_invariant_modify_env_record_preserved : js_ljs.
+Hint Extern 4 (state_invariant _ ?jst _) =>
+    not is_evar jst; eapply state_invariant_modify_env_record_preserved : js_ljs.
+(* Hint Resolve state_invariant_modify_env_record_preserved : js_ljs. *)
 
 Lemma state_invariant_next_fresh_commute_object_preserved : forall BR jst jptr jobj st,
     state_invariant BR (J.state_next_fresh (jst \(jptr := jobj))) st ->
@@ -2718,7 +2722,9 @@ Proof.
     introv Hinv. rewrite js_state_write_object_next_fresh_commute. assumption. 
 Qed.
 
-Hint Resolve state_invariant_next_fresh_commute_object_preserved : js_ljs.
+Hint Extern 4 (state_invariant _ ?jst _) =>
+    not is_evar jst; eapply state_invariant_next_fresh_commute_object_preserved : js_ljs.
+(* Hint Resolve state_invariant_next_fresh_commute_object_preserved : js_ljs. *)
 
 Lemma state_invariant_double_write_preserved : forall BR jst jptr jobj jobj' st,
     state_invariant BR (jst \(jptr := jobj)) st ->
@@ -2727,7 +2733,9 @@ Proof.
     introv Hinv. rew_bag_simpl. assumption. 
 Qed.
 
-Hint Resolve state_invariant_double_write_preserved : js_ljs.
+Hint Extern 4 (state_invariant _ ?jst _) => (* TODO *)
+    not is_evar jst; eapply state_invariant_double_write_preserved : js_ljs.
+(* Hint Resolve state_invariant_double_write_preserved : js_ljs. *)
 
 Lemma ctx_parent_ok_new_env_parent_preserved : forall BR st ptr jeptr obj v,
     fact_js_env jeptr ptr \in BR ->

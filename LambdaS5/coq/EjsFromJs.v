@@ -181,7 +181,7 @@ with js_prog_to_ejs p : E.prog :=
         E.expr_seqs (filtmap_js_element_to_ejs is_element_func_decl es ++ 
             filtmap_js_element_to_ejs is_element_stat es) in
     match p with
-    | J.prog_intro _ sts => E.prog_intro (is_strict sts) (JI.prog_vardecl p) (js_elements_to_ejs sts)
+    | J.prog_intro b sts => E.prog_intro b (JI.prog_vardecl p) (js_elements_to_ejs sts)
     end.
 
 Require EjsToLjs.

@@ -161,7 +161,7 @@ Definition make_fobj f is p s :=
         if_strict (syntax_error "Illegal function definition") L.expr_undefined else
 *)
     make_app_builtin "%MakeFunctionObject" 
-        [make_lambda f is p; L.expr_number (length is); L.expr_string s; L.expr_id "$strict"].
+        [make_lambda f is p; L.expr_number (length is); L.expr_string s; L.expr_bool (E.prog_strictness p)].
 
 Definition make_rec_fobj f i is p s :=
     let fobj := make_fobj f is p s in

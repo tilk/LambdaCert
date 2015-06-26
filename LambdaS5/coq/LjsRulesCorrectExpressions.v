@@ -27,6 +27,7 @@ Implicit Type props : L.object_props.
 
 Implicit Type jst : J.state.
 Implicit Type je : J.expr.
+Implicit Type jp : J.prog.
 Implicit Type jt : J.stat.
 Implicit Type jee : J.ext_expr.
 Implicit Type jet : J.ext_stat.
@@ -47,6 +48,64 @@ Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
 
 (* Expressions *)
+
+(** *** Functions *)
+
+Lemma red_spec_creating_function_object_ok : forall BR k jst jc c st st' r is s jp jle,
+    L.red_exprh k c st
+        (L.expr_app_2 LjsInitEnv.privMakeFunctionObject 
+            [L.value_closure (funcbody_closure (to_list c) is jp); L.value_number (length is); L.value_string s; 
+             L.value_bool (J.prog_intro_strictness jp)])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    (forall v, binds c "$context" v -> lexical_env_related BR jle v) ->
+    concl_ext_expr_value BR jst jc c st st' r 
+        (J.spec_creating_function_object is (J.funcbody_intro jp s) jle (J.prog_intro_strictness jp)) 
+        (fun _ => True).
+Proof.
+    introv Hlred Hcinv Hinv Himpl. 
+Admitted. (* TODO *)
+
+Lemma exprjs_prog_strictness_eq : forall jp, E.prog_strictness (E.js_prog_to_ejs jp) = J.prog_intro_strictness jp.
+Proof.
+    introv. destruct jp. reflexivity.
+Qed.
+
+Lemma red_expr_nonrec_function_ok : forall k is fb,
+    th_expr k (J.expr_function None is fb).
+Proof.
+    introv Hcinv Hinv Hlred.
+    destruct fb.
+    repeat ljs_autoforward.
+    rewrite exprjs_prog_strictness_eq in *.
+    forwards_th Hx : red_spec_creating_function_object_ok. { 
+        eapply execution_ctx_related_lexical_env. 
+        eapply context_invariant_execution_ctx_related. 
+        eassumption.
+    }
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_only_invert.
+    jauto_js 12.
+Qed.
+
+Lemma red_expr_rec_function_ok : forall k s is fb,
+    th_expr k (J.expr_function (Some s) is fb).
+Proof.
+    introv Hcinv Hinv Hlred.
+    destruct fb.
+    repeat ljs_autoforward.
+Admitted. (* TODO *)
+
+Lemma red_expr_function_ok : forall k os is fb,
+    th_expr k (J.expr_function os is fb).
+Proof.
+    introv.
+    destruct os.
+    eapply red_expr_rec_function_ok.
+    eapply red_expr_nonrec_function_ok.
+Qed.
 
 (** *** Literals *)
 
