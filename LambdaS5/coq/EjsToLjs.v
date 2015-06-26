@@ -155,20 +155,20 @@ Definition make_lambda_expr f (is : list string) p :=
 Definition make_lambda f (is : list string) p := 
     L.expr_lambda ["obj"; "$this"; "args"] (make_lambda_expr f is p).
 
-Definition make_fobj f is p :=
+Definition make_fobj f is p s :=
 (* should be really a parser check 
     ifb Exists (fun nm => nm = "arguments" \/ nm = "eval") is \/ Has_dupes is then 
         if_strict (syntax_error "Illegal function definition") L.expr_undefined else
 *)
     make_app_builtin "%MakeFunctionObject" 
-        [make_lambda f is p; L.expr_number (length is); L.expr_id "$strict"].
+        [make_lambda f is p; L.expr_number (length is); L.expr_string s; L.expr_id "$strict"].
 
-Definition make_rec_fobj f i is p :=
-    let fobj := make_fobj f is p in
+Definition make_rec_fobj f i is p s :=
+    let fobj := make_fobj f is p s in
     make_var_decl [(i, fobj, false)] (make_var_id i).
 
-Definition make_func_stmt f i is p :=
-    let fobj := make_fobj f is p in
+Definition make_func_stmt f i is p s :=
+    let fobj := make_fobj f is p s in
     make_app_builtin "%defineFunction" [context; L.expr_string i; fobj; L.expr_id "evalCode"].
 
 Definition make_try_catch body i catch :=
@@ -367,9 +367,9 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_object ps => make_object (List.map (fun (p : string * E.property) => let (a,b) := p in (a, property_to_ljs b)) ps) 
     | E.expr_array es => make_array (List.map (LibOption.map ejs_to_ljs) es)
     | E.expr_app e es => make_app ejs_to_ljs e (List.map ejs_to_ljs es)
-    | E.expr_func None is p => make_fobj ejs_to_ljs is p 
-    | E.expr_func (Some i) is p => make_rec_fobj ejs_to_ljs i is p 
-    | E.expr_func_stmt i is p => make_func_stmt ejs_to_ljs i is p
+    | E.expr_func None is p s => make_fobj ejs_to_ljs is p s
+    | E.expr_func (Some i) is p s => make_rec_fobj ejs_to_ljs i is p s
+    | E.expr_func_stmt i is p s => make_func_stmt ejs_to_ljs i is p s
     | E.expr_fseq e1 e2 => L.expr_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_seq e1 e2 => make_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_if e e1 e2 => make_if (ejs_to_ljs e) (ejs_to_ljs e1) (ejs_to_ljs e2)

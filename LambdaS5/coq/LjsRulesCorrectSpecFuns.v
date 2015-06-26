@@ -92,6 +92,27 @@ Qed.
 
 Hint Resolve option_usercode_related_none_lemma option_usercode_related_some_lemma : js_ljs.
 
+Lemma option_codetxt_related_none_lemma : forall (m : finmap _ _) s,
+     ~index m s ->
+     option_codetxt_related None (m\(s?)).
+Proof.
+    intros.
+    erewrite read_option_not_index_inv by prove_bag.
+    eauto_js.
+Qed.
+
+Lemma option_codetxt_related_some_lemma : forall (m : finmap _ _) s jfb v,
+     binds m s v ->
+     codetxt_related jfb v ->
+     option_codetxt_related (Some jfb) (m\(s?)).
+Proof.
+    intros.
+    erewrite read_option_binds_inv by prove_bag.
+    eauto_js.
+Qed.
+
+Hint Resolve option_codetxt_related_none_lemma option_codetxt_related_some_lemma : js_ljs.
+
 Lemma nindex_update_diff : forall `{Index_update_diff_eq} M k k' x', 
     k <> k' -> ~index M k -> ~index (M \(k' := x')) k.
 Proof.
@@ -262,7 +283,7 @@ Proof.
     destruct_hyp Hv;
     repeat ljs_autoforward. {
         inverts Hvrel2.
-        jauto_js 12.
+        jauto_js 15.
     }
     (* has message *)
     inv_ljs;

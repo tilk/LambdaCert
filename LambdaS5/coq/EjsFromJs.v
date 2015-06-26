@@ -71,7 +71,7 @@ Fixpoint js_expr_to_ejs (e : J.expr) : E.expr :=
     | J.expr_assign e1 oo e2 => js_expr_assign_to_ejs (js_expr_to_ejs e1) oo (js_expr_to_ejs e2)
     | J.expr_new e es => E.expr_new (js_expr_to_ejs e) (List.map js_expr_to_ejs es)
     | J.expr_call e es => E.expr_app (js_expr_to_ejs e) (List.map js_expr_to_ejs es)
-    | J.expr_function onm xs (J.funcbody_intro p _) => E.expr_func onm xs (js_prog_to_ejs p)
+    | J.expr_function onm xs (J.funcbody_intro p s) => E.expr_func onm xs (js_prog_to_ejs p) s
     | J.expr_object ps => 
         E.expr_object (List.map (fun (pp : J.propname * J.propbody) => let (pn, p) := pp in (JI.string_of_propname pn, js_prop_to_ejs p)) ps) 
     | J.expr_array oes => E.expr_array (List.map (fun oe => LibOption.map js_expr_to_ejs oe) oes)
@@ -79,8 +79,8 @@ Fixpoint js_expr_to_ejs (e : J.expr) : E.expr :=
 with js_prop_to_ejs p :=
     match p with
     | J.propbody_val e => E.property_data (js_expr_to_ejs e)
-    | J.propbody_get (J.funcbody_intro p _) => E.property_getter (E.expr_func None nil (js_prog_to_ejs p))
-    | J.propbody_set is (J.funcbody_intro p _) => E.property_setter (E.expr_func None is (js_prog_to_ejs p))
+    | J.propbody_get (J.funcbody_intro p s) => E.property_getter (E.expr_func None nil (js_prog_to_ejs p) s)
+    | J.propbody_set is (J.funcbody_intro p s) => E.property_setter (E.expr_func None is (js_prog_to_ejs p) s)
     end
 with js_stat_to_ejs (e : J.stat) : E.expr := 
     let js_vardecl_to_ejs vd := 
@@ -170,9 +170,9 @@ with js_switchclause_to_ejs c :=
 with js_element_to_ejs (e : J.element) : E.expr := 
     match e with
     | J.element_stat st => js_stat_to_ejs st
-    | J.element_func_decl s ps (J.funcbody_intro p _) => 
+    | J.element_func_decl s ps (J.funcbody_intro p s') => 
 (* TODO reconsider implementation strategy *)
-        E.expr_func_stmt s ps (js_prog_to_ejs p)
+        E.expr_func_stmt s ps (js_prog_to_ejs p) s'
     end
 with js_prog_to_ejs p : E.prog :=
     let js_elements_to_ejs (es : list J.element) : E.expr :=

@@ -467,7 +467,11 @@ Inductive usercode_related BR : J.funcbody -> list string -> J.lexical_env -> L.
 
 Definition option_usercode_related BR := Option4 (usercode_related BR).
 
-Definition option_scope_related BR := Option2 (lexical_env_related BR).
+Inductive codetxt_related : J.funcbody -> L.value -> Prop :=
+| codetxt_related_intro : forall jp s, codetxt_related (J.funcbody_intro jp s) (L.value_string s)
+.
+
+Definition option_codetxt_related := Option2 codetxt_related.
 
 Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_class : J.object_class_ jobj = L.object_class obj;
@@ -480,7 +484,8 @@ Record object_prim_related BR jobj obj : Prop := {
         option_construct_related (J.object_construct_ jobj) (L.object_internal obj\("construct"?));
     object_prim_related_usercode :
         option_usercode_related BR (J.object_code_ jobj) (J.object_formal_parameters_ jobj)
-            (J.object_scope_ jobj) (L.object_internal obj\("usercode"?))
+            (J.object_scope_ jobj) (L.object_internal obj\("usercode"?));
+    object_prim_related_codetxt : option_codetxt_related (J.object_code_ jobj) (L.object_internal obj\("codetxt"?))
 }.
 
 Record object_related BR jobj obj : Prop := {

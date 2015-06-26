@@ -67,6 +67,7 @@ Hint Extern 1 => solve [eauto 10 with nocore typeclass_instances] : js_ljs.
 
 Hint Constructors construct_prealloc_related : js_ljs.
 Hint Constructors construct_related : js_ljs.
+Hint Constructors codetxt_related : js_ljs.
 Hint Constructors usercode_related : js_ljs.
 Hint Constructors call_prealloc_related : js_ljs.
 Hint Constructors call_related : js_ljs.
@@ -120,6 +121,7 @@ Hint Constructors J.prepost_op : js_ljs.
 
 Hint Extern 4 (option_value_related _ _ _) => unfold option_value_related : js_ljs.
 Hint Extern 4 (option_construct_related _ _) => unfold option_construct_related : js_ljs.
+Hint Extern 4 (option_codetxt_related _ _) => unfold option_codetxt_related : js_ljs.
 Hint Extern 4 (option_usercode_related _ _ _ _ _) => unfold option_usercode_related : js_ljs.
 Hint Extern 4 (res_related _ _ _ (J.res_throw _) _) => unfold J.res_throw : js_ljs.
 Hint Extern 4 (J.regular_binary_op _) => unfold J.regular_binary_op : js_ljs.
