@@ -775,7 +775,8 @@ Parameter initBR : fact_set. (* TODO *)
 Definition ctx_parent_ok BR st :=
     forall ptr v,
     fact_ctx_parent ptr v \in BR ->
-    exists obj,
+    exists jeptr obj,
+    fact_js_env jeptr ptr \in BR /\
     binds st ptr obj /\
     binds (L.object_internal obj) "parent" v.
 

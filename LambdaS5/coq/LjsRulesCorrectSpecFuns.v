@@ -843,6 +843,98 @@ Proof.
     right. simpls. do 3 eexists. rew_heap_to_libbag in *. rew_binds_eq. iauto.
 Qed.
 
+Lemma make_getter_lemma : forall k c st v st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeGetter [v]) (L.out_ter st' r) ->
+    exists ptr obj,
+    ~index st ptr /\
+    getter_proxy obj v /\
+    st' = st \(ptr := obj) /\
+    r = L.res_value (L.value_object ptr).
+Proof.
+    introv Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    do 2 eexists. splits; eauto_js; eauto_js.
+Qed.
+
+Lemma make_setter_lemma : forall k c st v st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeSetter [v]) (L.out_ter st' r) ->
+    exists ptr obj,
+    ~index st ptr /\
+    setter_proxy obj v /\
+    st' = st \(ptr := obj) /\
+    r = L.res_value (L.value_object ptr).
+Proof.
+    introv Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    do 2 eexists. splits; eauto_js; eauto_js.
+Qed.
+
+Lemma make_getter_invariant_lemma : forall BR k c jst st v st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeGetter [v]) (L.out_ter st' r) ->
+    state_invariant BR jst st ->
+    exists ptr,
+    st \c st' /\ 
+    state_invariant (\{fact_getter_proxy ptr v} \u BR) jst st' /\
+    r = L.res_value (L.value_object ptr).
+Proof.
+    introv Hlred Hinv.
+    lets Hx : make_getter_lemma Hlred.
+    destruct_hyp Hx.
+    jauto_js.
+Qed.
+
+Lemma make_setter_invariant_lemma : forall BR k c jst st v st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeSetter [v]) (L.out_ter st' r) ->
+    state_invariant BR jst st ->
+    exists ptr,
+    st \c st' /\ 
+    state_invariant (\{fact_setter_proxy ptr v} \u BR) jst st' /\
+    r = L.res_value (L.value_object ptr).
+Proof.
+    introv Hlred Hinv.
+    lets Hx : make_setter_lemma Hlred.
+    destruct_hyp Hx.
+    jauto_js.
+Qed.
+
+Lemma add_accessor_field_lemma : forall k c st st' r s v1 v2 b1 b2 ptr obj,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privAddAccessorField 
+        [L.value_object ptr; L.value_string s; v1; v2; L.value_bool b1; L.value_bool b2])
+        (L.out_ter st' r) ->
+    binds st ptr obj ->
+    st' = st \(ptr := L.set_object_property obj s (L.attributes_accessor_of 
+        (L.attributes_accessor_intro v1 v2 b1 b2))) /\
+    r = L.res_value L.value_undefined /\
+    ~index (L.object_properties obj) s.
+Proof.
+    introv Hlred Hbinds.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    cases_decide. {
+        repeat ljs_autoforward. 
+        inv_ljs.
+    }
+    repeat ljs_autoforward.
+    destruct obj.
+    inv_ljs. {
+        binds_determine.
+        false. prove_bag.
+    }
+    simpls.
+    do 3 (repeat ljs_autoforward; inv_ljs; [idtac | binds_inv; false; prove_bag 7]). 
+    repeat ljs_autoforward. 
+    simpls.
+    repeat binds_inv.
+    simpls.
+    rew_bag_simpl.
+    eauto_js.
+Qed.
+
 Lemma add_data_field_lemma : forall k c st st' r s v b0 b1 b2 ptr obj,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privAddDataField 
         [L.value_object ptr; L.value_string s; v; L.value_bool b0; L.value_bool b1; L.value_bool b2])

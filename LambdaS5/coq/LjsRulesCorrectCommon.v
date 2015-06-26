@@ -1667,10 +1667,53 @@ Proof.
     asserts Hpar' : (fact_ctx_parent ptr v \in BR).
     rew_in_eq in Hpar. destruct_hyp Hpar; tryfalse. assumption.
     specializes Hcp Hpar'.
-    assumption.
+    destruct_hyp Hcp; jauto_js.
 Qed.
 
 Hint Resolve ctx_parent_ok_new_fact_preserved : js_ljs.
+
+Lemma ctx_parent_ok_modify_state_preserved : forall BR st ptr obj,
+    (forall v, ~fact_ctx_parent ptr v \in BR) ->
+    ctx_parent_ok BR st ->
+    ctx_parent_ok BR (st \(ptr := obj)).
+Proof.
+    introv Hneg Hcpar Hbs.
+    destruct (classic (ptr = ptr0)). {
+        substs. specializes Hneg Hbs. tryfalse.
+    }
+    lets Hx : Hcpar Hbs.
+    destruct_hyp Hx.
+    prove_bag 9.
+Qed.
+
+Lemma ctx_parent_ok_modify_object_preserved_lemma : forall BR st ptr jptr obj,
+    heaps_bisim_rfun BR ->
+    fact_js_obj jptr ptr \in BR ->
+    ctx_parent_ok BR st ->
+    ctx_parent_ok BR (st \(ptr := obj)).
+Proof.
+    introv Hrfun Hfact Hcpar Hbs.
+    lets (jeptr&obj'&Hfact'&Hx) : Hcpar Hbs.
+    destruct (classic (ptr = ptr0)). {
+        substs.
+        specializes Hrfun Hfact Hfact' ___; try eauto_js.
+        tryfalse.
+    }
+    destruct_hyp Hx.
+    exists jeptr obj'.
+    prove_bag 6.
+Qed.
+
+Lemma ctx_parent_ok_modify_object_preserved : forall BR jst st ptr jptr obj,
+    heaps_bisim_consistent BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    ctx_parent_ok BR st ->
+    ctx_parent_ok BR (st \(ptr := obj)).
+Proof.
+    introv Hbisim. destruct Hbisim. eauto using ctx_parent_ok_modify_object_preserved_lemma.
+Qed.
+
+Hint Resolve ctx_parent_ok_modify_object_preserved : js_ljs.
 
 Lemma object_prim_related_map_properties_preserved : forall BR jobj obj F,
     object_prim_related BR jobj obj ->
@@ -2633,6 +2676,21 @@ Qed.
 
 Hint Resolve state_invariant_new_exn_object_preserved : js_ljs.
 
+Lemma state_invariant_modify_object_preserved : forall BR jst st jptr jobj ptr obj,
+    fact_js_obj jptr ptr \in BR ->
+    state_invariant BR jst st ->
+    object_related BR jobj obj ->
+    state_invariant BR (jst \(jptr:=jobj)) (st \(ptr:=obj)).
+Proof.
+    introv Hbi Hinv Horel.
+    inverts Hinv.
+    asserts Hjindex : (index jst jptr). 
+    applys heaps_bisim_consistent_lnoghost_obj; try eassumption.
+    constructor; jauto_js.
+Qed.
+
+Hint Resolve state_invariant_modify_object_preserved : js_ljs.
+
 Lemma state_invariant_modify_env_record_preserved : forall BR jst st jeptr jer ptr obj obj0,
     fact_js_env jeptr ptr \in BR ->
     binds st ptr obj0 ->
@@ -2669,26 +2727,29 @@ Qed.
 
 Hint Resolve state_invariant_double_write_preserved : js_ljs.
 
-Lemma ctx_parent_ok_new_env_parent_preserved : forall BR st ptr obj v,
+Lemma ctx_parent_ok_new_env_parent_preserved : forall BR st ptr jeptr obj v,
+    fact_js_env jeptr ptr \in BR ->
     binds st ptr obj ->
     binds (L.object_internal obj) "parent" v ->
     ctx_parent_ok BR st ->
     ctx_parent_ok (\{fact_ctx_parent ptr v} \u BR) st.
 Proof.
-    introv Hbinds1 Hbinds2 Hcp Hf.
+    introv Hbs Hbinds1 Hbinds2 Hcp Hf.
     rew_in_eq in Hf.
-    destruct_hyp Hf; repeat injects; eauto.
+    destruct_hyp Hf; repeat injects. { jauto_js. }
+    specializes Hcp Hf. destruct_hyp Hcp. jauto_js.
 Qed.
 
 Hint Resolve ctx_parent_ok_new_env_parent_preserved : js_ljs.
 
-Lemma state_invariant_new_env_parent_preserved : forall BR jst st v ptr obj,
+Lemma state_invariant_new_env_parent_preserved : forall BR jst st v jeptr ptr obj,
+    fact_js_env jeptr ptr \in BR ->
     binds st ptr obj ->
     binds (L.object_internal obj) "parent" v ->
     state_invariant BR jst st ->
     state_invariant (\{fact_ctx_parent ptr v} \u BR) jst st.
 Proof.
-    introv Hbinds1 Hbinds2 Hinv.
+    introv Hbs Hbinds1 Hbinds2 Hinv.
     inverts Hinv.
     asserts Hsub : (BR \c \{fact_ctx_parent ptr v} \u BR). jauto_js.
     constructor; jauto_js.

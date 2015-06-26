@@ -57,6 +57,9 @@ expr_object
  ("%AddDataField", property_data
                    (data_intro (expr_id "%AddDataField") expr_true expr_false
                     expr_false));
+ ("%AddJsAccessorField", property_data
+                         (data_intro (expr_id "%AddJsAccessorField")
+                          expr_true expr_false expr_false));
  ("%AppExpr", property_data
               (data_intro (expr_id "%AppExpr") expr_true expr_false
                expr_false));
@@ -1808,11 +1811,9 @@ expr_seq
  (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "name"))
  (expr_fail "property already exists in %AddAccessorField") expr_undefined)
 (expr_seq
- (expr_set_attr pattr_getter (expr_id "obj") (expr_id "name")
-  (expr_app (expr_id "%MakeGetter") [expr_id "g"]))
+ (expr_set_attr pattr_getter (expr_id "obj") (expr_id "name") (expr_id "g"))
  (expr_seq
-  (expr_set_attr pattr_setter (expr_id "obj") (expr_id "name")
-   (expr_app (expr_id "%MakeSetter") [expr_id "s"]))
+  (expr_set_attr pattr_setter (expr_id "obj") (expr_id "name") (expr_id "s"))
   (expr_seq
    (expr_set_attr pattr_enum (expr_id "obj") (expr_id "name") (expr_id "e"))
    (expr_seq
@@ -1834,6 +1835,15 @@ expr_seq
    (expr_seq
     (expr_set_attr pattr_config (expr_id "obj") (expr_id "name")
      (expr_id "c")) expr_undefined))))
+.
+Definition ex_privAddJsAccessorField := 
+expr_app (expr_id "%AddAccessorField")
+[expr_id "obj";
+ expr_id "name";
+ expr_app (expr_id "%MakeGetter") [expr_id "g"];
+ expr_app (expr_id "%MakeSetter") [expr_id "s"];
+ expr_id "e";
+ expr_id "c"]
 .
 Definition ex_privAppExpr := 
 expr_app (expr_id "fun") [expr_id "this"; expr_id "args"]
@@ -2783,14 +2793,14 @@ expr_let "fobj"
   (expr_seq
    (expr_if (expr_id "strict")
     (expr_seq
-     (expr_app (expr_id "%AddAccessorField")
+     (expr_app (expr_id "%AddJsAccessorField")
       [expr_id "fobj";
        expr_string "caller";
        expr_id "%ThrowTypeError";
        expr_id "%ThrowTypeError";
        expr_false;
        expr_false])
-     (expr_app (expr_id "%AddAccessorField")
+     (expr_app (expr_id "%AddJsAccessorField")
       [expr_id "fobj";
        expr_string "arguments";
        expr_id "%ThrowTypeError";
@@ -7254,6 +7264,18 @@ Definition objCode :=  value_undefined .
 Definition name_objCode :=  "objCode" .
 Definition dolthis :=  value_object 2 .
 Definition name_dolthis :=  "$this" .
+Definition privAddAccessorField := 
+value_closure
+(closure_intro [] None ["obj"; "name"; "g"; "s"; "e"; "c"]
+ ex_privAddAccessorField)
+.
+Definition name_privAddAccessorField :=  "%AddAccessorField" .
+Definition privAddDataField := 
+value_closure
+(closure_intro [] None ["obj"; "name"; "v"; "w"; "e"; "c"]
+ ex_privAddDataField)
+.
+Definition name_privAddDataField :=  "%AddDataField" .
 Definition privAppExpr := 
 value_closure (closure_intro [] None ["fun"; "this"; "args"] ex_privAppExpr)
 .
@@ -7330,19 +7352,15 @@ value_closure
  ex_privMakeSetter)
 .
 Definition name_privMakeSetter :=  "%MakeSetter" .
-Definition privAddAccessorField := 
+Definition privAddJsAccessorField := 
 value_closure
 (closure_intro
- [("%MakeGetter", privMakeGetter); ("%MakeSetter", privMakeSetter)] None
- ["obj"; "name"; "g"; "s"; "e"; "c"] ex_privAddAccessorField)
+ [("%AddAccessorField", privAddAccessorField);
+  ("%MakeGetter", privMakeGetter);
+  ("%MakeSetter", privMakeSetter)] None ["obj"; "name"; "g"; "s"; "e"; "c"]
+ ex_privAddJsAccessorField)
 .
-Definition name_privAddAccessorField :=  "%AddAccessorField" .
-Definition privAddDataField := 
-value_closure
-(closure_intro [] None ["obj"; "name"; "v"; "w"; "e"; "c"]
- ex_privAddDataField)
-.
-Definition name_privAddDataField :=  "%AddDataField" .
+Definition name_privAddJsAccessorField :=  "%AddJsAccessorField" .
 Definition privBooleanProto :=  value_object 12 .
 Definition name_privBooleanProto :=  "%BooleanProto" .
 Definition privMakeBoolean := 
@@ -7996,8 +8014,8 @@ Definition name_privMakeBind :=  "%MakeBind" .
 Definition privMakeFunctionObject := 
 value_closure
 (closure_intro
- [("%AddAccessorField", privAddAccessorField);
-  ("%AddDataField", privAddDataField);
+ [("%AddDataField", privAddDataField);
+  ("%AddJsAccessorField", privAddJsAccessorField);
   ("%DefaultCall", privDefaultCall);
   ("%DefaultConstruct", privDefaultConstruct);
   ("%FunctionProto", privFunctionProto);
@@ -9679,6 +9697,7 @@ Definition ctx_items :=
 [(name_dolthis, dolthis);
  (name_privAddAccessorField, privAddAccessorField);
  (name_privAddDataField, privAddDataField);
+ (name_privAddJsAccessorField, privAddJsAccessorField);
  (name_privAppExpr, privAppExpr);
  (name_privAppExprCheck, privAppExprCheck);
  (name_privAppMethod, privAppMethod);
@@ -10102,6 +10121,7 @@ Ltac ctx_compute := cbv beta iota zeta delta -[
 dolthis
 privAddAccessorField
 privAddDataField
+privAddJsAccessorField
 privAppExpr
 privAppExprCheck
 privAppMethod
@@ -10535,6 +10555,7 @@ Definition store_items := [
                                             [("$this", dolthis);
                                              ("%AddAccessorField", privAddAccessorField);
                                              ("%AddDataField", privAddDataField);
+                                             ("%AddJsAccessorField", privAddJsAccessorField);
                                              ("%AppExpr", privAppExpr);
                                              ("%AppExprCheck", privAppExprCheck);
                                              ("%AppMethod", privAppMethod);
