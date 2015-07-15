@@ -234,6 +234,32 @@ Qed.
 Definition post_to_primitive jv jv' := 
     exists jp', jv' = J.value_prim jp' /\ forall jp, jv = J.value_prim jp -> jp = jp'.
 
+Lemma post_to_primitive_lemma1 : forall jv1 jv2, post_to_primitive jv1 jv2 -> exists jpr, jv2 = J.value_prim jpr.
+Proof.
+    introv Hpp. unfold post_to_primitive in Hpp. destruct_hyp Hpp. eauto.
+Qed.
+
+Lemma post_to_primitive_lemma2 : forall jpr jv, 
+    post_to_primitive (J.value_prim jpr) jv -> jv = J.value_prim jpr.
+Proof.
+    introv Hpp. unfold post_to_primitive in Hpp. destruct_hyp Hpp. 
+    eapply func_eq_1. symmetry. eauto.
+Qed.
+
+Ltac js_post_to_primitive :=
+    match goal with
+    | H : post_to_primitive (J.value_prim ?jpr) ?jv |- _ =>
+        match jv with
+        | J.value_prim jpr => fail 1
+        | _ => let H1 := fresh in lets H1 : post_to_primitive_lemma2 H; destruct_hyp H1
+        end
+    | H : post_to_primitive ?jv1 ?jv2 |- _ =>
+        match jv2 with
+        | J.value_prim _ => fail 1
+        | _ => let H1 := fresh in lets H1 : post_to_primitive_lemma1 H; destruct_hyp H1
+        end
+    end.
+
 Lemma red_spec_to_primitive_ok : forall BR k jst jc c st st' jv v jprefo r s,
     L.red_exprh k c st
         (L.expr_app_2 LjsInitEnv.privToPrimitiveHint [v; L.value_string s])
@@ -244,6 +270,7 @@ Lemma red_spec_to_primitive_ok : forall BR k jst jc c st st' jv v jprefo r s,
     option_preftype_name jprefo s ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_to_primitive jv jprefo) (post_to_primitive jv).
 Proof.
+    (* TODO *)
 Admitted.
 
 Lemma red_spec_to_primitive_ok_default : forall BR k jst jc c st st' jv v r,
@@ -483,7 +510,7 @@ Proof.
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     repeat ljs_autoforward.
-    match goal with H : post_to_primitive _ _ |- _ => unfold post_to_primitive in H; destruct_hyp H end. (* TODO *)
+    js_post_to_primitive.
     resvalue_related_only_invert.
     erewrite convert_prim_to_number_lemma by eassumption.
     jauto_js.

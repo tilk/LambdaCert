@@ -3089,18 +3089,17 @@ expr_let "l" (expr_app (expr_id "%ToPrimitive") [expr_id "l"])
  (expr_if
   (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "l"))
    (expr_string "string"))
-  (expr_let "lstr" (expr_op1 unary_op_prim_to_str (expr_id "l"))
-   (expr_let "rstr" (expr_op1 unary_op_prim_to_str (expr_id "r"))
-    (expr_op2 binary_op_string_plus (expr_id "lstr") (expr_id "rstr"))))
+  (expr_op2 binary_op_string_plus
+   (expr_op1 unary_op_prim_to_str (expr_id "l"))
+   (expr_op1 unary_op_prim_to_str (expr_id "r")))
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "r"))
     (expr_string "string"))
-   (expr_let "lstr" (expr_op1 unary_op_prim_to_str (expr_id "l"))
-    (expr_let "rstr" (expr_op1 unary_op_prim_to_str (expr_id "r"))
-     (expr_op2 binary_op_string_plus (expr_id "lstr") (expr_id "rstr"))))
-   (expr_let "lnum" (expr_op1 unary_op_prim_to_num (expr_id "l"))
-    (expr_let "rnum" (expr_op1 unary_op_prim_to_num (expr_id "r"))
-     (expr_op2 binary_op_add (expr_id "lnum") (expr_id "rnum")))))))
+   (expr_op2 binary_op_string_plus
+    (expr_op1 unary_op_prim_to_str (expr_id "l"))
+    (expr_op1 unary_op_prim_to_str (expr_id "r")))
+   (expr_op2 binary_op_add (expr_op1 unary_op_prim_to_num (expr_id "l"))
+    (expr_op1 unary_op_prim_to_num (expr_id "r"))))))
 .
 Definition ex_privPrimMultOp := 
 expr_app (expr_id "op")

@@ -1078,6 +1078,87 @@ Proof.
     jauto_js 18.
 Qed.
 
+(* TODO move to ljs *)
+Lemma value_related_type_string_eq : forall BR jv v,
+    value_related BR jv v ->
+    (L.typeof v = "string") = (J.type_of jv = J.type_string).
+Proof.
+    introv Hvrel.
+    rew_logic.
+    split; intro; inverts Hvrel; tryfalse; reflexivity.
+Qed.
+
+Lemma value_related_to_num_append_lemma : forall BR jpr1 jpr2 v1 v2,
+    value_related BR (J.value_prim jpr1) v1 ->
+    value_related BR (J.value_prim jpr2) v2 ->
+    value_related BR 
+        (J.value_prim (J.prim_number
+            (add (J.convert_prim_to_number jpr1) (J.convert_prim_to_number jpr2))))
+        (L.value_number (add (L.value_to_num_cast v1) (L.value_to_num_cast v2))).
+Proof.
+    introv Hvrel1 Hvrel2.
+    repeat erewrite convert_prim_to_number_lemma by eassumption.
+    eauto_js.
+Qed.
+
+Hint Resolve value_related_to_num_append_lemma : js_ljs.
+
+Lemma value_related_to_str_append_lemma : forall BR jpr1 jpr2 v1 v2,
+    value_related BR (J.value_prim jpr1) v1 ->
+    value_related BR (J.value_prim jpr2) v2 ->
+    value_related BR 
+        (J.value_prim (J.prim_string
+            (J.convert_prim_to_string jpr1 ++ J.convert_prim_to_string jpr2)))
+        (L.value_string (L.value_to_str_cast v1 ++ L.value_to_str_cast v2)).
+Proof.
+    introv Hvrel1 Hvrel2.
+    repeat erewrite convert_prim_to_string_lemma by eassumption.
+    eauto_js.
+Qed.
+
+Hint Resolve value_related_to_str_append_lemma : js_ljs.
+
+Lemma red_expr_binary_op_add : forall k je1 je2,
+    ih_expr k ->
+    th_expr k (J.expr_binary_op je1 J.binary_op_add je2).
+Proof.
+    introv IHe Hcinv Hinv Hlred.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    inverts red_exprh H7. (* TODO *)
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : red_spec_to_primitive_ok_default.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_only_invert.
+    repeat ljs_autoforward.
+    forwards_th Hx : red_spec_to_primitive_ok_default.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_only_invert.
+    repeat ljs_autoforward.
+    repeat js_post_to_primitive.
+    inv_ljs; cases_decide. {
+        repeat ljs_autoforward.
+        erewrite value_related_type_string_eq in * by eassumption.
+        jauto_js 20.
+    } 
+    repeat ljs_autoforward.
+    inv_ljs; cases_decide. {
+        repeat ljs_autoforward.
+        erewrite value_related_type_string_eq in * by eassumption.
+        jauto_js 20.
+    }
+    repeat ljs_autoforward.
+    erewrite value_related_type_string_eq in * by eassumption.
+    jauto_js 20.
+Qed.
+
 (* TODO move *) 
 Lemma inequality_op_regular : forall jop b1 b2, 
     J.inequality_op jop b1 b2 ->
@@ -1125,7 +1206,7 @@ Proof.
     applys red_expr_binary_op_puremath J.puremath_op_mult.
     applys red_expr_binary_op_puremath J.puremath_op_div.
     applys red_expr_binary_op_puremath J.puremath_op_mod.
-    skip.
+    applys red_expr_binary_op_add.
     applys red_expr_binary_op_puremath J.puremath_op_sub.
     skip.
     skip.

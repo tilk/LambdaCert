@@ -2,6 +2,7 @@ Set Implicit Arguments.
 Require Import JsNumber.
 Require Import LjsShared.
 Require Import LjsSyntax.
+Require Import LjsSyntaxAux.
 Require Import Utils.
 Require Import LjsValues.
 Require Import LjsStore.
@@ -35,18 +36,19 @@ Definition overwrite_value_if_empty v1 v2 :=
 
 (* For operators *)
 
-Definition typeof v :=
-  match v with
-  | value_undefined => "undefined"
-  | value_null => "null"
-  | value_string _ => "string"
-  | value_number _ => "number"
-  | value_bool _ => "boolean"
-  | value_object ptr => "object"
-  | value_closure _ => "closure"
-  | value_empty => "empty"
-  end
-.
+Definition type_name t :=
+  match t with
+  | type_empty => "empty"
+  | type_null => "null"
+  | type_undefined => "undefined"
+  | type_string => "string"
+  | type_number => "number"
+  | type_closure => "closure"
+  | type_bool => "boolean"
+  | type_object => "object"
+  end.
+
+Definition typeof v := type_name (value_type v).
 
 Definition value_to_bool_cast v :=
   match v with
