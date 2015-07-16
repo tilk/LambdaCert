@@ -1178,12 +1178,160 @@ Proof.
     inverts Hop; reflexivity.
 Qed.
 
+Inductive inequality_result_related : J.prim -> L.value -> Prop :=
+| inequality_result_related_bool : forall b, inequality_result_related (J.prim_bool b) (L.value_bool b)
+| inequality_result_related_undefined : inequality_result_related J.prim_undef L.value_undefined
+.
+
+Hint Constructors inequality_result_related : js_ljs.
+
+Hint Constructors L.same_value : js_ljs. (* TODO move *)
+
+Lemma same_value_eq_lemma : forall v1 v2, L.value_type v1 <> L.type_closure -> L.same_value v1 v2 = (v1 = v2).
+Proof.
+    introv Htype.
+    rew_logic.
+    split.
+    introv Hsv. inverts Hsv; reflexivity.
+    introv Heq. subst. destruct v2; simpls; tryfalse; eauto_js.
+Qed.
+
+Lemma value_number_eq_lemma : forall n1 n2, (L.value_number n1 = L.value_number n2) = (n1 = n2).
+Proof.
+    introv.
+    rew_logic.
+    split.
+    introv Hx. injects. reflexivity.
+    introv Hx. substs. reflexivity.
+Qed.
+
+(* TODO move *)
+Ltac munch_elseif Hx :=
+    inv_fwd_ljs;
+    ljs_out_redh_ter;
+    ljs_bool_red_exprh;
+    repeat binds_inv;
+    repeat determine_epsilon_binds;
+    repeat determine_epsilon;
+    cases_isTrue as Hx;
+    repeat rewrite same_value_eq_lemma in Hx by solve [auto];
+    repeat rewrite value_number_eq_lemma in Hx;
+    inv_ljs; [idtac | let Hx1 := fresh Hx in rename Hx into Hx1; try munch_elseif Hx].
+
+Lemma inequality_test_number_lemma : forall k c st st' r n1 n2,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privNumberCompareOp [L.value_number n1; L.value_number n2]) (L.out_ter st' r) ->
+    exists v jpr,
+    J.inequality_test_number n1 n2 = jpr /\
+    inequality_result_related jpr v /\
+    st' = st /\ r = L.res_value v.
+Proof.
+    introv Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+
+    munch_elseif Hcond;
+    unfolds J.inequality_test_number. { (* one is NaN *)
+        repeat ljs_autoforward.
+        destruct_hyp Hcond;
+        cases_if; try solve [false; auto];
+        jauto_js.
+    } { (* are equal *)
+        repeat ljs_autoforward.
+        subst_hyp Hcond.
+        cases_if; try solve [false; iauto].
+        cases_if.
+        jauto_js. 
+    } {
+        skip.
+    }
+Admitted. (* TODO *)
+
+Lemma inequality_test_primitive_lemma : forall k BR1 BR2 c st st' r v1 v2 jpr1 jpr2,
+    value_related BR1 (J.value_prim jpr1) v1 ->
+    value_related BR2 (J.value_prim jpr2) v2 ->
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privPrimitiveCompareOp [v1; v2]) (L.out_ter st' r) ->
+    exists v jpr,
+    J.inequality_test_primitive jpr1 jpr2 = jpr /\
+    inequality_result_related jpr v /\
+    st' = st /\ r = L.res_value v.
+Proof.
+    introv Hvrel1 Hvrel2 Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+Admitted. (* TODO *)
+
 Lemma red_expr_binary_op_inequality : forall k je1 je2 jop b1 b2,
     J.inequality_op jop b1 b2 ->
     ih_expr k ->
     th_expr k (J.expr_binary_op je1 jop je2).
 Proof.
-Admitted. (* TODO *)
+    introv Hop IHe Hcinv Hinv Hlred.
+    erewrite js_inequality_to_ljs in * by eassumption.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    inverts red_exprh H7. (* TODO *)
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : red_spec_to_primitive_ok_default.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_only_invert.
+    repeat ljs_autoforward.
+    forwards_th Hx : red_spec_to_primitive_ok_default.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_only_invert.
+    repeat js_post_to_primitive.
+    repeat ljs_autoforward.
+
+    destruct b1. {
+        repeat ljs_autoforward.
+        forwards_th Hineq : inequality_test_primitive_lemma.
+        destruct_hyp Hineq.
+        repeat ljs_autoforward.
+        cases_decide as Hund. {
+            inverts Hund.
+            inverts Hineq0 as Hundef.
+            repeat ljs_autoforward.
+            jauto_js 15.
+        }
+        repeat ljs_autoforward.
+        inverts Hineq0; try solve [false; eauto_js].
+        destruct b2. {
+            repeat ljs_autoforward.
+            destruct b0; jauto_js 15.
+        } {
+            repeat ljs_autoforward.
+            destruct b; jauto_js 15.
+        }
+    } { (* copy-pasted :( *)
+        repeat ljs_autoforward.
+        forwards_th Hineq : inequality_test_primitive_lemma.
+        destruct_hyp Hineq.
+        repeat ljs_autoforward.
+        cases_decide as Hund. {
+            inverts Hund.
+            inverts Hineq0 as Hundef.
+            repeat ljs_autoforward.
+            jauto_js 15.
+        }
+        repeat ljs_autoforward.
+        inverts Hineq0; try solve [false; eauto_js].
+        destruct b2. {
+            repeat ljs_autoforward.
+            destruct b0; jauto_js 15.
+        } {
+            repeat ljs_autoforward.
+            destruct b; jauto_js 15.
+        }
+    }
+Qed.
 
 Lemma red_expr_binary_op_coma_ok : forall k je1 je2,
     ih_expr k ->
@@ -1211,10 +1359,10 @@ Proof.
     skip.
     skip.
     skip.
-    skip.
-    skip.
-    skip.
-    skip.
+    applys red_expr_binary_op_inequality J.inequality_op_lt.
+    applys red_expr_binary_op_inequality J.inequality_op_gt.
+    applys red_expr_binary_op_inequality J.inequality_op_le.
+    applys red_expr_binary_op_inequality J.inequality_op_ge.
     skip.
     skip.
     apply red_expr_binary_op_equal_ok.
