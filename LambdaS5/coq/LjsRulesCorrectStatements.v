@@ -678,7 +678,7 @@ Proof.
     eapply J.red_stat_while_1. eassumption.
     eapply J.red_stat_while_2_true. eassumption.
     eapply J.red_stat_while_3. reflexivity.
-    eapply J.red_stat_while_4_not_continue. jauto_js.
+    eapply J.red_stat_while_4_not_continue. intro. jauto_js.
     eapply J.red_stat_while_5_not_break. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
     autorewrite with js_ljs.
     skip. (* eapply J.red_stat_while_6_abort. *) (* TODO SPECIFICATION PROBLEM! ASK ALAN *)
@@ -694,7 +694,7 @@ Proof.
     eapply J.red_stat_while_2_true. eassumption.
     eapply J.red_stat_while_3. reflexivity.
     eapply J.red_stat_while_4_not_continue. simpls. intro. jauto_set. tryfalse. (* TODO! to jauto_js *)
-    eapply J.red_stat_while_5_not_break. jauto_js. (* intro. jauto_set. apply H6. eauto with js_ljs. *)
+    eapply J.red_stat_while_5_not_break. intro. jauto_js. (* intro. jauto_set. apply H6. eauto with js_ljs. *)
     autorewrite with js_ljs.
     skip. (* eapply J.red_stat_while_6_abort. *) (* TODO SPECIFICATION PROBLEM! ASK ALAN *)
     (* only return remains *)
@@ -862,7 +862,7 @@ Proof.
     inv_internal_ljs; try injects;
     jauto_js.
     destruct (classic (s = s0)).
-    substs. false. jauto_js. (* TODO *)
+    substs. false. eapply H6. jauto_js. (* TODO *)
     jauto_js.
 Qed. 
 

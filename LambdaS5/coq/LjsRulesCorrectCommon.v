@@ -311,9 +311,14 @@ Tactic Notation "eauto_js" integer(k) := eauto k with js_ljs bag nocore xcore.
 
 Tactic Notation "eauto_js" := eauto_js 5.
 
+(* TODO move *)
+Ltac jauto_set_slim :=
+  intros; jauto_set_hyps;
+  intros; jauto_set_goal.
+
 Tactic Notation "jauto_js" integer(k) := 
-    repeat destr_concl; jauto_set; eauto with js_ljs bag nocore xcore; 
-    repeat (try unfold_concl; jauto_set; eauto k with js_ljs bag nocore xcore).
+    repeat destr_concl; jauto_set_slim; eauto with js_ljs bag nocore xcore; 
+    repeat (try unfold_concl; jauto_set_slim; eauto k with js_ljs bag nocore xcore).
 
 Tactic Notation "jauto_js" := jauto_js 5.
 

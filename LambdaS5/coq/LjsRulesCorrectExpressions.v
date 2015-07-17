@@ -585,6 +585,30 @@ Ltac reference_match_cases Hlred Hx Heq :=
     clear Hlred;
     destruct Hx as [(?je&?je&Heq&Hlred)|[(?s&Heq&Hlred)|(Heq&Hx)]]; try subst_hyp Heq. 
 
+(* TODO move *)
+Lemma js_red_expr_getvalue_not_ref_lemma : forall jst jc je jo jo',
+    ~js_reference_producing je ->
+    js_red_expr_getvalue jst jc je jo (J.specret_out jo') ->
+    J.red_expr jst jc (J.expr_basic je) jo' /\ jo = jo'.
+Proof.
+    introv Hnrp Hgv.
+    destruct Hgv.
+    inverts js_red_expr_getvalue_red_spec; tryfalse.
+    auto.
+Qed.
+
+(* TODO move *)
+Ltac js_red_expr_getvalue_not_ref :=
+    match goal with
+    | Hnrp : ~js_reference_producing ?je, Hgv : js_red_expr_getvalue ?jst ?jc ?je ?jo (J.specret_out ?jo') 
+        |- J.red_expr ?jst ?jc (J.expr_basic ?je) _ =>
+        let H := fresh in
+        lets (H&_) : js_red_expr_getvalue_not_ref_lemma Hnrp Hgv;
+        eapply H
+    end.
+
+Hint Extern 5 (J.red_expr ?jst ?jc (J.expr_basic _) _) => js_red_expr_getvalue_not_ref : js_ljs.
+
 Lemma red_expr_unary_op_typeof_ok : forall k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_typeof je).
@@ -597,14 +621,10 @@ Proof.
         skip.
     } {
         repeat ljs_autoforward.
-        destr_concl; try ljs_handle_abort. skip. (* TODO see how to make ljs_handle_abort handle this! *)
 
-        repeat (ljs_propagate_abort || ljs_abort_from_js).
+        destr_concl; try ljs_handle_abort.
 
-        destruct IH0.
-        inverts js_red_expr_getvalue_red_spec; tryfalse.
-
-        jauto_js 8.
+        skip. (* TODO *)
     }
 Qed.
 
