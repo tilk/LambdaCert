@@ -93,6 +93,7 @@ Hint Constructors fact_ptr : js_ljs.
 (* Hint Constructors arg_list : js_ljs. *)
 Hint Constructors js_red_spec_get_value_or_abort : js_ljs.
 Hint Constructors js_red_expr_getvalue : js_ljs.
+Hint Constructors ejs_reference_producing js_reference_producing : js_ljs.
 
 Hint Constructors Option Option2 Option3 Option4 Forall Forall2 Forall3 : js_ljs.
 

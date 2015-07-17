@@ -299,18 +299,6 @@ Qed.
 (** *** Call *)
 
 (* TODO move *)
-Inductive ejs_reference_producing : E.expr -> Prop :=
-| ejs_reference_producing_get_field : forall ee1 ee2, ejs_reference_producing (E.expr_get_field ee1 ee2)
-| ejs_reference_producing_var_id : forall s, ejs_reference_producing (E.expr_var_id s)
-.
-
-Inductive js_reference_producing : J.expr -> Prop :=
-| js_reference_producing_access : forall je1 je2, js_reference_producing (J.expr_access je1 je2)
-| js_reference_producing_member : forall je s, js_reference_producing (J.expr_member je s)
-| js_reference_producing_identifier : forall s, js_reference_producing (J.expr_identifier s)
-.
-
-Hint Constructors ejs_reference_producing js_reference_producing : js_ljs.
 
 (* TODO move *)
 Lemma reference_match_lemma : forall (A : Type) (P : A -> Prop) ee f1 f2 f3,
@@ -608,30 +596,15 @@ Proof.
     } {
         skip.
     } {
-(*
         repeat ljs_autoforward.
-        destr_concl; try ljs_handle_abort. skip.
+        destr_concl; try ljs_handle_abort. skip. (* TODO see how to make ljs_handle_abort handle this! *)
 
         repeat (ljs_propagate_abort || ljs_abort_from_js).
-        jauto_js.
-        
+
         destruct IH0.
-        inverts js_red_expr_getvalue_red_spec.
+        inverts js_red_expr_getvalue_red_spec; tryfalse.
 
-        econstructor.
-        eapply J.red_expr_typeof.
-        eassumption.
-        eauto_js. eauto_js. 
-
-        econstructor.
-        eapply J.red_expr_typeof.
-        eassumption.
-        skip. eauto_js.
-        eapply js_red_spec_get_value_or_abort_get_value. 
-
-        inverts red_exprh H8. (* TODO *)
-*)
-        skip.
+        jauto_js 8.
     }
 Qed.
 

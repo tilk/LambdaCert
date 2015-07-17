@@ -844,17 +844,33 @@ Definition concl_spec {A : Type} BR jst jc c st st' r jes
         J.res_type jr = J.restype_throw /\
         res_related BR' jst' st' jr r)).
 
-Inductive js_red_spec_get_value_or_abort : J.execution_ctx -> J.out -> J.specret J.value -> Prop :=
-| js_red_spec_get_value_or_abort_abort : forall jc jo, 
-    J.abort jo -> js_red_spec_get_value_or_abort jc jo (J.specret_out jo)
-| js_red_spec_get_value_or_abort_get_value : forall jst jc jrv jsr, 
-    J.red_spec jst jc (J.spec_get_value jrv) jsr -> 
-    js_red_spec_get_value_or_abort jc (J.out_ter jst (J.res_normal jrv)) jsr
+Inductive ejs_reference_producing : E.expr -> Prop :=
+| ejs_reference_producing_get_field : forall ee1 ee2, ejs_reference_producing (E.expr_get_field ee1 ee2)
+| ejs_reference_producing_var_id : forall s, ejs_reference_producing (E.expr_var_id s)
+.
+
+Inductive js_reference_producing : J.expr -> Prop :=
+| js_reference_producing_access : forall je1 je2, js_reference_producing (J.expr_access je1 je2)
+| js_reference_producing_member : forall je s, js_reference_producing (J.expr_member je s)
+| js_reference_producing_identifier : forall s, js_reference_producing (J.expr_identifier s)
+.
+
+Inductive js_red_spec_get_value_or_abort : J.execution_ctx -> J.expr -> J.out -> J.specret J.value -> Prop :=
+| js_red_spec_get_value_or_abort_abort : forall jc je jo, 
+    J.abort jo -> js_red_spec_get_value_or_abort jc je jo (J.specret_out jo)
+| js_red_spec_get_value_or_abort_value : forall jst jc je jv, 
+    ~js_reference_producing je ->
+    js_red_spec_get_value_or_abort jc je 
+        (J.out_ter jst (J.res_normal (J.resvalue_value jv))) (J.specret_val jst jv)
+| js_red_spec_get_value_or_abort_get_value : forall jst jc je jref jsr, 
+    js_reference_producing je ->
+    J.red_spec jst jc (J.spec_get_value (J.resvalue_ref jref)) jsr -> 
+    js_red_spec_get_value_or_abort jc je (J.out_ter jst (J.res_normal (J.resvalue_ref jref))) jsr
 .
 
 Record js_red_expr_getvalue jst jc je jo jsr : Prop := {
     js_red_expr_getvalue_red_expr : J.red_expr jst jc (J.expr_basic je) jo;
-    js_red_expr_getvalue_red_spec : js_red_spec_get_value_or_abort jc jo jsr
+    js_red_expr_getvalue_red_spec : js_red_spec_get_value_or_abort jc je jo jsr
 }.
 
 Definition concl_expr_getvalue BR jst jc c st st' r je := 
