@@ -590,7 +590,50 @@ Proof.
     ljs_apply.
     repeat ljs_autoforward.
     (* TODO ToInt32 spec_to_int32 *)
-Admitted.
+Admitted. (* TODO *)
+
+Ltac reference_match_cases Hlred Hx Heq :=
+    lets Hx : (reference_match_red_exprh_js_lemma _ _ _ _ Hlred);
+    clear Hlred;
+    destruct Hx as [(?je&?je&Heq&Hlred)|[(?s&Heq&Hlred)|(Heq&Hx)]]; try subst_hyp Heq. 
+
+Lemma red_expr_unary_op_typeof_ok : forall k je,
+    ih_expr k ->
+    th_expr k (J.expr_unary_op J.unary_op_typeof je).
+Proof.
+    introv IHe Hcinv Hinv Hlred.
+    unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_typeof.
+    reference_match_cases Hlred Hx Heq. {
+        skip.
+    } {
+        skip.
+    } {
+(*
+        repeat ljs_autoforward.
+        destr_concl; try ljs_handle_abort. skip.
+
+        repeat (ljs_propagate_abort || ljs_abort_from_js).
+        jauto_js.
+        
+        destruct IH0.
+        inverts js_red_expr_getvalue_red_spec.
+
+        econstructor.
+        eapply J.red_expr_typeof.
+        eassumption.
+        eauto_js. eauto_js. 
+
+        econstructor.
+        eapply J.red_expr_typeof.
+        eassumption.
+        skip. eauto_js.
+        eapply js_red_spec_get_value_or_abort_get_value. 
+
+        inverts red_exprh H8. (* TODO *)
+*)
+        skip.
+    }
+Qed.
 
 Lemma red_expr_unary_op_ok : forall op k je,
     ih_expr k ->
@@ -981,7 +1024,7 @@ Proof.
     destruct b; repeat ljs_autoforward.
     destr_concl.
     jauto_js 8. 
-    jauto_js 8.
+    jauto_js 9.
     exists BR'0. (* TODO *)
     jauto_js 8.
 Qed.
@@ -1002,7 +1045,7 @@ Proof.
     exists BR'0. jauto_js 8. (* TODO *) 
     destr_concl. 
     jauto_js 8.
-    jauto_js 8.
+    jauto_js 9.
 Qed.
 
 (* TODO move, ljs only *)

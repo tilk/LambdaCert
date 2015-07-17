@@ -91,6 +91,8 @@ Hint Constructors getter_proxy : js_ljs.
 Hint Constructors setter_proxy : js_ljs.
 Hint Constructors fact_ptr : js_ljs.
 (* Hint Constructors arg_list : js_ljs. *)
+Hint Constructors js_red_spec_get_value_or_abort : js_ljs.
+Hint Constructors js_red_expr_getvalue : js_ljs.
 
 Hint Constructors Option Option2 Option3 Option4 Forall Forall2 Forall3 : js_ljs.
 
@@ -3215,7 +3217,7 @@ Ltac ljs_propagate_abort :=
     end
     end.
 
-Ltac ljs_handle_abort := progress (repeat (ljs_propagate_abort || ljs_abort_from_js)); solve_ijauto_js.
+Ltac ljs_handle_abort := progress (repeat (ljs_propagate_abort || ljs_abort_from_js)); solve_jauto_js.
 
 Ltac ih_leq :=
     match goal with
@@ -3318,3 +3320,12 @@ Ltac ljs_autoforward := first [
     apply_ih_stat | apply_ih_expr | ljs_autoinject | 
     binds_inv | binds_determine | ljs_get_builtin ].
 
+Lemma js_red_expr_getvalue_lemma : forall jst jc je jo jsr,
+    js_red_expr_getvalue jst jc je jo jsr ->
+    J.red_spec jst jc (J.spec_expr_get_value je) jsr.
+Proof.
+    introv (Hgv1&Hgv2).
+    inverts Hgv2; jauto_js.
+Qed.
+
+Hint Resolve js_red_expr_getvalue_lemma : js_ljs.

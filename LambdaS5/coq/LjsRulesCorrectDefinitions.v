@@ -844,9 +844,29 @@ Definition concl_spec {A : Type} BR jst jc c st st' r jes
         J.res_type jr = J.restype_throw /\
         res_related BR' jst' st' jr r)).
 
+Inductive js_red_spec_get_value_or_abort : J.execution_ctx -> J.out -> J.specret J.value -> Prop :=
+| js_red_spec_get_value_or_abort_abort : forall jc jo, 
+    J.abort jo -> js_red_spec_get_value_or_abort jc jo (J.specret_out jo)
+| js_red_spec_get_value_or_abort_get_value : forall jst jc jrv jsr, 
+    J.red_spec jst jc (J.spec_get_value jrv) jsr -> 
+    js_red_spec_get_value_or_abort jc (J.out_ter jst (J.res_normal jrv)) jsr
+.
+
+Record js_red_expr_getvalue jst jc je jo jsr : Prop := {
+    js_red_expr_getvalue_red_expr : J.red_expr jst jc (J.expr_basic je) jo;
+    js_red_expr_getvalue_red_spec : js_red_spec_get_value_or_abort jc jo jsr
+}.
+
 Definition concl_expr_getvalue BR jst jc c st st' r je := 
-    concl_spec BR jst jc c st st' r (J.spec_expr_get_value je) 
-       (fun BR' _ jv => exists v, r = L.res_value v /\ value_related BR' jv v).
+    exists BR' jst' jo sr,
+    js_red_expr_getvalue jst jc je jo sr /\
+    state_invariant BR' jst' st' /\ 
+    BR \c BR' /\
+    ((exists jv, sr = J.specret_val jst' jv /\ exists v, r = L.res_value v /\ value_related BR' jv v) \/
+     (exists jr, sr = @J.specret_out J.value (J.out_ter jst' jr) /\ 
+        J.abort (J.out_ter jst' jr) /\ 
+        J.res_type jr = J.restype_throw /\
+        res_related BR' jst' st' jr r)).
 
 (** *** Theorem statements *)
 
