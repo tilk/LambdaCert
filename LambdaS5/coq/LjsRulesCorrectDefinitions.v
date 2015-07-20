@@ -855,6 +855,9 @@ Inductive js_reference_producing : J.expr -> Prop :=
 | js_reference_producing_identifier : forall s, js_reference_producing (J.expr_identifier s)
 .
 
+Definition js_not_identifier_not_unresolvable je jref :=
+    (forall s, je <> J.expr_identifier s) -> ~J.ref_is_unresolvable jref.
+
 Inductive js_red_spec_get_value_or_abort : J.execution_ctx -> J.expr -> J.out -> J.specret J.value -> Prop :=
 | js_red_spec_get_value_or_abort_abort : forall jc je jo, 
     J.abort jo -> js_red_spec_get_value_or_abort jc je jo (J.specret_out jo)
@@ -864,6 +867,7 @@ Inductive js_red_spec_get_value_or_abort : J.execution_ctx -> J.expr -> J.out ->
         (J.out_ter jst (J.res_normal (J.resvalue_value jv))) (J.specret_val jst jv)
 | js_red_spec_get_value_or_abort_get_value : forall jst jc je jref jsr, 
     js_reference_producing je ->
+    js_not_identifier_not_unresolvable je jref ->
     J.red_spec jst jc (J.spec_get_value (J.resvalue_ref jref)) jsr -> 
     js_red_spec_get_value_or_abort jc je (J.out_ter jst (J.res_normal (J.resvalue_ref jref))) jsr
 .

@@ -322,22 +322,135 @@ Proof.
     applys reference_match_lemma (exprjs_red_p k c st o) Hlred.
 Qed.
 
+Inductive js_field_access : J.expr -> E.expr -> E.expr -> Prop :=
+| js_field_access_access : forall je1 je2,
+    js_field_access (J.expr_access je1 je2) (E.js_expr_to_ejs je1) (E.js_expr_to_ejs je2)
+| js_field_access_member : forall je1 s,
+    js_field_access (J.expr_member je1 s) (E.js_expr_to_ejs je1) (E.expr_string s).
+
+Lemma js_field_access_reference_producing : forall je ee1 ee2,
+    js_field_access je ee1 ee2 -> js_reference_producing je.
+Proof.
+    introv jsfe. inverts jsfe; eauto_js.
+Qed.
+
+Hint Constructors js_field_access : js_ljs.
+Hint Resolve js_field_access_reference_producing : js_ljs.
+
 Lemma reference_match_red_exprh_js_lemma : forall k c st o je f1 f2 f3,
     L.red_exprh k c st (L.expr_basic (E.reference_match (E.js_expr_to_ejs je) f1 f2 f3)) o ->
-    (exists je1 je2, (je = J.expr_access je1 je2 \/ 
-            exists s, je = J.expr_member je1 s /\ je2 = J.expr_literal (J.literal_string s)) /\ 
-        L.red_exprh k c st (L.expr_basic (f1 (E.js_expr_to_ejs je1) (E.js_expr_to_ejs je2))) o) \/
-    (exists s, je = J.expr_identifier s /\ L.red_exprh k c st (L.expr_basic (f2 s)) o) \/
+    (exists ee1 ee2, js_reference_producing je /\ js_field_access je ee1 ee2 /\ 
+        L.red_exprh k c st (L.expr_basic (f1 ee1 ee2)) o) \/
+    (exists s, js_reference_producing je /\ je = J.expr_identifier s /\ 
+        L.red_exprh k c st (L.expr_basic (f2 s)) o) \/
     (~js_reference_producing je /\ L.red_exprh k c st (L.expr_basic (f3 (E.js_expr_to_ejs je))) o).
 Proof.
     introv Hlred.
     lets Hx : reference_match_red_exprh_lemma Hlred.
     destruct je; try destruct l; try destruct b; try destruct f; destruct_hyp Hx; tryfalse;
     try match goal with H : ~ejs_reference_producing _ |- _ => false; apply H; solve [eauto_js 10] end;
-    eauto 9. 
+    eauto_js 9. 
     simpls. destruct (E.js_expr_to_ejs je1); tryfalse.
     simpls. destruct (E.js_expr_to_ejs je1); tryfalse.
 Qed.
+
+Ltac reference_match_cases Hlred Hx Heq Hrp :=
+    lets Hx : (reference_match_red_exprh_js_lemma _ _ _ _ Hlred);
+    clear Hlred;
+    destruct Hx as [(?ee&?ee&Hrp&Heq&Hlred)|[(?s&Hrp&Heq&Hlred)|(Hrp&Hx)]]; try subst_hyp Heq.
+
+(* TODO move *)
+Lemma js_red_expr_getvalue_not_ref_lemma : forall jst jc je jo jo',
+    ~js_reference_producing je ->
+    js_red_expr_getvalue jst jc je jo (J.specret_out jo') ->
+    jo = jo'.
+Proof.
+    introv Hnrp Hgv.
+    destruct Hgv.
+    inverts js_red_expr_getvalue_red_spec; tryfalse.
+    auto.
+Qed.
+
+Lemma js_red_expr_getvalue_not_ref_lemma2 : forall jst jst' jc je jo jv,
+    ~js_reference_producing je ->
+    js_red_expr_getvalue jst jc je jo (J.specret_val jst' jv) ->
+    jo = J.out_ter jst' (J.res_normal (J.resvalue_value jv)).
+Proof.
+    introv Hnrp Hgv.
+    destruct Hgv.
+    inverts js_red_expr_getvalue_red_spec; tryfalse.
+    auto.
+Qed.
+
+Lemma js_red_expr_getvalue_ref_lemma : forall jst jc je jo jo',
+    js_reference_producing je ->
+    js_red_expr_getvalue jst jc je jo (J.specret_out jo') ->
+    jo = jo' \/ exists jst' jref, jo = J.out_ter jst' (J.res_ref jref) /\
+        J.red_spec jst' jc (J.spec_get_value (J.resvalue_ref jref)) (@J.specret_out J.value jo').
+Proof.
+    introv Hnrp Hgv.
+    destruct Hgv.
+    inverts js_red_expr_getvalue_red_spec; tryfalse.
+    auto. eauto_js.
+Qed.
+
+Lemma js_red_expr_getvalue_ref_lemma2 : forall jst jst' jc je jo jv,
+    js_reference_producing je ->
+    js_red_expr_getvalue jst jc je jo (J.specret_val jst' jv) ->
+    exists jref jst'', jo = J.out_ter jst'' (J.res_ref jref) /\
+        J.red_spec jst'' jc (J.spec_get_value (J.resvalue_ref jref)) (J.specret_val jst' jv).
+Proof.
+    introv Hnrp Hgv.
+    destruct Hgv.
+    inverts js_red_expr_getvalue_red_spec; tryfalse.
+    jauto_js.
+Qed.
+
+Ltac js_red_expr_getvalue_fwd :=
+    match goal with
+    | Hnrp : ~js_reference_producing ?je, Hgv : js_red_expr_getvalue ?jst ?jc ?je ?jo (J.specret_out _) |- _ =>
+        let H := fresh in
+        lets H : js_red_expr_getvalue_not_ref_lemma Hnrp Hgv;
+        subst_hyp H
+    | Hnrp : ~js_reference_producing ?je, Hgv : js_red_expr_getvalue ?jst ?jc ?je ?jo (J.specret_val _ _) |- _ =>
+        let H := fresh in
+        lets H : js_red_expr_getvalue_not_ref_lemma2 Hnrp Hgv;
+        subst_hyp H
+    | Hnrp : js_reference_producing ?je, Hgv : js_red_expr_getvalue ?jst ?jc ?je ?jo (J.specret_out _) |- _ =>
+        let H := fresh in
+        lets H : js_red_expr_getvalue_ref_lemma Hnrp Hgv;
+        destruct_hyp H
+    | Hnrp : js_reference_producing ?je, Hgv : js_red_expr_getvalue ?jst ?jc ?je ?jo (J.specret_val _ _) |- _ =>
+        let H := fresh in
+        lets H : js_red_expr_getvalue_ref_lemma2 Hnrp Hgv;
+        destruct_hyp H
+    end.
+
+(* Hint Resolve js_red_expr_getvalue_red_expr : js_ljs. *)
+Ltac js_red_expr_getvalue_hint :=
+    match goal with
+    | Hgv : js_red_expr_getvalue ?jst ?jc ?je ?jo _
+        |- J.red_expr ?jst ?jc (J.expr_basic ?je) _ =>
+        applys js_red_expr_getvalue_red_expr Hgv
+    end.
+
+Hint Extern 5 (J.red_expr ?jst ?jc (J.expr_basic _) _) => js_red_expr_getvalue_hint : js_ljs.
+
+Lemma js_field_access_not_unresolvable_lemma : forall jc jst jst' je ee1 ee2 jref jsr,
+    js_field_access je ee1 ee2 ->
+    js_red_expr_getvalue jst jc je (J.out_ter jst' (J.res_normal (J.resvalue_ref jref))) jsr ->
+    ~J.ref_is_unresolvable jref.
+Proof.
+    introv Hjfa Hgv.
+    inverts Hgv as Hxx Hgva.
+    inverts Hgva as Ha Hb Hc. {
+        inverts Ha as Hx. false. eauto_js.
+    }
+    applys Hb.
+    destruct Hjfa; eauto.
+Qed.
+
+Hint Resolve js_field_access_not_unresolvable_lemma : js_ljs.
 
 Lemma red_expr_call_ok : forall k je jel,
     ih_expr k ->
@@ -345,17 +458,14 @@ Lemma red_expr_call_ok : forall k je jel,
 Proof.
     introv IHe HCinv Hinv Hlred. 
     unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_app.
-    (* TODO make tactic - would be useful for delete, typeof etc. *)
-    lets Hx : (reference_match_red_exprh_js_lemma _ _ _ _ Hlred).
-    clear Hlred.
-    destruct Hx as [(?je&?je&Heq&Hlred)|[(?s&Heq&Hlred)|(Heq&Hx)]]; try subst_hyp Heq. 
+    reference_match_cases Hlred Hx Heq Hrp. 
     {
         skip.
     } {
         skip. 
     } {
         repeat ljs_autoforward.
-        destr_concl; try ljs_handle_abort.  (* TODO improve handling of references! *)
+        destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
         do 5 inv_top_fwd_ljs.
         ljs_out_redh_ter.
         forwards_th : red_spec_list_ok.
@@ -365,7 +475,7 @@ Proof.
         inverts red_exprh H7. (* TODO *)
         ljs_apply.
         ljs_context_invariant_after_apply.
-        skip. skip. skip.
+        skip.
     }
 Qed.
 
@@ -580,57 +690,6 @@ Proof.
     (* TODO ToInt32 spec_to_int32 *)
 Admitted. (* TODO *)
 
-Ltac reference_match_cases Hlred Hx Heq :=
-    lets Hx : (reference_match_red_exprh_js_lemma _ _ _ _ Hlred);
-    clear Hlred;
-    destruct Hx as [(?je&?je&Heq&Hlred)|[(?s&Heq&Hlred)|(Heq&Hx)]]; try subst_hyp Heq. 
-
-(* TODO move *)
-Lemma js_red_expr_getvalue_not_ref_lemma : forall jst jc je jo jo',
-    ~js_reference_producing je ->
-    js_red_expr_getvalue jst jc je jo (J.specret_out jo') ->
-    jo = jo'.
-Proof.
-    introv Hnrp Hgv.
-    destruct Hgv.
-    inverts js_red_expr_getvalue_red_spec; tryfalse.
-    auto.
-Qed.
-
-Lemma js_red_expr_getvalue_not_ref_lemma2 : forall jst jst' jc je jo jv,
-    ~js_reference_producing je ->
-    js_red_expr_getvalue jst jc je jo (J.specret_val jst' jv) ->
-    jo = J.out_ter jst' (J.res_normal (J.resvalue_value jv)).
-Proof.
-    introv Hnrp Hgv.
-    destruct Hgv.
-    inverts js_red_expr_getvalue_red_spec; tryfalse.
-    auto.
-Qed.
-
-Ltac js_red_expr_getvalue_fwd :=
-    match goal with
-    | Hnrp : ~js_reference_producing ?je, Hgv : js_red_expr_getvalue ?jst ?jc ?je ?jo (J.specret_out _) |- _ =>
-        let H := fresh in
-        lets H : js_red_expr_getvalue_not_ref_lemma Hnrp Hgv;
-        subst_hyp H
-    | Hnrp : ~js_reference_producing ?je, Hgv : js_red_expr_getvalue ?jst ?jc ?je ?jo (J.specret_val _ _) |- _ =>
-        let H := fresh in
-        lets H : js_red_expr_getvalue_not_ref_lemma2 Hnrp Hgv;
-        subst_hyp H
-    end.
-
-(* Hint Resolve js_red_expr_getvalue_red_expr : js_ljs. *)
-
-Ltac js_red_expr_getvalue_hint :=
-    match goal with
-    | Hgv : js_red_expr_getvalue ?jst ?jc ?je ?jo _
-        |- J.red_expr ?jst ?jc (J.expr_basic ?je) _ =>
-        applys js_red_expr_getvalue_red_expr Hgv
-    end.
-
-Hint Extern 5 (J.red_expr ?jst ?jc (J.expr_basic _) _) => js_red_expr_getvalue_hint : js_ljs.
-
 Lemma not_is_callable_lemma : forall BR jst st jptr ptr obj,
     state_invariant BR jst st -> 
     binds st ptr obj ->
@@ -722,10 +781,15 @@ Lemma red_expr_unary_op_typeof_ok : forall k je,
 Proof.
     introv IHe Hcinv Hinv Hlred.
     unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_typeof.
-    reference_match_cases Hlred Hx Heq. {
-        skip.
+    reference_match_cases Hlred Hx Heq Hrp. {
+        repeat ljs_autoforward.
+        destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort. 
+        repeat ljs_autoforward.
+        forwards_th Hx : typeof_lemma.
+        destruct_hyp Hx.
+        jauto_js 15.
     } {
-        skip.
+        skip. (* TODO typeof on variable *)
     } {
         repeat ljs_autoforward.
         destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
