@@ -566,10 +566,68 @@ Proof.
     }
 Qed.
 
+(* TODO move *)
+Lemma env_record_related_lookup_lemma : forall BR jeptr ptr jst st obj,
+     state_invariant BR jst st ->
+     fact_js_env jeptr ptr \in BR ->
+     binds st ptr obj ->
+     exists jer,
+     binds jst jeptr jer /\
+     env_record_related BR jer obj.
+Proof.
+    introv Hinv Hbs Hbinds.
+    lets Hjindex : heaps_bisim_consistent_lnoghost_env (state_invariant_heaps_bisim_consistent Hinv) Hbs.
+    lets (jer&Hjbinds) : index_binds Hjindex.
+    lets Herel : heaps_bisim_consistent_bisim_env (state_invariant_heaps_bisim_consistent Hinv) Hbs Hbinds.
+        eassumption.
+    jauto.
+Qed.
+
+Lemma implicit_this_lemma : forall BR k jst jc c st st' r jle jeptr v,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvImplicitThis [v]) (L.out_ter st' r) ->
+    lexical_env_related BR (jeptr::jle) v ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_env_record_implicit_this_value jeptr) (fun _ => True).
+Proof.
+    introv Hlred Hlrel Hcinv Hinv.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    inverts Hlrel as Hf1 Hf2 Hlrel.
+    lets (jer&Hjbinds&Herel) : env_record_related_lookup_lemma Hinv Hf1. eassumption.
+    inverts Herel as Herel. { (* declarative record *)
+        lets Hcl : decl_env_record_related_class Herel.
+        cases_decide as Hx; 
+            try solve [false; apply Hx; destruct obj; destruct object_attrs; cbv in Hcl; substs; eauto_js].
+        repeat ljs_autoforward.
+        jauto_js.
+    } { (* object record *)
+        lets Hcl : object_env_record_related_class Herel.
+        cases_decide as Hx; 
+            try solve [inverts Hx as Hcl1; destruct obj; destruct object_attrs; cbv in Hcl; substs; tryfalse].
+        repeat ljs_autoforward.
+        cases_decide as Hy; 
+            try solve [false; apply Hy; destruct obj; destruct object_attrs; cbv in Hcl; substs; eauto_js].
+        repeat ljs_autoforward.
+        lets Hpt : object_env_record_related_provideThis Herel.
+        binds_determine.
+        destruct b; repeat ljs_autoforward. {
+            lets Hbin : object_env_record_related_bindings Herel.
+            lets Hbis : object_env_record_related_bisim Herel.
+            binds_determine.
+            jauto_js.
+        } {
+            jauto_js.
+        }
+    }
+Qed.
+
 Lemma red_expr_call_3_hint : forall S0 S C jo rv jv is_eval_direct vs, (* Steps 4-5 *)
-      ~ J.is_callable S jv ->
-      J.red_expr S C (J.spec_error J.native_error_type) jo ->
-      J.red_expr S0 C (J.expr_call_3 (J.res_normal rv) jv is_eval_direct (J.ret S vs)) jo.
+    ~ J.is_callable S jv ->
+    J.red_expr S C (J.spec_error J.native_error_type) jo ->
+    J.red_expr S0 C (J.expr_call_3 (J.res_normal rv) jv is_eval_direct (J.ret S vs)) jo.
 Proof.
     introv Hic Hjred. 
     destruct jv. {
@@ -581,17 +639,34 @@ Qed.
 
 Hint Resolve red_expr_call_3_hint : js_ljs.
 
+Lemma is_callable_obj : forall jst jv,
+    J.is_callable jst jv ->
+    exists jptr, jv = J.value_object jptr.
+Proof.
+    introv (?&Hic).
+    destruct jv; tryfalse. eauto.
+Qed.
+
 Lemma red_expr_call_ok : forall k je jel,
     ih_expr k ->
+    ih_stat k ->
+    ih_call_prealloc k ->
     th_expr k (J.expr_call je jel).
 Proof.
-    introv IHe HCinv Hinv Hlred. 
+    introv IHe IHs IHp HCinv Hinv Hlred. 
     unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_app.
     reference_match_cases Hlred Hx Heq Hrp. 
     {
         skip.
     } {
-        skip. 
+        cases_if. { (* TODO eval *)
+            skip.
+        }
+        sets_eq je : (J.expr_identifier s).
+        repeat ljs_autoforward.
+        destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort. (* TODO abort *)
+        repeat ljs_autoforward.
+        skip. skip.
     } {
         repeat ljs_autoforward.
         destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
@@ -609,8 +684,16 @@ Proof.
         destruct_hyp Hx.
         cases_isTrue as Hic. { (* is callable *)
             repeat ljs_autoforward.
-(*            forwards_th : red_spec_call_ok. *)
-            skip.
+            lets (jptr&Heq) : is_callable_obj Hic. subst_hyp Heq.
+            inverts IH4. (* TODO *)
+            forwards_th : red_spec_call_ok; try eassumption. eauto_js.
+            destruct (classic (jptr = J.object_loc_prealloc J.prealloc_global_eval)). {
+                skip. (* TODO eval *)
+            }
+            destr_concl; try ljs_handle_abort. 
+            res_related_invert.
+            resvalue_related_only_invert.
+            jauto_js 15.
         } { (* not callable *)
             repeat ljs_autoforward.
             forwards_th : type_error_lemma. eauto.
