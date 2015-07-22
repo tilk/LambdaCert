@@ -177,6 +177,16 @@ Proof.
     inverts Hrel as Hx. inverts Hx.
 Qed.
 
+(* TODO move *)
+Lemma call_related_determine1_lemma : forall jcall1 jcall2 v,
+    call_related jcall1 v ->
+    call_related jcall2 v ->
+    jcall1 = jcall2.
+Proof.
+    introv Hcr1 Hcr2.
+    skip. (* TODO modify the env, this is not true! *)
+Qed.
+
 Lemma object_method_call_lemma : forall BR jst st jptr ptr obj jcall,
     state_invariant BR jst st ->
     fact_js_obj jptr ptr \in BR ->
@@ -190,7 +200,9 @@ Proof.
     destruct Horel.
     destruct object_related_prim.
     inverts object_prim_related_call as Hp1 Hp2. {
-        skip. (* TODO *)
+        lets Heq : call_related_determine1_lemma Hp1 Hcrel. subst_hyp Heq.
+        symmetry in Hp2. unfolds.
+        jauto_js.
     } {
         rewrite <- Hp2 in Hcrel.
         lets Hx : call_related_not_undefined_lemma Hcrel. tryfalse.
@@ -220,11 +232,15 @@ Proof.
     lets (jcon&Hcall) : call_related_lemma Hinv Hbs ___; try eassumption. (* TODO *)
     lets Hmeth : object_method_call_lemma ___; try eassumption. rewrite H6. eassumption.
     inverts Hcall. { (* prealloc *)
-        forwards Hx : IHp. skip.
-        forwards_th Hxx : Hx; try eassumption. (* TODO *)
+        forwards Hx : IHp; [idtac |  
+        forwards_th Hxx : Hx]; try eassumption. omega. (* TODO *)
         destr_concl; try ljs_handle_abort.
         jauto_js.
     } { (* default *)
+        inverts red_exprh H8.
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
         skip. (* TODO *)
     } { (* bind *)
         skip. (* TODO *) (* NOT YET IN JSCERT *)
