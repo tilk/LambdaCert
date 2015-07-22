@@ -128,6 +128,29 @@ let assign_op (v : json) : binary_op option = match string (get "operator" v) wi
   | "=" -> None
   | x -> Some (binary_op (`Assoc ["operator", `String (String.rchop x)]))
 
+let rec directive_prologue (vl : json list) : string list =
+  match vl with
+  | v :: vl' -> 
+    begin match string (get "type" v) with
+    | "ExpressionStatement" -> 
+      let ev = get "expression" v in
+      begin match string (get "type" ev) with
+      | "Literal" ->
+        begin match get "value" ev with
+        | `String _ -> 
+          string (get "raw" ev) :: directive_prologue vl'
+        | _ -> []
+        end
+      | _ -> []
+      end
+    | _ -> []
+    end
+  | _ -> []
+
+let is_strict (v : json) : bool = 
+  let dp = directive_prologue (list v) in
+  List.mem "\"use strict\"" dp || List.mem "'use strict'" dp (* 14.1 *)
+
 let rec stmt (v : json) : stat = 
   let typ = 
     let x = string (get "type" v) in
@@ -257,7 +280,7 @@ and expr (v : json) : expr =
       Coq_expr_function (maybe (fun x -> String.to_list (identifier x)) (get "id" v), 
 	    List.map (fun x -> String.to_list (identifier x)) (list (get "params" v)),
 	    (* Pull the body out of the BlockStatement *)
-	    Coq_funcbody_intro (Coq_prog_intro (false, srcElts (get "body" (get "body" v))), []))
+	    Coq_funcbody_intro (Coq_prog_intro (is_strict (get "body" (get "body" v)), srcElts (get "body" (get "body" v))), []))
     | "Unary" -> 
       if bool (get "prefix" v) then
         Coq_expr_unary_op (unary_op v, expr (get "argument" v))
@@ -331,7 +354,7 @@ and srcElt (v : json) : element = match string (get "type" v) with
   | "FunctionDeclaration" -> 
     Coq_element_func_decl (String.to_list (identifier (get "id" v)),
 	      List.map (fun x -> String.to_list (identifier x)) (list (get "params" v)),
-	      Coq_funcbody_intro (Coq_prog_intro (false, (srcElts (get "body" (get "body" v)))), [])) 
+	      Coq_funcbody_intro (Coq_prog_intro (is_strict (get "body" (get "body" v)), (srcElts (get "body" (get "body" v)))), [])) 
   | _ -> Coq_element_stat (stmt v) 
 
 and srcElts (v : json) : element list =
@@ -339,7 +362,7 @@ and srcElts (v : json) : element list =
 
 let program (v : json) : prog option = 
   match string (get "type" v) with
-    | "Program" -> Some (Coq_prog_intro (false, List.map srcElt (list (get "body" v))))
+    | "Program" -> Some (Coq_prog_intro (is_strict (get "body" v), srcElts (get "body" v)))
     | "ParseError" -> None (* TODO error message *)
     | typ -> failwith (sprintf "expected Program, got %s" typ)
 
