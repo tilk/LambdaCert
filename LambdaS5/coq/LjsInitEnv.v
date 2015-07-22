@@ -165,6 +165,9 @@ expr_object
                  expr_false));
  ("%EnvGet", property_data
              (data_intro (expr_id "%EnvGet") expr_true expr_false expr_false));
+ ("%EnvGetId", property_data
+               (data_intro (expr_id "%EnvGetId") expr_true expr_false
+                expr_false));
  ("%EnvImplicitThis", property_data
                       (data_intro (expr_id "%EnvImplicitThis") expr_true
                        expr_false expr_false));
@@ -2304,93 +2307,97 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
      [expr_string "unconfigurable delete in strict mode"]) expr_false))))
 .
 Definition ex_privEnvCheckAssign := 
-expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
-(expr_if (expr_id "strict") (expr_app (expr_id "%UnboundId") [expr_id "id"])
- (expr_set_attr pattr_value (expr_id "%global") (expr_id "id")
-  (expr_id "val")))
-(expr_if
- (expr_op2 binary_op_stx_eq
-  (expr_get_obj_attr oattr_class (expr_id "context"))
-  (expr_string "DeclEnvRec"))
- (expr_if
-  (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
-  (expr_if (expr_get_attr pattr_writable (expr_id "context") (expr_id "id"))
-   (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
-    (expr_id "val"))
-   (expr_if (expr_id "strict")
-    (expr_app (expr_id "%TypeError")
-     [expr_op2 binary_op_string_plus (expr_id "id")
-      (expr_string " is read-only")]) expr_undefined))
-  (expr_app (expr_id "%EnvCheckAssign")
-   [expr_get_internal "parent" (expr_id "context");
-    expr_id "id";
-    expr_id "val";
-    expr_id "strict"]))
- (expr_if
-  (expr_op2 binary_op_stx_eq
-   (expr_get_obj_attr oattr_class (expr_id "context"))
-   (expr_string "ObjEnvRec"))
-  (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
+expr_let "f"
+(expr_lambda ["context"]
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
+  (expr_if (expr_id "strict")
+   (expr_app (expr_id "%UnboundId") [expr_id "id"])
+   (expr_set_attr pattr_value (expr_id "%global") (expr_id "id")
+    (expr_id "val")))
+  (expr_if
+   (expr_op2 binary_op_stx_eq
+    (expr_get_obj_attr oattr_class (expr_id "context"))
+    (expr_string "DeclEnvRec"))
+   (expr_if (expr_get_attr pattr_writable (expr_id "context") (expr_id "id"))
+    (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
+     (expr_id "val"))
+    (expr_if (expr_id "strict")
+     (expr_app (expr_id "%TypeError")
+      [expr_op2 binary_op_string_plus (expr_id "id")
+       (expr_string " is read-only")]) expr_undefined))
    (expr_if
-    (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
+    (expr_op2 binary_op_stx_eq
+     (expr_get_obj_attr oattr_class (expr_id "context"))
+     (expr_string "ObjEnvRec"))
     (expr_app (expr_id "%set-property")
-     [expr_id "bindings"; expr_id "id"; expr_id "val"])
-    (expr_app (expr_id "%EnvCheckAssign")
-     [expr_get_internal "parent" (expr_id "context");
+     [expr_get_internal "bindings" (expr_id "context");
       expr_id "id";
-      expr_id "val";
-      expr_id "strict"])))
-  (expr_throw
-   (expr_string "[env] Context not well formed! In %EnvCheckAssign"))))
+      expr_id "val"])
+    (expr_throw
+     (expr_string "[env] Context not well formed! In %EnvCheckAssign"))))))
+(expr_app (expr_id "%EnvGetId")
+ [expr_id "context"; expr_id "id"; expr_id "f"])
 .
 Definition ex_privEnvDelete := 
 expr_seq
 (expr_if (expr_id "strict")
  (expr_app (expr_id "%SyntaxError")
   [expr_string "unqualified name delete in strict mode"]) expr_undefined)
-(expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null) expr_true
- (expr_if
-  (expr_op2 binary_op_stx_eq
-   (expr_get_obj_attr oattr_class (expr_id "context"))
-   (expr_string "DeclEnvRec"))
-  (expr_if
-   (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
-   (expr_try_catch
-    (expr_seq (expr_delete_field (expr_id "context") (expr_id "id"))
-     expr_true) (expr_lambda ["e"] expr_false))
-   (expr_app (expr_id "%EnvDelete")
-    [expr_get_internal "parent" (expr_id "context");
-     expr_id "id";
-     expr_id "strict"]))
+(expr_let "f"
+ (expr_lambda ["context"]
+  (expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
+   expr_true
+   (expr_if
+    (expr_op2 binary_op_stx_eq
+     (expr_get_obj_attr oattr_class (expr_id "context"))
+     (expr_string "DeclEnvRec"))
+    (expr_if (expr_get_attr pattr_config (expr_id "context") (expr_id "id"))
+     (expr_seq (expr_delete_field (expr_id "context") (expr_id "id"))
+      expr_true) expr_false)
+    (expr_if
+     (expr_op2 binary_op_stx_eq
+      (expr_get_obj_attr oattr_class (expr_id "context"))
+      (expr_string "ObjEnvRec"))
+     (expr_app (expr_id "%Delete")
+      [expr_get_internal "bindings" (expr_id "context");
+       expr_id "id";
+       expr_false])
+     (expr_throw (expr_string "[env] Context not well formed! In %EnvDelete"))))))
+ (expr_app (expr_id "%EnvGetId")
+  [expr_id "context"; expr_id "id"; expr_id "f"]))
+.
+Definition ex_privEnvGet := 
+expr_let "f"
+(expr_lambda ["context"]
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
+  (expr_app (expr_id "%UnboundId") [expr_id "id"])
   (expr_if
    (expr_op2 binary_op_stx_eq
     (expr_get_obj_attr oattr_class (expr_id "context"))
-    (expr_string "ObjEnvRec"))
-   (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
-    (expr_if
-     (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
-     (expr_app (expr_id "%Delete")
-      [expr_id "bindings"; expr_id "id"; expr_false])
-     (expr_app (expr_id "%EnvDelete")
-      [expr_get_internal "parent" (expr_id "context");
-       expr_id "id";
-       expr_id "strict"])))
-   (expr_throw (expr_string "[env] Context not well formed! In %EnvDelete")))))
+    (expr_string "DeclEnvRec"))
+   (expr_get_field (expr_id "context") (expr_id "id"))
+   (expr_if
+    (expr_op2 binary_op_stx_eq
+     (expr_get_obj_attr oattr_class (expr_id "context"))
+     (expr_string "ObjEnvRec"))
+    (expr_get_field (expr_get_internal "bindings" (expr_id "context"))
+     (expr_id "id"))
+    (expr_throw (expr_string "[env] Context not well formed! In %EnvGet"))))))
+(expr_app (expr_id "%EnvGetId")
+ [expr_id "context"; expr_id "id"; expr_id "f"])
 .
-Definition ex_privEnvGet := 
+Definition ex_privEnvGetId := 
 expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
-(expr_app (expr_id "%UnboundId") [expr_id "id"])
+(expr_app (expr_id "f") [expr_id "context"])
 (expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))
   (expr_string "DeclEnvRec"))
  (expr_if
   (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
-  (expr_get_field (expr_id "context") (expr_id "id"))
-  (expr_app (expr_id "%EnvGet")
-   [expr_get_internal "parent" (expr_id "context");
-    expr_id "id";
-    expr_id "strict"]))
+  (expr_app (expr_id "f") [expr_id "context"])
+  (expr_app (expr_id "%EnvGetId")
+   [expr_get_internal "parent" (expr_id "context"); expr_id "id"; expr_id "f"]))
  (expr_if
   (expr_op2 binary_op_stx_eq
    (expr_get_obj_attr oattr_class (expr_id "context"))
@@ -2398,12 +2405,12 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
   (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
    (expr_if
     (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
-    (expr_get_field (expr_id "bindings") (expr_id "id"))
-    (expr_app (expr_id "%EnvGet")
+    (expr_app (expr_id "f") [expr_id "context"])
+    (expr_app (expr_id "%EnvGetId")
      [expr_get_internal "parent" (expr_id "context");
       expr_id "id";
-      expr_id "strict"])))
-  (expr_throw (expr_string "[env] Context not well formed! In %EnvGet"))))
+      expr_id "f"])))
+  (expr_throw (expr_string "[env] Context not well formed! In %EnvGetId"))))
 .
 Definition ex_privEnvImplicitThis := 
 expr_if
@@ -2433,30 +2440,26 @@ expr_let "oldValue"
   (expr_if (expr_id "is_pre") (expr_id "newValue") (expr_id "oldValue"))))
 .
 Definition ex_privEnvTypeof := 
-expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
-(expr_string "undefined")
-(expr_if
- (expr_op2 binary_op_stx_eq
-  (expr_get_obj_attr oattr_class (expr_id "context"))
-  (expr_string "DeclEnvRec"))
- (expr_if
-  (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
-  (expr_app (expr_id "%Typeof")
-   [expr_get_field (expr_id "context") (expr_id "id")])
-  (expr_app (expr_id "%EnvTypeof")
-   [expr_get_internal "parent" (expr_id "context"); expr_id "id"]))
- (expr_if
-  (expr_op2 binary_op_stx_eq
-   (expr_get_obj_attr oattr_class (expr_id "context"))
-   (expr_string "ObjEnvRec"))
-  (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
+expr_let "f"
+(expr_lambda ["context"]
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
+  (expr_string "undefined")
+  (expr_if
+   (expr_op2 binary_op_stx_eq
+    (expr_get_obj_attr oattr_class (expr_id "context"))
+    (expr_string "DeclEnvRec"))
+   (expr_app (expr_id "%Typeof")
+    [expr_get_field (expr_id "context") (expr_id "id")])
    (expr_if
-    (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
+    (expr_op2 binary_op_stx_eq
+     (expr_get_obj_attr oattr_class (expr_id "context"))
+     (expr_string "ObjEnvRec"))
     (expr_app (expr_id "%Typeof")
-     [expr_get_field (expr_id "bindings") (expr_id "id")])
-    (expr_app (expr_id "%EnvTypeof")
-     [expr_get_internal "parent" (expr_id "context"); expr_id "id"])))
-  (expr_throw (expr_string "[env] Context not well formed! In %EnvTypeof"))))
+     [expr_get_field (expr_get_internal "bindings" (expr_id "context"))
+      (expr_id "id")])
+    (expr_throw (expr_string "[env] Context not well formed! In %EnvTypeof"))))))
+(expr_app (expr_id "%EnvGetId")
+ [expr_id "context"; expr_id "id"; expr_id "f"])
 .
 Definition ex_privEqEq := 
 expr_let "t1" (expr_op1 unary_op_typeof (expr_id "x1"))
@@ -7845,6 +7848,11 @@ value_closure
   ("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"] ex_privDelete)
 .
 Definition name_privDelete :=  "%Delete" .
+Definition privEnvGetId := 
+value_closure
+(closure_intro [] (Some "%EnvGetId") ["context"; "id"; "f"] ex_privEnvGetId)
+.
+Definition name_privEnvGetId :=  "%EnvGetId" .
 Definition privReferenceErrorProto :=  value_object 6 .
 Definition name_privReferenceErrorProto :=  "%ReferenceErrorProto" .
 Definition privReferenceError := 
@@ -7878,10 +7886,11 @@ Definition name_privset_property :=  "%set-property" .
 Definition privEnvCheckAssign := 
 value_closure
 (closure_intro
- [("%TypeError", privTypeError);
+ [("%EnvGetId", privEnvGetId);
+  ("%TypeError", privTypeError);
   ("%UnboundId", privUnboundId);
   ("%global", dolthis);
-  ("%set-property", privset_property)] (Some "%EnvCheckAssign")
+  ("%set-property", privset_property)] None
  ["context"; "id"; "val"; "strict"] ex_privEnvCheckAssign)
 .
 Definition name_privEnvCheckAssign :=  "%EnvCheckAssign" .
@@ -7897,14 +7906,17 @@ value_closure
 Definition name_privSyntaxError :=  "%SyntaxError" .
 Definition privEnvDelete := 
 value_closure
-(closure_intro [("%Delete", privDelete); ("%SyntaxError", privSyntaxError)]
- (Some "%EnvDelete") ["context"; "id"; "strict"] ex_privEnvDelete)
+(closure_intro
+ [("%Delete", privDelete);
+  ("%EnvGetId", privEnvGetId);
+  ("%SyntaxError", privSyntaxError)] (Some "%EnvDelete")
+ ["context"; "id"; "strict"] ex_privEnvDelete)
 .
 Definition name_privEnvDelete :=  "%EnvDelete" .
 Definition privEnvGet := 
 value_closure
-(closure_intro [("%UnboundId", privUnboundId)] (Some "%EnvGet")
- ["context"; "id"; "strict"] ex_privEnvGet)
+(closure_intro [("%EnvGetId", privEnvGetId); ("%UnboundId", privUnboundId)]
+ None ["context"; "id"; "strict"] ex_privEnvGet)
 .
 Definition name_privEnvGet :=  "%EnvGet" .
 Definition privEnvImplicitThis := 
@@ -7922,8 +7934,8 @@ value_closure
 Definition name_privEnvPrepostOp :=  "%EnvPrepostOp" .
 Definition privEnvTypeof := 
 value_closure
-(closure_intro [("%Typeof", privTypeof)] (Some "%EnvTypeof")
- ["context"; "id"] ex_privEnvTypeof)
+(closure_intro [("%EnvGetId", privEnvGetId); ("%Typeof", privTypeof)]
+ (Some "%EnvTypeof") ["context"; "id"] ex_privEnvTypeof)
 .
 Definition name_privEnvTypeof :=  "%EnvTypeof" .
 Definition privEqEq := 
@@ -9764,6 +9776,7 @@ Definition ctx_items :=
  (name_privEnvCheckAssign, privEnvCheckAssign);
  (name_privEnvDelete, privEnvDelete);
  (name_privEnvGet, privEnvGet);
+ (name_privEnvGetId, privEnvGetId);
  (name_privEnvImplicitThis, privEnvImplicitThis);
  (name_privEnvPrepostOp, privEnvPrepostOp);
  (name_privEnvTypeof, privEnvTypeof);
@@ -10188,6 +10201,7 @@ privDelete
 privEnvCheckAssign
 privEnvDelete
 privEnvGet
+privEnvGetId
 privEnvImplicitThis
 privEnvPrepostOp
 privEnvTypeof
@@ -10622,6 +10636,7 @@ Definition store_items := [
                                              ("%EnvCheckAssign", privEnvCheckAssign);
                                              ("%EnvDelete", privEnvDelete);
                                              ("%EnvGet", privEnvGet);
+                                             ("%EnvGetId", privEnvGetId);
                                              ("%EnvImplicitThis", privEnvImplicitThis);
                                              ("%EnvPrepostOp", privEnvPrepostOp);
                                              ("%EnvTypeof", privEnvTypeof);
