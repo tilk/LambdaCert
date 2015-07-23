@@ -2394,7 +2394,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
   (expr_get_obj_attr oattr_class (expr_id "context"))
   (expr_string "DeclEnvRec"))
  (expr_if
-  (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id"))
+  (expr_op2 binary_op_has_own_property (expr_id "context") (expr_id "id"))
   (expr_app (expr_id "f") [expr_id "context"])
   (expr_app (expr_id "%EnvGetId")
    [expr_get_internal "parent" (expr_id "context"); expr_id "id"; expr_id "f"]))
