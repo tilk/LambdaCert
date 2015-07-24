@@ -64,24 +64,24 @@ Proof.
     jauto.
 Qed.
 
+Lemma ref_base_type_obj_not_unresolvable jref :
+    ref_base_type_obj (J.ref_base jref) -> ~J.ref_is_unresolvable jref.
+Proof.
+    introv Hrbt Hjru. destruct jref. inverts Hrbt as Hoc. simpls. substs. 
+    inverts Hoc. unfolds J.ref_is_unresolvable. unfolds J.ref_kind_of. 
+    destruct jv; simpls; tryfalse. destruct p; tryfalse.
+Qed.
+
+Lemma js_not_identifier_not_unresolvable : forall je jref,
+    js_reference_type je (J.ref_base jref) -> (forall s, je <> J.expr_identifier s) -> ~J.ref_is_unresolvable jref.
+Proof.
+    introv Hrt Hne.
+    eapply ref_base_type_obj_not_unresolvable.
+    inverts Hrt; try eassumption. 
+    specializes Hne s. false.
+Qed.
+
 (* TODO move *)
-Definition js_object_coercible jv := jv <> J.value_prim J.prim_undef /\ jv <> J.value_prim J.prim_null.
-
-Inductive ref_base_type_related BR : J.ref_base_type -> L.value -> Prop :=
-| ref_base_type_related_undefined : 
-    ref_base_type_related BR (J.ref_base_type_value (J.value_prim J.prim_undef)) L.value_null
-| ref_base_type_related_value : forall jv v,
-    js_object_coercible jv ->
-    value_related BR jv v ->
-    ref_base_type_related BR (J.ref_base_type_value jv) v
-| ref_base_type_related_env_loc : forall jeptr ptr,
-    fact_js_env jeptr ptr \in BR ->
-    ref_base_type_related BR (J.ref_base_type_env_loc jeptr) (L.value_object ptr).
-
-Hint Constructors ref_base_type_related : js_ljs.
-
-Hint Extern 5 (_ < _) => math : js_ljs.
-
 Lemma stx_eq_string_eq_lemma : forall s1 s2,
     L.stx_eq (L.value_string s1) (L.value_string s2) = (s1 = s2).
 Proof.
@@ -98,7 +98,7 @@ Lemma decl_env_record_vars_related_index_lemma : forall BR jx x s,
 Proof.
     introv Hder.
     specializes Hder s.
-    destruct Hder as [(Hder1&Hder2)|(?&?&?&Hder1&Hder2&Hder3)]. {
+    destruct Hder as [(Hder1&Hder2)|(?&?&?&Hder0&Hder1&Hder2&Hder3)]. {
         apply prop_eq_False_back in Hder1.
         apply prop_eq_False_back in Hder2.
         rewrite Hder1. rewrite Hder2. reflexivity.
@@ -121,7 +121,8 @@ Lemma red_spec_lexical_env_get_identifier_ref_lemma : forall k BR jst jc c st st
     L.red_exprh k' c' st'' (L.expr_app_2 v1 [v']) (L.out_ter st' r) /\
     J.red_spec jst jc (J.spec_lexical_env_get_identifier_ref jlenv s b) 
         (J.specret_val jst' (J.ref_intro jrbt s b)) /\
-    ref_base_type_related BR' jrbt v'.
+    ref_base_type_related BR' jrbt v' /\
+    ref_base_type_var jrbt.
 Proof.
     intro k.
     induction_wf IH : lt_wf k.
@@ -554,7 +555,7 @@ Proof.
     inverts Hgva as Ha Hb Hc. {
         inverts Ha as Hx. false. eauto_js.
     }
-    applys Hb.
+    applys js_not_identifier_not_unresolvable Hb.
     destruct Hjfa; eauto.
 Qed.
 
@@ -795,52 +796,82 @@ Qed.
 
 (** *** Identifier *)
 
-(*
-Lemma get_identifier_value_lemma : forall jlenv k BR jst jc c st st' r b v i,
-    lexical_env_related BR jlenv v ->
-    binds c "strict" (L.value_bool b) ->
-    binds c "context" v ->
-    binds c "id" (L.value_string i) ->
-    includes_init_ctx c ->
-    state_invariant BR jst jc c st ->
-    L.red_exprh k c st (L.expr_basic LjsInitEnv.ex_privEnvGet) (L.out_ter st' r) ->
-    exists BR' jst' jst'' jref,
-    state_invariant BR' jst' jc c st' /\
-    BR \c BR' /\
-    J.red_spec jst jc (J.spec_lexical_env_get_identifier_ref jlenv i b) (J.specret_val jst'' jref) /\
-    (exists jv v', r = L.res_value v' /\
-     J.red_spec jst'' jc (J.spec_get_value (J.resvalue_ref jref)) (J.specret_val jst' jv) /\
-     value_related BR' jv v').
+(* TODO move *)
+Lemma unbound_id_lemma : forall BR k jst jc c st st' s r,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privUnboundId [L.value_string s]) 
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_error J.native_error_ref) (fun _ => False).
 Proof.
-    inductions jlenv;
-    introv Henvrel; inverts Henvrel;
-    introv Hstrict Hcontext Hid Hii Hinv Hred.
-    (* nil *)
-    repeat ljs_autoforward. 
-    skip.
-    (* cons *)
+    introv Hlred Hcinv Hinv.
+    inverts red_exprh Hlred; tryfalse.
+    ljs_apply.
+    ljs_context_invariant_after_apply. clear Hcinv.
     repeat ljs_autoforward.
-(*
-    cases_decide. 
-    repeat ljs_autoforward.
-*)
-    skip.
+    forwards_th Hx : reference_error_lemma; try eassumption.
+    jauto_js.
+Qed.
+
+(* TODO move *)
+Lemma decl_env_record_vars_related_binds_lemma : forall BR jder props s attrs,
+    decl_env_record_vars_related BR jder props ->
+    binds props s attrs ->
+    exists jmut jv v,
+    jmut <> J.mutability_uninitialized_immutable /\
+    attrs = L.attributes_data_of (L.attributes_data_intro v 
+            (mutability_writable jmut) true (mutability_configurable jmut)) /\
+    binds jder s (jmut, jv) /\ 
+    value_related BR jv v.
+Proof.
+    introv Hder Hbinds.
+    specializes Hder s.
+    destruct Hder as [(Hder1&Hder2)|(jmut&jv&v&Hnimmut&Hjxbinds&Hxbinds&Hder)]. {
+        false. applys Hder2. prove_bag.
+    }
+    binds_determine.
+    jauto_js.
 Qed.
 
 Lemma red_expr_identifier_ok : forall k i,
     th_expr k (J.expr_identifier i).
 Proof.
-    introv Hinv Hlred.
+    introv Hcinv Hinv Hlred.
     repeat ljs_autoforward.
-Admitted.
-(*
-    inverts H7. (* TODO *)
-    ljs_inv_value_is_closure. 
-    ljs_inv_closure_ctx. unfold L.closure_body in H12.
-    skip.
+    inverts red_exprh H7. (* TODO *)
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
+        eassumption.
+    forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
+    destruct_hyp Hx.
+    inverts red_exprh Hx3.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    inverts Hx7. {
+        inverts Hx5; try solve [inverts H12; tryfalse]. (* TODO *)
+        repeat ljs_autoforward.
+        forwards_th Hx : unbound_id_lemma.
+        destr_concl; tryfalse; try ljs_handle_abort.
+    }
+    inverts Hx5.
+    repeat ljs_autoforward.
+    lets (jer&Hjbinds&Herel) : env_record_related_lookup_lemma ___; try eassumption.
+    inverts Herel as Herel. { (* declarative records *)
+        inverts Herel.
+        unfolds L.object_class.
+        cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
+        repeat ljs_autoforward.
+        lets Hx : decl_env_record_vars_related_binds_lemma ___; try eassumption.
+        destruct_hyp Hx.
+        simpl.
+        jauto_js 12.
+    } { (* object records *)
+        skip.
+    }
 Qed.
-*)
-*)
 
 (** *** Conditional *)
 

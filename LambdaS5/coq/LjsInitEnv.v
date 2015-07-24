@@ -2375,7 +2375,7 @@ expr_let "f"
    (expr_op2 binary_op_stx_eq
     (expr_get_obj_attr oattr_class (expr_id "context"))
     (expr_string "DeclEnvRec"))
-   (expr_get_field (expr_id "context") (expr_id "id"))
+   (expr_get_attr pattr_value (expr_id "context") (expr_id "id"))
    (expr_if
     (expr_op2 binary_op_stx_eq
      (expr_get_obj_attr oattr_class (expr_id "context"))

@@ -889,22 +889,21 @@ Proof.
     constructor; try eassumption.
     unfolds.
     intro s'.
-    destruct (classic (s = s')).
-    (* equal *)
-    substs.
-    right.
-    do 3 eexists. split.
-    rew_binds_eq. iauto.
-    split; [idtac | eassumption].
-    simpls.
-    rewrite binds_update_same_eq.
-    destruct b1; destruct b2; simpl; tryfalse; try reflexivity. 
-    (* disequal *)
-    lets Hx : decl_env_record_related_vars s'.
-    destruct_hyp Hx.
-    left. split. rew_index_eq. iauto.
-    simpls. rew_index_eq. iauto.
-    right. simpls. do 3 eexists. rew_heap_to_libbag in *. rew_binds_eq. iauto.
+    destruct (classic (s = s')). { (* equal *)
+        substs.
+        right.
+        do 3 eexists. splits; [idtac | rew_binds_eq; iauto | idtac | eassumption]. 
+            { intro; destruct b1; destruct b2; tryfalse. }
+        simpls.
+        rewrite binds_update_same_eq.
+        destruct b1; destruct b2; simpl; tryfalse; try reflexivity. 
+    } { (* disequal *)
+        lets Hx : decl_env_record_related_vars s'.
+        destruct_hyp Hx.
+        left. split. rew_index_eq. iauto.
+        simpls. rew_index_eq. iauto.
+        right. simpls. do 3 eexists. rew_heap_to_libbag in *. rew_binds_eq. iauto.
+    }
 Qed.
 
 Lemma make_getter_lemma : forall k c st v st' r,

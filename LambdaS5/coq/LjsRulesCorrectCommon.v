@@ -94,6 +94,10 @@ Hint Constructors fact_ptr : js_ljs.
 Hint Constructors js_red_spec_get_value_or_abort : js_ljs.
 Hint Constructors js_red_expr_getvalue : js_ljs.
 Hint Constructors ejs_reference_producing js_reference_producing : js_ljs.
+Hint Constructors ref_base_type_related : js_ljs.
+Hint Constructors ref_base_type_var : js_ljs.
+Hint Constructors ref_base_type_obj : js_ljs.
+Hint Constructors js_reference_type : js_ljs.
 
 Hint Constructors Option Option2 Option3 Option4 Forall Forall2 Forall3 : js_ljs.
 
@@ -140,6 +144,7 @@ Hint Extern 11 => match goal with |- context [If _ then _ else _] => case_if end
 
 Hint Extern 50 (~_) => progress rew_logic.
 Hint Extern 1 (_ <> _) => solve [let H := fresh in intro H; injects H; false]. 
+Hint Extern 5 (_ < _) => math : js_ljs. 
 
 (** Additional hints *)
 
@@ -310,6 +315,10 @@ Ltac destr_concl := match goal with
 Tactic Notation "eauto_js" integer(k) := eauto k with js_ljs bag nocore xcore.
 
 Tactic Notation "eauto_js" := eauto_js 5.
+
+Tactic Notation "debug" "eauto_js" integer(k) := debug eauto k with js_ljs bag nocore xcore.
+
+Tactic Notation "debug" "eauto_js" := debug eauto_js 5.
 
 (* TODO move *)
 Ltac jauto_set_slim :=
@@ -2055,9 +2064,11 @@ Ltac binds_inv H :=
                     lets He : (binds_single_bind_same_inv _ _ _ H);
                     (subst_hyp He || injects He); clear H    
                 | _ \(?x':=?v1) =>
+                    not (constr_eq v1 v2);
                     lets He : (binds_update_same_inv _ _ _ _ H);
                     (subst_hyp He || injects He); clear H
                 | _ \(?x':=?v1) =>
+                    not (constr_eq v1 v2);
                     let Ha := fresh "H" in
                     asserts Ha : (x <> x'); [solve [eauto] | 
                     lets He : (binds_update_diff_inv _ _ _ _ _ Ha H);

@@ -517,6 +517,7 @@ Definition mutability_configurable jmut :=
 Definition decl_env_record_vars_related BR jder props := forall s,
     ~index jder s /\ ~index props s \/
     exists jmut jv v, 
+        jmut <> J.mutability_uninitialized_immutable /\
         binds jder s (jmut, jv) /\ 
         binds props s (L.attributes_data_of (L.attributes_data_intro v 
             (mutability_writable jmut) true (mutability_configurable jmut))) /\
@@ -748,6 +749,22 @@ Inductive res_related BR jst st : J.res -> L.res -> Prop :=
         (L.res_break (E.js_label_to_ejs "%continue" jl) v)
 .
 
+(** ** Relating reference base values *)
+
+Definition js_object_coercible jv := jv <> J.value_prim J.prim_undef /\ jv <> J.value_prim J.prim_null.
+
+Inductive ref_base_type_related BR : J.ref_base_type -> L.value -> Prop :=
+| ref_base_type_related_undefined : 
+    ref_base_type_related BR (J.ref_base_type_value (J.value_prim J.prim_undef)) L.value_null
+| ref_base_type_related_value : forall jv v,
+    js_object_coercible jv ->
+    value_related BR jv v ->
+    ref_base_type_related BR (J.ref_base_type_value jv) v
+| ref_base_type_related_env_loc : forall jeptr ptr,
+    fact_js_env jeptr ptr \in BR ->
+    ref_base_type_related BR (J.ref_base_type_env_loc jeptr) (L.value_object ptr)
+.
+
 (** ** Invariants 
     To relate JS and S5 programs, certain invariants must hold at all times. *)
 
@@ -855,8 +872,23 @@ Inductive js_reference_producing : J.expr -> Prop :=
 | js_reference_producing_identifier : forall s, js_reference_producing (J.expr_identifier s)
 .
 
-Definition js_not_identifier_not_unresolvable je jref :=
-    (forall s, je <> J.expr_identifier s) -> ~J.ref_is_unresolvable jref.
+Inductive ref_base_type_var : J.ref_base_type -> Prop :=
+| ref_base_type_var_undefined : ref_base_type_var (J.ref_base_type_value (J.value_prim J.prim_undef))
+| ref_base_type_var_env_loc : forall jeptr, ref_base_type_var (J.ref_base_type_env_loc jeptr)
+.
+
+Inductive ref_base_type_obj : J.ref_base_type -> Prop :=
+| ref_base_type_obj_coercible : forall jv, js_object_coercible jv -> ref_base_type_obj (J.ref_base_type_value jv)
+.
+
+Inductive js_reference_type : J.expr -> J.ref_base_type -> Prop :=
+| js_reference_type_access : forall je1 je2 jrbt, 
+    ref_base_type_obj jrbt -> js_reference_type (J.expr_access je1 je2) jrbt
+| js_reference_type_member : forall je s jrbt, 
+    ref_base_type_obj jrbt -> js_reference_type (J.expr_member je s) jrbt
+| js_reference_type_identifier : forall s jrbt, 
+    ref_base_type_var jrbt -> js_reference_type (J.expr_identifier s) jrbt
+.
 
 Inductive js_red_spec_get_value_or_abort : J.execution_ctx -> J.expr -> J.out -> J.specret J.value -> Prop :=
 | js_red_spec_get_value_or_abort_abort : forall jc je jo, 
@@ -867,7 +899,7 @@ Inductive js_red_spec_get_value_or_abort : J.execution_ctx -> J.expr -> J.out ->
         (J.out_ter jst (J.res_normal (J.resvalue_value jv))) (J.specret_val jst jv)
 | js_red_spec_get_value_or_abort_get_value : forall jst jc je jref jsr, 
     js_reference_producing je ->
-    js_not_identifier_not_unresolvable je jref ->
+    js_reference_type je (J.ref_base jref) ->
     J.red_spec jst jc (J.spec_get_value (J.resvalue_ref jref)) jsr -> 
     js_red_spec_get_value_or_abort jc je (J.out_ter jst (J.res_normal (J.resvalue_ref jref))) jsr
 .
