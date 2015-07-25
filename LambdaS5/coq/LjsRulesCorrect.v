@@ -103,7 +103,7 @@ Proof.
     (* expr_this *)
     eapply red_expr_this_ok.
     (* expr_identifier *)
-    skip. (* eapply red_expr_identifier_ok. *)
+    eapply red_expr_identifier_ok. 
     (* expr_literal *)
     eapply red_expr_literal_ok.
     (* expr_object *)

@@ -1049,7 +1049,39 @@ Proof.
         destruct_hyp Hx.
         jauto_js 15.
     } {
-        skip. (* TODO typeof on variable *)
+        repeat ljs_autoforward.
+        inverts red_exprh H7. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
+        destruct_hyp Hx.
+        inverts red_exprh Hx3.
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        inverts Hx7. {
+            inverts Hx5; try solve [inverts H11; tryfalse]. (* TODO *)
+            repeat ljs_autoforward.
+            jauto_js 10.
+        }
+        inverts Hx5.
+        repeat ljs_autoforward.
+        lets (jer&Hjbinds&Herel) : env_record_related_lookup_lemma ___; try eassumption.
+        inverts Herel as Herel. { (* declarative records *)
+            inverts Herel.
+            unfolds L.object_class.
+            cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
+            repeat ljs_autoforward.
+            lets Hx : decl_env_record_vars_related_binds_lemma ___; try eassumption.
+            destruct_hyp Hx.
+            forwards_th Hx : typeof_lemma.
+            destruct_hyp Hx.
+            jauto_js 12.
+        } { (* object records *)
+            skip.
+        }
     } {
         repeat ljs_autoforward.
         destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
@@ -1067,7 +1099,7 @@ Proof.
     destruct op.
     skip.
     apply red_expr_unary_op_void_ok.
-    skip.
+    apply red_expr_unary_op_typeof_ok.
     skip.
     skip.
     skip.
