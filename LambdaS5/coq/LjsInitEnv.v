@@ -2339,12 +2339,12 @@ expr_let "f"
  [expr_id "context"; expr_id "id"; expr_id "f"])
 .
 Definition ex_privEnvDelete := 
-expr_seq
-(expr_if (expr_id "strict")
- (expr_app (expr_id "%SyntaxError")
-  [expr_string "unqualified name delete in strict mode"]) expr_undefined)
-(expr_let "f"
- (expr_lambda ["context"]
+expr_let "f"
+(expr_lambda ["context"]
+ (expr_seq
+  (expr_if (expr_id "strict")
+   (expr_app (expr_id "%SyntaxError")
+    [expr_string "unqualified name delete in strict mode"]) expr_undefined)
   (expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
    expr_true
    (expr_if
@@ -2362,9 +2362,9 @@ expr_seq
       [expr_get_internal "bindings" (expr_id "context");
        expr_id "id";
        expr_false])
-     (expr_throw (expr_string "[env] Context not well formed! In %EnvDelete"))))))
- (expr_app (expr_id "%EnvGetId")
-  [expr_id "context"; expr_id "id"; expr_id "f"]))
+     (expr_throw (expr_string "[env] Context not well formed! In %EnvDelete")))))))
+(expr_app (expr_id "%EnvGetId")
+ [expr_id "context"; expr_id "id"; expr_id "f"])
 .
 Definition ex_privEnvGet := 
 expr_let "f"

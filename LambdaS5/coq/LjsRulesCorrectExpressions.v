@@ -1092,12 +1092,58 @@ Proof.
     }
 Qed.
 
+Lemma red_expr_unary_op_delete_ok : forall k je,
+    ih_expr k ->
+    th_expr k (J.expr_unary_op J.unary_op_delete je).
+Proof.
+    introv IHe Hcinv Hinv Hlred.
+    unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_delete.
+    reference_match_cases Hlred Hx Heq Hrp. {
+        skip. (* TODO fields *)
+    } {
+        repeat ljs_autoforward.
+        inverts red_exprh H7. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
+        destruct_hyp Hx.
+        inverts red_exprh Hx3.
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        subst_hyp Hstrict.
+        inv_ljs. { (* strict *)
+            symmetry in H16. (* TODO *)
+            repeat ljs_autoforward.
+            forwards_th Hx : syntax_error_lemma. eauto_js.
+            destr_concl; tryfalse.
+            inverts Hx7. {
+                inverts Hx5; try solve [inverts H19; tryfalse]. (* TODO *)
+                ljs_handle_abort.
+            }
+            inverts Hx5.
+            ljs_handle_abort.
+        } (* not strict *)
+        skip. (* TODO *)
+    } {
+        repeat ljs_autoforward.
+        destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        jauto_js 8.
+    }
+Qed.
+
 Lemma red_expr_unary_op_ok : forall op k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op op je).
 Proof.
     destruct op.
-    skip.
+    apply red_expr_unary_op_delete_ok.
     apply red_expr_unary_op_void_ok.
     apply red_expr_unary_op_typeof_ok.
     skip.
