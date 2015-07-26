@@ -2062,7 +2062,10 @@ Ltac binds_inv H :=
                     end 
                 | ?x' \:= ?v1 =>
                     lets He : (binds_single_bind_same_inv _ _ _ H);
-                    (subst_hyp He || injects He); clear H    
+                    (subst_hyp He || injects He); clear H 
+                | \{} =>
+                    lets He : (binds_empty _ _ H);
+                    false
                 | _ \(?x':=?v1) =>
                     not (constr_eq v1 v2);
                     lets He : (binds_update_same_inv _ _ _ _ H);
@@ -2078,11 +2081,26 @@ Ltac binds_inv H :=
         end in
     progress f H.
 
+Ltac env_base M :=
+    match M with
+    | ?M1 \(_ := _) => env_base M1
+    | _ => constr:M
+    end.
+
+Inductive binds_inv_done : forall {K V}, finmap K V -> K -> Prop := 
+    binds_inv_done_intro : forall K V (m : finmap K V) k, binds_inv_done m k.
+
 Tactic Notation "binds_inv" hyp(H) := binds_inv H.
 
 Tactic Notation "binds_inv" := 
     match goal with
-    | H : binds _ _ _ |- _ => binds_inv H
+    | H : binds ?e _ _ |- _ => 
+        not (is_var e);
+        binds_inv H
+    | H : binds ?v ?k _, Heq : ?M = ?v |- _ =>
+        is_var v; not (is_hyp (binds_inv_done v k)); 
+        let Hd := fresh "Hdone" in lets Hd : binds_inv_done_intro v k; 
+        try binds_inv H
     end.
 
 Lemma heaps_bisim_consistent_modify_env_record_preserved : forall BR jst st jeptr jer ptr obj,

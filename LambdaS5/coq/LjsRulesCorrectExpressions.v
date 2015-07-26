@@ -383,7 +383,7 @@ Proof.
     ljs_context_invariant_after_apply.
     repeat (repeat ljs_autoforward || cases_decide). {
         inverts IH4. (* TODO *)
-        rewrite index_binds_eq in H10. destruct H10 as (?x&H10). (* TODO *)
+        rewrite index_binds_eq in H7. destruct H7 as (?x&H7). (* TODO *)
         forwards Hc : construct_related_lemma; try eassumption. eauto_js.
         destruct_hyp Hc.
         forwards Hx : object_method_construct_lemma; try eassumption. eauto_js. eauto_js.
@@ -1759,6 +1759,7 @@ Ltac munch_elseif Hx :=
     repeat binds_inv;
     repeat determine_epsilon_binds;
     repeat determine_epsilon;
+    repeat binds_determine;
     cases_isTrue as Hx;
     repeat rewrite same_value_eq_lemma in Hx by solve [auto];
     repeat rewrite value_number_eq_lemma in Hx;
