@@ -125,6 +125,8 @@ Definition if_strict e1 e2 := L.expr_if (L.expr_id "$strict") e1 e2.
 
 Definition syntax_error s := make_app_builtin "%SyntaxError" [L.expr_string s].
 
+Definition reference_error s := make_app_builtin "%ReferenceError" [L.expr_string s].
+
 Definition make_var_decl is e := 
     let flds := List.map (fun ip => 
         let '(i, e, m) := ip in 
@@ -348,6 +350,12 @@ Definition make_switch_withdefault e acls def bcls :=
     L.expr_let "found" L.expr_false (
     make_cases acls (deflt_case (make_cases bcls last_case)) "found"))).
 
+Definition make_assign f (e1 : E.expr) e2 := 
+    reference_match e1
+        (fun obj fld => make_set_field (f obj) (f fld) e2)
+        (fun s => make_var_set s e2)
+        (fun e => L.expr_seq e2 (reference_error "invalid lhs for assignment")).
+
 (* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     match e with
@@ -375,7 +383,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_if e e1 e2 => make_if (ejs_to_ljs e) (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_op1 op e => make_op1 ejs_to_ljs op e
     | E.expr_op2 op e1 e2 => make_op2 op (ejs_to_ljs e1) (ejs_to_ljs e2)
-    | E.expr_set_field e1 e2 e3 => make_set_field (ejs_to_ljs e1) (ejs_to_ljs e2) (ejs_to_ljs e3)
+    | E.expr_assign e1 e2 => make_assign ejs_to_ljs e1 (ejs_to_ljs e2)
     | E.expr_get_field e1 e2 => make_get_field (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_for_in s e1 e2 => make_for_in s (ejs_to_ljs e1) (ejs_to_ljs e2) 
     | E.expr_while e1 e2 e3 => make_while (ejs_to_ljs e1) (ejs_to_ljs e2) (ejs_to_ljs e3) 

@@ -28,17 +28,14 @@ Fixpoint js_literal_to_ejs l :=
     | J.literal_string s => E.expr_string s
     end.
 
-Definition js_expr_assign_to_ejs e1 oop e2 :=
-    let aop e := 
-        match oop with
-        | None => e
-        | Some op => E.expr_op2 op e1 e
-        end in
-    match e1 with
-    | E.expr_var_id s => E.expr_var_set s (aop e2)
-    | E.expr_get_field e1' e1'' => E.expr_set_field e1' e1'' (aop e2)
-    | _ => E.expr_syntaxerror
+Definition assign_op oop e1 e :=
+    match oop with
+    | None => e
+    | Some op => E.expr_op2 op e1 e
     end.
+
+Definition js_expr_assign_to_ejs e1 oop e2 :=
+    E.expr_assign e1 (assign_op oop e1 e2).
 
 Definition is_strict es := 
     match es with

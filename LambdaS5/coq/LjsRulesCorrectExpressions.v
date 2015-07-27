@@ -459,8 +459,6 @@ Proof.
     destruct je; try destruct l; try destruct b; try destruct f; destruct_hyp Hx; tryfalse;
     try match goal with H : ~ejs_reference_producing _ |- _ => false; apply H; solve [eauto_js 10] end;
     eauto_js 9. 
-    simpls. destruct (E.js_expr_to_ejs je1); tryfalse.
-    simpls. destruct (E.js_expr_to_ejs je1); tryfalse.
 Qed.
 
 Ltac reference_match_cases Hlred Hx Heq Hrp :=
