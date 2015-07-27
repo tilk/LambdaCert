@@ -834,6 +834,16 @@ Proof.
     jauto_js.
 Qed.
 
+Ltac ref_base_type_var_invert :=
+    match goal with
+    | H1 : ref_base_type_var ?jrbt, H2 : ref_base_type_related _ ?jrbt _ |- _ =>
+        inverts H1; inverts H2;
+        try match goal with
+        | H3 : js_object_coercible (J.value_prim J.prim_undef) |- _ => solve [inverts H3; tryfalse]
+        | _ => idtac
+        end
+    end.
+
 Lemma red_expr_identifier_ok : forall k i,
     th_expr k (J.expr_identifier i).
 Proof.
@@ -850,13 +860,11 @@ Proof.
     inverts red_exprh Hx3.
     ljs_apply.
     ljs_context_invariant_after_apply.
-    inverts Hx7. {
-        inverts Hx5; try solve [inverts H12; tryfalse]. (* TODO *)
+    ref_base_type_var_invert. {
         repeat ljs_autoforward.
         forwards_th Hx : unbound_id_lemma.
         destr_concl; tryfalse; try ljs_handle_abort.
     }
-    inverts Hx5.
     repeat ljs_autoforward.
     lets (jer&Hjbinds&Herel) : env_record_related_lookup_lemma ___; try eassumption.
     inverts Herel as Herel. { (* declarative records *)
@@ -1061,12 +1069,10 @@ Proof.
         inverts red_exprh Hx3.
         ljs_apply.
         ljs_context_invariant_after_apply.
-        inverts Hx7. {
-            inverts Hx5; try solve [inverts H11; tryfalse]. (* TODO *)
+        ref_base_type_var_invert. {
             repeat ljs_autoforward.
             jauto_js 10.
         }
-        inverts Hx5.
         repeat ljs_autoforward.
         lets (jer&Hjbinds&Herel) : env_record_related_lookup_lemma ___; try eassumption.
         inverts Herel as Herel. { (* declarative records *)
@@ -1090,6 +1096,65 @@ Proof.
         destruct_hyp Hx.
         jauto_js 15.
     }
+Qed.
+
+(* TODO move *)
+
+Lemma spec_env_record_delete_binding_1_deletable_hint : forall jv S C L x Ed S',
+      J.decl_env_record_binds Ed x J.mutability_deletable jv ->
+      S' = J.env_record_write S L (J.env_record_decl (J.decl_env_record_rem Ed x)) ->
+      J.red_expr S C (J.spec_env_record_delete_binding_1 L x (J.env_record_decl Ed)) 
+          (J.out_ter S' (J.res_val (J.value_prim (J.prim_bool true)))).
+Proof.
+    introv Hb Hs. eapply J.red_spec_env_record_delete_binding_1_decl_indom. eassumption. 
+    cases_if. eauto_js.
+Qed.
+
+Hint Resolve spec_env_record_delete_binding_1_deletable_hint : js_ljs.
+
+Lemma spec_env_record_delete_binding_1_deletable_hint2 : forall jv S C L x Ed jmut,
+      J.decl_env_record_binds Ed x jmut jv ->
+      jmut <> J.mutability_deletable ->
+      J.red_expr S C (J.spec_env_record_delete_binding_1 L x (J.env_record_decl Ed)) 
+          (J.out_ter S (J.res_val (J.value_prim (J.prim_bool false)))).
+Proof.
+    introv Hb Hd. eapply J.red_spec_env_record_delete_binding_1_decl_indom. eassumption. 
+    cases_if. eauto_js.
+Qed.
+
+Hint Resolve spec_env_record_delete_binding_1_deletable_hint2 : js_ljs.
+
+Lemma env_record_related_decl_rem : forall BR jder s obj,
+    env_record_related BR (J.env_record_decl jder) obj ->
+    env_record_related BR (J.env_record_decl (J.decl_env_record_rem jder s)) (L.delete_object_property obj s).
+Proof.
+    introv Herel. 
+    destruct obj. destruct object_attrs.
+    inverts Herel as Herel. inverts Herel. 
+    unfolds L.object_proto. unfolds L.object_class. unfolds L.object_extensible.
+    simpls.
+    constructor. constructor; eauto.
+    simpl.
+    intro s'.
+    destruct (classic (s = s')). { 
+        substs.
+        left. split. skip. eauto_js. (* TODO heap/libbag mismatch *)
+    } {
+        lets Hx : decl_env_record_related_vars s'. destruct_hyp Hx. {
+            skip. (* TODO *)
+        } 
+        right. skip. (* TODO *)
+    }
+Qed.
+
+Hint Extern 3 (env_record_related _ ?jer _) => not (is_evar jer); eapply env_record_related_decl_rem : js_ljs.
+
+Lemma mutability_not_deletable_lemma : forall jmut,
+    jmut <> J.mutability_uninitialized_immutable ->
+    jmut <> J.mutability_deletable -> mutability_configurable jmut = false.
+Proof.
+    introv Hx1 Hx2.
+    destruct jmut; tryfalse; try reflexivity.
 Qed.
 
 Lemma red_expr_unary_op_delete_ok : forall k je,
@@ -1118,18 +1183,43 @@ Proof.
             eassumption.
         subst_hyp Hstrict.
         inv_ljs. { (* strict *)
-            symmetry in H16. (* TODO *)
+            symmetry in H16. (* TODO *) (* J.execution_ctx_strict jc = true *)
             repeat ljs_autoforward.
             forwards_th Hx : syntax_error_lemma. eauto_js.
             destr_concl; tryfalse.
-            inverts Hx7. {
-                inverts Hx5; try solve [inverts H19; tryfalse]. (* TODO *)
-                ljs_handle_abort.
-            }
-            inverts Hx5.
-            ljs_handle_abort.
+            ref_base_type_var_invert; ljs_handle_abort.
         } (* not strict *)
-        skip. (* TODO *)
+        symmetry in H16. (* TODO *)
+        repeat ljs_autoforward.
+        ref_base_type_var_invert. {
+            repeat ljs_autoforward.
+            jauto_js 15.
+        }
+        repeat ljs_autoforward.
+        lets (jer&Hjbinds&Herel) : env_record_related_lookup_lemma ___; try eassumption.
+        inverts Herel as Herel. { (* declarative records *)
+            inverts Herel.
+            unfolds L.object_class.
+            cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
+            repeat ljs_autoforward.
+            lets Hx : decl_env_record_vars_related_binds_lemma ___; try eassumption.
+            destruct_hyp Hx.
+            destruct (classic (jmut = J.mutability_deletable)) as [Hmut|Hmut]. { (* deletable *)
+                subst_hyp Hmut.
+                repeat ljs_autoforward.
+                unfolds L.get_object_property. (* TODO ? *)
+                erewrite read_option_binds_inv in H26 by solve [eassumption]. (* TODO *)
+                repeat ljs_autoforward.
+                destruct obj.
+                jauto_js 15.
+            } {
+                rewrite mutability_not_deletable_lemma in H17 by eassumption.
+                repeat ljs_autoforward.
+                jauto_js 15.
+            }
+        } { (* object records *)
+            skip. (* TODO *)
+        }
     } {
         repeat ljs_autoforward.
         destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
