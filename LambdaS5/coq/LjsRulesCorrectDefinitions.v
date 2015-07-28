@@ -829,7 +829,16 @@ Record context_invariant BR jc c : Prop := {
 (** *** Theorem conclusions
     They state what must hold if the preconditions are satisfied. *)
 
-Definition concl_ext_expr_value BR jst jc c st st' r jee P :=
+Definition concl_ext_expr_resvalue BR jst jc c st st' r jee P :=
+    exists BR' jst' jr,
+    J.red_expr jst jc jee (J.out_ter jst' jr) /\ 
+    ((exists jrv, jr = J.res_normal jrv /\ P jrv) \/
+     J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw) /\
+    state_invariant BR' jst' st' /\
+    BR \c BR' /\
+    res_related BR' jst' st' jr r.
+
+Definition concl_ext_expr_value BR jst jc c st st' r jee P := (* TODO use resvalue *)
     exists BR' jst' jr,
     J.red_expr jst jc jee (J.out_ter jst' jr) /\ 
     ((exists jv, jr = J.res_val jv /\ P jv) \/

@@ -27,7 +27,7 @@ let handle_parameter filename =
     let ast = 
         if !fformat then
             let Some jp = Desugar.get_js_parser () in
-            jp filename
+            EjsToLjs.add_init (jp filename)
         else
             let ch = get_channel filename in
             let ret = Parse.parse_es5 ch filename in

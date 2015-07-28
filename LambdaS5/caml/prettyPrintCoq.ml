@@ -148,6 +148,7 @@ let format_number n =
 
 (* TODO modify to give letrecs own identifiers! *)
 let rec format_expr b e = match e with
+    | Coq_expr_empty -> text "expr_empty"
     | Coq_expr_null -> text "expr_null"
     | Coq_expr_undefined -> text "expr_undefined"
     | Coq_expr_number n -> coqconstr b "expr_number" [format_number n]

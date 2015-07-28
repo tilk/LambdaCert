@@ -10,7 +10,7 @@ object
     method ljsprint b = ljsprint <- b
     method eval s =
         try
-            let ast = Desugar.desugar s in
+            let ast = EjsToLjs.add_init (Desugar.desugar s) in
             let result = Run.eval_ast (ctx, store) ast in
             if ljsprint then begin print_string (Ljs_pretty.exp_to_string ast); print_string "\n" end;
             Run.print_result_as ljsprint result;

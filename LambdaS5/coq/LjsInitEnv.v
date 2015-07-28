@@ -49,9 +49,7 @@ Definition ex_getter :=
 expr_object
 (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined) 
 []
-[("$this", property_data
-           (data_intro (expr_id "$this") expr_true expr_false expr_false));
- ("%AddAccessorField", property_data
+[("%AddAccessorField", property_data
                        (data_intro (expr_id "%AddAccessorField") expr_true
                         expr_false expr_false));
  ("%AddDataField", property_data
@@ -157,9 +155,9 @@ expr_object
                         expr_false expr_false));
  ("%Delete", property_data
              (data_intro (expr_id "%Delete") expr_true expr_false expr_false));
- ("%EnvCheckAssign", property_data
-                     (data_intro (expr_id "%EnvCheckAssign") expr_true
-                      expr_false expr_false));
+ ("%EnvAssign", property_data
+                (data_intro (expr_id "%EnvAssign") expr_true expr_false
+                 expr_false));
  ("%EnvDelete", property_data
                 (data_intro (expr_id "%EnvDelete") expr_true expr_false
                  expr_false));
@@ -168,12 +166,18 @@ expr_object
  ("%EnvGetId", property_data
                (data_intro (expr_id "%EnvGetId") expr_true expr_false
                 expr_false));
+ ("%EnvGetValue", property_data
+                  (data_intro (expr_id "%EnvGetValue") expr_true expr_false
+                   expr_false));
  ("%EnvImplicitThis", property_data
                       (data_intro (expr_id "%EnvImplicitThis") expr_true
                        expr_false expr_false));
  ("%EnvPrepostOp", property_data
                    (data_intro (expr_id "%EnvPrepostOp") expr_true expr_false
                     expr_false));
+ ("%EnvPutValue", property_data
+                  (data_intro (expr_id "%EnvPutValue") expr_true expr_false
+                   expr_false));
  ("%EnvTypeof", property_data
                 (data_intro (expr_id "%EnvTypeof") expr_true expr_false
                  expr_false));
@@ -1234,9 +1238,6 @@ expr_object
  ("copy-when-defined", property_data
                        (data_intro (expr_id "copy-when-defined") expr_true
                         expr_false expr_false));
- ("evalCode", property_data
-              (data_intro (expr_id "evalCode") expr_true expr_false
-               expr_false));
  ("isAccessorDescriptor", property_data
                           (data_intro (expr_id "isAccessorDescriptor")
                            expr_true expr_false expr_false));
@@ -1254,13 +1255,7 @@ expr_object
                           expr_true expr_false expr_false));
  ("isGenericField", property_data
                     (data_intro (expr_id "isGenericField") expr_true
-                     expr_false expr_false));
- ("nonstrictContext", property_data
-                      (data_intro (expr_id "nonstrictContext") expr_true
-                       expr_false expr_false));
- ("strictContext", property_data
-                   (data_intro (expr_id "strictContext") expr_true expr_false
-                    expr_false))]
+                     expr_false expr_false))]
 .
 Definition ex_internal := 
 expr_let "cproto1"
@@ -2306,35 +2301,14 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
     (expr_app (expr_id "%TypeError")
      [expr_string "unconfigurable delete in strict mode"]) expr_false))))
 .
-Definition ex_privEnvCheckAssign := 
+Definition ex_privEnvAssign := 
 expr_let "f"
 (expr_lambda ["context"]
- (expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
-  (expr_if (expr_id "strict")
-   (expr_app (expr_id "%UnboundId") [expr_id "id"])
-   (expr_set_attr pattr_value (expr_id "%global") (expr_id "id")
-    (expr_id "val")))
-  (expr_if
-   (expr_op2 binary_op_stx_eq
-    (expr_get_obj_attr oattr_class (expr_id "context"))
-    (expr_string "DeclEnvRec"))
-   (expr_if (expr_get_attr pattr_writable (expr_id "context") (expr_id "id"))
-    (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
-     (expr_id "val"))
-    (expr_if (expr_id "strict")
-     (expr_app (expr_id "%TypeError")
-      [expr_op2 binary_op_string_plus (expr_id "id")
-       (expr_string " is read-only")]) expr_undefined))
-   (expr_if
-    (expr_op2 binary_op_stx_eq
-     (expr_get_obj_attr oattr_class (expr_id "context"))
-     (expr_string "ObjEnvRec"))
-    (expr_app (expr_id "%set-property")
-     [expr_get_internal "bindings" (expr_id "context");
-      expr_id "id";
-      expr_id "val"])
-    (expr_throw
-     (expr_string "[env] Context not well formed! In %EnvCheckAssign"))))))
+ (expr_let "val" (expr_app (expr_id "val_thunk") [])
+  (expr_seq
+   (expr_app (expr_id "%EnvPutValue")
+    [expr_id "context"; expr_id "id"; expr_id "val"; expr_id "strict"])
+   (expr_id "val"))))
 (expr_app (expr_id "%EnvGetId")
  [expr_id "context"; expr_id "id"; expr_id "f"])
 .
@@ -2412,6 +2386,22 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
       expr_id "f"])))
   (expr_throw (expr_string "[env] Context not well formed! In %EnvGetId"))))
 .
+Definition ex_privEnvGetValue := 
+expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
+(expr_app (expr_id "%UnboundId") [expr_id "id"])
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_obj_attr oattr_class (expr_id "context"))
+  (expr_string "DeclEnvRec"))
+ (expr_get_attr pattr_value (expr_id "context") (expr_id "id"))
+ (expr_if
+  (expr_op2 binary_op_stx_eq
+   (expr_get_obj_attr oattr_class (expr_id "context"))
+   (expr_string "ObjEnvRec"))
+  (expr_get_field (expr_get_internal "bindings" (expr_id "context"))
+   (expr_id "id"))
+  (expr_throw (expr_string "[env] Context not well formed! In %EnvGet"))))
+.
 Definition ex_privEnvImplicitThis := 
 expr_if
 (expr_op2 binary_op_stx_eq
@@ -2427,17 +2417,48 @@ expr_if
   (expr_string "[env] Context not well formed! In %EnvImplicitThis")))
 .
 Definition ex_privEnvPrepostOp := 
-expr_let "oldValue"
-(expr_app (expr_id "%ToNumber")
- [expr_app (expr_id "%EnvGet")
-  [expr_id "context"; expr_id "id"; expr_id "strict"]])
-(expr_let "newValue"
- (expr_app (expr_id "op")
-  [expr_id "oldValue"; expr_number (JsNumber.of_int (1))])
- (expr_seq
-  (expr_app (expr_id "%EnvCheckAssign")
-   [expr_id "context"; expr_id "id"; expr_id "newValue"; expr_id "strict"])
-  (expr_if (expr_id "is_pre") (expr_id "newValue") (expr_id "oldValue"))))
+expr_let "f"
+(expr_lambda ["context"]
+ (expr_let "oldValue"
+  (expr_app (expr_id "%ToNumber")
+   [expr_app (expr_id "%EnvGetValue")
+    [expr_id "context"; expr_id "id"; expr_id "strict"]])
+  (expr_let "newValue"
+   (expr_app (expr_id "op")
+    [expr_id "oldValue"; expr_number (JsNumber.of_int (1))])
+   (expr_seq
+    (expr_app (expr_id "%EnvPutValue")
+     [expr_id "context"; expr_id "id"; expr_id "newValue"; expr_id "strict"])
+    (expr_if (expr_id "is_pre") (expr_id "newValue") (expr_id "oldValue"))))))
+(expr_app (expr_id "%EnvGetId")
+ [expr_id "context"; expr_id "id"; expr_id "f"])
+.
+Definition ex_privEnvPutValue := 
+expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
+(expr_if (expr_id "strict") (expr_app (expr_id "%UnboundId") [expr_id "id"])
+ (expr_set_attr pattr_value (expr_id "%global") (expr_id "id")
+  (expr_id "val")))
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_obj_attr oattr_class (expr_id "context"))
+  (expr_string "DeclEnvRec"))
+ (expr_if (expr_get_attr pattr_writable (expr_id "context") (expr_id "id"))
+  (expr_seq
+   (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
+    (expr_id "val")) expr_empty)
+  (expr_if (expr_id "strict")
+   (expr_app (expr_id "%TypeError")
+    [expr_op2 binary_op_string_plus (expr_id "id")
+     (expr_string " is read-only")]) expr_empty))
+ (expr_if
+  (expr_op2 binary_op_stx_eq
+   (expr_get_obj_attr oattr_class (expr_id "context"))
+   (expr_string "ObjEnvRec"))
+  (expr_app (expr_id "%set-property")
+   [expr_get_internal "bindings" (expr_id "context");
+    expr_id "id";
+    expr_id "val"])
+  (expr_throw (expr_string "[env] Context not well formed! In %EnvPutValue"))))
 .
 Definition ex_privEnvTypeof := 
 expr_let "f"
@@ -3995,7 +4016,7 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
        (expr_op2 binary_op_stx_eq
         (expr_op1 unary_op_typeof (expr_id "evalStr")) (expr_string "string"))
        (expr_let "ret" (expr_eval (expr_id "evalStr") (expr_id "globalEnv"))
-        (expr_if (expr_op2 binary_op_stx_eq (expr_id "ret") expr_dump)
+        (expr_if (expr_op2 binary_op_stx_eq (expr_id "ret") expr_empty)
          expr_undefined (expr_id "ret"))) (expr_id "evalStr"))))))))
 .
 Definition ex_privcosCall :=  expr_string "cos NYI" .
@@ -4126,7 +4147,7 @@ Definition ex_privdefineFunction :=
 expr_seq
 (expr_app (expr_id "%defineGlobalVar")
  [expr_id "context"; expr_id "id"; expr_id "configurableBindings"])
-(expr_app (expr_id "%EnvCheckAssign")
+(expr_app (expr_id "%EnvPutValue")
  [expr_id "context"; expr_id "id"; expr_id "fo"; expr_true])
 .
 Definition ex_privdefineGlobalVar := 
@@ -7293,8 +7314,6 @@ expr_let "hasWrongProto"
 .
 Definition objCode :=  value_undefined .
 Definition name_objCode :=  "objCode" .
-Definition dolthis :=  value_object 2 .
-Definition name_dolthis :=  "$this" .
 Definition privAddAccessorField := 
 value_closure
 (closure_intro [] None ["obj"; "name"; "g"; "s"; "e"; "c"]
@@ -7869,6 +7888,8 @@ value_closure
  ex_privUnboundId)
 .
 Definition name_privUnboundId :=  "%UnboundId" .
+Definition privglobal :=  value_object 2 .
+Definition name_privglobal :=  "%global" .
 Definition privset_property := 
 value_closure
 (closure_intro
@@ -7883,17 +7904,23 @@ value_closure
  ex_privset_property)
 .
 Definition name_privset_property :=  "%set-property" .
-Definition privEnvCheckAssign := 
+Definition privEnvPutValue := 
 value_closure
 (closure_intro
- [("%EnvGetId", privEnvGetId);
-  ("%TypeError", privTypeError);
+ [("%TypeError", privTypeError);
   ("%UnboundId", privUnboundId);
-  ("%global", dolthis);
+  ("%global", privglobal);
   ("%set-property", privset_property)] None
- ["context"; "id"; "val"; "strict"] ex_privEnvCheckAssign)
+ ["context"; "id"; "val"; "strict"] ex_privEnvPutValue)
 .
-Definition name_privEnvCheckAssign :=  "%EnvCheckAssign" .
+Definition name_privEnvPutValue :=  "%EnvPutValue" .
+Definition privEnvAssign := 
+value_closure
+(closure_intro
+ [("%EnvGetId", privEnvGetId); ("%EnvPutValue", privEnvPutValue)] None
+ ["context"; "id"; "val_thunk"; "strict"] ex_privEnvAssign)
+.
+Definition name_privEnvAssign :=  "%EnvAssign" .
 Definition privSyntaxErrorProto :=  value_object 7 .
 Definition name_privSyntaxErrorProto :=  "%SyntaxErrorProto" .
 Definition privSyntaxError := 
@@ -7919,6 +7946,12 @@ value_closure
  None ["context"; "id"; "strict"] ex_privEnvGet)
 .
 Definition name_privEnvGet :=  "%EnvGet" .
+Definition privEnvGetValue := 
+value_closure
+(closure_intro [("%UnboundId", privUnboundId)] None
+ ["context"; "id"; "strict"] ex_privEnvGetValue)
+.
+Definition name_privEnvGetValue :=  "%EnvGetValue" .
 Definition privEnvImplicitThis := 
 value_closure (closure_intro [] None ["context"] ex_privEnvImplicitThis)
 .
@@ -7926,8 +7959,9 @@ Definition name_privEnvImplicitThis :=  "%EnvImplicitThis" .
 Definition privEnvPrepostOp := 
 value_closure
 (closure_intro
- [("%EnvCheckAssign", privEnvCheckAssign);
-  ("%EnvGet", privEnvGet);
+ [("%EnvGetId", privEnvGetId);
+  ("%EnvGetValue", privEnvGetValue);
+  ("%EnvPutValue", privEnvPutValue);
   ("%ToNumber", privToNumber)] None
  ["context"; "id"; "op"; "is_pre"; "strict"] ex_privEnvPrepostOp)
 .
@@ -7998,7 +8032,7 @@ Definition privevalCall :=
 value_closure
 (closure_intro
  [("%configurableEval", privconfigurableEval);
-  ("%global", dolthis);
+  ("%global", privglobal);
   ("%globalContext", privglobalContext)] None ["obj"; "this"; "args"]
  ex_privevalCall)
 .
@@ -8586,7 +8620,7 @@ Definition name_privdefineGlobalVar :=  "%defineGlobalVar" .
 Definition privdefineFunction := 
 value_closure
 (closure_intro
- [("%EnvCheckAssign", privEnvCheckAssign);
+ [("%EnvPutValue", privEnvPutValue);
   ("%defineGlobalVar", privdefineGlobalVar)] None
  ["context"; "id"; "fo"; "configurableBindings"] ex_privdefineFunction)
 .
@@ -9140,8 +9174,8 @@ value_closure
 Definition name_privreplaceCall :=  "%replaceCall" .
 Definition privresolveThis := 
 value_closure
-(closure_intro [("%ToObject", privToObject); ("%global", dolthis)] None
- ["strict"; "obj"] ex_privresolveThis)
+(closure_intro [("%ToObject", privToObject); ("%global", privglobal)] 
+ None ["strict"; "obj"] ex_privresolveThis)
 .
 Definition name_privresolveThis :=  "%resolveThis" .
 Definition privreverse :=  value_object 84 .
@@ -9411,8 +9445,6 @@ value_closure
  None ["this"; "args"; "proto"; "typestr"] ex_privvalueOfCall)
 .
 Definition name_privvalueOfCall :=  "%valueOfCall" .
-Definition evalCode :=  value_false .
-Definition name_evalCode :=  "evalCode" .
 Definition isAccessorField := 
 value_closure (closure_intro [] None ["obj"; "field"] ex_isAccessorField)
 .
@@ -9736,8 +9768,7 @@ value_closure
 .
 Definition name_objCode38 :=  "objCode" .
 Definition ctx_items := 
-[(name_dolthis, dolthis);
- (name_privAddAccessorField, privAddAccessorField);
+[(name_privAddAccessorField, privAddAccessorField);
  (name_privAddDataField, privAddDataField);
  (name_privAddJsAccessorField, privAddJsAccessorField);
  (name_privAppExpr, privAppExpr);
@@ -9773,12 +9804,14 @@ Definition ctx_items :=
  (name_privDefaultCall, privDefaultCall);
  (name_privDefaultConstruct, privDefaultConstruct);
  (name_privDelete, privDelete);
- (name_privEnvCheckAssign, privEnvCheckAssign);
+ (name_privEnvAssign, privEnvAssign);
  (name_privEnvDelete, privEnvDelete);
  (name_privEnvGet, privEnvGet);
  (name_privEnvGetId, privEnvGetId);
+ (name_privEnvGetValue, privEnvGetValue);
  (name_privEnvImplicitThis, privEnvImplicitThis);
  (name_privEnvPrepostOp, privEnvPrepostOp);
+ (name_privEnvPutValue, privEnvPutValue);
  (name_privEnvTypeof, privEnvTypeof);
  (name_privEqEq, privEqEq);
  (name_privErrorConstructor, privErrorConstructor);
@@ -9988,7 +10021,7 @@ Definition ctx_items :=
  (name_privgetMonthCall, privgetMonthCall);
  (name_privgetYear, privgetYear);
  (name_privgetYearCall, privgetYearCall);
- (name_dolthis, dolthis);
+ (name_privglobal, privglobal);
  (name_privglobalContext, privglobalContext);
  (name_privgopd, privgopd);
  (name_privgopdCall, privgopdCall);
@@ -10150,18 +10183,14 @@ Definition ctx_items :=
  (name_copy_access_desc, copy_access_desc);
  (name_copy_data_desc, copy_data_desc);
  (name_copy_when_defined, copy_when_defined);
- (name_evalCode, evalCode);
  (name_isAccessorDescriptor, isAccessorDescriptor);
  (name_isAccessorField, isAccessorField);
  (name_isDataDescriptor, isDataDescriptor);
  (name_isDataField, isDataField);
  (name_isGenericDescriptor, isGenericDescriptor);
- (name_isGenericField, isGenericField);
- (name_privglobalContext, privglobalContext);
- (name_privglobalContext, privglobalContext)]
+ (name_isGenericField, isGenericField)]
 .
 Ltac ctx_compute := cbv beta iota zeta delta -[
-dolthis
 privAddAccessorField
 privAddDataField
 privAddJsAccessorField
@@ -10198,12 +10227,14 @@ privDeclEnvAddBinding
 privDefaultCall
 privDefaultConstruct
 privDelete
-privEnvCheckAssign
+privEnvAssign
 privEnvDelete
 privEnvGet
 privEnvGetId
+privEnvGetValue
 privEnvImplicitThis
 privEnvPrepostOp
+privEnvPutValue
 privEnvTypeof
 privEqEq
 privErrorConstructor
@@ -10413,7 +10444,7 @@ privgetMonth
 privgetMonthCall
 privgetYear
 privgetYearCall
-dolthis
+privglobal
 privglobalContext
 privgopd
 privgopdCall
@@ -10575,15 +10606,12 @@ privvalueOfCall
 copy_access_desc
 copy_data_desc
 copy_when_defined
-evalCode
 isAccessorDescriptor
 isAccessorField
 isDataDescriptor
 isDataField
 isGenericDescriptor
 isGenericField
-privglobalContext
-privglobalContext
 ].
 Definition store_items := [
 (0, {|object_attrs :=
@@ -10596,8 +10624,7 @@ Definition store_items := [
                   attributes_accessor_of {|attributes_accessor_get :=
                                            value_closure
                                            (closure_intro
-                                            [("$this", dolthis);
-                                             ("%AddAccessorField", privAddAccessorField);
+                                            [("%AddAccessorField", privAddAccessorField);
                                              ("%AddDataField", privAddDataField);
                                              ("%AddJsAccessorField", privAddJsAccessorField);
                                              ("%AppExpr", privAppExpr);
@@ -10633,12 +10660,14 @@ Definition store_items := [
                                              ("%DefaultCall", privDefaultCall);
                                              ("%DefaultConstruct", privDefaultConstruct);
                                              ("%Delete", privDelete);
-                                             ("%EnvCheckAssign", privEnvCheckAssign);
+                                             ("%EnvAssign", privEnvAssign);
                                              ("%EnvDelete", privEnvDelete);
                                              ("%EnvGet", privEnvGet);
                                              ("%EnvGetId", privEnvGetId);
+                                             ("%EnvGetValue", privEnvGetValue);
                                              ("%EnvImplicitThis", privEnvImplicitThis);
                                              ("%EnvPrepostOp", privEnvPrepostOp);
+                                             ("%EnvPutValue", privEnvPutValue);
                                              ("%EnvTypeof", privEnvTypeof);
                                              ("%EqEq", privEqEq);
                                              ("%ErrorConstructor", privErrorConstructor);
@@ -10848,7 +10877,7 @@ Definition store_items := [
                                              ("%getMonthCall", privgetMonthCall);
                                              ("%getYear", privgetYear);
                                              ("%getYearCall", privgetYearCall);
-                                             ("%global", dolthis);
+                                             ("%global", privglobal);
                                              ("%globalContext", privglobalContext);
                                              ("%gopd", privgopd);
                                              ("%gopdCall", privgopdCall);
@@ -11010,15 +11039,12 @@ Definition store_items := [
                                              ("copy-access-desc", copy_access_desc);
                                              ("copy-data-desc", copy_data_desc);
                                              ("copy-when-defined", copy_when_defined);
-                                             ("evalCode", evalCode);
                                              ("isAccessorDescriptor", isAccessorDescriptor);
                                              ("isAccessorField", isAccessorField);
                                              ("isDataDescriptor", isDataDescriptor);
                                              ("isDataField", isDataField);
                                              ("isGenericDescriptor", isGenericDescriptor);
-                                             ("isGenericField", isGenericField);
-                                             ("nonstrictContext", privglobalContext);
-                                             ("strictContext", privglobalContext)]
+                                             ("isGenericField", isGenericField)]
                                             None ["%"] ex_getter);
                                            attributes_accessor_set :=
                                            value_undefined;

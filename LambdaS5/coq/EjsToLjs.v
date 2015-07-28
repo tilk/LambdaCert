@@ -61,7 +61,8 @@ Definition make_set_field obj fld v :=
     with_error_dispatch (make_app_builtin "%set-property" [to_object obj; to_string fld; v]).
 
 Definition make_var_set fld v :=
-    make_app_builtin "%EnvCheckAssign" [L.expr_id "$context"; L.expr_string fld; v; L.expr_id "$strict"].
+    make_app_builtin "%EnvAssign" 
+        [L.expr_id "$context"; L.expr_string fld; L.expr_lambda [] v; L.expr_id "$strict"].
 
 Definition make_var_id i :=    
     make_app_builtin "%EnvGet" [L.expr_id "$context"; L.expr_string i; L.expr_id "$strict"].
@@ -354,7 +355,7 @@ Definition make_assign f (e1 : E.expr) e2 :=
     reference_match e1
         (fun obj fld => make_set_field (f obj) (f fld) e2)
         (fun s => make_var_set s e2)
-        (fun e => L.expr_seq e2 (reference_error "invalid lhs for assignment")).
+        (fun e => L.expr_seq (f e) (L.expr_seq e2 (reference_error "invalid lhs for assignment"))).
 
 (* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
@@ -423,3 +424,8 @@ Definition ejs_prog_to_ljs ep :=
     L.expr_let "$context" (L.expr_id (if strict then "strictContext" else "nonstrictContext")) 
         (L.expr_seq (L.expr_seqs initializers) (make_strictness strict (ejs_to_ljs inner))). 
 
+Definition add_init e :=
+    L.expr_let "strictContext" (L.expr_id "%globalContext") (
+    L.expr_let "nonstrictContext" (L.expr_id "%globalContext") (
+    L.expr_let "$this" (L.expr_id "%global") (
+    L.expr_let "evalCode" (L.expr_bool false) e))).

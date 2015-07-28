@@ -905,11 +905,161 @@ Qed.
 
 (** *** Assignment *)
 
+(* TODO should not be necessary *)
+Hint Extern 3 (J.red_expr _ _ (J.expr_assign_1 _ _ _) _) => eapply J.red_expr_assign_1_simple : js_ljs.
+
+Lemma mutability_not_immutable_lemma : forall jmut,
+    jmut <> J.mutability_uninitialized_immutable ->
+    jmut <> J.mutability_immutable -> 
+    mutability_writable jmut = true.
+Proof.
+    introv Hx1 Hx2.
+    destruct jmut; tryfalse; try reflexivity.
+Qed.
+
+Lemma env_record_related_decl_write : forall BR jder s obj jmut jv v,
+    value_related BR jv v ->
+    env_record_related BR (J.env_record_decl jder) obj ->
+    env_record_related BR 
+        (J.env_record_decl (J.decl_env_record_write jder s jmut jv)) 
+        (L.set_object_property obj s 
+            (L.attributes_data_of (L.attributes_data_intro v (* TODO factorize this to the decl_env_record_rel *)
+                (mutability_writable jmut) true (mutability_configurable jmut)))).
+Proof.
+    introv Hvrel Herel. 
+    destruct obj. destruct object_attrs.
+    inverts Herel as Herel. inverts Herel. 
+    unfolds L.object_proto. unfolds L.object_class. unfolds L.object_extensible.
+    simpls.
+    constructor. constructor; eauto.
+    simpl.
+    intro s'.
+    destruct (classic (s = s')). {
+        skip. (* TODO *)
+    } {
+        skip. (* TODO *)
+    }
+Qed.
+
+Hint Extern 3 (env_record_related _ ?jer _) => not (is_evar jer); eapply env_record_related_decl_write : js_ljs.
+
+Lemma env_put_value_lemma : forall BR k jst jc c st st' r v v' s b jrbt jv,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvPutValue 
+        [v; L.value_string s; v'; L.value_bool b]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    ref_base_type_related BR jrbt v ->
+    ref_base_type_var jrbt ->
+    value_related BR jv v' ->
+    concl_ext_expr_resvalue BR jst jc c st st' r 
+        (J.spec_put_value (J.resvalue_ref (J.ref_intro jrbt s b)) jv) (fun _ => True).
+Proof.
+    introv Hlred Hcinv Hinv Hrbt Hrbtv Hvrel.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply. 
+    ref_base_type_var_invert. {
+        repeat ljs_autoforward.
+        destruct b. { (* strict *)
+            repeat ljs_autoforward.
+            forwards_th Hx : unbound_id_lemma. 
+            destr_concl; tryfalse.
+            ljs_handle_abort.
+        } { (* nonstrict *)
+            repeat ljs_autoforward.
+            skip. (* TODO involves the global object *)
+        }
+    }
+    repeat ljs_autoforward.
+    lets (jer&Hjbinds&Herel) : env_record_related_lookup_lemma ___; try eassumption.
+    inverts Herel as Herel. { (* declarative records *)
+        inverts Herel.
+        unfolds L.object_class.
+        cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
+        repeat ljs_autoforward.
+        lets Hx : decl_env_record_vars_related_binds_lemma ___; try eassumption.
+        destruct_hyp Hx.
+        destruct (classic (jmut = J.mutability_immutable)) as [Heqmut|Heqmut]. { (* immutable binding *)
+            subst_hyp Heqmut.
+            destruct b. { (* strict *)
+                repeat ljs_autoforward.
+                forwards_th Hx : type_error_lemma. eauto_js.
+                destr_concl; tryfalse.
+                ljs_handle_abort.
+            } { (* nonstrict *)
+                repeat ljs_autoforward.
+                jauto_js 10. 
+            }
+        } { (* mutable binding *)
+            rewrite mutability_not_immutable_lemma in H8 by eassumption. (* TODO *)
+            repeat ljs_autoforward.
+            inv_ljs; repeat binds_determine; try solve [false; prove_bag]. (* TODO *)
+            repeat ljs_autoforward.
+            destruct obj0.
+            jauto_js 8.
+        }
+    } { (* object records *)
+        skip. (* TODO *)
+    }
+Qed.
+
 Lemma red_expr_assign0_ok : forall k je1 je2,
     ih_expr k ->
     th_expr k (J.expr_assign je1 None je2).
 Proof.
-Admitted.
+    introv IHe Hcinv Hinv Hlred.
+    unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_assign.
+    reference_match_cases Hlred Hx Heq Hrp. { (* object field assign *)
+        skip. (* TODO *)
+    } { (* variable assign *)
+        repeat ljs_autoforward.
+        inverts red_exprh H7. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
+        destruct_hyp Hx.
+        inverts red_exprh Hx3.
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        inverts red_exprh H13. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        subst_hyp Hstrict.
+        forwards_th Hx : env_put_value_lemma. eauto_js. eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        repeat ljs_autoforward.
+        jauto_js 15.
+    } { (* invalid lhs, error thrown *)
+        repeat ljs_autoforward.
+        destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        forwards_th Hx : reference_error_lemma. eauto_js.
+        destr_concl; tryfalse.
+        ljs_handle_abort.
+    }
+Qed.
+
+Lemma red_expr_assign_ok : forall k je1 je2 oo,
+    ih_expr k ->
+    th_expr k (J.expr_assign je1 oo je2).
+Proof.
+    introv IHe.
+    destruct oo.
+    skip.
+    eapply red_expr_assign0_ok; assumption.
+Qed.
 
 (** *** Unary operators *)
 
@@ -1149,7 +1299,8 @@ Hint Extern 3 (env_record_related _ ?jer _) => not (is_evar jer); eapply env_rec
 
 Lemma mutability_not_deletable_lemma : forall jmut,
     jmut <> J.mutability_uninitialized_immutable ->
-    jmut <> J.mutability_deletable -> mutability_configurable jmut = false.
+    jmut <> J.mutability_deletable -> 
+    mutability_configurable jmut = false.
 Proof.
     introv Hx1 Hx2.
     destruct jmut; tryfalse; try reflexivity.

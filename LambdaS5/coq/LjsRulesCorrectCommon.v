@@ -268,11 +268,11 @@ Ltac inv_literal_ljs :=
     end in inverts red_exprh H.
 
 Ltac unfold_concl := 
-    unfold concl_ext_expr_value, concl_expr_getvalue, 
+    unfold concl_ext_expr_value, concl_ext_expr_resvalue, concl_expr_getvalue, 
         concl_stat, concl_spec.
  
 Tactic Notation "unfold_concl" "in" hyp(H) := 
-    unfold concl_ext_expr_value, concl_expr_getvalue, 
+    unfold concl_ext_expr_value, concl_ext_expr_resvalue, concl_expr_getvalue, 
         concl_stat, concl_spec in H. 
 
 Ltac js_ljs_false_invert := match goal with 
@@ -307,6 +307,8 @@ Ltac destr_concl := match goal with
     | H : concl_stat _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_ext_expr_value _ _ _ _ _ _ _ _ _ |- _ =>
+        unfold_concl in H; destruct_hyp H
+    | H : concl_ext_expr_resvalue _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_expr_getvalue _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
@@ -1536,6 +1538,22 @@ Hint Extern 4 (context_invariant ?BR2 _ _) =>
     match goal with 
     | H : context_invariant ?BR1 _ _ |- _ => sub_helper BR1 BR2 context_invariant_bisim_incl_preserved
     | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 context_invariant_bisim_incl_preserved
+    end 
+    : js_ljs.
+
+Lemma ref_base_type_related_bisim_incl_preserved : forall BR1 BR2 jrbt v,
+    BR1 \c BR2 ->
+    ref_base_type_related BR1 jrbt v ->
+    ref_base_type_related BR2 jrbt v.
+Proof.
+    introv Hs Hrel.
+    inverts Hrel; eauto_js.
+Qed.
+
+Hint Extern 4 (ref_base_type_related ?BR2 _ _) => 
+    match goal with 
+    | H : ref_base_type_related ?BR1 _ _ |- _ => sub_helper BR1 BR2 ref_base_type_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 ref_base_type_related_bisim_incl_preserved
     end 
     : js_ljs.
 
@@ -3162,7 +3180,7 @@ Ltac apply_ih_expr := match goal with
         let Hih := fresh "IH" in
         let Hsec := fresh "Hsec" in
         let Hsub := fresh "H" in
-        asserts Hle : (k < k')%nat; [omega | idtac];
+        asserts Hle : (k < k')%nat; [math | idtac];
         asserts Hsub : (BR' \c BR); [prove_bag | idtac];
         asserts HC : (context_invariant BR jc c); 
             [applys context_invariant_bisim_incl_preserved Hsub; ljs_context_invariant | idtac]; 
@@ -3179,7 +3197,7 @@ Ltac apply_ih_stat := match goal with
         let HC := fresh "HC" in
         let Hsec := fresh "Hsec" in
         let Hsub := fresh "H" in
-        asserts Hle : (k < k')%nat; [omega | idtac];
+        asserts Hle : (k < k')%nat; [math | idtac];
         asserts Hsub : (BR' \c BR); [prove_bag | idtac];
         asserts HC : (context_invariant BR jc c); 
             [applys context_invariant_bisim_incl_preserved Hsub; ljs_context_invariant | idtac]; 
