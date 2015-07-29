@@ -920,13 +920,14 @@ Qed.
 Lemma env_record_related_decl_write : forall BR jder s obj jmut jv v,
     value_related BR jv v ->
     env_record_related BR (J.env_record_decl jder) obj ->
+    jmut <> J.mutability_uninitialized_immutable ->
     env_record_related BR 
         (J.env_record_decl (J.decl_env_record_write jder s jmut jv)) 
         (L.set_object_property obj s 
             (L.attributes_data_of (L.attributes_data_intro v (* TODO factorize this to the decl_env_record_rel *)
                 (mutability_writable jmut) true (mutability_configurable jmut)))).
 Proof.
-    introv Hvrel Herel. 
+    introv Hvrel Herel Hjmut. 
     destruct obj. destruct object_attrs.
     inverts Herel as Herel. inverts Herel. 
     unfolds L.object_proto. unfolds L.object_class. unfolds L.object_extensible.
@@ -934,10 +935,22 @@ Proof.
     constructor. constructor; eauto.
     simpl.
     intro s'.
-    destruct (classic (s = s')). {
-        skip. (* TODO *)
+    destruct (classic (s = s')) as [Hs|Hs]. {
+        subst_hyp Hs.
+        right.
+        jauto_js.
     } {
-        skip. (* TODO *)
+        lets Hx : decl_env_record_related_vars s'.
+        destruct_hyp Hx. {
+            left. 
+            asserts Hs' : (s' <> s). solve [eauto].
+            unfolds J.decl_env_record_write. repeat rew_heap_to_libbag. 
+            split; intro Hi; eapply index_update_diff_inv in Hi; eauto.
+        } {
+            right. 
+            unfolds J.decl_env_record_write. repeat rew_heap_to_libbag. 
+            prove_bag 20.
+        }
     }
 Qed.
 
