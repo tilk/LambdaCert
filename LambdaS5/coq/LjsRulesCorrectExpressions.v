@@ -990,7 +990,8 @@ Lemma env_put_value_lemma : forall BR k jst jc c st st' r v v' s b jrbt jv,
     ref_base_type_var jrbt ->
     value_related BR jv v' ->
     concl_ext_expr_resvalue BR jst jc c st st' r 
-        (J.spec_put_value (J.resvalue_ref (J.ref_intro jrbt s b)) jv) (fun _ => True).
+        (J.spec_put_value (J.resvalue_ref (J.ref_intro jrbt s b)) jv) 
+            (fun jrv => jrv = J.resvalue_empty).
 Proof.
     introv Hlred Hcinv Hinv Hrbt Hrbtv Hvrel.
     inverts red_exprh Hlred.
@@ -1100,6 +1101,109 @@ Proof.
 Qed.
 
 (** *** Unary operators *)
+
+(* TODO move *)
+Lemma nat_one_is_js_one : @eq number one 1.
+Admitted. (* TODO *)
+
+Lemma prepost_op_to_ljs_lemma : forall op F b je,
+    J.prepost_op op F b ->
+    exists lop F',
+    L.num_binary_op lop F' /\
+    F = (fun n => F' n 1) /\
+    js_expr_to_ljs (J.expr_unary_op op je) = 
+        E.make_xfix lop b E.ejs_to_ljs (E.js_expr_to_ejs je).
+Proof.
+    introv Hjop.
+    inverts Hjop; unfolds js_expr_to_ljs; simpl;
+    [exists L.binary_op_add | exists L.binary_op_sub 
+    |exists L.binary_op_add | exists L.binary_op_sub];
+    eexists; (split; [eapply L.num_binary_op_add || eapply L.num_binary_op_sub | idtac]);
+    rewrite <- nat_one_is_js_one; jauto_js.    
+Qed.
+
+Lemma js_prepost_unary_op_hint : forall op F b,
+    J.prepost_op op F b -> J.prepost_unary_op op.
+Proof. introv Hx. unfolds. eauto. Qed.
+
+Hint Resolve js_prepost_unary_op_hint : js_ljs.
+
+Hint Extern 3 (J.red_expr _ _ (J.expr_prepost_1 _ _) _) => eapply J.red_expr_prepost_1_valid : js_ljs.
+
+(* TODO move, ljs only *)
+Lemma eval_binary_op_num_lemma : forall op F st n1 n2 v,
+    L.num_binary_op op F ->
+    L.eval_binary_op op st (L.value_number n1) (L.value_number n2) v ->
+    v = L.value_number (F n1 n2).
+Proof.
+    introv Hnumop Hevop.
+    inverts Hevop as Hxop;
+    inverts Hnumop; try inverts Hxop;
+    reflexivity.
+Qed.
+
+Lemma red_expr_unary_op_prepost : forall k op F b je,
+    ih_expr k ->
+    J.prepost_op op F b ->
+    th_expr k (J.expr_unary_op op je).
+Proof.
+    introv IHe Hop Hcinv Hinv Hlred.
+    lets (lop&F'&Hlop&Feq&Heq) : prepost_op_to_ljs_lemma Hop.
+    rewrite Heq in Hlred. clear Heq.
+    subst_hyp Feq.
+    unfolds E.make_xfix.
+    reference_match_cases Hlred Hx Heq Hrp. { (* ++ on objects *)
+        skip. (* TODO *)
+    } { (* ++ on variables *)
+        repeat ljs_autoforward.
+        inverts red_exprh H7. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
+        destruct_hyp Hx.
+        inverts red_exprh Hx3.
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        subst_hyp Hstrict.
+        forwards_th Hx : env_get_value_lemma. eauto_js. eassumption.
+        destr_concl; try ljs_handle_abort. 
+        repeat ljs_autoforward.
+        forwards_th Hx : red_spec_to_number_unary_ok.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_invert.
+        repeat ljs_autoforward.
+        inverts red_exprh H29. (* TODO *)
+        ljs_apply.
+        repeat ljs_autoforward.
+        forwards Hveq : eval_binary_op_num_lemma; try eassumption.
+        subst_hyp Hveq.
+        forwards_th Hx : env_put_value_lemma. eauto_js. eassumption. 
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        destruct b; repeat ljs_autoforward; jauto_js 15.
+    } { (* ++ on general expressions *)
+        repeat ljs_autoforward.
+        destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort. 
+        repeat ljs_autoforward.
+        forwards_th Hx : red_spec_to_number_unary_ok.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_invert.
+        repeat ljs_autoforward.
+        forwards_th Hx : reference_error_lemma. eauto_js.
+        destr_concl; tryfalse.
+        ljs_handle_abort.
+    }
+Qed.
 
 Lemma red_expr_unary_op_2_not_ok : forall k,
     ih_expr k ->
@@ -1826,18 +1930,6 @@ Proof.
     destr_concl. 
     jauto_js 8.
     jauto_js 9.
-Qed.
-
-(* TODO move, ljs only *)
-Lemma eval_binary_op_num_lemma : forall op F st n1 n2 v,
-    L.num_binary_op op F ->
-    L.eval_binary_op op st (L.value_number n1) (L.value_number n2) v ->
-    v = L.value_number (F n1 n2).
-Proof.
-    introv Hnumop Hevop.
-    inverts Hevop as Hxop;
-    inverts Hnumop; try inverts Hxop;
-    reflexivity.
 Qed.
 
 (* TODO move *) 

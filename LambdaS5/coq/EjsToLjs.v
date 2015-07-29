@@ -192,7 +192,8 @@ Definition make_xfix op b f e :=
         (fun obj fld => make_app_builtin "%PrepostOp" [f obj; f fld; op2_func op; L.expr_bool b])
         (fun varid => make_app_builtin "%EnvPrepostOp" 
             [context; L.expr_string varid; op2_func op; L.expr_bool b; L.expr_id "$strict"])
-        (fun _ => syntax_error "Illegal use of an prefix/postfix operator").
+        (fun _ => L.expr_seq (make_app_builtin "%ToNumber" [f e])
+            (reference_error "Illegal use of an prefix/postfix operator")).
 
 Definition make_typeof f e :=
     reference_match e
