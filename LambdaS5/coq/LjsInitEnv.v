@@ -2343,20 +2343,8 @@ expr_let "f"
 Definition ex_privEnvGet := 
 expr_let "f"
 (expr_lambda ["context"]
- (expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
-  (expr_app (expr_id "%UnboundId") [expr_id "id"])
-  (expr_if
-   (expr_op2 binary_op_stx_eq
-    (expr_get_obj_attr oattr_class (expr_id "context"))
-    (expr_string "DeclEnvRec"))
-   (expr_get_attr pattr_value (expr_id "context") (expr_id "id"))
-   (expr_if
-    (expr_op2 binary_op_stx_eq
-     (expr_get_obj_attr oattr_class (expr_id "context"))
-     (expr_string "ObjEnvRec"))
-    (expr_get_field (expr_get_internal "bindings" (expr_id "context"))
-     (expr_id "id"))
-    (expr_throw (expr_string "[env] Context not well formed! In %EnvGet"))))))
+ (expr_app (expr_id "%EnvGetValue")
+  [expr_id "context"; expr_id "id"; expr_id "strict"]))
 (expr_app (expr_id "%EnvGetId")
  [expr_id "context"; expr_id "id"; expr_id "f"])
 .
@@ -7940,18 +7928,19 @@ value_closure
  ["context"; "id"; "strict"] ex_privEnvDelete)
 .
 Definition name_privEnvDelete :=  "%EnvDelete" .
-Definition privEnvGet := 
-value_closure
-(closure_intro [("%EnvGetId", privEnvGetId); ("%UnboundId", privUnboundId)]
- None ["context"; "id"; "strict"] ex_privEnvGet)
-.
-Definition name_privEnvGet :=  "%EnvGet" .
 Definition privEnvGetValue := 
 value_closure
 (closure_intro [("%UnboundId", privUnboundId)] None
  ["context"; "id"; "strict"] ex_privEnvGetValue)
 .
 Definition name_privEnvGetValue :=  "%EnvGetValue" .
+Definition privEnvGet := 
+value_closure
+(closure_intro
+ [("%EnvGetId", privEnvGetId); ("%EnvGetValue", privEnvGetValue)] None
+ ["context"; "id"; "strict"] ex_privEnvGet)
+.
+Definition name_privEnvGet :=  "%EnvGet" .
 Definition privEnvImplicitThis := 
 value_closure (closure_intro [] None ["context"] ex_privEnvImplicitThis)
 .

@@ -842,20 +842,20 @@ Ltac ref_base_type_var_invert :=
         end
     end.
 
-Lemma red_expr_identifier_ok : forall k i,
-    th_expr k (J.expr_identifier i).
+(* TODO why get_value is an ext_spec, and put_value is ext_expr? *)
+Lemma env_get_value_lemma : forall BR k jst jc c st st' r v s b jrbt,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvGetValue 
+        [v; L.value_string s; L.value_bool b]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    ref_base_type_related BR jrbt v ->
+    ref_base_type_var jrbt ->
+    concl_spec BR jst jc c st st' r 
+        (J.spec_get_value (J.resvalue_ref (J.ref_intro jrbt s b))) 
+        (fun BR' _ jv => exists v, r = L.res_value v /\ value_related BR' jv v ).
 Proof.
-    introv Hcinv Hinv Hlred.
-    repeat ljs_autoforward.
-    inverts red_exprh H7. (* TODO *)
-    ljs_apply.
-    ljs_context_invariant_after_apply.
-    repeat ljs_autoforward.
-    lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
-        eassumption.
-    forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
-    destruct_hyp Hx.
-    inverts red_exprh Hx3.
+    introv Hlred Hcinv Hinv Hrbt Hrbtv.
+    inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply.
     ref_base_type_var_invert. {
@@ -877,6 +877,31 @@ Proof.
     } { (* object records *)
         skip.
     }
+Qed.
+
+Lemma red_expr_identifier_ok : forall k i,
+    th_expr k (J.expr_identifier i).
+Proof.
+    introv Hcinv Hinv Hlred.
+    repeat ljs_autoforward.
+    inverts red_exprh H7. (* TODO *)
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
+        eassumption.
+    forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
+    destruct_hyp Hx.
+    inverts red_exprh Hx3.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
+        eassumption.
+    subst_hyp Hstrict.
+    forwards_th Hx : env_get_value_lemma. eauto_js. eassumption.
+    destr_concl; try ljs_handle_abort.
+    jauto_js 10.
 Qed.
 
 (** *** Conditional *)
