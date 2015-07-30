@@ -3245,7 +3245,7 @@ Qed.
 
 Ltac ljs_abort_from_js := 
     match goal with
-    | Hja : J.abort (J.out_ter ?jst ?jr), Hc : context [L.out_ter ?st ?r],
+    | Hja : J.abort (J.out_ter ?jst ?jr),
       Hrel : res_related _ ?jst ?st ?jr ?r |- _ => 
       not is_hyp (L.abort (L.out_ter st r));
       let H := fresh "H" in
@@ -3282,16 +3282,7 @@ Ltac ih_leq :=
     | H : ih_call_prealloc ?k |- ih_call_prealloc ?k' => eapply ih_call_prealloc_leq; try eapply H; omega
     end.
 
-(* TODO auto-clear the red_exprh hypothesis used *)
-Ltac specializes_th H :=
-    try unfold th_stat, th_spec, th_ext_expr_unary, th_ext_expr_binary in H;
-    let needs_state := match type of H with
-        | context [state_invariant _ _ _ -> _] => constr:true (* TODO better *)
-        | _ => constr:false
-    end in
-    specializes H ___;
-    try match goal with Hx : state_invariant _ _ _ |- state_invariant _ _ _ => eapply Hx end;
-    try match goal with |- L.red_exprh _ _ _ _ _ => eassumption end;
+Ltac specializes_th_clean :=
     try match goal with 
     | Hx : context_invariant ?BR' _ _ |- context_invariant ?BR _ _ =>  
         let Hsub := fresh in
@@ -3316,11 +3307,26 @@ Ltac specializes_th H :=
     | |- resvalue_related _ _ ?v => not is_evar v; eauto_js
     | |- lexical_env_related _ _ ?v => not is_evar v; eauto_js
     end;
-    try ih_leq;
-    match needs_state with
-    | true => match goal with Hx : state_invariant _ _ _ |- _ => clear Hx end
-    | false => idtac
-    end.
+    try ih_leq.
+
+Ltac specializes_th H :=
+    try unfold th_stat, th_spec, th_call_prealloc, th_ext_expr_unary, th_ext_expr_binary,
+        th_construct_prealloc in H;
+    let rec spec := 
+        match type of H  with
+        | state_invariant _ _ _ -> _ => 
+            match goal with
+            | H1 : state_invariant _ _ _ |- _ => specializes H H1; clear H1; spec
+            end
+        | L.red_exprh _ _ _ _ _ -> _ =>
+            match goal with
+            | H1 : L.red_exprh _ _ _ _ _ |- _ => specializes H H1; clear H1; spec
+            end
+        | _ -> _ => specializes H __; [idtac | spec]
+        | forall _, _ => specializes H __; [spec]
+        | _ => idtac
+        end
+    in spec; specializes_th_clean.
 
 Tactic Notation "forwards_th" ident(H) ":" constr(th) :=
     lets H : th;

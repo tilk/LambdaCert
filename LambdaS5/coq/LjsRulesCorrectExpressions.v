@@ -376,7 +376,6 @@ Proof.
     ljs_out_redh_ter.
     forwards_th : red_spec_list_ok.
     destr_concl; try ljs_handle_abort.
-    clear H7. (* TODO fix forwards_th *)
     repeat ljs_autoforward.
     inverts red_exprh H7. (* TODO *)
     ljs_apply.
@@ -764,7 +763,6 @@ Proof.
         ljs_out_redh_ter.
         forwards_th : red_spec_list_ok.
         destr_concl; try ljs_handle_abort.
-        clear H7. (* TODO fix forwards_th *)
         repeat ljs_autoforward.
         inverts red_exprh H7. (* TODO *)
         ljs_apply.
@@ -1064,7 +1062,7 @@ Proof.
         ljs_apply.
         ljs_context_invariant_after_apply.
         repeat ljs_autoforward.
-        inverts red_exprh H13. (* TODO *)
+        inverts red_exprh H12. (* TODO *)
         ljs_apply.
         ljs_context_invariant_after_apply.
         repeat ljs_autoforward.
@@ -1179,7 +1177,7 @@ Proof.
         res_related_invert.
         resvalue_related_invert.
         repeat ljs_autoforward.
-        inverts red_exprh H29. (* TODO *)
+        inverts red_exprh H26. (* TODO *)
         ljs_apply.
         repeat ljs_autoforward.
         forwards Hveq : eval_binary_op_num_lemma; try eassumption.
@@ -1474,13 +1472,13 @@ Proof.
             eassumption.
         subst_hyp Hstrict.
         inv_ljs. { (* strict *)
-            symmetry in H16. (* TODO *) (* J.execution_ctx_strict jc = true *)
+            symmetry in H15. (* TODO *) (* J.execution_ctx_strict jc = true *)
             repeat ljs_autoforward.
             forwards_th Hx : syntax_error_lemma. eauto_js.
             destr_concl; tryfalse.
             ref_base_type_var_invert; ljs_handle_abort.
         } (* not strict *)
-        symmetry in H16. (* TODO *)
+        symmetry in H15. (* TODO *)
         repeat ljs_autoforward.
         ref_base_type_var_invert. {
             repeat ljs_autoforward.
@@ -1499,12 +1497,12 @@ Proof.
                 subst_hyp Hmut.
                 repeat ljs_autoforward.
                 unfolds L.get_object_property. (* TODO ? *)
-                erewrite read_option_binds_inv in H26 by solve [eassumption]. (* TODO *)
+                erewrite read_option_binds_inv in H25 by solve [eassumption]. (* TODO *)
                 repeat ljs_autoforward.
                 destruct obj.
                 jauto_js 15.
             } {
-                rewrite mutability_not_deletable_lemma in H17 by eassumption.
+                rewrite mutability_not_deletable_lemma in H16 by eassumption.
                 repeat ljs_autoforward.
                 jauto_js 15.
             }
@@ -1985,7 +1983,7 @@ Proof.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    inverts red_exprh H15. (* TODO *)
+    inverts red_exprh H14. (* TODO *)
     ljs_apply.
     repeat ljs_autoforward.
     forwards_th Hx : eval_binary_op_num_lemma. eassumption. eassumption. 
