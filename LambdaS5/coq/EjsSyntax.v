@@ -62,5 +62,6 @@ with switchbody : Type :=
 .
 
 Definition expr_seqs es := fold_left (fun e1 e2 => expr_seq e2 e1) expr_empty es.
+Definition expr_fseqs_r es := fold_right expr_fseq expr_empty es.
 
 Definition prog_strictness p := match p with prog_intro b _ _ => b end.

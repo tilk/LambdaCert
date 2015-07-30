@@ -66,7 +66,7 @@ Proof.
     (* stat_block *)
     applys red_stat_block_ok; eassumption.
     (* stat_var_decl *)
-    skip.
+    applys red_stat_var_decl_ok; eassumption.
     (* stat_if *)
     applys red_stat_if_ok; eassumption.
     (* stat_do_while *)

@@ -55,6 +55,13 @@ Definition js_label_to_ejs s l := s ++
 Definition js_label_set_to_labels s (ls : J.label_set) e := 
     fold_right E.expr_label e (map (js_label_to_ejs s) ls).
 
+Definition js_vardecl_to_ejs (f : J.expr -> E.expr) vd := 
+        let '(s, oe) := vd in 
+        match oe with
+        | None => E.expr_undefined
+        | Some e => E.expr_var_set s (f e)
+        end.
+
 Fixpoint js_expr_to_ejs (e : J.expr) : E.expr := 
     match e with
     | J.expr_this => E.expr_this
@@ -80,17 +87,11 @@ with js_prop_to_ejs p :=
     | J.propbody_set is (J.funcbody_intro p s) => E.property_setter (E.expr_func None is (js_prog_to_ejs p) s)
     end
 with js_stat_to_ejs (e : J.stat) : E.expr := 
-    let js_vardecl_to_ejs vd := 
-        let '(s, oe) := vd in 
-        match oe with
-        | None => E.expr_undefined
-        | Some e => E.expr_var_set s (js_expr_to_ejs e)
-        end in
     match e with
     | J.stat_expr e => E.expr_noop (js_expr_to_ejs e)
     | J.stat_label s st => E.expr_label (js_label_to_ejs "%break" (J.label_string s)) (js_stat_to_ejs st)
     | J.stat_block sts => E.expr_seqs (List.map js_stat_to_ejs sts)
-    | J.stat_var_decl l => E.expr_fseq (E.expr_seqs (List.map js_vardecl_to_ejs l)) E.expr_empty
+    | J.stat_var_decl l => E.expr_fseqs_r (List.map (js_vardecl_to_ejs js_expr_to_ejs) l)
     | J.stat_if e st None => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) E.expr_empty
     | J.stat_if e st (Some st') => E.expr_if (js_expr_to_ejs e) (js_stat_to_ejs st) (js_stat_to_ejs st')
     | J.stat_do_while ls st e => 
@@ -141,7 +142,7 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         | None => E.expr_undefined
         | Some e => js_expr_to_ejs e
         end in
-        E.expr_seq (E.expr_seqs (List.map js_vardecl_to_ejs le1)) 
+        E.expr_seq (E.expr_fseqs_r (List.map (js_vardecl_to_ejs js_expr_to_ejs) le1)) 
             (js_label_set_to_labels "%break" ls 
                 (E.expr_while e2 (js_label_set_to_labels "%continue" ls (js_stat_to_ejs st)) e3))
 (* TODO for-in

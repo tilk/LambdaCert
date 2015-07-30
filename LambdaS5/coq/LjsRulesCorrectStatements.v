@@ -58,6 +58,72 @@ Proof.
     jauto_js.
 Qed.
 
+(** *** var_decl *)
+
+Lemma stat_vardecl_ejs_last_lemma : forall vd vdl,
+    E.js_stat_to_ejs (J.stat_var_decl (vd :: vdl)) = 
+        E.expr_fseq (E.js_vardecl_to_ejs E.js_expr_to_ejs vd) (E.js_stat_to_ejs (J.stat_var_decl vdl)).
+Proof.
+    intros. 
+    unfolds E.js_stat_to_ejs. 
+    unfolds E.expr_seqs.
+    rewrite_all list_map_tlc.
+    rew_list.
+    reflexivity.
+Qed.
+
+Lemma red_stat_var_decl_ok : forall vdl k,
+    ih_expr k ->
+    th_stat k (J.stat_var_decl vdl).
+Proof.
+    induction vdl;
+    introv IHe Hcinv Hinv Hlred. {
+        repeat ljs_autoforward.
+        jauto_js.
+    } {
+        unfolds js_stat_to_ljs.
+        rewrite stat_vardecl_ejs_last_lemma in Hlred.
+        destruct a. destruct o; unfolds E.js_vardecl_to_ejs. {
+            repeat ljs_autoforward.
+            inverts red_exprh H3.
+            ljs_apply.
+            ljs_context_invariant_after_apply.
+            repeat ljs_autoforward.
+            lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
+                eassumption.
+            forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
+            destruct_hyp Hx.
+            inverts red_exprh Hx3.
+            ljs_apply.
+            ljs_context_invariant_after_apply.
+            repeat ljs_autoforward.
+            inverts red_exprh H13. (* TODO *)
+            ljs_apply.
+            ljs_context_invariant_after_apply.
+            repeat ljs_autoforward.
+            destr_concl; try ljs_handle_abort.
+            repeat ljs_autoforward.
+            lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
+                eassumption.
+            subst_hyp Hstrict.
+            forwards_th Hx : env_put_value_lemma. eauto_js. eassumption.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            repeat ljs_autoforward.
+            specializes IHvdl (ih_expr_S IHe).
+            specializes_th IHvdl.
+            destr_concl; try ljs_handle_abort.
+            jauto_js 10.
+        } { (* no initializer *)
+            repeat ljs_autoforward.
+            specializes IHvdl (ih_expr_S IHe).
+            specializes_th IHvdl.
+            destr_concl; try ljs_handle_abort.
+            jauto_js.
+        }
+    }
+Qed.
+
 (** *** block *)
 
 Lemma stat_block_ejs_last_lemma : forall jts jt,
