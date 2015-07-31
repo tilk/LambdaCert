@@ -181,6 +181,9 @@ expr_object
  ("%EnvImplicitThis", property_data
                       (data_intro (expr_id "%EnvImplicitThis") expr_true
                        expr_false expr_false));
+ ("%EnvModify", property_data
+                (data_intro (expr_id "%EnvModify") expr_true expr_false
+                 expr_false));
  ("%EnvPrepostOp", property_data
                    (data_intro (expr_id "%EnvPrepostOp") expr_true expr_false
                     expr_false));
@@ -2462,6 +2465,21 @@ expr_if
   (expr_get_internal "bindings" (expr_id "context")) expr_undefined)
  (expr_throw
   (expr_string "[env] Context not well formed! In %EnvImplicitThis")))
+.
+Definition ex_privEnvModify := 
+expr_let "f"
+(expr_lambda ["context"]
+ (expr_let "val"
+  (expr_app (expr_id "op")
+   [expr_app (expr_id "%EnvGetValue")
+    [expr_id "context"; expr_id "id"; expr_id "strict"];
+    expr_app (expr_id "val_thunk") []])
+  (expr_seq
+   (expr_app (expr_id "%EnvPutValue")
+    [expr_id "context"; expr_id "id"; expr_id "val"; expr_id "strict"])
+   (expr_id "val"))))
+(expr_app (expr_id "%EnvGetId")
+ [expr_id "context"; expr_id "id"; expr_id "f"])
 .
 Definition ex_privEnvPrepostOp := 
 expr_let "f"
@@ -8075,6 +8093,15 @@ Definition privEnvImplicitThis :=
 value_closure (closure_intro [] None ["context"] ex_privEnvImplicitThis)
 .
 Definition name_privEnvImplicitThis :=  "%EnvImplicitThis" .
+Definition privEnvModify := 
+value_closure
+(closure_intro
+ [("%EnvGetId", privEnvGetId);
+  ("%EnvGetValue", privEnvGetValue);
+  ("%EnvPutValue", privEnvPutValue)] None
+ ["context"; "id"; "op"; "val_thunk"; "strict"] ex_privEnvModify)
+.
+Definition name_privEnvModify :=  "%EnvModify" .
 Definition privEnvPrepostOp := 
 value_closure
 (closure_intro
@@ -9990,6 +10017,7 @@ Definition ctx_items :=
  (name_privEnvGetId, privEnvGetId);
  (name_privEnvGetValue, privEnvGetValue);
  (name_privEnvImplicitThis, privEnvImplicitThis);
+ (name_privEnvModify, privEnvModify);
  (name_privEnvPrepostOp, privEnvPrepostOp);
  (name_privEnvPutValue, privEnvPutValue);
  (name_privEnvTypeof, privEnvTypeof);
@@ -10427,6 +10455,7 @@ privEnvGet
 privEnvGetId
 privEnvGetValue
 privEnvImplicitThis
+privEnvModify
 privEnvPrepostOp
 privEnvPutValue
 privEnvTypeof
@@ -10874,6 +10903,7 @@ Definition store_items := [
                                              ("%EnvGetId", privEnvGetId);
                                              ("%EnvGetValue", privEnvGetValue);
                                              ("%EnvImplicitThis", privEnvImplicitThis);
+                                             ("%EnvModify", privEnvModify);
                                              ("%EnvPrepostOp", privEnvPrepostOp);
                                              ("%EnvPutValue", privEnvPutValue);
                                              ("%EnvTypeof", privEnvTypeof);

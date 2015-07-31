@@ -31,7 +31,7 @@ Inductive expr : Type :=
 | expr_op1 : J.unary_op -> expr -> expr
 | expr_op2 : J.binary_op -> expr -> expr -> expr
 | expr_if : expr -> expr -> expr -> expr
-| expr_assign :  expr -> expr -> expr
+| expr_assign :  expr -> (option J.binary_op) -> expr -> expr
 | expr_app : expr -> list expr -> expr
 | expr_func : option id -> list id -> prog -> string -> expr (* the string is program text *)
 | expr_func_stmt : id -> list id -> prog -> string -> expr (* TODO find way to remove it *)

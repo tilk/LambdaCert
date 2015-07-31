@@ -28,15 +28,6 @@ Fixpoint js_literal_to_ejs l :=
     | J.literal_string s => E.expr_string s
     end.
 
-Definition assign_op oop e1 e :=
-    match oop with
-    | None => e
-    | Some op => E.expr_op2 op e1 e
-    end.
-
-Definition js_expr_assign_to_ejs e1 oop e2 :=
-    E.expr_assign e1 (assign_op oop e1 e2).
-
 Definition is_strict es := 
     match es with
     | J.element_stat (J.stat_expr (J.expr_literal (J.literal_string "use strict"))) :: _ => true
@@ -72,7 +63,7 @@ Fixpoint js_expr_to_ejs (e : J.expr) : E.expr :=
     | J.expr_unary_op o e => E.expr_op1 o (js_expr_to_ejs e) 
     | J.expr_binary_op e1 o e2 => E.expr_op2 o (js_expr_to_ejs e1) (js_expr_to_ejs e2)
     | J.expr_conditional e1 e2 e3 => E.expr_if (js_expr_to_ejs e1) (js_expr_to_ejs e2) (js_expr_to_ejs e3)
-    | J.expr_assign e1 oo e2 => js_expr_assign_to_ejs (js_expr_to_ejs e1) oo (js_expr_to_ejs e2)
+    | J.expr_assign e1 oo e2 => E.expr_assign (js_expr_to_ejs e1) oo (js_expr_to_ejs e2)
     | J.expr_new e es => E.expr_new (js_expr_to_ejs e) (List.map js_expr_to_ejs es)
     | J.expr_call e es => E.expr_app (js_expr_to_ejs e) (List.map js_expr_to_ejs es)
     | J.expr_function onm xs (J.funcbody_intro p s) => E.expr_func onm xs (js_prog_to_ejs p) s

@@ -60,6 +60,12 @@ Definition make_set_field_naked obj fld v :=
 Definition make_set_field obj fld v :=
     with_error_dispatch (make_app_builtin "%set-property" [to_object obj; to_string fld; v]).
 
+Definition make_var_modify fld f v :=
+    make_app_builtin "%EnvModify" 
+        [L.expr_id "$context"; L.expr_string fld; 
+            L.expr_lambda ["x1";"x2"] (f (L.expr_id "x1") (L.expr_id "x2"));
+            L.expr_lambda [] v; L.expr_id "$strict"].
+
 Definition make_var_set fld v :=
     make_app_builtin "%EnvAssign" 
         [L.expr_id "$context"; L.expr_string fld; L.expr_lambda [] v; L.expr_id "$strict"].
@@ -358,6 +364,23 @@ Definition make_assign f (e1 : E.expr) e2 :=
         (fun s => make_var_set s e2)
         (fun e => L.expr_seq (f e) (L.expr_seq e2 (reference_error "invalid lhs for assignment"))).
 
+Definition make_op_assign f (e1 : E.expr) op e2 := 
+    reference_match e1
+        (fun obj fld => 
+            L.expr_let "obj" (f obj) (
+            L.expr_let "fld" (f fld) (
+            make_set_field (L.expr_id "obj") (L.expr_id "fld") (make_op2 op 
+                (make_get_field (L.expr_id "obj") (L.expr_id "fld")) e2))))
+        (fun s => make_var_modify s (make_op2 op) e2)
+        (fun e => L.expr_seq (make_op2 op (f e) e2) 
+            (reference_error "invalid lhs for assignment")).
+
+Definition make_general_assign f (e1 : E.expr) oop e2 := 
+    match oop with
+    | None => make_assign f e1 e2
+    | Some op => make_op_assign f e1 op e2
+    end.
+
 (* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     match e with
@@ -385,7 +408,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_if e e1 e2 => make_if (ejs_to_ljs e) (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_op1 op e => make_op1 ejs_to_ljs op e
     | E.expr_op2 op e1 e2 => make_op2 op (ejs_to_ljs e1) (ejs_to_ljs e2)
-    | E.expr_assign e1 e2 => make_assign ejs_to_ljs e1 (ejs_to_ljs e2)
+    | E.expr_assign e1 oop e2 => make_general_assign ejs_to_ljs e1 oop (ejs_to_ljs e2)
     | E.expr_get_field e1 e2 => make_get_field (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_for_in s e1 e2 => make_for_in s (ejs_to_ljs e1) (ejs_to_ljs e2) 
     | E.expr_while e1 e2 e3 => make_while (ejs_to_ljs e1) (ejs_to_ljs e2) (ejs_to_ljs e3) 
