@@ -228,30 +228,30 @@ Definition make_or e1 e2 := L.expr_let "e" e1 (L.expr_if (to_bool (L.expr_id "e"
 
 Definition make_op2 op e1 e2 :=
     match op with
-    | J.binary_op_coma => L.expr_seq e1 e2
-    | J.binary_op_sub => make_app_builtin "%PrimMultOp" [e1; e2; op2_func L.binary_op_sub] 
-    | J.binary_op_mult => make_app_builtin "%PrimMultOp" [e1; e2; op2_func L.binary_op_mul]
-    | J.binary_op_div => make_app_builtin "%PrimMultOp" [e1; e2; op2_func L.binary_op_div]
-    | J.binary_op_mod => make_app_builtin "%PrimMultOp" [e1; e2; op2_func L.binary_op_mod]
-    | J.binary_op_bitwise_and => make_app_builtin "%BitwiseInfix" [e1; e2; op2_func L.binary_op_band]
-    | J.binary_op_bitwise_or => make_app_builtin "%BitwiseInfix" [e1; e2; op2_func L.binary_op_bor]
-    | J.binary_op_bitwise_xor => make_app_builtin "%BitwiseInfix" [e1; e2; op2_func L.binary_op_bxor]
+    | J.binary_op_coma => make_app_builtin "%PrimComma" [e1; e2]
+    | J.binary_op_sub => make_app_builtin "%PrimSub" [e1; e2] 
+    | J.binary_op_mult => make_app_builtin "%PrimMult" [e1; e2]
+    | J.binary_op_div => make_app_builtin "%PrimDiv" [e1; e2]
+    | J.binary_op_mod => make_app_builtin "%PrimMod" [e1; e2]
+    | J.binary_op_bitwise_and => make_app_builtin "%BitwiseAnd" [e1; e2]
+    | J.binary_op_bitwise_or => make_app_builtin "%BitwiseOr" [e1; e2]
+    | J.binary_op_bitwise_xor => make_app_builtin "%BitwiseXor" [e1; e2]
     | J.binary_op_and => make_and e1 e2
     | J.binary_op_or => make_or e1 e2
     | J.binary_op_add => make_app_builtin "%PrimAdd" [e1; e2] 
     | J.binary_op_left_shift => make_app_builtin "%LeftShift" [e1; e2] 
     | J.binary_op_right_shift => make_app_builtin "%SignedRightShift" [e1; e2] 
     | J.binary_op_unsigned_right_shift => make_app_builtin "%UnsignedRightShift" [e1; e2] 
-    | J.binary_op_lt => make_app_builtin "%CompareOp" [e1; e2; L.expr_false; L.expr_false] 
-    | J.binary_op_gt => make_app_builtin "%CompareOp" [e1; e2; L.expr_true; L.expr_false] 
-    | J.binary_op_le => make_app_builtin "%CompareOp" [e1; e2; L.expr_true; L.expr_true] 
-    | J.binary_op_ge => make_app_builtin "%CompareOp" [e1; e2; L.expr_false; L.expr_true] 
+    | J.binary_op_lt => make_app_builtin "%LtOp" [e1; e2] 
+    | J.binary_op_gt => make_app_builtin "%GtOp" [e1; e2] 
+    | J.binary_op_le => make_app_builtin "%LeOp" [e1; e2] 
+    | J.binary_op_ge => make_app_builtin "%GeOp" [e1; e2] 
     | J.binary_op_instanceof => make_app_builtin "%instanceof" [e1; e2] 
     | J.binary_op_in => make_app_builtin "%in" [e1; e2] 
     | J.binary_op_equal => make_app_builtin "%EqEq" [e1; e2] 
     | J.binary_op_strict_equal => make_app_builtin "%StxEq" [e1; e2] 
-    | J.binary_op_disequal => L.expr_op1 L.unary_op_not (make_app_builtin "%EqEq" [e1; e2])
-    | J.binary_op_strict_disequal => L.expr_op1 L.unary_op_not (make_app_builtin "%StxEq" [e1; e2])
+    | J.binary_op_disequal => make_app_builtin "%notEqEq" [e1; e2]
+    | J.binary_op_strict_disequal => make_app_builtin "%notStxEq" [e1; e2]
     end.
 
 Definition make_array es :=
