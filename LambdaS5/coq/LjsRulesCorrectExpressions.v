@@ -693,12 +693,12 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma red_expr_unary_op_prepost : forall k op F b je,
-    ih_expr k ->
+Lemma red_expr_unary_op_prepost_ok : forall k op F b je,
     J.prepost_op op F b ->
+    ih_expr k ->
     th_expr k (J.expr_unary_op op je).
 Proof.
-    introv IHe Hop Hcinv Hinv Hlred.
+    introv Hop IHe Hcinv Hinv Hlred.
     lets (lop&F'&Hlop&Feq&Heq) : prepost_op_to_ljs_lemma Hop.
     rewrite Heq in Hlred. clear Heq.
     subst_hyp Feq.
@@ -1074,14 +1074,14 @@ Lemma red_expr_unary_op_ok : forall op k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op op je).
 Proof.
-    destruct op.
+    destruct op; introv.
     apply red_expr_unary_op_delete_ok.
     apply red_expr_unary_op_void_ok.
     apply red_expr_unary_op_typeof_ok.
-    skip.
-    skip.
-    skip.
-    skip.
+    applys red_expr_unary_op_prepost_ok. eauto_js.
+    applys red_expr_unary_op_prepost_ok. eauto_js.
+    applys red_expr_unary_op_prepost_ok. eauto_js.
+    applys red_expr_unary_op_prepost_ok. eauto_js.
     apply red_expr_unary_op_add_ok.
     apply red_expr_unary_op_neg_ok.
     apply red_expr_unary_op_bitwise_not_ok.
