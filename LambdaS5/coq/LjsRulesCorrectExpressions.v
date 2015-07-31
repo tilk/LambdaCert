@@ -96,6 +96,17 @@ Proof.
     introv Hcinv Hinv Hlred.
     destruct fb.
     repeat ljs_autoforward.
+    forwards_th Hx : state_invariant_new_env_record_decl_lemma; try eassumption.
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    rewrite exprjs_prog_strictness_eq in *.
+    forwards_th Hx : red_spec_creating_function_object_ok. { 
+        eapply execution_ctx_related_lexical_env. 
+        eapply context_invariant_execution_ctx_related. 
+        eassumption.
+    }
+    destr_concl; [idtac | skip]. (* TODO function object creation never fails *)
+    (* TODO uninitialized binding business *)
 Admitted. (* TODO *)
 
 Lemma red_expr_function_ok : forall k os is fb,
