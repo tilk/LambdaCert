@@ -591,66 +591,6 @@ Proof.
     ljs_handle_abort.
 Qed.
 
-(** *** Assignment *)
-
-Lemma red_expr_assign0_ok : forall k je1 je2,
-    ih_expr k ->
-    th_expr k (J.expr_assign je1 None je2).
-Proof.
-    introv IHe Hcinv Hinv Hlred.
-    unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_assign.
-    reference_match_cases Hlred Hx Heq Hrp. { (* object field assign *)
-        skip. (* TODO *)
-    } { (* variable assign *)
-        repeat ljs_autoforward.
-        inverts red_exprh H7. (* TODO *)
-        ljs_apply.
-        ljs_context_invariant_after_apply.
-        repeat ljs_autoforward.
-        lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
-            eassumption.
-        forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
-        destruct_hyp Hx.
-        inverts red_exprh Hx3.
-        ljs_apply.
-        ljs_context_invariant_after_apply.
-        repeat ljs_autoforward.
-        inverts red_exprh H12. (* TODO *)
-        ljs_apply.
-        ljs_context_invariant_after_apply.
-        repeat ljs_autoforward.
-        destr_concl; try ljs_handle_abort.
-        repeat ljs_autoforward.
-        lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
-            eassumption.
-        subst_hyp Hstrict.
-        forwards_th Hx : env_put_value_lemma. eauto_js. eassumption.
-        destr_concl; try ljs_handle_abort.
-        res_related_invert.
-        repeat ljs_autoforward.
-        jauto_js 15.
-    } { (* invalid lhs, error thrown *)
-        repeat ljs_autoforward.
-        destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
-        repeat ljs_autoforward.
-        destr_concl; try ljs_handle_abort.
-        repeat ljs_autoforward.
-        forwards_th Hx : reference_error_lemma. eauto_js.
-        destr_concl; tryfalse.
-        ljs_handle_abort.
-    }
-Qed.
-
-Lemma red_expr_assign_ok : forall k je1 je2 oo,
-    ih_expr k ->
-    th_expr k (J.expr_assign je1 oo je2).
-Proof.
-    introv IHe.
-    destruct oo.
-    skip.
-    eapply red_expr_assign0_ok; assumption.
-Qed.
-
 (** *** Unary operators *)
 
 (* TODO move *)
@@ -1935,4 +1875,144 @@ Proof.
     destruct op; try solve [false; apply Hreg; eauto_js].
     apply red_expr_binary_op_and_ok; eassumption.
     apply red_expr_binary_op_or_ok; eassumption.
+Qed.
+
+(** *** Assignment *)
+
+(* TODO should not be necessary *)
+Hint Extern 3 (J.red_expr _ _ (J.expr_assign_1 _ (Some _) _) _) =>
+    eapply J.red_expr_assign_1_compound : js_ljs.
+
+Lemma red_expr_assign_compound_ok : forall k je1 je2 op,
+    J.regular_binary_op op ->
+    ih_expr k ->
+    th_expr k (J.expr_assign je1 (Some op) je2).
+Proof.
+    introv Hreg IHe Hcinv Hinv Hlred.
+    lets (v&Himpl) : regular_binary_op_get_impl_lemma Hreg.
+    unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_assign.
+    reference_match_cases Hlred Hx Heq Hrp. { (* object field assign *)
+        skip. (* TODO *)
+    } { (* variable assign *)
+        unfolds E.make_var_modify.
+        lets (s'&Heqq&Hbuiltin) : make_op2_red_expr_lemma Himpl.
+        rewrite Heqq in Hlred. clear Heqq.
+        repeat ljs_autoforward.
+        inverts red_exprh H7. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
+        destruct_hyp Hx.
+        inverts red_exprh Hx3.
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        subst_hyp Hstrict.
+        forwards_th Hx : env_get_value_lemma. eauto_js. eassumption.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        inverts red_exprh H23. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        inverts red_exprh H17. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        lets Heq : Hbuiltin ___; try eassumption. subst_hyp Heq.
+        forwards_th Hx : red_expr_binary_op_3_regular_ok. 
+            eapply ih_expr_leq; try eassumption. math. (* TODO *)
+            eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        forwards_th Hx : env_put_value_lemma. eauto_js. eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        repeat ljs_autoforward.
+        jauto_js 15.
+    } { (* invalid lhs, error thrown *)
+        lets (s&Heqq&Hbuiltin) : make_op2_red_expr_lemma Himpl.
+        rewrite Heqq in Hx. clear Heqq.
+        repeat ljs_autoforward.
+        lets Heq : Hbuiltin ___; try eassumption. subst_hyp Heq.
+        destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        forwards_th Hx : red_expr_binary_op_3_regular_ok. eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        forwards_th Hx : reference_error_lemma. eauto_js.
+        destr_concl; tryfalse.
+        ljs_handle_abort.
+    }
+Qed.
+
+Lemma red_expr_assign_simple_ok : forall k je1 je2,
+    ih_expr k ->
+    th_expr k (J.expr_assign je1 None je2).
+Proof.
+    introv IHe Hcinv Hinv Hlred.
+    unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_assign.
+    reference_match_cases Hlred Hx Heq Hrp. { (* object field assign *)
+        skip. (* TODO *)
+    } { (* variable assign *)
+        repeat ljs_autoforward.
+        inverts red_exprh H7. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
+        destruct_hyp Hx.
+        inverts red_exprh Hx3.
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        inverts red_exprh H12. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        subst_hyp Hstrict.
+        forwards_th Hx : env_put_value_lemma. eauto_js. eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        repeat ljs_autoforward.
+        jauto_js 15.
+    } { (* invalid lhs, error thrown *)
+        repeat ljs_autoforward.
+        destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        forwards_th Hx : reference_error_lemma. eauto_js.
+        destr_concl; tryfalse.
+        ljs_handle_abort.
+    }
+Qed.
+
+Lemma red_expr_assign_ok : forall k je1 je2 oo,
+    ih_expr k ->
+    th_expr k (J.expr_assign je1 oo je2).
+Proof.
+    introv IHe.
+    destruct oo.
+    eapply red_expr_assign_compound_ok. skip. assumption. (* TODO: regular op assumption *)
+    eapply red_expr_assign_simple_ok; assumption.
 Qed.
