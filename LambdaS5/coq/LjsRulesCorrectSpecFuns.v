@@ -1236,6 +1236,16 @@ Proof.
     }
 Qed.
 
+Lemma stx_eq_object_eq_lemma : forall ptr1 ptr2,
+    L.stx_eq (L.value_object ptr1) (L.value_object ptr2) = (ptr1 = ptr2).
+Proof.
+    introv. rew_logic. splits; introv Hx. {
+       inverts Hx. reflexivity.
+    } {
+       substs. eauto_js.
+    }
+Qed.
+
 Lemma decl_env_record_vars_related_index_lemma : forall BR jx x s,
     decl_env_record_vars_related BR jx x ->
     index jx s = index x s.
@@ -1491,7 +1501,9 @@ Lemma env_get_value_lemma : forall BR k jst jc c st st' r v s b jrbt,
     ref_base_type_var jrbt ->
     concl_spec BR jst jc c st st' r 
         (J.spec_get_value (J.resvalue_ref (J.ref_intro jrbt s b))) 
-        (fun BR' _ jv => exists v, r = L.res_value v /\ value_related BR' jv v ).
+        (fun BR' _ jv => 
+            v <> L.value_null /\
+            exists v', r = L.res_value v' /\ value_related BR' jv v' ).
 Proof.
     introv Hlred Hcinv Hinv Hrbt Hrbtv.
     inverts red_exprh Hlred.

@@ -173,7 +173,7 @@ Inductive lexical_env_related BR : J.lexical_env -> L.value -> Prop :=
 
 Definition prealloc_in_ctx_list := [
     (J.prealloc_global, "%global");
-    (J.prealloc_global_eval, "%global");
+    (J.prealloc_global_eval, "%eval");
     (J.prealloc_global_is_finite, "%isFinite");
     (J.prealloc_global_is_nan, "%isNaN");
     (J.prealloc_global_parse_float, "%parseFloat");
@@ -829,28 +829,30 @@ Record context_invariant BR jc c : Prop := {
 (** *** Theorem conclusions
     They state what must hold if the preconditions are satisfied. *)
 
+Definition concl_ext_expr_resvalue_gen BR jst jc c st st' r jee P Q :=
+    exists BR' jst' jr,
+    J.red_expr jst jc jee (J.out_ter jst' jr) /\ 
+    ((exists jrv, jr = J.res_normal jrv /\ P BR' jst' jrv) \/
+     J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw /\ Q) /\
+    state_invariant BR' jst' st' /\
+    BR \c BR' /\
+    res_related BR' jst' st' jr r.
+
 Definition concl_ext_expr_resvalue BR jst jc c st st' r jee P :=
+    concl_ext_expr_resvalue_gen BR jst jc c st st' r jee (fun _ _ x => P x) True.
+
+Definition concl_ext_expr_value_gen BR jst jc c st st' r jee P Q := (* TODO use resvalue ? *)
     exists BR' jst' jr,
     J.red_expr jst jc jee (J.out_ter jst' jr) /\ 
-    ((exists jrv, jr = J.res_normal jrv /\ P jrv) \/
-     J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw) /\
+    ((exists jv, jr = J.res_val jv /\ P BR' jst' jv) \/
+     J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw /\ Q) /\
     state_invariant BR' jst' st' /\
     BR \c BR' /\
     res_related BR' jst' st' jr r.
 
-Definition concl_ext_expr_value BR jst jc c st st' r jee P := (* TODO use resvalue *)
-    exists BR' jst' jr,
-    J.red_expr jst jc jee (J.out_ter jst' jr) /\ 
-    ((exists jv, jr = J.res_val jv /\ P jv) \/
-     J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw) /\
-    state_invariant BR' jst' st' /\
-    BR \c BR' /\
-    res_related BR' jst' st' jr r.
+Definition concl_ext_expr_value BR jst jc c st st' r jee P :=
+    concl_ext_expr_value_gen BR jst jc c st st' r jee (fun _ _ x => P x) True.
 
-(* unused
-Definition concl_expr_value BR jst jc c st st' r je :=  
-    concl_ext_expr_value BR jst jc c st st' r (J.expr_basic je).
-*)
 Definition concl_stat BR jst jc c st st' r jt :=
     exists BR' jst' jr,
     J.red_stat jst jc (J.stat_basic jt) (J.out_ter jst' jr) /\ 

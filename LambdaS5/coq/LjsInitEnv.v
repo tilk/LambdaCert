@@ -164,6 +164,9 @@ expr_object
                         expr_false expr_false));
  ("%Delete", property_data
              (data_intro (expr_id "%Delete") expr_true expr_false expr_false));
+ ("%EnvAppExpr", property_data
+                 (data_intro (expr_id "%EnvAppExpr") expr_true expr_false
+                  expr_false));
  ("%EnvAssign", property_data
                 (data_intro (expr_id "%EnvAssign") expr_true expr_false
                  expr_false));
@@ -960,9 +963,6 @@ expr_object
                    expr_false));
  ("%max", property_data
           (data_intro (expr_id "%max") expr_true expr_false expr_false));
- ("%maybeDirectEval", property_data
-                      (data_intro (expr_id "%maybeDirectEval") expr_true
-                       expr_false expr_false));
  ("%min", property_data
           (data_intro (expr_id "%min") expr_true expr_false expr_false));
  ("%minMaxCall", property_data
@@ -2362,6 +2362,27 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
    (expr_if (expr_id "strict")
     (expr_app (expr_id "%TypeError")
      [expr_string "unconfigurable delete in strict mode"]) expr_false))))
+.
+Definition ex_privEnvAppExpr := 
+expr_let "f"
+(expr_lambda ["context"]
+ (expr_let "fun"
+  (expr_app (expr_id "%EnvGetValue")
+   [expr_id "context"; expr_id "id"; expr_id "strict"])
+  (expr_let "args" (expr_app (expr_id "args_thunk") [])
+   (expr_if
+    (expr_if (expr_op2 binary_op_stx_eq (expr_id "id") (expr_string "eval"))
+     (expr_op2 binary_op_stx_eq (expr_id "fun") (expr_id "%eval")) expr_false)
+    (expr_app (expr_id "%configurableEval")
+     [expr_id "this"; expr_id "pcontext"; expr_id "strict"; expr_id "args"])
+    (expr_if (expr_app (expr_id "%IsCallable") [expr_id "fun"])
+     (expr_app (expr_id "%AppExpr")
+      [expr_id "fun";
+       expr_app (expr_id "%EnvImplicitThis") [expr_id "context"];
+       expr_id "args"])
+     (expr_app (expr_id "%TypeError") [expr_string "Not a function"]))))))
+(expr_app (expr_id "%EnvGetId")
+ [expr_id "pcontext"; expr_id "id"; expr_id "f"])
 .
 Definition ex_privEnvAssign := 
 expr_let "f"
@@ -5710,17 +5731,6 @@ Definition ex_privmax :=
 expr_if (expr_op2 binary_op_le (expr_id "a") (expr_id "b")) (expr_id "b")
 (expr_id "a")
 .
-Definition ex_privmaybeDirectEval := 
-expr_let "contextEval"
-(expr_app (expr_id "%EnvGet")
- [expr_id "theContext"; expr_string "eval"; expr_false])
-(expr_if
- (expr_op2 binary_op_stx_eq (expr_id "contextEval") (expr_id "%eval"))
- (expr_app (expr_id "%configurableEval")
-  [expr_id "theThis"; expr_id "theContext"; expr_id "strict"; expr_id "args"])
- (expr_app (expr_id "%AppExprCheck")
-  [expr_id "contextEval"; expr_undefined; expr_id "args"]))
-.
 Definition ex_privmin := 
 expr_if (expr_op2 binary_op_le (expr_id "a") (expr_id "b")) (expr_id "a")
 (expr_id "b")
@@ -8024,6 +8034,46 @@ value_closure
  ex_privUnboundId)
 .
 Definition name_privUnboundId :=  "%UnboundId" .
+Definition privEnvGetValue := 
+value_closure
+(closure_intro [("%UnboundId", privUnboundId)] None
+ ["context"; "id"; "strict"] ex_privEnvGetValue)
+.
+Definition name_privEnvGetValue :=  "%EnvGetValue" .
+Definition privEnvImplicitThis := 
+value_closure (closure_intro [] None ["context"] ex_privEnvImplicitThis)
+.
+Definition name_privEnvImplicitThis :=  "%EnvImplicitThis" .
+Definition privmakeGlobalEnv :=  value_object 0 .
+Definition name_privmakeGlobalEnv :=  "%makeGlobalEnv" .
+Definition privnewDeclEnvRec := 
+value_closure (closure_intro [] None ["parent"] ex_privnewDeclEnvRec)
+.
+Definition name_privnewDeclEnvRec :=  "%newDeclEnvRec" .
+Definition privconfigurableEval := 
+value_closure
+(closure_intro
+ [("%makeGlobalEnv", privmakeGlobalEnv);
+  ("%newDeclEnvRec", privnewDeclEnvRec)] None
+ ["evalThis"; "evalContext"; "useStrict"; "args"] ex_privconfigurableEval)
+.
+Definition name_privconfigurableEval :=  "%configurableEval" .
+Definition priveval :=  value_object 310 .
+Definition name_priveval :=  "%eval" .
+Definition privEnvAppExpr := 
+value_closure
+(closure_intro
+ [("%AppExpr", privAppExpr);
+  ("%EnvGetId", privEnvGetId);
+  ("%EnvGetValue", privEnvGetValue);
+  ("%EnvImplicitThis", privEnvImplicitThis);
+  ("%IsCallable", privIsCallable);
+  ("%TypeError", privTypeError);
+  ("%configurableEval", privconfigurableEval);
+  ("%eval", priveval)] None
+ ["pcontext"; "id"; "this"; "args_thunk"; "strict"] ex_privEnvAppExpr)
+.
+Definition name_privEnvAppExpr :=  "%EnvAppExpr" .
 Definition privglobal :=  value_object 2 .
 Definition name_privglobal :=  "%global" .
 Definition privset_property := 
@@ -8076,12 +8126,6 @@ value_closure
  ["context"; "id"; "strict"] ex_privEnvDelete)
 .
 Definition name_privEnvDelete :=  "%EnvDelete" .
-Definition privEnvGetValue := 
-value_closure
-(closure_intro [("%UnboundId", privUnboundId)] None
- ["context"; "id"; "strict"] ex_privEnvGetValue)
-.
-Definition name_privEnvGetValue :=  "%EnvGetValue" .
 Definition privEnvGet := 
 value_closure
 (closure_intro
@@ -8089,10 +8133,6 @@ value_closure
  ["context"; "id"; "strict"] ex_privEnvGet)
 .
 Definition name_privEnvGet :=  "%EnvGet" .
-Definition privEnvImplicitThis := 
-value_closure (closure_intro [] None ["context"] ex_privEnvImplicitThis)
-.
-Definition name_privEnvImplicitThis :=  "%EnvImplicitThis" .
 Definition privEnvModify := 
 value_closure
 (closure_intro
@@ -8158,20 +8198,6 @@ value_closure
 Definition name_privEvalErrorConstructor :=  "%EvalErrorConstructor" .
 Definition privEvalErrorGlobalFuncObj :=  value_object 46 .
 Definition name_privEvalErrorGlobalFuncObj :=  "%EvalErrorGlobalFuncObj" .
-Definition privmakeGlobalEnv :=  value_object 0 .
-Definition name_privmakeGlobalEnv :=  "%makeGlobalEnv" .
-Definition privnewDeclEnvRec := 
-value_closure (closure_intro [] None ["parent"] ex_privnewDeclEnvRec)
-.
-Definition name_privnewDeclEnvRec :=  "%newDeclEnvRec" .
-Definition privconfigurableEval := 
-value_closure
-(closure_intro
- [("%makeGlobalEnv", privmakeGlobalEnv);
-  ("%newDeclEnvRec", privnewDeclEnvRec)] None
- ["evalThis"; "evalContext"; "useStrict"; "args"] ex_privconfigurableEval)
-.
-Definition name_privconfigurableEval :=  "%configurableEval" .
 Definition privglobalContext :=  value_object 307 .
 Definition name_privglobalContext :=  "%globalContext" .
 Definition privevalCall := 
@@ -8878,8 +8904,6 @@ value_closure
  None ["obj"; "this"; "args"] ex_privetsCall)
 .
 Definition name_privetsCall :=  "%etsCall" .
-Definition priveval :=  value_object 310 .
-Definition name_priveval :=  "%eval" .
 Definition privevery :=  value_object 138 .
 Definition name_privevery :=  "%every" .
 Definition priveveryCall := 
@@ -9178,16 +9202,6 @@ value_closure
  ex_privmathPowCall)
 .
 Definition name_privmathPowCall :=  "%mathPowCall" .
-Definition privmaybeDirectEval := 
-value_closure
-(closure_intro
- [("%AppExprCheck", privAppExprCheck);
-  ("%EnvGet", privEnvGet);
-  ("%configurableEval", privconfigurableEval);
-  ("%eval", priveval)] None ["theThis"; "theContext"; "args"; "strict"]
- ex_privmaybeDirectEval)
-.
-Definition name_privmaybeDirectEval :=  "%maybeDirectEval" .
 Definition privnewObjEnvRec := 
 value_closure
 (closure_intro [] None ["parent"; "obj"; "pt"] ex_privnewObjEnvRec)
@@ -10011,6 +10025,7 @@ Definition ctx_items :=
  (name_privDefaultCall, privDefaultCall);
  (name_privDefaultConstruct, privDefaultConstruct);
  (name_privDelete, privDelete);
+ (name_privEnvAppExpr, privEnvAppExpr);
  (name_privEnvAssign, privEnvAssign);
  (name_privEnvDelete, privEnvDelete);
  (name_privEnvGet, privEnvGet);
@@ -10289,7 +10304,6 @@ Definition ctx_items :=
  (name_privmathPow, privmathPow);
  (name_privmathPowCall, privmathPowCall);
  (name_privmax, privmax);
- (name_privmaybeDirectEval, privmaybeDirectEval);
  (name_privmin, privmin);
  (name_privminMaxCall, privminMaxCall);
  (name_privmkArgsObj, privmkArgsObj);
@@ -10449,6 +10463,7 @@ privDeclEnvAddBinding
 privDefaultCall
 privDefaultConstruct
 privDelete
+privEnvAppExpr
 privEnvAssign
 privEnvDelete
 privEnvGet
@@ -10727,7 +10742,6 @@ privmathMinCall
 privmathPow
 privmathPowCall
 privmax
-privmaybeDirectEval
 privmin
 privminMaxCall
 privmkArgsObj
@@ -10897,6 +10911,7 @@ Definition store_items := [
                                              ("%DefaultCall", privDefaultCall);
                                              ("%DefaultConstruct", privDefaultConstruct);
                                              ("%Delete", privDelete);
+                                             ("%EnvAppExpr", privEnvAppExpr);
                                              ("%EnvAssign", privEnvAssign);
                                              ("%EnvDelete", privEnvDelete);
                                              ("%EnvGet", privEnvGet);
@@ -11175,7 +11190,6 @@ Definition store_items := [
                                              ("%mathPow", privmathPow);
                                              ("%mathPowCall", privmathPowCall);
                                              ("%max", privmax);
-                                             ("%maybeDirectEval", privmaybeDirectEval);
                                              ("%min", privmin);
                                              ("%minMaxCall", privminMaxCall);
                                              ("%mkArgsObj", privmkArgsObj);

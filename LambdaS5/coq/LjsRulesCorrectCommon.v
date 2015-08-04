@@ -269,10 +269,12 @@ Ltac inv_literal_ljs :=
 
 Ltac unfold_concl := 
     unfold concl_ext_expr_value, concl_ext_expr_resvalue, concl_expr_getvalue, 
+        concl_ext_expr_value_gen, concl_ext_expr_resvalue_gen,
         concl_stat, concl_spec.
  
 Tactic Notation "unfold_concl" "in" hyp(H) := 
     unfold concl_ext_expr_value, concl_ext_expr_resvalue, concl_expr_getvalue, 
+        concl_ext_expr_value_gen, concl_ext_expr_resvalue_gen,
         concl_stat, concl_spec in H. 
 
 Ltac js_ljs_false_invert := match goal with 
@@ -309,6 +311,10 @@ Ltac destr_concl := match goal with
     | H : concl_ext_expr_value _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_ext_expr_resvalue _ _ _ _ _ _ _ _ _ |- _ =>
+        unfold_concl in H; destruct_hyp H
+    | H : concl_ext_expr_value_gen _ _ _ _ _ _ _ _ _ _ |- _ =>
+        unfold_concl in H; destruct_hyp H
+    | H : concl_ext_expr_resvalue_gen _ _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_expr_getvalue _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
@@ -3275,11 +3281,11 @@ Ltac ljs_handle_abort := progress (repeat (ljs_propagate_abort || ljs_abort_from
 Ltac ih_leq :=
     match goal with
     | H : ih_expr ?k |- ih_expr ?k' => is_evar k'; eapply H
-    | H : ih_expr ?k |- ih_expr ?k' => eapply ih_expr_leq; try eapply H; omega
+    | H : ih_expr ?k |- ih_expr ?k' => eapply ih_expr_leq; try eapply H; math
     | H : ih_stat ?k |- ih_stat ?k' => is_evar k'; eapply H
-    | H : ih_stat ?k |- ih_stat ?k' => eapply ih_stat_leq; try eapply H; omega
+    | H : ih_stat ?k |- ih_stat ?k' => eapply ih_stat_leq; try eapply H; math
     | H : ih_call_prealloc ?k |- ih_call_prealloc ?k' => is_evar k'; eapply H
-    | H : ih_call_prealloc ?k |- ih_call_prealloc ?k' => eapply ih_call_prealloc_leq; try eapply H; omega
+    | H : ih_call_prealloc ?k |- ih_call_prealloc ?k' => eapply ih_call_prealloc_leq; try eapply H; math
     end.
 
 Ltac specializes_th_clean :=

@@ -422,20 +422,20 @@ Proof.
     }
 Qed.
 
-Lemma implicit_this_lemma : forall BR k jst jc c st st' r jle jeptr v,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvImplicitThis [v]) (L.out_ter st' r) ->
-    lexical_env_related BR (jeptr::jle) v ->
+Lemma implicit_this_lemma : forall BR k jst jc c st st' r jeptr ptr,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvImplicitThis [L.value_object ptr]) (L.out_ter st' r) ->
+    fact_js_env jeptr ptr \in BR ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_env_record_implicit_this_value jeptr) (fun _ => True).
+    concl_ext_expr_value_gen BR jst jc c st st' r (J.spec_env_record_implicit_this_value jeptr) 
+        (fun BR' jst' _ => BR' = BR /\ jst' = jst) False.
 Proof.
     introv Hlred Hlrel Hcinv Hinv.
     inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply.
     repeat ljs_autoforward.
-    inverts Hlrel as Hf1 Hf2 Hlrel.
-    lets (jer&Hjbinds&Herel) : env_record_related_lookup_lemma Hinv Hf1. eassumption.
+    lets (jer&Hjbinds&Herel) : env_record_related_lookup_lemma Hinv Hlrel. eassumption.
     inverts Herel as Herel. { (* declarative record *)
         lets Hcl : decl_env_record_related_class Herel.
         cases_decide as Hx; 
@@ -486,26 +486,105 @@ Proof.
     destruct jv; tryfalse. eauto.
 Qed.
 
+Lemma is_syntactic_eval_reference_producing_lemma : forall je,
+    J.is_syntactic_eval je -> js_reference_producing je.
+Proof.
+    introv Hse. 
+    destruct je; tryfalse. eauto_js.
+Qed.
+
+(* TODO should not be needed *)
+Hint Extern 3 (J.red_expr _ _ (J.expr_call_1 _ _ _) _) => eapply J.red_expr_call_1 : js_ljs.
+
 Lemma red_expr_call_ok : forall k je jel,
     ih_expr k ->
     ih_stat k ->
     ih_call_prealloc k ->
     th_expr k (J.expr_call je jel).
 Proof.
-    introv IHe IHs IHp HCinv Hinv Hlred. 
+    introv IHe IHs IHp Hcinv Hinv Hlred. 
     unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_app.
     reference_match_cases Hlred Hx Heq Hrp. 
     {
         skip.
     } {
-        cases_if. { (* TODO eval *)
-            skip.
+        repeat ljs_autoforward.
+        inverts red_exprh H7. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward. 
+        lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
+        destruct_hyp Hx.
+        inverts red_exprh Hx3.
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
+            eassumption.
+        subst_hyp Hstrict.
+        forwards_th Hx : env_get_value_lemma. eauto_js. eassumption.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        inverts red_exprh H21. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        forwards_th : red_spec_list_ok.
+        destr_concl; try ljs_handle_abort.
+(* TODO place for better boolean condition handling  *)
+        do 2 inv_top_fwd_ljs.
+        ljs_out_redh_ter.
+        ljs_bool_red_exprh; repeat determine_epsilon.
+        cases_isTrue as Hevcond. { (* eval *)
+            destruct Hevcond as (Hevcond1&Hevcond2).
+            specializes H32 Hevcond1. destruct_hyp H32. repeat determine_epsilon. (* TODO better! *)
+            repeat ljs_autoforward.
+            skip. (* TODO prove eval *)
+        } 
+        rew_logic in Hevcond.
+        repeat ljs_autoforward.
+        forwards_th Hx : is_callable_lemma.
+        destruct_hyp Hx.
+        cases_isTrue as Hic. { (* is callable *)
+            lets (jptr&Heq) : is_callable_obj Hic. subst_hyp Heq.
+            repeat ljs_autoforward.
+            ref_base_type_var_invert; tryfalse.
+            forwards_th Hx : implicit_this_lemma. prove_bag.
+            destr_concl; tryfalse.
+            res_related_invert.
+            resvalue_related_only_invert.
+            repeat ljs_autoforward.
+            inverts keep Hx11. (* TODO *)
+            asserts Hseval : (jptr <> J.object_loc_prealloc J.prealloc_global_eval \/ 
+                    !J.is_syntactic_eval (J.expr_identifier s)). {
+                apply case_classic_l in Hevcond.
+                destruct Hevcond as [Hevcond|Hevcond]. { (* var is not named eval *)
+                    right. rew_refl. intro Heval. simpl in Heval.
+                    rewrite stx_eq_string_eq_lemma in Hevcond.
+                    cases_decide.
+                } { (* var is named eval, but does not refer to eval *)
+                    left.
+                    rew_logic in Hevcond.
+                    destruct Hevcond as (Hevcond1&Hevcond2).
+                    specializes H32 Hevcond1. destruct_hyp H32. repeat determine_epsilon. (* TODO *)
+                    repeat binds_inv.
+                    introv Heqeval. subst_hyp Heqeval.
+                    apply Hevcond2.
+                    unfolds LjsInitEnv.priveval. rewrite stx_eq_object_eq_lemma.
+                    skip. (* TODO fix handling preallocs *)
+                }
+            }
+            forwards_th : red_spec_call_ok; try eassumption. eauto_js.
+            destr_concl; try ljs_handle_abort. 
+            res_related_invert.
+            resvalue_related_only_invert.
+            jauto_js 15.
+        } { (* not callable *)
+            repeat ljs_autoforward.
+            forwards_th : type_error_lemma. eauto.
+            destr_concl; tryfalse; try ljs_handle_abort.
         }
-        sets_eq je : (J.expr_identifier s).
-        repeat ljs_autoforward.
-        destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort. (* TODO abort *)
-        repeat ljs_autoforward.
-        skip. skip.
     } {
         repeat ljs_autoforward.
         destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
@@ -525,8 +604,9 @@ Proof.
             lets (jptr&Heq) : is_callable_obj Hic. subst_hyp Heq.
             inverts IH4. (* TODO *)
             forwards_th : red_spec_call_ok; try eassumption. eauto_js.
-            destruct (classic (jptr = J.object_loc_prealloc J.prealloc_global_eval)). {
-                skip. (* TODO eval *)
+            asserts Hseval : (!J.is_syntactic_eval je). {
+                rew_refl.
+                eauto using is_syntactic_eval_reference_producing_lemma.
             }
             destr_concl; try ljs_handle_abort. 
             res_related_invert.
@@ -1927,9 +2007,7 @@ Proof.
         ljs_context_invariant_after_apply.
         repeat ljs_autoforward.
         lets Heq : Hbuiltin ___; try eassumption. subst_hyp Heq.
-        forwards_th Hx : red_expr_binary_op_3_regular_ok. 
-            eapply ih_expr_leq; try eassumption. math. (* TODO *)
-            eassumption.
+        forwards_th Hx : red_expr_binary_op_3_regular_ok. eassumption.
         destr_concl; try ljs_handle_abort.
         res_related_invert.
         resvalue_related_only_invert.
