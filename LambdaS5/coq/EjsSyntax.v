@@ -33,8 +33,7 @@ Inductive expr : Type :=
 | expr_if : expr -> expr -> expr -> expr
 | expr_assign :  expr -> (option J.binary_op) -> expr -> expr
 | expr_app : expr -> list expr -> expr
-| expr_func : option id -> list id -> prog -> string -> expr (* the string is program text *)
-| expr_func_stmt : id -> list id -> prog -> string -> expr (* TODO find way to remove it *)
+| expr_func : option id -> func -> expr
 (* | expr_let : id -> expr -> expr -> expr *)
 | expr_fseq : expr -> expr -> expr
 | expr_seq : expr -> expr -> expr
@@ -50,8 +49,10 @@ Inductive expr : Type :=
 | expr_with : expr -> expr -> expr
 | expr_noop : expr -> expr
 | expr_syntaxerror : expr
+with func : Type :=
+| func_intro : list id -> prog -> string -> func (* the string is program text *)
 with prog : Type :=
-| prog_intro : bool -> list id -> expr -> prog
+| prog_intro : bool -> list (id * func) -> list id -> expr -> prog
 with property : Type :=
 | property_data : expr -> property
 | property_getter : expr -> property
@@ -64,4 +65,8 @@ with switchbody : Type :=
 Definition expr_seqs es := fold_left (fun e1 e2 => expr_seq e2 e1) expr_empty es.
 Definition expr_fseqs_r es := fold_right expr_fseq expr_empty es.
 
-Definition prog_strictness p := match p with prog_intro b _ _ => b end.
+Definition prog_strictness p := match p with prog_intro b _ _ _ => b end.
+Definition prog_funcs p := match p with prog_intro _ l _ _ => l end.
+Definition prog_vars p := match p with prog_intro _ _ l _ => l end.
+Definition prog_body p := match p with prog_intro _ _ _ e => e end.
+

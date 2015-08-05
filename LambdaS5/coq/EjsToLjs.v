@@ -22,6 +22,10 @@ Definition make_builtin s := L.expr_id s.
 
 Definition context := make_builtin "$context".
 
+Definition vcontext := make_builtin "$vcontext".
+
+Definition strict := make_builtin "$strict".
+
 Definition eq e1 e2 := L.expr_op2 L.binary_op_stx_eq e1 e2.
 
 Definition undef_test e := eq e L.expr_undefined.
@@ -64,14 +68,14 @@ Definition make_var_modify fld f v :=
     make_app_builtin "%EnvModify" 
         [L.expr_id "$context"; L.expr_string fld; 
             L.expr_lambda ["x1";"x2"] (f (L.expr_id "x1") (L.expr_id "x2"));
-            L.expr_lambda [] v; L.expr_id "$strict"].
+            L.expr_lambda [] v; strict].
 
 Definition make_var_set fld v :=
     make_app_builtin "%EnvAssign" 
-        [L.expr_id "$context"; L.expr_string fld; L.expr_lambda [] v; L.expr_id "$strict"].
+        [L.expr_id "$context"; L.expr_string fld; L.expr_lambda [] v; strict].
 
 Definition make_var_id i :=    
-    make_app_builtin "%EnvGet" [L.expr_id "$context"; L.expr_string i; L.expr_id "$strict"].
+    make_app_builtin "%EnvGet" [L.expr_id "$context"; L.expr_string i; strict].
 
 Definition make_getter e := make_app_builtin "%MakeGetter" [e].
 
@@ -128,11 +132,14 @@ Definition new_context_in ctx e :=
 Definition make_with e1 e2 := 
     new_context_in (make_app_builtin "%newObjEnvRec" [context; to_object e1; L.expr_true]) e2.
 
-Definition if_strict e1 e2 := L.expr_if (L.expr_id "$strict") e1 e2.
+Definition if_strict e1 e2 := L.expr_if strict e1 e2.
 
 Definition syntax_error s := make_app_builtin "%SyntaxError" [L.expr_string s].
 
 Definition reference_error s := make_app_builtin "%ReferenceError" [L.expr_string s].
+
+Definition remember_vcontext e :=
+    L.expr_let "$vcontext" context e.
 
 Definition make_var_decl is e := 
     let flds := List.map (fun ip => 
@@ -145,40 +152,53 @@ Definition make_strictness b e :=
     L.expr_let "$strict" (L.expr_bool b) e.
 
 Definition make_resolve_this e :=
-    make_app_builtin "%resolveThis" [L.expr_id "$strict"; e].
+    make_app_builtin "%resolveThis" [strict; e].
 
-Definition make_lambda_expr f (is : list string) p :=
-    let 'E.prog_intro str vis e := p in 
-    let argdecls := 
-        map (fun p => let '(vnum, vid) := p in 
-                      (vid, L.expr_get_field (L.expr_id "args") (L.expr_string vnum), true)) 
-            (zipl_stream (id_stream_from 0) is) in
-    let vdecls := map (fun i => (i, L.expr_undefined, true)) vis in
+Definition init_arg p :=
+    let '(vnum, vid) := p in 
+    make_app_builtin "%EnvDefineArg" 
+        [vcontext; L.expr_string vid; L.expr_get_field (L.expr_id "args") (L.expr_id vnum); strict].
+
+Definition init_args is := map init_arg (zipl_stream (id_stream_from 0) is).
+
+Definition init_var cb i :=
+    make_app_builtin "%EnvDefineVar" [vcontext; L.expr_string i; cb; strict].
+
+Definition init_vars cb ps := L.expr_seqs (map (init_var cb) ps).
+
+Definition init_func (f : E.func -> L.expr) cb p := 
+    let '(i, fd) := p in 
+    make_app_builtin "%EnvDefineFunc" [vcontext; L.expr_string i; f fd; cb; strict].
+
+Definition init_funcs f cb ps := L.expr_seqs (List.map (init_func f cb) ps).
+
+Definition init_args_obj := make_app_builtin "%EnvDefineArgsObj" [vcontext; L.expr_id "args"; strict].
+
+Definition init_bindings f mvs cb fs is := 
+    match mvs with
+    | Some vs => 
+       L.expr_seq (init_vars cb vs) (
+       L.expr_seq (init_funcs f cb fs) (
+       L.expr_seq init_args_obj (
+       L.expr_seq (init_vars cb is) L.expr_empty)))
+    | None => 
+       L.expr_seq (init_funcs f cb fs) (
+       L.expr_seq (init_vars cb is) L.expr_empty)
+    end.
+
+Definition make_lambda_expr f ff (is : list string) p :=
+    let 'E.prog_intro str fs vis e := p in
     L.expr_label "%ret" (
+    new_context_in (make_app_builtin "%newDeclEnvRec" [context]) (
+    remember_vcontext (
     L.expr_let "$this" (make_resolve_this (L.expr_id "$this")) (
-    L.expr_let "evalCode" L.expr_false (
-    make_var_decl (vdecls ++ ("arguments", make_app_builtin "%mkArgsObj" [L.expr_id "args"], !str) :: argdecls) (
-    make_strictness str (
-    L.expr_seq (f e) L.expr_undefined))))).
+    L.expr_seq (init_bindings ff (Some is) (L.expr_bool false) fs vis) (f e))))).
 
-Definition make_lambda f (is : list string) p := 
-    L.expr_lambda ["obj"; "$this"; "args"] (make_lambda_expr f is p).
+Definition make_lambda f ff (is : list string) p := 
+    L.expr_lambda ["$this"; "args"] (make_lambda_expr f ff is p).
 
-Definition make_fobj f is p s :=
-(* should be really a parser check 
-    ifb Exists (fun nm => nm = "arguments" \/ nm = "eval") is \/ Has_dupes is then 
-        if_strict (syntax_error "Illegal function definition") L.expr_undefined else
-*)
-    make_app_builtin "%MakeFunctionObject" 
-        [make_lambda f is p; L.expr_number (length is); L.expr_string s; L.expr_bool (E.prog_strictness p)].
-
-Definition make_rec_fobj f i is p s :=
-    let fobj := make_fobj f is p s in
-    make_var_decl [(i, fobj, false)] (make_var_id i).
-
-Definition make_func_stmt f i is p s :=
-    let fobj := make_fobj f is p s in
-    make_app_builtin "%defineFunction" [context; L.expr_string i; fobj; L.expr_id "evalCode"].
+Definition make_rec_fobj (ff : E.func -> L.expr) i fd :=
+    make_var_decl [(i, ff fd, false)] (make_var_id i).
 
 Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda ["exc"] (
@@ -284,7 +304,7 @@ Definition make_app f (e : E.expr) es :=
     reference_match e
         (fun obj fld => make_app_builtin "%AppMethod" [f obj; f fld; args_obj])
         (fun s => make_app_builtin "%EnvAppExpr" 
-            [context; L.expr_string s; L.expr_id "$this"; L.expr_lambda [] args_obj; L.expr_id "$strict"])
+            [context; vcontext; L.expr_string s; L.expr_id "$this"; L.expr_lambda [] args_obj; L.expr_id "$strict"])
         (fun e => make_app_builtin "%AppExprCheck" [f e; L.expr_undefined; args_obj]).
 
 (* TODO move to utils *)
@@ -389,17 +409,15 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_null => L.expr_null
     | E.expr_number n => L.expr_number n
     | E.expr_string s => L.expr_string s
-(*    | E.expr_id i => L.expr_id i *)
     | E.expr_var_id i => make_var_id i
-(*    | E.expr_var_decl is e => make_var_decl is (ejs_to_ljs e) *)
     | E.expr_var_set i e => make_var_set i (ejs_to_ljs e)
     | E.expr_this => make_builtin "$this"
-    | E.expr_object ps => make_object (List.map (fun (p : string * E.property) => let (a,b) := p in (a, property_to_ljs b)) ps) 
+    | E.expr_object ps => 
+        make_object (List.map (fun (p : string * E.property) => let (a,b) := p in (a, property_to_ljs b)) ps) 
     | E.expr_array es => make_array (List.map (LibOption.map ejs_to_ljs) es)
     | E.expr_app e es => make_app ejs_to_ljs e (List.map ejs_to_ljs es)
-    | E.expr_func None is p s => make_fobj ejs_to_ljs is p s
-    | E.expr_func (Some i) is p s => make_rec_fobj ejs_to_ljs i is p s
-    | E.expr_func_stmt i is p s => make_func_stmt ejs_to_ljs i is p s
+    | E.expr_func None fd => make_fobj fd
+    | E.expr_func (Some i) fd => make_rec_fobj make_fobj i fd
     | E.expr_fseq e1 e2 => L.expr_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_seq e1 e2 => make_seq (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_if e e1 e2 => make_if (ejs_to_ljs e) (ejs_to_ljs e1) (ejs_to_ljs e2)
@@ -434,19 +452,28 @@ with property_to_ljs (p : E.property) : L.property :=
         L.property_accessor (L.accessor_intro (make_getter (ejs_to_ljs d)) L.expr_undefined L.expr_true L.expr_true)
     | E.property_setter d =>
         L.property_accessor (L.accessor_intro L.expr_undefined (make_setter (ejs_to_ljs d)) L.expr_true L.expr_true)
-    end.
+    end
+with make_fobj fd :=
+    let 'E.func_intro is p s := fd in
+    make_strictness (E.prog_strictness p) (
+    make_app_builtin "%MakeFunctionObject" 
+        [make_lambda ejs_to_ljs make_fobj is p; L.expr_number (length is); L.expr_string s; L.expr_id "$strict"]).
 
-Definition init_global cb i :=
-    make_app_builtin "%defineGlobalVar" [context; L.expr_string i; cb].
+Definition init_new_decl cb fs is e := 
+    new_context_in (make_app_builtin "%newDeclEnvRec" [context]) (
+    remember_vcontext (
+    L.expr_seq (init_bindings make_fobj None cb fs is) e)).
+
+Definition init_existing cb fs is e := L.expr_seq (init_bindings make_fobj None cb fs is) e.
 
 Definition ejs_prog_to_ljs ep :=
-    let 'E.prog_intro strict is inner := ep in
-    let initializers := List.map (init_global (L.expr_id "evalCode")) is in
-    L.expr_let "$context" (L.expr_id (if strict then "strictContext" else "nonstrictContext")) 
-        (L.expr_seq (L.expr_seqs initializers) (make_strictness strict (ejs_to_ljs inner))). 
+    let 'E.prog_intro strict fs is inner := ep in
+    let evalCode := L.expr_id "evalCode" in
+    make_strictness strict (
+    (if strict then init_new_decl else init_existing) evalCode fs is (ejs_to_ljs inner)).
 
 Definition add_init e :=
-    L.expr_let "strictContext" (L.expr_id "%globalContext") (
-    L.expr_let "nonstrictContext" (L.expr_id "%globalContext") (
+    L.expr_let "$context" (L.expr_id "%globalContext") (
+    L.expr_let "$vcontext" (L.expr_id "%globalContext") (
     L.expr_let "$this" (L.expr_id "%global") (
     L.expr_let "evalCode" (L.expr_bool false) e))).

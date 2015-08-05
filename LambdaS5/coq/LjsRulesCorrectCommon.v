@@ -1369,6 +1369,26 @@ Hint Extern 4 (env_record_related ?BR2 _ _) =>
     end 
     : js_ljs.
 
+Lemma env_records_exist_env_bisim_incl_preserved : forall BR1 BR2 jle,
+    BR1 \c BR2 ->
+    env_records_exist_env BR1 jle ->
+    env_records_exist_env BR2 jle.
+Proof.
+    introv Hs Hrel.
+    introv Hmem.
+    specializes Hrel Hmem.
+    destruct_hyp Hrel.
+    eauto_js.
+Qed.
+
+Hint Extern 4 (env_records_exist_env ?BR2 _) => 
+    match goal with 
+    | H : env_records_exist_env ?BR1 _ |- _ => 
+        sub_helper BR1 BR2 env_records_exist_env_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 env_records_exist_env_bisim_incl_preserved
+    end 
+    : js_ljs.
+
 Lemma usercode_context_invariant_bisim_incl_preserved : forall BR1 BR2 jle c,
     BR1 \c BR2 ->
     usercode_context_invariant BR1 jle c ->
@@ -1377,6 +1397,7 @@ Proof.
     introv Hs Hrel.
     inverts Hrel.
     constructor; eauto_js.
+    destruct_hyp usercode_context_invariant_lexical_env. eauto_js.
 Qed.
 
 Hint Extern 4 (usercode_context_invariant ?BR2 _ _) => 

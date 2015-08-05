@@ -167,6 +167,10 @@ Inductive lexical_env_related BR : J.lexical_env -> L.value -> Prop :=
     lexical_env_related BR jlenv v ->
     lexical_env_related BR (jeptr::jlenv) (L.value_object ptr)
 .
+(* States that the variable environment and lexical environment exist *)
+
+Definition env_records_exist_env BR jle :=
+    forall jeptr, Mem jeptr jle -> exists ptr, fact_js_env jeptr ptr \in BR.
 
 (** *** Preallocated objects invariant
     States that EcmaScript preallocated objects can be found in the LJS context. *)
@@ -449,17 +453,17 @@ Inductive construct_related : J.construct -> L.value -> Prop :=
 
 Definition option_construct_related := Option2 construct_related.
 
-Definition funcbody_expr is jp := E.make_lambda_expr E.ejs_to_ljs is (E.js_prog_to_ejs jp).
+Definition funcbody_expr is jp := E.make_lambda_expr E.ejs_to_ljs E.make_fobj is (E.js_prog_to_ejs jp).
 
-Definition funcbody_closure ctxl is jp := L.closure_intro ctxl None ["obj"; "$this"; "args"] (funcbody_expr is jp).
+Definition funcbody_closure ctxl is jp := L.closure_intro ctxl None ["$this"; "args"] (funcbody_expr is jp).
 
 Record usercode_context_invariant BR jle c : Prop := {
     usercode_context_invariant_includes_init_ctx : includes_init_ctx c;
     usercode_context_invariant_prealloc_related : prealloc_in_ctx BR c;
     usercode_context_invariant_global_env_record_exists : global_env_record_exists BR c;
-    usercode_context_invariant_context : index c "$context";
-    usercode_context_invariant_scope : 
-        forall v, binds c "$context" v -> lexical_env_related BR jle v
+    usercode_context_invariant_lexical_env : exists v,
+        binds c "$context" v /\ lexical_env_related BR jle v;
+    usercode_context_invariant_env_records_exist : env_records_exist_env BR jle 
 }.
 
 Inductive usercode_related BR : J.funcbody -> list string -> J.lexical_env -> L.value -> Prop :=
@@ -489,7 +493,8 @@ Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_usercode :
         option_usercode_related BR (J.object_code_ jobj) (J.object_formal_parameters_ jobj)
             (J.object_scope_ jobj) (L.object_internal obj\("usercode"?));
-    object_prim_related_codetxt : option_codetxt_related (J.object_code_ jobj) (L.object_internal obj\("codetxt"?))
+    object_prim_related_codetxt :
+        option_codetxt_related (J.object_code_ jobj) (L.object_internal obj\("codetxt"?))
 }.
 
 Record object_related BR jobj obj : Prop := {
@@ -783,14 +788,6 @@ Record execution_ctx_related BR jc c := {
         lexical_env_related BR (J.execution_ctx_lexical_env jc) v
 }.
 
-(* States that the variable environment and lexical environment exist *)
-Record env_records_exist BR jc := { 
-    env_record_exist_variable_env : 
-        forall jeptr, Mem jeptr (J.execution_ctx_variable_env jc) -> exists ptr, fact_js_env jeptr ptr \in BR;
-    env_record_exist_lexical_env : 
-        forall jeptr, Mem jeptr (J.execution_ctx_lexical_env jc) -> exists ptr, fact_js_env jeptr ptr \in BR
-}.
-
 (** *** Initial bisimulation. *)
 
 Parameter initBR : fact_set. (* TODO *)
@@ -813,6 +810,11 @@ Record state_invariant BR jst st : Prop := {
 }.
 
 (** *** For restoring invariants after function application *)
+
+Record env_records_exist BR jc := { 
+    env_record_exist_variable_env : env_records_exist_env BR (J.execution_ctx_variable_env jc);
+    env_record_exist_lexical_env : env_records_exist_env BR (J.execution_ctx_lexical_env jc)
+}.
 
 Record context_invariant BR jc c : Prop := {
     context_invariant_bisim_includes_init : initBR \c BR;

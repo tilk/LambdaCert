@@ -170,6 +170,18 @@ expr_object
  ("%EnvAssign", property_data
                 (data_intro (expr_id "%EnvAssign") expr_true expr_false
                  expr_false));
+ ("%EnvDefineArg", property_data
+                   (data_intro (expr_id "%EnvDefineArg") expr_true expr_false
+                    expr_false));
+ ("%EnvDefineArgsObj", property_data
+                       (data_intro (expr_id "%EnvDefineArgsObj") expr_true
+                        expr_false expr_false));
+ ("%EnvDefineFunc", property_data
+                    (data_intro (expr_id "%EnvDefineFunc") expr_true
+                     expr_false expr_false));
+ ("%EnvDefineVar", property_data
+                   (data_intro (expr_id "%EnvDefineVar") expr_true expr_false
+                    expr_false));
  ("%EnvDelete", property_data
                 (data_intro (expr_id "%EnvDelete") expr_true expr_false
                  expr_false));
@@ -715,12 +727,6 @@ expr_object
  ("%define15Property", property_data
                        (data_intro (expr_id "%define15Property") expr_true
                         expr_false expr_false));
- ("%defineFunction", property_data
-                     (data_intro (expr_id "%defineFunction") expr_true
-                      expr_false expr_false));
- ("%defineGlobalVar", property_data
-                      (data_intro (expr_id "%defineGlobalVar") expr_true
-                       expr_false expr_false));
  ("%defineNYIProperty", property_data
                         (data_intro (expr_id "%defineNYIProperty") expr_true
                          expr_false expr_false));
@@ -2335,7 +2341,7 @@ expr_app (expr_id "%AddDataField")
 .
 Definition ex_privDefaultCall := 
 expr_app (expr_get_internal "usercode" (expr_id "obj"))
-[expr_id "obj"; expr_id "this"; expr_id "args"]
+[expr_id "this"; expr_id "args"]
 .
 Definition ex_privDefaultConstruct := 
 expr_let "cproto1"
@@ -2374,7 +2380,11 @@ expr_let "f"
     (expr_if (expr_op2 binary_op_stx_eq (expr_id "id") (expr_string "eval"))
      (expr_op2 binary_op_stx_eq (expr_id "fun") (expr_id "%eval")) expr_false)
     (expr_app (expr_id "%configurableEval")
-     [expr_id "this"; expr_id "pcontext"; expr_id "strict"; expr_id "args"])
+     [expr_id "this";
+      expr_id "pcontext";
+      expr_id "vcontext";
+      expr_id "strict";
+      expr_id "args"])
     (expr_if (expr_app (expr_id "%IsCallable") [expr_id "fun"])
      (expr_app (expr_id "%AppExpr")
       [expr_id "fun";
@@ -2394,6 +2404,71 @@ expr_let "f"
    (expr_id "val"))))
 (expr_app (expr_id "%EnvGetId")
  [expr_id "context"; expr_id "id"; expr_id "f"])
+.
+Definition ex_privEnvDefineArg := 
+expr_seq
+(expr_if
+ (expr_op1 unary_op_not
+  (expr_op2 binary_op_stx_eq
+   (expr_get_obj_attr oattr_class (expr_id "context"))
+   (expr_string "DeclEnvRec")))
+ (expr_throw (expr_string "[env] Context not well formed! In %EnvDefineArg"))
+ expr_undefined)
+(expr_if
+ (expr_op1 unary_op_not
+  (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id")))
+ (expr_app (expr_id "%DeclEnvAddBinding")
+  [expr_id "context"; expr_id "id"; expr_id "val"; expr_true; expr_false])
+ (expr_app (expr_id "%EnvPutValue")
+  [expr_id "context"; expr_id "id"; expr_id "val"; expr_id "strict"]))
+.
+Definition ex_privEnvDefineArgsObj := 
+expr_app (expr_id "%EnvDefineArg")
+[expr_id "context";
+ expr_string "arguments";
+ expr_app (expr_id "%mkArgsObj") [expr_id "args"; expr_id "strict"];
+ expr_id "strict"]
+.
+Definition ex_privEnvDefineFunc := 
+expr_seq
+(expr_app (expr_id "%EnvDefineVar")
+ [expr_id "context";
+  expr_id "id";
+  expr_id "configurableBindings";
+  expr_id "strict"])
+(expr_app (expr_id "%EnvPutValue")
+ [expr_id "context"; expr_id "id"; expr_id "fo"; expr_id "strict"])
+.
+Definition ex_privEnvDefineVar := 
+expr_if
+(expr_op2 binary_op_stx_eq
+ (expr_get_obj_attr oattr_class (expr_id "context"))
+ (expr_string "DeclEnvRec"))
+(expr_if
+ (expr_op1 unary_op_not
+  (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id")))
+ (expr_app (expr_id "%DeclEnvAddBinding")
+  [expr_id "context";
+   expr_id "id";
+   expr_undefined;
+   expr_true;
+   expr_id "configurableBindings"]) expr_undefined)
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_obj_attr oattr_class (expr_id "context"))
+  (expr_string "ObjEnvRec"))
+ (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
+  (expr_if
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id")))
+   (expr_app (expr_id "%AddDataField")
+    [expr_id "bindings";
+     expr_id "id";
+     expr_undefined;
+     expr_true;
+     expr_true;
+     expr_id "configurableBindings"]) expr_undefined))
+ (expr_throw (expr_string "[env] Context not well formed! In %EnvDefineVar")))
 .
 Definition ex_privEnvDelete := 
 expr_let "f"
@@ -4132,14 +4207,13 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
   (expr_get_field (expr_id "%makeGlobalEnv") (expr_string "make"))
   (expr_seq
    (expr_set_attr pattr_value (expr_id "globalEnv") (expr_string "$this")
-    (expr_id "evalThis"))
+    (expr_id "this"))
    (expr_seq
-    (expr_set_attr pattr_value (expr_id "globalEnv")
-     (expr_string "nonstrictContext") (expr_id "evalContext"))
+    (expr_set_attr pattr_value (expr_id "globalEnv") (expr_string "$context")
+     (expr_id "context"))
     (expr_seq
      (expr_set_attr pattr_value (expr_id "globalEnv")
-      (expr_string "strictContext")
-      (expr_app (expr_id "%newDeclEnvRec") [expr_id "evalContext"]))
+      (expr_string "$vcontext") (expr_id "vcontext"))
      (expr_seq
       (expr_set_attr pattr_value (expr_id "globalEnv")
        (expr_string "evalCode") expr_true)
@@ -4273,55 +4347,6 @@ expr_let "%mkPropObj"
    expr_id "field";
    expr_app (expr_id "%mkPropObj")
    [expr_id "prop"; expr_true; expr_false; expr_true]]))
-.
-Definition ex_privdefineFunction := 
-expr_seq
-(expr_app (expr_id "%defineGlobalVar")
- [expr_id "context"; expr_id "id"; expr_id "configurableBindings"])
-(expr_app (expr_id "%EnvPutValue")
- [expr_id "context"; expr_id "id"; expr_id "fo"; expr_true])
-.
-Definition ex_privdefineGlobalVar := 
-expr_if
-(expr_op2 binary_op_stx_eq
- (expr_get_obj_attr oattr_class (expr_id "context"))
- (expr_string "DeclEnvRec"))
-(expr_if
- (expr_op1 unary_op_not
-  (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id")))
- (expr_seq
-  (expr_set_attr pattr_config (expr_id "context") (expr_id "id") expr_true)
-  (expr_seq
-   (expr_set_attr pattr_writable (expr_id "context") (expr_id "id") expr_true)
-   (expr_seq
-    (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
-     expr_undefined)
-    (expr_seq
-     (expr_set_attr pattr_enum (expr_id "context") (expr_id "id") expr_true)
-     (expr_set_attr pattr_config (expr_id "context") (expr_id "id")
-      (expr_id "configurableBindings")))))) expr_undefined)
-(expr_if
- (expr_op2 binary_op_stx_eq
-  (expr_get_obj_attr oattr_class (expr_id "context"))
-  (expr_string "ObjEnvRec"))
- (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
-  (expr_if
-   (expr_op1 unary_op_not
-    (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id")))
-   (expr_seq
-    (expr_set_attr pattr_config (expr_id "bindings") (expr_id "id") expr_true)
-    (expr_seq
-     (expr_set_attr pattr_writable (expr_id "bindings") (expr_id "id")
-      expr_true)
-     (expr_seq
-      (expr_set_attr pattr_value (expr_id "bindings") (expr_id "id")
-       expr_undefined)
-      (expr_seq
-       (expr_set_attr pattr_enum (expr_id "bindings") (expr_id "id")
-        expr_true)
-       (expr_set_attr pattr_config (expr_id "bindings") (expr_id "id")
-        (expr_id "configurableBindings")))))) expr_undefined))
- (expr_throw (expr_string "[env] Context not well formed!")))
 .
 Definition ex_privdefineNYIProperty := 
 expr_let "unimplFunc"
@@ -4669,7 +4694,11 @@ expr_if
 .
 Definition ex_privevalCall := 
 expr_app (expr_id "%configurableEval")
-[expr_id "%global"; expr_id "%globalContext"; expr_false; expr_id "args"]
+[expr_id "%global";
+ expr_id "%globalContext";
+ expr_id "%globalContext";
+ expr_false;
+ expr_id "args"]
 .
 Definition ex_priveveryCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -8046,16 +8075,10 @@ value_closure (closure_intro [] None ["context"] ex_privEnvImplicitThis)
 Definition name_privEnvImplicitThis :=  "%EnvImplicitThis" .
 Definition privmakeGlobalEnv :=  value_object 0 .
 Definition name_privmakeGlobalEnv :=  "%makeGlobalEnv" .
-Definition privnewDeclEnvRec := 
-value_closure (closure_intro [] None ["parent"] ex_privnewDeclEnvRec)
-.
-Definition name_privnewDeclEnvRec :=  "%newDeclEnvRec" .
 Definition privconfigurableEval := 
 value_closure
-(closure_intro
- [("%makeGlobalEnv", privmakeGlobalEnv);
-  ("%newDeclEnvRec", privnewDeclEnvRec)] None
- ["evalThis"; "evalContext"; "useStrict"; "args"] ex_privconfigurableEval)
+(closure_intro [("%makeGlobalEnv", privmakeGlobalEnv)] None
+ ["this"; "context"; "vcontext"; "useStrict"; "args"] ex_privconfigurableEval)
 .
 Definition name_privconfigurableEval :=  "%configurableEval" .
 Definition priveval :=  value_object 310 .
@@ -8071,7 +8094,8 @@ value_closure
   ("%TypeError", privTypeError);
   ("%configurableEval", privconfigurableEval);
   ("%eval", priveval)] None
- ["pcontext"; "id"; "this"; "args_thunk"; "strict"] ex_privEnvAppExpr)
+ ["pcontext"; "vcontext"; "id"; "this"; "args_thunk"; "strict"]
+ ex_privEnvAppExpr)
 .
 Definition name_privEnvAppExpr :=  "%EnvAppExpr" .
 Definition privglobal :=  value_object 2 .
@@ -8107,6 +8131,49 @@ value_closure
  ["context"; "id"; "val_thunk"; "strict"] ex_privEnvAssign)
 .
 Definition name_privEnvAssign :=  "%EnvAssign" .
+Definition privEnvDefineArg := 
+value_closure
+(closure_intro
+ [("%DeclEnvAddBinding", privDeclEnvAddBinding);
+  ("%EnvPutValue", privEnvPutValue)] None ["context"; "id"; "val"; "strict"]
+ ex_privEnvDefineArg)
+.
+Definition name_privEnvDefineArg :=  "%EnvDefineArg" .
+Definition privThrowTypeError :=  value_object 10 .
+Definition name_privThrowTypeError :=  "%ThrowTypeError" .
+Definition privmkArgsObj := 
+value_closure
+(closure_intro
+ [("%MakeGetter", privMakeGetter);
+  ("%MakeSetter", privMakeSetter);
+  ("%ObjectProto", privObjectProto);
+  ("%ThrowTypeError", privThrowTypeError)] None ["args"; "strict"]
+ ex_privmkArgsObj)
+.
+Definition name_privmkArgsObj :=  "%mkArgsObj" .
+Definition privEnvDefineArgsObj := 
+value_closure
+(closure_intro
+ [("%EnvDefineArg", privEnvDefineArg); ("%mkArgsObj", privmkArgsObj)] 
+ None ["context"; "args"; "strict"] ex_privEnvDefineArgsObj)
+.
+Definition name_privEnvDefineArgsObj :=  "%EnvDefineArgsObj" .
+Definition privEnvDefineVar := 
+value_closure
+(closure_intro
+ [("%AddDataField", privAddDataField);
+  ("%DeclEnvAddBinding", privDeclEnvAddBinding)] None
+ ["context"; "id"; "configurableBindings"; "strict"] ex_privEnvDefineVar)
+.
+Definition name_privEnvDefineVar :=  "%EnvDefineVar" .
+Definition privEnvDefineFunc := 
+value_closure
+(closure_intro
+ [("%EnvDefineVar", privEnvDefineVar); ("%EnvPutValue", privEnvPutValue)]
+ None ["context"; "id"; "fo"; "configurableBindings"; "strict"]
+ ex_privEnvDefineFunc)
+.
+Definition name_privEnvDefineFunc :=  "%EnvDefineFunc" .
 Definition privSyntaxErrorProto :=  value_object 7 .
 Definition name_privSyntaxErrorProto :=  "%SyntaxErrorProto" .
 Definition privSyntaxError := 
@@ -8261,8 +8328,6 @@ value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privLtOp)
 .
 Definition name_privLtOp :=  "%LtOp" .
-Definition privThrowTypeError :=  value_object 10 .
-Definition name_privThrowTypeError :=  "%ThrowTypeError" .
 Definition privmax := 
 value_closure (closure_intro [] None ["a"; "b"] ex_privmax)
 .
@@ -8582,15 +8647,6 @@ value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privacosCall)
 Definition name_privacosCall :=  "%acosCall" .
 Definition privapply :=  value_object 18 .
 Definition name_privapply :=  "%apply" .
-Definition privmkArgsObj := 
-value_closure
-(closure_intro
- [("%MakeGetter", privMakeGetter);
-  ("%MakeSetter", privMakeSetter);
-  ("%ObjectProto", privObjectProto);
-  ("%ThrowTypeError", privThrowTypeError)] None ["args"] ex_privmkArgsObj)
-.
-Definition name_privmkArgsObj :=  "%mkArgsObj" .
 Definition privapplyCall := 
 value_closure
 (closure_intro
@@ -8831,20 +8887,6 @@ value_closure
  None ["obj"; "field"; "prop"] ex_privdefine15Property)
 .
 Definition name_privdefine15Property :=  "%define15Property" .
-Definition privdefineGlobalVar := 
-value_closure
-(closure_intro [] None ["context"; "id"; "configurableBindings"]
- ex_privdefineGlobalVar)
-.
-Definition name_privdefineGlobalVar :=  "%defineGlobalVar" .
-Definition privdefineFunction := 
-value_closure
-(closure_intro
- [("%EnvPutValue", privEnvPutValue);
-  ("%defineGlobalVar", privdefineGlobalVar)] None
- ["context"; "id"; "fo"; "configurableBindings"] ex_privdefineFunction)
-.
-Definition name_privdefineFunction :=  "%defineFunction" .
 Definition privdefineNYIProperty := 
 value_closure
 (closure_intro
@@ -9202,6 +9244,10 @@ value_closure
  ex_privmathPowCall)
 .
 Definition name_privmathPowCall :=  "%mathPowCall" .
+Definition privnewDeclEnvRec := 
+value_closure (closure_intro [] None ["parent"] ex_privnewDeclEnvRec)
+.
+Definition name_privnewDeclEnvRec :=  "%newDeclEnvRec" .
 Definition privnewObjEnvRec := 
 value_closure
 (closure_intro [] None ["parent"; "obj"; "pt"] ex_privnewObjEnvRec)
@@ -10027,6 +10073,10 @@ Definition ctx_items :=
  (name_privDelete, privDelete);
  (name_privEnvAppExpr, privEnvAppExpr);
  (name_privEnvAssign, privEnvAssign);
+ (name_privEnvDefineArg, privEnvDefineArg);
+ (name_privEnvDefineArgsObj, privEnvDefineArgsObj);
+ (name_privEnvDefineFunc, privEnvDefineFunc);
+ (name_privEnvDefineVar, privEnvDefineVar);
  (name_privEnvDelete, privEnvDelete);
  (name_privEnvGet, privEnvGet);
  (name_privEnvGetId, privEnvGetId);
@@ -10215,8 +10265,6 @@ Definition ctx_items :=
  (name_privdecodeURIComponent, privdecodeURIComponent);
  (name_privdecodeURIComponentCall, privdecodeURIComponentCall);
  (name_privdefine15Property, privdefine15Property);
- (name_privdefineFunction, privdefineFunction);
- (name_privdefineGlobalVar, privdefineGlobalVar);
  (name_privdefineNYIProperty, privdefineNYIProperty);
  (name_privdefineOwnProperty, privdefineOwnProperty);
  (name_privdefineProperties, privdefineProperties);
@@ -10465,6 +10513,10 @@ privDefaultConstruct
 privDelete
 privEnvAppExpr
 privEnvAssign
+privEnvDefineArg
+privEnvDefineArgsObj
+privEnvDefineFunc
+privEnvDefineVar
 privEnvDelete
 privEnvGet
 privEnvGetId
@@ -10653,8 +10705,6 @@ privdecodeURICall
 privdecodeURIComponent
 privdecodeURIComponentCall
 privdefine15Property
-privdefineFunction
-privdefineGlobalVar
 privdefineNYIProperty
 privdefineOwnProperty
 privdefineProperties
@@ -10913,6 +10963,10 @@ Definition store_items := [
                                              ("%Delete", privDelete);
                                              ("%EnvAppExpr", privEnvAppExpr);
                                              ("%EnvAssign", privEnvAssign);
+                                             ("%EnvDefineArg", privEnvDefineArg);
+                                             ("%EnvDefineArgsObj", privEnvDefineArgsObj);
+                                             ("%EnvDefineFunc", privEnvDefineFunc);
+                                             ("%EnvDefineVar", privEnvDefineVar);
                                              ("%EnvDelete", privEnvDelete);
                                              ("%EnvGet", privEnvGet);
                                              ("%EnvGetId", privEnvGetId);
@@ -11101,8 +11155,6 @@ Definition store_items := [
                                              ("%decodeURIComponent", privdecodeURIComponent);
                                              ("%decodeURIComponentCall", privdecodeURIComponentCall);
                                              ("%define15Property", privdefine15Property);
-                                             ("%defineFunction", privdefineFunction);
-                                             ("%defineGlobalVar", privdefineGlobalVar);
                                              ("%defineNYIProperty", privdefineNYIProperty);
                                              ("%defineOwnProperty", privdefineOwnProperty);
                                              ("%defineProperties", privdefineProperties);

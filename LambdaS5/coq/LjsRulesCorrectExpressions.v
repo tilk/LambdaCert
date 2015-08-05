@@ -79,10 +79,10 @@ Proof.
     destruct fb.
     repeat ljs_autoforward.
     rewrite exprjs_prog_strictness_eq in *.
-    forwards_th Hx : red_spec_creating_function_object_ok. { 
+    forwards_th Hx : red_spec_creating_function_object_ok. { skip. (* TODO *) } { 
         eapply execution_ctx_related_lexical_env. 
         eapply context_invariant_execution_ctx_related. 
-        eassumption.
+        skip. (* TODO eassumption. *)
     }
     destr_concl; try ljs_handle_abort.
     res_related_invert.
@@ -100,10 +100,10 @@ Proof.
     destruct_hyp Hx.
     repeat ljs_autoforward.
     rewrite exprjs_prog_strictness_eq in *.
-    forwards_th Hx : red_spec_creating_function_object_ok. { 
+    forwards_th Hx : red_spec_creating_function_object_ok. { skip. (* TODO *) } { 
         eapply execution_ctx_related_lexical_env. 
         eapply context_invariant_execution_ctx_related. 
-        eassumption.
+        skip. (* TODO eassumption. *)
     }
     destr_concl; [idtac | skip]. (* TODO function object creation never fails *)
     (* TODO uninitialized binding business *)
@@ -527,7 +527,7 @@ Proof.
         forwards_th Hx : env_get_value_lemma. eauto_js. eassumption.
         destr_concl; try ljs_handle_abort.
         repeat ljs_autoforward.
-        inverts red_exprh H21. (* TODO *)
+        inverts red_exprh H22. (* TODO *)
         ljs_apply.
         ljs_context_invariant_after_apply.
         forwards_th : red_spec_list_ok.
@@ -538,7 +538,7 @@ Proof.
         ljs_bool_red_exprh; repeat determine_epsilon.
         cases_isTrue as Hevcond. { (* eval *)
             destruct Hevcond as (Hevcond1&Hevcond2).
-            specializes H32 Hevcond1. destruct_hyp H32. repeat determine_epsilon. (* TODO better! *)
+            specializes H33 Hevcond1. destruct_hyp H33. repeat determine_epsilon. (* TODO better! *)
             repeat ljs_autoforward.
             skip. (* TODO prove eval *)
         } 
@@ -567,7 +567,7 @@ Proof.
                     left.
                     rew_logic in Hevcond.
                     destruct Hevcond as (Hevcond1&Hevcond2).
-                    specializes H32 Hevcond1. destruct_hyp H32. repeat determine_epsilon. (* TODO *)
+                    specializes H33 Hevcond1. destruct_hyp H33. repeat determine_epsilon. (* TODO *)
                     repeat binds_inv.
                     introv Heqeval. subst_hyp Heqeval.
                     apply Hevcond2.

@@ -209,6 +209,13 @@ Proof.
     } 
 Qed.
 
+(* TODO
+Lemma usercode_context_invariant_restore_lemma : forall BR jle c jv v b,
+    value_related BR jv v ->
+    usercode_context_invariant BR jle c ->
+    context_invariant BR (J.execution_ctx_intro_same jle jv b) (c\("$this" := v)\("$strict" := L.value_bool b)).  
+*)
+
 Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 vs r jptr jv jvs,
     ih_stat k ->
     ih_call_prealloc k ->
