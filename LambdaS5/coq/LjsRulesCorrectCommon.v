@@ -69,6 +69,7 @@ Hint Constructors construct_prealloc_related : js_ljs.
 Hint Constructors construct_related : js_ljs.
 Hint Constructors codetxt_related : js_ljs.
 Hint Constructors usercode_related : js_ljs.
+Hint Constructors func_strict_related : js_ljs.
 Hint Constructors call_prealloc_related : js_ljs.
 Hint Constructors call_related : js_ljs.
 Hint Constructors option_call_related : js_ljs.
@@ -1279,9 +1280,10 @@ Proof.
     introv Hs Hrel.
     inverts Hrel.
     constructor.
-    introv Hbinds. specializes execution_ctx_related_this_binding Hbinds. jauto_js.
-    jauto_js.
-    introv Hbinds. specializes execution_ctx_related_lexical_env Hbinds. jauto_js.
+    + introv Hbinds. specializes execution_ctx_related_this_binding Hbinds. jauto_js.
+    + jauto_js.
+    + introv Hbinds. specializes execution_ctx_related_lexical_env Hbinds. jauto_js.
+    + introv Hbinds. specializes execution_ctx_related_variable_env Hbinds. jauto_js.
 Qed.
 
 (* Hint Resolve execution_ctx_related_bisim_incl_preserved : js_ljs. *)
@@ -1389,20 +1391,19 @@ Hint Extern 4 (env_records_exist_env ?BR2 _) =>
     end 
     : js_ljs.
 
-Lemma usercode_context_invariant_bisim_incl_preserved : forall BR1 BR2 jle c,
+Lemma usercode_context_invariant_bisim_incl_preserved : forall BR1 BR2 jle b c,
     BR1 \c BR2 ->
-    usercode_context_invariant BR1 jle c ->
-    usercode_context_invariant BR2 jle c.
+    usercode_context_invariant BR1 jle b c ->
+    usercode_context_invariant BR2 jle b c.
 Proof.
     introv Hs Hrel.
     inverts Hrel.
     constructor; eauto_js.
-    destruct_hyp usercode_context_invariant_lexical_env. eauto_js.
 Qed.
 
-Hint Extern 4 (usercode_context_invariant ?BR2 _ _) => 
+Hint Extern 4 (usercode_context_invariant ?BR2 _ _ _) => 
     match goal with 
-    | H : usercode_context_invariant ?BR1 _ _ |- _ => 
+    | H : usercode_context_invariant ?BR1 _ _ _ |- _ => 
         sub_helper BR1 BR2 usercode_context_invariant_bisim_incl_preserved
     | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 usercode_context_invariant_bisim_incl_preserved
     end 

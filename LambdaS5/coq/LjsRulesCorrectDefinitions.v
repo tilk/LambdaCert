@@ -457,18 +457,20 @@ Definition funcbody_expr is jp := E.make_lambda_expr E.ejs_to_ljs E.make_fobj is
 
 Definition funcbody_closure ctxl is jp := L.closure_intro ctxl None ["$this"; "args"] (funcbody_expr is jp).
 
-Record usercode_context_invariant BR jle c : Prop := {
+Record usercode_context_invariant BR jle b c : Prop := {
     usercode_context_invariant_includes_init_ctx : includes_init_ctx c;
     usercode_context_invariant_prealloc_related : prealloc_in_ctx BR c;
     usercode_context_invariant_global_env_record_exists : global_env_record_exists BR c;
-    usercode_context_invariant_lexical_env : exists v,
-        binds c "$context" v /\ lexical_env_related BR jle v;
+    usercode_context_invariant_lexical_env : forall v,
+        binds c "$context" v -> lexical_env_related BR jle v;
+    usercode_context_invariant_strict : forall v,
+        binds c "$strict" v -> v = L.value_bool b;
     usercode_context_invariant_env_records_exist : env_records_exist_env BR jle 
 }.
 
 Inductive usercode_related BR : J.funcbody -> list string -> J.lexical_env -> L.value -> Prop :=
 | usercode_related_intro : forall jp s is jle ctxl, 
-    usercode_context_invariant BR jle (from_list ctxl) ->
+    usercode_context_invariant BR jle (J.prog_intro_strictness jp) (from_list ctxl) ->
     usercode_related BR (J.funcbody_intro jp s) is jle 
         (L.value_closure (funcbody_closure ctxl is jp))
 .
@@ -480,6 +482,12 @@ Inductive codetxt_related : J.funcbody -> L.value -> Prop :=
 .
 
 Definition option_codetxt_related := Option2 codetxt_related.
+
+Inductive func_strict_related : J.funcbody -> L.value -> Prop :=
+| func_strict_related_intro : forall jfb, func_strict_related jfb (L.value_bool (J.funcbody_is_strict jfb))
+.
+
+Definition option_func_strict_related := Option2 func_strict_related.
 
 Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_class : J.object_class_ jobj = L.object_class obj;
@@ -494,7 +502,9 @@ Record object_prim_related BR jobj obj : Prop := {
         option_usercode_related BR (J.object_code_ jobj) (J.object_formal_parameters_ jobj)
             (J.object_scope_ jobj) (L.object_internal obj\("usercode"?));
     object_prim_related_codetxt :
-        option_codetxt_related (J.object_code_ jobj) (L.object_internal obj\("codetxt"?))
+        option_codetxt_related (J.object_code_ jobj) (L.object_internal obj\("codetxt"?));
+    object_prim_related_func_strict :
+        option_func_strict_related (J.object_code_ jobj) (L.object_internal obj\("strict"?))
 }.
 
 Record object_related BR jobj obj : Prop := {
@@ -785,7 +795,10 @@ Record execution_ctx_related BR jc c := {
         v = L.value_bool (J.execution_ctx_strict jc);
     execution_ctx_related_lexical_env : forall v,
         binds c "$context" v ->
-        lexical_env_related BR (J.execution_ctx_lexical_env jc) v
+        lexical_env_related BR (J.execution_ctx_lexical_env jc) v;
+    execution_ctx_related_variable_env : forall v,
+        binds c "$vcontext" v ->
+        lexical_env_related BR (J.execution_ctx_variable_env jc) v
 }.
 
 (** *** Initial bisimulation. *)

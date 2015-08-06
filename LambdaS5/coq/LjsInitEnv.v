@@ -2341,7 +2341,9 @@ expr_app (expr_id "%AddDataField")
 .
 Definition ex_privDefaultCall := 
 expr_app (expr_get_internal "usercode" (expr_id "obj"))
-[expr_id "this"; expr_id "args"]
+[expr_app (expr_id "%resolveThis")
+ [expr_get_internal "strict" (expr_id "obj"); expr_id "this"];
+ expr_id "args"]
 .
 Definition ex_privDefaultConstruct := 
 expr_let "cproto1"
@@ -2976,7 +2978,8 @@ expr_let "fobj"
   (expr_id "%FunctionProto") (expr_id "%DefaultCall"))
  [("construct", expr_id "%DefaultConstruct");
   ("usercode", expr_id "body");
-  ("codetxt", expr_id "codetxt")]
+  ("codetxt", expr_id "codetxt");
+  ("strict", expr_id "strict")]
  [("length", property_data
              (data_intro (expr_id "len") expr_false expr_false expr_false))])
 (expr_let "proto"
@@ -8021,9 +8024,18 @@ value_closure
  ["context"; "name"; "val"; "mutable"; "deletable"] ex_privDeclEnvAddBinding)
 .
 Definition name_privDeclEnvAddBinding :=  "%DeclEnvAddBinding" .
+Definition privglobal :=  value_object 2 .
+Definition name_privglobal :=  "%global" .
+Definition privresolveThis := 
+value_closure
+(closure_intro [("%ToObject", privToObject); ("%global", privglobal)] 
+ None ["strict"; "obj"] ex_privresolveThis)
+.
+Definition name_privresolveThis :=  "%resolveThis" .
 Definition privDefaultCall := 
 value_closure
-(closure_intro [] None ["obj"; "this"; "args"] ex_privDefaultCall)
+(closure_intro [("%resolveThis", privresolveThis)] None
+ ["obj"; "this"; "args"] ex_privDefaultCall)
 .
 Definition name_privDefaultCall :=  "%DefaultCall" .
 Definition privObjectProto :=  value_object 1 .
@@ -8098,8 +8110,6 @@ value_closure
  ex_privEnvAppExpr)
 .
 Definition name_privEnvAppExpr :=  "%EnvAppExpr" .
-Definition privglobal :=  value_object 2 .
-Definition name_privglobal :=  "%global" .
 Definition privset_property := 
 value_closure
 (closure_intro
@@ -9436,12 +9446,6 @@ value_closure
  ex_privreplaceCall)
 .
 Definition name_privreplaceCall :=  "%replaceCall" .
-Definition privresolveThis := 
-value_closure
-(closure_intro [("%ToObject", privToObject); ("%global", privglobal)] 
- None ["strict"; "obj"] ex_privresolveThis)
-.
-Definition name_privresolveThis :=  "%resolveThis" .
 Definition privreverse :=  value_object 84 .
 Definition name_privreverse :=  "%reverse" .
 Definition privreverseCall := 

@@ -45,32 +45,6 @@ Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
 
-(* TODO move *)
-(*
-Hint Extern 50 => erewrite read_option_not_index_inv by prove_bag : js_ljs.
-Hint Extern 50 => erewrite read_option_binds_inv by prove_bag : js_ljs.
-*)
-Lemma option_construct_related_none_lemma : forall (m : finmap _ _) s,
-    ~index m s ->
-    option_construct_related None (m\(s?)).
-Proof.
-    intros.
-    erewrite read_option_not_index_inv by prove_bag.
-    eauto_js.
-Qed.
-
-Lemma option_construct_related_some_lemma : forall jcall (m : finmap _ _) s v,
-    binds m s v ->
-    construct_related jcall v ->
-    option_construct_related (Some jcall) (m\(s?)).
-Proof.
-    intros.
-    erewrite read_option_binds_inv by prove_bag.
-    eauto_js.
-Qed.
-
-Hint Resolve option_construct_related_none_lemma option_construct_related_some_lemma : js_ljs.
-
 Lemma option_usercode_related_none_lemma : forall BR (m : finmap _ _) s,
      ~index m s ->
      option_usercode_related BR None None None (m\(s?)).
@@ -92,26 +66,31 @@ Qed.
 
 Hint Resolve option_usercode_related_none_lemma option_usercode_related_some_lemma : js_ljs.
 
-Lemma option_codetxt_related_none_lemma : forall (m : finmap _ _) s,
+Lemma option2_none_lemma : forall T1 T2 (P : T1 -> T2 -> Prop) (m : finmap _ _) s,
      ~index m s ->
-     option_codetxt_related None (m\(s?)).
+     Option2 P None (m\(s?)).
 Proof.
     intros.
     erewrite read_option_not_index_inv by prove_bag.
     eauto_js.
 Qed.
 
-Lemma option_codetxt_related_some_lemma : forall (m : finmap _ _) s jfb v,
-     binds m s v ->
-     codetxt_related jfb v ->
-     option_codetxt_related (Some jfb) (m\(s?)).
+Lemma option2_some_lemma : forall T1 T2 (P : T1 -> T2 -> Prop) (m : finmap string T2) s x1 x2,
+     binds m s x2 ->
+     P x1 x2 ->
+     Option2 P (Some x1) (m\(s?)).
 Proof.
     intros.
     erewrite read_option_binds_inv by prove_bag.
     eauto_js.
 Qed.
 
-Hint Resolve option_codetxt_related_none_lemma option_codetxt_related_some_lemma : js_ljs.
+Hint Extern 2 (option_construct_related _ _) => eapply option2_none_lemma : js_ljs.
+Hint Extern 2 (option_construct_related _ _) => eapply option2_some_lemma : js_ljs.
+Hint Extern 2 (option_codetxt_related _ _) => eapply option2_none_lemma : js_ljs.
+Hint Extern 2 (option_codetxt_related _ _) => eapply option2_some_lemma : js_ljs.
+Hint Extern 2 (option_func_strict_related _ _) => eapply option2_none_lemma : js_ljs.
+Hint Extern 2 (option_func_strict_related _ _) => eapply option2_some_lemma : js_ljs.
 
 Lemma nindex_update_diff : forall `{Index_update_diff_eq} M k k' x', 
     k <> k' -> ~index M k -> ~index (M \(k' := x')) k.
@@ -209,12 +188,33 @@ Proof.
     } 
 Qed.
 
-(* TODO
-Lemma usercode_context_invariant_restore_lemma : forall BR jle c jv v b,
+Lemma usercode_context_invariant_restore_lemma : forall BR jeptr ptr jle c jv v b v',
+    initBR \c BR ->
+    binds c "$context" v' ->
+    fact_js_env jeptr ptr \in BR ->
+    fact_ctx_parent ptr v' \in BR ->
     value_related BR jv v ->
-    usercode_context_invariant BR jle c ->
-    context_invariant BR (J.execution_ctx_intro_same jle jv b) (c\("$this" := v)\("$strict" := L.value_bool b)).  
-*)
+    usercode_context_invariant BR jle b c ->
+    context_invariant BR 
+        (J.execution_ctx_intro_same (jeptr::jle) jv b) 
+        (c\("$this" := v)\("$context" := L.value_object ptr)\("$vcontext" := L.value_object ptr)).
+Proof.
+    introv Hinit Hbinds Hf1 Hf2 Hthisrel Hucinv.
+    destruct Hucinv.
+    specializes usercode_context_invariant_lexical_env Hbinds.
+    constructor. {
+        assumption.
+    } {
+        constructor; introv Hb; 
+        repeat rewrite binds_update_diff_eq in Hb by prove_bag;
+        repeat rewrite binds_update_same_eq in Hb by prove_bag;
+        try subst_hyp Hb; simpl; eauto_js 2.
+    } 
+    + eauto_js 8.
+    + constructor; introv Hmem; inverts Hmem as Hmem; eauto_js.
+    + eauto_js 8.
+    + eauto_js 8.
+Qed.
 
 Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 vs r jptr jv jvs,
     ih_stat k ->
@@ -333,7 +333,7 @@ Proof.
     destruct_hyp Hv;
     repeat ljs_autoforward. {
         inverts Hvrel2.
-        jauto_js 15.
+        jauto_js 16.
     }
     (* has message *)
     inv_ljs;
@@ -344,18 +344,15 @@ Proof.
     rew_bag_simpl. 
     simpls.
     binds_inv.
-    inverts Hvrel2.
-    unfold_concl. do 3 eexists. splits. 
-    jauto_js 15.
-    jauto_js.
-    eapply state_invariant_next_fresh_commute_object_preserved.
-    rew_bag_simpl.
-    eapply state_invariant_new_object_preserved.
-    eauto_js. eauto_js.
-    eauto_js 15.
-    eauto_js 7.
-    jauto_js 8.
-    simpls. false. prove_bag 7.
+    inverts Hvrel2. 
+    unfold_concl. jauto_set_slim. (* TODO automation? *)
+    + eauto_js 15.
+    + eauto_js.
+    + eapply state_invariant_next_fresh_commute_object_preserved. rew_bag_simpl.
+      eapply state_invariant_new_object_preserved; eauto_js 17.
+    + eauto_js 7.
+    + eauto_js 8.
+    + simpls. false. prove_bag 8.
 Qed.
 
 Lemma priv_js_error_lemma : forall k c st v st' r,
@@ -618,39 +615,39 @@ Proof.
     inverts red_exprh Hlred; tryfalse.
     ljs_apply.
     ljs_context_invariant_after_apply. clear Hcinv.
-    repeat (ljs_autoforward || decide_stx_eq).
-    (* null *)
-    destruct Hvrel; invert_stx_eq.
-    forwards_th Hx : type_error_lemma. iauto. 
-    destr_concl; tryfalse.
-    jauto_js.
-    (* undefined *)
-    destruct Hvrel; invert_stx_eq.
-    forwards_th Hx : type_error_lemma. iauto. 
-    destr_concl; tryfalse.
-    jauto_js.
-    (* object *)
-    destruct Hvrel; invert_stx_eq.
-    jauto_js.
-    (* string *)
-    destruct Hvrel; invert_stx_eq.
-    skip. (* TODO *)
-    (* number *)
-    destruct Hvrel; invert_stx_eq.
-    inverts red_exprh H7. (* TODO *)
-    ljs_apply.
-    ljs_context_invariant_after_apply. 
-    repeat ljs_autoforward.
-    jauto_js 22.
-    (* boolean *)
-    destruct Hvrel; invert_stx_eq.
-    inverts red_exprh H7. (* TODO *)
-    ljs_apply.
-    ljs_context_invariant_after_apply. 
-    repeat ljs_autoforward.
-    jauto_js 22.
-    (* impossible *)
-    destruct Hvrel; false; eauto_js.
+    repeat (ljs_autoforward || decide_stx_eq). { (* null *)
+        destruct Hvrel; invert_stx_eq.
+        forwards_th Hx : type_error_lemma. iauto. 
+        destr_concl; tryfalse.
+        jauto_js.
+    } { (* undefined *)
+        destruct Hvrel; invert_stx_eq.
+        forwards_th Hx : type_error_lemma. iauto. 
+        destr_concl; tryfalse.
+        jauto_js.
+    } { (* object *)
+        destruct Hvrel; invert_stx_eq.
+        jauto_js.
+    } { (* string *)
+        destruct Hvrel; invert_stx_eq.
+        skip. (* TODO *)
+    } { (* number *)
+        destruct Hvrel; invert_stx_eq.
+        inverts red_exprh H7. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply. 
+        repeat ljs_autoforward.
+        jauto_js 28.
+    } { (* boolean *)
+        destruct Hvrel; invert_stx_eq.
+        inverts red_exprh H7. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply. 
+        repeat ljs_autoforward.
+        jauto_js 28.
+    } { (* impossible *)
+        destruct Hvrel; false; eauto_js.
+    }
 Qed.
 
 Lemma red_spec_to_boolean_ok : forall k je, 
@@ -746,7 +743,7 @@ Proof.
     repeat ljs_autoforward.
     forwards Hx : construct_related_lemma Hinv Hbs; try eassumption. 
     destruct Hx as (jcon&Hcrel).
-    forwards Hmeth : object_method_construct_lemma; try eassumption. eauto_js.
+    forwards Hmeth : object_method_construct_lemma; try eassumption. eauto_js 7.
     inverts Hcrel. { (* prealloc *)
         lets Hx : red_spec_construct_prealloc_ok ___.
         specializes_th Hx; try eassumption.

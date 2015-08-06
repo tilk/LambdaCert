@@ -191,8 +191,7 @@ Definition make_lambda_expr f ff (is : list string) p :=
     L.expr_label "%ret" (
     new_context_in (make_app_builtin "%newDeclEnvRec" [context]) (
     remember_vcontext (
-    L.expr_let "$this" (make_resolve_this (L.expr_id "$this")) (
-    L.expr_seq (init_bindings ff (Some is) (L.expr_bool false) fs vis) (f e))))).
+    L.expr_seq (init_bindings ff (Some is) (L.expr_bool false) fs vis) (f e)))).
 
 Definition make_lambda f ff (is : list string) p := 
     L.expr_lambda ["$this"; "args"] (make_lambda_expr f ff is p).
@@ -461,8 +460,7 @@ with make_fobj fd :=
 
 Definition init_new_decl cb fs is e := 
     new_context_in (make_app_builtin "%newDeclEnvRec" [context]) (
-    remember_vcontext (
-    L.expr_seq (init_bindings make_fobj None cb fs is) e)).
+    L.expr_seq (init_bindings make_fobj None cb fs is) e).
 
 Definition init_existing cb fs is e := L.expr_seq (init_bindings make_fobj None cb fs is) e.
 
