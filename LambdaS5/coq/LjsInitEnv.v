@@ -6329,7 +6329,11 @@ expr_if (expr_id "strict") (expr_id "obj")
 (expr_if
  (expr_if (expr_op2 binary_op_stx_eq (expr_id "obj") expr_null) expr_true
   (expr_op2 binary_op_stx_eq (expr_id "obj") expr_undefined))
- (expr_id "%global") (expr_app (expr_id "%ToObject") [expr_id "obj"]))
+ (expr_id "%global")
+ (expr_if
+  (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "obj"))
+   (expr_string "object")) (expr_id "obj")
+  (expr_app (expr_id "%ToObject") [expr_id "obj"])))
 .
 Definition ex_privreverseCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
