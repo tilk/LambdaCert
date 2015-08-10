@@ -8,6 +8,8 @@ let vals_store = ref Map.empty
 
 let used_names = ref Set.empty
 
+let in_ordered_vals = ref Set.empty
+
 let ordered_vals = ref []
 
 let named_exprs = ref Map.empty
@@ -31,12 +33,23 @@ let ident_for i =
         else f (k+1) i
     in f 1 ii'
 
+let reserve_named_val i v =
+    let vst = !vals_store in
+    if Map.mem v vst then ()
+    else let ii = ident_for i in
+    vals_store := Map.add v ii vst
+
 let named_val i v = 
     let vst = !vals_store in
-    if Map.mem v vst then Map.find v vst
+    if Map.mem v vst 
+    then let ii = Map.find v vst in
+    if Set.mem ii !in_ordered_vals
+    then ()
+    else begin ordered_vals := (ii,i,v) :: !ordered_vals; in_ordered_vals := Set.add ii !in_ordered_vals end; ii
     else let ii = ident_for i in 
     vals_store := Map.add v ii vst; 
     ordered_vals := (ii,i,v) :: !ordered_vals;
+    in_ordered_vals := Set.add ii !in_ordered_vals;
     ii
 
 let named_expr i e =
@@ -262,7 +275,7 @@ let format_object_internal vh =
 
 let format_object o = 
     let l1 = [
-        "oattrs_proto", format_value "proto" (object_proto o);
+        "oattrs_proto", format_named_val (String.to_list "proto") (object_proto o);
         "oattrs_class", format_id (object_class o);
         "oattrs_extensible", bool (object_extensible o);
         "oattrs_code", format_named_val (String.to_list "objCode") (object_code o)
@@ -273,6 +286,10 @@ let format_object o =
         "object_internal", format_object_internal (object_internal o)
     ] in
     coqrecord l
+
+let reserve_ctx_names (c : ctx) = 
+    let f (i, v) = reserve_named_val i v in
+    List.iter f (LibFinmap.FinmapImpl.to_list_impl c)
 
 let format_ctx (c : ctx) = 
     let format_ctx_item (i, v) = parens (squish [text ("name_"); format_named_val i v; text ", "; format_named_val i v]) in
@@ -318,6 +335,7 @@ let header () = vert (List.map text [
     "Open Scope string_scope."])
 
 let format_ctx_store (c, st) = 
+    reserve_ctx_names c;
     let fst = format_store st in
     let fctx = format_ctx_def c in
     let fnv = format_named_vals () in

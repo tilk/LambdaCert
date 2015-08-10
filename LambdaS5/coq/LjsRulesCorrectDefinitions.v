@@ -306,6 +306,133 @@ End OptionPred.
 
 Definition option_value_related BR := Option2 (value_related BR).
 
+Inductive prealloc_related : J.prealloc ->  L.value -> Prop :=
+| prealloc_related_global_eval : 
+    prealloc_related J.prealloc_global_eval LjsInitEnv.priveval
+| prealloc_related_global_is_finite : 
+    prealloc_related J.prealloc_global_is_finite LjsInitEnv.privisFinite
+| prealloc_related_global_is_nan : 
+    prealloc_related J.prealloc_global_is_nan LjsInitEnv.privisNaN
+| prealloc_related_global_parse_float : 
+    prealloc_related J.prealloc_global_parse_float LjsInitEnv.privparseFloat
+| prealloc_related_global_parse_int : 
+    prealloc_related J.prealloc_global_parse_int LjsInitEnv.privparseInt
+| prealloc_related_object : 
+    prealloc_related J.prealloc_object LjsInitEnv.privObjectGlobalFuncObj
+| prealloc_related_object_proto : 
+    prealloc_related J.prealloc_object LjsInitEnv.privObjectProto
+| prealloc_related_object_get_proto_of : 
+    prealloc_related J.prealloc_object_get_proto_of LjsInitEnv.privgpo
+| prealloc_related_object_get_own_prop_descriptor : 
+    prealloc_related J.prealloc_object_get_own_prop_descriptor LjsInitEnv.privgopd
+| prealloc_related_object_get_own_prop_name : 
+    prealloc_related J.prealloc_object_get_own_prop_name LjsInitEnv.privgopn
+| prealloc_related_object_create : 
+    prealloc_related J.prealloc_object_create LjsInitEnv.privcreate
+| prealloc_related_object_define_prop : 
+    prealloc_related J.prealloc_object_define_prop LjsInitEnv.privdefineProperty
+| prealloc_related_object_define_props : 
+    prealloc_related J.prealloc_object_define_props LjsInitEnv.privdefineProperties
+| prealloc_related_object_seal : 
+    prealloc_related J.prealloc_object_seal LjsInitEnv.privseal
+| prealloc_related_object_freeze : 
+    prealloc_related J.prealloc_object_freeze LjsInitEnv.privfreeze
+| prealloc_related_object_prevent_extensions : 
+    prealloc_related J.prealloc_object_prevent_extensions LjsInitEnv.privpreventExtensions
+| prealloc_related_object_is_sealed : 
+    prealloc_related J.prealloc_object_is_sealed LjsInitEnv.privisSealed
+| prealloc_related_object_is_frozen : 
+    prealloc_related J.prealloc_object_is_frozen LjsInitEnv.privisFrozen
+| prealloc_related_object_is_extensible : 
+    prealloc_related J.prealloc_object_is_extensible LjsInitEnv.privisExtensible
+| prealloc_related_object_keys : 
+    prealloc_related J.prealloc_object_keys LjsInitEnv.privkeys
+| prealloc_related_object_proto_to_string : 
+    prealloc_related J.prealloc_object_proto_to_string LjsInitEnv.privobjectToString
+| prealloc_related_object_proto_value_of : 
+    prealloc_related J.prealloc_object_proto_value_of LjsInitEnv.privobjectValueOf
+| prealloc_related_object_proto_has_own_prop : 
+    prealloc_related J.prealloc_object_proto_has_own_prop LjsInitEnv.privhasOwnProperty
+| prealloc_related_object_proto_is_prototype_of : 
+    prealloc_related J.prealloc_object_proto_is_prototype_of LjsInitEnv.privisPrototypeOf
+| prealloc_related_object_proto_prop_is_enumerable : 
+    prealloc_related J.prealloc_object_proto_prop_is_enumerable LjsInitEnv.privpropEnum
+| prealloc_related_function : 
+    prealloc_related J.prealloc_function LjsInitEnv.privFunctionGlobalFuncObj
+| prealloc_related_function_proto : 
+    prealloc_related J.prealloc_function_proto LjsInitEnv.privFunctionProto
+| prealloc_related_function_to_string : 
+    prealloc_related J.prealloc_function_proto_to_string LjsInitEnv.privfunctionToString
+| prealloc_related_function_apply : 
+    prealloc_related J.prealloc_function_proto_apply LjsInitEnv.privapply
+| prealloc_related_function_bind : 
+    prealloc_related J.prealloc_function_proto_bind LjsInitEnv.privbind
+| prealloc_related_bool : 
+    prealloc_related J.prealloc_bool LjsInitEnv.privBooleanGlobalFuncObj
+| prealloc_related_bool_proto : 
+    prealloc_related J.prealloc_bool_proto LjsInitEnv.privBooleanProto
+| prealloc_related_bool_proto_to_string : 
+    prealloc_related J.prealloc_bool_proto_to_string LjsInitEnv.privbooleanToString
+| prealloc_related_bool_proto_value_of : 
+    prealloc_related J.prealloc_bool_proto_value_of LjsInitEnv.privbooleanValueOf
+| prealloc_related_number : 
+    prealloc_related J.prealloc_number LjsInitEnv.privNumberGlobalFuncObj
+| prealloc_related_number_proto : 
+    prealloc_related J.prealloc_number_proto LjsInitEnv.privNumberProto
+| prealloc_related_number_proto_to_string : 
+    prealloc_related J.prealloc_number_proto_to_string LjsInitEnv.privnumberToString
+| prealloc_related_number_proto_value_of : 
+    prealloc_related J.prealloc_number_proto_value_of LjsInitEnv.privnumberValueOf
+| prealloc_related_number_proto_to_fixed : 
+    prealloc_related J.prealloc_number_proto_to_fixed LjsInitEnv.privtoFixed
+| prealloc_related_number_proto_to_exponential : 
+    prealloc_related J.prealloc_number_proto_to_exponential LjsInitEnv.privtoExponential
+| prealloc_related_number_proto_to_precision : 
+    prealloc_related J.prealloc_number_proto_to_precision LjsInitEnv.privtoPrecision
+(* | prealloc_related_array : 
+    prealloc_related J.prealloc_array LjsInitEnv.priv
+| prealloc_related_array_is_array : 
+    prealloc_related J.prealloc_array_is_array LjsInitEnv.priv
+| prealloc_related_array_proto_to_string : 
+    prealloc_related J.prealloc_array_proto_to_string LjsInitEnv.priv *)
+| prealloc_related_string : 
+    prealloc_related J.prealloc_string LjsInitEnv.privStringGlobalFuncObj
+| prealloc_related_string_proto : 
+    prealloc_related J.prealloc_string_proto LjsInitEnv.privStringProto
+| prealloc_related_string_proto_to_string : 
+    prealloc_related J.prealloc_string_proto_to_string LjsInitEnv.privstringToString
+| prealloc_related_string_proto_value_of : 
+    prealloc_related J.prealloc_string_proto_value_of LjsInitEnv.privstringValueOf
+| prealloc_related_string_proto_char_at : 
+    prealloc_related J.prealloc_string_proto_char_at LjsInitEnv.privcharAt
+| prealloc_related_string_proto_char_code_at : 
+    prealloc_related J.prealloc_string_proto_char_code_at LjsInitEnv.privcharCodeAt
+| prealloc_related_error : 
+    prealloc_related J.prealloc_error LjsInitEnv.privErrorGlobalFuncObj
+| prealloc_related_error_proto : 
+    prealloc_related J.prealloc_error_proto LjsInitEnv.privErrorProto
+| prealloc_related_native_error_eval : 
+    prealloc_related (J.prealloc_native_error J.native_error_eval) LjsInitEnv.privEvalErrorGlobalFuncObj
+| prealloc_related_native_error_eval_proto : 
+    prealloc_related (J.prealloc_native_error_proto J.native_error_eval) LjsInitEnv.privEvalErrorProto
+| prealloc_related_native_error_range : 
+    prealloc_related (J.prealloc_native_error J.native_error_range) LjsInitEnv.privRangeErrorGlobalFuncObj
+| prealloc_related_native_error_range_proto : 
+    prealloc_related (J.prealloc_native_error_proto J.native_error_range) LjsInitEnv.privRangeErrorProto
+| prealloc_related_native_error_ref : 
+    prealloc_related (J.prealloc_native_error J.native_error_ref) LjsInitEnv.privReferenceErrorGlobalFuncObj
+| prealloc_related_native_error_ref_proto : 
+    prealloc_related (J.prealloc_native_error_proto J.native_error_ref) LjsInitEnv.privReferenceErrorProto
+| prealloc_related_native_error_syntax : 
+    prealloc_related (J.prealloc_native_error J.native_error_syntax) LjsInitEnv.privSyntaxErrorGlobalFuncObj
+| prealloc_related_native_error_syntax_proto : 
+    prealloc_related (J.prealloc_native_error_proto J.native_error_syntax) LjsInitEnv.privSyntaxErrorProto
+| prealloc_related_native_error_type : 
+    prealloc_related (J.prealloc_native_error J.native_error_type) LjsInitEnv.privTypeErrorGlobalFuncObj
+| prealloc_related_native_error_type_proto : 
+    prealloc_related (J.prealloc_native_error_proto J.native_error_type) LjsInitEnv.privTypeErrorProto
+.
+
 Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
 | call_prealloc_related_global_eval : 
     call_prealloc_related J.prealloc_global_eval LjsInitEnv.privevalCall
