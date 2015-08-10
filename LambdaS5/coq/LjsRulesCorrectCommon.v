@@ -65,6 +65,7 @@ Hint Extern 1 => solve [eauto 10 with nocore typeclass_instances] : js_ljs.
 
 (** The constructors for relating JS to S5 are used as hints. *)
 
+Hint Constructors prealloc_related : js_ljs.
 Hint Constructors construct_prealloc_related : js_ljs.
 Hint Constructors construct_related : js_ljs.
 Hint Constructors codetxt_related : js_ljs.
@@ -761,30 +762,6 @@ Qed.
 
 Hint Resolve execution_ctx_related_incl_preserved : js_ljs.
 
-Lemma prealloc_in_ctx_incl_preserved : forall BR c c',
-    c' \c c ->
-    prealloc_in_ctx BR c ->
-    prealloc_in_ctx BR c'.
-Proof.
-    introv Hincl Hpre.
-    unfolds prealloc_in_ctx.
-    prove_bag.
-Qed.
-
-Hint Resolve prealloc_in_ctx_incl_preserved : js_ljs.
-
-Lemma global_env_record_exists_ctx_incl_preserved : forall BR c c',
-    c' \c c ->
-    global_env_record_exists BR c ->
-    global_env_record_exists BR c'.
-Proof.
-    introv Hincl Hpre.
-    unfolds global_env_record_exists.
-    prove_bag.
-Qed.
-
-Hint Resolve global_env_record_exists_ctx_incl_preserved : js_ljs.
-
 Lemma context_invariant_ctx_incl_preserved : forall BR jc c c',
     c' \c c ->
     context_invariant BR jc c ->
@@ -818,17 +795,6 @@ Proof.
     skip.
 Qed.
 
-Lemma prealloc_in_ctx_percent_prefix : forall jpre s,
-    Mem (jpre, s) prealloc_in_ctx_list -> exists s', s = String "%" s'.
-Proof.
-    introv Hmem.
-(* TODO faster
-    repeat (inverts Hmem as Hmem; [eexists; reflexivity | idtac]).
-    inverts Hmem.
-*)
-    skip.
-Qed.
-
 Lemma execution_ctx_related_add_nodollar_id_preserved : forall BR jc c s v ch,
     ch <> "$" ->
     execution_ctx_related BR jc c ->
@@ -855,34 +821,8 @@ Proof.
     destruct_hyp Hbinds; tryfalse; eauto.
 Qed.
 
-Lemma prealloc_in_ctx_add_nopercent_id_preserved : forall BR c s v ch,
-    ch <> "%" ->
-    prealloc_in_ctx BR c ->
-    prealloc_in_ctx BR (c \(String ch s := v)).
-Proof.
-    unfolds prealloc_in_ctx.
-    introv Hdif Hpre Hmem Hbinds.
-    lets (s'&EQs') : prealloc_in_ctx_percent_prefix Hmem. 
-    substs.
-    rew_binds_eq in Hbinds.
-    destruct_hyp Hbinds; tryfalse; eauto.
-Qed.
-
-Lemma global_env_record_exists_add_nopercent_id_preserved : forall BR c s v ch,
-    ch <> "%" ->
-    global_env_record_exists BR c ->
-    global_env_record_exists BR (c \(String ch s := v)).
-Proof.
-    unfolds global_env_record_exists.
-    introv Hdif Hgenv Hbinds.
-    rew_binds_eq in Hbinds.
-    destruct_hyp Hbinds; tryfalse; eauto.
-Qed.
-
 Hint Resolve execution_ctx_related_add_nodollar_id_preserved : js_ljs.
 Hint Resolve includes_init_ctx_add_nopercent_id_preserved : js_ljs.
-Hint Resolve prealloc_in_ctx_add_nopercent_id_preserved : js_ljs.
-Hint Resolve global_env_record_exists_add_nopercent_id_preserved : js_ljs.
 
 Lemma context_invariant_add_nopercent_nodollar_id_preserved : forall BR jc c s v ch,
     context_invariant BR jc c->
@@ -920,36 +860,8 @@ Proof.
     eauto.
 Qed.
 
-Lemma prealloc_in_ctx_unadd_nopercent_id_preserved : forall BR c s v ch,
-    ch <> "%" ->
-    prealloc_in_ctx BR (c \(String ch s := v)) ->
-    prealloc_in_ctx BR c.
-Proof.
-    unfolds prealloc_in_ctx.
-    introv Hdif Hpre Hmem Hbinds.
-    lets (s'&EQs') : prealloc_in_ctx_percent_prefix Hmem. 
-    substs.
-    eapply Hpre. eapply Hmem.
-    rew_binds_eq.
-    eauto.
-Qed.
-
-Lemma global_env_record_exists_unadd_nopercent_id_preserved : forall BR c s v ch,
-    ch <> "%" ->
-    global_env_record_exists BR (c \(String ch s := v)) ->
-    global_env_record_exists BR c.
-Proof.
-    unfolds global_env_record_exists.
-    introv Hdif Hgenv Hbinds.
-    apply Hgenv.
-    rew_binds_eq.
-    eauto.
-Qed.
-
 Hint Resolve execution_ctx_related_unadd_nodollar_id_preserved : js_ljs.
 Hint Resolve includes_init_ctx_unadd_nopercent_id_preserved : js_ljs.
-Hint Resolve prealloc_in_ctx_unadd_nopercent_id_preserved : js_ljs.
-Hint Resolve global_env_record_exists_unadd_nopercent_id_preserved : js_ljs.
 
 Lemma context_invariant_unadd_nopercent_nodollar_id_preserved : forall BR jc c s v ch,
     context_invariant BR jc (c \(String ch s := v)) ->
@@ -966,13 +878,9 @@ End prefixes.
 (* because coq does not accept global in sections *)
 Hint Resolve execution_ctx_related_add_nodollar_id_preserved : js_ljs.
 Hint Resolve includes_init_ctx_add_nopercent_id_preserved : js_ljs.
-Hint Resolve prealloc_in_ctx_add_nopercent_id_preserved : js_ljs.
-Hint Resolve global_env_record_exists_add_nopercent_id_preserved : js_ljs.
 (*
 Hint Resolve execution_ctx_related_unadd_nodollar_id_preserved : js_ljs.
 Hint Resolve includes_init_ctx_unadd_nopercent_id_preserved : js_ljs.
-Hint Resolve prealloc_in_ctx_unadd_nopercent_id_preserved : js_ljs.
-Hint Resolve global_env_record_exists_unadd_nopercent_id_preserved : js_ljs.
 *)
 Hint Resolve context_invariant_add_nopercent_nodollar_id_preserved : js_ljs.
 (* Hint Resolve state_invariant_unadd_nopercent_nodollar_id_preserved : js_ljs. *)
@@ -1008,33 +916,6 @@ Qed.
 
 Hint Resolve includes_init_ctx_union_preserved : js_ljs.
 
-Lemma prealloc_in_ctx_union_preserved : forall BR c c',
-    prealloc_in_ctx BR c ->
-    prealloc_in_ctx BR c' -> 
-    prealloc_in_ctx BR (c \u c').
-Proof.
-    introv Hpre1 Hpre2.
-    unfolds prealloc_in_ctx.
-    introv Hmem Hbinds.
-    rewrite binds_union_eq in Hbinds.
-    destruct_hyp Hbinds; prove_bag.
-Qed.
-
-Hint Resolve prealloc_in_ctx_union_preserved : js_ljs.
-
-Lemma global_env_record_exists_union_preserved : forall BR c c',
-    global_env_record_exists BR c ->
-    global_env_record_exists BR c' -> 
-    global_env_record_exists BR (c \u c').
-Proof.
-    unfolds prealloc_in_ctx.
-    introv Hgenv1 Hgenv2 Hbinds.
-    rewrite binds_union_eq in Hbinds.
-    destruct_hyp Hbinds; prove_bag.
-Qed.
-
-Hint Resolve global_env_record_exists_union_preserved : js_ljs.
-
 Lemma context_invariant_union_preserved : forall BR jc c c',
     context_invariant BR jc c ->
     context_invariant BR jc c' ->
@@ -1060,6 +941,44 @@ Qed.
 
 Hint Resolve includes_init_ctx_init_ctx : js_ljs.
 
+Lemma global_env_record_initBR_lemma :
+    fact_js_env J.env_loc_global_env_record LjsInitEnv.ptr_privglobalContext \in initBR.
+Proof.
+Admitted. (* TODO *)
+
+Hint Resolve global_env_record_initBR_lemma : js_ljs.
+
+Lemma prealloc_initBR_lemma : forall jpre ptr,
+    prealloc_related jpre ptr ->
+    fact_js_obj (J.object_loc_prealloc jpre) ptr \in initBR.
+Proof.
+Admitted. (* TODO *)
+
+Hint Resolve prealloc_initBR_lemma : js_ljs.
+
+Lemma context_invariant_global_env_record_lemma : forall BR jc c,
+    context_invariant BR jc c ->
+    fact_js_env J.env_loc_global_env_record LjsInitEnv.ptr_privglobalContext \in BR.
+Proof.
+    introv Hinv.
+    eapply (incl_in (context_invariant_bisim_includes_init Hinv)).
+    eauto_js.
+Qed.
+
+Hint Resolve context_invariant_global_env_record_lemma : js_ljs.
+
+Lemma context_invariant_prealloc_lemma : forall BR jc c ptr jpre,
+    context_invariant BR jc c ->
+    prealloc_related jpre ptr ->
+    fact_js_obj (J.object_loc_prealloc jpre) ptr \in BR.
+Proof.
+    introv Hinv Hpre.
+    eapply (incl_in (context_invariant_bisim_includes_init Hinv)).
+    eauto_js.
+Qed.
+
+Hint Resolve context_invariant_prealloc_lemma : js_ljs.
+
 Lemma execution_ctx_related_init_ctx : forall BR jc,
     execution_ctx_related BR jc LjsInitEnv.init_ctx.
 Proof.
@@ -1067,22 +986,6 @@ Proof.
 Admitted. (* TODO *)
 
 Hint Resolve execution_ctx_related_init_ctx : js_ljs.
-
-Lemma global_env_record_exists_init_ctx : forall BR,
-    initBR \c BR ->
-    global_env_record_exists BR LjsInitEnv.init_ctx.
-Proof.
-Admitted. (* TODO *)
-
-Hint Resolve global_env_record_exists_init_ctx : js_ljs.
-
-Lemma prealloc_in_ctx_init_ctx : forall BR,
-    initBR \c BR ->
-    prealloc_in_ctx BR LjsInitEnv.init_ctx.
-Proof.
-Admitted. (* TODO *)
-
-Hint Resolve prealloc_in_ctx_init_ctx : js_ljs.
 
 Lemma context_invariant_replace_ctx_sub_init : forall BR jc c c',
     c' \c LjsInitEnv.init_ctx -> 
@@ -1210,48 +1113,6 @@ Hint Extern 4 (env_records_exist ?BR2 _) =>
     match goal with 
     | H : env_records_exist ?BR1 _ |- _ => sub_helper BR1 BR2 env_records_exist_bisim_incl_preserved
     | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 env_records_exist_bisim_incl_preserved
-    end 
-    : js_ljs.
-
-Lemma prealloc_in_ctx_bisim_incl_preserved : forall BR1 BR2 c,
-    BR1 \c BR2 ->
-    prealloc_in_ctx BR1 c ->
-    prealloc_in_ctx BR2 c.
-Proof.
-    introv Hs Hpre.
-    unfolds prealloc_in_ctx.
-    introv Hmem Hbinds.
-    specializes Hpre Hmem Hbinds.
-    destruct_hyp Hpre.
-    jauto_js.
-Qed.
-
-(* Hint Resolve prealloc_in_ctx_bisim_incl_preserved : js_ljs. *)
-Hint Extern 4 (prealloc_in_ctx ?BR2 _) => 
-    match goal with 
-    | H : prealloc_in_ctx ?BR1 _ |- _ => sub_helper BR1 BR2 prealloc_in_ctx_bisim_incl_preserved
-    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 prealloc_in_ctx_bisim_incl_preserved
-    end 
-    : js_ljs.
-
-Lemma global_env_record_exists_bisim_incl_preserved : forall BR1 BR2 c,
-    BR1 \c BR2 ->
-    global_env_record_exists BR1 c ->
-    global_env_record_exists BR2 c.
-Proof.
-    introv Hs Hpre.
-    unfolds global_env_record_exists. 
-    introv Hbinds.
-    specializes Hpre Hbinds.
-    destruct_hyp Hpre.
-    jauto_js.
-Qed.
-
-(* Hint Resolve global_env_record_exists_bisim_incl_preserved : js_ljs. *)
-Hint Extern 4 (global_env_record_exists ?BR2 _) => 
-    match goal with 
-    | H : global_env_record_exists ?BR1 _ |- _ => sub_helper BR1 BR2 global_env_record_exists_bisim_incl_preserved
-    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 global_env_record_exists_bisim_incl_preserved
     end 
     : js_ljs.
 
@@ -1593,135 +1454,7 @@ Proof.
     introv Hinv Hbinds.
     eapply context_invariant_execution_ctx_related; eassumption.
 Defined.
-(*
-Lemma value_related_add_fact_preserved : forall BR jv v f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    value_related BR jv v ->
-    value_related (\{f} \u BR) jv v.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    inverts Hrel; eauto_js.
-Qed.
 
-Hint Resolve value_related_add_fact_preserved : js_ljs.
-
-Lemma option_value_related_add_fact_preserved : forall BR jov ov f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    option_value_related BR jov ov ->
-    option_value_related (\{f} \u BR) jov ov.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    inverts Hrel; eauto_js.
-Qed.
-
-Hint Resolve option_value_related_add_fact_preserved : js_ljs.
-
-Lemma object_prim_related_add_fact_preserved : forall BR jobj obj f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    object_prim_related BR jobj obj ->
-    object_prim_related (\{f} \u BR) jobj obj.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    inverts Hrel.
-    constructor; eauto_js.
-Qed.
-
-Hint Resolve object_prim_related_add_fact_preserved : js_ljs.
-
-Lemma attributes_data_related_add_fact_preserved : forall BR jattrsd attrsd f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    attributes_data_related BR jattrsd attrsd ->
-    attributes_data_related (\{f} \u BR) jattrsd attrsd.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    inverts Hrel.
-    constructor; eauto_js.
-Qed.
-
-Hint Resolve attributes_data_related_add_fact_preserved : js_ljs.
-
-Lemma attributes_accessor_related_add_fact_preserved : forall BR jattrsa attrsa f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    attributes_accessor_related BR jattrsa attrsa ->
-    attributes_accessor_related (\{f} \u BR) jattrsa attrsa.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    inverts Hrel.
-    econstructor; eauto_js.
-Qed.
-
-Hint Resolve attributes_accessor_related_add_fact_preserved : js_ljs.
-
-Lemma attributes_related_add_fact_preserved : forall BR jattrs attrs f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    attributes_related BR jattrs attrs ->
-    attributes_related (\{f} \u BR) jattrs attrs.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    inverts Hrel; eauto_js.
-Qed.
-
-Hint Resolve attributes_related_add_fact_preserved : js_ljs.
-
-Lemma object_properties_related_add_fact_preserved : forall BR jprops props f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    object_properties_related BR jprops props ->
-    object_properties_related (\{f} \u BR) jprops props.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    unfolds object_properties_related.
-    intro s. specializes Hrel s.
-    destruct_hyp Hrel; intuition jauto_js 8.
-Qed.
-
-Hint Resolve object_properties_related_add_fact_preserved : js_ljs.
-
-Lemma object_related_add_fact_preserved : forall BR jobj obj f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    object_related BR jobj obj ->
-    object_related (\{f} \u BR) jobj obj.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    inverts Hrel.
-    constructor; eauto_js.
-Qed.
-
-Hint Resolve object_related_add_fact_preserved : js_ljs.
-
-Lemma decl_env_record_vars_related_add_fact_preserved : forall BR jder props f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    decl_env_record_vars_related BR jder props ->
-    decl_env_record_vars_related (\{f} \u BR) jder props.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    unfolds decl_env_record_vars_related.
-    intro s. specializes Hrel s.
-    destruct_hyp Hrel; intuition jauto_js 8.
-Qed.
-
-Hint Resolve decl_env_record_vars_related_add_fact_preserved : js_ljs.
-
-Lemma env_record_related_add_fact_preserved : forall BR jer obj f,
-    (forall jptr ptr, f <> fact_js_obj jptr ptr) ->
-    (forall jeptr ptr, f <> fact_js_env jeptr ptr) ->
-    env_record_related BR jer obj ->
-    env_record_related (\{f} \u BR) jer obj.
-Proof.
-    introv Hdif1 Hdif2 Hrel.
-    inverts Hrel; eauto_js.
-Qed.
-
-Hint Resolve env_record_related_add_fact_preserved : js_ljs.
-*)
 Lemma ctx_parent_ok_new_fact_preserved : forall BR st f,
     (forall ptr v, f <> fact_ctx_parent ptr v) ->
     ctx_parent_ok BR st ->
@@ -2914,40 +2647,6 @@ Qed.
 
 Hint Resolve includes_init_ctx_add_init_ctx_preserved : js_ljs.
 
-Lemma prealloc_in_ctx_add_init_ctx_preserved : forall BR c s v,
-    binds LjsInitEnv.init_ctx s v ->
-    initBR \c BR ->
-    prealloc_in_ctx BR c ->
-    prealloc_in_ctx BR (c \(s:=v)).
-Proof.
-    introv Hbinds Hincl Hpre.
-    unfolds prealloc_in_ctx.
-    introv Hpmem Hbinds1.
-    rew_binds_eq in Hbinds1.
-    destruct_hyp Hbinds1.
-    forwards Hx : prealloc_in_ctx_init_ctx Hincl Hpmem Hbinds. assumption.
-    eauto.
-Qed.
-
-Hint Resolve prealloc_in_ctx_add_init_ctx_preserved : js_ljs.
-
-Lemma global_env_record_exists_add_init_ctx_preserved : forall BR c s v,
-    binds LjsInitEnv.init_ctx s v ->
-    initBR \c BR ->
-    global_env_record_exists BR c ->
-    global_env_record_exists BR (c \(s:=v)).
-Proof.
-    introv Hbinds Hincl Hpre.
-    unfolds global_env_record_exists.
-    introv Hbinds1.
-    rew_binds_eq in Hbinds1.
-    destruct_hyp Hbinds1.
-    forwards Hx : global_env_record_exists_init_ctx Hincl Hbinds. assumption.
-    eauto.
-Qed.
-
-Hint Resolve global_env_record_exists_add_init_ctx_preserved : js_ljs.
-
 Lemma context_invariant_add_init_ctx_preserved : forall BR jc c s v,
     binds LjsInitEnv.init_ctx s v ->
     context_invariant BR jc c ->
@@ -3018,32 +2717,6 @@ Hint Extern 0 (L.state_security_ok ?st1 ?st3) =>
     | H : L.state_security_ok ?st2 st3 |- _ => 
         apply ((fun h1 h2 => @L.state_security_ok_trans st2 st1 st3 h2 h1) H)
     end : js_ljs.
-
-Lemma context_invariant_prealloc_in_ctx_lemma : forall BR jc c s ptr jpre,
-    context_invariant BR jc c ->
-    Mem (jpre, s) prealloc_in_ctx_list ->
-    binds c s (L.value_object ptr) ->
-    fact_js_obj (J.object_loc_prealloc jpre) ptr \in BR.
-Proof.
-    introv Hinv Hmem Hbinds.
-    lets Hx : context_invariant_prealloc_related Hinv Hmem Hbinds.
-    destruct_hyp Hx.
-    injects.
-    assumption.
-Qed.
-
-Ltac context_invariant_prealloc :=
-    match goal with
-    | HC : context_invariant ?BR' _ _ |- fact_js_obj (J.object_loc_prealloc ?jpre) _ \in ?BR =>
-        let Hsub := fresh "H" in 
-        asserts Hsub : (BR' \c BR); [prove_bag | idtac];
-        applys context_invariant_prealloc_in_ctx_lemma (context_invariant_bisim_incl_preserved Hsub HC);
-            [solve [repeat (eapply Mem_here || eapply Mem_next)] | idtac]; (* TODO something faster *)
-        clear Hsub 
-    end.
-
-Hint Extern 4 (fact_js_obj (J.object_loc_prealloc _) _ \in _) =>
-    context_invariant_prealloc : js_ljs.
 
 Lemma builtin_assoc : forall k BR jc c st st' i v r,
     context_invariant BR jc c ->

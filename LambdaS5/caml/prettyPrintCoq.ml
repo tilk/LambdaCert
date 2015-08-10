@@ -309,8 +309,13 @@ let format_named_exprs () =
 let format_named_vals () = 
     let f (ii, i, v) = vert [
         horzOrVert [text ("Definition " ^ ii ^ " := "); format_value ii v; text "."];
-        horz [text ("Definition name_" ^ ii ^ " := "); format_id i ; text "."]]
+        horz [text ("Definition name_" ^ ii ^ " : id := "); format_id i ; text "."]]
     in vert (List.map f (List.rev !ordered_vals))
+
+let format_object_nums () =
+    let g (ii, i, v) = match v with Coq_value_object _ -> true | _ -> false
+    and f (ii, i, Coq_value_object n) = horz [text ("Definition ptr_" ^ ii ^ " : object_ptr := "); int n; text "."]
+    in vert (List.map f (List.filter g (List.rev !ordered_vals)))
 
 let format_ctx_mems c =
     let format_ctx_mem (l, m) (i, v) = 
@@ -339,7 +344,7 @@ let format_ctx_store (c, st) =
     let fst = format_store st in
     let fctx = format_ctx_def c in
     let fnv = format_named_vals () in
-    vert [header(); format_named_exprs(); fnv; fctx; format_ctx_red c; (* format_ctx_mems c;*) fst; text "Definition init_ctx : ctx := from_list ctx_items."]
+    vert [header(); format_object_nums(); format_named_exprs(); fnv; fctx; format_ctx_red c; (* format_ctx_mems c;*) fst; text "Definition init_ctx : ctx := from_list ctx_items."]
 
 let ctx_store_to_output o c st = 
     Format.set_margin 200;

@@ -424,8 +424,6 @@ Proof.
     } 
     + eauto_js 8.
     + constructor; introv Hmem; inverts Hmem as Hmem; eauto_js.
-    + eauto_js 8.
-    + eauto_js 8.
 Qed.
 
 (* TODO: move to TLC LibLogic *)

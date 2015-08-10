@@ -295,7 +295,8 @@ Proof.
         jauto_js 12.
     } { 
         inverts IH4. (* TODO *)
-        forwards Hx : object_method_construct_lemma; try eauto_js.
+        Check object_method_construct_lemma.
+        forwards Hx : object_method_construct_lemma; try eassumption; try eauto_js.
         forwards_th : type_error_lemma. iauto.
         destr_concl; tryfalse.
         jauto_js 12.
@@ -496,6 +497,19 @@ Qed.
 (* TODO should not be needed *)
 Hint Extern 3 (J.red_expr _ _ (J.expr_call_1 _ _ _) _) => eapply J.red_expr_call_1 : js_ljs.
 
+(* TODO move *)
+Ltac determine_fact_js_obj :=
+    match goal with
+    | Hfact1 : fact_js_obj ?jptr ?ptr1 \in ?BR1, Hfact2 : fact_js_obj ?jptr ?ptr2 \in ?BR2,
+      Hinv : state_invariant ?BR _ _ |- _ =>
+        let Hsub1 := fresh in let Hsub2 := fresh in let Heq := fresh "Heq" in 
+        asserts Hsub1 : (BR1 \c BR); [prove_bag | idtac];
+        asserts Hsub2 : (BR2 \c BR); [prove_bag | idtac];
+        lets Heq : heaps_bisim_consistent_lfun_obj (state_invariant_heaps_bisim_consistent Hinv) 
+            (incl_in Hsub1 Hfact1) (incl_in Hsub2 Hfact2);
+        clear Hsub1; clear Hsub2; try (subst_hyp Heq; clear Hfact2)
+    end.
+
 Lemma red_expr_call_ok : forall k je jel,
     ih_expr k ->
     ih_stat k ->
@@ -572,7 +586,9 @@ Proof.
                     introv Heqeval. subst_hyp Heqeval.
                     apply Hevcond2.
                     unfolds LjsInitEnv.priveval. rewrite stx_eq_object_eq_lemma.
-                    skip. (* TODO fix handling preallocs *)
+                    lets Hfact : context_invariant_prealloc_lemma Hcinv prealloc_related_global_eval.
+                    determine_fact_js_obj.
+                    reflexivity.
                 }
             }
             forwards_th : red_spec_call_ok; try eassumption. eauto_js.

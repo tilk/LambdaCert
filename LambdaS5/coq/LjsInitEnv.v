@@ -5,6 +5,149 @@ Require Import String.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
+Definition ptr_privTypeErrorProto : object_ptr :=  5 .
+Definition ptr_privBooleanProto : object_ptr :=  12 .
+Definition ptr_privNumberProto : object_ptr :=  13 .
+Definition ptr_privStringProto : object_ptr :=  14 .
+Definition ptr_privArrayProto : object_ptr :=  52 .
+Definition ptr_privRangeErrorProto : object_ptr :=  9 .
+Definition ptr_privArrayGlobalFuncObj : object_ptr :=  101 .
+Definition ptr_privconcat : object_ptr :=  95 .
+Definition ptr_privBooleanGlobalFuncObj : object_ptr :=  31 .
+Definition ptr_privDateProto : object_ptr :=  167 .
+Definition ptr_privdateToString : object_ptr :=  168 .
+Definition ptr_privDateGlobalFuncObj : object_ptr :=  171 .
+Definition ptr_privglobal : object_ptr :=  2 .
+Definition ptr_privObjectProto : object_ptr :=  1 .
+Definition ptr_privReferenceErrorProto : object_ptr :=  6 .
+Definition ptr_privmakeGlobalEnv : object_ptr :=  0 .
+Definition ptr_priveval : object_ptr :=  310 .
+Definition ptr_privThrowTypeError : object_ptr :=  10 .
+Definition ptr_privSyntaxErrorProto : object_ptr :=  7 .
+Definition ptr_privErrorProto : object_ptr :=  4 .
+Definition ptr_privErrorGlobalFuncObj : object_ptr :=  44 .
+Definition ptr_privEvalErrorProto : object_ptr :=  8 .
+Definition ptr_privEvalErrorGlobalFuncObj : object_ptr :=  46 .
+Definition ptr_privglobalContext : object_ptr :=  307 .
+Definition ptr_privFunctionGlobalFuncObj : object_ptr :=  311 .
+Definition ptr_privFunctionProto : object_ptr :=  3 .
+Definition ptr_privMath : object_ptr :=  255 .
+Definition ptr_privNumberGlobalFuncObj : object_ptr :=  24 .
+Definition ptr_privObjectGlobalFuncObj : object_ptr :=  33 .
+Definition ptr_privRangeErrorGlobalFuncObj : object_ptr :=  47 .
+Definition ptr_privReferenceErrorGlobalFuncObj : object_ptr :=  48 .
+Definition ptr_privRegExpProto : object_ptr :=  247 .
+Definition ptr_privRegExpGlobalFuncObj : object_ptr :=  248 .
+Definition ptr_privStringGlobalFuncObj : object_ptr :=  27 .
+Definition ptr_privSyntaxErrorGlobalFuncObj : object_ptr :=  45 .
+Definition ptr_privTypeErrorGlobalFuncObj : object_ptr :=  49 .
+Definition ptr_privURIErrorProto : object_ptr :=  50 .
+Definition ptr_privURIErrorGlobalFuncObj : object_ptr :=  51 .
+Definition ptr_privacos : object_ptr :=  264 .
+Definition ptr_privapply : object_ptr :=  18 .
+Definition ptr_privarrayIndexOf : object_ptr :=  121 .
+Definition ptr_privarrayLastIndexOf : object_ptr :=  124 .
+Definition ptr_privarrayToLocaleString : object_ptr :=  93 .
+Definition ptr_privarrayToString : object_ptr :=  90 .
+Definition ptr_privasin : object_ptr :=  266 .
+Definition ptr_privatan : object_ptr :=  268 .
+Definition ptr_privatan2 : object_ptr :=  270 .
+Definition ptr_privbind : object_ptr :=  150 .
+Definition ptr_privslice : object_ptr :=  147 .
+Definition ptr_privbooleanToString : object_ptr :=  28 .
+Definition ptr_privbooleanValueOf : object_ptr :=  296 .
+Definition ptr_privcall : object_ptr :=  17 .
+Definition ptr_privcharAt : object_ptr :=  103 .
+Definition ptr_privcharCodeAt : object_ptr :=  106 .
+Definition ptr_privconsole : object_ptr :=  309 .
+Definition ptr_privcos : object_ptr :=  272 .
+Definition ptr_privcreate : object_ptr :=  58 .
+Definition ptr_privdefineProperties : object_ptr :=  56 .
+Definition ptr_privdateGetTimezoneOffset : object_ptr :=  172 .
+Definition ptr_privdateValueOf : object_ptr :=  170 .
+Definition ptr_privdategetDate : object_ptr :=  176 .
+Definition ptr_privdategetDay : object_ptr :=  174 .
+Definition ptr_privdecodeURI : object_ptr :=  250 .
+Definition ptr_privdecodeURIComponent : object_ptr :=  251 .
+Definition ptr_privdefineProperty : object_ptr :=  16 .
+Definition ptr_privencodeURI : object_ptr :=  252 .
+Definition ptr_privencodeURIComponent : object_ptr :=  253 .
+Definition ptr_privescape : object_ptr :=  314 .
+Definition ptr_privets : object_ptr :=  22 .
+Definition ptr_privevery : object_ptr :=  138 .
+Definition ptr_privexp : object_ptr :=  254 .
+Definition ptr_privfilter : object_ptr :=  133 .
+Definition ptr_privforeach : object_ptr :=  127 .
+Definition ptr_privfreeze : object_ptr :=  62 .
+Definition ptr_privfromCharCode : object_ptr :=  74 .
+Definition ptr_privfunctionToString : object_ptr :=  11 .
+Definition ptr_privgetMonth : object_ptr :=  166 .
+Definition ptr_privgetYear : object_ptr :=  165 .
+Definition ptr_privgopd : object_ptr :=  36 .
+Definition ptr_privgopn : object_ptr :=  53 .
+Definition ptr_privgpo : object_ptr :=  34 .
+Definition ptr_privhasOwnProperty : object_ptr :=  42 .
+Definition ptr_privisExtensible : object_ptr :=  70 .
+Definition ptr_privisFinite : object_ptr :=  312 .
+Definition ptr_privisFrozen : object_ptr :=  66 .
+Definition ptr_privisNaN : object_ptr :=  21 .
+Definition ptr_privisPrototypeOf : object_ptr :=  43 .
+Definition ptr_privisSealed : object_ptr :=  68 .
+Definition ptr_privjoin : object_ptr :=  76 .
+Definition ptr_privkeys : object_ptr :=  72 .
+Definition ptr_privlocaleCompare : object_ptr :=  159 .
+Definition ptr_privlog : object_ptr :=  308 .
+Definition ptr_privmap : object_ptr :=  130 .
+Definition ptr_privmathAbs : object_ptr :=  262 .
+Definition ptr_privmathCeil : object_ptr :=  286 .
+Definition ptr_privmathFloor : object_ptr :=  288 .
+Definition ptr_privmathLog : object_ptr :=  284 .
+Definition ptr_privmathMax : object_ptr :=  259 .
+Definition ptr_privmathMin : object_ptr :=  256 .
+Definition ptr_privmathPow : object_ptr :=  290 .
+Definition ptr_privnumTLS : object_ptr :=  301 .
+Definition ptr_privtoLocaleString : object_ptr :=  40 .
+Definition ptr_privnumberToString : object_ptr :=  153 .
+Definition ptr_privnumberValueOf : object_ptr :=  294 .
+Definition ptr_privobjectToString : object_ptr :=  38 .
+Definition ptr_privobjectValueOf : object_ptr :=  41 .
+Definition ptr_privparseFloat : object_ptr :=  313 .
+Definition ptr_privparseInt : object_ptr :=  249 .
+Definition ptr_privpop : object_ptr :=  78 .
+Definition ptr_privpreventExtensions : object_ptr :=  64 .
+Definition ptr_privprint : object_ptr :=  15 .
+Definition ptr_privpropEnum : object_ptr :=  39 .
+Definition ptr_privpush : object_ptr :=  81 .
+Definition ptr_privrandom : object_ptr :=  274 .
+Definition ptr_privreduce : object_ptr :=  135 .
+Definition ptr_privreduceRight : object_ptr :=  144 .
+Definition ptr_privreplace : object_ptr :=  157 .
+Definition ptr_privstringIndexOf : object_ptr :=  156 .
+Definition ptr_privsubstring : object_ptr :=  112 .
+Definition ptr_privreverse : object_ptr :=  84 .
+Definition ptr_privround : object_ptr :=  276 .
+Definition ptr_privseal : object_ptr :=  60 .
+Definition ptr_privshift : object_ptr :=  87 .
+Definition ptr_privsin : object_ptr :=  278 .
+Definition ptr_privsome : object_ptr :=  141 .
+Definition ptr_privsort : object_ptr :=  98 .
+Definition ptr_privsplice : object_ptr :=  115 .
+Definition ptr_privsplit : object_ptr :=  163 .
+Definition ptr_privsqrt : object_ptr :=  280 .
+Definition ptr_privstringConcat : object_ptr :=  109 .
+Definition ptr_privstringLastIndexOf : object_ptr :=  158 .
+Definition ptr_privstringSlice : object_ptr :=  160 .
+Definition ptr_privstringToString : object_ptr :=  25 .
+Definition ptr_privstringValueOf : object_ptr :=  292 .
+Definition ptr_privtan : object_ptr :=  282 .
+Definition ptr_privtest : object_ptr :=  246 .
+Definition ptr_privtoExponential : object_ptr :=  303 .
+Definition ptr_privtoFixed : object_ptr :=  298 .
+Definition ptr_privtoLowerCase : object_ptr :=  161 .
+Definition ptr_privtoPrecision : object_ptr :=  305 .
+Definition ptr_privtoUpperCase : object_ptr :=  162 .
+Definition ptr_privunescape : object_ptr :=  316 .
+Definition ptr_privunshift : object_ptr :=  118 .
 Definition ex_copy_access_desc := 
 expr_seq
 (expr_app (expr_id "copy-when-defined")
@@ -7482,58 +7625,58 @@ expr_let "hasWrongProto"
     (expr_get_internal "primval" (expr_id "this")) (expr_id "this")))))
 .
 Definition objCode :=  value_undefined .
-Definition name_objCode :=  "objCode" .
+Definition name_objCode : id :=  "objCode" .
 Definition proto :=  value_null .
-Definition name_proto :=  "proto" .
+Definition name_proto : id :=  "proto" .
 Definition privAddAccessorField := 
 value_closure
 (closure_intro [] None ["obj"; "name"; "g"; "s"; "e"; "c"]
  ex_privAddAccessorField)
 .
-Definition name_privAddAccessorField :=  "%AddAccessorField" .
+Definition name_privAddAccessorField : id :=  "%AddAccessorField" .
 Definition privAddDataField := 
 value_closure
 (closure_intro [] None ["obj"; "name"; "v"; "w"; "e"; "c"]
  ex_privAddDataField)
 .
-Definition name_privAddDataField :=  "%AddDataField" .
+Definition name_privAddDataField : id :=  "%AddDataField" .
 Definition privAppExpr := 
 value_closure (closure_intro [] None ["fun"; "this"; "args"] ex_privAppExpr)
 .
-Definition name_privAppExpr :=  "%AppExpr" .
+Definition name_privAppExpr : id :=  "%AppExpr" .
 Definition privTypeof := 
 value_closure (closure_intro [] None ["val"] ex_privTypeof)
 .
-Definition name_privTypeof :=  "%Typeof" .
+Definition name_privTypeof : id :=  "%Typeof" .
 Definition privIsCallable := 
 value_closure
 (closure_intro [("%Typeof", privTypeof)] None ["o"] ex_privIsCallable)
 .
-Definition name_privIsCallable :=  "%IsCallable" .
+Definition name_privIsCallable : id :=  "%IsCallable" .
 Definition privJSError := 
 value_closure (closure_intro [] None ["err"] ex_privJSError)
 .
-Definition name_privJSError :=  "%JSError" .
+Definition name_privJSError : id :=  "%JSError" .
 Definition privMakeNativeError := 
 value_closure (closure_intro [] None ["proto"; "msg"] ex_privMakeNativeError)
 .
-Definition name_privMakeNativeError :=  "%MakeNativeError" .
+Definition name_privMakeNativeError : id :=  "%MakeNativeError" .
 Definition privNativeError := 
 value_closure
 (closure_intro
  [("%JSError", privJSError); ("%MakeNativeError", privMakeNativeError)] 
  None ["proto"; "msg"] ex_privNativeError)
 .
-Definition name_privNativeError :=  "%NativeError" .
+Definition name_privNativeError : id :=  "%NativeError" .
 Definition privTypeErrorProto :=  value_object 5 .
-Definition name_privTypeErrorProto :=  "%TypeErrorProto" .
+Definition name_privTypeErrorProto : id :=  "%TypeErrorProto" .
 Definition privTypeError := 
 value_closure
 (closure_intro
  [("%NativeError", privNativeError); ("%TypeErrorProto", privTypeErrorProto)]
  None ["msg"] ex_privTypeError)
 .
-Definition name_privTypeError :=  "%TypeError" .
+Definition name_privTypeError : id :=  "%TypeError" .
 Definition privAppExprCheck := 
 value_closure
 (closure_intro
@@ -7542,37 +7685,37 @@ value_closure
   ("%TypeError", privTypeError)] None ["fun"; "this"; "args"]
  ex_privAppExprCheck)
 .
-Definition name_privAppExprCheck :=  "%AppExprCheck" .
+Definition name_privAppExprCheck : id :=  "%AppExprCheck" .
 Definition privdevirtualize := 
 value_closure (closure_intro [] None ["obj"] ex_privdevirtualize)
 .
-Definition name_privdevirtualize :=  "%devirtualize" .
+Definition name_privdevirtualize : id :=  "%devirtualize" .
 Definition privGetterProxyFun := 
 value_closure
 (closure_intro
  [("%AppExprCheck", privAppExprCheck); ("%devirtualize", privdevirtualize)]
  None ["obj"; "this"] ex_privGetterProxyFun)
 .
-Definition name_privGetterProxyFun :=  "%GetterProxyFun" .
+Definition name_privGetterProxyFun : id :=  "%GetterProxyFun" .
 Definition privMakeGetter := 
 value_closure
 (closure_intro [("%GetterProxyFun", privGetterProxyFun)] None ["f"]
  ex_privMakeGetter)
 .
-Definition name_privMakeGetter :=  "%MakeGetter" .
+Definition name_privMakeGetter : id :=  "%MakeGetter" .
 Definition privSetterProxyFun := 
 value_closure
 (closure_intro
  [("%AppExprCheck", privAppExprCheck); ("%devirtualize", privdevirtualize)]
  None ["obj"; "this"; "arg"] ex_privSetterProxyFun)
 .
-Definition name_privSetterProxyFun :=  "%SetterProxyFun" .
+Definition name_privSetterProxyFun : id :=  "%SetterProxyFun" .
 Definition privMakeSetter := 
 value_closure
 (closure_intro [("%SetterProxyFun", privSetterProxyFun)] None ["f"]
  ex_privMakeSetter)
 .
-Definition name_privMakeSetter :=  "%MakeSetter" .
+Definition name_privMakeSetter : id :=  "%MakeSetter" .
 Definition privAddJsAccessorField := 
 value_closure
 (closure_intro
@@ -7581,36 +7724,36 @@ value_closure
   ("%MakeSetter", privMakeSetter)] None ["obj"; "name"; "g"; "s"; "e"; "c"]
  ex_privAddJsAccessorField)
 .
-Definition name_privAddJsAccessorField :=  "%AddJsAccessorField" .
+Definition name_privAddJsAccessorField : id :=  "%AddJsAccessorField" .
 Definition privBooleanProto :=  value_object 12 .
-Definition name_privBooleanProto :=  "%BooleanProto" .
+Definition name_privBooleanProto : id :=  "%BooleanProto" .
 Definition privMakeBoolean := 
 value_closure
 (closure_intro [("%BooleanProto", privBooleanProto)] None ["v"]
  ex_privMakeBoolean)
 .
-Definition name_privMakeBoolean :=  "%MakeBoolean" .
+Definition name_privMakeBoolean : id :=  "%MakeBoolean" .
 Definition privNumberProto :=  value_object 13 .
-Definition name_privNumberProto :=  "%NumberProto" .
+Definition name_privNumberProto : id :=  "%NumberProto" .
 Definition privMakeNumber := 
 value_closure
 (closure_intro [("%NumberProto", privNumberProto)] None ["v"]
  ex_privMakeNumber)
 .
-Definition name_privMakeNumber :=  "%MakeNumber" .
+Definition name_privMakeNumber : id :=  "%MakeNumber" .
 Definition privStringIndices := 
 value_closure (closure_intro [] None ["obj"; "s"] ex_privStringIndices)
 .
-Definition name_privStringIndices :=  "%StringIndices" .
+Definition name_privStringIndices : id :=  "%StringIndices" .
 Definition privStringProto :=  value_object 14 .
-Definition name_privStringProto :=  "%StringProto" .
+Definition name_privStringProto : id :=  "%StringProto" .
 Definition privMakeString := 
 value_closure
 (closure_intro
  [("%StringIndices", privStringIndices); ("%StringProto", privStringProto)]
  None ["v"] ex_privMakeString)
 .
-Definition name_privMakeString :=  "%MakeString" .
+Definition name_privMakeString : id :=  "%MakeString" .
 Definition privToObject := 
 value_closure
 (closure_intro
@@ -7619,13 +7762,13 @@ value_closure
   ("%MakeString", privMakeString);
   ("%TypeError", privTypeError)] None ["o"] ex_privToObject)
 .
-Definition name_privToObject :=  "%ToObject" .
+Definition name_privToObject : id :=  "%ToObject" .
 Definition privToObjectVirtual := 
 value_closure
 (closure_intro [("%ToObject", privToObject)] None ["o"]
  ex_privToObjectVirtual)
 .
-Definition name_privToObjectVirtual :=  "%ToObjectVirtual" .
+Definition name_privToObjectVirtual : id :=  "%ToObjectVirtual" .
 Definition privToPrimitiveHint := 
 value_closure
 (closure_intro
@@ -7633,87 +7776,87 @@ value_closure
   ("%IsCallable", privIsCallable);
   ("%TypeError", privTypeError)] None ["val"; "hint"] ex_privToPrimitiveHint)
 .
-Definition name_privToPrimitiveHint :=  "%ToPrimitiveHint" .
+Definition name_privToPrimitiveHint : id :=  "%ToPrimitiveHint" .
 Definition privToString := 
 value_closure
 (closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["val"]
  ex_privToString)
 .
-Definition name_privToString :=  "%ToString" .
+Definition name_privToString : id :=  "%ToString" .
 Definition privGetField := 
 value_closure
 (closure_intro
  [("%ToObjectVirtual", privToObjectVirtual); ("%ToString", privToString)]
  None ["v"; "fld"] ex_privGetField)
 .
-Definition name_privGetField :=  "%GetField" .
+Definition name_privGetField : id :=  "%GetField" .
 Definition privAppMethod := 
 value_closure
 (closure_intro
  [("%AppExprCheck", privAppExprCheck); ("%GetField", privGetField)] None
  ["obj"; "fld"; "args"] ex_privAppMethod)
 .
-Definition name_privAppMethod :=  "%AppMethod" .
+Definition name_privAppMethod : id :=  "%AppMethod" .
 Definition privComputeLength := 
 value_closure (closure_intro [] None ["args"] ex_privComputeLength)
 .
-Definition name_privComputeLength :=  "%ComputeLength" .
+Definition name_privComputeLength : id :=  "%ComputeLength" .
 Definition privArrayProto :=  value_object 52 .
-Definition name_privArrayProto :=  "%ArrayProto" .
+Definition name_privArrayProto : id :=  "%ArrayProto" .
 Definition privMakeArray := 
 value_closure
 (closure_intro [("%ArrayProto", privArrayProto)] None ["len"]
  ex_privMakeArray)
 .
-Definition name_privMakeArray :=  "%MakeArray" .
+Definition name_privMakeArray : id :=  "%MakeArray" .
 Definition privRangeErrorProto :=  value_object 9 .
-Definition name_privRangeErrorProto :=  "%RangeErrorProto" .
+Definition name_privRangeErrorProto : id :=  "%RangeErrorProto" .
 Definition privToNumber := 
 value_closure
 (closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["x"]
  ex_privToNumber)
 .
-Definition name_privToNumber :=  "%ToNumber" .
+Definition name_privToNumber : id :=  "%ToNumber" .
 Definition privToUint := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["n"; "limit"]
  ex_privToUint)
 .
-Definition name_privToUint :=  "%ToUint" .
+Definition name_privToUint : id :=  "%ToUint" .
 Definition privToUint32 := 
 value_closure
 (closure_intro [("%ToUint", privToUint)] None ["n"] ex_privToUint32)
 .
-Definition name_privToUint32 :=  "%ToUint32" .
+Definition name_privToUint32 : id :=  "%ToUint32" .
 Definition privToBoolean := 
 value_closure (closure_intro [] None ["x"] ex_privToBoolean)
 .
-Definition name_privToBoolean :=  "%ToBoolean" .
+Definition name_privToBoolean : id :=  "%ToBoolean" .
 Definition copy_when_defined := 
 value_closure
 (closure_intro [] None ["obj1"; "obj2"; "s"] ex_copy_when_defined)
 .
-Definition name_copy_when_defined :=  "copy-when-defined" .
+Definition name_copy_when_defined : id :=  "copy-when-defined" .
 Definition copy_access_desc := 
 value_closure
 (closure_intro [("copy-when-defined", copy_when_defined)] None
  ["obj1"; "obj2"] ex_copy_access_desc)
 .
-Definition name_copy_access_desc :=  "copy-access-desc" .
+Definition name_copy_access_desc : id :=  "copy-access-desc" .
 Definition copy_data_desc := 
 value_closure
 (closure_intro [("copy-when-defined", copy_when_defined)] None
  ["obj1"; "obj2"] ex_copy_data_desc)
 .
-Definition name_copy_data_desc :=  "copy-data-desc" .
+Definition name_copy_data_desc : id :=  "copy-data-desc" .
 Definition isAccessorDescriptor := 
 value_closure (closure_intro [] None ["attr-obj"] ex_isAccessorDescriptor)
 .
-Definition name_isAccessorDescriptor :=  "isAccessorDescriptor" .
+Definition name_isAccessorDescriptor : id :=  "isAccessorDescriptor" .
 Definition isDataDescriptor := 
 value_closure (closure_intro [] None ["attr-obj"] ex_isDataDescriptor)
 .
-Definition name_isDataDescriptor :=  "isDataDescriptor" .
+Definition name_isDataDescriptor : id :=  "isDataDescriptor" .
 Definition privdefineOwnProperty := 
 value_closure
 (closure_intro
@@ -7728,7 +7871,7 @@ value_closure
   ("isDataDescriptor", isDataDescriptor)] None ["obj"; "field"; "attr-obj"]
  ex_privdefineOwnProperty)
 .
-Definition name_privdefineOwnProperty :=  "%defineOwnProperty" .
+Definition name_privdefineOwnProperty : id :=  "%defineOwnProperty" .
 Definition privArrayConstructor := 
 value_closure
 (closure_intro
@@ -7740,117 +7883,117 @@ value_closure
   ("%defineOwnProperty", privdefineOwnProperty)] None ["this"; "args"]
  ex_privArrayConstructor)
 .
-Definition name_privArrayConstructor :=  "%ArrayConstructor" .
+Definition name_privArrayConstructor : id :=  "%ArrayConstructor" .
 Definition privArrayCall := 
 value_closure
 (closure_intro [("%ArrayConstructor", privArrayConstructor)] None
  ["obj"; "this"; "args"] ex_privArrayCall)
 .
-Definition name_privArrayCall :=  "%ArrayCall" .
+Definition name_privArrayCall : id :=  "%ArrayCall" .
 Definition privArrayGlobalFuncObj :=  value_object 101 .
-Definition name_privArrayGlobalFuncObj :=  "%ArrayGlobalFuncObj" .
+Definition name_privArrayGlobalFuncObj : id :=  "%ArrayGlobalFuncObj" .
 Definition privArrayLengthChange := 
 value_closure
 (closure_intro [("%ToUint32", privToUint32)] None ["arr"; "newlen"]
  ex_privArrayLengthChange)
 .
-Definition name_privArrayLengthChange :=  "%ArrayLengthChange" .
+Definition name_privArrayLengthChange : id :=  "%ArrayLengthChange" .
 Definition privrunConstruct := 
 value_closure (closure_intro [] None ["constr"; "args"] ex_privrunConstruct)
 .
-Definition name_privrunConstruct :=  "%runConstruct" .
+Definition name_privrunConstruct : id :=  "%runConstruct" .
 Definition privPrimNew := 
 value_closure
 (closure_intro
  [("%TypeError", privTypeError); ("%runConstruct", privrunConstruct)] 
  None ["constr"; "args"] ex_privPrimNew)
 .
-Definition name_privPrimNew :=  "%PrimNew" .
+Definition name_privPrimNew : id :=  "%PrimNew" .
 Definition privconcat :=  value_object 95 .
-Definition name_privconcat :=  "%concat" .
+Definition name_privconcat : id :=  "%concat" .
 Definition privBindConstructor := 
 value_closure
 (closure_intro [("%PrimNew", privPrimNew); ("%concat", privconcat)] None
  ["constr"; "args"] ex_privBindConstructor)
 .
-Definition name_privBindConstructor :=  "%BindConstructor" .
+Definition name_privBindConstructor : id :=  "%BindConstructor" .
 Definition privBindObjCall := 
 value_closure
 (closure_intro [("%AppExprCheck", privAppExprCheck); ("%concat", privconcat)]
  None ["obj"; "this"; "args"] ex_privBindObjCall)
 .
-Definition name_privBindObjCall :=  "%BindObjCall" .
+Definition name_privBindObjCall : id :=  "%BindObjCall" .
 Definition privToInt32 := 
 value_closure
 (closure_intro [("%ToUint32", privToUint32)] None ["n"] ex_privToInt32)
 .
-Definition name_privToInt32 :=  "%ToInt32" .
+Definition name_privToInt32 : id :=  "%ToInt32" .
 Definition privBitwiseInfix := 
 value_closure
 (closure_intro [("%ToInt32", privToInt32)] None ["l"; "r"; "op"]
  ex_privBitwiseInfix)
 .
-Definition name_privBitwiseInfix :=  "%BitwiseInfix" .
+Definition name_privBitwiseInfix : id :=  "%BitwiseInfix" .
 Definition privBitwiseAnd := 
 value_closure
 (closure_intro [("%BitwiseInfix", privBitwiseInfix)] None ["l"; "r"]
  ex_privBitwiseAnd)
 .
-Definition name_privBitwiseAnd :=  "%BitwiseAnd" .
+Definition name_privBitwiseAnd : id :=  "%BitwiseAnd" .
 Definition privBitwiseNot := 
 value_closure
 (closure_intro [("%ToInt32", privToInt32)] None ["expr"] ex_privBitwiseNot)
 .
-Definition name_privBitwiseNot :=  "%BitwiseNot" .
+Definition name_privBitwiseNot : id :=  "%BitwiseNot" .
 Definition privBitwiseOr := 
 value_closure
 (closure_intro [("%BitwiseInfix", privBitwiseInfix)] None ["l"; "r"]
  ex_privBitwiseOr)
 .
-Definition name_privBitwiseOr :=  "%BitwiseOr" .
+Definition name_privBitwiseOr : id :=  "%BitwiseOr" .
 Definition privBitwiseXor := 
 value_closure
 (closure_intro [("%BitwiseInfix", privBitwiseInfix)] None ["l"; "r"]
  ex_privBitwiseXor)
 .
-Definition name_privBitwiseXor :=  "%BitwiseXor" .
+Definition name_privBitwiseXor : id :=  "%BitwiseXor" .
 Definition privBooleanCall := 
 value_closure
 (closure_intro [("%ToBoolean", privToBoolean)] None ["obj"; "this"; "args"]
  ex_privBooleanCall)
 .
-Definition name_privBooleanCall :=  "%BooleanCall" .
+Definition name_privBooleanCall : id :=  "%BooleanCall" .
 Definition privBooleanConstructor := 
 value_closure
 (closure_intro
  [("%MakeBoolean", privMakeBoolean); ("%ToBoolean", privToBoolean)] None
  ["constr"; "args"] ex_privBooleanConstructor)
 .
-Definition name_privBooleanConstructor :=  "%BooleanConstructor" .
+Definition name_privBooleanConstructor : id :=  "%BooleanConstructor" .
 Definition privBooleanGlobalFuncObj :=  value_object 31 .
-Definition name_privBooleanGlobalFuncObj :=  "%BooleanGlobalFuncObj" .
+Definition name_privBooleanGlobalFuncObj : id :=  "%BooleanGlobalFuncObj" .
 Definition privCheckObjectCoercible := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["o"]
  ex_privCheckObjectCoercible)
 .
-Definition name_privCheckObjectCoercible :=  "%CheckObjectCoercible" .
+Definition name_privCheckObjectCoercible : id :=  "%CheckObjectCoercible" .
 Definition privNumberCompareOp := 
 value_closure (closure_intro [] None ["l"; "r"] ex_privNumberCompareOp)
 .
-Definition name_privNumberCompareOp :=  "%NumberCompareOp" .
+Definition name_privNumberCompareOp : id :=  "%NumberCompareOp" .
 Definition privPrimitiveCompareOp := 
 value_closure
 (closure_intro [("%NumberCompareOp", privNumberCompareOp)] None ["l"; "r"]
  ex_privPrimitiveCompareOp)
 .
-Definition name_privPrimitiveCompareOp :=  "%PrimitiveCompareOp" .
+Definition name_privPrimitiveCompareOp : id :=  "%PrimitiveCompareOp" .
 Definition privToPrimitive := 
 value_closure
 (closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["val"]
  ex_privToPrimitive)
 .
-Definition name_privToPrimitive :=  "%ToPrimitive" .
+Definition name_privToPrimitive : id :=  "%ToPrimitive" .
 Definition privCompareOp := 
 value_closure
 (closure_intro
@@ -7858,20 +8001,20 @@ value_closure
   ("%ToPrimitive", privToPrimitive)] None ["l"; "r"; "swap"; "neg"]
  ex_privCompareOp)
 .
-Definition name_privCompareOp :=  "%CompareOp" .
+Definition name_privCompareOp : id :=  "%CompareOp" .
 Definition privDateProto :=  value_object 167 .
-Definition name_privDateProto :=  "%DateProto" .
+Definition name_privDateProto : id :=  "%DateProto" .
 Definition privMakeDate := 
 value_closure
 (closure_intro [("%DateProto", privDateProto)] None ["v"] ex_privMakeDate)
 .
-Definition name_privMakeDate :=  "%MakeDate" .
+Definition name_privMakeDate : id :=  "%MakeDate" .
 Definition privdateToString :=  value_object 168 .
-Definition name_privdateToString :=  "%dateToString" .
+Definition name_privdateToString : id :=  "%dateToString" .
 Definition privgetCurrentUTC := 
 value_closure (closure_intro [] None [] ex_privgetCurrentUTC)
 .
-Definition name_privgetCurrentUTC :=  "%getCurrentUTC" .
+Definition name_privgetCurrentUTC : id :=  "%getCurrentUTC" .
 Definition privDateCall := 
 value_closure
 (closure_intro
@@ -7880,37 +8023,37 @@ value_closure
   ("%getCurrentUTC", privgetCurrentUTC)] None ["obj"; "this"; "args"]
  ex_privDateCall)
 .
-Definition name_privDateCall :=  "%DateCall" .
+Definition name_privDateCall : id :=  "%DateCall" .
 Definition privmsPerDay :=  value_number (JsNumber.of_int (86400000)) .
-Definition name_privmsPerDay :=  "%msPerDay" .
+Definition name_privmsPerDay : id :=  "%msPerDay" .
 Definition privMakeDateDayTime := 
 value_closure
 (closure_intro [("%msPerDay", privmsPerDay)] None ["day"; "time"]
  ex_privMakeDateDayTime)
 .
-Definition name_privMakeDateDayTime :=  "%MakeDateDayTime" .
+Definition name_privMakeDateDayTime : id :=  "%MakeDateDayTime" .
 Definition privDay := 
 value_closure
 (closure_intro [("%msPerDay", privmsPerDay)] None ["t"] ex_privDay)
 .
-Definition name_privDay :=  "%Day" .
+Definition name_privDay : id :=  "%Day" .
 Definition privDayFromYear := 
 value_closure (closure_intro [] None ["y"] ex_privDayFromYear)
 .
-Definition name_privDayFromYear :=  "%DayFromYear" .
+Definition name_privDayFromYear : id :=  "%DayFromYear" .
 Definition privTimeFromYear := 
 value_closure
 (closure_intro
  [("%DayFromYear", privDayFromYear); ("%msPerDay", privmsPerDay)] None 
  ["y"] ex_privTimeFromYear)
 .
-Definition name_privTimeFromYear :=  "%TimeFromYear" .
+Definition name_privTimeFromYear : id :=  "%TimeFromYear" .
 Definition privYearFromTime := 
 value_closure
 (closure_intro [("%TimeFromYear", privTimeFromYear)] None ["t"]
  ex_privYearFromTime)
 .
-Definition name_privYearFromTime :=  "%YearFromTime" .
+Definition name_privYearFromTime : id :=  "%YearFromTime" .
 Definition privDayWithinYear := 
 value_closure
 (closure_intro
@@ -7918,18 +8061,18 @@ value_closure
   ("%DayFromYear", privDayFromYear);
   ("%YearFromTime", privYearFromTime)] None ["t"] ex_privDayWithinYear)
 .
-Definition name_privDayWithinYear :=  "%DayWithinYear" .
+Definition name_privDayWithinYear : id :=  "%DayWithinYear" .
 Definition privDaysInYear := 
 value_closure (closure_intro [] None ["y"] ex_privDaysInYear)
 .
-Definition name_privDaysInYear :=  "%DaysInYear" .
+Definition name_privDaysInYear : id :=  "%DaysInYear" .
 Definition privInLeapYear := 
 value_closure
 (closure_intro
  [("%DaysInYear", privDaysInYear); ("%YearFromTime", privYearFromTime)] 
  None ["t"] ex_privInLeapYear)
 .
-Definition name_privInLeapYear :=  "%InLeapYear" .
+Definition name_privInLeapYear : id :=  "%InLeapYear" .
 Definition privMonthFromTime := 
 value_closure
 (closure_intro
@@ -7940,7 +8083,7 @@ value_closure
   ("%TypeError", privTypeError);
   ("%YearFromTime", privYearFromTime)] None ["t"] ex_privMonthFromTime)
 .
-Definition name_privMonthFromTime :=  "%MonthFromTime" .
+Definition name_privMonthFromTime : id :=  "%MonthFromTime" .
 Definition privDateFromTime := 
 value_closure
 (closure_intro
@@ -7949,20 +8092,20 @@ value_closure
   ("%MonthFromTime", privMonthFromTime);
   ("%TypeError", privTypeError)] None ["t"] ex_privDateFromTime)
 .
-Definition name_privDateFromTime :=  "%DateFromTime" .
+Definition name_privDateFromTime : id :=  "%DateFromTime" .
 Definition privDaysInMonth := 
 value_closure (closure_intro [] None ["m"; "leap"] ex_privDaysInMonth)
 .
-Definition name_privDaysInMonth :=  "%DaysInMonth" .
+Definition name_privDaysInMonth : id :=  "%DaysInMonth" .
 Definition privIsFinite := 
 value_closure (closure_intro [] None ["n"] ex_privIsFinite)
 .
-Definition name_privIsFinite :=  "%IsFinite" .
+Definition name_privIsFinite : id :=  "%IsFinite" .
 Definition privToInteger := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["i"] ex_privToInteger)
 .
-Definition name_privToInteger :=  "%ToInteger" .
+Definition name_privToInteger : id :=  "%ToInteger" .
 Definition privMakeDay := 
 value_closure
 (closure_intro
@@ -7977,13 +8120,13 @@ value_closure
   ("%YearFromTime", privYearFromTime);
   ("%msPerDay", privmsPerDay)] None ["yr"; "mt"; "date"] ex_privMakeDay)
 .
-Definition name_privMakeDay :=  "%MakeDay" .
+Definition name_privMakeDay : id :=  "%MakeDay" .
 Definition privmsPerHour :=  value_number (JsNumber.of_int (3600000)) .
-Definition name_privmsPerHour :=  "%msPerHour" .
+Definition name_privmsPerHour : id :=  "%msPerHour" .
 Definition privmsPerMin :=  value_number (JsNumber.of_int (60000)) .
-Definition name_privmsPerMin :=  "%msPerMin" .
+Definition name_privmsPerMin : id :=  "%msPerMin" .
 Definition privmsPerSecond :=  value_number (JsNumber.of_int (1000)) .
-Definition name_privmsPerSecond :=  "%msPerSecond" .
+Definition name_privmsPerSecond : id :=  "%msPerSecond" .
 Definition privMakeTime := 
 value_closure
 (closure_intro
@@ -7994,21 +8137,21 @@ value_closure
   ("%msPerSecond", privmsPerSecond)] None ["h"; "m"; "s"; "ms"]
  ex_privMakeTime)
 .
-Definition name_privMakeTime :=  "%MakeTime" .
+Definition name_privMakeTime : id :=  "%MakeTime" .
 Definition privTimeClip := 
 value_closure
 (closure_intro [("%IsFinite", privIsFinite); ("%ToInteger", privToInteger)]
  None ["t"] ex_privTimeClip)
 .
-Definition name_privTimeClip :=  "%TimeClip" .
+Definition name_privTimeClip : id :=  "%TimeClip" .
 Definition privUTC := 
 value_closure (closure_intro [] None ["t"] ex_privUTC)
 .
-Definition name_privUTC :=  "%UTC" .
+Definition name_privUTC : id :=  "%UTC" .
 Definition privparse := 
 value_closure (closure_intro [] None ["v"] ex_privparse)
 .
-Definition name_privparse :=  "%parse" .
+Definition name_privparse : id :=  "%parse" .
 Definition privDateConstructor := 
 value_closure
 (closure_intro
@@ -8026,37 +8169,37 @@ value_closure
   ("%getCurrentUTC", privgetCurrentUTC);
   ("%parse", privparse)] None ["constr"; "args"] ex_privDateConstructor)
 .
-Definition name_privDateConstructor :=  "%DateConstructor" .
+Definition name_privDateConstructor : id :=  "%DateConstructor" .
 Definition privDateGlobalFuncObj :=  value_object 171 .
-Definition name_privDateGlobalFuncObj :=  "%DateGlobalFuncObj" .
+Definition name_privDateGlobalFuncObj : id :=  "%DateGlobalFuncObj" .
 Definition privDeclEnvAddBinding := 
 value_closure
 (closure_intro [("%AddDataField", privAddDataField)] None
  ["context"; "name"; "val"; "mutable"; "deletable"] ex_privDeclEnvAddBinding)
 .
-Definition name_privDeclEnvAddBinding :=  "%DeclEnvAddBinding" .
+Definition name_privDeclEnvAddBinding : id :=  "%DeclEnvAddBinding" .
 Definition privglobal :=  value_object 2 .
-Definition name_privglobal :=  "%global" .
+Definition name_privglobal : id :=  "%global" .
 Definition privresolveThis := 
 value_closure
 (closure_intro [("%ToObject", privToObject); ("%global", privglobal)] 
  None ["strict"; "obj"] ex_privresolveThis)
 .
-Definition name_privresolveThis :=  "%resolveThis" .
+Definition name_privresolveThis : id :=  "%resolveThis" .
 Definition privDefaultCall := 
 value_closure
 (closure_intro [("%resolveThis", privresolveThis)] None
  ["obj"; "this"; "args"] ex_privDefaultCall)
 .
-Definition name_privDefaultCall :=  "%DefaultCall" .
+Definition name_privDefaultCall : id :=  "%DefaultCall" .
 Definition privObjectProto :=  value_object 1 .
-Definition name_privObjectProto :=  "%ObjectProto" .
+Definition name_privObjectProto : id :=  "%ObjectProto" .
 Definition privDefaultConstruct := 
 value_closure
 (closure_intro [("%AppExpr", privAppExpr); ("%ObjectProto", privObjectProto)]
  None ["constr"; "args"] ex_privDefaultConstruct)
 .
-Definition name_privDefaultConstruct :=  "%DefaultConstruct" .
+Definition name_privDefaultConstruct : id :=  "%DefaultConstruct" .
 Definition privDelete := 
 value_closure
 (closure_intro
@@ -8064,14 +8207,14 @@ value_closure
   ("%ToString", privToString);
   ("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"] ex_privDelete)
 .
-Definition name_privDelete :=  "%Delete" .
+Definition name_privDelete : id :=  "%Delete" .
 Definition privEnvGetId := 
 value_closure
 (closure_intro [] (Some "%EnvGetId") ["context"; "id"; "f"] ex_privEnvGetId)
 .
-Definition name_privEnvGetId :=  "%EnvGetId" .
+Definition name_privEnvGetId : id :=  "%EnvGetId" .
 Definition privReferenceErrorProto :=  value_object 6 .
-Definition name_privReferenceErrorProto :=  "%ReferenceErrorProto" .
+Definition name_privReferenceErrorProto : id :=  "%ReferenceErrorProto" .
 Definition privReferenceError := 
 value_closure
 (closure_intro
@@ -8079,33 +8222,33 @@ value_closure
   ("%ReferenceErrorProto", privReferenceErrorProto)] None ["msg"]
  ex_privReferenceError)
 .
-Definition name_privReferenceError :=  "%ReferenceError" .
+Definition name_privReferenceError : id :=  "%ReferenceError" .
 Definition privUnboundId := 
 value_closure
 (closure_intro [("%ReferenceError", privReferenceError)] None ["id"]
  ex_privUnboundId)
 .
-Definition name_privUnboundId :=  "%UnboundId" .
+Definition name_privUnboundId : id :=  "%UnboundId" .
 Definition privEnvGetValue := 
 value_closure
 (closure_intro [("%UnboundId", privUnboundId)] None
  ["context"; "id"; "strict"] ex_privEnvGetValue)
 .
-Definition name_privEnvGetValue :=  "%EnvGetValue" .
+Definition name_privEnvGetValue : id :=  "%EnvGetValue" .
 Definition privEnvImplicitThis := 
 value_closure (closure_intro [] None ["context"] ex_privEnvImplicitThis)
 .
-Definition name_privEnvImplicitThis :=  "%EnvImplicitThis" .
+Definition name_privEnvImplicitThis : id :=  "%EnvImplicitThis" .
 Definition privmakeGlobalEnv :=  value_object 0 .
-Definition name_privmakeGlobalEnv :=  "%makeGlobalEnv" .
+Definition name_privmakeGlobalEnv : id :=  "%makeGlobalEnv" .
 Definition privconfigurableEval := 
 value_closure
 (closure_intro [("%makeGlobalEnv", privmakeGlobalEnv)] None
  ["this"; "context"; "vcontext"; "useStrict"; "args"] ex_privconfigurableEval)
 .
-Definition name_privconfigurableEval :=  "%configurableEval" .
+Definition name_privconfigurableEval : id :=  "%configurableEval" .
 Definition priveval :=  value_object 310 .
-Definition name_priveval :=  "%eval" .
+Definition name_priveval : id :=  "%eval" .
 Definition privEnvAppExpr := 
 value_closure
 (closure_intro
@@ -8120,7 +8263,7 @@ value_closure
  ["pcontext"; "vcontext"; "id"; "this"; "args_thunk"; "strict"]
  ex_privEnvAppExpr)
 .
-Definition name_privEnvAppExpr :=  "%EnvAppExpr" .
+Definition name_privEnvAppExpr : id :=  "%EnvAppExpr" .
 Definition privset_property := 
 value_closure
 (closure_intro
@@ -8134,7 +8277,7 @@ value_closure
   ("%TypeError", privTypeError)] None ["obj"; "fld"; "val"]
  ex_privset_property)
 .
-Definition name_privset_property :=  "%set-property" .
+Definition name_privset_property : id :=  "%set-property" .
 Definition privEnvPutValue := 
 value_closure
 (closure_intro
@@ -8144,14 +8287,14 @@ value_closure
   ("%set-property", privset_property)] None
  ["context"; "id"; "val"; "strict"] ex_privEnvPutValue)
 .
-Definition name_privEnvPutValue :=  "%EnvPutValue" .
+Definition name_privEnvPutValue : id :=  "%EnvPutValue" .
 Definition privEnvAssign := 
 value_closure
 (closure_intro
  [("%EnvGetId", privEnvGetId); ("%EnvPutValue", privEnvPutValue)] None
  ["context"; "id"; "val_thunk"; "strict"] ex_privEnvAssign)
 .
-Definition name_privEnvAssign :=  "%EnvAssign" .
+Definition name_privEnvAssign : id :=  "%EnvAssign" .
 Definition privEnvDefineArg := 
 value_closure
 (closure_intro
@@ -8159,9 +8302,9 @@ value_closure
   ("%EnvPutValue", privEnvPutValue)] None ["context"; "id"; "val"; "strict"]
  ex_privEnvDefineArg)
 .
-Definition name_privEnvDefineArg :=  "%EnvDefineArg" .
+Definition name_privEnvDefineArg : id :=  "%EnvDefineArg" .
 Definition privThrowTypeError :=  value_object 10 .
-Definition name_privThrowTypeError :=  "%ThrowTypeError" .
+Definition name_privThrowTypeError : id :=  "%ThrowTypeError" .
 Definition privmkArgsObj := 
 value_closure
 (closure_intro
@@ -8171,14 +8314,14 @@ value_closure
   ("%ThrowTypeError", privThrowTypeError)] None ["args"; "strict"]
  ex_privmkArgsObj)
 .
-Definition name_privmkArgsObj :=  "%mkArgsObj" .
+Definition name_privmkArgsObj : id :=  "%mkArgsObj" .
 Definition privEnvDefineArgsObj := 
 value_closure
 (closure_intro
  [("%EnvDefineArg", privEnvDefineArg); ("%mkArgsObj", privmkArgsObj)] 
  None ["context"; "args"; "strict"] ex_privEnvDefineArgsObj)
 .
-Definition name_privEnvDefineArgsObj :=  "%EnvDefineArgsObj" .
+Definition name_privEnvDefineArgsObj : id :=  "%EnvDefineArgsObj" .
 Definition privEnvDefineVar := 
 value_closure
 (closure_intro
@@ -8186,7 +8329,7 @@ value_closure
   ("%DeclEnvAddBinding", privDeclEnvAddBinding)] None
  ["context"; "id"; "configurableBindings"; "strict"] ex_privEnvDefineVar)
 .
-Definition name_privEnvDefineVar :=  "%EnvDefineVar" .
+Definition name_privEnvDefineVar : id :=  "%EnvDefineVar" .
 Definition privEnvDefineFunc := 
 value_closure
 (closure_intro
@@ -8194,9 +8337,9 @@ value_closure
  None ["context"; "id"; "fo"; "configurableBindings"; "strict"]
  ex_privEnvDefineFunc)
 .
-Definition name_privEnvDefineFunc :=  "%EnvDefineFunc" .
+Definition name_privEnvDefineFunc : id :=  "%EnvDefineFunc" .
 Definition privSyntaxErrorProto :=  value_object 7 .
-Definition name_privSyntaxErrorProto :=  "%SyntaxErrorProto" .
+Definition name_privSyntaxErrorProto : id :=  "%SyntaxErrorProto" .
 Definition privSyntaxError := 
 value_closure
 (closure_intro
@@ -8204,7 +8347,7 @@ value_closure
   ("%SyntaxErrorProto", privSyntaxErrorProto)] None ["msg"]
  ex_privSyntaxError)
 .
-Definition name_privSyntaxError :=  "%SyntaxError" .
+Definition name_privSyntaxError : id :=  "%SyntaxError" .
 Definition privEnvDelete := 
 value_closure
 (closure_intro
@@ -8213,14 +8356,14 @@ value_closure
   ("%SyntaxError", privSyntaxError)] (Some "%EnvDelete")
  ["context"; "id"; "strict"] ex_privEnvDelete)
 .
-Definition name_privEnvDelete :=  "%EnvDelete" .
+Definition name_privEnvDelete : id :=  "%EnvDelete" .
 Definition privEnvGet := 
 value_closure
 (closure_intro
  [("%EnvGetId", privEnvGetId); ("%EnvGetValue", privEnvGetValue)] None
  ["context"; "id"; "strict"] ex_privEnvGet)
 .
-Definition name_privEnvGet :=  "%EnvGet" .
+Definition name_privEnvGet : id :=  "%EnvGet" .
 Definition privEnvModify := 
 value_closure
 (closure_intro
@@ -8229,7 +8372,7 @@ value_closure
   ("%EnvPutValue", privEnvPutValue)] None
  ["context"; "id"; "op"; "val_thunk"; "strict"] ex_privEnvModify)
 .
-Definition name_privEnvModify :=  "%EnvModify" .
+Definition name_privEnvModify : id :=  "%EnvModify" .
 Definition privEnvPrepostOp := 
 value_closure
 (closure_intro
@@ -8239,21 +8382,21 @@ value_closure
   ("%ToNumber", privToNumber)] None
  ["context"; "id"; "op"; "is_pre"; "strict"] ex_privEnvPrepostOp)
 .
-Definition name_privEnvPrepostOp :=  "%EnvPrepostOp" .
+Definition name_privEnvPrepostOp : id :=  "%EnvPrepostOp" .
 Definition privEnvTypeof := 
 value_closure
 (closure_intro [("%EnvGetId", privEnvGetId); ("%Typeof", privTypeof)]
  (Some "%EnvTypeof") ["context"; "id"] ex_privEnvTypeof)
 .
-Definition name_privEnvTypeof :=  "%EnvTypeof" .
+Definition name_privEnvTypeof : id :=  "%EnvTypeof" .
 Definition privEqEq := 
 value_closure
 (closure_intro [("%ToPrimitive", privToPrimitive)] (Some "%EqEq")
  ["x1"; "x2"] ex_privEqEq)
 .
-Definition name_privEqEq :=  "%EqEq" .
+Definition name_privEqEq : id :=  "%EqEq" .
 Definition privErrorProto :=  value_object 4 .
-Definition name_privErrorProto :=  "proto" .
+Definition name_privErrorProto : id :=  "proto" .
 Definition privErrorConstructor := 
 value_closure
 (closure_intro
@@ -8261,21 +8404,21 @@ value_closure
   ("%ToString", privToString);
   ("proto", privErrorProto)] None ["this"; "args"] ex_privErrorConstructor)
 .
-Definition name_privErrorConstructor :=  "%ErrorConstructor" .
+Definition name_privErrorConstructor : id :=  "%ErrorConstructor" .
 Definition privIsJSError := 
 value_closure (closure_intro [] None ["thing"] ex_privIsJSError)
 .
-Definition name_privIsJSError :=  "%IsJSError" .
+Definition name_privIsJSError : id :=  "%IsJSError" .
 Definition privErrorDispatch := 
 value_closure
 (closure_intro [("%IsJSError", privIsJSError); ("%TypeError", privTypeError)]
  None ["maybe-js-error"] ex_privErrorDispatch)
 .
-Definition name_privErrorDispatch :=  "%ErrorDispatch" .
+Definition name_privErrorDispatch : id :=  "%ErrorDispatch" .
 Definition privErrorGlobalFuncObj :=  value_object 44 .
-Definition name_privErrorGlobalFuncObj :=  "%ErrorGlobalFuncObj" .
+Definition name_privErrorGlobalFuncObj : id :=  "%ErrorGlobalFuncObj" .
 Definition privEvalErrorProto :=  value_object 8 .
-Definition name_privEvalErrorProto :=  "proto" .
+Definition name_privEvalErrorProto : id :=  "proto" .
 Definition privEvalErrorConstructor := 
 value_closure
 (closure_intro
@@ -8284,11 +8427,11 @@ value_closure
   ("proto", privEvalErrorProto)] None ["this"; "args"]
  ex_privEvalErrorConstructor)
 .
-Definition name_privEvalErrorConstructor :=  "%EvalErrorConstructor" .
+Definition name_privEvalErrorConstructor : id :=  "%EvalErrorConstructor" .
 Definition privEvalErrorGlobalFuncObj :=  value_object 46 .
-Definition name_privEvalErrorGlobalFuncObj :=  "%EvalErrorGlobalFuncObj" .
+Definition name_privEvalErrorGlobalFuncObj : id :=  "%EvalErrorGlobalFuncObj" .
 Definition privglobalContext :=  value_object 307 .
-Definition name_privglobalContext :=  "%globalContext" .
+Definition name_privglobalContext : id :=  "%globalContext" .
 Definition privevalCall := 
 value_closure
 (closure_intro
@@ -8297,7 +8440,7 @@ value_closure
   ("%globalContext", privglobalContext)] None ["obj"; "this"; "args"]
  ex_privevalCall)
 .
-Definition name_privevalCall :=  "%evalCall" .
+Definition name_privevalCall : id :=  "%evalCall" .
 Definition privFunctionConstructor := 
 value_closure
 (closure_intro
@@ -8306,54 +8449,54 @@ value_closure
   ("%evalCall", privevalCall)] None ["this"; "args"]
  ex_privFunctionConstructor)
 .
-Definition name_privFunctionConstructor :=  "%FunctionConstructor" .
+Definition name_privFunctionConstructor : id :=  "%FunctionConstructor" .
 Definition privFunctionGlobalFuncObj :=  value_object 311 .
-Definition name_privFunctionGlobalFuncObj :=  "%FunctionGlobalFuncObj" .
+Definition name_privFunctionGlobalFuncObj : id :=  "%FunctionGlobalFuncObj" .
 Definition privFunctionProto :=  value_object 3 .
-Definition name_privFunctionProto :=  "%FunctionProto" .
+Definition name_privFunctionProto : id :=  "%FunctionProto" .
 Definition privFunctionProtoCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privFunctionProtoCall)
 .
-Definition name_privFunctionProtoCall :=  "%FunctionProtoCall" .
+Definition name_privFunctionProtoCall : id :=  "%FunctionProtoCall" .
 Definition privGeOp := 
 value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privGeOp)
 .
-Definition name_privGeOp :=  "%GeOp" .
+Definition name_privGeOp : id :=  "%GeOp" .
 Definition privGetterValue := 
 value_closure (closure_intro [] None ["o"] ex_privGetterValue)
 .
-Definition name_privGetterValue :=  "%GetterValue" .
+Definition name_privGetterValue : id :=  "%GetterValue" .
 Definition privGtOp := 
 value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privGtOp)
 .
-Definition name_privGtOp :=  "%GtOp" .
+Definition name_privGtOp : id :=  "%GtOp" .
 Definition privLeOp := 
 value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privLeOp)
 .
-Definition name_privLeOp :=  "%LeOp" .
+Definition name_privLeOp : id :=  "%LeOp" .
 Definition privLeftShift := 
 value_closure
 (closure_intro [("%ToInt32", privToInt32); ("%ToUint32", privToUint32)] 
  None ["l"; "r"] ex_privLeftShift)
 .
-Definition name_privLeftShift :=  "%LeftShift" .
+Definition name_privLeftShift : id :=  "%LeftShift" .
 Definition privLocalTime := 
 value_closure (closure_intro [] None ["t"] ex_privLocalTime)
 .
-Definition name_privLocalTime :=  "%LocalTime" .
+Definition name_privLocalTime : id :=  "%LocalTime" .
 Definition privLtOp := 
 value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privLtOp)
 .
-Definition name_privLtOp :=  "%LtOp" .
+Definition name_privLtOp : id :=  "%LtOp" .
 Definition privmax := 
 value_closure (closure_intro [] None ["a"; "b"] ex_privmax)
 .
-Definition name_privmax :=  "%max" .
+Definition name_privmax : id :=  "%max" .
 Definition privMakeBind := 
 value_closure
 (closure_intro
@@ -8363,7 +8506,7 @@ value_closure
   ("%ThrowTypeError", privThrowTypeError);
   ("%max", privmax)] None ["obj"; "this"; "args"] ex_privMakeBind)
 .
-Definition name_privMakeBind :=  "%MakeBind" .
+Definition name_privMakeBind : id :=  "%MakeBind" .
 Definition privMakeFunctionObject := 
 value_closure
 (closure_intro
@@ -8376,34 +8519,34 @@ value_closure
   ("%ThrowTypeError", privThrowTypeError)] None
  ["body"; "len"; "codetxt"; "strict"] ex_privMakeFunctionObject)
 .
-Definition name_privMakeFunctionObject :=  "%MakeFunctionObject" .
+Definition name_privMakeFunctionObject : id :=  "%MakeFunctionObject" .
 Definition privMakeNativeErrorProto := 
 value_closure
 (closure_intro [("%ErrorProto", privErrorProto)] None ["name"]
  ex_privMakeNativeErrorProto)
 .
-Definition name_privMakeNativeErrorProto :=  "%MakeNativeErrorProto" .
+Definition name_privMakeNativeErrorProto : id :=  "%MakeNativeErrorProto" .
 Definition privMakeObject := 
 value_closure
 (closure_intro [("%ObjectProto", privObjectProto)] None [] ex_privMakeObject)
 .
-Definition name_privMakeObject :=  "%MakeObject" .
+Definition name_privMakeObject : id :=  "%MakeObject" .
 Definition privMath :=  value_object 255 .
-Definition name_privMath :=  "%Math" .
+Definition name_privMath : id :=  "%Math" .
 Definition privNativeErrorConstructor := 
 value_closure
 (closure_intro
  [("%MakeNativeError", privMakeNativeError); ("%ToString", privToString)]
  None ["proto"] ex_privNativeErrorConstructor)
 .
-Definition name_privNativeErrorConstructor :=  "%NativeErrorConstructor" .
+Definition name_privNativeErrorConstructor : id :=  "%NativeErrorConstructor" .
 Definition privNumberCall := 
 value_closure
 (closure_intro
  [("%ComputeLength", privComputeLength); ("%ToNumber", privToNumber)] 
  None ["obj"; "this"; "args"] ex_privNumberCall)
 .
-Definition name_privNumberCall :=  "%NumberCall" .
+Definition name_privNumberCall : id :=  "%NumberCall" .
 Definition privNumberConstructor := 
 value_closure
 (closure_intro
@@ -8412,9 +8555,9 @@ value_closure
   ("%ToNumber", privToNumber)] None ["constr"; "args"]
  ex_privNumberConstructor)
 .
-Definition name_privNumberConstructor :=  "%NumberConstructor" .
+Definition name_privNumberConstructor : id :=  "%NumberConstructor" .
 Definition privNumberGlobalFuncObj :=  value_object 24 .
-Definition name_privNumberGlobalFuncObj :=  "%NumberGlobalFuncObj" .
+Definition name_privNumberGlobalFuncObj : id :=  "%NumberGlobalFuncObj" .
 Definition privObjectCall := 
 value_closure
 (closure_intro
@@ -8422,21 +8565,21 @@ value_closure
   ("%MakeObject", privMakeObject);
   ("%ToObject", privToObject)] None ["obj"; "this"; "args"] ex_privObjectCall)
 .
-Definition name_privObjectCall :=  "%ObjectCall" .
+Definition name_privObjectCall : id :=  "%ObjectCall" .
 Definition privObjectConstructor := 
 value_closure
 (closure_intro [("%ObjectCall", privObjectCall)] None ["constr"; "args"]
  ex_privObjectConstructor)
 .
-Definition name_privObjectConstructor :=  "%ObjectConstructor" .
+Definition name_privObjectConstructor : id :=  "%ObjectConstructor" .
 Definition privObjectGlobalFuncObj :=  value_object 33 .
-Definition name_privObjectGlobalFuncObj :=  "%ObjectGlobalFuncObj" .
+Definition name_privObjectGlobalFuncObj : id :=  "%ObjectGlobalFuncObj" .
 Definition privObjectTypeCheck := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["o"]
  ex_privObjectTypeCheck)
 .
-Definition name_privObjectTypeCheck :=  "%ObjectTypeCheck" .
+Definition name_privObjectTypeCheck : id :=  "%ObjectTypeCheck" .
 Definition privPrepostOp := 
 value_closure
 (closure_intro
@@ -8445,54 +8588,54 @@ value_closure
   ("%set-property", privset_property)] None ["obj"; "fld"; "op"; "is_pre"]
  ex_privPrepostOp)
 .
-Definition name_privPrepostOp :=  "%PrepostOp" .
+Definition name_privPrepostOp : id :=  "%PrepostOp" .
 Definition privPrimAdd := 
 value_closure
 (closure_intro [("%ToPrimitive", privToPrimitive)] None ["l"; "r"]
  ex_privPrimAdd)
 .
-Definition name_privPrimAdd :=  "%PrimAdd" .
+Definition name_privPrimAdd : id :=  "%PrimAdd" .
 Definition privPrimComma := 
 value_closure (closure_intro [] None ["l"; "r"] ex_privPrimComma)
 .
-Definition name_privPrimComma :=  "%PrimComma" .
+Definition name_privPrimComma : id :=  "%PrimComma" .
 Definition privPrimMultOp := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["l"; "r"; "op"]
  ex_privPrimMultOp)
 .
-Definition name_privPrimMultOp :=  "%PrimMultOp" .
+Definition name_privPrimMultOp : id :=  "%PrimMultOp" .
 Definition privPrimDiv := 
 value_closure
 (closure_intro [("%PrimMultOp", privPrimMultOp)] None ["l"; "r"]
  ex_privPrimDiv)
 .
-Definition name_privPrimDiv :=  "%PrimDiv" .
+Definition name_privPrimDiv : id :=  "%PrimDiv" .
 Definition privPrimMod := 
 value_closure
 (closure_intro [("%PrimMultOp", privPrimMultOp)] None ["l"; "r"]
  ex_privPrimMod)
 .
-Definition name_privPrimMod :=  "%PrimMod" .
+Definition name_privPrimMod : id :=  "%PrimMod" .
 Definition privPrimMult := 
 value_closure
 (closure_intro [("%PrimMultOp", privPrimMultOp)] None ["l"; "r"]
  ex_privPrimMult)
 .
-Definition name_privPrimMult :=  "%PrimMult" .
+Definition name_privPrimMult : id :=  "%PrimMult" .
 Definition privPrimSub := 
 value_closure
 (closure_intro [("%PrimMultOp", privPrimMultOp)] None ["l"; "r"]
  ex_privPrimSub)
 .
-Definition name_privPrimSub :=  "%PrimSub" .
+Definition name_privPrimSub : id :=  "%PrimSub" .
 Definition privRangeError := 
 value_closure
 (closure_intro
  [("%NativeError", privNativeError);
   ("%RangeErrorProto", privRangeErrorProto)] None ["msg"] ex_privRangeError)
 .
-Definition name_privRangeError :=  "%RangeError" .
+Definition name_privRangeError : id :=  "%RangeError" .
 Definition privRangeErrorConstructor := 
 value_closure
 (closure_intro
@@ -8501,9 +8644,9 @@ value_closure
   ("proto", privRangeErrorProto)] None ["this"; "args"]
  ex_privRangeErrorConstructor)
 .
-Definition name_privRangeErrorConstructor :=  "%RangeErrorConstructor" .
+Definition name_privRangeErrorConstructor : id :=  "%RangeErrorConstructor" .
 Definition privRangeErrorGlobalFuncObj :=  value_object 47 .
-Definition name_privRangeErrorGlobalFuncObj :=  "%RangeErrorGlobalFuncObj" .
+Definition name_privRangeErrorGlobalFuncObj : id :=  "%RangeErrorGlobalFuncObj" .
 Definition privReferenceErrorConstructor := 
 value_closure
 (closure_intro
@@ -8512,60 +8655,60 @@ value_closure
   ("proto", privReferenceErrorProto)] None ["this"; "args"]
  ex_privReferenceErrorConstructor)
 .
-Definition name_privReferenceErrorConstructor :=  "%ReferenceErrorConstructor" .
+Definition name_privReferenceErrorConstructor : id :=  "%ReferenceErrorConstructor" .
 Definition privReferenceErrorGlobalFuncObj :=  value_object 48 .
-Definition name_privReferenceErrorGlobalFuncObj :=  "%ReferenceErrorGlobalFuncObj" .
+Definition name_privReferenceErrorGlobalFuncObj : id :=  "%ReferenceErrorGlobalFuncObj" .
 Definition privRegExpProto :=  value_object 247 .
-Definition name_privRegExpProto :=  "%RegExpProto" .
+Definition name_privRegExpProto : id :=  "%RegExpProto" .
 Definition privRegExpConstructor := 
 value_closure
 (closure_intro [("%RegExpProto", privRegExpProto)] None
  ["obj"; "this"; "args"] ex_privRegExpConstructor)
 .
-Definition name_privRegExpConstructor :=  "%RegExpConstructor" .
+Definition name_privRegExpConstructor : id :=  "%RegExpConstructor" .
 Definition privRegExpCode := 
 value_closure
 (closure_intro [("%RegExpConstructor", privRegExpConstructor)] None
  ["obj"; "this"; "args"] ex_privRegExpCode)
 .
-Definition name_privRegExpCode :=  "%RegExpCode" .
+Definition name_privRegExpCode : id :=  "%RegExpCode" .
 Definition privRegExpGlobalFuncObj :=  value_object 248 .
-Definition name_privRegExpGlobalFuncObj :=  "%RegExpGlobalFuncObj" .
+Definition name_privRegExpGlobalFuncObj : id :=  "%RegExpGlobalFuncObj" .
 Definition privRunSelfConstructorCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privRunSelfConstructorCall)
 .
-Definition name_privRunSelfConstructorCall :=  "%RunSelfConstructorCall" .
+Definition name_privRunSelfConstructorCall : id :=  "%RunSelfConstructorCall" .
 Definition privSetterValue := 
 value_closure (closure_intro [] None ["o"] ex_privSetterValue)
 .
-Definition name_privSetterValue :=  "%SetterValue" .
+Definition name_privSetterValue : id :=  "%SetterValue" .
 Definition privSignedRightShift := 
 value_closure
 (closure_intro [("%ToInt32", privToInt32); ("%ToUint32", privToUint32)] 
  None ["l"; "r"] ex_privSignedRightShift)
 .
-Definition name_privSignedRightShift :=  "%SignedRightShift" .
+Definition name_privSignedRightShift : id :=  "%SignedRightShift" .
 Definition privStringCall := 
 value_closure
 (closure_intro
  [("%ComputeLength", privComputeLength); ("%ToString", privToString)] 
  None ["obj"; "this"; "args"] ex_privStringCall)
 .
-Definition name_privStringCall :=  "%StringCall" .
+Definition name_privStringCall : id :=  "%StringCall" .
 Definition privStringConstructor := 
 value_closure
 (closure_intro
  [("%MakeString", privMakeString); ("%StringCall", privStringCall)] None
  ["constr"; "args"] ex_privStringConstructor)
 .
-Definition name_privStringConstructor :=  "%StringConstructor" .
+Definition name_privStringConstructor : id :=  "%StringConstructor" .
 Definition privStringGlobalFuncObj :=  value_object 27 .
-Definition name_privStringGlobalFuncObj :=  "%StringGlobalFuncObj" .
+Definition name_privStringGlobalFuncObj : id :=  "%StringGlobalFuncObj" .
 Definition privStxEq := 
 value_closure (closure_intro [] None ["x1"; "x2"] ex_privStxEq)
 .
-Definition name_privStxEq :=  "%StxEq" .
+Definition name_privStxEq : id :=  "%StxEq" .
 Definition privSyntaxErrorConstructor := 
 value_closure
 (closure_intro
@@ -8574,20 +8717,20 @@ value_closure
   ("proto", privSyntaxErrorProto)] None ["this"; "args"]
  ex_privSyntaxErrorConstructor)
 .
-Definition name_privSyntaxErrorConstructor :=  "%SyntaxErrorConstructor" .
+Definition name_privSyntaxErrorConstructor : id :=  "%SyntaxErrorConstructor" .
 Definition privSyntaxErrorGlobalFuncObj :=  value_object 45 .
-Definition name_privSyntaxErrorGlobalFuncObj :=  "%SyntaxErrorGlobalFuncObj" .
+Definition name_privSyntaxErrorGlobalFuncObj : id :=  "%SyntaxErrorGlobalFuncObj" .
 Definition privThrowTypeErrorFun := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
  ex_privThrowTypeErrorFun)
 .
-Definition name_privThrowTypeErrorFun :=  "%ThrowTypeErrorFun" .
+Definition name_privThrowTypeErrorFun : id :=  "%ThrowTypeErrorFun" .
 Definition privTimeWithinDay := 
 value_closure
 (closure_intro [("%msPerDay", privmsPerDay)] None ["t"] ex_privTimeWithinDay)
 .
-Definition name_privTimeWithinDay :=  "%TimeWithinDay" .
+Definition name_privTimeWithinDay : id :=  "%TimeWithinDay" .
 Definition privToPropertyDescriptor := 
 value_closure
 (closure_intro
@@ -8600,12 +8743,12 @@ value_closure
   ("isDataDescriptor", isDataDescriptor)] None ["propobj"]
  ex_privToPropertyDescriptor)
 .
-Definition name_privToPropertyDescriptor :=  "%ToPropertyDescriptor" .
+Definition name_privToPropertyDescriptor : id :=  "%ToPropertyDescriptor" .
 Definition privToUint16 := 
 value_closure
 (closure_intro [("%ToUint", privToUint)] None ["n"] ex_privToUint16)
 .
-Definition name_privToUint16 :=  "%ToUint16" .
+Definition name_privToUint16 : id :=  "%ToUint16" .
 Definition privTypeErrorConstructor := 
 value_closure
 (closure_intro
@@ -8614,11 +8757,11 @@ value_closure
   ("proto", privTypeErrorProto)] None ["this"; "args"]
  ex_privTypeErrorConstructor)
 .
-Definition name_privTypeErrorConstructor :=  "%TypeErrorConstructor" .
+Definition name_privTypeErrorConstructor : id :=  "%TypeErrorConstructor" .
 Definition privTypeErrorGlobalFuncObj :=  value_object 49 .
-Definition name_privTypeErrorGlobalFuncObj :=  "%TypeErrorGlobalFuncObj" .
+Definition name_privTypeErrorGlobalFuncObj : id :=  "%TypeErrorGlobalFuncObj" .
 Definition privURIErrorProto :=  value_object 50 .
-Definition name_privURIErrorProto :=  "proto" .
+Definition name_privURIErrorProto : id :=  "proto" .
 Definition privURIErrorConstructor := 
 value_closure
 (closure_intro
@@ -8627,58 +8770,58 @@ value_closure
   ("proto", privURIErrorProto)] None ["this"; "args"]
  ex_privURIErrorConstructor)
 .
-Definition name_privURIErrorConstructor :=  "%URIErrorConstructor" .
+Definition name_privURIErrorConstructor : id :=  "%URIErrorConstructor" .
 Definition privURIErrorGlobalFuncObj :=  value_object 51 .
-Definition name_privURIErrorGlobalFuncObj :=  "%URIErrorGlobalFuncObj" .
+Definition name_privURIErrorGlobalFuncObj : id :=  "%URIErrorGlobalFuncObj" .
 Definition privUnaryNeg := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["expr"] ex_privUnaryNeg)
 .
-Definition name_privUnaryNeg :=  "%UnaryNeg" .
+Definition name_privUnaryNeg : id :=  "%UnaryNeg" .
 Definition privUnaryNot := 
 value_closure
 (closure_intro [("%ToBoolean", privToBoolean)] None ["expr"] ex_privUnaryNot)
 .
-Definition name_privUnaryNot :=  "%UnaryNot" .
+Definition name_privUnaryNot : id :=  "%UnaryNot" .
 Definition privUnaryPlus := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["expr"] ex_privUnaryPlus)
 .
-Definition name_privUnaryPlus :=  "%UnaryPlus" .
+Definition name_privUnaryPlus : id :=  "%UnaryPlus" .
 Definition privUnsignedRightShift := 
 value_closure
 (closure_intro [("%ToUint32", privToUint32)] None ["l"; "r"]
  ex_privUnsignedRightShift)
 .
-Definition name_privUnsignedRightShift :=  "%UnsignedRightShift" .
+Definition name_privUnsignedRightShift : id :=  "%UnsignedRightShift" .
 Definition privUnwritableDispatch := 
 value_closure
 (closure_intro
  [("%ErrorDispatch", privErrorDispatch); ("%TypeError", privTypeError)] 
  None ["id"] ex_privUnwritableDispatch)
 .
-Definition name_privUnwritableDispatch :=  "%UnwritableDispatch" .
+Definition name_privUnwritableDispatch : id :=  "%UnwritableDispatch" .
 Definition privVoid := 
 value_closure (closure_intro [] None ["val"] ex_privVoid)
 .
-Definition name_privVoid :=  "%Void" .
+Definition name_privVoid : id :=  "%Void" .
 Definition privacos :=  value_object 264 .
-Definition name_privacos :=  "%acos" .
+Definition name_privacos : id :=  "%acos" .
 Definition privacosCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privacosCall)
 .
-Definition name_privacosCall :=  "%acosCall" .
+Definition name_privacosCall : id :=  "%acosCall" .
 Definition privapply :=  value_object 18 .
-Definition name_privapply :=  "%apply" .
+Definition name_privapply : id :=  "%apply" .
 Definition privapplyCall := 
 value_closure
 (closure_intro
  [("%ObjectTypeCheck", privObjectTypeCheck); ("%mkArgsObj", privmkArgsObj)]
  None ["this"; "args"] ex_privapplyCall)
 .
-Definition name_privapplyCall :=  "%applyCall" .
+Definition name_privapplyCall : id :=  "%applyCall" .
 Definition privarrayIndexOf :=  value_object 121 .
-Definition name_privarrayIndexOf :=  "%arrayIndexOf" .
+Definition name_privarrayIndexOf : id :=  "%arrayIndexOf" .
 Definition privarrayIndexOfCall := 
 value_closure
 (closure_intro
@@ -8688,13 +8831,13 @@ value_closure
   ("%ToUint32", privToUint32);
   ("%max", privmax)] None ["obj"; "this"; "args"] ex_privarrayIndexOfCall)
 .
-Definition name_privarrayIndexOfCall :=  "%arrayIndexOfCall" .
+Definition name_privarrayIndexOfCall : id :=  "%arrayIndexOfCall" .
 Definition privarrayLastIndexOf :=  value_object 124 .
-Definition name_privarrayLastIndexOf :=  "%arrayLastIndexOf" .
+Definition name_privarrayLastIndexOf : id :=  "%arrayLastIndexOf" .
 Definition privmin := 
 value_closure (closure_intro [] None ["a"; "b"] ex_privmin)
 .
-Definition name_privmin :=  "%min" .
+Definition name_privmin : id :=  "%min" .
 Definition privarrayLastIndexOfCall := 
 value_closure
 (closure_intro
@@ -8704,7 +8847,7 @@ value_closure
   ("%ToUint32", privToUint32);
   ("%min", privmin)] None ["obj"; "this"; "args"] ex_privarrayLastIndexOfCall)
 .
-Definition name_privarrayLastIndexOfCall :=  "%arrayLastIndexOfCall" .
+Definition name_privarrayLastIndexOfCall : id :=  "%arrayLastIndexOfCall" .
 Definition privarrayTLSCall := 
 value_closure
 (closure_intro
@@ -8715,17 +8858,17 @@ value_closure
   ("%TypeErrorProto", privTypeErrorProto)] None ["obj"; "this"; "args"]
  ex_privarrayTLSCall)
 .
-Definition name_privarrayTLSCall :=  "%arrayTLSCall" .
+Definition name_privarrayTLSCall : id :=  "%arrayTLSCall" .
 Definition privarrayToLocaleString :=  value_object 93 .
-Definition name_privarrayToLocaleString :=  "%arrayToLocaleString" .
+Definition name_privarrayToLocaleString : id :=  "%arrayToLocaleString" .
 Definition privarrayToString :=  value_object 90 .
-Definition name_privarrayToString :=  "%arrayToString" .
+Definition name_privarrayToString : id :=  "%arrayToString" .
 Definition privobjectToStringCall := 
 value_closure
 (closure_intro [("%ToObject", privToObject)] None ["obj"; "this"; "args"]
  ex_privobjectToStringCall)
 .
-Definition name_privobjectToStringCall :=  "%objectToStringCall" .
+Definition name_privobjectToStringCall : id :=  "%objectToStringCall" .
 Definition privarrayToStringCall := 
 value_closure
 (closure_intro
@@ -8733,39 +8876,39 @@ value_closure
   ("%objectToStringCall", privobjectToStringCall)] None
  ["obj"; "this"; "args"] ex_privarrayToStringCall)
 .
-Definition name_privarrayToStringCall :=  "%arrayToStringCall" .
+Definition name_privarrayToStringCall : id :=  "%arrayToStringCall" .
 Definition privasin :=  value_object 266 .
-Definition name_privasin :=  "%asin" .
+Definition name_privasin : id :=  "%asin" .
 Definition privasinCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privasinCall)
 .
-Definition name_privasinCall :=  "%asinCall" .
+Definition name_privasinCall : id :=  "%asinCall" .
 Definition privassert := 
 value_closure (closure_intro [] None ["b"; "s"] ex_privassert)
 .
-Definition name_privassert :=  "%assert" .
+Definition name_privassert : id :=  "%assert" .
 Definition privatan :=  value_object 268 .
-Definition name_privatan :=  "%atan" .
+Definition name_privatan : id :=  "%atan" .
 Definition privatan2 :=  value_object 270 .
-Definition name_privatan2 :=  "%atan2" .
+Definition name_privatan2 : id :=  "%atan2" .
 Definition privatan2Call := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privatan2Call)
 .
-Definition name_privatan2Call :=  "%atan2Call" .
+Definition name_privatan2Call : id :=  "%atan2Call" .
 Definition privatanCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privatanCall)
 .
-Definition name_privatanCall :=  "%atanCall" .
+Definition name_privatanCall : id :=  "%atanCall" .
 Definition privbind :=  value_object 150 .
-Definition name_privbind :=  "%bind" .
+Definition name_privbind : id :=  "%bind" .
 Definition privoneArgObj := 
 value_closure
 (closure_intro [("%mkArgsObj", privmkArgsObj)] None ["arg"] ex_privoneArgObj)
 .
-Definition name_privoneArgObj :=  "%oneArgObj" .
+Definition name_privoneArgObj : id :=  "%oneArgObj" .
 Definition privslice :=  value_object 147 .
-Definition name_privslice :=  "%slice" .
+Definition name_privslice : id :=  "%slice" .
 Definition privbindCall := 
 value_closure
 (closure_intro
@@ -8775,36 +8918,36 @@ value_closure
   ("%oneArgObj", privoneArgObj);
   ("%slice", privslice)] None ["obj"; "this"; "args"] ex_privbindCall)
 .
-Definition name_privbindCall :=  "%bindCall" .
+Definition name_privbindCall : id :=  "%bindCall" .
 Definition privbooleanToString :=  value_object 28 .
-Definition name_privbooleanToString :=  "%booleanToString" .
+Definition name_privbooleanToString : id :=  "%booleanToString" .
 Definition privbooleanToStringCall := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
  ex_privbooleanToStringCall)
 .
-Definition name_privbooleanToStringCall :=  "%booleanToStringCall" .
+Definition name_privbooleanToStringCall : id :=  "%booleanToStringCall" .
 Definition privbooleanValueOf :=  value_object 296 .
-Definition name_privbooleanValueOf :=  "%booleanValueOf" .
+Definition name_privbooleanValueOf : id :=  "%booleanValueOf" .
 Definition privcall :=  value_object 17 .
-Definition name_privcall :=  "%call" .
+Definition name_privcall : id :=  "%call" .
 Definition privlen := 
 value_closure (closure_intro [] None ["list"] ex_privlen)
 .
-Definition name_privlen :=  "%len" .
+Definition name_privlen : id :=  "%len" .
 Definition privslice_internal := 
 value_closure
 (closure_intro [] None ["list"; "min"; "max"] ex_privslice_internal)
 .
-Definition name_privslice_internal :=  "%slice_internal" .
+Definition name_privslice_internal : id :=  "%slice_internal" .
 Definition privcallCall := 
 value_closure
 (closure_intro [("%len", privlen); ("%slice_internal", privslice_internal)]
  None ["this"; "args"] ex_privcallCall)
 .
-Definition name_privcallCall :=  "%callCall" .
+Definition name_privcallCall : id :=  "%callCall" .
 Definition privcharAt :=  value_object 103 .
-Definition name_privcharAt :=  "%charAt" .
+Definition name_privcharAt : id :=  "%charAt" .
 Definition privcharAtCall := 
 value_closure
 (closure_intro
@@ -8812,9 +8955,9 @@ value_closure
   ("%ToInteger", privToInteger);
   ("%ToString", privToString)] None ["obj"; "this"; "args"] ex_privcharAtCall)
 .
-Definition name_privcharAtCall :=  "%charAtCall" .
+Definition name_privcharAtCall : id :=  "%charAtCall" .
 Definition privcharCodeAt :=  value_object 106 .
-Definition name_privcharCodeAt :=  "%charCodeAt" .
+Definition name_privcharCodeAt : id :=  "%charCodeAt" .
 Definition privcharCodeAtCall := 
 value_closure
 (closure_intro
@@ -8823,26 +8966,26 @@ value_closure
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
  ex_privcharCodeAtCall)
 .
-Definition name_privcharCodeAtCall :=  "%charCodeAtCall" .
+Definition name_privcharCodeAtCall : id :=  "%charCodeAtCall" .
 Definition privconcatCall := 
 value_closure
 (closure_intro
  [("%ArrayConstructor", privArrayConstructor); ("%ToObject", privToObject)]
  None ["obj"; "this"; "args"] ex_privconcatCall)
 .
-Definition name_privconcatCall :=  "%concatCall" .
+Definition name_privconcatCall : id :=  "%concatCall" .
 Definition privconsole :=  value_object 309 .
-Definition name_privconsole :=  "%console" .
+Definition name_privconsole : id :=  "%console" .
 Definition privcos :=  value_object 272 .
-Definition name_privcos :=  "%cos" .
+Definition name_privcos : id :=  "%cos" .
 Definition privcosCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privcosCall)
 .
-Definition name_privcosCall :=  "%cosCall" .
+Definition name_privcosCall : id :=  "%cosCall" .
 Definition privcreate :=  value_object 58 .
-Definition name_privcreate :=  "%create" .
+Definition name_privcreate : id :=  "%create" .
 Definition privdefineProperties :=  value_object 56 .
-Definition name_privdefineProperties :=  "%defineProperties" .
+Definition name_privdefineProperties : id :=  "%defineProperties" .
 Definition privcreateCall := 
 value_closure
 (closure_intro
@@ -8851,65 +8994,65 @@ value_closure
   ("%defineProperties", privdefineProperties)] None ["obj"; "this"; "args"]
  ex_privcreateCall)
 .
-Definition name_privcreateCall :=  "%createCall" .
+Definition name_privcreateCall : id :=  "%createCall" .
 Definition privdateGetTimezoneOffset :=  value_object 172 .
-Definition name_privdateGetTimezoneOffset :=  "%dateGetTimezoneOffset" .
+Definition name_privdateGetTimezoneOffset : id :=  "%dateGetTimezoneOffset" .
 Definition privdateGetTimezoneOffsetCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"]
  ex_privdateGetTimezoneOffsetCall)
 .
-Definition name_privdateGetTimezoneOffsetCall :=  "%dateGetTimezoneOffsetCall" .
+Definition name_privdateGetTimezoneOffsetCall : id :=  "%dateGetTimezoneOffsetCall" .
 Definition privdateToStringCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privdateToStringCall)
 .
-Definition name_privdateToStringCall :=  "%dateToStringCall" .
+Definition name_privdateToStringCall : id :=  "%dateToStringCall" .
 Definition privdateValueOf :=  value_object 170 .
-Definition name_privdateValueOf :=  "%dateValueOf" .
+Definition name_privdateValueOf : id :=  "%dateValueOf" .
 Definition privdateValueOfCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privdateValueOfCall)
 .
-Definition name_privdateValueOfCall :=  "%dateValueOfCall" .
+Definition name_privdateValueOfCall : id :=  "%dateValueOfCall" .
 Definition privdategetDate :=  value_object 176 .
-Definition name_privdategetDate :=  "%dategetDate" .
+Definition name_privdategetDate : id :=  "%dategetDate" .
 Definition privdategetDateCall := 
 value_closure
 (closure_intro
  [("%DateFromTime", privDateFromTime); ("%LocalTime", privLocalTime)] 
  None ["obj"; "this"; "args"] ex_privdategetDateCall)
 .
-Definition name_privdategetDateCall :=  "%dategetDateCall" .
+Definition name_privdategetDateCall : id :=  "%dategetDateCall" .
 Definition privdategetDay :=  value_object 174 .
-Definition name_privdategetDay :=  "%dategetDay" .
+Definition name_privdategetDay : id :=  "%dategetDay" .
 Definition privdategetDayCall := 
 value_closure
 (closure_intro [("%msPerDay", privmsPerDay)] None ["obj"; "this"; "args"]
  ex_privdategetDayCall)
 .
-Definition name_privdategetDayCall :=  "%dategetDayCall" .
+Definition name_privdategetDayCall : id :=  "%dategetDayCall" .
 Definition privdecodeURI :=  value_object 250 .
-Definition name_privdecodeURI :=  "%decodeURI" .
+Definition name_privdecodeURI : id :=  "%decodeURI" .
 Definition privdecodeURICall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privdecodeURICall)
 .
-Definition name_privdecodeURICall :=  "%decodeURICall" .
+Definition name_privdecodeURICall : id :=  "%decodeURICall" .
 Definition privdecodeURIComponent :=  value_object 251 .
-Definition name_privdecodeURIComponent :=  "%decodeURIComponent" .
+Definition name_privdecodeURIComponent : id :=  "%decodeURIComponent" .
 Definition privdecodeURIComponentCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privdecodeURIComponentCall)
 .
-Definition name_privdecodeURIComponentCall :=  "%decodeURIComponentCall" .
+Definition name_privdecodeURIComponentCall : id :=  "%decodeURIComponentCall" .
 Definition privdefine15Property := 
 value_closure
 (closure_intro
  [("%Typeof", privTypeof); ("%defineOwnProperty", privdefineOwnProperty)]
  None ["obj"; "field"; "prop"] ex_privdefine15Property)
 .
-Definition name_privdefine15Property :=  "%define15Property" .
+Definition name_privdefine15Property : id :=  "%define15Property" .
 Definition privdefineNYIProperty := 
 value_closure
 (closure_intro
@@ -8918,9 +9061,9 @@ value_closure
   ("%define15Property", privdefine15Property)] None ["base"; "name"]
  ex_privdefineNYIProperty)
 .
-Definition name_privdefineNYIProperty :=  "%defineNYIProperty" .
+Definition name_privdefineNYIProperty : id :=  "%defineNYIProperty" .
 Definition privdefineProperty :=  value_object 16 .
-Definition name_privdefineProperty :=  "%defineProperty" .
+Definition name_privdefineProperty : id :=  "%defineProperty" .
 Definition privdefinePropertiesCall := 
 value_closure
 (closure_intro
@@ -8929,7 +9072,7 @@ value_closure
   ("%defineProperty", privdefineProperty)] None ["obj"; "this"; "args"]
  ex_privdefinePropertiesCall)
 .
-Definition name_privdefinePropertiesCall :=  "%definePropertiesCall" .
+Definition name_privdefinePropertiesCall : id :=  "%definePropertiesCall" .
 Definition privdefinePropertyCall := 
 value_closure
 (closure_intro
@@ -8939,38 +9082,38 @@ value_closure
   ("%defineOwnProperty", privdefineOwnProperty)] None ["this"; "args"]
  ex_privdefinePropertyCall)
 .
-Definition name_privdefinePropertyCall :=  "%definePropertyCall" .
+Definition name_privdefinePropertyCall : id :=  "%definePropertyCall" .
 Definition privencodeURI :=  value_object 252 .
-Definition name_privencodeURI :=  "%encodeURI" .
+Definition name_privencodeURI : id :=  "%encodeURI" .
 Definition privencodeURICall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privencodeURICall)
 .
-Definition name_privencodeURICall :=  "%encodeURICall" .
+Definition name_privencodeURICall : id :=  "%encodeURICall" .
 Definition privencodeURIComponent :=  value_object 253 .
-Definition name_privencodeURIComponent :=  "%encodeURIComponent" .
+Definition name_privencodeURIComponent : id :=  "%encodeURIComponent" .
 Definition privencodeURIComponentCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privencodeURIComponentCall)
 .
-Definition name_privencodeURIComponentCall :=  "%encodeURIComponentCall" .
+Definition name_privencodeURIComponentCall : id :=  "%encodeURIComponentCall" .
 Definition privescape :=  value_object 314 .
-Definition name_privescape :=  "%escape" .
+Definition name_privescape : id :=  "%escape" .
 Definition privescapeCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privescapeCall)
 .
-Definition name_privescapeCall :=  "%escapeCall" .
+Definition name_privescapeCall : id :=  "%escapeCall" .
 Definition privets :=  value_object 22 .
-Definition name_privets :=  "%ets" .
+Definition name_privets : id :=  "%ets" .
 Definition privetsCall := 
 value_closure
 (closure_intro [("%ToString", privToString); ("%TypeError", privTypeError)]
  None ["obj"; "this"; "args"] ex_privetsCall)
 .
-Definition name_privetsCall :=  "%etsCall" .
+Definition name_privetsCall : id :=  "%etsCall" .
 Definition privevery :=  value_object 138 .
-Definition name_privevery :=  "%every" .
+Definition name_privevery : id :=  "%every" .
 Definition priveveryCall := 
 value_closure
 (closure_intro
@@ -8982,15 +9125,15 @@ value_closure
   ("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
  ex_priveveryCall)
 .
-Definition name_priveveryCall :=  "%everyCall" .
+Definition name_priveveryCall : id :=  "%everyCall" .
 Definition privexp :=  value_object 254 .
-Definition name_privexp :=  "%exp" .
+Definition name_privexp : id :=  "%exp" .
 Definition privexpCall := 
 value_closure (closure_intro [] None [] ex_privexpCall)
 .
-Definition name_privexpCall :=  "%expCall" .
+Definition name_privexpCall : id :=  "%expCall" .
 Definition privfilter :=  value_object 133 .
-Definition name_privfilter :=  "%filter" .
+Definition name_privfilter : id :=  "%filter" .
 Definition privfilterCall := 
 value_closure
 (closure_intro
@@ -9004,9 +9147,9 @@ value_closure
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
  ex_privfilterCall)
 .
-Definition name_privfilterCall :=  "%filterCall" .
+Definition name_privfilterCall : id :=  "%filterCall" .
 Definition privforeach :=  value_object 127 .
-Definition name_privforeach :=  "%foreach" .
+Definition name_privforeach : id :=  "%foreach" .
 Definition privforeachCall := 
 value_closure
 (closure_intro
@@ -9017,47 +9160,47 @@ value_closure
   ("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
  ex_privforeachCall)
 .
-Definition name_privforeachCall :=  "%foreachCall" .
+Definition name_privforeachCall : id :=  "%foreachCall" .
 Definition privfreeze :=  value_object 62 .
-Definition name_privfreeze :=  "%freeze" .
+Definition name_privfreeze : id :=  "%freeze" .
 Definition privfreezeCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
  ["obj"; "this"; "args"] ex_privfreezeCall)
 .
-Definition name_privfreezeCall :=  "%freezeCall" .
+Definition name_privfreezeCall : id :=  "%freezeCall" .
 Definition privfromCharCode :=  value_object 74 .
-Definition name_privfromCharCode :=  "%fromCharCode" .
+Definition name_privfromCharCode : id :=  "%fromCharCode" .
 Definition privfromccCall := 
 value_closure
 (closure_intro [("%ToUint16", privToUint16)] None ["obj"; "this"; "args"]
  ex_privfromccCall)
 .
-Definition name_privfromccCall :=  "%fromccCall" .
+Definition name_privfromccCall : id :=  "%fromccCall" .
 Definition privfunctionToString :=  value_object 11 .
-Definition name_privfunctionToString :=  "%functionToString" .
+Definition name_privfunctionToString : id :=  "%functionToString" .
 Definition privfunctionToStringCall := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
  ex_privfunctionToStringCall)
 .
-Definition name_privfunctionToStringCall :=  "%functionToStringCall" .
+Definition name_privfunctionToStringCall : id :=  "%functionToStringCall" .
 Definition privgetMonth :=  value_object 166 .
-Definition name_privgetMonth :=  "%getMonth" .
+Definition name_privgetMonth : id :=  "%getMonth" .
 Definition privgetMonthCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privgetMonthCall)
 .
-Definition name_privgetMonthCall :=  "%getMonthCall" .
+Definition name_privgetMonthCall : id :=  "%getMonthCall" .
 Definition privgetYear :=  value_object 165 .
-Definition name_privgetYear :=  "%getYear" .
+Definition name_privgetYear : id :=  "%getYear" .
 Definition privgetYearCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privgetYearCall)
 .
-Definition name_privgetYearCall :=  "%getYearCall" .
+Definition name_privgetYearCall : id :=  "%getYearCall" .
 Definition privgopd :=  value_object 36 .
-Definition name_privgopd :=  "%gopd" .
+Definition name_privgopd : id :=  "%gopd" .
 Definition privgopdCall := 
 value_closure
 (closure_intro
@@ -9067,94 +9210,94 @@ value_closure
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
  ex_privgopdCall)
 .
-Definition name_privgopdCall :=  "%gopdCall" .
+Definition name_privgopdCall : id :=  "%gopdCall" .
 Definition privgopn :=  value_object 53 .
-Definition name_privgopn :=  "%gopn" .
+Definition name_privgopn : id :=  "%gopn" .
 Definition privgopnCall := 
 value_closure
 (closure_intro
  [("%MakeArray", privMakeArray); ("%ObjectTypeCheck", privObjectTypeCheck)]
  None ["obj"; "this"; "args"] ex_privgopnCall)
 .
-Definition name_privgopnCall :=  "%gopnCall" .
+Definition name_privgopnCall : id :=  "%gopnCall" .
 Definition privgpo :=  value_object 34 .
-Definition name_privgpo :=  "%gpo" .
+Definition name_privgpo : id :=  "%gpo" .
 Definition privgpoCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
  ["obj"; "this"; "args"] ex_privgpoCall)
 .
-Definition name_privgpoCall :=  "%gpoCall" .
+Definition name_privgpoCall : id :=  "%gpoCall" .
 Definition privhasOwnProperty :=  value_object 42 .
-Definition name_privhasOwnProperty :=  "%hasOwnProperty" .
+Definition name_privhasOwnProperty : id :=  "%hasOwnProperty" .
 Definition privhasOwnPropertyCall := 
 value_closure
 (closure_intro [("%ToObject", privToObject); ("%ToString", privToString)]
  None ["obj"; "this"; "args"] ex_privhasOwnPropertyCall)
 .
-Definition name_privhasOwnPropertyCall :=  "%hasOwnPropertyCall" .
+Definition name_privhasOwnPropertyCall : id :=  "%hasOwnPropertyCall" .
 Definition privin := 
 value_closure
 (closure_intro [("%ToString", privToString); ("%TypeError", privTypeError)]
  None ["l"; "r"] ex_privin)
 .
-Definition name_privin :=  "%in" .
+Definition name_privin : id :=  "%in" .
 Definition privinstanceof := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("%Typeof", privTypeof)] 
  None ["l"; "r"] ex_privinstanceof)
 .
-Definition name_privinstanceof :=  "%instanceof" .
+Definition name_privinstanceof : id :=  "%instanceof" .
 Definition privisExtensible :=  value_object 70 .
-Definition name_privisExtensible :=  "%isExtensible" .
+Definition name_privisExtensible : id :=  "%isExtensible" .
 Definition privisExtensibleCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
  ["obj"; "this"; "args"] ex_privisExtensibleCall)
 .
-Definition name_privisExtensibleCall :=  "%isExtensibleCall" .
+Definition name_privisExtensibleCall : id :=  "%isExtensibleCall" .
 Definition privisFinite :=  value_object 312 .
-Definition name_privisFinite :=  "%isFinite" .
+Definition name_privisFinite : id :=  "%isFinite" .
 Definition privisFiniteCall := 
 value_closure
 (closure_intro [("%IsFinite", privIsFinite); ("%ToNumber", privToNumber)]
  None ["obj"; "this"; "args"] ex_privisFiniteCall)
 .
-Definition name_privisFiniteCall :=  "%isFiniteCall" .
+Definition name_privisFiniteCall : id :=  "%isFiniteCall" .
 Definition privisFrozen :=  value_object 66 .
-Definition name_privisFrozen :=  "%isFrozen" .
+Definition name_privisFrozen : id :=  "%isFrozen" .
 Definition privisFrozenCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
  ["obj"; "this"; "args"] ex_privisFrozenCall)
 .
-Definition name_privisFrozenCall :=  "%isFrozenCall" .
+Definition name_privisFrozenCall : id :=  "%isFrozenCall" .
 Definition privisNaN :=  value_object 21 .
-Definition name_privisNaN :=  "%isNaN" .
+Definition name_privisNaN : id :=  "%isNaN" .
 Definition privisNaNCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
  ex_privisNaNCall)
 .
-Definition name_privisNaNCall :=  "%isNaNCall" .
+Definition name_privisNaNCall : id :=  "%isNaNCall" .
 Definition privisPrototypeOf :=  value_object 43 .
-Definition name_privisPrototypeOf :=  "%isPrototypeOf" .
+Definition name_privisPrototypeOf : id :=  "%isPrototypeOf" .
 Definition privisPrototypeOfCall := 
 value_closure
 (closure_intro [("%ToObject", privToObject)] None ["obj"; "this"; "args"]
  ex_privisPrototypeOfCall)
 .
-Definition name_privisPrototypeOfCall :=  "%isPrototypeOfCall" .
+Definition name_privisPrototypeOfCall : id :=  "%isPrototypeOfCall" .
 Definition privisSealed :=  value_object 68 .
-Definition name_privisSealed :=  "%isSealed" .
+Definition name_privisSealed : id :=  "%isSealed" .
 Definition privisSealedCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
  ["obj"; "this"; "args"] ex_privisSealedCall)
 .
-Definition name_privisSealedCall :=  "%isSealedCall" .
+Definition name_privisSealedCall : id :=  "%isSealedCall" .
 Definition privjoin :=  value_object 76 .
-Definition name_privjoin :=  "%join" .
+Definition name_privjoin : id :=  "%join" .
 Definition privjoinCall := 
 value_closure
 (closure_intro
@@ -9162,9 +9305,9 @@ value_closure
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privjoinCall)
 .
-Definition name_privjoinCall :=  "%joinCall" .
+Definition name_privjoinCall : id :=  "%joinCall" .
 Definition privkeys :=  value_object 72 .
-Definition name_privkeys :=  "%keys" .
+Definition name_privkeys : id :=  "%keys" .
 Definition privkeysCall := 
 value_closure
 (closure_intro
@@ -9173,9 +9316,9 @@ value_closure
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
  ex_privkeysCall)
 .
-Definition name_privkeysCall :=  "%keysCall" .
+Definition name_privkeysCall : id :=  "%keysCall" .
 Definition privlocaleCompare :=  value_object 159 .
-Definition name_privlocaleCompare :=  "%localeCompare" .
+Definition name_privlocaleCompare : id :=  "%localeCompare" .
 Definition privlocaleCompareCall := 
 value_closure
 (closure_intro
@@ -9183,15 +9326,15 @@ value_closure
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
  ex_privlocaleCompareCall)
 .
-Definition name_privlocaleCompareCall :=  "%localeCompareCall" .
+Definition name_privlocaleCompareCall : id :=  "%localeCompareCall" .
 Definition privlog :=  value_object 308 .
-Definition name_privlog :=  "%log" .
+Definition name_privlog : id :=  "%log" .
 Definition privlogCall := 
 value_closure (closure_intro [] None ["o"; "s"] ex_privlogCall)
 .
-Definition name_privlogCall :=  "%logCall" .
+Definition name_privlogCall : id :=  "%logCall" .
 Definition privmap :=  value_object 130 .
-Definition name_privmap :=  "%map" .
+Definition name_privmap : id :=  "%map" .
 Definition privmapCall := 
 value_closure
 (closure_intro
@@ -9204,111 +9347,111 @@ value_closure
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
  ex_privmapCall)
 .
-Definition name_privmapCall :=  "%mapCall" .
+Definition name_privmapCall : id :=  "%mapCall" .
 Definition privmathAbs :=  value_object 262 .
-Definition name_privmathAbs :=  "%mathAbs" .
+Definition name_privmathAbs : id :=  "%mathAbs" .
 Definition privmathAbsCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
  ex_privmathAbsCall)
 .
-Definition name_privmathAbsCall :=  "%mathAbsCall" .
+Definition name_privmathAbsCall : id :=  "%mathAbsCall" .
 Definition privmathCeil :=  value_object 286 .
-Definition name_privmathCeil :=  "%mathCeil" .
+Definition name_privmathCeil : id :=  "%mathCeil" .
 Definition privmathCeilCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
  ex_privmathCeilCall)
 .
-Definition name_privmathCeilCall :=  "%mathCeilCall" .
+Definition name_privmathCeilCall : id :=  "%mathCeilCall" .
 Definition privmathFloor :=  value_object 288 .
-Definition name_privmathFloor :=  "%mathFloor" .
+Definition name_privmathFloor : id :=  "%mathFloor" .
 Definition privmathFloorCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
  ex_privmathFloorCall)
 .
-Definition name_privmathFloorCall :=  "%mathFloorCall" .
+Definition name_privmathFloorCall : id :=  "%mathFloorCall" .
 Definition privmathLog :=  value_object 284 .
-Definition name_privmathLog :=  "%mathLog" .
+Definition name_privmathLog : id :=  "%mathLog" .
 Definition privmathLogCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
  ex_privmathLogCall)
 .
-Definition name_privmathLogCall :=  "%mathLogCall" .
+Definition name_privmathLogCall : id :=  "%mathLogCall" .
 Definition privmathMax :=  value_object 259 .
-Definition name_privmathMax :=  "%mathMax" .
+Definition name_privmathMax : id :=  "%mathMax" .
 Definition privminMaxCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None
  ["this"; "args"; "op"; "init"] ex_privminMaxCall)
 .
-Definition name_privminMaxCall :=  "%minMaxCall" .
+Definition name_privminMaxCall : id :=  "%minMaxCall" .
 Definition privmathMaxCall := 
 value_closure
 (closure_intro [("%max", privmax); ("%minMaxCall", privminMaxCall)] None
  ["obj"; "this"; "args"] ex_privmathMaxCall)
 .
-Definition name_privmathMaxCall :=  "%mathMaxCall" .
+Definition name_privmathMaxCall : id :=  "%mathMaxCall" .
 Definition privmathMin :=  value_object 256 .
-Definition name_privmathMin :=  "%mathMin" .
+Definition name_privmathMin : id :=  "%mathMin" .
 Definition privmathMinCall := 
 value_closure
 (closure_intro [("%min", privmin); ("%minMaxCall", privminMaxCall)] None
  ["obj"; "this"; "args"] ex_privmathMinCall)
 .
-Definition name_privmathMinCall :=  "%mathMinCall" .
+Definition name_privmathMinCall : id :=  "%mathMinCall" .
 Definition privmathPow :=  value_object 290 .
-Definition name_privmathPow :=  "%mathPow" .
+Definition name_privmathPow : id :=  "%mathPow" .
 Definition privmathPowCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
  ex_privmathPowCall)
 .
-Definition name_privmathPowCall :=  "%mathPowCall" .
+Definition name_privmathPowCall : id :=  "%mathPowCall" .
 Definition privnewDeclEnvRec := 
 value_closure (closure_intro [] None ["parent"] ex_privnewDeclEnvRec)
 .
-Definition name_privnewDeclEnvRec :=  "%newDeclEnvRec" .
+Definition name_privnewDeclEnvRec : id :=  "%newDeclEnvRec" .
 Definition privnewObjEnvRec := 
 value_closure
 (closure_intro [] None ["parent"; "obj"; "pt"] ex_privnewObjEnvRec)
 .
-Definition name_privnewObjEnvRec :=  "%newObjEnvRec" .
+Definition name_privnewObjEnvRec : id :=  "%newObjEnvRec" .
 Definition privnotEqEq := 
 value_closure
 (closure_intro [("%EqEq", privEqEq)] None ["x1"; "x2"] ex_privnotEqEq)
 .
-Definition name_privnotEqEq :=  "%notEqEq" .
+Definition name_privnotEqEq : id :=  "%notEqEq" .
 Definition privnotStxEq := 
 value_closure
 (closure_intro [("%StxEq", privStxEq)] None ["x1"; "x2"] ex_privnotStxEq)
 .
-Definition name_privnotStxEq :=  "%notStxEq" .
+Definition name_privnotStxEq : id :=  "%notStxEq" .
 Definition privnumTLS :=  value_object 301 .
-Definition name_privnumTLS :=  "%numTLS" .
+Definition name_privnumTLS : id :=  "%numTLS" .
 Definition privtoLocaleString :=  value_object 40 .
-Definition name_privtoLocaleString :=  "%toLocaleString" .
+Definition name_privtoLocaleString : id :=  "%toLocaleString" .
 Definition privnumTLSCall := 
 value_closure
 (closure_intro
  [("%StringProto", privStringProto); ("%toLocaleString", privtoLocaleString)]
  None ["obj"; "this"; "args"] ex_privnumTLSCall)
 .
-Definition name_privnumTLSCall :=  "%numTLSCall" .
+Definition name_privnumTLSCall : id :=  "%numTLSCall" .
 Definition privnumToStringAbstract := 
 value_closure (closure_intro [] None ["n"; "r"] ex_privnumToStringAbstract)
 .
-Definition name_privnumToStringAbstract :=  "%numToStringAbstract" .
+Definition name_privnumToStringAbstract : id :=  "%numToStringAbstract" .
 Definition privnumberPrimval := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["this"]
  ex_privnumberPrimval)
 .
-Definition name_privnumberPrimval :=  "%numberPrimval" .
+Definition name_privnumberPrimval : id :=  "%numberPrimval" .
 Definition privnumberToString :=  value_object 153 .
-Definition name_privnumberToString :=  "%numberToString" .
+Definition name_privnumberToString : id :=  "%numberToString" .
 Definition privnumberToStringCall := 
 value_closure
 (closure_intro
@@ -9318,36 +9461,36 @@ value_closure
   ("%numberPrimval", privnumberPrimval)] None ["obj"; "this"; "args"]
  ex_privnumberToStringCall)
 .
-Definition name_privnumberToStringCall :=  "%numberToStringCall" .
+Definition name_privnumberToStringCall : id :=  "%numberToStringCall" .
 Definition privnumberValueOf :=  value_object 294 .
-Definition name_privnumberValueOf :=  "%numberValueOf" .
+Definition name_privnumberValueOf : id :=  "%numberValueOf" .
 Definition privobjectToString :=  value_object 38 .
-Definition name_privobjectToString :=  "%objectToString" .
+Definition name_privobjectToString : id :=  "%objectToString" .
 Definition privobjectValueOf :=  value_object 41 .
-Definition name_privobjectValueOf :=  "%objectValueOf" .
+Definition name_privobjectValueOf : id :=  "%objectValueOf" .
 Definition privobjectValueOfCall := 
 value_closure
 (closure_intro [("%ToObject", privToObject)] None ["obj"; "this"; "args"]
  ex_privobjectValueOfCall)
 .
-Definition name_privobjectValueOfCall :=  "%objectValueOfCall" .
+Definition name_privobjectValueOfCall : id :=  "%objectValueOfCall" .
 Definition privparseFloat :=  value_object 313 .
-Definition name_privparseFloat :=  "%parseFloat" .
+Definition name_privparseFloat : id :=  "%parseFloat" .
 Definition privparseFloatCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privparseFloatCall)
 .
-Definition name_privparseFloatCall :=  "%parseFloatCall" .
+Definition name_privparseFloatCall : id :=  "%parseFloatCall" .
 Definition privparseInt :=  value_object 249 .
-Definition name_privparseInt :=  "%parseInt" .
+Definition name_privparseInt : id :=  "%parseInt" .
 Definition privparseIntCall := 
 value_closure
 (closure_intro [("%ToString", privToString)] None ["obj"; "this"; "args"]
  ex_privparseIntCall)
 .
-Definition name_privparseIntCall :=  "%parseIntCall" .
+Definition name_privparseIntCall : id :=  "%parseIntCall" .
 Definition privpop :=  value_object 78 .
-Definition name_privpop :=  "%pop" .
+Definition name_privpop : id :=  "%pop" .
 Definition privpopCall := 
 value_closure
 (closure_intro
@@ -9356,50 +9499,50 @@ value_closure
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privpopCall)
 .
-Definition name_privpopCall :=  "%popCall" .
+Definition name_privpopCall : id :=  "%popCall" .
 Definition privpreventExtensions :=  value_object 64 .
-Definition name_privpreventExtensions :=  "%preventExtensions" .
+Definition name_privpreventExtensions : id :=  "%preventExtensions" .
 Definition privpreventExtensionsCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
  ["obj"; "this"; "args"] ex_privpreventExtensionsCall)
 .
-Definition name_privpreventExtensionsCall :=  "%preventExtensionsCall" .
+Definition name_privpreventExtensionsCall : id :=  "%preventExtensionsCall" .
 Definition privprimEach := 
 value_closure
 (closure_intro [("%ToString", privToString)] None ["arr"; "fn"]
  ex_privprimEach)
 .
-Definition name_privprimEach :=  "%primEach" .
+Definition name_privprimEach : id :=  "%primEach" .
 Definition privprint :=  value_object 15 .
-Definition name_privprint :=  "%print" .
+Definition name_privprint : id :=  "%print" .
 Definition privprintCall := 
 value_closure
 (closure_intro [("%ToString", privToString)] None ["obj"; "o"; "s"]
  ex_privprintCall)
 .
-Definition name_privprintCall :=  "%printCall" .
+Definition name_privprintCall : id :=  "%printCall" .
 Definition privpropEnum :=  value_object 39 .
-Definition name_privpropEnum :=  "%propEnum" .
+Definition name_privpropEnum : id :=  "%propEnum" .
 Definition privpropEnumCall := 
 value_closure
 (closure_intro [("%ToObject", privToObject); ("%ToString", privToString)]
  None ["obj"; "this"; "args"] ex_privpropEnumCall)
 .
-Definition name_privpropEnumCall :=  "%propEnumCall" .
+Definition name_privpropEnumCall : id :=  "%propEnumCall" .
 Definition privpropertyNames := 
 value_closure
 (closure_intro [] None ["obj"; "get-non-enumerable"] ex_privpropertyNames)
 .
-Definition name_privpropertyNames :=  "%propertyNames" .
+Definition name_privpropertyNames : id :=  "%propertyNames" .
 Definition privprotoOfField := 
 value_closure
 (closure_intro [] (Some "%protoOfField") ["object"; "fld"]
  ex_privprotoOfField)
 .
-Definition name_privprotoOfField :=  "%protoOfField" .
+Definition name_privprotoOfField : id :=  "%protoOfField" .
 Definition privpush :=  value_object 81 .
-Definition name_privpush :=  "%push" .
+Definition name_privpush : id :=  "%push" .
 Definition privpushCall := 
 value_closure
 (closure_intro
@@ -9409,16 +9552,16 @@ value_closure
   ("%set-property", privset_property)] None ["obj"; "this"; "args"]
  ex_privpushCall)
 .
-Definition name_privpushCall :=  "%pushCall" .
+Definition name_privpushCall : id :=  "%pushCall" .
 Definition privrandom :=  value_object 274 .
-Definition name_privrandom :=  "%random" .
+Definition name_privrandom : id :=  "%random" .
 Definition privrandomCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privrandomCall)
 .
-Definition name_privrandomCall :=  "%randomCall" .
+Definition name_privrandomCall : id :=  "%randomCall" .
 Definition privreduce :=  value_object 135 .
-Definition name_privreduce :=  "%reduce" .
+Definition name_privreduce : id :=  "%reduce" .
 Definition privreduceCall := 
 value_closure
 (closure_intro
@@ -9429,9 +9572,9 @@ value_closure
   ("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
  ex_privreduceCall)
 .
-Definition name_privreduceCall :=  "%reduceCall" .
+Definition name_privreduceCall : id :=  "%reduceCall" .
 Definition privreduceRight :=  value_object 144 .
-Definition name_privreduceRight :=  "%reduceRight" .
+Definition name_privreduceRight : id :=  "%reduceRight" .
 Definition privreduceRightCall := 
 value_closure
 (closure_intro
@@ -9442,19 +9585,19 @@ value_closure
   ("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
  ex_privreduceRightCall)
 .
-Definition name_privreduceRightCall :=  "%reduceRightCall" .
+Definition name_privreduceRightCall : id :=  "%reduceRightCall" .
 Definition privreplace :=  value_object 157 .
-Definition name_privreplace :=  "%replace" .
+Definition name_privreplace : id :=  "%replace" .
 Definition privstringIndexOf :=  value_object 156 .
-Definition name_privstringIndexOf :=  "%stringIndexOf" .
+Definition name_privstringIndexOf : id :=  "%stringIndexOf" .
 Definition privsubstring :=  value_object 112 .
-Definition name_privsubstring :=  "%substring" .
+Definition name_privsubstring : id :=  "%substring" .
 Definition privtwoArgObj := 
 value_closure
 (closure_intro [("%mkArgsObj", privmkArgsObj)] None ["arg1"; "arg2"]
  ex_privtwoArgObj)
 .
-Definition name_privtwoArgObj :=  "%twoArgObj" .
+Definition name_privtwoArgObj : id :=  "%twoArgObj" .
 Definition privreplaceCall := 
 value_closure
 (closure_intro
@@ -9466,9 +9609,9 @@ value_closure
   ("%twoArgObj", privtwoArgObj)] None ["obj"; "this"; "args"]
  ex_privreplaceCall)
 .
-Definition name_privreplaceCall :=  "%replaceCall" .
+Definition name_privreplaceCall : id :=  "%replaceCall" .
 Definition privreverse :=  value_object 84 .
-Definition name_privreverse :=  "%reverse" .
+Definition name_privreverse : id :=  "%reverse" .
 Definition privreverseCall := 
 value_closure
 (closure_intro
@@ -9477,24 +9620,24 @@ value_closure
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"]
  ex_privreverseCall)
 .
-Definition name_privreverseCall :=  "%reverseCall" .
+Definition name_privreverseCall : id :=  "%reverseCall" .
 Definition privround :=  value_object 276 .
-Definition name_privround :=  "%round" .
+Definition name_privround : id :=  "%round" .
 Definition privroundCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privroundCall)
 .
-Definition name_privroundCall :=  "%roundCall" .
+Definition name_privroundCall : id :=  "%roundCall" .
 Definition privseal :=  value_object 60 .
-Definition name_privseal :=  "%seal" .
+Definition name_privseal : id :=  "%seal" .
 Definition privsealCall := 
 value_closure
 (closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
  ["obj"; "this"; "args"] ex_privsealCall)
 .
-Definition name_privsealCall :=  "%sealCall" .
+Definition name_privsealCall : id :=  "%sealCall" .
 Definition privshift :=  value_object 87 .
-Definition name_privshift :=  "%shift" .
+Definition name_privshift : id :=  "%shift" .
 Definition privshiftCall := 
 value_closure
 (closure_intro
@@ -9502,15 +9645,15 @@ value_closure
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privshiftCall)
 .
-Definition name_privshiftCall :=  "%shiftCall" .
+Definition name_privshiftCall : id :=  "%shiftCall" .
 Definition privsin :=  value_object 278 .
-Definition name_privsin :=  "%sin" .
+Definition name_privsin : id :=  "%sin" .
 Definition privsinCall := 
 value_closure
 (closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
  ex_privsinCall)
 .
-Definition name_privsinCall :=  "%sinCall" .
+Definition name_privsinCall : id :=  "%sinCall" .
 Definition privsliceCall := 
 value_closure
 (closure_intro
@@ -9522,9 +9665,9 @@ value_closure
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
  ex_privsliceCall)
 .
-Definition name_privsliceCall :=  "%sliceCall" .
+Definition name_privsliceCall : id :=  "%sliceCall" .
 Definition privsome :=  value_object 141 .
-Definition name_privsome :=  "%some" .
+Definition name_privsome : id :=  "%some" .
 Definition privsomeCall := 
 value_closure
 (closure_intro
@@ -9535,9 +9678,9 @@ value_closure
   ("%ToUint32", privToUint32);
   ("%TypeError", privTypeError)] None ["obj"; "this"; "args"] ex_privsomeCall)
 .
-Definition name_privsomeCall :=  "%someCall" .
+Definition name_privsomeCall : id :=  "%someCall" .
 Definition privsort :=  value_object 98 .
-Definition name_privsort :=  "%sort" .
+Definition name_privsort : id :=  "%sort" .
 Definition privsortCall := 
 value_closure
 (closure_intro
@@ -9548,9 +9691,9 @@ value_closure
   ("%TypeErrorProto", privTypeErrorProto)] None ["obj"; "this"; "args"]
  ex_privsortCall)
 .
-Definition name_privsortCall :=  "%sortCall" .
+Definition name_privsortCall : id :=  "%sortCall" .
 Definition privsplice :=  value_object 115 .
-Definition name_privsplice :=  "%splice" .
+Definition name_privsplice : id :=  "%splice" .
 Definition privspliceCall := 
 value_closure
 (closure_intro
@@ -9563,22 +9706,22 @@ value_closure
   ("%max", privmax);
   ("%min", privmin)] None ["obj"; "this"; "args"] ex_privspliceCall)
 .
-Definition name_privspliceCall :=  "%spliceCall" .
+Definition name_privspliceCall : id :=  "%spliceCall" .
 Definition privsplit :=  value_object 163 .
-Definition name_privsplit :=  "%split" .
+Definition name_privsplit : id :=  "%split" .
 Definition privsplitCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privsplitCall)
 .
-Definition name_privsplitCall :=  "%splitCall" .
+Definition name_privsplitCall : id :=  "%splitCall" .
 Definition privsqrt :=  value_object 280 .
-Definition name_privsqrt :=  "%sqrt" .
+Definition name_privsqrt : id :=  "%sqrt" .
 Definition privsqrtCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privsqrtCall)
 .
-Definition name_privsqrtCall :=  "%sqrtCall" .
+Definition name_privsqrtCall : id :=  "%sqrtCall" .
 Definition privstringConcat :=  value_object 109 .
-Definition name_privstringConcat :=  "%stringConcat" .
+Definition name_privstringConcat : id :=  "%stringConcat" .
 Definition privstringConcatCall := 
 value_closure
 (closure_intro
@@ -9586,7 +9729,7 @@ value_closure
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
  ex_privstringConcatCall)
 .
-Definition name_privstringConcatCall :=  "%stringConcatCall" .
+Definition name_privstringConcatCall : id :=  "%stringConcatCall" .
 Definition privstringIndexOfCall := 
 value_closure
 (closure_intro
@@ -9596,9 +9739,9 @@ value_closure
   ("%max", privmax);
   ("%min", privmin)] None ["obj"; "this"; "args"] ex_privstringIndexOfCall)
 .
-Definition name_privstringIndexOfCall :=  "%stringIndexOfCall" .
+Definition name_privstringIndexOfCall : id :=  "%stringIndexOfCall" .
 Definition privstringLastIndexOf :=  value_object 158 .
-Definition name_privstringLastIndexOf :=  "%stringLastIndexOf" .
+Definition name_privstringLastIndexOf : id :=  "%stringLastIndexOf" .
 Definition privstringLastIndexOfCall := 
 value_closure
 (closure_intro
@@ -9610,9 +9753,9 @@ value_closure
   ("%min", privmin)] None ["obj"; "this"; "args"]
  ex_privstringLastIndexOfCall)
 .
-Definition name_privstringLastIndexOfCall :=  "%stringLastIndexOfCall" .
+Definition name_privstringLastIndexOfCall : id :=  "%stringLastIndexOfCall" .
 Definition privstringSlice :=  value_object 160 .
-Definition name_privstringSlice :=  "%stringSlice" .
+Definition name_privstringSlice : id :=  "%stringSlice" .
 Definition privstringSliceCall := 
 value_closure
 (closure_intro
@@ -9622,17 +9765,17 @@ value_closure
   ("%max", privmax);
   ("%min", privmin)] None ["obj"; "this"; "args"] ex_privstringSliceCall)
 .
-Definition name_privstringSliceCall :=  "%stringSliceCall" .
+Definition name_privstringSliceCall : id :=  "%stringSliceCall" .
 Definition privstringToString :=  value_object 25 .
-Definition name_privstringToString :=  "%stringToString" .
+Definition name_privstringToString : id :=  "%stringToString" .
 Definition privstringToStringCall := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
  ex_privstringToStringCall)
 .
-Definition name_privstringToStringCall :=  "%stringToStringCall" .
+Definition name_privstringToStringCall : id :=  "%stringToStringCall" .
 Definition privstringValueOf :=  value_object 292 .
-Definition name_privstringValueOf :=  "%stringValueOf" .
+Definition name_privstringValueOf : id :=  "%stringValueOf" .
 Definition privsubstringCall := 
 value_closure
 (closure_intro
@@ -9642,28 +9785,28 @@ value_closure
   ("%max", privmax);
   ("%min", privmin)] None ["obj"; "this"; "args"] ex_privsubstringCall)
 .
-Definition name_privsubstringCall :=  "%substringCall" .
+Definition name_privsubstringCall : id :=  "%substringCall" .
 Definition privtan :=  value_object 282 .
-Definition name_privtan :=  "%tan" .
+Definition name_privtan : id :=  "%tan" .
 Definition privtanCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privtanCall)
 .
-Definition name_privtanCall :=  "%tanCall" .
+Definition name_privtanCall : id :=  "%tanCall" .
 Definition privtest :=  value_object 246 .
-Definition name_privtest :=  "%test" .
+Definition name_privtest : id :=  "%test" .
 Definition privtestCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privtestCall)
 .
-Definition name_privtestCall :=  "%testCall" .
+Definition name_privtestCall : id :=  "%testCall" .
 Definition privtoExponential :=  value_object 303 .
-Definition name_privtoExponential :=  "%toExponential" .
+Definition name_privtoExponential : id :=  "%toExponential" .
 Definition privtoExponentialCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privtoExponentialCall)
 .
-Definition name_privtoExponentialCall :=  "%toExponentialCall" .
+Definition name_privtoExponentialCall : id :=  "%toExponentialCall" .
 Definition privtoFixed :=  value_object 298 .
-Definition name_privtoFixed :=  "%toFixed" .
+Definition name_privtoFixed : id :=  "%toFixed" .
 Definition privtoFixedCall := 
 value_closure
 (closure_intro
@@ -9673,15 +9816,15 @@ value_closure
   ("%numberPrimval", privnumberPrimval)] None ["obj"; "this"; "args"]
  ex_privtoFixedCall)
 .
-Definition name_privtoFixedCall :=  "%toFixedCall" .
+Definition name_privtoFixedCall : id :=  "%toFixedCall" .
 Definition privtoLocaleStringCall := 
 value_closure
 (closure_intro [("%ToObject", privToObject); ("%TypeError", privTypeError)]
  None ["obj"; "this"; "args"] ex_privtoLocaleStringCall)
 .
-Definition name_privtoLocaleStringCall :=  "%toLocaleStringCall" .
+Definition name_privtoLocaleStringCall : id :=  "%toLocaleStringCall" .
 Definition privtoLowerCase :=  value_object 161 .
-Definition name_privtoLowerCase :=  "%toLowerCase" .
+Definition name_privtoLowerCase : id :=  "%toLowerCase" .
 Definition privtoLowerCaseCall := 
 value_closure
 (closure_intro
@@ -9689,16 +9832,16 @@ value_closure
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
  ex_privtoLowerCaseCall)
 .
-Definition name_privtoLowerCaseCall :=  "%toLowerCaseCall" .
+Definition name_privtoLowerCaseCall : id :=  "%toLowerCaseCall" .
 Definition privtoPrecision :=  value_object 305 .
-Definition name_privtoPrecision :=  "%toPrecision" .
+Definition name_privtoPrecision : id :=  "%toPrecision" .
 Definition privtoPrecisionCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privtoPrecisionCall)
 .
-Definition name_privtoPrecisionCall :=  "%toPrecisionCall" .
+Definition name_privtoPrecisionCall : id :=  "%toPrecisionCall" .
 Definition privtoUpperCase :=  value_object 162 .
-Definition name_privtoUpperCase :=  "%toUpperCase" .
+Definition name_privtoUpperCase : id :=  "%toUpperCase" .
 Definition privtoUpperCaseCall := 
 value_closure
 (closure_intro
@@ -9706,16 +9849,16 @@ value_closure
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
  ex_privtoUpperCaseCall)
 .
-Definition name_privtoUpperCaseCall :=  "%toUpperCaseCall" .
+Definition name_privtoUpperCaseCall : id :=  "%toUpperCaseCall" .
 Definition privunescape :=  value_object 316 .
-Definition name_privunescape :=  "%unescape" .
+Definition name_privunescape : id :=  "%unescape" .
 Definition privunescapeCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privunescapeCall)
 .
-Definition name_privunescapeCall :=  "%unescapeCall" .
+Definition name_privunescapeCall : id :=  "%unescapeCall" .
 Definition privunshift :=  value_object 118 .
-Definition name_privunshift :=  "%unshift" .
+Definition name_privunshift : id :=  "%unshift" .
 Definition privunshiftCall := 
 value_closure
 (closure_intro
@@ -9725,21 +9868,21 @@ value_closure
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"]
  ex_privunshiftCall)
 .
-Definition name_privunshiftCall :=  "%unshiftCall" .
+Definition name_privunshiftCall : id :=  "%unshiftCall" .
 Definition privvalueOfCall := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("%Typeof", privTypeof)] 
  None ["this"; "args"; "proto"; "typestr"] ex_privvalueOfCall)
 .
-Definition name_privvalueOfCall :=  "%valueOfCall" .
+Definition name_privvalueOfCall : id :=  "%valueOfCall" .
 Definition isAccessorField := 
 value_closure (closure_intro [] None ["obj"; "field"] ex_isAccessorField)
 .
-Definition name_isAccessorField :=  "isAccessorField" .
+Definition name_isAccessorField : id :=  "isAccessorField" .
 Definition isDataField := 
 value_closure (closure_intro [] None ["obj"; "field"] ex_isDataField)
 .
-Definition name_isDataField :=  "isDataField" .
+Definition name_isDataField : id :=  "isDataField" .
 Definition isGenericDescriptor := 
 value_closure
 (closure_intro
@@ -9747,307 +9890,307 @@ value_closure
   ("isDataDescriptor", isDataDescriptor)] None ["attr-obj"]
  ex_isGenericDescriptor)
 .
-Definition name_isGenericDescriptor :=  "isGenericDescriptor" .
+Definition name_isGenericDescriptor : id :=  "isGenericDescriptor" .
 Definition isGenericField := 
 value_closure
 (closure_intro
  [("isAccessorField", isAccessorField); ("isDataField", isDataField)] 
  None ["obj"; "field"] ex_isGenericField)
 .
-Definition name_isGenericField :=  "isGenericField" .
+Definition name_isGenericField : id :=  "isGenericField" .
 Definition name :=  value_string "parse" .
-Definition name_name :=  "name" .
+Definition name_name : id :=  "name" .
 Definition objCode1 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name)] None
  ["obj"; "this"; "args"] ex_objCode1)
 .
-Definition name_objCode1 :=  "objCode" .
+Definition name_objCode1 : id :=  "objCode" .
 Definition name1 :=  value_string "UTC" .
-Definition name_name1 :=  "name" .
+Definition name_name1 : id :=  "name" .
 Definition objCode2 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name1)] None
  ["obj"; "this"; "args"] ex_objCode2)
 .
-Definition name_objCode2 :=  "objCode" .
+Definition name_objCode2 : id :=  "objCode" .
 Definition name2 :=  value_string "getTime" .
-Definition name_name2 :=  "name" .
+Definition name_name2 : id :=  "name" .
 Definition objCode3 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name2)] None
  ["obj"; "this"; "args"] ex_objCode3)
 .
-Definition name_objCode3 :=  "objCode" .
+Definition name_objCode3 : id :=  "objCode" .
 Definition name3 :=  value_string "getFullYear" .
-Definition name_name3 :=  "name" .
+Definition name_name3 : id :=  "name" .
 Definition objCode4 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name3)] None
  ["obj"; "this"; "args"] ex_objCode4)
 .
-Definition name_objCode4 :=  "objCode" .
+Definition name_objCode4 : id :=  "objCode" .
 Definition name4 :=  value_string "getUTCFullYear" .
-Definition name_name4 :=  "name" .
+Definition name_name4 : id :=  "name" .
 Definition objCode5 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name4)] None
  ["obj"; "this"; "args"] ex_objCode5)
 .
-Definition name_objCode5 :=  "objCode" .
+Definition name_objCode5 : id :=  "objCode" .
 Definition name5 :=  value_string "getUTCMonth" .
-Definition name_name5 :=  "name" .
+Definition name_name5 : id :=  "name" .
 Definition objCode6 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name5)] None
  ["obj"; "this"; "args"] ex_objCode6)
 .
-Definition name_objCode6 :=  "objCode" .
+Definition name_objCode6 : id :=  "objCode" .
 Definition name6 :=  value_string "getUTCDate" .
-Definition name_name6 :=  "name" .
+Definition name_name6 : id :=  "name" .
 Definition objCode7 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name6)] None
  ["obj"; "this"; "args"] ex_objCode7)
 .
-Definition name_objCode7 :=  "objCode" .
+Definition name_objCode7 : id :=  "objCode" .
 Definition name7 :=  value_string "getUTCDay" .
-Definition name_name7 :=  "name" .
+Definition name_name7 : id :=  "name" .
 Definition objCode8 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name7)] None
  ["obj"; "this"; "args"] ex_objCode8)
 .
-Definition name_objCode8 :=  "objCode" .
+Definition name_objCode8 : id :=  "objCode" .
 Definition name8 :=  value_string "getHours" .
-Definition name_name8 :=  "name" .
+Definition name_name8 : id :=  "name" .
 Definition objCode9 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name8)] None
  ["obj"; "this"; "args"] ex_objCode9)
 .
-Definition name_objCode9 :=  "objCode" .
+Definition name_objCode9 : id :=  "objCode" .
 Definition name9 :=  value_string "getUTCHours" .
-Definition name_name9 :=  "name" .
+Definition name_name9 : id :=  "name" .
 Definition objCode10 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name9)] None
  ["obj"; "this"; "args"] ex_objCode10)
 .
-Definition name_objCode10 :=  "objCode" .
+Definition name_objCode10 : id :=  "objCode" .
 Definition name10 :=  value_string "getMinutes" .
-Definition name_name10 :=  "name" .
+Definition name_name10 : id :=  "name" .
 Definition objCode11 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name10)] None
  ["obj"; "this"; "args"] ex_objCode11)
 .
-Definition name_objCode11 :=  "objCode" .
+Definition name_objCode11 : id :=  "objCode" .
 Definition name11 :=  value_string "getUTCMinutes" .
-Definition name_name11 :=  "name" .
+Definition name_name11 : id :=  "name" .
 Definition objCode12 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name11)] None
  ["obj"; "this"; "args"] ex_objCode12)
 .
-Definition name_objCode12 :=  "objCode" .
+Definition name_objCode12 : id :=  "objCode" .
 Definition name12 :=  value_string "getSeconds" .
-Definition name_name12 :=  "name" .
+Definition name_name12 : id :=  "name" .
 Definition objCode13 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name12)] None
  ["obj"; "this"; "args"] ex_objCode13)
 .
-Definition name_objCode13 :=  "objCode" .
+Definition name_objCode13 : id :=  "objCode" .
 Definition name13 :=  value_string "getUTCSeconds" .
-Definition name_name13 :=  "name" .
+Definition name_name13 : id :=  "name" .
 Definition objCode14 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name13)] None
  ["obj"; "this"; "args"] ex_objCode14)
 .
-Definition name_objCode14 :=  "objCode" .
+Definition name_objCode14 : id :=  "objCode" .
 Definition name14 :=  value_string "getMilliseconds" .
-Definition name_name14 :=  "name" .
+Definition name_name14 : id :=  "name" .
 Definition objCode15 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name14)] None
  ["obj"; "this"; "args"] ex_objCode15)
 .
-Definition name_objCode15 :=  "objCode" .
+Definition name_objCode15 : id :=  "objCode" .
 Definition name15 :=  value_string "getUTCMilliseconds" .
-Definition name_name15 :=  "name" .
+Definition name_name15 : id :=  "name" .
 Definition objCode16 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name15)] None
  ["obj"; "this"; "args"] ex_objCode16)
 .
-Definition name_objCode16 :=  "objCode" .
+Definition name_objCode16 : id :=  "objCode" .
 Definition name16 :=  value_string "setTime" .
-Definition name_name16 :=  "name" .
+Definition name_name16 : id :=  "name" .
 Definition objCode17 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name16)] None
  ["obj"; "this"; "args"] ex_objCode17)
 .
-Definition name_objCode17 :=  "objCode" .
+Definition name_objCode17 : id :=  "objCode" .
 Definition name17 :=  value_string "setMilliseconds" .
-Definition name_name17 :=  "name" .
+Definition name_name17 : id :=  "name" .
 Definition objCode18 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name17)] None
  ["obj"; "this"; "args"] ex_objCode18)
 .
-Definition name_objCode18 :=  "objCode" .
+Definition name_objCode18 : id :=  "objCode" .
 Definition name18 :=  value_string "setUTCMilliseconds" .
-Definition name_name18 :=  "name" .
+Definition name_name18 : id :=  "name" .
 Definition objCode19 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name18)] None
  ["obj"; "this"; "args"] ex_objCode19)
 .
-Definition name_objCode19 :=  "objCode" .
+Definition name_objCode19 : id :=  "objCode" .
 Definition name19 :=  value_string "setSeconds" .
-Definition name_name19 :=  "name" .
+Definition name_name19 : id :=  "name" .
 Definition objCode20 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name19)] None
  ["obj"; "this"; "args"] ex_objCode20)
 .
-Definition name_objCode20 :=  "objCode" .
+Definition name_objCode20 : id :=  "objCode" .
 Definition name20 :=  value_string "setUTCSeconds" .
-Definition name_name20 :=  "name" .
+Definition name_name20 : id :=  "name" .
 Definition objCode21 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name20)] None
  ["obj"; "this"; "args"] ex_objCode21)
 .
-Definition name_objCode21 :=  "objCode" .
+Definition name_objCode21 : id :=  "objCode" .
 Definition name21 :=  value_string "setMinutes" .
-Definition name_name21 :=  "name" .
+Definition name_name21 : id :=  "name" .
 Definition objCode22 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name21)] None
  ["obj"; "this"; "args"] ex_objCode22)
 .
-Definition name_objCode22 :=  "objCode" .
+Definition name_objCode22 : id :=  "objCode" .
 Definition name22 :=  value_string "setUTCMinutes" .
-Definition name_name22 :=  "name" .
+Definition name_name22 : id :=  "name" .
 Definition objCode23 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name22)] None
  ["obj"; "this"; "args"] ex_objCode23)
 .
-Definition name_objCode23 :=  "objCode" .
+Definition name_objCode23 : id :=  "objCode" .
 Definition name23 :=  value_string "setHours" .
-Definition name_name23 :=  "name" .
+Definition name_name23 : id :=  "name" .
 Definition objCode24 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name23)] None
  ["obj"; "this"; "args"] ex_objCode24)
 .
-Definition name_objCode24 :=  "objCode" .
+Definition name_objCode24 : id :=  "objCode" .
 Definition name24 :=  value_string "setUTCHours" .
-Definition name_name24 :=  "name" .
+Definition name_name24 : id :=  "name" .
 Definition objCode25 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name24)] None
  ["obj"; "this"; "args"] ex_objCode25)
 .
-Definition name_objCode25 :=  "objCode" .
+Definition name_objCode25 : id :=  "objCode" .
 Definition name25 :=  value_string "setDate" .
-Definition name_name25 :=  "name" .
+Definition name_name25 : id :=  "name" .
 Definition objCode26 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name25)] None
  ["obj"; "this"; "args"] ex_objCode26)
 .
-Definition name_objCode26 :=  "objCode" .
+Definition name_objCode26 : id :=  "objCode" .
 Definition name26 :=  value_string "setUTCDate" .
-Definition name_name26 :=  "name" .
+Definition name_name26 : id :=  "name" .
 Definition objCode27 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name26)] None
  ["obj"; "this"; "args"] ex_objCode27)
 .
-Definition name_objCode27 :=  "objCode" .
+Definition name_objCode27 : id :=  "objCode" .
 Definition name27 :=  value_string "setMonth" .
-Definition name_name27 :=  "name" .
+Definition name_name27 : id :=  "name" .
 Definition objCode28 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name27)] None
  ["obj"; "this"; "args"] ex_objCode28)
 .
-Definition name_objCode28 :=  "objCode" .
+Definition name_objCode28 : id :=  "objCode" .
 Definition name28 :=  value_string "setUTCMonth" .
-Definition name_name28 :=  "name" .
+Definition name_name28 : id :=  "name" .
 Definition objCode29 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name28)] None
  ["obj"; "this"; "args"] ex_objCode29)
 .
-Definition name_objCode29 :=  "objCode" .
+Definition name_objCode29 : id :=  "objCode" .
 Definition name29 :=  value_string "setFullYear" .
-Definition name_name29 :=  "name" .
+Definition name_name29 : id :=  "name" .
 Definition objCode30 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name29)] None
  ["obj"; "this"; "args"] ex_objCode30)
 .
-Definition name_objCode30 :=  "objCode" .
+Definition name_objCode30 : id :=  "objCode" .
 Definition name30 :=  value_string "setUTCFullYear" .
-Definition name_name30 :=  "name" .
+Definition name_name30 : id :=  "name" .
 Definition objCode31 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name30)] None
  ["obj"; "this"; "args"] ex_objCode31)
 .
-Definition name_objCode31 :=  "objCode" .
+Definition name_objCode31 : id :=  "objCode" .
 Definition name31 :=  value_string "toUTCString" .
-Definition name_name31 :=  "name" .
+Definition name_name31 : id :=  "name" .
 Definition objCode32 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name31)] None
  ["obj"; "this"; "args"] ex_objCode32)
 .
-Definition name_objCode32 :=  "objCode" .
+Definition name_objCode32 : id :=  "objCode" .
 Definition name32 :=  value_string "toGMTString" .
-Definition name_name32 :=  "name" .
+Definition name_name32 : id :=  "name" .
 Definition objCode33 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name32)] None
  ["obj"; "this"; "args"] ex_objCode33)
 .
-Definition name_objCode33 :=  "objCode" .
+Definition name_objCode33 : id :=  "objCode" .
 Definition name33 :=  value_string "setYear" .
-Definition name_name33 :=  "name" .
+Definition name_name33 : id :=  "name" .
 Definition objCode34 := 
 value_closure
 (closure_intro [("%TypeError", privTypeError); ("name", name33)] None
  ["obj"; "this"; "args"] ex_objCode34)
 .
-Definition name_objCode34 :=  "objCode" .
+Definition name_objCode34 : id :=  "objCode" .
 Definition objCode35 := 
 value_closure
 (closure_intro
  [("%StringProto", privStringProto); ("%valueOfCall", privvalueOfCall)] 
  None ["obj"; "this"; "args"] ex_objCode35)
 .
-Definition name_objCode35 :=  "objCode" .
+Definition name_objCode35 : id :=  "objCode" .
 Definition objCode36 := 
 value_closure
 (closure_intro
  [("%NumberProto", privNumberProto); ("%valueOfCall", privvalueOfCall)] 
  None ["obj"; "this"; "args"] ex_objCode36)
 .
-Definition name_objCode36 :=  "objCode" .
+Definition name_objCode36 : id :=  "objCode" .
 Definition objCode37 := 
 value_closure
 (closure_intro
  [("%BooleanProto", privBooleanProto); ("%valueOfCall", privvalueOfCall)]
  None ["obj"; "this"; "args"] ex_objCode37)
 .
-Definition name_objCode37 :=  "objCode" .
+Definition name_objCode37 : id :=  "objCode" .
 Definition ctx_items := 
 [(name_privAddAccessorField, privAddAccessorField);
  (name_privAddDataField, privAddDataField);
