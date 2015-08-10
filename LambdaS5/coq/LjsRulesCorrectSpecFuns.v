@@ -441,6 +441,30 @@ Proof.
     + auto using case_classic_r.
 Qed.
 
+Lemma call_lemma : forall BR k jst jc c st st' r jfb is jle v v1 vs ptr1 jptr jv1 jvs,
+    ih_stat k ->
+    ih_call_prealloc k ->
+    L.red_exprh k c st (L.expr_app_2 v [v1; L.value_object ptr1]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    usercode_related BR jfb is jle v ->
+    value_related BR jv1 v1 ->
+    values_related BR jvs vs ->
+    fact_iarray ptr1 vs \in BR ->
+    J.object_method J.object_scope_ jst jptr (Some jle) ->
+    concl_ext_expr_value BR jst jc c st st' r 
+        (J.spec_entering_func_code_3 jptr jvs (J.funcbody_is_strict jfb) jfb jv1 (J.spec_call_default_1 jptr)) 
+        (fun jv => True).
+Proof.
+    introv IHt IHp Hlred Hcinv Hinv Hucrel Hvrel Hvrels Hbs Hom.
+    inverts Hucrel as Huci.
+    destruct jp.
+    unfolds funcbody_closure. unfolds funcbody_expr. unfolds E.make_lambda_expr.
+    cases_let as Hprog.
+    inverts red_exprh Hlred.
+    ljs_apply.
+Admitted. (* TODO *)
+
 Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 vs r jptr jv jvs,
     ih_stat k ->
     ih_call_prealloc k ->
@@ -479,21 +503,38 @@ Proof.
         ljs_apply.
         ljs_context_invariant_after_apply.
         repeat ljs_autoforward.
-        inv_ljs. { (* strict *)
+        symmetry in Hfbstr.
+        destruct str. { (* strict *)
             repeat ljs_autoforward.
-            skip. (* TODO *)
+            forwards_th Hcl : call_lemma; try eassumption.
+            rewrite <- Hfbstr in Hcl.
+            destr_concl; try ljs_handle_abort.
+            jauto_js 15.
         } { (* not strict *)
-            inv_fwd_ljs.
+            do 2 inv_fwd_ljs.
             (* TODO better condition handling *)
             ljs_out_redh_ter.
             ljs_bool_red_exprh; repeat determine_epsilon.
             cases_isTrue as Hevcond. { (* null or undefined *)
-                skip. (* TODO *)
+                repeat ljs_autoforward.
+                rewrite case_classic_l_eq in Hevcond.
+                asserts Hmycond : (jv = J.value_prim J.prim_null \/ jv = J.value_prim J.prim_undef). {
+                    inverts Hvrel;
+                    destruct Hevcond as [Hevcond|Hevcond]; inverts Hevcond; eauto_js.
+                }
+                forwards_th Hcl : call_lemma; try eassumption.
+                rewrite <- Hfbstr in Hcl.
+                destr_concl; try ljs_handle_abort.
+                jauto_js 15.
             } 
             repeat ljs_autoforward.
             cases_decide as Hisobj. { (* is object *)
                 repeat ljs_autoforward.
-                skip. (* TODO *)
+                inverts Hvrel; inverts Hisobj.
+                forwards_th Hcl : call_lemma; try eassumption.
+                rewrite <- Hfbstr in Hcl.
+                destr_concl; try ljs_handle_abort.
+                jauto_js 15.
             } { (* not object *)
                 rewrite case_classic_l_eq in Hevcond.
                 rew_logic in Hevcond. destruct Hevcond as (Hevcond1&Hevcond2).
@@ -505,7 +546,13 @@ Proof.
                 repeat ljs_autoforward.
                 forwards_th : red_spec_to_object_ok.
                 destr_concl; try ljs_handle_abort.
-                skip.
+                res_related_invert.
+                resvalue_related_invert.
+                repeat ljs_autoforward.
+                forwards_th Hcl : call_lemma; try eauto_js. skip. (* TODO state consistency issue! *)
+                rewrite <- Hfbstr in Hcl.
+                destr_concl; try ljs_handle_abort.
+                jauto_js 15.
             }
         }
     } { (* bind *)

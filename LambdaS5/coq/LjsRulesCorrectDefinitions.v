@@ -252,6 +252,8 @@ End OptionPred.
 Definition option_value_related BR := Option2 (value_related BR).
 
 Inductive prealloc_related : J.prealloc -> L.object_ptr -> Prop :=
+| prealloc_related_global : 
+    prealloc_related J.prealloc_global LjsInitEnv.ptr_privglobal
 | prealloc_related_global_eval : 
     prealloc_related J.prealloc_global_eval LjsInitEnv.ptr_priveval
 | prealloc_related_global_is_finite : 
