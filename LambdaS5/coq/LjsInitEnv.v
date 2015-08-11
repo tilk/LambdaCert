@@ -2486,7 +2486,8 @@ expr_app (expr_id "%AddDataField")
 .
 Definition ex_privDefaultCall := 
 expr_app (expr_get_internal "usercode" (expr_id "obj"))
-[expr_app (expr_id "%resolveThis")
+[expr_id "obj";
+ expr_app (expr_id "%resolveThis")
  [expr_get_internal "strict" (expr_id "obj"); expr_id "this"];
  expr_id "args"]
 .
@@ -2573,7 +2574,8 @@ Definition ex_privEnvDefineArgsObj :=
 expr_app (expr_id "%EnvDefineArg")
 [expr_id "context";
  expr_string "arguments";
- expr_app (expr_id "%mkArgsObj") [expr_id "args"; expr_id "strict"];
+ expr_app (expr_id "%mkArgsObj")
+ [expr_id "context"; expr_id "args"; expr_id "obj"; expr_id "strict"];
  expr_id "strict"]
 .
 Definition ex_privEnvDefineFunc := 
@@ -3959,8 +3961,7 @@ expr_let "applyArgs1" (expr_get_field (expr_id "args") (expr_string "1"))
    [] []) (expr_id "applyArgs1"))
  (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "applyArgs"])
   (expr_app (expr_id "this")
-   [expr_get_field (expr_id "args") (expr_string "0");
-    expr_app (expr_id "%mkArgsObj") [expr_id "applyArgs"]])))
+   [expr_get_field (expr_id "args") (expr_string "0"); expr_id "applyArgs"])))
 .
 Definition ex_privarrayIndexOfCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -5944,35 +5945,49 @@ Definition ex_privmkArgsObj :=
 expr_let "argsObj"
 (expr_object
  (objattrs_intro (expr_string "Arguments") expr_true (expr_id "%ObjectProto")
-  expr_undefined) []
- [("callee", property_accessor
-             (accessor_intro
-              (expr_app (expr_id "%MakeGetter") [expr_id "%ThrowTypeError"])
-              (expr_app (expr_id "%MakeSetter") [expr_id "%ThrowTypeError"])
-              expr_false expr_false));
-  ("caller", property_accessor
-             (accessor_intro
-              (expr_app (expr_id "%MakeGetter") [expr_id "%ThrowTypeError"])
-              (expr_app (expr_id "%MakeSetter") [expr_id "%ThrowTypeError"])
-              expr_false expr_false))])
-(expr_recc "loop"
- (expr_lambda ["iter"]
-  (expr_let "strx" (expr_op1 unary_op_prim_to_str (expr_id "iter"))
-   (expr_if
-    (expr_op2 binary_op_has_own_property (expr_id "args") (expr_id "strx"))
-    (expr_seq
-     (expr_set_attr pattr_value (expr_id "argsObj") (expr_id "strx")
-      (expr_get_field (expr_id "args") (expr_id "strx")))
-     (expr_app (expr_id "loop")
-      [expr_op2 binary_op_add (expr_id "iter")
-       (expr_number (JsNumber.of_int (1)))]))
-    (expr_seq
-     (expr_set_attr pattr_value (expr_id "argsObj") (expr_string "length")
-      (expr_id "iter"))
-     (expr_set_attr pattr_enum (expr_id "argsObj") (expr_string "length")
-      expr_false)))))
- (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
-  (expr_id "argsObj")))
+  expr_undefined) [] [])
+(expr_seq
+ (expr_if (expr_id "strict")
+  (expr_seq
+   (expr_app (expr_id "%AddJsAccessorField")
+    [expr_id "argsObj";
+     expr_string "callee";
+     expr_id "%ThrowTypeError";
+     expr_id "%ThrowTypeError";
+     expr_false;
+     expr_false])
+   (expr_app (expr_id "%AddJsAccessorField")
+    [expr_id "argsObj";
+     expr_string "caller";
+     expr_id "%ThrowTypeError";
+     expr_id "%ThrowTypeError";
+     expr_false;
+     expr_false]))
+  (expr_app (expr_id "%AddDataField")
+   [expr_id "argsObj";
+    expr_string "callee";
+    expr_id "obj";
+    expr_true;
+    expr_false;
+    expr_true]))
+ (expr_recc "loop"
+  (expr_lambda ["iter"]
+   (expr_let "strx" (expr_op1 unary_op_prim_to_str (expr_id "iter"))
+    (expr_if
+     (expr_op2 binary_op_has_own_property (expr_id "args") (expr_id "strx"))
+     (expr_seq
+      (expr_set_attr pattr_value (expr_id "argsObj") (expr_id "strx")
+       (expr_get_field (expr_id "args") (expr_id "strx")))
+      (expr_app (expr_id "loop")
+       [expr_op2 binary_op_add (expr_id "iter")
+        (expr_number (JsNumber.of_int (1)))]))
+     (expr_seq
+      (expr_set_attr pattr_value (expr_id "argsObj") (expr_string "length")
+       (expr_id "iter"))
+      (expr_set_attr pattr_enum (expr_id "argsObj") (expr_string "length")
+       expr_false)))))
+  (expr_seq (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
+   (expr_id "argsObj"))))
 .
 Definition ex_privnewDeclEnvRec := 
 expr_object
@@ -6098,12 +6113,11 @@ Definition ex_privobjectValueOfCall :=
 expr_app (expr_id "%ToObject") [expr_id "this"]
 .
 Definition ex_privoneArgObj := 
-expr_app (expr_id "%mkArgsObj")
-[expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
- []
- [("0", property_data
-        (data_intro (expr_id "arg") expr_false expr_false expr_false))]]
+expr_object
+(objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined) 
+[]
+[("0", property_data
+       (data_intro (expr_id "arg") expr_false expr_false expr_false))]
 .
 Definition ex_privparse :=  expr_number (JsNumber.of_int (0)) .
 Definition ex_privparseFloatCall :=  expr_string "parseFloat NYI" .
@@ -7537,14 +7551,13 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
  (expr_op1 unary_op_to_upper (expr_id "S")))
 .
 Definition ex_privtwoArgObj := 
-expr_app (expr_id "%mkArgsObj")
-[expr_object
- (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
- []
- [("0", property_data
-        (data_intro (expr_id "arg1") expr_false expr_false expr_false));
-  ("1", property_data
-        (data_intro (expr_id "arg2") expr_false expr_false expr_false))]]
+expr_object
+(objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined) 
+[]
+[("0", property_data
+       (data_intro (expr_id "arg1") expr_false expr_false expr_false));
+ ("1", property_data
+       (data_intro (expr_id "arg2") expr_false expr_false expr_false))]
 .
 Definition ex_privunescapeCall :=  expr_string "unescape NYI" .
 Definition ex_privunshiftCall := 
@@ -8308,18 +8321,18 @@ Definition name_privThrowTypeError : id :=  "%ThrowTypeError" .
 Definition privmkArgsObj := 
 value_closure
 (closure_intro
- [("%MakeGetter", privMakeGetter);
-  ("%MakeSetter", privMakeSetter);
+ [("%AddDataField", privAddDataField);
+  ("%AddJsAccessorField", privAddJsAccessorField);
   ("%ObjectProto", privObjectProto);
-  ("%ThrowTypeError", privThrowTypeError)] None ["args"; "strict"]
- ex_privmkArgsObj)
+  ("%ThrowTypeError", privThrowTypeError)] None
+ ["context"; "args"; "obj"; "strict"] ex_privmkArgsObj)
 .
 Definition name_privmkArgsObj : id :=  "%mkArgsObj" .
 Definition privEnvDefineArgsObj := 
 value_closure
 (closure_intro
  [("%EnvDefineArg", privEnvDefineArg); ("%mkArgsObj", privmkArgsObj)] 
- None ["context"; "args"; "strict"] ex_privEnvDefineArgsObj)
+ None ["context"; "args"; "obj"; "strict"] ex_privEnvDefineArgsObj)
 .
 Definition name_privEnvDefineArgsObj : id :=  "%EnvDefineArgsObj" .
 Definition privEnvDefineVar := 
@@ -8815,9 +8828,8 @@ Definition privapply :=  value_object 18 .
 Definition name_privapply : id :=  "%apply" .
 Definition privapplyCall := 
 value_closure
-(closure_intro
- [("%ObjectTypeCheck", privObjectTypeCheck); ("%mkArgsObj", privmkArgsObj)]
- None ["this"; "args"] ex_privapplyCall)
+(closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
+ ["this"; "args"] ex_privapplyCall)
 .
 Definition name_privapplyCall : id :=  "%applyCall" .
 Definition privarrayIndexOf :=  value_object 121 .
@@ -8903,8 +8915,7 @@ Definition name_privatanCall : id :=  "%atanCall" .
 Definition privbind :=  value_object 150 .
 Definition name_privbind : id :=  "%bind" .
 Definition privoneArgObj := 
-value_closure
-(closure_intro [("%mkArgsObj", privmkArgsObj)] None ["arg"] ex_privoneArgObj)
+value_closure (closure_intro [] None ["arg"] ex_privoneArgObj)
 .
 Definition name_privoneArgObj : id :=  "%oneArgObj" .
 Definition privslice :=  value_object 147 .
@@ -9593,9 +9604,7 @@ Definition name_privstringIndexOf : id :=  "%stringIndexOf" .
 Definition privsubstring :=  value_object 112 .
 Definition name_privsubstring : id :=  "%substring" .
 Definition privtwoArgObj := 
-value_closure
-(closure_intro [("%mkArgsObj", privmkArgsObj)] None ["arg1"; "arg2"]
- ex_privtwoArgObj)
+value_closure (closure_intro [] None ["arg1"; "arg2"] ex_privtwoArgObj)
 .
 Definition name_privtwoArgObj : id :=  "%twoArgObj" .
 Definition privreplaceCall := 

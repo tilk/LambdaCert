@@ -529,7 +529,7 @@ Definition option_construct_related := Option2 construct_related.
 
 Definition funcbody_expr is jp := E.make_lambda_expr E.ejs_to_ljs E.make_fobj is (E.js_prog_to_ejs jp).
 
-Definition funcbody_closure ctxl is jp := L.closure_intro ctxl None ["$this"; "args"] (funcbody_expr is jp).
+Definition funcbody_closure ctxl is jp := L.closure_intro ctxl None ["obj"; "$this"; "args"] (funcbody_expr is jp).
 
 Record usercode_context_invariant BR jle b c : Prop := {
     usercode_context_invariant_includes_init_ctx : includes_init_ctx c;

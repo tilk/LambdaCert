@@ -161,41 +161,41 @@ Definition init_arg p :=
 
 Definition init_args is := map init_arg (zipl_stream (id_stream_from 0) is).
 
-Definition init_var cb i :=
-    make_app_builtin "%EnvDefineVar" [vcontext; L.expr_string i; cb; strict].
+Definition init_var i :=
+    make_app_builtin "%EnvDefineVar" [vcontext; L.expr_string i; L.expr_id "evalCode"; strict].
 
-Definition init_vars cb ps := L.expr_seqs (map (init_var cb) ps).
+Definition init_vars ps := L.expr_seqs (map init_var ps).
 
-Definition init_func (f : E.func -> L.expr) cb p := 
+Definition init_func (f : E.func -> L.expr) p := 
     let '(i, fd) := p in 
-    make_app_builtin "%EnvDefineFunc" [vcontext; L.expr_string i; f fd; cb; strict].
+    make_app_builtin "%EnvDefineFunc" [vcontext; L.expr_string i; f fd; L.expr_id "evalCode"; strict].
 
-Definition init_funcs f cb ps := L.expr_seqs (List.map (init_func f cb) ps).
+Definition init_funcs f ps := L.expr_seqs (List.map (init_func f) ps).
 
-Definition init_args_obj := make_app_builtin "%EnvDefineArgsObj" [vcontext; L.expr_id "args"; strict].
+Definition init_args_obj := 
+    make_app_builtin "%EnvDefineArgsObj" [vcontext; L.expr_id "args"; L.expr_id "obj"; strict].
 
-Definition init_bindings f mvs cb fs is := 
-    match mvs with
-    | Some vs => 
-       L.expr_seq (init_vars cb vs) (
-       L.expr_seq (init_funcs f cb fs) (
-       L.expr_seq init_args_obj (
-       L.expr_seq (init_vars cb is) L.expr_empty)))
-    | None => 
-       L.expr_seq (init_funcs f cb fs) (
-       L.expr_seq (init_vars cb is) L.expr_empty)
-    end.
+Definition init_bindings_func f vs fs is := 
+    L.expr_let "evalCode" L.expr_false (
+    L.expr_seq (init_vars vs) (
+    L.expr_seq (init_funcs f fs) (
+    L.expr_seq init_args_obj (
+    L.expr_seq (init_vars is) L.expr_empty)))).
+
+Definition init_bindings_prog f fs is := 
+   L.expr_seq (init_funcs f fs) (
+   L.expr_seq (init_vars is) L.expr_empty).
 
 Definition make_lambda_expr f ff (is : list string) p :=
     let 'E.prog_intro str fs vis e := p in
     new_context_in (make_app_builtin "%newDeclEnvRec" [context]) (
     remember_vcontext (
-    L.expr_seq (init_bindings ff (Some is) (L.expr_bool false) fs vis) (
+    L.expr_seq (init_bindings_func ff is fs vis) (
     L.expr_label "%ret" (
     f e)))).
 
 Definition make_lambda f ff (is : list string) p := 
-    L.expr_lambda ["$this"; "args"] (make_lambda_expr f ff is p).
+    L.expr_lambda ["obj"; "$this"; "args"] (make_lambda_expr f ff is p).
 
 Definition make_rec_fobj (ff : E.func -> L.expr) i fd :=
     make_var_decl [(i, ff fd, false)] (make_var_id i).
@@ -459,17 +459,16 @@ with make_fobj fd :=
     make_app_builtin "%MakeFunctionObject" 
         [make_lambda ejs_to_ljs make_fobj is p; L.expr_number (length is); L.expr_string s; L.expr_id "$strict"]).
 
-Definition init_new_decl cb fs is e := 
+Definition init_new_decl fs is e := 
     new_context_in (make_app_builtin "%newDeclEnvRec" [context]) (
-    L.expr_seq (init_bindings make_fobj None cb fs is) e).
+    L.expr_seq (init_bindings_prog make_fobj fs is) e).
 
-Definition init_existing cb fs is e := L.expr_seq (init_bindings make_fobj None cb fs is) e.
+Definition init_existing fs is e := L.expr_seq (init_bindings_prog make_fobj fs is) e.
 
 Definition ejs_prog_to_ljs ep :=
     let 'E.prog_intro strict fs is inner := ep in
-    let evalCode := L.expr_id "evalCode" in
     make_strictness strict (
-    (if strict then init_new_decl else init_existing) evalCode fs is (ejs_to_ljs inner)).
+    (if strict then init_new_decl else init_existing) fs is (ejs_to_ljs inner)).
 
 Definition add_init e :=
     L.expr_let "$context" (L.expr_id "%globalContext") (

@@ -546,7 +546,7 @@ Proof.
     jauto_js.
 Qed.
 
-Lemma usercode_context_invariant_restore_lemma : forall BR jeptr ptr jle c jv v b v' v'',
+Lemma usercode_context_invariant_restore_lemma : forall BR jeptr ptr jle c jv v b v' v'' v''',
     initBR \c BR ->
     binds c "$context" v' ->
     fact_js_env jeptr ptr \in BR ->
@@ -555,7 +555,8 @@ Lemma usercode_context_invariant_restore_lemma : forall BR jeptr ptr jle c jv v 
     usercode_context_invariant BR jle b c ->
     context_invariant BR 
         (J.execution_ctx_intro_same (jeptr::jle) jv b) 
-        (c\("args" := v'')\("$this" := v)\("$context" := L.value_object ptr)\("$vcontext" := L.value_object ptr)).
+        (c\("args" := v'')\("$this" := v)\("obj" := v''')
+           \("$context" := L.value_object ptr)\("$vcontext" := L.value_object ptr)).
 Proof.
     introv Hinit Hbinds Hf1 Hf2 Hthisrel Hucinv.
     lets Hlerel : usercode_context_invariant_lexical_env_related Hucinv Hbinds.
@@ -572,8 +573,8 @@ Proof.
     + constructor; introv Hmem; inverts Hmem as Hmem; eauto_js.
 Qed.
 
-Lemma usercode_context_invariant_restore : forall BR k jle c jv v b v' v'' jst st st' r jc' c',
-    L.red_exprh k (c\("args" := v'')\("$this" := v)) st 
+Lemma usercode_context_invariant_restore : forall BR k jle c jv v b v' v'' v''' jst st st' r jc' c',
+    L.red_exprh k (c\("args" := v'')\("$this" := v)\("obj" := v''')) st 
         (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v']) (L.out_ter st' r) ->
     context_invariant BR jc' c' ->
     state_invariant BR jst st ->
@@ -587,7 +588,7 @@ Lemma usercode_context_invariant_restore : forall BR k jle c jv v b v' v'' jst s
     env_record_related BR' (J.env_record_decl J.decl_env_record_empty) obj /\
     context_invariant BR'
         (J.execution_ctx_intro_same (fresh jst::jle) jv b) 
-        (c\("args" := v'')\("$this" := v)
+        (c\("args" := v'')\("$this" := v)\("obj" := v''')
           \("$context" := L.value_object (fresh st))\("$vcontext" := L.value_object (fresh st))) /\
     state_invariant BR'
         (J.state_next_fresh (jst \(fresh jst := J.env_record_decl J.decl_env_record_empty))) 
@@ -617,26 +618,47 @@ Proof.
     + auto using case_classic_r.
 Qed.
 
-Opaque E.init_bindings.
+Opaque E.init_bindings_func.
 
-Lemma call_lemma : forall BR k jst jc c st st' r jfb is jle v v1 vs ptr1 jptr jv1 jvs,
+(* TODO move *)
+Lemma js_prog_intro_eta : forall p, J.prog_intro (J.prog_intro_strictness p) (J.prog_elements p) = p.
+Proof.
+    introv. destruct p. reflexivity.
+Qed.
+
+Lemma binding_inst_lemma : forall BR k jst jc c st st' r ptr jptr jp jvs is,
+    L.red_exprh k c st (L.expr_basic
+          (E.init_bindings_func E.make_fobj is (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
+              (J.prog_vardecl jp))) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    binds c "obj" (L.value_object ptr) ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r 
+        (J.spec_binding_inst J.codetype_func (Some jptr) jp jvs) (fun jv => True).
+Proof.
+    introv Hlred Hcinv Hinv Hbinds Hf.
+Admitted. (* TODO *)
+
+Lemma call_lemma : forall BR k jst jc c st st' r jfb is jle v v1 vs ptr ptr1 jptr jv1 jvs,
     ih_stat k ->
     ih_call_prealloc k ->
-    L.red_exprh k c st (L.expr_app_2 v [v1; L.value_object ptr1]) (L.out_ter st' r) ->
+    L.red_exprh k c st (L.expr_app_2 v [L.value_object ptr; v1; L.value_object ptr1]) (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     usercode_related BR jfb is jle v ->
     value_related BR jv1 v1 ->
     values_related BR jvs vs ->
     fact_iarray ptr1 vs \in BR ->
+    fact_js_obj jptr ptr \in BR ->
     J.object_method J.object_scope_ jst jptr (Some jle) ->
     concl_ext_expr_value BR jst jc c st st' r 
         (J.spec_entering_func_code_3 jptr jvs (J.funcbody_is_strict jfb) jfb jv1 (J.spec_call_default_1 jptr)) 
         (fun jv => True).
 Proof.
-    introv IHt IHp Hlred Hcinv Hinv Hucrel Hvrel Hvrels Hbs Hom.
+    introv IHt IHp Hlred Hcinv Hinv Hucrel Hvrel Hvrels Hbs Hbs1.
+    introv Hom.
     inverts Hucrel as Huci.
-    destruct jp.
     unfolds funcbody_closure. unfolds funcbody_expr. unfolds E.make_lambda_expr.
     cases_let as Hprog.
     inverts red_exprh Hlred.
@@ -647,7 +669,14 @@ Proof.
     forwards_th Hx : usercode_context_invariant_restore; try eassumption. 
     destruct_hyp Hx.
     repeat ljs_autoforward.
-Admitted. (* TODO *)
+    rewrite <- (js_prog_intro_eta jp) in Hprog.
+    simpl in Hprog.
+    injects Hprog.
+    rewrite js_prog_intro_eta in *.
+    forwards_th : binding_inst_lemma. { eauto_js. } { prove_bag. }
+    destr_concl; try ljs_handle_abort.
+    skip.
+Qed.
 
 Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 vs r jptr jv jvs,
     ih_stat k ->
@@ -683,7 +712,7 @@ Proof.
         lets (jfb&is&jle&Hmcode&Hparams&Hscope&Hcode) : object_method_code_some_lemma ___; try eassumption.
         lets (str&Heqstr&Hfbstr) : object_strict_lemma ___; try eassumption.
         subst_hyp Heqstr.
-        inverts red_exprh H20. (* TODO *)
+        inverts red_exprh H21. (* TODO *)
         ljs_apply.
         ljs_context_invariant_after_apply.
         repeat ljs_autoforward.
