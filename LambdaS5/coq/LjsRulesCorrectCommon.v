@@ -2907,11 +2907,19 @@ Ltac apply_ih_stat := match goal with
     end.
 
 Ltac ljs_get_builtin :=
-    match goal with
+    match goal with (* TODO refactor *)
+    | Hbinds : binds ?c (String (Ascii.Ascii true false true false false true false false) ?s) ?v,
+      Hinv : usercode_context_invariant _ _ _ ?c |- _ =>
+        is_var v;
+        let H1 := fresh in
+        forwards H1 : usercode_context_invariant_includes_init_ctx Hinv Hbinds; [
+        eapply init_ctx_mem_binds;
+        unfold LjsInitEnv.ctx_items;
+        solve [init_ctx_lookup] |
+        subst_hyp H1 ]
     | Hbinds : binds ?c (String (Ascii.Ascii true false true false false true false false) ?s) ?v, 
       Hinv : context_invariant _ _ ?c |- _ =>
         is_var v;
-(*        not (first [constr_eq s "strict" | constr_eq s "this" | constr_eq s "context"]); *)
         let H1 := fresh in
         forwards H1 : context_invariant_includes_init_ctx Hinv Hbinds; [
         eapply init_ctx_mem_binds;

@@ -533,7 +533,7 @@ Definition funcbody_closure ctxl is jp := L.closure_intro ctxl None ["$this"; "a
 
 Record usercode_context_invariant BR jle b c : Prop := {
     usercode_context_invariant_includes_init_ctx : includes_init_ctx c;
-    usercode_context_invariant_lexical_env : forall v,
+    usercode_context_invariant_lexical_env_related : forall v,
         binds c "$context" v -> lexical_env_related BR jle v;
     usercode_context_invariant_strict : forall v,
         binds c "$strict" v -> v = L.value_bool b;
@@ -541,10 +541,10 @@ Record usercode_context_invariant BR jle b c : Prop := {
 }.
 
 Inductive usercode_related BR : J.funcbody -> list string -> J.lexical_env -> L.value -> Prop :=
-| usercode_related_intro : forall jp s is jle ctxl, 
-    usercode_context_invariant BR jle (J.prog_intro_strictness jp) (from_list ctxl) ->
+| usercode_related_intro : forall jp s is jle c, 
+    usercode_context_invariant BR jle (J.prog_intro_strictness jp) c ->
     usercode_related BR (J.funcbody_intro jp s) is jle 
-        (L.value_closure (funcbody_closure ctxl is jp))
+        (L.value_closure (funcbody_closure (to_list c) is jp))
 .
 
 Definition option_usercode_related BR := Option4 (usercode_related BR).

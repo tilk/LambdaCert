@@ -188,10 +188,11 @@ Definition init_bindings f mvs cb fs is :=
 
 Definition make_lambda_expr f ff (is : list string) p :=
     let 'E.prog_intro str fs vis e := p in
-    L.expr_label "%ret" (
     new_context_in (make_app_builtin "%newDeclEnvRec" [context]) (
     remember_vcontext (
-    L.expr_seq (init_bindings ff (Some is) (L.expr_bool false) fs vis) (f e)))).
+    L.expr_seq (init_bindings ff (Some is) (L.expr_bool false) fs vis) (
+    L.expr_label "%ret" (
+    f e)))).
 
 Definition make_lambda f ff (is : list string) p := 
     L.expr_lambda ["$this"; "args"] (make_lambda_expr f ff is p).

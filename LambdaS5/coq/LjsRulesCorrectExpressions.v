@@ -295,7 +295,6 @@ Proof.
         jauto_js 12.
     } { 
         inverts IH4. (* TODO *)
-        Check object_method_construct_lemma.
         forwards Hx : object_method_construct_lemma; try eassumption; try eauto_js.
         forwards_th : type_error_lemma. iauto.
         destr_concl; tryfalse.

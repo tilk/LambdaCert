@@ -330,6 +330,152 @@ Proof.
     }
 Qed.
 
+(* ** Handling contexts *)
+
+(* TODO move *)
+Lemma decl_env_record_related_empty : forall BR,
+    decl_env_record_vars_related BR \{} \{}.
+Proof.
+    introv. unfolds.
+    intro s.
+    left. splits; prove_bag.
+Qed.
+
+Hint Resolve decl_env_record_related_empty : js_ljs.
+
+(* *** Creating new environment records *)
+
+Lemma new_env_record_decl_lemma : forall BR k c st jlenv v st' r,
+    lexical_env_related BR jlenv v ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v]) (L.out_ter st' r) ->
+    exists obj,
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    binds (L.object_internal obj) "parent" v /\
+    env_record_related BR (J.env_record_decl J.decl_env_record_empty) obj.
+Proof.
+    introv Hlrel Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    eexists.
+    splits.
+    reflexivity.
+    reflexivity.
+    prove_bag.
+    econstructor; jauto_js.
+Qed.
+
+Lemma new_env_record_object_lemma : forall BR k c st jlenv v jptr ptr b st' r,
+    lexical_env_related BR jlenv v ->
+    value_related BR (J.value_object jptr) (L.value_object ptr) ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewObjEnvRec 
+        [v; L.value_object ptr; L.value_bool b]) (L.out_ter st' r) ->
+    exists obj,
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    binds (L.object_internal obj) "parent" v /\
+    env_record_related BR (J.env_record_object jptr b) obj.
+Proof.
+    introv Hlrel Hvrel Hlred.
+    inverts Hvrel.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    eexists.
+    splits.
+    reflexivity.
+    reflexivity.
+    prove_bag 10.
+    econstructor.
+    econstructor;
+    prove_bag 10.
+Qed.
+
+(* *** State invariant for new environment records *)
+
+Lemma only_state_invariant_new_env_record_decl_lemma : forall BR k jst jlenv c st v st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v]) (L.out_ter st' r) ->
+    lexical_env_related BR jlenv v ->
+    state_invariant BR jst st ->
+    exists obj BR',
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    BR' = \{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR /\
+    env_record_related BR' (J.env_record_decl J.decl_env_record_empty) obj /\
+    state_invariant BR'
+        (J.state_next_fresh (jst \(fresh jst := J.env_record_decl J.decl_env_record_empty))) 
+        (st \(fresh st := obj)).
+Proof.
+    introv Hlred Hlerel Hinv.
+    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). { jauto_js. }
+    forwards_th Hx : new_env_record_decl_lemma. destruct_hyp Hx.
+    do 2 eexists. splits; try reflexivity.
+    + eauto_js.
+    + eauto_js 8.
+Qed.
+
+Lemma state_invariant_new_env_record_decl_lemma : forall BR k jst jc c st v st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v]) (L.out_ter st' r) ->
+    binds c "$context" v ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    exists obj BR',
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    BR' = \{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR /\
+    env_record_related BR' (J.env_record_decl J.decl_env_record_empty) obj /\
+    state_invariant BR'
+        (J.state_next_fresh (jst \(fresh jst := J.env_record_decl J.decl_env_record_empty))) 
+        (st \(fresh st := obj)) /\
+    context_invariant BR'
+        (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
+        (c \("$context" := L.value_object (fresh st))).
+Proof.
+    introv Hlred Hbinds Hcinv Hinv.
+    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). jauto_js.
+    lets Hlerel : context_invariant_lexical_env_related Hcinv Hbinds.
+    forwards_th Hx : only_state_invariant_new_env_record_decl_lemma. destruct_hyp Hx.
+    do 2 eexists. splits; try reflexivity; try assumption.
+    eapply context_invariant_push_context_lemma.
+    + eapply lexical_env_related_cons; eauto_js 15.
+    + eauto_js 10.
+    + eauto_js 10.
+Qed.
+
+Lemma state_invariant_new_env_record_object_lemma : forall BR k jst jc c st v jptr ptr b st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewObjEnvRec 
+        [v; L.value_object ptr; L.value_bool b]) (L.out_ter st' r) ->
+    binds c "$context" v ->
+    value_related BR (J.value_object jptr) (L.value_object ptr) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    exists obj,
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    state_invariant (\{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR) 
+        (J.state_next_fresh (jst \(fresh jst := J.env_record_object jptr b))) 
+        (st \(fresh st := obj)) /\
+    context_invariant (\{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR)
+        (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
+        (c \("$context" := L.value_object (fresh st))).
+Proof.
+    introv Hlred Hbinds Hvrel Hcinv Hinv.
+    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). 
+        prove_bag 10.
+    asserts Hlerel : (lexical_env_related BR (J.execution_ctx_lexical_env jc) v).
+    solve [eauto using context_invariant_lexical_env_related].
+    forwards_th Hx : new_env_record_object_lemma. eauto_js.
+    destruct_hyp Hx.
+    eexists. splits; try reflexivity. (* TODO *)
+    jauto_js 7. 
+    eapply context_invariant_push_context_lemma.
+    eapply lexical_env_related_cons; eauto_js 10. eauto_js 10.
+    eauto_js.
+Qed. 
+
+(* ** Function calls *)
+
 Lemma object_method_call_some_lemma : forall BR jst st jptr ptr obj clo,
     state_invariant BR jst st ->
     fact_js_obj jptr ptr \in BR ->
@@ -400,7 +546,7 @@ Proof.
     jauto_js.
 Qed.
 
-Lemma usercode_context_invariant_restore_lemma : forall BR jeptr ptr jle c jv v b v',
+Lemma usercode_context_invariant_restore_lemma : forall BR jeptr ptr jle c jv v b v' v'',
     initBR \c BR ->
     binds c "$context" v' ->
     fact_js_env jeptr ptr \in BR ->
@@ -409,11 +555,11 @@ Lemma usercode_context_invariant_restore_lemma : forall BR jeptr ptr jle c jv v 
     usercode_context_invariant BR jle b c ->
     context_invariant BR 
         (J.execution_ctx_intro_same (jeptr::jle) jv b) 
-        (c\("$this" := v)\("$context" := L.value_object ptr)\("$vcontext" := L.value_object ptr)).
+        (c\("args" := v'')\("$this" := v)\("$context" := L.value_object ptr)\("$vcontext" := L.value_object ptr)).
 Proof.
     introv Hinit Hbinds Hf1 Hf2 Hthisrel Hucinv.
+    lets Hlerel : usercode_context_invariant_lexical_env_related Hucinv Hbinds.
     destruct Hucinv.
-    specializes usercode_context_invariant_lexical_env Hbinds.
     constructor. {
         assumption.
     } {
@@ -424,6 +570,36 @@ Proof.
     } 
     + eauto_js 8.
     + constructor; introv Hmem; inverts Hmem as Hmem; eauto_js.
+Qed.
+
+Lemma usercode_context_invariant_restore : forall BR k jle c jv v b v' v'' jst st st' r jc' c',
+    L.red_exprh k (c\("args" := v'')\("$this" := v)) st 
+        (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v']) (L.out_ter st' r) ->
+    context_invariant BR jc' c' ->
+    state_invariant BR jst st ->
+    usercode_context_invariant BR jle b c ->
+    binds c "$context" v' ->
+    value_related BR jv v ->
+    exists obj BR',
+    st' = st \(fresh st := obj) /\
+    r = L.res_value (L.value_object (fresh st)) /\
+    BR' = \{fact_ctx_parent (fresh st) v'} \u \{fact_js_env (fresh jst) (fresh st)} \u BR /\
+    env_record_related BR' (J.env_record_decl J.decl_env_record_empty) obj /\
+    context_invariant BR'
+        (J.execution_ctx_intro_same (fresh jst::jle) jv b) 
+        (c\("args" := v'')\("$this" := v)
+          \("$context" := L.value_object (fresh st))\("$vcontext" := L.value_object (fresh st))) /\
+    state_invariant BR'
+        (J.state_next_fresh (jst \(fresh jst := J.env_record_decl J.decl_env_record_empty))) 
+        (st \(fresh st := obj)).
+Proof.
+    introv Hlred Hcinv Hinv Hucinv Hbinds Hvrel.
+    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). jauto_js.
+    lets Hlerel : usercode_context_invariant_lexical_env_related Hucinv Hbinds.
+    forwards_th Hx : only_state_invariant_new_env_record_decl_lemma. destruct_hyp Hx.
+    do 2 eexists; splits; try reflexivity; try eassumption.
+    lets Hincl : context_invariant_bisim_includes_init Hcinv.
+    eapply usercode_context_invariant_restore_lemma; eauto_js.
 Qed.
 
 (* TODO: move to TLC LibLogic *)
@@ -440,6 +616,8 @@ Proof.
     + iauto.
     + auto using case_classic_r.
 Qed.
+
+Opaque E.init_bindings.
 
 Lemma call_lemma : forall BR k jst jc c st st' r jfb is jle v v1 vs ptr1 jptr jv1 jvs,
     ih_stat k ->
@@ -463,6 +641,12 @@ Proof.
     cases_let as Hprog.
     inverts red_exprh Hlred.
     ljs_apply.
+    subst c'.
+    repeat ljs_autoforward.
+    lets Hlerel : usercode_context_invariant_lexical_env_related Huci ___; try eassumption.
+    forwards_th Hx : usercode_context_invariant_restore; try eassumption. 
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
 Admitted. (* TODO *)
 
 Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 vs r jptr jv jvs,
@@ -849,125 +1033,6 @@ Proof.
     }
 Qed.
 
-Lemma new_env_record_object_lemma : forall BR k c st jlenv v jptr ptr b st' r,
-    lexical_env_related BR jlenv v ->
-    value_related BR (J.value_object jptr) (L.value_object ptr) ->
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewObjEnvRec 
-        [v; L.value_object ptr; L.value_bool b]) (L.out_ter st' r) ->
-    exists obj,
-    st' = st \(fresh st := obj) /\
-    r = L.res_value (L.value_object (fresh st)) /\
-    binds (L.object_internal obj) "parent" v /\
-    env_record_related BR (J.env_record_object jptr b) obj.
-Proof.
-    introv Hlrel Hvrel Hlred.
-    inverts Hvrel.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    repeat ljs_autoforward.
-    eexists.
-    splits.
-    reflexivity.
-    reflexivity.
-    prove_bag 10.
-    econstructor.
-    econstructor;
-    prove_bag 10.
-Qed.
-
-Lemma state_invariant_new_env_record_object_lemma : forall BR k jst jc c st v jptr ptr b st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewObjEnvRec 
-        [v; L.value_object ptr; L.value_bool b]) (L.out_ter st' r) ->
-    binds c "$context" v ->
-    value_related BR (J.value_object jptr) (L.value_object ptr) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    exists obj,
-    st' = st \(fresh st := obj) /\
-    r = L.res_value (L.value_object (fresh st)) /\
-    state_invariant (\{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR) 
-        (J.state_next_fresh (jst \(fresh jst := J.env_record_object jptr b))) 
-        (st \(fresh st := obj)) /\
-    context_invariant (\{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR)
-        (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
-        (c \("$context" := L.value_object (fresh st))).
-Proof.
-    introv Hlred Hbinds Hvrel Hcinv Hinv.
-    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). 
-        prove_bag 10.
-    asserts Hlerel : (lexical_env_related BR (J.execution_ctx_lexical_env jc) v).
-    solve [eauto using context_invariant_lexical_env_related].
-    forwards_th Hx : new_env_record_object_lemma. eauto_js.
-    destruct_hyp Hx.
-    eexists. splits; try reflexivity. (* TODO *)
-    jauto_js 7. 
-    eapply context_invariant_push_context_lemma.
-    eapply lexical_env_related_cons; eauto_js 10. eauto_js 10.
-    eauto_js.
-Qed. 
-
-Lemma decl_env_record_related_empty : forall BR,
-    decl_env_record_vars_related BR \{} \{}.
-Proof.
-    introv. unfolds.
-    intro s.
-    left. splits; prove_bag.
-Qed.
-
-Hint Resolve decl_env_record_related_empty : js_ljs.
-
-(* TODO move *)
-Lemma new_env_record_decl_lemma : forall BR k c st jlenv v st' r,
-    lexical_env_related BR jlenv v ->
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v]) (L.out_ter st' r) ->
-    exists obj,
-    st' = st \(fresh st := obj) /\
-    r = L.res_value (L.value_object (fresh st)) /\
-    binds (L.object_internal obj) "parent" v /\
-    env_record_related BR (J.env_record_decl J.decl_env_record_empty) obj.
-Proof.
-    introv Hlrel Hlred.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    repeat ljs_autoforward.
-    eexists.
-    splits.
-    reflexivity.
-    reflexivity.
-    prove_bag.
-    econstructor; jauto_js.
-Qed.
-
-Lemma state_invariant_new_env_record_decl_lemma : forall BR k jst jc c st v st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privnewDeclEnvRec [v]) (L.out_ter st' r) ->
-    binds c "$context" v ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    exists obj BR',
-    st' = st \(fresh st := obj) /\
-    r = L.res_value (L.value_object (fresh st)) /\
-    BR' = \{fact_ctx_parent (fresh st) v} \u \{fact_js_env (fresh jst) (fresh st)} \u BR /\
-    env_record_related BR' (J.env_record_decl J.decl_env_record_empty) obj /\
-    state_invariant BR'
-        (J.state_next_fresh (jst \(fresh jst := J.env_record_decl J.decl_env_record_empty))) 
-        (st \(fresh st := obj)) /\
-    context_invariant BR'
-        (J.execution_ctx_with_lex jc (fresh jst::J.execution_ctx_lexical_env jc)) 
-        (c \("$context" := L.value_object (fresh st))).
-Proof.
-    introv Hlred Hbinds Hcinv Hinv.
-    asserts Hsub : (BR \c (\{fact_js_env (fresh jst) (fresh st)} \u BR)). jauto_js.
-    asserts Hlerel : (lexical_env_related BR (J.execution_ctx_lexical_env jc) v).
-    solve [eauto using context_invariant_lexical_env_related].
-    forwards_th Hx : new_env_record_decl_lemma. 
-    destruct_hyp Hx.
-    do 2 eexists. splits; try reflexivity.
-    eauto_js.
-    eauto_js 8.
-    eapply context_invariant_push_context_lemma.
-    eapply lexical_env_related_cons; eauto_js 15.
-    eauto_js 10. eauto_js 10.
-Qed.
 
 (* TODO move *)
 Definition mutability_of_bools b1 b2 :=
