@@ -59,7 +59,7 @@ Hint Extern 0 => reflexivity : xcore.
 Hint Extern 50 (~_) => progress rew_logic : xcore.
 Hint Extern 60 (~_) => solve [let H := fresh in intro H; inversion H] : xcore.
 
-Hint Extern 1 => solve [eauto 10 with nocore typeclass_instances] : js_ljs.
+(* Hint Extern 1 => solve [eauto 10 with nocore typeclass_instances] : js_ljs. *)
 
 (* Hint Extern 99 (~_) => solve [intro; eauto 4 with js_ljs bag nocore xcore] : js_ljs.*) (* potentially slow *) 
 
@@ -1002,7 +1002,7 @@ Qed.
 Ltac sub_helper BR1 BR2 f :=
     not constr_eq BR1 BR2;
     let Hsub := fresh "H" in
-    asserts Hsub : (BR1 \c BR2); [prove_bag | idtac];
+    asserts Hsub : (BR1 \c BR2); [prove_bag 10 | idtac];
     applys f Hsub;
     clear Hsub.
 
@@ -3013,6 +3013,7 @@ Ltac specializes_th_clean :=
         asserts Hsub : (BR' \c BR); [prove_bag 10 | idtac];
         applys lexical_env_related_bisim_incl_preserved Hsub; eauto_js
     | |- value_related _ _ ?v => not is_evar v; eauto_js
+    | |- values_related _ _ ?v => not is_evar v; eauto_js
     | |- resvalue_related _ _ ?v => not is_evar v; eauto_js
     | |- lexical_env_related _ _ ?v => not is_evar v; eauto_js
     end;

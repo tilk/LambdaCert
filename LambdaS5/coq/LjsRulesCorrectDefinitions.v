@@ -537,7 +537,8 @@ Record usercode_context_invariant BR jle b c : Prop := {
         binds c "$context" v -> lexical_env_related BR jle v;
     usercode_context_invariant_strict : forall v,
         binds c "$strict" v -> v = L.value_bool b;
-    usercode_context_invariant_env_records_exist : env_records_exist_env BR jle 
+    usercode_context_invariant_env_records_exist : env_records_exist_env BR jle;
+    usercode_context_invariant_has_strict : index c "$strict"
 }.
 
 Inductive usercode_related BR : J.funcbody -> list string -> J.lexical_env -> L.value -> Prop :=

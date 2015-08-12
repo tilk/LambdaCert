@@ -1347,8 +1347,10 @@ Hint Extern 0 (?A \c ?C) =>
     | H : ?B \c C |- _ => apply ((fun bs1 bs2 => @incl_trans _ _ _ B A C bs2 bs1) H) 
     end : bag. 
 
+Hint Extern 1 => solve [eauto 10 with nocore typeclass_instances] : bag.
+
 Tactic Notation "prove_bag" integer(n) :=
-    solve [ eauto n with bag typeclass_instances ].
+    solve [ eauto n with bag ].
 
 Tactic Notation "prove_bag" := prove_bag 5.
 

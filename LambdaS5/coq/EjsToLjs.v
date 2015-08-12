@@ -159,7 +159,7 @@ Definition init_arg p :=
     make_app_builtin "%EnvDefineArg" 
         [vcontext; L.expr_string vid; L.expr_get_field (L.expr_id "args") (L.expr_id vnum); strict].
 
-Definition init_args is := map init_arg (zipl_stream (id_stream_from 0) is).
+Definition init_args is := L.expr_seqs (map init_arg (zipl_stream (id_stream_from 0) is)).
 
 Definition init_var i :=
     make_app_builtin "%EnvDefineVar" [vcontext; L.expr_string i; L.expr_id "evalCode"; strict].
@@ -177,7 +177,7 @@ Definition init_args_obj :=
 
 Definition init_bindings_func f vs fs is := 
     L.expr_let "evalCode" L.expr_false (
-    L.expr_seq (init_vars vs) (
+    L.expr_seq (init_args vs) (
     L.expr_seq (init_funcs f fs) (
     L.expr_seq init_args_obj (
     L.expr_seq (init_vars is) L.expr_empty)))).
