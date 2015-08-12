@@ -634,8 +634,8 @@ Lemma binding_inst_formal_params_lemma : forall BR k jst jc c st st' r is vs jvs
     binds c "args" (L.value_object ptr1) ->
     fact_iarray ptr1 vs \in BR ->
     fact_js_env jeptr ptr \in BR ->
-    concl_ext_expr_value BR jst jc c st st' r 
-        (J.spec_binding_inst_formal_params jvs jeptr is b) (fun jv => True).    
+    concl_ext_expr_resvalue BR jst jc c st st' r 
+        (J.spec_binding_inst_formal_params jvs jeptr is b) (fun jrv => jrv = J.resvalue_empty).    
 Proof.
 Admitted. (* TODO *)
 
@@ -648,8 +648,8 @@ Lemma binding_inst_function_decls_lemma : forall BR k jst jc c st st' r jfds jep
     binds c "$vcontext" (L.value_object ptr) ->
     binds c "evalCode" (L.value_bool b1) ->
     fact_js_env jeptr ptr \in BR ->
-    concl_ext_expr_value BR jst jc c st st' r 
-        (J.spec_binding_inst_function_decls jeptr jfds b2 b1) (fun jv => True).    
+    concl_ext_expr_resvalue BR jst jc c st st' r 
+        (J.spec_binding_inst_function_decls jeptr jfds b2 b1) (fun jrv => jrv = J.resvalue_empty).    
 Proof.
 Admitted. (* TODO *)
 
@@ -663,8 +663,8 @@ Lemma binding_inst_arg_obj_lemma : forall BR k jst jc c st st' r jptr ptr ptr1 i
     binds c "args" (L.value_object ptr1) ->
     fact_iarray ptr1 vs \in BR ->
     fact_js_env jeptr ptr \in BR ->
-    concl_ext_expr_value BR jst jc c st st' r 
-        (J.spec_binding_inst_arg_obj jptr is jvs jeptr b) (fun jv => True).
+    concl_ext_expr_resvalue BR jst jc c st st' r 
+        (J.spec_binding_inst_arg_obj jptr is jvs jeptr b) (fun jrv => jrv = J.resvalue_empty).
 Proof.
 Admitted. (* TODO *)    
 
@@ -676,14 +676,14 @@ Lemma binding_inst_var_decls_lemma : forall BR k jst jc c st st' r is jeptr ptr 
     binds c "$vcontext" (L.value_object ptr) ->
     binds c "evalCode" (L.value_bool b1) ->
     fact_js_env jeptr ptr \in BR ->
-    concl_ext_expr_value BR jst jc c st st' r 
-        (J.spec_binding_inst_var_decls jeptr is b1 b2) (fun jv => True).    
+    concl_ext_expr_resvalue BR jst jc c st st' r 
+        (J.spec_binding_inst_var_decls jeptr is b1 b2) (fun jrv => jrv = J.resvalue_empty).
 Proof.
 Admitted. (* TODO *)
 
 Opaque E.init_args E.init_vars E.init_funcs E.init_args_obj.
  
-Lemma binding_inst_lemma : forall BR k jst jc c st st' r ptr ptr1 ptr2 jptr jeptr jp jvs vs is,
+Lemma binding_inst_lemma : forall BR k jst jc c st st' r ptr ptr1 ptr2 jptr jp jvs vs is,
     L.red_exprh k c st (L.expr_basic
           (E.init_bindings_func E.make_fobj is (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
               (J.prog_vardecl jp))) (L.out_ter st' r) ->
@@ -696,16 +696,18 @@ Lemma binding_inst_lemma : forall BR k jst jc c st st' r ptr ptr1 ptr2 jptr jept
     binds c "args" (L.value_object ptr1) ->
     fact_iarray ptr1 vs \in BR ->
     fact_js_obj jptr ptr \in BR ->
-    fact_js_env jeptr ptr2 \in BR ->
+    J.object_method J.object_formal_parameters_ jst jptr (Some is) ->
     concl_ext_expr_value BR jst jc c st st' r 
         (J.spec_binding_inst J.codetype_func (Some jptr) jp jvs) (fun jv => True).
 Proof.
     introv Hlred Hcinv Hinv Hvrels Hbinds1 Hbinds2 Hbinds3 Hbinds4.
-    introv Hf1 Hf2 Hf3.
+    introv Hf1 Hf2 Hom.
     asserts_rewrite 
         (concat (List.map E.js_element_to_func (J.prog_elements jp)) = E.prog_funcs (E.js_prog_to_ejs jp)) in Hlred.
     { destruct jp. reflexivity. }
     rewrite E.js_funcdecl_to_func_lemma in Hlred.
+    lets Hvenv : execution_ctx_related_variable_env (context_invariant_execution_ctx_related Hcinv) Hbinds3.
+    inverts Hvenv as Hf3 Hf4 Hlerel Hvenveq. symmetry in Hvenveq.
     repeat ljs_autoforward.
     forwards_th : binding_inst_formal_params_lemma; try prove_bag.
     destr_concl; try ljs_handle_abort.
@@ -717,10 +719,15 @@ Proof.
     repeat ljs_autoforward.
     forwards_th : binding_inst_arg_obj_lemma; try prove_bag. { eauto_js. }
     destr_concl; try ljs_handle_abort.
+
+(* TODO: for some reason, the step 6 of the declaration binding instantiation procedure
+   is to be executed always, and therefore is not bundled with the step 7. This is already
+   fixed in ES6. The problem prevents finishing the proof here. *)
+
     res_related_invert.
     repeat ljs_autoforward.
     forwards_th : binding_inst_var_decls_lemma; try prove_bag.
-    destr_concl; try ljs_handle_abort.
+    destr_concl. (* ; try ljs_handle_abort. *)
     res_related_invert.
     repeat ljs_autoforward.
 Admitted. (* TODO *)
@@ -739,12 +746,13 @@ Lemma call_lemma : forall BR k jst jc c st st' r jfb is jle v v1 vs ptr ptr1 jpt
     fact_iarray ptr1 vs \in BR ->
     fact_js_obj jptr ptr \in BR ->
     J.object_method J.object_scope_ jst jptr (Some jle) ->
+    J.object_method J.object_formal_parameters_ jst jptr (Some is) ->
     concl_ext_expr_value BR jst jc c st st' r 
         (J.spec_entering_func_code_3 jptr jvs (J.funcbody_is_strict jfb) jfb jv1 (J.spec_call_default_1 jptr)) 
         (fun jv => True).
 Proof.
     introv IHt IHp Hlred Hcinv Hinv Hucrel Hvrel Hvrels Hbs Hbs1.
-    introv Hom.
+    introv Hom1 Hom2.
     inverts Hucrel as Huci.
     unfolds funcbody_closure. unfolds funcbody_expr. unfolds E.make_lambda_expr.
     cases_let as Hprog.
@@ -763,7 +771,7 @@ Proof.
     lets Hstrict : usercode_context_invariant_has_strict Huci. (* TODO do a lemma *)
     rewrite index_binds_eq in Hstrict. destruct_hyp Hstrict.
     lets Hstreq : usercode_context_invariant_strict Huci Hstrict. subst_hyp Hstreq.
-    forwards_th : binding_inst_lemma; try prove_bag 8. { eauto_js. }
+    forwards_th : binding_inst_lemma; try prove_bag 8. { eauto_js. } skip. (* TODO state consistency *)
     destr_concl; try ljs_handle_abort.
     skip.
 Qed.
@@ -852,7 +860,7 @@ Proof.
                 res_related_invert.
                 resvalue_related_invert.
                 repeat ljs_autoforward.
-                forwards_th Hcl : call_lemma; try eauto_js. skip. (* TODO state consistency issue! *)
+                forwards_th Hcl : call_lemma; try eauto_js. skip. skip. (* TODO state consistency issue! *)
                 rewrite <- Hfbstr in Hcl.
                 destr_concl; try ljs_handle_abort.
                 jauto_js 15.
