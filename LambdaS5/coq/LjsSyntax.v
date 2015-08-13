@@ -202,6 +202,8 @@ Fixpoint expr_seqs es :=
     | e :: es' => expr_seq e (expr_seqs es')
     end.
 
+Definition expr_seqs_then e0 es := fold_right expr_seq e0 es.
+
 Definition expr_true := expr_bool true.
 Definition expr_false := expr_bool false.
 
