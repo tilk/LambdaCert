@@ -157,7 +157,7 @@ Definition make_resolve_this e :=
 Definition init_arg p :=
     let '(vnum, vid) := p in 
     make_app_builtin "%EnvDefineArg" 
-        [vcontext; L.expr_string vid; L.expr_get_field (L.expr_id "args") (L.expr_id vnum); strict].
+        [vcontext; L.expr_string vid; L.expr_get_field (L.expr_id "args") (L.expr_string vnum); strict].
 
 Definition init_args is := L.expr_seqs_then L.expr_empty (map init_arg (zipl_stream (id_stream_from 0) is)).
 
