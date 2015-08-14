@@ -23,12 +23,12 @@ Definition ptr_privReferenceErrorProto : object_ptr :=  6 .
 Definition ptr_privmakeGlobalEnv : object_ptr :=  0 .
 Definition ptr_priveval : object_ptr :=  310 .
 Definition ptr_privThrowTypeError : object_ptr :=  10 .
+Definition ptr_privglobalContext : object_ptr :=  307 .
 Definition ptr_privSyntaxErrorProto : object_ptr :=  7 .
 Definition ptr_privErrorProto : object_ptr :=  4 .
 Definition ptr_privErrorGlobalFuncObj : object_ptr :=  44 .
 Definition ptr_privEvalErrorProto : object_ptr :=  8 .
 Definition ptr_privEvalErrorGlobalFuncObj : object_ptr :=  46 .
-Definition ptr_privglobalContext : object_ptr :=  307 .
 Definition ptr_privFunctionGlobalFuncObj : object_ptr :=  311 .
 Definition ptr_privFunctionProto : object_ptr :=  3 .
 Definition ptr_privMath : object_ptr :=  255 .
@@ -313,6 +313,14 @@ expr_object
  ("%EnvAssign", property_data
                 (data_intro (expr_id "%EnvAssign") expr_true expr_false
                  expr_false));
+ ("%EnvCreateMutableBinding", property_data
+                              (data_intro
+                               (expr_id "%EnvCreateMutableBinding") expr_true
+                               expr_false expr_false));
+ ("%EnvCreateSetMutableBinding", property_data
+                                 (data_intro
+                                  (expr_id "%EnvCreateSetMutableBinding")
+                                  expr_true expr_false expr_false));
  ("%EnvDefineArg", property_data
                    (data_intro (expr_id "%EnvDefineArg") expr_true expr_false
                     expr_false));
@@ -330,12 +338,18 @@ expr_object
                  expr_false));
  ("%EnvGet", property_data
              (data_intro (expr_id "%EnvGet") expr_true expr_false expr_false));
+ ("%EnvGetBindingValue", property_data
+                         (data_intro (expr_id "%EnvGetBindingValue")
+                          expr_true expr_false expr_false));
  ("%EnvGetId", property_data
                (data_intro (expr_id "%EnvGetId") expr_true expr_false
                 expr_false));
  ("%EnvGetValue", property_data
                   (data_intro (expr_id "%EnvGetValue") expr_true expr_false
                    expr_false));
+ ("%EnvHasBinding", property_data
+                    (data_intro (expr_id "%EnvHasBinding") expr_true
+                     expr_false expr_false));
  ("%EnvImplicitThis", property_data
                       (data_intro (expr_id "%EnvImplicitThis") expr_true
                        expr_false expr_false));
@@ -348,6 +362,9 @@ expr_object
  ("%EnvPutValue", property_data
                   (data_intro (expr_id "%EnvPutValue") expr_true expr_false
                    expr_false));
+ ("%EnvSetMutableBinding", property_data
+                           (data_intro (expr_id "%EnvSetMutableBinding")
+                            expr_true expr_false expr_false));
  ("%EnvTypeof", property_data
                 (data_intro (expr_id "%EnvTypeof") expr_true expr_false
                  expr_false));
@@ -2553,6 +2570,39 @@ expr_let "f"
 (expr_app (expr_id "%EnvGetId")
  [expr_id "context"; expr_id "id"; expr_id "f"])
 .
+Definition ex_privEnvCreateMutableBinding := 
+expr_if
+(expr_op2 binary_op_stx_eq
+ (expr_get_obj_attr oattr_class (expr_id "context"))
+ (expr_string "DeclEnvRec"))
+(expr_seq
+ (expr_app (expr_id "%DeclEnvAddBinding")
+  [expr_id "context";
+   expr_id "id";
+   expr_undefined;
+   expr_true;
+   expr_id "configurable"]) expr_empty)
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_obj_attr oattr_class (expr_id "context"))
+  (expr_string "ObjEnvRec"))
+ (expr_app (expr_id "%AddDataField")
+  [expr_get_internal "bindings" (expr_id "context");
+   expr_id "id";
+   expr_undefined;
+   expr_true;
+   expr_true;
+   expr_id "configurable"])
+ (expr_throw
+  (expr_string "[env] Context not well formed! In %EnvCreateMutableBinding")))
+.
+Definition ex_privEnvCreateSetMutableBinding := 
+expr_seq
+(expr_app (expr_id "%EnvCreateMutableBinding")
+ [expr_id "context"; expr_id "id"; expr_id "configurable"])
+(expr_app (expr_id "%EnvSetMutableBinding")
+ [expr_id "context"; expr_id "id"; expr_id "val"; expr_id "strict"])
+.
 Definition ex_privEnvDefineArg := 
 expr_seq
 (expr_if
@@ -2580,44 +2630,47 @@ expr_app (expr_id "%EnvDefineArg")
 .
 Definition ex_privEnvDefineFunc := 
 expr_seq
-(expr_app (expr_id "%EnvDefineVar")
- [expr_id "context";
-  expr_id "id";
-  expr_id "configurableBindings";
-  expr_id "strict"])
-(expr_app (expr_id "%EnvPutValue")
- [expr_id "context"; expr_id "id"; expr_id "fo"; expr_id "strict"])
-.
-Definition ex_privEnvDefineVar := 
-expr_if
-(expr_op2 binary_op_stx_eq
- (expr_get_obj_attr oattr_class (expr_id "context"))
- (expr_string "DeclEnvRec"))
 (expr_if
  (expr_op1 unary_op_not
-  (expr_op2 binary_op_has_own_property (expr_id "context") (expr_id "id")))
- (expr_app (expr_id "%DeclEnvAddBinding")
-  [expr_id "context";
-   expr_id "id";
-   expr_undefined;
-   expr_true;
-   expr_id "configurableBindings"]) expr_undefined)
-(expr_if
- (expr_op2 binary_op_stx_eq
-  (expr_get_obj_attr oattr_class (expr_id "context"))
-  (expr_string "ObjEnvRec"))
- (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
-  (expr_if
-   (expr_op1 unary_op_not
-    (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id")))
+  (expr_app (expr_id "%EnvHasBinding") [expr_id "context"; expr_id "id"]))
+ (expr_app (expr_id "%EnvCreateMutableBinding")
+  [expr_id "context"; expr_id "id"; expr_id "configurableBindings"])
+ (expr_if
+  (expr_op2 binary_op_stx_eq (expr_id "context") (expr_id "%globalContext"))
+  (expr_if (expr_get_attr pattr_config (expr_id "%global") (expr_id "id"))
    (expr_app (expr_id "%AddDataField")
-    [expr_id "bindings";
+    [expr_id "%global";
      expr_id "id";
      expr_undefined;
      expr_true;
      expr_true;
-     expr_id "configurableBindings"]) expr_undefined))
- (expr_throw (expr_string "[env] Context not well formed! In %EnvDefineVar")))
+     expr_id "configurableBindings"])
+   (expr_if
+    (expr_if
+     (expr_if
+      (expr_op2 binary_op_is_accessor (expr_id "%global") (expr_id "id"))
+      expr_true
+      (expr_op1 unary_op_not
+       (expr_get_attr pattr_writable (expr_id "%global") (expr_id "id"))))
+     expr_true
+     (expr_op1 unary_op_not
+      (expr_get_attr pattr_enum (expr_id "%global") (expr_id "id"))))
+    (expr_app (expr_id "%TypeError") [expr_string "cannot redefine function"])
+    expr_undefined)) expr_undefined))
+(expr_app (expr_id "%EnvSetMutableBinding")
+ [expr_id "context"; expr_id "id"; expr_id "fo"; expr_id "strict"])
+.
+Definition ex_privEnvDefineVar := 
+expr_seq
+(expr_if
+ (expr_op1 unary_op_not
+  (expr_app (expr_id "%EnvHasBinding") [expr_id "context"; expr_id "id"]))
+ (expr_app (expr_id "%EnvCreateSetMutableBinding")
+  [expr_id "context";
+   expr_id "id";
+   expr_undefined;
+   expr_id "configurableBindings";
+   expr_id "strict"]) expr_undefined) expr_empty
 .
 Definition ex_privEnvDelete := 
 expr_let "f"
@@ -2655,6 +2708,21 @@ expr_let "f"
 (expr_app (expr_id "%EnvGetId")
  [expr_id "context"; expr_id "id"; expr_id "f"])
 .
+Definition ex_privEnvGetBindingValue := 
+expr_if
+(expr_op2 binary_op_stx_eq
+ (expr_get_obj_attr oattr_class (expr_id "context"))
+ (expr_string "DeclEnvRec"))
+(expr_get_attr pattr_value (expr_id "context") (expr_id "id"))
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_obj_attr oattr_class (expr_id "context"))
+  (expr_string "ObjEnvRec"))
+ (expr_get_field (expr_get_internal "bindings" (expr_id "context"))
+  (expr_id "id"))
+ (expr_throw
+  (expr_string "[env] Context not well formed! In %EnvGetBindingValue")))
+.
 Definition ex_privEnvGetId := 
 expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
 (expr_app (expr_id "f") [expr_id "context"])
@@ -2684,18 +2752,22 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
 Definition ex_privEnvGetValue := 
 expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
 (expr_app (expr_id "%UnboundId") [expr_id "id"])
+(expr_app (expr_id "%EnvGetBindingValue")
+ [expr_id "context"; expr_id "id"; expr_id "strict"])
+.
+Definition ex_privEnvHasBinding := 
+expr_if
+(expr_op2 binary_op_stx_eq
+ (expr_get_obj_attr oattr_class (expr_id "context"))
+ (expr_string "DeclEnvRec"))
+(expr_op2 binary_op_has_own_property (expr_id "context") (expr_id "id"))
 (expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))
-  (expr_string "DeclEnvRec"))
- (expr_get_attr pattr_value (expr_id "context") (expr_id "id"))
- (expr_if
-  (expr_op2 binary_op_stx_eq
-   (expr_get_obj_attr oattr_class (expr_id "context"))
-   (expr_string "ObjEnvRec"))
-  (expr_get_field (expr_get_internal "bindings" (expr_id "context"))
-   (expr_id "id"))
-  (expr_throw (expr_string "[env] Context not well formed! In %EnvGet"))))
+  (expr_string "ObjEnvRec"))
+ (expr_op2 binary_op_has_own_property
+  (expr_get_internal "bindings" (expr_id "context")) (expr_id "id"))
+ (expr_throw (expr_string "[env] Context not well formed! In %EnvHasBinding")))
 .
 Definition ex_privEnvImplicitThis := 
 expr_if
@@ -2748,27 +2820,32 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
 (expr_if (expr_id "strict") (expr_app (expr_id "%UnboundId") [expr_id "id"])
  (expr_set_attr pattr_value (expr_id "%global") (expr_id "id")
   (expr_id "val")))
+(expr_app (expr_id "%EnvSetMutableBinding")
+ [expr_id "context"; expr_id "id"; expr_id "val"; expr_id "strict"])
+.
+Definition ex_privEnvSetMutableBinding := 
+expr_if
+(expr_op2 binary_op_stx_eq
+ (expr_get_obj_attr oattr_class (expr_id "context"))
+ (expr_string "DeclEnvRec"))
+(expr_if (expr_get_attr pattr_writable (expr_id "context") (expr_id "id"))
+ (expr_seq
+  (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
+   (expr_id "val")) expr_empty)
+ (expr_if (expr_id "strict")
+  (expr_app (expr_id "%TypeError")
+   [expr_op2 binary_op_string_plus (expr_id "id")
+    (expr_string " is read-only")]) expr_empty))
 (expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))
-  (expr_string "DeclEnvRec"))
- (expr_if (expr_get_attr pattr_writable (expr_id "context") (expr_id "id"))
-  (expr_seq
-   (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
-    (expr_id "val")) expr_empty)
-  (expr_if (expr_id "strict")
-   (expr_app (expr_id "%TypeError")
-    [expr_op2 binary_op_string_plus (expr_id "id")
-     (expr_string " is read-only")]) expr_empty))
- (expr_if
-  (expr_op2 binary_op_stx_eq
-   (expr_get_obj_attr oattr_class (expr_id "context"))
-   (expr_string "ObjEnvRec"))
-  (expr_app (expr_id "%set-property")
-   [expr_get_internal "bindings" (expr_id "context");
-    expr_id "id";
-    expr_id "val"])
-  (expr_throw (expr_string "[env] Context not well formed! In %EnvPutValue"))))
+  (expr_string "ObjEnvRec"))
+ (expr_app (expr_id "%set-property")
+  [expr_get_internal "bindings" (expr_id "context");
+   expr_id "id";
+   expr_id "val"])
+ (expr_throw
+  (expr_string "[env] Context not well formed! In %EnvSetMutableBinding")))
 .
 Definition ex_privEnvTypeof := 
 expr_let "f"
@@ -8226,6 +8303,11 @@ value_closure
 (closure_intro [] (Some "%EnvGetId") ["context"; "id"; "f"] ex_privEnvGetId)
 .
 Definition name_privEnvGetId : id :=  "%EnvGetId" .
+Definition privEnvGetBindingValue := 
+value_closure
+(closure_intro [] None ["context"; "id"; "strict"] ex_privEnvGetBindingValue)
+.
+Definition name_privEnvGetBindingValue : id :=  "%EnvGetBindingValue" .
 Definition privReferenceErrorProto :=  value_object 6 .
 Definition name_privReferenceErrorProto : id :=  "%ReferenceErrorProto" .
 Definition privReferenceError := 
@@ -8244,8 +8326,10 @@ value_closure
 Definition name_privUnboundId : id :=  "%UnboundId" .
 Definition privEnvGetValue := 
 value_closure
-(closure_intro [("%UnboundId", privUnboundId)] None
- ["context"; "id"; "strict"] ex_privEnvGetValue)
+(closure_intro
+ [("%EnvGetBindingValue", privEnvGetBindingValue);
+  ("%UnboundId", privUnboundId)] None ["context"; "id"; "strict"]
+ ex_privEnvGetValue)
 .
 Definition name_privEnvGetValue : id :=  "%EnvGetValue" .
 Definition privEnvImplicitThis := 
@@ -8291,14 +8375,20 @@ value_closure
  ex_privset_property)
 .
 Definition name_privset_property : id :=  "%set-property" .
+Definition privEnvSetMutableBinding := 
+value_closure
+(closure_intro
+ [("%TypeError", privTypeError); ("%set-property", privset_property)] 
+ None ["context"; "id"; "val"; "strict"] ex_privEnvSetMutableBinding)
+.
+Definition name_privEnvSetMutableBinding : id :=  "%EnvSetMutableBinding" .
 Definition privEnvPutValue := 
 value_closure
 (closure_intro
- [("%TypeError", privTypeError);
+ [("%EnvSetMutableBinding", privEnvSetMutableBinding);
   ("%UnboundId", privUnboundId);
-  ("%global", privglobal);
-  ("%set-property", privset_property)] None
- ["context"; "id"; "val"; "strict"] ex_privEnvPutValue)
+  ("%global", privglobal)] None ["context"; "id"; "val"; "strict"]
+ ex_privEnvPutValue)
 .
 Definition name_privEnvPutValue : id :=  "%EnvPutValue" .
 Definition privEnvAssign := 
@@ -8308,6 +8398,23 @@ value_closure
  ["context"; "id"; "val_thunk"; "strict"] ex_privEnvAssign)
 .
 Definition name_privEnvAssign : id :=  "%EnvAssign" .
+Definition privEnvCreateMutableBinding := 
+value_closure
+(closure_intro
+ [("%AddDataField", privAddDataField);
+  ("%DeclEnvAddBinding", privDeclEnvAddBinding)] None
+ ["context"; "id"; "configurable"] ex_privEnvCreateMutableBinding)
+.
+Definition name_privEnvCreateMutableBinding : id :=  "%EnvCreateMutableBinding" .
+Definition privEnvCreateSetMutableBinding := 
+value_closure
+(closure_intro
+ [("%EnvCreateMutableBinding", privEnvCreateMutableBinding);
+  ("%EnvSetMutableBinding", privEnvSetMutableBinding)] None
+ ["context"; "id"; "val"; "configurable"; "strict"]
+ ex_privEnvCreateSetMutableBinding)
+.
+Definition name_privEnvCreateSetMutableBinding : id :=  "%EnvCreateSetMutableBinding" .
 Definition privEnvDefineArg := 
 value_closure
 (closure_intro
@@ -8335,22 +8442,34 @@ value_closure
  None ["context"; "args"; "obj"; "strict"] ex_privEnvDefineArgsObj)
 .
 Definition name_privEnvDefineArgsObj : id :=  "%EnvDefineArgsObj" .
-Definition privEnvDefineVar := 
-value_closure
-(closure_intro
- [("%AddDataField", privAddDataField);
-  ("%DeclEnvAddBinding", privDeclEnvAddBinding)] None
- ["context"; "id"; "configurableBindings"; "strict"] ex_privEnvDefineVar)
+Definition privEnvHasBinding := 
+value_closure (closure_intro [] None ["context"; "id"] ex_privEnvHasBinding)
 .
-Definition name_privEnvDefineVar : id :=  "%EnvDefineVar" .
+Definition name_privEnvHasBinding : id :=  "%EnvHasBinding" .
+Definition privglobalContext :=  value_object 307 .
+Definition name_privglobalContext : id :=  "%globalContext" .
 Definition privEnvDefineFunc := 
 value_closure
 (closure_intro
- [("%EnvDefineVar", privEnvDefineVar); ("%EnvPutValue", privEnvPutValue)]
- None ["context"; "id"; "fo"; "configurableBindings"; "strict"]
+ [("%AddDataField", privAddDataField);
+  ("%EnvCreateMutableBinding", privEnvCreateMutableBinding);
+  ("%EnvHasBinding", privEnvHasBinding);
+  ("%EnvSetMutableBinding", privEnvSetMutableBinding);
+  ("%TypeError", privTypeError);
+  ("%global", privglobal);
+  ("%globalContext", privglobalContext)] None
+ ["context"; "id"; "fo"; "configurableBindings"; "strict"]
  ex_privEnvDefineFunc)
 .
 Definition name_privEnvDefineFunc : id :=  "%EnvDefineFunc" .
+Definition privEnvDefineVar := 
+value_closure
+(closure_intro
+ [("%EnvCreateSetMutableBinding", privEnvCreateSetMutableBinding);
+  ("%EnvHasBinding", privEnvHasBinding)] None
+ ["context"; "id"; "configurableBindings"; "strict"] ex_privEnvDefineVar)
+.
+Definition name_privEnvDefineVar : id :=  "%EnvDefineVar" .
 Definition privSyntaxErrorProto :=  value_object 7 .
 Definition name_privSyntaxErrorProto : id :=  "%SyntaxErrorProto" .
 Definition privSyntaxError := 
@@ -8443,8 +8562,6 @@ value_closure
 Definition name_privEvalErrorConstructor : id :=  "%EvalErrorConstructor" .
 Definition privEvalErrorGlobalFuncObj :=  value_object 46 .
 Definition name_privEvalErrorGlobalFuncObj : id :=  "%EvalErrorGlobalFuncObj" .
-Definition privglobalContext :=  value_object 307 .
-Definition name_privglobalContext : id :=  "%globalContext" .
 Definition privevalCall := 
 value_closure
 (closure_intro
@@ -9090,7 +9207,7 @@ value_closure
  [("%ObjectTypeCheck", privObjectTypeCheck);
   ("%ToPropertyDescriptor", privToPropertyDescriptor);
   ("%ToString", privToString);
-  ("%defineOwnProperty", privdefineOwnProperty)] None ["this"; "args"]
+  ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
  ex_privdefinePropertyCall)
 .
 Definition name_privdefinePropertyCall : id :=  "%definePropertyCall" .
@@ -10242,18 +10359,23 @@ Definition ctx_items :=
  (name_privDelete, privDelete);
  (name_privEnvAppExpr, privEnvAppExpr);
  (name_privEnvAssign, privEnvAssign);
+ (name_privEnvCreateMutableBinding, privEnvCreateMutableBinding);
+ (name_privEnvCreateSetMutableBinding, privEnvCreateSetMutableBinding);
  (name_privEnvDefineArg, privEnvDefineArg);
  (name_privEnvDefineArgsObj, privEnvDefineArgsObj);
  (name_privEnvDefineFunc, privEnvDefineFunc);
  (name_privEnvDefineVar, privEnvDefineVar);
  (name_privEnvDelete, privEnvDelete);
  (name_privEnvGet, privEnvGet);
+ (name_privEnvGetBindingValue, privEnvGetBindingValue);
  (name_privEnvGetId, privEnvGetId);
  (name_privEnvGetValue, privEnvGetValue);
+ (name_privEnvHasBinding, privEnvHasBinding);
  (name_privEnvImplicitThis, privEnvImplicitThis);
  (name_privEnvModify, privEnvModify);
  (name_privEnvPrepostOp, privEnvPrepostOp);
  (name_privEnvPutValue, privEnvPutValue);
+ (name_privEnvSetMutableBinding, privEnvSetMutableBinding);
  (name_privEnvTypeof, privEnvTypeof);
  (name_privEqEq, privEqEq);
  (name_privErrorConstructor, privErrorConstructor);
@@ -10683,18 +10805,23 @@ privDefaultConstruct
 privDelete
 privEnvAppExpr
 privEnvAssign
+privEnvCreateMutableBinding
+privEnvCreateSetMutableBinding
 privEnvDefineArg
 privEnvDefineArgsObj
 privEnvDefineFunc
 privEnvDefineVar
 privEnvDelete
 privEnvGet
+privEnvGetBindingValue
 privEnvGetId
 privEnvGetValue
+privEnvHasBinding
 privEnvImplicitThis
 privEnvModify
 privEnvPrepostOp
 privEnvPutValue
+privEnvSetMutableBinding
 privEnvTypeof
 privEqEq
 privErrorConstructor
@@ -11134,18 +11261,23 @@ Definition store_items := [
                                              ("%Delete", privDelete);
                                              ("%EnvAppExpr", privEnvAppExpr);
                                              ("%EnvAssign", privEnvAssign);
+                                             ("%EnvCreateMutableBinding", privEnvCreateMutableBinding);
+                                             ("%EnvCreateSetMutableBinding", privEnvCreateSetMutableBinding);
                                              ("%EnvDefineArg", privEnvDefineArg);
                                              ("%EnvDefineArgsObj", privEnvDefineArgsObj);
                                              ("%EnvDefineFunc", privEnvDefineFunc);
                                              ("%EnvDefineVar", privEnvDefineVar);
                                              ("%EnvDelete", privEnvDelete);
                                              ("%EnvGet", privEnvGet);
+                                             ("%EnvGetBindingValue", privEnvGetBindingValue);
                                              ("%EnvGetId", privEnvGetId);
                                              ("%EnvGetValue", privEnvGetValue);
+                                             ("%EnvHasBinding", privEnvHasBinding);
                                              ("%EnvImplicitThis", privEnvImplicitThis);
                                              ("%EnvModify", privEnvModify);
                                              ("%EnvPrepostOp", privEnvPrepostOp);
                                              ("%EnvPutValue", privEnvPutValue);
+                                             ("%EnvSetMutableBinding", privEnvSetMutableBinding);
                                              ("%EnvTypeof", privEnvTypeof);
                                              ("%EqEq", privEqEq);
                                              ("%ErrorConstructor", privErrorConstructor);
