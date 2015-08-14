@@ -1314,6 +1314,54 @@ Lemma binding_inst_formal_params_lemma : forall BR k jst jc c st st' r is vs jvs
 Proof.
 Admitted. (* TODO *)
 
+(* TODO move *)
+Lemma red_spec_creating_function_object_ok : forall BR k jst jc c st st' r is s jp jle,
+    L.red_exprh k c st
+        (L.expr_app_2 LjsInitEnv.privMakeFunctionObject 
+            [L.value_closure (funcbody_closure (to_list c) is jp); L.value_number (length is); L.value_string s; 
+             L.value_bool (J.prog_intro_strictness jp)])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    (forall v, binds c "$context" v -> lexical_env_related BR jle v) ->
+    concl_ext_expr_value BR jst jc c st st' r 
+        (J.spec_creating_function_object is (J.funcbody_intro jp s) jle (J.prog_intro_strictness jp)) 
+        (fun jv => exists jptr, jv = J.value_object jptr).
+Proof.
+    introv Hlred Hcinv Hinv Himpl. 
+Admitted. (* TODO *)
+
+(* TODO move to ejs *)
+Lemma exprjs_prog_strictness_eq : forall jp, E.prog_strictness (E.js_prog_to_ejs jp) = J.prog_intro_strictness jp.
+Proof.
+    introv. destruct jp. reflexivity.
+Qed.
+
+(* TODO move *)
+Ltac determine_fact_js_obj :=
+    match goal with
+    | Hfact1 : fact_js_obj ?jptr ?ptr1 \in ?BR1, Hfact2 : fact_js_obj ?jptr ?ptr2 \in ?BR2,
+      Hinv : state_invariant ?BR _ _ |- _ =>
+        let Hsub1 := fresh in let Hsub2 := fresh in let Heq := fresh "Heq" in 
+        asserts Hsub1 : (BR1 \c BR); [prove_bag | idtac];
+        asserts Hsub2 : (BR2 \c BR); [prove_bag | idtac];
+        lets Heq : heaps_bisim_consistent_lfun_obj (state_invariant_heaps_bisim_consistent Hinv) 
+            (incl_in Hsub1 Hfact1) (incl_in Hsub2 Hfact2);
+        clear Hsub1; clear Hsub2; try (subst_hyp Heq; clear Hfact2)
+    end.
+
+Ltac determine_fact_js_env :=
+    match goal with
+    | Hfact1 : fact_js_env ?jptr ?ptr1 \in ?BR1, Hfact2 : fact_js_env ?jptr ?ptr2 \in ?BR2,
+      Hinv : state_invariant ?BR _ _ |- _ =>
+        let Hsub1 := fresh in let Hsub2 := fresh in let Heq := fresh "Heq" in 
+        asserts Hsub1 : (BR1 \c BR); [prove_bag | idtac];
+        asserts Hsub2 : (BR2 \c BR); [prove_bag | idtac];
+        lets Heq : heaps_bisim_consistent_lfun_env (state_invariant_heaps_bisim_consistent Hinv) 
+            (incl_in Hsub1 Hfact1) (incl_in Hsub2 Hfact2);
+        clear Hsub1; clear Hsub2; try (subst_hyp Heq; clear Hfact2)
+    end.
+
 Lemma binding_inst_function_decls_lemma : forall BR k jst jc c st st' r jfds jeptr ptr b1 b2,
     L.red_exprh k c st (L.expr_basic 
         (E.init_funcs E.make_fobj (map E.js_funcdecl_to_func jfds))) (L.out_ter st' r) ->
@@ -1326,7 +1374,70 @@ Lemma binding_inst_function_decls_lemma : forall BR k jst jc c st st' r jfds jep
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst_function_decls jeptr jfds b2 b1) (fun jrv => jrv = J.resvalue_empty).    
 Proof.
-Admitted. (* TODO *)
+    introv.
+    unfolds E.init_funcs.
+    inductions jfds gen BR k jst st;
+    introv Hlred Hcinv Hinv Hbinds1 Hbinds2 Hbinds3 Hf. {
+        repeat ljs_autoforward.
+        jauto_js.
+    }
+    destruct a. destruct funcdecl_body.
+    rew_map in Hlred.
+    repeat ljs_autoforward.
+    rewrite exprjs_prog_strictness_eq in *.
+    forwards_th : red_spec_creating_function_object_ok. skip. skip. (* TODO! *)
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    inverts red_exprh H13. (* TODO *)
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    forwards_th: has_binding_lemma. prove_bag.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    destruct b. { (* binding already exists *)
+        repeat ljs_autoforward.
+        cases_decide as Hgctx. { (* on global context *)
+            skip. (* TODO global context *)
+        }
+        asserts Hq : (jeptr <> J.env_loc_global_env_record). {
+            unfolds LjsInitEnv.privglobalContext.
+            rewrite stx_eq_object_eq_lemma in Hgctx.
+            forwards Hger : context_invariant_global_env_record_lemma Hcinv.
+            intro Hjeptr. subst_hyp Hjeptr. apply Hgctx.
+            determine_fact_js_env.
+            reflexivity.
+        }
+        repeat ljs_autoforward.
+        forwards_th: set_mutable_binding_lemma. prove_bag.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        repeat ljs_autoforward.
+        forwards_th : IHjfds; try prove_bag.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        jauto_js 10.
+    } { (* binding does not exist *)
+        repeat ljs_autoforward.
+        forwards_th: create_mutable_binding_lemma_some. prove_bag.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        repeat ljs_autoforward.
+        forwards_th: set_mutable_binding_lemma. prove_bag.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        forwards_th : IHjfds; try prove_bag.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        jauto_js 10.
+    }
+Qed.
 
 Lemma binding_inst_arg_obj_lemma : forall BR k jst jc c st st' r jptr ptr ptr1 is jvs vs jeptr b,
     L.red_exprh k c st (L.expr_basic E.init_args_obj) (L.out_ter st' r) ->

@@ -51,27 +51,6 @@ Implicit Type jlenv : J.lexical_env.
 
 (** *** Functions *)
 
-Lemma red_spec_creating_function_object_ok : forall BR k jst jc c st st' r is s jp jle,
-    L.red_exprh k c st
-        (L.expr_app_2 LjsInitEnv.privMakeFunctionObject 
-            [L.value_closure (funcbody_closure (to_list c) is jp); L.value_number (length is); L.value_string s; 
-             L.value_bool (J.prog_intro_strictness jp)])
-        (L.out_ter st' r) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    (forall v, binds c "$context" v -> lexical_env_related BR jle v) ->
-    concl_ext_expr_value BR jst jc c st st' r 
-        (J.spec_creating_function_object is (J.funcbody_intro jp s) jle (J.prog_intro_strictness jp)) 
-        (fun _ => True).
-Proof.
-    introv Hlred Hcinv Hinv Himpl. 
-Admitted. (* TODO *)
-
-Lemma exprjs_prog_strictness_eq : forall jp, E.prog_strictness (E.js_prog_to_ejs jp) = J.prog_intro_strictness jp.
-Proof.
-    introv. destruct jp. reflexivity.
-Qed.
-
 Lemma red_expr_nonrec_function_ok : forall k is fb,
     th_expr k (J.expr_function None is fb).
 Proof.
@@ -495,19 +474,6 @@ Qed.
 
 (* TODO should not be needed *)
 Hint Extern 3 (J.red_expr _ _ (J.expr_call_1 _ _ _) _) => eapply J.red_expr_call_1 : js_ljs.
-
-(* TODO move *)
-Ltac determine_fact_js_obj :=
-    match goal with
-    | Hfact1 : fact_js_obj ?jptr ?ptr1 \in ?BR1, Hfact2 : fact_js_obj ?jptr ?ptr2 \in ?BR2,
-      Hinv : state_invariant ?BR _ _ |- _ =>
-        let Hsub1 := fresh in let Hsub2 := fresh in let Heq := fresh "Heq" in 
-        asserts Hsub1 : (BR1 \c BR); [prove_bag | idtac];
-        asserts Hsub2 : (BR2 \c BR); [prove_bag | idtac];
-        lets Heq : heaps_bisim_consistent_lfun_obj (state_invariant_heaps_bisim_consistent Hinv) 
-            (incl_in Hsub1 Hfact1) (incl_in Hsub2 Hfact2);
-        clear Hsub1; clear Hsub2; try (subst_hyp Heq; clear Hfact2)
-    end.
 
 Lemma red_expr_call_ok : forall k je jel,
     ih_expr k ->
