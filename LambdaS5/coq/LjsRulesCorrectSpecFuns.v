@@ -1299,6 +1299,156 @@ Proof.
     introv. destruct p. reflexivity.
 Qed.
 
+(* TODO move *)
+Lemma array_idx_lemma : forall BR k jst jc c st st' ptr jvs vs s k' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privArrayIdx [L.value_object ptr; L.value_string s])
+        (L.out_ter st' r) ->
+    s = string_of_nat k' ->
+    fact_iarray ptr vs \in BR ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR jvs vs ->
+    state_invariant BR jst st' /\
+    st = st' /\ 
+    exists jv v,
+    r = L.res_value v /\
+    value_related BR jv v /\
+    (k' >= length vs /\ jv = J.value_prim J.prim_undef /\ v = L.value_undefined \/ Nth k' jvs jv /\ Nth k' vs v).
+Proof.
+Admitted. (* TODO *)
+
+Lemma values_related_length_lemma : forall BR jvs vs,
+    values_related BR jvs vs ->
+    length jvs = length vs.
+Proof.
+    introv Hvrel.
+    inductions Hvrel. { reflexivity. } {
+        rew_length. rewrite IHHvrel. reflexivity.
+    }
+Qed.
+
+Lemma binding_inst_formal_params_lemma_lemma : forall BR k jst jc c st st' r is vs jvs1 jvs2 ptr ptr1 jeptr b k',
+    L.red_exprh k c st (L.expr_basic (L.expr_seqs_then L.expr_empty
+            (map E.init_arg (zipl_stream (LibStream.map string_of_nat (nat_stream_from k')) is)))) 
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR (jvs1 ++ jvs2) vs ->
+    k' = length jvs1 /\ length jvs2 > 0 \/ k' >= length jvs1 /\ jvs2 = [] ->
+    binds c "$strict" (L.value_bool b) ->
+    binds c "$vcontext" (L.value_object ptr) ->
+    binds c "args" (L.value_object ptr1) ->
+    fact_iarray ptr1 vs \in BR ->
+    fact_js_env jeptr ptr \in BR ->
+    concl_ext_expr_resvalue BR jst jc c st st' r 
+        (J.spec_binding_inst_formal_params jvs2 jeptr is b) (fun jrv => jrv = J.resvalue_empty).    
+Proof.
+    introv.
+    unfolds E.init_args.
+    inductions is gen BR k jst st jvs1 jvs2;
+    introv Hlred Hcinv Hinv Hvrels Hk' Hbinds1 Hbinds2 Hbinds3 Hf1 Hf2. {
+        repeat ljs_autoforward.
+        jauto_js 10.
+    }
+    simpl in Hlred.
+    rew_map in Hlred.
+    repeat ljs_autoforward.
+    forwards_th Harridx : array_idx_lemma. reflexivity. eassumption. eassumption.
+    destruct Harridx as (?&Heq1&jv&v&Heq2&Hvrel&Harridx). subst_hyp Heq1. subst_hyp Heq2.
+    asserts Hjvs2 : (k' >= length jvs1 /\ jvs2 = [] /\ v = L.value_undefined /\ jv = J.value_prim J.prim_undef \/ 
+            k' = length jvs1 /\ exists jvs2', jvs2 = jv::jvs2'). {
+        destruct Hk' as [(Hk1&Hk2)|(Hk1&Hk2)]. {
+            right. split. assumption. 
+            destruct jvs2; rew_length in Hk2; try solve [false; math].
+            destruct Harridx as [Harridx|Harridx]. {
+                erewrite <- values_related_length_lemma in Harridx by eassumption.
+                rew_length in Harridx. destruct_hyp Harridx. false. math.
+            }
+            destruct Harridx as (Harridx1&Harridx2).
+            apply Nth_app_inv in Harridx1.
+            destruct Harridx1 as [Harridx1|Harridx1]. {
+                apply Nth_lt_length in Harridx1. false. math.
+            }
+            destruct Harridx1 as (k''&Heqk''&Harridx1).
+            asserts Hzero : (k'' = 0). { math. } subst_hyp Hzero.
+            inverts Harridx1.
+            jauto.
+        } {
+            left. 
+            destruct Harridx as [Harridx|Harridx]. {
+                destruct_hyp Harridx. jauto.
+            }
+            subst_hyp Hk2.
+            destruct Harridx as (Harridx1&Harridx2).
+            rew_app in Harridx1.
+            apply Nth_lt_length in Harridx1. false. math.
+        }
+    }
+    clear Harridx. clear Hk'.
+    asserts Hexit : (exists jvs1' jvs2', values_related BR (jvs1' ++ jvs2') vs /\
+            (S k' = length jvs1' /\ length jvs2' > 0 \/ S k' >= length jvs1' /\ jvs2' = []) /\
+            (k' >= length jvs1 /\ jvs2 = [] /\ v = L.value_undefined /\ jv = J.value_prim J.prim_undef /\
+                jvs1' = jvs1 /\ jvs2' = jvs2 \/ 
+             k' = length jvs1 /\ jvs1' = jvs1 & jv /\ jvs2 = jv::jvs2')). {
+        destruct Hjvs2 as [Hjvs2|Hjvs2]. {
+            exists jvs1 jvs2.
+            destruct_hyp Hjvs2. splits. 
+            + assumption. 
+            + right. split. math. reflexivity.
+            + left. jauto_js.
+        } {
+            destruct_hyp Hjvs2. destruct jvs2' as [|jv' jvs2']. {
+                exists (jvs1&jv) (@nil J.value). splits.
+                + rew_app. assumption.
+                + right. split. { rew_length. math. } reflexivity.
+                + right. jauto_js.
+            }
+            exists (jvs1&jv) (jv'::jvs2'). splits. 
+            + rew_app. assumption.
+            + left. split. { rew_length. math. } { rew_length. math. }
+            + right. jauto_js.
+        }
+    }
+    repeat ljs_autoforward.
+    inverts red_exprh H3. (* TODO *)
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    forwards_th: has_binding_lemma. prove_bag.
+    destr_concl; [idtac | destruct_hyp Hjvs2; try ljs_handle_abort].
+    res_related_invert.
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    destruct b0. { (* binding already exists *)
+        repeat ljs_autoforward.
+        forwards_th: set_mutable_binding_lemma. prove_bag.
+        destr_concl; [idtac | destruct_hyp Hjvs2; try ljs_handle_abort].
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        destruct Hexit as (jvs1'&jvs2'&Hvrels'&Hsk'&Hjvs2').
+        forwards_th Hx : IHis; try prove_bag. eauto_js.
+        destr_concl; [idtac | destruct_hyp Hjvs2'; try ljs_handle_abort].
+        destruct_hyp Hjvs2'; jauto_js 10.
+    } { (* binding does not exist *)
+        repeat ljs_autoforward.
+        forwards_th: create_mutable_binding_lemma_none. prove_bag.
+        destr_concl; [idtac | destruct_hyp Hjvs2; try ljs_handle_abort].
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        forwards_th: set_mutable_binding_lemma. prove_bag.
+        destr_concl; [idtac | destruct_hyp Hjvs2; try ljs_handle_abort]. 
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        destruct Hexit as (jvs1'&jvs2'&Hvrels'&Hsk'&Hjvs2').
+        forwards_th Hx : IHis; try prove_bag. eauto_js.
+        destr_concl; [idtac | destruct_hyp Hjvs2'; try ljs_handle_abort].
+        destruct_hyp Hjvs2'; jauto_js 10.
+    }
+Qed.
+
 Lemma binding_inst_formal_params_lemma : forall BR k jst jc c st st' r is vs jvs ptr ptr1 jeptr b,
     L.red_exprh k c st (L.expr_basic (E.init_args is)) (L.out_ter st' r) ->
     context_invariant BR jc c ->
@@ -1312,7 +1462,11 @@ Lemma binding_inst_formal_params_lemma : forall BR k jst jc c st st' r is vs jvs
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst_formal_params jvs jeptr is b) (fun jrv => jrv = J.resvalue_empty).    
 Proof.
-Admitted. (* TODO *)
+    introv Hlred Hcinv Hinv Hvrels Hbinds1 Hbinds2 Hbinds3 Hf1 Hf2.
+    asserts Hvrels' : (values_related BR ([]++jvs) vs). { rew_app. assumption. }
+    forwards_th : binding_inst_formal_params_lemma_lemma; try prove_bag.
+    destruct jvs; rew_length; intuition math.
+Qed.
 
 (* TODO move *)
 Lemma red_spec_creating_function_object_ok : forall BR k jst jc c st st' r is s jp jle,
@@ -1361,6 +1515,21 @@ Ltac determine_fact_js_env :=
             (incl_in Hsub1 Hfact1) (incl_in Hsub2 Hfact2);
         clear Hsub1; clear Hsub2; try (subst_hyp Heq; clear Hfact2)
     end.
+
+Lemma binding_inst_arg_obj_lemma : forall BR k jst jc c st st' r jptr ptr ptr1 is jvs vs jeptr b,
+    L.red_exprh k c st (L.expr_basic E.init_args_obj) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR jvs vs ->
+    binds c "$strict" (L.value_bool b) ->
+    binds c "$vcontext" (L.value_object ptr) ->
+    binds c "args" (L.value_object ptr1) ->
+    fact_iarray ptr1 vs \in BR ->
+    fact_js_env jeptr ptr \in BR ->
+    concl_ext_expr_resvalue BR jst jc c st st' r 
+        (J.spec_binding_inst_arg_obj jptr is jvs jeptr b) (fun jrv => jrv = J.resvalue_empty).
+Proof.
+Admitted. (* TODO *)
 
 Lemma binding_inst_function_decls_lemma : forall BR k jst jc c st st' r jfds jeptr ptr b1 b2,
     L.red_exprh k c st (L.expr_basic 
@@ -1438,21 +1607,6 @@ Proof.
         jauto_js 10.
     }
 Qed.
-
-Lemma binding_inst_arg_obj_lemma : forall BR k jst jc c st st' r jptr ptr ptr1 is jvs vs jeptr b,
-    L.red_exprh k c st (L.expr_basic E.init_args_obj) (L.out_ter st' r) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    values_related BR jvs vs ->
-    binds c "$strict" (L.value_bool b) ->
-    binds c "$vcontext" (L.value_object ptr) ->
-    binds c "args" (L.value_object ptr1) ->
-    fact_iarray ptr1 vs \in BR ->
-    fact_js_env jeptr ptr \in BR ->
-    concl_ext_expr_resvalue BR jst jc c st st' r 
-        (J.spec_binding_inst_arg_obj jptr is jvs jeptr b) (fun jrv => jrv = J.resvalue_empty).
-Proof.
-Admitted. (* TODO *)
 
 Lemma binding_inst_var_decls_lemma : forall BR k jst jc c st st' r is jeptr ptr b1 b2,
     L.red_exprh k c st (L.expr_basic (E.init_vars is)) (L.out_ter st' r) ->

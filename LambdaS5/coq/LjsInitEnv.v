@@ -219,6 +219,9 @@ expr_object
  ("%ArrayGlobalFuncObj", property_data
                          (data_intro (expr_id "%ArrayGlobalFuncObj")
                           expr_true expr_false expr_false));
+ ("%ArrayIdx", property_data
+               (data_intro (expr_id "%ArrayIdx") expr_true expr_false
+                expr_false));
  ("%ArrayLengthChange", property_data
                         (data_intro (expr_id "%ArrayLengthChange") expr_true
                          expr_false expr_false));
@@ -2143,6 +2146,9 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
                              expr_false))]])
         (expr_break "ret" (expr_id "rtn"))))))))))
 .
+Definition ex_privArrayIdx := 
+expr_get_field (expr_id "arr") (expr_id "idx")
+.
 Definition ex_privArrayLengthChange := 
 expr_let "oldlen"
 (expr_app (expr_id "%ToUint32")
@@ -2607,18 +2613,13 @@ Definition ex_privEnvDefineArg :=
 expr_seq
 (expr_if
  (expr_op1 unary_op_not
-  (expr_op2 binary_op_stx_eq
-   (expr_get_obj_attr oattr_class (expr_id "context"))
-   (expr_string "DeclEnvRec")))
- (expr_throw (expr_string "[env] Context not well formed! In %EnvDefineArg"))
- expr_undefined)
-(expr_if
- (expr_op1 unary_op_not
-  (expr_op2 binary_op_has_property (expr_id "context") (expr_id "id")))
- (expr_app (expr_id "%DeclEnvAddBinding")
-  [expr_id "context"; expr_id "id"; expr_id "val"; expr_true; expr_false])
- (expr_app (expr_id "%EnvPutValue")
-  [expr_id "context"; expr_id "id"; expr_id "val"; expr_id "strict"]))
+  (expr_app (expr_id "%EnvHasBinding") [expr_id "context"; expr_id "id"]))
+ (expr_app (expr_id "%EnvCreateMutableBinding")
+  [expr_id "context"; expr_id "id"; expr_false]) expr_undefined)
+(expr_seq
+ (expr_app (expr_id "%EnvSetMutableBinding")
+  [expr_id "context"; expr_id "id"; expr_id "val"; expr_id "strict"])
+ expr_empty)
 .
 Definition ex_privEnvDefineArgsObj := 
 expr_app (expr_id "%EnvDefineArg")
@@ -7982,6 +7983,10 @@ value_closure
 Definition name_privArrayCall : id :=  "%ArrayCall" .
 Definition privArrayGlobalFuncObj :=  value_object 101 .
 Definition name_privArrayGlobalFuncObj : id :=  "%ArrayGlobalFuncObj" .
+Definition privArrayIdx := 
+value_closure (closure_intro [] None ["arr"; "idx"] ex_privArrayIdx)
+.
+Definition name_privArrayIdx : id :=  "%ArrayIdx" .
 Definition privArrayLengthChange := 
 value_closure
 (closure_intro [("%ToUint32", privToUint32)] None ["arr"; "newlen"]
@@ -8415,12 +8420,17 @@ value_closure
  ex_privEnvCreateSetMutableBinding)
 .
 Definition name_privEnvCreateSetMutableBinding : id :=  "%EnvCreateSetMutableBinding" .
+Definition privEnvHasBinding := 
+value_closure (closure_intro [] None ["context"; "id"] ex_privEnvHasBinding)
+.
+Definition name_privEnvHasBinding : id :=  "%EnvHasBinding" .
 Definition privEnvDefineArg := 
 value_closure
 (closure_intro
- [("%DeclEnvAddBinding", privDeclEnvAddBinding);
-  ("%EnvPutValue", privEnvPutValue)] None ["context"; "id"; "val"; "strict"]
- ex_privEnvDefineArg)
+ [("%EnvCreateMutableBinding", privEnvCreateMutableBinding);
+  ("%EnvHasBinding", privEnvHasBinding);
+  ("%EnvSetMutableBinding", privEnvSetMutableBinding)] None
+ ["context"; "id"; "val"; "strict"] ex_privEnvDefineArg)
 .
 Definition name_privEnvDefineArg : id :=  "%EnvDefineArg" .
 Definition privThrowTypeError :=  value_object 10 .
@@ -8442,10 +8452,6 @@ value_closure
  None ["context"; "args"; "obj"; "strict"] ex_privEnvDefineArgsObj)
 .
 Definition name_privEnvDefineArgsObj : id :=  "%EnvDefineArgsObj" .
-Definition privEnvHasBinding := 
-value_closure (closure_intro [] None ["context"; "id"] ex_privEnvHasBinding)
-.
-Definition name_privEnvHasBinding : id :=  "%EnvHasBinding" .
 Definition privglobalContext :=  value_object 307 .
 Definition name_privglobalContext : id :=  "%globalContext" .
 Definition privEnvDefineFunc := 
@@ -10327,6 +10333,7 @@ Definition ctx_items :=
  (name_privArrayCall, privArrayCall);
  (name_privArrayConstructor, privArrayConstructor);
  (name_privArrayGlobalFuncObj, privArrayGlobalFuncObj);
+ (name_privArrayIdx, privArrayIdx);
  (name_privArrayLengthChange, privArrayLengthChange);
  (name_privArrayProto, privArrayProto);
  (name_privBindConstructor, privBindConstructor);
@@ -10773,6 +10780,7 @@ privAppMethod
 privArrayCall
 privArrayConstructor
 privArrayGlobalFuncObj
+privArrayIdx
 privArrayLengthChange
 privArrayProto
 privBindConstructor
@@ -11229,6 +11237,7 @@ Definition store_items := [
                                              ("%ArrayCall", privArrayCall);
                                              ("%ArrayConstructor", privArrayConstructor);
                                              ("%ArrayGlobalFuncObj", privArrayGlobalFuncObj);
+                                             ("%ArrayIdx", privArrayIdx);
                                              ("%ArrayLengthChange", privArrayLengthChange);
                                              ("%ArrayProto", privArrayProto);
                                              ("%BindConstructor", privBindConstructor);
