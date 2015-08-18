@@ -154,6 +154,12 @@ Definition make_strictness b e :=
 Definition make_resolve_this e :=
     make_app_builtin "%resolveThis" [strict; e].
 
+Definition make_args_obj_prop e := L.property_data (L.data_intro e L.expr_false L.expr_false L.expr_false).
+
+Definition make_args_obj (es : list L.expr) := 
+    let props := zipl_stream (id_stream_from 0) (map make_args_obj_prop es) in
+    L.expr_object L.default_objattrs nil props.
+
 Definition init_arg p :=
     let '(vnum, vid) := p in 
     make_app_builtin "%EnvDefineArg" 
@@ -172,19 +178,20 @@ Definition init_func (f : E.func -> L.expr) p :=
 
 Definition init_funcs f ps := L.expr_seqs_then L.expr_empty (List.map (init_func f) ps).
 
-Definition init_args_obj := 
-    make_app_builtin "%EnvDefineArgsObj" [vcontext; L.expr_id "args"; L.expr_id "obj"; strict].
+Definition init_args_obj (is : list string) := (* TODO support non-strict arguments object *)
+    make_app_builtin "%EnvDefineArgsObj" [vcontext; L.expr_null; L.expr_id "args"; L.expr_id "obj"; strict].
 
 Definition init_bindings_func f vs fs is := 
     L.expr_let "evalCode" L.expr_false (
     L.expr_seq (init_args vs) (
     L.expr_seq (init_funcs f fs) (
-    L.expr_seq init_args_obj (
+    L.expr_seq (init_args_obj vs) (
     L.expr_seq (init_vars is) L.expr_empty)))).
 
 Definition init_bindings_prog f fs is := 
    L.expr_seq (init_funcs f fs) (
-   L.expr_seq (init_vars is) L.expr_empty).
+   L.expr_seq (make_app_builtin "%EnvHasBinding" [vcontext; L.expr_string "arguments"]) ( (* stupid spec *)
+   L.expr_seq (init_vars is) L.expr_empty)).
 
 Definition make_lambda_expr f ff (is : list string) p :=
     let 'E.prog_intro str fs vis e := p in
@@ -288,12 +295,6 @@ Definition make_array es :=
         end in
     L.expr_let "a" (make_app_builtin "%MakeArray" [L.expr_number (length es)]) 
       (L.expr_seq (L.expr_seqs (map f (number_list_from 0 es))) (L.expr_id "a")).
-
-Definition make_args_obj_prop e := L.property_data (L.data_intro e L.expr_false L.expr_false L.expr_false).
-
-Definition make_args_obj (es : list L.expr) := 
-    let props := zipl_stream (id_stream_from 0) (map make_args_obj_prop es) in
-    L.expr_object L.default_objattrs nil props.
 
 Definition throw_typ_error msg := make_app_builtin "%TypeError" [L.expr_string msg].
 

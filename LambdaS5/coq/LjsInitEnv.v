@@ -330,6 +330,9 @@ expr_object
  ("%EnvDefineArgsObj", property_data
                        (data_intro (expr_id "%EnvDefineArgsObj") expr_true
                         expr_false expr_false));
+ ("%EnvDefineArgsObjOk", property_data
+                         (data_intro (expr_id "%EnvDefineArgsObjOk")
+                          expr_true expr_false expr_false));
  ("%EnvDefineFunc", property_data
                     (data_intro (expr_id "%EnvDefineFunc") expr_true
                      expr_false expr_false));
@@ -2622,12 +2625,38 @@ expr_seq
  expr_empty)
 .
 Definition ex_privEnvDefineArgsObj := 
-expr_app (expr_id "%EnvDefineArg")
-[expr_id "context";
- expr_string "arguments";
- expr_app (expr_id "%mkArgsObj")
- [expr_id "context"; expr_id "args"; expr_id "obj"; expr_id "strict"];
- expr_id "strict"]
+expr_seq
+(expr_if
+ (expr_op1 unary_op_not
+  (expr_op2 binary_op_stx_eq
+   (expr_get_obj_attr oattr_class (expr_id "context"))
+   (expr_string "DeclEnvRec")))
+ (expr_fail "[env] %EnvDefineArgsObj needs a declarative env record")
+ expr_undefined)
+(expr_if
+ (expr_op1 unary_op_not
+  (expr_app (expr_id "%EnvHasBinding")
+   [expr_id "context"; expr_string "arguments"]))
+ (expr_app (expr_id "%EnvDefineArgsObjOk")
+  [expr_id "context";
+   expr_id "ids";
+   expr_id "args";
+   expr_id "obj";
+   expr_id "strict"]) expr_undefined)
+.
+Definition ex_privEnvDefineArgsObjOk := 
+expr_seq
+(expr_app (expr_id "%DeclEnvAddBinding")
+ [expr_id "context";
+  expr_string "arguments";
+  expr_app (expr_id "%mkArgsObj")
+  [expr_id "context";
+   expr_id "ids";
+   expr_id "args";
+   expr_id "obj";
+   expr_id "strict"];
+  expr_op1 unary_op_not (expr_id "strict");
+  expr_false]) expr_empty
 .
 Definition ex_privEnvDefineFunc := 
 expr_seq
@@ -8442,14 +8471,23 @@ value_closure
   ("%AddJsAccessorField", privAddJsAccessorField);
   ("%ObjectProto", privObjectProto);
   ("%ThrowTypeError", privThrowTypeError)] None
- ["context"; "args"; "obj"; "strict"] ex_privmkArgsObj)
+ ["context"; "ids"; "args"; "obj"; "strict"] ex_privmkArgsObj)
 .
 Definition name_privmkArgsObj : id :=  "%mkArgsObj" .
+Definition privEnvDefineArgsObjOk := 
+value_closure
+(closure_intro
+ [("%DeclEnvAddBinding", privDeclEnvAddBinding);
+  ("%mkArgsObj", privmkArgsObj)] None
+ ["context"; "ids"; "args"; "obj"; "strict"] ex_privEnvDefineArgsObjOk)
+.
+Definition name_privEnvDefineArgsObjOk : id :=  "%EnvDefineArgsObjOk" .
 Definition privEnvDefineArgsObj := 
 value_closure
 (closure_intro
- [("%EnvDefineArg", privEnvDefineArg); ("%mkArgsObj", privmkArgsObj)] 
- None ["context"; "args"; "obj"; "strict"] ex_privEnvDefineArgsObj)
+ [("%EnvDefineArgsObjOk", privEnvDefineArgsObjOk);
+  ("%EnvHasBinding", privEnvHasBinding)] None
+ ["context"; "ids"; "args"; "obj"; "strict"] ex_privEnvDefineArgsObj)
 .
 Definition name_privEnvDefineArgsObj : id :=  "%EnvDefineArgsObj" .
 Definition privglobalContext :=  value_object 307 .
@@ -10370,6 +10408,7 @@ Definition ctx_items :=
  (name_privEnvCreateSetMutableBinding, privEnvCreateSetMutableBinding);
  (name_privEnvDefineArg, privEnvDefineArg);
  (name_privEnvDefineArgsObj, privEnvDefineArgsObj);
+ (name_privEnvDefineArgsObjOk, privEnvDefineArgsObjOk);
  (name_privEnvDefineFunc, privEnvDefineFunc);
  (name_privEnvDefineVar, privEnvDefineVar);
  (name_privEnvDelete, privEnvDelete);
@@ -10817,6 +10856,7 @@ privEnvCreateMutableBinding
 privEnvCreateSetMutableBinding
 privEnvDefineArg
 privEnvDefineArgsObj
+privEnvDefineArgsObjOk
 privEnvDefineFunc
 privEnvDefineVar
 privEnvDelete
@@ -11274,6 +11314,7 @@ Definition store_items := [
                                              ("%EnvCreateSetMutableBinding", privEnvCreateSetMutableBinding);
                                              ("%EnvDefineArg", privEnvDefineArg);
                                              ("%EnvDefineArgsObj", privEnvDefineArgsObj);
+                                             ("%EnvDefineArgsObjOk", privEnvDefineArgsObjOk);
                                              ("%EnvDefineFunc", privEnvDefineFunc);
                                              ("%EnvDefineVar", privEnvDefineVar);
                                              ("%EnvDelete", privEnvDelete);

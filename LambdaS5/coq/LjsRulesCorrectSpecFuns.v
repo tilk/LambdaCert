@@ -1516,19 +1516,59 @@ Ltac determine_fact_js_env :=
         clear Hsub1; clear Hsub2; try (subst_hyp Heq; clear Hfact2)
     end.
 
-Lemma binding_inst_arg_obj_lemma : forall BR k jst jc c st st' r jptr ptr ptr1 is jvs vs jeptr b,
-    L.red_exprh k c st (L.expr_basic E.init_args_obj) (L.out_ter st' r) ->
+Lemma create_arguments_object_ok : forall BR k jst jc c st st' r jptr ptr ptr1 ptr2(*ptr3*)is jvs vs jeptr jlenv v b,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privmkArgsObj
+        [L.value_object ptr2; L.value_null(*object ptr3*); L.value_object ptr1; L.value_object ptr; L.value_bool b]) 
+        (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     values_related BR jvs vs ->
-    binds c "$strict" (L.value_bool b) ->
-    binds c "$vcontext" (L.value_object ptr) ->
-    binds c "args" (L.value_object ptr1) ->
+    lexical_env_related BR jlenv v ->
+    fact_js_obj jptr ptr \in BR ->
     fact_iarray ptr1 vs \in BR ->
-    fact_js_env jeptr ptr \in BR ->
+(*     fact_iarray ptr3 (map L.value_string is) \in BR -> TODO non-strict args obj *)
+    fact_js_env jeptr ptr2 \in BR ->
+    fact_ctx_parent ptr2 v \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r
+        (J.spec_create_arguments_object jptr is jvs (jeptr::jlenv) b) 
+        (fun jv => exists obj, jv = J.value_object obj).
+Proof.
+Admitted. (* TODO *)
+
+Lemma binding_inst_arg_obj_lemma : forall BR k jst jc c st st' r jptr ptr ptr1 ptr2(*ptr3*)is jvs vs jeptr jlenv v b,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvDefineArgsObjOk
+        [L.value_object ptr2; L.value_null(*object ptr3*); L.value_object ptr1; L.value_object ptr; L.value_bool b]) 
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR jvs vs ->
+    lexical_env_related BR jlenv v ->
+    fact_js_obj jptr ptr \in BR ->
+    fact_iarray ptr1 vs \in BR ->
+(*    fact_iarray ptr3 (map L.value_string is) \in BR -> TODO non-strict args obj *)
+    fact_js_env jeptr ptr2 \in BR ->
+    fact_ctx_parent ptr2 v \in BR ->
+    J.execution_ctx_variable_env jc = jeptr::jlenv ->
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst_arg_obj jptr is jvs jeptr b) (fun jrv => jrv = J.resvalue_empty).
 Proof.
+    introv Hlred Hcinv Hinv Hvrel Hlrel Hf1 Hf2 Hf3 Hf4 Hvenv.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : create_arguments_object_ok; try prove_bag.
+    rewrite <- Hvenv in Hx.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_only_invert.
+    repeat ljs_autoforward.
+    forwards_th Hx : decl_env_add_binding_lemma. { rew_refl. eauto. } skip. skip. skip. prove_bag. 
+        (* TODO heap consistency problems *)
+    destruct b0;
+    rew_bool in Hx;
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
 Admitted. (* TODO *)
 
 Lemma binding_inst_function_decls_lemma : forall BR k jst jc c st st' r jfds jeptr ptr b1 b2,
@@ -1656,9 +1696,83 @@ Proof.
     }
 Qed.
 
-Opaque E.init_args E.init_vars E.init_funcs E.init_args_obj.
- 
-Lemma binding_inst_lemma : forall BR k jst jc c st st' r ptr ptr1 ptr2 jptr jp jvs vs is,
+Opaque E.init_args E.init_vars E.init_funcs.
+
+Lemma binding_inst_global_lemma : forall BR k jst jc c st st' r ptr jp,
+    L.red_exprh k c st (L.expr_basic
+          (E.init_bindings_prog E.make_fobj (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
+              (J.prog_vardecl jp))) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    binds c "$strict" (L.value_bool (J.prog_intro_strictness jp)) ->
+    binds c "$vcontext" (L.value_object ptr) ->
+    binds c "evalCode" (L.value_bool false) ->
+    concl_ext_expr_resvalue BR jst jc c st st' r 
+        (J.spec_binding_inst J.codetype_global None jp []) (fun jrv => jrv = J.resvalue_empty).
+Proof.
+    introv Hlred Hcinv Hinv Hbinds1 Hbinds2 Hbinds3.
+    asserts_rewrite 
+        (concat (List.map E.js_element_to_func (J.prog_elements jp)) = E.prog_funcs (E.js_prog_to_ejs jp)) in Hlred.
+    { destruct jp. reflexivity. }
+    rewrite E.js_funcdecl_to_func_lemma in Hlred.
+    lets Hvenv : execution_ctx_related_variable_env (context_invariant_execution_ctx_related Hcinv) Hbinds2.
+    inverts Hvenv as Hf3 Hf4 Hlerel Hvenveq. symmetry in Hvenveq.
+    repeat ljs_autoforward.
+    forwards_th : binding_inst_function_decls_lemma; try prove_bag.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    repeat ljs_autoforward.
+    forwards_th: has_binding_lemma. prove_bag.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    forwards_th : binding_inst_var_decls_lemma; try prove_bag.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_only_invert.
+    repeat ljs_autoforward.
+    jauto_js 15.
+Qed.
+
+Lemma binding_inst_eval_lemma : forall BR k jst jc c st st' r ptr jp,
+    L.red_exprh k c st (L.expr_basic
+          (E.init_bindings_prog E.make_fobj (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
+              (J.prog_vardecl jp))) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    binds c "$strict" (L.value_bool (J.prog_intro_strictness jp)) ->
+    binds c "$vcontext" (L.value_object ptr) ->
+    binds c "evalCode" (L.value_bool true) ->
+    concl_ext_expr_resvalue BR jst jc c st st' r 
+        (J.spec_binding_inst J.codetype_eval None jp []) (fun jrv => jrv = J.resvalue_empty).
+Proof.
+    introv Hlred Hcinv Hinv Hbinds1 Hbinds2 Hbinds3.
+    asserts_rewrite 
+        (concat (List.map E.js_element_to_func (J.prog_elements jp)) = E.prog_funcs (E.js_prog_to_ejs jp)) in Hlred.
+    { destruct jp. reflexivity. }
+    rewrite E.js_funcdecl_to_func_lemma in Hlred.
+    lets Hvenv : execution_ctx_related_variable_env (context_invariant_execution_ctx_related Hcinv) Hbinds2.
+    inverts Hvenv as Hf3 Hf4 Hlerel Hvenveq. symmetry in Hvenveq.
+    repeat ljs_autoforward.
+    forwards_th : binding_inst_function_decls_lemma; try prove_bag.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    repeat ljs_autoforward.
+    forwards_th: has_binding_lemma. prove_bag.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    forwards_th : binding_inst_var_decls_lemma; try prove_bag.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_only_invert.
+    repeat ljs_autoforward.
+    jauto_js 15.
+Qed.
+
+Lemma binding_inst_func_lemma : forall BR k jst jc c st st' r ptr ptr1 ptr2 jptr jp jvs vs is,
     L.red_exprh k c st (L.expr_basic
           (E.init_bindings_func E.make_fobj is (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
               (J.prog_vardecl jp))) (L.out_ter st' r) ->
@@ -1672,8 +1786,8 @@ Lemma binding_inst_lemma : forall BR k jst jc c st st' r ptr ptr1 ptr2 jptr jp j
     fact_iarray ptr1 vs \in BR ->
     fact_js_obj jptr ptr \in BR ->
     J.object_method J.object_formal_parameters_ jst jptr (Some is) ->
-    concl_ext_expr_value BR jst jc c st st' r 
-        (J.spec_binding_inst J.codetype_func (Some jptr) jp jvs) (fun jv => True).
+    concl_ext_expr_resvalue BR jst jc c st st' r 
+        (J.spec_binding_inst J.codetype_func (Some jptr) jp jvs) (fun jrv => jrv = J.resvalue_empty).
 Proof.
     introv Hlred Hcinv Hinv Hvrels Hbinds1 Hbinds2 Hbinds3 Hbinds4.
     introv Hf1 Hf2 Hom.
@@ -1692,20 +1806,38 @@ Proof.
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     repeat ljs_autoforward.
-    forwards_th : binding_inst_arg_obj_lemma; try prove_bag. { eauto_js. }
-    destr_concl. (* ; try ljs_handle_abort. *)
-
-(* TODO: for some reason, the step 6 of the declaration binding instantiation procedure
-   is to be executed always, and therefore is not bundled with the step 7. This is already
-   fixed in ES6. The problem prevents finishing the proof here. *)
-
-    res_related_invert.
+    unfolds E.init_args_obj.
+    inverts red_exprh H16. (* TODO *)
+    ljs_apply.
+    ljs_context_invariant_after_apply.
     repeat ljs_autoforward.
-    forwards_th : binding_inst_var_decls_lemma; try prove_bag.
-    destr_concl. (* ; try ljs_handle_abort. *)
-    res_related_invert.
+    cases_decide; [idtac | repeat inv_ljs].
     repeat ljs_autoforward.
-Admitted. (* TODO *)
+    forwards_th: has_binding_lemma. prove_bag.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    destruct b. { (* has binding named "arguments" *)
+        repeat ljs_autoforward.
+        forwards_th : binding_inst_var_decls_lemma; try prove_bag.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        repeat ljs_autoforward.
+        jauto_js 15.
+    } { (* no binding named "arguments" *)
+        repeat ljs_autoforward.
+        forwards_th : binding_inst_arg_obj_lemma; try prove_bag. eauto_js. eauto_js.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        forwards_th : binding_inst_var_decls_lemma; try prove_bag.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        repeat ljs_autoforward.
+        jauto_js 15.
+    }
+Qed.
 
 Opaque E.init_bindings_func.
 
@@ -1746,7 +1878,7 @@ Proof.
     lets Hstrict : usercode_context_invariant_has_strict Huci. (* TODO do a lemma *)
     rewrite index_binds_eq in Hstrict. destruct_hyp Hstrict.
     lets Hstreq : usercode_context_invariant_strict Huci Hstrict. subst_hyp Hstreq.
-    forwards_th : binding_inst_lemma; try prove_bag 8. { eauto_js. } skip. (* TODO state consistency *)
+    forwards_th : binding_inst_func_lemma; try prove_bag 8. { eauto_js. } skip. (* TODO state consistency *)
     destr_concl; try ljs_handle_abort.
     skip.
 Qed.
