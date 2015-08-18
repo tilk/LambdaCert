@@ -190,7 +190,8 @@ Definition init_bindings_func f vs fs is :=
 
 Definition init_bindings_prog f fs is := 
    L.expr_seq (init_funcs f fs) (
-   L.expr_seq (make_app_builtin "%EnvHasBinding" [vcontext; L.expr_string "arguments"]) ( (* stupid spec *)
+   (* the following check is required by ES5 (by mistake), fixed in ES6 *)
+   L.expr_seq (make_app_builtin "%EnvHasBinding" [vcontext; L.expr_string "arguments"]) ( 
    L.expr_seq (init_vars is) L.expr_empty)).
 
 Definition make_lambda_expr f ff (is : list string) p :=

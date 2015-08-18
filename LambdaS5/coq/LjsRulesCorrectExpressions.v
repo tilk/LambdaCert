@@ -58,10 +58,10 @@ Proof.
     destruct fb.
     repeat ljs_autoforward.
     rewrite exprjs_prog_strictness_eq in *.
-    forwards_th Hx : red_spec_creating_function_object_ok. { skip. (* TODO *) } { 
-        eapply execution_ctx_related_lexical_env. 
-        eapply context_invariant_execution_ctx_related. 
-        skip. (* TODO eassumption. *)
+    forwards_th Hx : red_spec_creating_function_object_ok. {
+        introv Hbinds. binds_inv.
+        applys (execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv)).
+        assumption.
     }
     destr_concl; try ljs_handle_abort.
     res_related_invert.
@@ -79,10 +79,11 @@ Proof.
     destruct_hyp Hx.
     repeat ljs_autoforward.
     rewrite exprjs_prog_strictness_eq in *.
-    forwards_th Hx : red_spec_creating_function_object_ok. { skip. (* TODO *) } { 
-        eapply execution_ctx_related_lexical_env. 
-        eapply context_invariant_execution_ctx_related. 
-        skip. (* TODO eassumption. *)
+    forwards_th Hx : red_spec_creating_function_object_ok. {
+        introv Hbinds. binds_inv.
+        eapply lexical_env_related_cons. eauto_js. eauto_js.
+        eapply execution_ctx_related_lexical_env; try eassumption. eapply context_invariant_execution_ctx_related.
+        eauto_js.
     }
     destr_concl; [idtac | skip]. (* TODO function object creation never fails *)
     (* TODO uninitialized binding business *)

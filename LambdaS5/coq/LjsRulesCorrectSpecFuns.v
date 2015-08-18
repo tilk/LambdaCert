@@ -1469,20 +1469,37 @@ Proof.
 Qed.
 
 (* TODO move *)
-Lemma red_spec_creating_function_object_ok : forall BR k jst jc c st st' r is s jp jle,
+Lemma red_spec_creating_function_object_ok : forall BR k jst jc c' c st st' r is s jp jle,
     L.red_exprh k c st
         (L.expr_app_2 LjsInitEnv.privMakeFunctionObject 
             [L.value_closure (funcbody_closure (to_list c) is jp); L.value_number (length is); L.value_string s; 
              L.value_bool (J.prog_intro_strictness jp)])
         (L.out_ter st' r) ->
-    context_invariant BR jc c ->
+    context_invariant BR jc c' ->
     state_invariant BR jst st ->
     (forall v, binds c "$context" v -> lexical_env_related BR jle v) ->
     concl_ext_expr_value BR jst jc c st st' r 
         (J.spec_creating_function_object is (J.funcbody_intro jp s) jle (J.prog_intro_strictness jp)) 
         (fun jv => exists jptr, jv = J.value_object jptr).
 Proof.
-    introv Hlred Hcinv Hinv Himpl. 
+    introv Hlred Hcinv Hinv Himpl.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : add_data_field_lemma. prove_bag.
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    sets_eq b : (J.prog_intro_strictness jp).
+(*
+    destruct b. { (* strict *)
+        repeat ljs_autoforward.
+        skip. (* TODO *)
+    } { (* not strict *)
+        repeat ljs_autoforward.
+        skip. (* TODO *)
+    }
+*)
 Admitted. (* TODO *)
 
 (* TODO move to ejs *)
@@ -1531,7 +1548,7 @@ Lemma create_arguments_object_ok : forall BR k jst jc c st st' r jptr ptr ptr1 p
     fact_ctx_parent ptr2 v \in BR ->
     concl_ext_expr_value BR jst jc c st st' r
         (J.spec_create_arguments_object jptr is jvs (jeptr::jlenv) b) 
-        (fun jv => exists obj, jv = J.value_object obj).
+        (fun jv => exists ptr0, jv = J.value_object ptr0).
 Proof.
 Admitted. (* TODO *)
 
@@ -1594,7 +1611,12 @@ Proof.
     rew_map in Hlred.
     repeat ljs_autoforward.
     rewrite exprjs_prog_strictness_eq in *.
-    forwards_th : red_spec_creating_function_object_ok. skip. skip. (* TODO! *)
+    forwards_th : red_spec_creating_function_object_ok. skip. (* { TODO in ES5 variable env required, fixed in ES6
+        introv Hbinds.
+        binds_inv.
+        applys (execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv)).
+        assumption.
+    } *)
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
