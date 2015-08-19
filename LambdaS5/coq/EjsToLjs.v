@@ -206,7 +206,7 @@ Definition make_lambda f ff (is : list string) p :=
     L.expr_lambda ["obj"; "$this"; "args"] (make_lambda_expr f ff is p).
 
 Definition make_rec_fobj (ff : E.func -> L.expr) i fd :=
-    make_var_decl [(i, ff fd, false)] (make_var_id i).
+    make_var_decl [(i, ff fd, false)] (L.expr_get_attr L.pattr_value context (L.expr_string i)).
 
 Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda ["exc"] (

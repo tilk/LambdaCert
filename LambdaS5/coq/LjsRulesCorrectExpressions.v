@@ -75,7 +75,9 @@ Proof.
     introv Hcinv Hinv Hlred.
     destruct fb.
     repeat ljs_autoforward.
-    forwards_th Hx : state_invariant_new_env_record_decl_lemma; try eassumption.
+    lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
+        eassumption.
+    forwards_th Hx : only_state_invariant_new_env_record_decl_lemma; try eassumption.
     destruct_hyp Hx.
     repeat ljs_autoforward.
     rewrite exprjs_prog_strictness_eq in *.
@@ -86,6 +88,20 @@ Proof.
         eauto_js.
     }
     destr_concl; [idtac | skip]. (* TODO function object creation never fails *)
+    res_related_invert.
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    forwards_th Hx : decl_env_add_binding_lemma.
+    { rew_refl. eauto. } skip. skip. skip. (* TODO *)
+    { inverts keep Hx0. eauto_js. } eauto_js.
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+(*
+    jauto_js.
+    constructor.
+    eapply J.red_expr_function_named. eauto_js. eauto_js. eauto_js. eauto_js.
+    eapply J.red_expr_function_named_1. eauto_js.
+*)
     (* TODO uninitialized binding business *)
 Admitted. (* TODO *)
 
