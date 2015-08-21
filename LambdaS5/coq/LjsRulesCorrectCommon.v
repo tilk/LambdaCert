@@ -118,6 +118,7 @@ Hint Constructors L.is_primitive : js_ljs.
 Hint Constructors J.red_expr : js_ljs.
 Hint Constructors J.red_stat : js_ljs.
 Hint Constructors J.red_spec : js_ljs.
+Hint Constructors J.red_prog : js_ljs.
 Hint Constructors J.abort : js_ljs.
 Hint Constructors J.lazy_op : js_ljs.
 Hint Constructors J.bitwise_op : js_ljs.
@@ -280,9 +281,9 @@ Tactic Notation "unfold_concl" "in" hyp(H) :=
         concl_stat, concl_spec in H. 
 
 Ltac js_ljs_false_invert := match goal with 
-    | H : J.abort_intercepted_expr _ |- _ => solve [inverts H]
-    | H : J.abort_intercepted_stat _ |- _ => solve [inverts H]
-    | H : J.abort_intercepted_spec _ |- _ => solve [inverts H]
+    | H : J.abort_intercepted_expr _ |- _ => solve [inverts H; tryfalse]
+    | H : J.abort_intercepted_stat _ |- _ => solve [inverts H; tryfalse]
+    | H : J.abort_intercepted_spec _ |- _ => solve [inverts H; tryfalse]
     | H : J.abort_intercepted_stat (J.stat_label_1 _ _) |- _ => 
         solve [let H' := fresh "H" in inverts H as H'; [discriminate H' || injects H']; tryfalse]
     | H : J.res_is_normal _ |- _ => inverts H

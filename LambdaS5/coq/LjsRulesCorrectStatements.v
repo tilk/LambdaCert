@@ -1032,7 +1032,7 @@ Proof.
     res_related_invert;
     res_related_invert;
     try ljs_abort;
-    jauto_js 6.
+    jauto_js 7.
 Qed.
 
 (** *** throw *)

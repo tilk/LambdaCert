@@ -69,6 +69,8 @@ Proof.
     jauto_js 12.
 Qed.
 
+Hint Extern 1 (J.red_expr _ _ (J.expr_function_1 _ _ _ _ _ _) _) => eapply J.red_expr_function_named_1 : js_ljs.
+
 Lemma red_expr_rec_function_ok : forall k s is fb,
     th_expr k (J.expr_function (Some s) is fb).
 Proof.
@@ -81,29 +83,26 @@ Proof.
     destruct_hyp Hx.
     repeat ljs_autoforward.
     rewrite exprjs_prog_strictness_eq in *.
+    forwards_th Hx : create_immutable_binding_lemma. skip. (* TODO *) prove_bag.
+    destr_concl; try solve [progress repeat (ljs_propagate_abort || ljs_abort_from_js); jauto_js 10]. (* TODO *)
+    res_related_invert.
+    repeat ljs_autoforward.
     forwards_th Hx : red_spec_creating_function_object_ok. {
         introv Hbinds. binds_inv.
         eapply lexical_env_related_cons. eauto_js. eauto_js.
         eapply execution_ctx_related_lexical_env; try eassumption. eapply context_invariant_execution_ctx_related.
         eauto_js.
     }
-    destr_concl; [idtac | skip]. (* TODO function object creation never fails *)
+    destr_concl; try solve [progress repeat (ljs_propagate_abort || ljs_abort_from_js); jauto_js 10]. (* TODO *)
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    forwards_th Hx : decl_env_add_binding_lemma.
-    { rew_refl. eauto. } skip. skip. skip. (* TODO *)
-    { inverts keep Hx0. eauto_js. } eauto_js.
-    destruct_hyp Hx.
+    forwards_th Hx : initialize_immutable_binding_lemma. skip. (* TODO *) prove_bag 8.
+    destr_concl; try solve [progress repeat (ljs_propagate_abort || ljs_abort_from_js); jauto_js 11]. (* TODO *)
+    res_related_invert.
     repeat ljs_autoforward.
-(*
-    jauto_js.
-    constructor.
-    eapply J.red_expr_function_named. eauto_js. eauto_js. eauto_js. eauto_js.
-    eapply J.red_expr_function_named_1. eauto_js.
-*)
-    (* TODO uninitialized binding business *)
-Admitted. (* TODO *)
+    jauto_js 11.
+Qed.
 
 Lemma red_expr_function_ok : forall k os is fb,
     th_expr k (J.expr_function os is fb).

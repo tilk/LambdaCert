@@ -2093,6 +2093,73 @@ Qed.
 
 Opaque E.init_bindings_func.
 
+(* TODO move *)
+Hint Constructors J.red_prog : js_ljs.
+
+Hint Extern 1 (J.red_prog _ _ (J.prog_1 _ _) _) => eapply J.red_prog_1_stat : js_ljs. 
+Hint Extern 50 => progress unfolds J.res_overwrite_value_if_empty : js_ljs.
+
+Lemma prog_els_last_lemma : forall el els,
+    E.expr_seqs (List.map E.js_element_to_ejs (els & el)) = 
+        E.expr_seq (E.expr_seqs (List.map E.js_element_to_ejs els)) (E.js_element_to_ejs el).
+Proof.
+    introv.
+    unfolds E.expr_seqs.
+    rewrite_all list_map_tlc.
+    rew_list.
+    reflexivity.
+Qed.
+
+Lemma prog_ok_lemma : forall els BR k jst jc c st st' r b,
+    ih_stat k ->
+    L.red_exprh k c st (L.expr_basic (E.ejs_to_ljs (E.expr_seqs (List.map E.js_element_to_ejs els))))
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    exists BR' jst' jr,
+    J.red_prog jst jc (J.prog_basic (J.prog_intro b els)) (J.out_ter jst' jr) /\ 
+    state_invariant BR' jst' st' /\
+    BR \c BR' /\
+    res_related BR' jst' st' jr r.
+Proof.
+    induction els as [|el els] using list_rev_ind;
+    introv IHt Hlred Hcinv Hinv. { (* no more elements *)
+        repeat ljs_autoforward.
+        jauto_js.
+    } (* one element more *)
+    rewrite prog_els_last_lemma in Hlred.
+    repeat ljs_autoforward.
+    specializes IHels (ih_stat_S IHt).
+    specializes_th IHels.
+    destruct_hyp IHels. res_related_abort; try ljs_handle_abort. (* TODO destr_concl_auto *)
+    repeat ljs_autoforward.
+    destruct el. { (* statement *)
+        repeat ljs_autoforward.
+        destr_concl.
+        res_related_invert; repeat ljs_autoforward; try resvalue_related_only_invert; jauto_js. 
+    } { (* funcdecl *)
+        destruct f. (* TODO remove *)
+        repeat ljs_autoforward.
+        jauto_js.
+    }
+Qed.
+
+Lemma prog_ok_call_lemma : forall BR k jst jc c st st' r jp,
+    ih_stat k ->
+    L.red_exprh k c st 
+        (L.expr_basic (E.ejs_to_ljs (E.expr_seqs (List.map E.js_element_to_ejs (J.prog_elements jp)))))
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    exists BR' jst' jr,
+    J.red_prog jst jc (J.prog_basic jp) (J.out_ter jst' jr) /\ 
+    state_invariant BR' jst' st' /\
+    BR \c BR' /\
+    res_related BR' jst' st' jr r.
+Proof.
+    intros. destruct jp. eapply prog_ok_lemma; eassumption.
+Qed.
+
 Lemma call_lemma : forall BR k jst jc c st st' r jfb is jle v v1 vs ptr ptr1 jptr jv1 jvs,
     ih_stat k ->
     ih_call_prealloc k ->
@@ -2106,12 +2173,13 @@ Lemma call_lemma : forall BR k jst jc c st st' r jfb is jle v v1 vs ptr ptr1 jpt
     fact_js_obj jptr ptr \in BR ->
     J.object_method J.object_scope_ jst jptr (Some jle) ->
     J.object_method J.object_formal_parameters_ jst jptr (Some is) ->
+    J.object_method J.object_code_ jst jptr (Some jfb) ->
     concl_ext_expr_value BR jst jc c st st' r 
         (J.spec_entering_func_code_3 jptr jvs (J.funcbody_is_strict jfb) jfb jv1 (J.spec_call_default_1 jptr)) 
         (fun jv => True).
 Proof.
     introv IHt IHp Hlred Hcinv Hinv Hucrel Hvrel Hvrels Hbs Hbs1.
-    introv Hom1 Hom2.
+    introv Hom1 Hom2 Hom3.
     inverts Hucrel as Huci.
     unfolds funcbody_closure. unfolds funcbody_expr. unfolds E.make_lambda_expr.
     cases_let as Hprog.
@@ -2132,7 +2200,33 @@ Proof.
     lets Hstreq : usercode_context_invariant_strict Huci Hstrict. subst_hyp Hstreq.
     forwards_th : binding_inst_func_lemma; try prove_bag 8. { eauto_js. } skip. (* TODO state consistency *)
     destr_concl; try ljs_handle_abort.
-    skip.
+    res_related_invert.
+    resvalue_related_only_invert.
+    repeat ljs_autoforward.
+    asserts Hom3' : (J.object_method J.object_code_ jst' jptr (Some (J.funcbody_intro jp s))). 
+        skip. (* TODO state consistency *)
+    lets [Hfbe|Hfbe] : classic (J.funcbody_empty (J.funcbody_intro jp s)). { 
+        (* special case required by the spec *)
+        unfolds J.funcbody_empty. unfolds J.prog_empty.
+        simpl in Hfbe. rewrite Hfbe in *.
+        repeat ljs_autoforward.
+        jauto_js 10.
+    }
+    forwards_th Hx : prog_ok_call_lemma.
+    destruct_hyp Hx. (* TODO destr_concl *)
+    res_related_invert; repeat ljs_autoforward. { (* normal exit *)
+        jauto_js 10.
+    } { (* exception *)
+        jauto_js 10.
+    } { (* return *)
+        jauto_js 10.
+    } { (* break *)
+        (* TODO: should never happen due to syntax constraints, but unable to prove this now. *)
+        skip. 
+    } { (* continue *)
+        (* TODO: should never happen due to syntax constraints, but unable to prove this now. *)
+        skip. 
+    }
 Qed.
 
 Lemma red_spec_call_ok : forall BR k jst jc c st st' ptr v ptr1 vs r jptr jv jvs,
@@ -2219,7 +2313,7 @@ Proof.
                 res_related_invert.
                 resvalue_related_invert.
                 repeat ljs_autoforward.
-                forwards_th Hcl : call_lemma; try eauto_js. skip. skip. (* TODO state consistency issue! *)
+                forwards_th Hcl : call_lemma; try eauto_js. skip. skip. skip. (* TODO state consistency issue! *)
                 rewrite <- Hfbstr in Hcl.
                 destr_concl; try ljs_handle_abort.
                 jauto_js 15.

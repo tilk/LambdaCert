@@ -200,13 +200,17 @@ Definition make_lambda_expr f ff (is : list string) p :=
     remember_vcontext (
     L.expr_seq (init_bindings_func ff is fs vis) (
     L.expr_label "%ret" (
-    f e)))).
+    L.expr_seq (f e) L.expr_undefined)))).
 
 Definition make_lambda f ff (is : list string) p := 
     L.expr_lambda ["obj"; "$this"; "args"] (make_lambda_expr f ff is p).
 
-Definition make_rec_fobj (ff : E.func -> L.expr) i fd :=
-    make_var_decl [(i, ff fd, false)] (L.expr_get_attr L.pattr_value context (L.expr_string i)).
+Definition make_rec_fobj (ff : E.func -> L.expr) i fd := 
+(* TODO replace make_var_decl, don't set $context, this complicates things *)
+    make_var_decl [] (L.expr_seq (make_app_builtin "%EnvCreateImmutableBinding" [context; L.expr_string i]) (
+    L.expr_let "fobj" (ff fd) (L.expr_seq (
+    make_app_builtin "%EnvInitializeImmutableBinding" [context; L.expr_string i; L.expr_id "fobj"])
+    (L.expr_id "fobj")))).
 
 Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda ["exc"] (

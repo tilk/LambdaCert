@@ -161,7 +161,7 @@ with js_switchclause_to_ejs c :=
 with js_element_to_ejs (e : J.element) : E.expr := 
     match e with
     | J.element_stat st => js_stat_to_ejs st
-    | J.element_func_decl s ps (J.funcbody_intro p s') => E.expr_empty
+    | J.element_func_decl s ps fb => E.expr_empty
     end
 with js_element_to_func (e : J.element) : list (E.id * E.func) :=
     match e with
