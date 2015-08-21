@@ -933,20 +933,17 @@ Proof.
             jauto_js 10.
         }
         repeat ljs_autoforward.
-        lets (jer&Hjbinds&Herel) : env_record_related_lookup_lemma ___; try eassumption.
-        inverts Herel as Herel. { (* declarative records *)
-            inverts Herel.
-            unfolds L.object_class.
-            cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
-            repeat ljs_autoforward.
-            lets Hx : decl_env_record_vars_related_binds_lemma ___; try eassumption.
-            destruct_hyp Hx.
-            forwards_th Hx : typeof_lemma.
-            destruct_hyp Hx.
-            jauto_js 12.
-        } { (* object records *)
-            skip.
-        }
+        forwards Hx : execution_ctx_related_strictness_flag; try eassumption.
+        { eapply context_invariant_execution_ctx_related. eassumption. }
+        subst_hyp Hx.
+        forwards_th : get_binding_value_lemma. prove_bag.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        forwards_th Hx : typeof_lemma.
+        destruct_hyp Hx.
+        jauto_js 15.
     } {
         repeat ljs_autoforward.
         destr_concl; js_red_expr_getvalue_fwd; try ljs_handle_abort.
@@ -1009,11 +1006,10 @@ Qed.
 Hint Extern 3 (env_record_related _ ?jer _) => not (is_evar jer); eapply env_record_related_decl_rem : js_ljs.
 
 Lemma mutability_not_deletable_lemma : forall jmut,
-    jmut <> J.mutability_uninitialized_immutable ->
     jmut <> J.mutability_deletable -> 
     mutability_configurable jmut = false.
 Proof.
-    introv Hx1 Hx2.
+    introv Hx.
     destruct jmut; tryfalse; try reflexivity.
 Qed.
 

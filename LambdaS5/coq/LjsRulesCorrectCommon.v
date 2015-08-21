@@ -1155,6 +1155,24 @@ Hint Extern 4 (execution_ctx_related ?BR2 _ _) =>
     end 
     : js_ljs.
 
+Lemma decl_env_record_var_related_bisim_incl_preserved : forall BR1 BR2 jmut jv v,
+    BR1 \c BR2 ->
+    decl_env_record_var_related BR1 jmut jv v -> 
+    decl_env_record_var_related BR2 jmut jv v.
+Proof.
+    unfolds decl_env_record_var_related.
+    introv Hs Hrel.
+    destruct_hyp Hrel; ijauto_js.
+Qed.
+
+Hint Extern 4 (decl_env_record_var_related ?BR2 _ _ _) => 
+    match goal with 
+    | H : decl_env_record_var_related ?BR1 _ _ _ |- _ => 
+        sub_helper BR1 BR2 decl_env_record_var_related_bisim_incl_preserved
+    | H : ?BR1 \c BR2 |- _ => sub_helper BR1 BR2 decl_env_record_var_related_bisim_incl_preserved
+    end 
+    : js_ljs.
+
 Lemma decl_env_record_vars_related_bisim_incl_preserved : forall BR1 BR2 jder props,
     BR1 \c BR2 ->
     decl_env_record_vars_related BR1 jder props -> 

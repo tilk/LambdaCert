@@ -232,7 +232,7 @@ Definition make_xfix op b f e :=
 Definition make_typeof f e :=
     reference_match e
         (fun obj fld => make_app_builtin "%Typeof" [f e])
-        (fun varid => make_app_builtin "%EnvTypeof" [context; L.expr_string varid])
+        (fun varid => make_app_builtin "%EnvTypeof" [context; L.expr_string varid; L.expr_id "$strict"])
         (fun e => make_app_builtin "%Typeof" [f e]).
 
 Definition make_delete f e :=

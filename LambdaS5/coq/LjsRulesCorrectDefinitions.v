@@ -599,17 +599,21 @@ Definition mutability_configurable jmut :=
     match jmut with
     | J.mutability_nondeletable => false
     | J.mutability_immutable => false
+    | J.mutability_uninitialized_immutable => false
     | _ => true
     end.
+
+Definition decl_env_record_var_related BR jmut jv v :=
+    (jmut <> J.mutability_uninitialized_immutable /\ value_related BR jv v \/
+     jmut = J.mutability_uninitialized_immutable /\ jv = J.value_prim J.prim_undef /\ v = L.value_empty).
 
 Definition decl_env_record_vars_related BR jder props := forall s,
     ~index jder s /\ ~index props s \/
     exists jmut jv v, 
-        jmut <> J.mutability_uninitialized_immutable /\
         binds jder s (jmut, jv) /\ 
         binds props s (L.attributes_data_of (L.attributes_data_intro v 
             (mutability_writable jmut) true (mutability_configurable jmut))) /\
-        value_related BR jv v.
+        decl_env_record_var_related BR jmut jv v.
 
 (* Relates environment records *)
 Record decl_env_record_related BR jder obj : Prop := {

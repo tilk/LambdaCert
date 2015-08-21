@@ -316,6 +316,10 @@ expr_object
  ("%EnvAssign", property_data
                 (data_intro (expr_id "%EnvAssign") expr_true expr_false
                  expr_false));
+ ("%EnvCreateImmutableBinding", property_data
+                                (data_intro
+                                 (expr_id "%EnvCreateImmutableBinding")
+                                 expr_true expr_false expr_false));
  ("%EnvCreateMutableBinding", property_data
                               (data_intro
                                (expr_id "%EnvCreateMutableBinding") expr_true
@@ -359,6 +363,11 @@ expr_object
  ("%EnvImplicitThis", property_data
                       (data_intro (expr_id "%EnvImplicitThis") expr_true
                        expr_false expr_false));
+ ("%EnvInitializeImmutableBinding", property_data
+                                    (data_intro
+                                     (expr_id
+                                      "%EnvInitializeImmutableBinding")
+                                     expr_true expr_false expr_false));
  ("%EnvModify", property_data
                 (data_intro (expr_id "%EnvModify") expr_true expr_false
                  expr_false));
@@ -2579,6 +2588,17 @@ expr_let "f"
 (expr_app (expr_id "%EnvGetId")
  [expr_id "context"; expr_id "id"; expr_id "f"])
 .
+Definition ex_privEnvCreateImmutableBinding := 
+expr_if
+(expr_op2 binary_op_stx_eq
+ (expr_get_obj_attr oattr_class (expr_id "context"))
+ (expr_string "DeclEnvRec"))
+(expr_seq
+ (expr_app (expr_id "%DeclEnvAddBinding")
+  [expr_id "context"; expr_id "id"; expr_empty; expr_true; expr_false])
+ expr_empty)
+(expr_fail "[env] Context not well formed! In %EnvCreateImutableBinding")
+.
 Definition ex_privEnvCreateMutableBinding := 
 expr_if
 (expr_op2 binary_op_stx_eq
@@ -2645,18 +2665,25 @@ expr_seq
    expr_id "strict"]) expr_undefined)
 .
 Definition ex_privEnvDefineArgsObjOk := 
-expr_seq
-(expr_app (expr_id "%DeclEnvAddBinding")
+expr_let "aobj"
+(expr_app (expr_id "%mkArgsObj")
  [expr_id "context";
-  expr_string "arguments";
-  expr_app (expr_id "%mkArgsObj")
+  expr_id "ids";
+  expr_id "args";
+  expr_id "obj";
+  expr_id "strict"])
+(expr_if (expr_id "strict")
+ (expr_seq
+  (expr_app (expr_id "%EnvCreateImmutableBinding")
+   [expr_id "context"; expr_string "arguments"])
+  (expr_app (expr_id "%EnvInitializeImmutableBinding")
+   [expr_id "context"; expr_string "arguments"; expr_id "aobj"]))
+ (expr_app (expr_id "%EnvCreateSetMutableBinding")
   [expr_id "context";
-   expr_id "ids";
-   expr_id "args";
-   expr_id "obj";
-   expr_id "strict"];
-  expr_op1 unary_op_not (expr_id "strict");
-  expr_false]) expr_empty
+   expr_string "arguments";
+   expr_id "aobj";
+   expr_false;
+   expr_false]))
 .
 Definition ex_privEnvDefineFunc := 
 expr_seq
@@ -2743,7 +2770,13 @@ expr_if
 (expr_op2 binary_op_stx_eq
  (expr_get_obj_attr oattr_class (expr_id "context"))
  (expr_string "DeclEnvRec"))
-(expr_get_attr pattr_value (expr_id "context") (expr_id "id"))
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_attr pattr_value (expr_id "context") (expr_id "id")) expr_empty)
+ (expr_if (expr_id "strict")
+  (expr_app (expr_id "%ReferenceError")
+   [expr_string "reading an uninitialized binding"]) expr_undefined)
+ (expr_get_attr pattr_value (expr_id "context") (expr_id "id")))
 (expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))
@@ -2813,6 +2846,25 @@ expr_if
  (expr_throw
   (expr_string "[env] Context not well formed! In %EnvImplicitThis")))
 .
+Definition ex_privEnvInitializeImmutableBinding := 
+expr_if
+(expr_op2 binary_op_stx_eq
+ (expr_get_obj_attr oattr_class (expr_id "context"))
+ (expr_string "DeclEnvRec"))
+(expr_seq
+ (expr_if
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq
+    (expr_get_attr pattr_value (expr_id "context") (expr_id "id")) expr_empty))
+  (expr_fail "Not an immutable binding") expr_undefined)
+ (expr_seq
+  (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
+   (expr_id "val"))
+  (expr_seq
+   (expr_set_attr pattr_writable (expr_id "context") (expr_id "id")
+    expr_false) expr_empty)))
+(expr_fail "[env] Context not well formed! In %EnvInitializeImmutableBinding")
+.
 Definition ex_privEnvModify := 
 expr_let "f"
 (expr_lambda ["context"]
@@ -2858,14 +2910,20 @@ expr_if
 (expr_op2 binary_op_stx_eq
  (expr_get_obj_attr oattr_class (expr_id "context"))
  (expr_string "DeclEnvRec"))
-(expr_if (expr_get_attr pattr_writable (expr_id "context") (expr_id "id"))
- (expr_seq
-  (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
-   (expr_id "val")) expr_empty)
- (expr_if (expr_id "strict")
-  (expr_app (expr_id "%TypeError")
-   [expr_op2 binary_op_string_plus (expr_id "id")
-    (expr_string " is read-only")]) expr_empty))
+(expr_if
+ (expr_op2 binary_op_stx_eq
+  (expr_get_attr pattr_value (expr_id "context") (expr_id "id")) expr_empty)
+ (expr_app (expr_id "%TypeError")
+  [expr_op2 binary_op_string_plus (expr_id "id")
+   (expr_string " is (uninitialized) read-only")])
+ (expr_if (expr_get_attr pattr_writable (expr_id "context") (expr_id "id"))
+  (expr_seq
+   (expr_set_attr pattr_value (expr_id "context") (expr_id "id")
+    (expr_id "val")) expr_empty)
+  (expr_if (expr_id "strict")
+   (expr_app (expr_id "%TypeError")
+    [expr_op2 binary_op_string_plus (expr_id "id")
+     (expr_string " is read-only")]) expr_empty)))
 (expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))
@@ -2882,20 +2940,9 @@ expr_let "f"
 (expr_lambda ["context"]
  (expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
   (expr_string "undefined")
-  (expr_if
-   (expr_op2 binary_op_stx_eq
-    (expr_get_obj_attr oattr_class (expr_id "context"))
-    (expr_string "DeclEnvRec"))
-   (expr_app (expr_id "%Typeof")
-    [expr_get_attr pattr_value (expr_id "context") (expr_id "id")])
-   (expr_if
-    (expr_op2 binary_op_stx_eq
-     (expr_get_obj_attr oattr_class (expr_id "context"))
-     (expr_string "ObjEnvRec"))
-    (expr_app (expr_id "%Typeof")
-     [expr_get_field (expr_get_internal "bindings" (expr_id "context"))
-      (expr_id "id")])
-    (expr_throw (expr_string "[env] Context not well formed! In %EnvTypeof"))))))
+  (expr_app (expr_id "%Typeof")
+   [expr_app (expr_id "%EnvGetBindingValue")
+    [expr_id "context"; expr_id "id"; expr_id "strict"]])))
 (expr_app (expr_id "%EnvGetId")
  [expr_id "context"; expr_id "id"; expr_id "f"])
 .
@@ -8337,11 +8384,6 @@ value_closure
 (closure_intro [] (Some "%EnvGetId") ["context"; "id"; "f"] ex_privEnvGetId)
 .
 Definition name_privEnvGetId : id :=  "%EnvGetId" .
-Definition privEnvGetBindingValue := 
-value_closure
-(closure_intro [] None ["context"; "id"; "strict"] ex_privEnvGetBindingValue)
-.
-Definition name_privEnvGetBindingValue : id :=  "%EnvGetBindingValue" .
 Definition privReferenceErrorProto :=  value_object 6 .
 Definition name_privReferenceErrorProto : id :=  "%ReferenceErrorProto" .
 Definition privReferenceError := 
@@ -8352,6 +8394,12 @@ value_closure
  ex_privReferenceError)
 .
 Definition name_privReferenceError : id :=  "%ReferenceError" .
+Definition privEnvGetBindingValue := 
+value_closure
+(closure_intro [("%ReferenceError", privReferenceError)] None
+ ["context"; "id"; "strict"] ex_privEnvGetBindingValue)
+.
+Definition name_privEnvGetBindingValue : id :=  "%EnvGetBindingValue" .
 Definition privUnboundId := 
 value_closure
 (closure_intro [("%ReferenceError", privReferenceError)] None ["id"]
@@ -8432,6 +8480,12 @@ value_closure
  ["context"; "id"; "val_thunk"; "strict"] ex_privEnvAssign)
 .
 Definition name_privEnvAssign : id :=  "%EnvAssign" .
+Definition privEnvCreateImmutableBinding := 
+value_closure
+(closure_intro [("%DeclEnvAddBinding", privDeclEnvAddBinding)] None
+ ["context"; "id"] ex_privEnvCreateImmutableBinding)
+.
+Definition name_privEnvCreateImmutableBinding : id :=  "%EnvCreateImmutableBinding" .
 Definition privEnvCreateMutableBinding := 
 value_closure
 (closure_intro
@@ -8462,6 +8516,12 @@ value_closure
  ["context"; "id"; "val"; "strict"] ex_privEnvDefineArg)
 .
 Definition name_privEnvDefineArg : id :=  "%EnvDefineArg" .
+Definition privEnvInitializeImmutableBinding := 
+value_closure
+(closure_intro [] None ["context"; "id"; "val"]
+ ex_privEnvInitializeImmutableBinding)
+.
+Definition name_privEnvInitializeImmutableBinding : id :=  "%EnvInitializeImmutableBinding" .
 Definition privThrowTypeError :=  value_object 10 .
 Definition name_privThrowTypeError : id :=  "%ThrowTypeError" .
 Definition privmkArgsObj := 
@@ -8477,7 +8537,9 @@ Definition name_privmkArgsObj : id :=  "%mkArgsObj" .
 Definition privEnvDefineArgsObjOk := 
 value_closure
 (closure_intro
- [("%DeclEnvAddBinding", privDeclEnvAddBinding);
+ [("%EnvCreateImmutableBinding", privEnvCreateImmutableBinding);
+  ("%EnvCreateSetMutableBinding", privEnvCreateSetMutableBinding);
+  ("%EnvInitializeImmutableBinding", privEnvInitializeImmutableBinding);
   ("%mkArgsObj", privmkArgsObj)] None
  ["context"; "ids"; "args"; "obj"; "strict"] ex_privEnvDefineArgsObjOk)
 .
@@ -8561,8 +8623,11 @@ value_closure
 Definition name_privEnvPrepostOp : id :=  "%EnvPrepostOp" .
 Definition privEnvTypeof := 
 value_closure
-(closure_intro [("%EnvGetId", privEnvGetId); ("%Typeof", privTypeof)]
- (Some "%EnvTypeof") ["context"; "id"] ex_privEnvTypeof)
+(closure_intro
+ [("%EnvGetBindingValue", privEnvGetBindingValue);
+  ("%EnvGetId", privEnvGetId);
+  ("%Typeof", privTypeof)] (Some "%EnvTypeof") ["context"; "id"; "strict"]
+ ex_privEnvTypeof)
 .
 Definition name_privEnvTypeof : id :=  "%EnvTypeof" .
 Definition privEqEq := 
@@ -10404,6 +10469,7 @@ Definition ctx_items :=
  (name_privDelete, privDelete);
  (name_privEnvAppExpr, privEnvAppExpr);
  (name_privEnvAssign, privEnvAssign);
+ (name_privEnvCreateImmutableBinding, privEnvCreateImmutableBinding);
  (name_privEnvCreateMutableBinding, privEnvCreateMutableBinding);
  (name_privEnvCreateSetMutableBinding, privEnvCreateSetMutableBinding);
  (name_privEnvDefineArg, privEnvDefineArg);
@@ -10418,6 +10484,7 @@ Definition ctx_items :=
  (name_privEnvGetValue, privEnvGetValue);
  (name_privEnvHasBinding, privEnvHasBinding);
  (name_privEnvImplicitThis, privEnvImplicitThis);
+ (name_privEnvInitializeImmutableBinding, privEnvInitializeImmutableBinding);
  (name_privEnvModify, privEnvModify);
  (name_privEnvPrepostOp, privEnvPrepostOp);
  (name_privEnvPutValue, privEnvPutValue);
@@ -10852,6 +10919,7 @@ privDefaultConstruct
 privDelete
 privEnvAppExpr
 privEnvAssign
+privEnvCreateImmutableBinding
 privEnvCreateMutableBinding
 privEnvCreateSetMutableBinding
 privEnvDefineArg
@@ -10866,6 +10934,7 @@ privEnvGetId
 privEnvGetValue
 privEnvHasBinding
 privEnvImplicitThis
+privEnvInitializeImmutableBinding
 privEnvModify
 privEnvPrepostOp
 privEnvPutValue
@@ -11310,6 +11379,7 @@ Definition store_items := [
                                              ("%Delete", privDelete);
                                              ("%EnvAppExpr", privEnvAppExpr);
                                              ("%EnvAssign", privEnvAssign);
+                                             ("%EnvCreateImmutableBinding", privEnvCreateImmutableBinding);
                                              ("%EnvCreateMutableBinding", privEnvCreateMutableBinding);
                                              ("%EnvCreateSetMutableBinding", privEnvCreateSetMutableBinding);
                                              ("%EnvDefineArg", privEnvDefineArg);
@@ -11324,6 +11394,7 @@ Definition store_items := [
                                              ("%EnvGetValue", privEnvGetValue);
                                              ("%EnvHasBinding", privEnvHasBinding);
                                              ("%EnvImplicitThis", privEnvImplicitThis);
+                                             ("%EnvInitializeImmutableBinding", privEnvInitializeImmutableBinding);
                                              ("%EnvModify", privEnvModify);
                                              ("%EnvPrepostOp", privEnvPrepostOp);
                                              ("%EnvPutValue", privEnvPutValue);
