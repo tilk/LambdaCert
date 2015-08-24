@@ -344,7 +344,8 @@ let format_ctx_store (c, st) =
     let fst = format_store st in
     let fctx = format_ctx_def c in
     let fnv = format_named_vals () in
-    vert [header(); format_object_nums(); format_named_exprs(); fnv; fctx; format_ctx_red c; (* format_ctx_mems c;*) fst; text "Definition init_ctx : ctx := from_list ctx_items."]
+    vert [header(); format_object_nums(); format_named_exprs(); fnv; fctx; format_ctx_red c; (* format_ctx_mems c;*) fst; 
+          text "Definition init_ctx : ctx := from_list ctx_items.\nDefinition init_store : store := from_list store_items."]
 
 let ctx_store_to_output o c st = 
     Format.set_margin 200;

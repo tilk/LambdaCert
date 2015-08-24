@@ -18334,3 +18334,4 @@ Definition store_items := [
         object_internal := from_list []|})
 ].
 Definition init_ctx : ctx := from_list ctx_items.
+Definition init_store : store := from_list store_items.

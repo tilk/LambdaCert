@@ -273,12 +273,12 @@ Ltac inv_literal_ljs :=
 Ltac unfold_concl := 
     unfold concl_ext_expr_value, concl_ext_expr_resvalue, concl_expr_getvalue, 
         concl_ext_expr_value_gen, concl_ext_expr_resvalue_gen,
-        concl_stat, concl_spec.
+        concl_stat, concl_spec, concl_prog, concl_javascript.
  
 Tactic Notation "unfold_concl" "in" hyp(H) := 
     unfold concl_ext_expr_value, concl_ext_expr_resvalue, concl_expr_getvalue, 
         concl_ext_expr_value_gen, concl_ext_expr_resvalue_gen,
-        concl_stat, concl_spec in H. 
+        concl_stat, concl_spec, concl_prog, concl_javascript in H. 
 
 Ltac js_ljs_false_invert := match goal with 
     | H : J.abort_intercepted_expr _ |- _ => solve [inverts H; tryfalse]
@@ -320,6 +320,10 @@ Ltac destr_concl := match goal with
     | H : concl_ext_expr_resvalue_gen _ _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_expr_getvalue _ _ _ _ _ _ _ _ |- _ =>
+        unfold_concl in H; destruct_hyp H
+    | H : concl_prog _ _ _ _ _ _ _ _ |- _ =>
+        unfold_concl in H; destruct_hyp H
+    | H : concl_javascript _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     end.
 
@@ -930,10 +934,9 @@ Qed.
 
 Hint Resolve context_invariant_union_preserved : js_ljs.
 
-Lemma includes_init_ctx_init_ctx : forall c,
+Lemma includes_init_ctx_init_ctx :
     includes_init_ctx LjsInitEnv.init_ctx.
 Proof.
-    introv Hsub.
     unfolds.
     introv Hb1 Hb2.
     determine.
@@ -945,7 +948,9 @@ Hint Resolve includes_init_ctx_init_ctx : js_ljs.
 Lemma global_env_record_initBR_lemma :
     fact_js_env J.env_loc_global_env_record LjsInitEnv.ptr_privglobalContext \in initBR.
 Proof.
-Admitted. (* TODO *)
+    unfolds initBR. rew_in_eq.
+    eapply Mem_here.
+Qed.
 
 Hint Resolve global_env_record_initBR_lemma : js_ljs.
 
@@ -953,9 +958,23 @@ Lemma prealloc_initBR_lemma : forall jpre ptr,
     prealloc_related jpre ptr ->
     fact_js_obj (J.object_loc_prealloc jpre) ptr \in initBR.
 Proof.
-Admitted. (* TODO *)
+    introv Hpre.
+    unfolds initBR. rew_in_eq.
+    destruct Hpre; repeat (apply Mem_here || apply Mem_next).
+Qed.
 
 Hint Resolve prealloc_initBR_lemma : js_ljs.
+
+Lemma initBR_members : forall f,
+    f \in initBR ->
+    f = fact_js_env J.env_loc_global_env_record LjsInitEnv.ptr_privglobalContext \/
+    exists jpre ptr, f = fact_js_obj (J.object_loc_prealloc jpre) ptr /\ prealloc_related jpre ptr.
+Proof.
+    introv Hf.
+    unfolds initBR. rew_in_eq in Hf.
+    repeat rewrite Mem_cons_eq in Hf. rewrite Mem_nil_eq in Hf.
+    destruct_hyp Hf; jauto_js; tryfalse.
+Qed.
 
 Lemma context_invariant_global_env_record_lemma : forall BR jc c,
     context_invariant BR jc c ->
@@ -983,10 +1002,144 @@ Hint Resolve context_invariant_prealloc_lemma : js_ljs.
 Lemma execution_ctx_related_init_ctx : forall BR jc,
     execution_ctx_related BR jc LjsInitEnv.init_ctx.
 Proof.
-    constructor.
-Admitted. (* TODO *)
+    constructor;
+    introv Hbinds; unfolds LjsInitEnv.init_ctx; rew_binds_eq in Hbinds;
+    apply assoc_fast_string_assoc in Hbinds;
+    cbv in Hbinds; tryfalse.
+Qed.
 
 Hint Resolve execution_ctx_related_init_ctx : js_ljs.
+
+Lemma init_heaps_bisim_obj_ok : heaps_bisim_obj initBR JsInit.state_initial LjsInitEnv.init_store.
+Proof.
+    introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse. injects.
+    introv Hb1 Hb2.
+    destruct Hx1.
+Admitted. (* TODO *)
+
+Lemma init_heaps_bisim_env_ok : heaps_bisim_env initBR JsInit.state_initial LjsInitEnv.init_store.
+Proof.
+    introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse. injects.
+    introv Hb1 Hb2.
+Admitted. (* TODO *)
+
+Instance prealloc_related_deterministic : forall jpre, Deterministic (prealloc_related jpre).
+Proof.
+    constructor. introv Hp1 Hp2. skip. (* inverts Hp1; inverts Hp2; reflexivity. *)
+Qed.
+
+Instance prealloc_related_flip_deterministic : forall ptr, Deterministic (flip prealloc_related ptr).
+Proof.
+    constructor. introv Hp1 Hp2. inverts Hp1; inverts Hp2; reflexivity.
+Qed.
+
+(* TODO to LibRel *)
+Lemma flip_eq : forall A B (P : rel A B) a b, flip P a b = P b a.
+Proof. reflexivity. Qed.
+
+Lemma init_heaps_bisim_lfun_obj_ok : heaps_bisim_lfun_obj initBR.
+Proof.
+    introv Hf1 Hf2. lets H1x : initBR_members Hf1. lets H2x : initBR_members Hf2. 
+    destruct_hyp H1x; destruct_hyp H2x; tryfalse; repeat injects.
+    determine. reflexivity.
+Qed.
+
+Lemma init_heaps_bisim_lfun_env_ok : heaps_bisim_lfun_env initBR.
+Proof.
+    introv Hf1 Hf2. lets H1x : initBR_members Hf1. lets H2x : initBR_members Hf2. 
+    destruct_hyp H1x; destruct_hyp H2x; tryfalse; repeat injects.
+    reflexivity.
+Qed.
+
+Lemma init_heaps_bisim_rfun_ok : heaps_bisim_rfun initBR.
+Proof.
+    introv Hf1 Hf2 Hfp1 Hfp2. lets H1x : initBR_members Hf1. lets H2x : initBR_members Hf2. 
+    destruct_hyp H1x; destruct_hyp H2x; inverts Hfp1; inverts Hfp2; try false_invert.
+    + reflexivity.
+    + rewrite <- flip_eq in H1x1, H2x1. determine. reflexivity.
+Qed.
+
+Lemma init_heaps_bisim_ltotal_obj_ok : heaps_bisim_ltotal_obj initBR JsInit.state_initial.
+Proof.
+    introv Hidx.
+Admitted. (* TODO *)
+
+Lemma init_heaps_bisim_ltotal_env_ok : heaps_bisim_ltotal_env initBR JsInit.state_initial.
+Proof.
+    introv Hidx.
+    (* TODO simpler? *)
+    unfolds JsInit.state_initial. simpls.
+    unfolds JsCertExt.env_record_indom. simpls.
+    unfolds JsInit.env_record_heap_initial.
+    rewrite heap_indom_to_libbag_eq in Hidx. rew_heap_to_libbag in Hidx.
+    rew_index_eq in Hidx. rew_logic in Hidx. substs.
+    eexists. unfold initBR. rew_in_eq. eapply Mem_here.
+Qed.
+
+Lemma init_heaps_bisim_lnoghost_obj_ok : heaps_bisim_lnoghost_obj initBR JsInit.state_initial.
+Proof.
+Admitted. (* TODO *)
+
+Lemma init_heaps_bisim_lnoghost_env_ok : heaps_bisim_lnoghost_env initBR JsInit.state_initial.
+Proof.
+    introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse. injects.
+    (* TODO simpler? *)
+    unfolds JsInit.state_initial. simpl.
+    unfolds JsCertExt.env_record_indom. simpl.
+    unfolds JsInit.env_record_heap_initial. 
+    rewrite heap_indom_to_libbag_eq. rew_heap_to_libbag. prove_bag.
+Qed.
+
+Lemma init_heaps_bisim_rnoghost_ok : heaps_bisim_rnoghost initBR LjsInitEnv.init_store.
+Proof.
+    introv Hf Hfp. lets Hx : initBR_members Hf.
+    unfolds LjsInitEnv.init_store. rewrite index_binds_eq.
+    destruct_hyp Hx; inverts Hfp.
+Admitted. (* TODO *)
+
+Lemma init_heaps_bisim_consistent_ok :
+    heaps_bisim_consistent initBR JsInit.state_initial LjsInitEnv.init_store.
+Proof.
+    constructor.
+    + apply init_heaps_bisim_obj_ok.
+    + apply init_heaps_bisim_env_ok.
+    + introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse.
+    + introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse.
+    + introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse.
+    + apply init_heaps_bisim_lfun_obj_ok.
+    + apply init_heaps_bisim_lfun_env_ok.
+    + apply init_heaps_bisim_rfun_ok.
+    + apply init_heaps_bisim_ltotal_obj_ok.
+    + apply init_heaps_bisim_ltotal_env_ok.
+    + apply init_heaps_bisim_lnoghost_obj_ok.
+    + apply init_heaps_bisim_lnoghost_env_ok.
+    + apply init_heaps_bisim_rnoghost_ok.
+Qed.
+
+Lemma init_state_invariant_ok :
+    state_invariant initBR JsInit.state_initial LjsInitEnv.init_store.
+Proof.
+    constructor. 
+    + apply init_heaps_bisim_consistent_ok.
+    + skip.
+    + skip. (* TODO *)
+Qed.
+
+Lemma env_records_exist_initial : env_records_exist_env initBR J.lexical_env_initial.
+Proof.
+    unfolds J.lexical_env_initial.
+    introv Hm. inverts Hm; try false_invert. jauto_js.
+Qed.
+
+Lemma init_context_invariant_ok : forall b,
+    context_invariant initBR (J.execution_ctx_initial b) LjsInitEnv.init_ctx.
+Proof.
+    constructor.
+    + prove_bag.
+    + apply execution_ctx_related_init_ctx.
+    + apply includes_init_ctx_init_ctx.
+    + constructor; apply env_records_exist_initial.
+Qed.
 
 Lemma context_invariant_replace_ctx_sub_init : forall BR jc c c',
     c' \c LjsInitEnv.init_ctx -> 
@@ -2753,7 +2906,17 @@ Lemma init_ctx_mem_assoc : forall i v,
     Mem (i, v) LjsInitEnv.ctx_items ->
     Assoc i v LjsInitEnv.ctx_items.
 Proof.
-Admitted. (* because they are all different *)
+(* Very slow!
+    introv Hmem.
+    unfolds LjsInitEnv.ctx_items.
+    eapply fast_string_assoc_assoc.
+    repeat (rewrite Mem_cons_eq in Hmem; destruct Hmem as [Hmem|Hmem]; 
+            [injects;LjsInitEnv.ctx_compute;reflexivity|idtac]).
+    rewrite Mem_nil_eq in Hmem.
+    tryfalse.
+Qed.
+*)
+Admitted.
 
 Lemma init_ctx_mem_binds : forall i v,
     Mem (i, v) LjsInitEnv.ctx_items ->

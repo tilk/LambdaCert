@@ -342,29 +342,48 @@ Fixpoint fast_string_assoc {A} (k : string) (l : list (string * A)) : option A :
     | (k', v') :: l' => match string_dec k' k with left _ => Some v' | right _ => fast_string_assoc k l' end
     end.
 
-(*
-Fixpoint fast_string_assoc2 {A} (k : string) (l : list (string * A)) : {A | Mem (k, A) l} + unit.
+Lemma Assoc_Mem : forall T A l (k : T) (v : A), Assoc k v l -> Mem (k, v) l.
 Proof.
-    destruct l as [|(k'&v') l'].
-    right. exact tt.
-    destruct (string_dec k' k).
-    substs.
-    left. econstructor. eapply Mem_here.
-    destruct (fast_assoc2 A k l') as [(v''&M)|H].
-    left. econstructor. eapply Mem_next. eassumption.
-    right. eassumption.
-Defined.
-*)
+    introv Ha.
+    induction Ha.
+    + apply Mem_here.
+    + apply Mem_next. assumption.
+Qed.
+
+Import LibList.
+
+Lemma fast_string_assoc_assoc_eq : forall A k l (v : A), Assoc k v l = (fast_string_assoc k l = Some v).
+Proof.
+    introv. rew_logic. split; introv Hf. {
+        induction Hf; simpl; cases_if; auto.
+    } {
+        induction l; tryfalse.
+        simpls. cases_let. cases_if.
+        injects.
+        eapply Assoc_here.
+        eapply Assoc_next. eapply IHl. assumption. auto. 
+    }
+Qed.
+
+Lemma fast_string_assoc_assoc : forall A k l (v : A), fast_string_assoc k l = Some v -> Assoc k v l.
+Proof.
+    introv. rewrite fast_string_assoc_assoc_eq. auto.
+Qed.
+
+Lemma assoc_fast_string_assoc : forall A k l (v : A), Assoc k v l -> fast_string_assoc k l = Some v.
+Proof.
+    introv. rewrite fast_string_assoc_assoc_eq. auto.
+Qed.
+
+Lemma fast_string_assoc_not_assoc : forall A k l, fast_string_assoc k l = None -> forall (v : A), ~Assoc k v l.
+Proof.
+    introv Hf Ha.
+    induction Ha; simpls; cases_if.
+Qed.
 
 Lemma fast_string_assoc_mem : forall A k l (v : A), fast_string_assoc k l = Some v -> Mem (k, v) l.
 Proof.
-    introv Hf.
-    induction l.
-    tryfalse.
-    simpls. cases_let. cases_if.
-    injects.
-    eapply Mem_here.
-    eapply Mem_next. eapply IHl. assumption. 
+    introv Hf. applys Assoc_Mem. applys fast_string_assoc_assoc. assumption.
 Qed.
 
 (* instances *)

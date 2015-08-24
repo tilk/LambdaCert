@@ -197,3 +197,53 @@ Proof.
     }
 Qed.
 
+Require JsInit. (* TODO to J namespace *)
+
+Lemma execution_ctx_related_set_prog_strictness_lemma : forall BR b c,
+    execution_ctx_related BR (J.execution_ctx_initial b) c ->
+    execution_ctx_related BR (J.execution_ctx_initial b) (c\("$strict" := L.value_bool b)).
+Proof.
+    introv Hrel.
+    destruct Hrel.
+    constructor; introv Hbinds; rew_binds_eq in Hbinds; destruct_hyp Hbinds; tryfalse; eauto.
+Qed.
+
+Lemma context_invariant_set_prog_strictness_lemma : forall BR b c,
+    context_invariant BR (J.execution_ctx_initial b) c ->
+    context_invariant BR (J.execution_ctx_initial b) (c\("$strict" := L.value_bool b)).
+Proof.
+    introv Hcinv.
+    destruct Hcinv.
+    apply execution_ctx_related_set_prog_strictness_lemma in context_invariant_execution_ctx_related.
+    constructor; eauto_js 2.
+Qed.
+
+Hint Resolve context_invariant_set_prog_strictness_lemma : js_ljs.
+Opaque E.init_bindings_prog.
+
+Lemma javascript_correct_lemma : forall BR k c st st' r jp jp',
+    jp' = JsSyntaxInfos.add_infos_prog false jp ->
+    L.red_exprh k c st (L.expr_basic (E.ejs_prog_to_ljs (E.js_prog_to_ejs jp')))
+        (L.out_ter st' r) -> (* TODO factorize in EjsFromJs *)
+    context_invariant BR (J.execution_ctx_initial (J.prog_intro_strictness jp')) c ->
+    state_invariant BR JsInit.state_initial st ->
+    concl_javascript initBR st' r jp.
+Proof.
+    introv EQjp' Hlred Hcinv Hinv.
+    destruct jp' as (b&jels).
+    simpls.
+    repeat ljs_autoforward.
+Admitted. (* TODO *)
+
+Lemma javascript_correct : forall st' jp jp' k r,
+    jp' = JsSyntaxInfos.add_infos_prog false jp ->
+    L.red_exprh k LjsInitEnv.init_ctx LjsInitEnv.init_store (L.expr_basic (E.ejs_prog_to_ljs (E.js_prog_to_ejs jp')))
+        (L.out_ter st' r) -> (* TODO factorize in EjsFromJs *)
+    concl_javascript initBR st' r jp.
+Proof.
+    introv EQjp' Hlred.
+    forwards Hx : javascript_correct_lemma EQjp' Hlred.
+    eapply init_context_invariant_ok.
+    eapply init_state_invariant_ok.
+    apply Hx.
+Qed.
