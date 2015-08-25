@@ -882,6 +882,7 @@ Record execution_ctx_related BR jc c := {
 (** *** Initial bisimulation. *)
 
 Definition initBR : fact_set := from_list [
+    fact_ctx_parent LjsInitEnv.ptr_privglobalContext L.value_null;
     fact_js_env J.env_loc_global_env_record LjsInitEnv.ptr_privglobalContext;
     fact_js_obj (J.object_loc_prealloc J.prealloc_global) LjsInitEnv.ptr_privglobal;
     fact_js_obj (J.object_loc_prealloc J.prealloc_global_eval) LjsInitEnv.ptr_priveval;

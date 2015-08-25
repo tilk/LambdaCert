@@ -5,6 +5,7 @@ Require Import LjsShared.
 Require Import Utils.
 Require Import LjsRulesCorrectDefinitions.
 Require Import LjsRulesCorrectCommon.
+Require Import LjsRulesCorrectSpecFuns.
 Require Import LjsRulesCorrectStatements.
 Require Import LjsRulesCorrectExpressions.
 Require Import LjsRulesCorrectCallPrealloc.
@@ -197,16 +198,12 @@ Proof.
     }
 Qed.
 
-Require JsInit. (* TODO to J namespace *)
-
-Lemma execution_ctx_related_set_prog_strictness_lemma : forall BR b c,
-    execution_ctx_related BR (J.execution_ctx_initial b) c ->
-    execution_ctx_related BR (J.execution_ctx_initial b) (c\("$strict" := L.value_bool b)).
+Lemma stat_lemma : forall k jt, th_stat k jt.
 Proof.
-    introv Hrel.
-    destruct Hrel.
-    constructor; introv Hbinds; rew_binds_eq in Hbinds; destruct_hyp Hbinds; tryfalse; eauto.
+    introv. lets Hmain : main_lemma k. iauto.
 Qed.
+
+Require JsInit. (* TODO to J namespace *)
 
 Lemma context_invariant_set_prog_strictness_lemma : forall BR b c,
     context_invariant BR (J.execution_ctx_initial b) c ->
@@ -214,29 +211,117 @@ Lemma context_invariant_set_prog_strictness_lemma : forall BR b c,
 Proof.
     introv Hcinv.
     destruct Hcinv.
-    apply execution_ctx_related_set_prog_strictness_lemma in context_invariant_execution_ctx_related.
+    asserts Hrel : (execution_ctx_related BR (J.execution_ctx_initial b) 
+                                             (c\("$strict" := L.value_bool b))). {
+        destruct context_invariant_execution_ctx_related.
+        constructor; introv Hbinds; rew_binds_eq in Hbinds; destruct_hyp Hbinds; tryfalse; eauto.
+    }
     constructor; eauto_js 2.
 Qed.
 
 Hint Resolve context_invariant_set_prog_strictness_lemma : js_ljs.
+
+Lemma lexical_env_related_initial : forall BR,
+    initBR \c BR ->
+    lexical_env_related BR J.lexical_env_initial LjsInitEnv.privglobalContext.
+Proof.
+    introv Hsub.
+    econstructor.
+    + eapply incl_in. eassumption. eauto_js.
+    + eapply incl_in. eassumption. eauto_js.
+    + econstructor.
+Qed.
+
+Lemma context_invariant_set_prog_vcontext_lemma : forall BR b c,
+    context_invariant BR (J.execution_ctx_initial b) c ->
+    context_invariant BR (J.execution_ctx_initial b) (c\("$vcontext" := LjsInitEnv.privglobalContext)).
+Proof.
+    introv Hcinv.
+    destruct Hcinv.
+    asserts Hrel : (execution_ctx_related BR (J.execution_ctx_initial b) 
+                                             (c\("$vcontext" := LjsInitEnv.privglobalContext))). {
+        destruct context_invariant_execution_ctx_related.
+        lets Hlrel : lexical_env_related_initial context_invariant_bisim_includes_init.
+        constructor; introv Hbinds; rew_binds_eq in Hbinds; destruct_hyp Hbinds; tryfalse; eauto.
+    }
+    constructor; eauto_js 2.
+Qed.
+
+Hint Resolve context_invariant_set_prog_vcontext_lemma : js_ljs.
+
+Lemma context_invariant_set_prog_context_lemma : forall BR b c,
+    context_invariant BR (J.execution_ctx_initial b) c ->
+    context_invariant BR (J.execution_ctx_initial b) (c\("$context" := LjsInitEnv.privglobalContext)).
+Proof.
+    introv Hcinv.
+    destruct Hcinv.
+    asserts Hrel : (execution_ctx_related BR (J.execution_ctx_initial b) 
+                                             (c\("$context" := LjsInitEnv.privglobalContext))). {
+        destruct context_invariant_execution_ctx_related.
+        lets Hlrel : lexical_env_related_initial context_invariant_bisim_includes_init.
+        constructor; introv Hbinds; rew_binds_eq in Hbinds; destruct_hyp Hbinds; tryfalse; eauto.
+    }
+    constructor; eauto_js 2.
+Qed.
+
+Hint Resolve context_invariant_set_prog_context_lemma : js_ljs.
+
+Lemma value_related_global : forall BR,
+    initBR \c BR ->
+    value_related BR (J.value_object (J.object_loc_prealloc J.prealloc_global)) LjsInitEnv.privglobal.
+Proof.
+    introv Hsub.
+    constructor.
+    eapply incl_in. eassumption. eauto_js.
+Qed.
+
+Lemma context_invariant_set_prog_this_lemma : forall BR b c,
+    context_invariant BR (J.execution_ctx_initial b) c ->
+    context_invariant BR (J.execution_ctx_initial b) (c\("$this" := LjsInitEnv.privglobal)).
+Proof.
+    introv Hcinv.
+    destruct Hcinv.
+    asserts Hrel : (execution_ctx_related BR (J.execution_ctx_initial b) 
+                                             (c\("$this" := LjsInitEnv.privglobal))). {
+        destruct context_invariant_execution_ctx_related.
+        lets Hlrel : value_related_global context_invariant_bisim_includes_init.
+        constructor; introv Hbinds; rew_binds_eq in Hbinds; destruct_hyp Hbinds; tryfalse; eauto.
+    }
+    constructor; eauto_js 2.
+Qed.
+
+Hint Resolve context_invariant_set_prog_this_lemma : js_ljs.
+
 Opaque E.init_bindings_prog.
+
+Hint Constructors J.red_javascript : js_ljs.
 
 Lemma javascript_correct_lemma : forall BR k c st st' r jp jp',
     jp' = JsSyntaxInfos.add_infos_prog false jp ->
-    L.red_exprh k c st (L.expr_basic (js_prog_to_ljs false jp')) (L.out_ter st' r) ->
+    L.red_exprh k c st (L.expr_basic (EjsToLjs.add_init (js_prog_to_ljs false jp')))
+        (L.out_ter st' r) ->
     context_invariant BR (J.execution_ctx_initial (J.prog_intro_strictness jp')) c ->
     state_invariant BR JsInit.state_initial st ->
-    concl_javascript initBR st' r jp.
+    concl_javascript BR st' r jp.
 Proof.
     introv EQjp' Hlred Hcinv Hinv.
     destruct jp' as (b&jels).
     simpls.
     repeat ljs_autoforward.
-Admitted. (* TODO *)
+    asserts_rewrite (jels = J.prog_elements (J.prog_intro b jels)) in *. reflexivity.
+    forwards_th : binding_inst_global_lemma. eauto_js 7. prove_bag. prove_bag.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    repeat ljs_autoforward.
+    forwards_th Hx : prog_ok_lemma. { unfolds. intros. apply stat_lemma. } eauto_js 7.
+    destruct_hyp Hx. (* TODO destr_concl *)
+    jauto_js.
+Qed.
 
 Lemma javascript_correct : forall st' jp jp' k r,
     jp' = JsSyntaxInfos.add_infos_prog false jp ->
-    L.red_exprh k LjsInitEnv.init_ctx LjsInitEnv.init_store (L.expr_basic (js_prog_to_ljs false jp'))
+    L.red_exprh k LjsInitEnv.init_ctx LjsInitEnv.init_store 
+        (L.expr_basic (EjsToLjs.add_init (js_prog_to_ljs false jp')))
         (L.out_ter st' r) ->
     concl_javascript initBR st' r jp.
 Proof.

@@ -949,10 +949,19 @@ Lemma global_env_record_initBR_lemma :
     fact_js_env J.env_loc_global_env_record LjsInitEnv.ptr_privglobalContext \in initBR.
 Proof.
     unfolds initBR. rew_in_eq.
-    eapply Mem_here.
+    eapply Mem_next. eapply Mem_here.
 Qed.
 
 Hint Resolve global_env_record_initBR_lemma : js_ljs.
+
+Lemma global_env_record_parent_initBR_lemma :
+    fact_ctx_parent LjsInitEnv.ptr_privglobalContext L.value_null \in initBR.
+Proof.
+    unfolds initBR. rew_in_eq.
+    eapply Mem_here.
+Qed.
+
+Hint Resolve global_env_record_parent_initBR_lemma : js_ljs.
 
 Lemma prealloc_initBR_lemma : forall jpre ptr,
     prealloc_related jpre ptr ->
@@ -967,13 +976,14 @@ Hint Resolve prealloc_initBR_lemma : js_ljs.
 
 Lemma initBR_members : forall f,
     f \in initBR ->
+    f = fact_ctx_parent LjsInitEnv.ptr_privglobalContext L.value_null \/
     f = fact_js_env J.env_loc_global_env_record LjsInitEnv.ptr_privglobalContext \/
     exists jpre ptr, f = fact_js_obj (J.object_loc_prealloc jpre) ptr /\ prealloc_related jpre ptr.
 Proof.
     introv Hf.
     unfolds initBR. rew_in_eq in Hf.
     repeat rewrite Mem_cons_eq in Hf. rewrite Mem_nil_eq in Hf.
-    destruct_hyp Hf; jauto_js; tryfalse.
+    destruct_hyp Hf; ijauto_js; tryfalse.
 Qed.
 
 Lemma context_invariant_global_env_record_lemma : forall BR jc c,
@@ -1073,7 +1083,7 @@ Proof.
     unfolds JsInit.env_record_heap_initial.
     rewrite heap_indom_to_libbag_eq in Hidx. rew_heap_to_libbag in Hidx.
     rew_index_eq in Hidx. rew_logic in Hidx. substs.
-    eexists. unfold initBR. rew_in_eq. eapply Mem_here.
+    eexists. unfold initBR. rew_in_eq. eapply Mem_next. eapply Mem_here.
 Qed.
 
 Lemma init_heaps_bisim_lnoghost_obj_ok : heaps_bisim_lnoghost_obj initBR JsInit.state_initial.

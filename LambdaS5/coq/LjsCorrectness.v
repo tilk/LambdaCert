@@ -702,7 +702,7 @@ Lemma eval_eval_correct : forall runs c st e1 e2 o,
                 v'' = value_object ptr /\ 
                 st'' \(ptr?) = Some obj /\ 
                 ctx_of_obj obj = Some c1 /\
-                desugar_expr s = Some e /\ 
+                EjsFromJs.desugar_expr true s = Some e /\ 
                 runs_type_eval runs c1 st'' e = result_some o)).
 Proof.
     introv IH R. unfolds in R.
