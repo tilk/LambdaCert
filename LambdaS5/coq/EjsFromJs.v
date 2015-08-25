@@ -200,6 +200,6 @@ Qed.
 Require EjsToLjs.
 
 Parameter parse_js_expr : string -> option JsSyntax.prog.
-Definition desugar_expr s := LibOption.map (fun e => EjsToLjs.ejs_prog_to_ljs (js_prog_to_ejs 
+Definition desugar_expr isEval s := LibOption.map (fun e => EjsToLjs.ejs_prog_to_ljs isEval (js_prog_to_ejs
     (JsSyntaxInfos.add_infos_prog J.strictness_false e))) (parse_js_expr s).
 

@@ -1820,12 +1820,11 @@ Qed.
 
 Lemma binding_inst_function_decls_lemma : forall BR k jst jc c st st' r jfds jeptr ptr b1 b2,
     L.red_exprh k c st (L.expr_basic 
-        (E.init_funcs E.make_fobj (map E.js_funcdecl_to_func jfds))) (L.out_ter st' r) ->
+        (E.init_funcs b1 E.make_fobj (map E.js_funcdecl_to_func jfds))) (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     binds c "$strict" (L.value_bool b2) ->
     binds c "$vcontext" (L.value_object ptr) ->
-    binds c "evalCode" (L.value_bool b1) ->
     fact_js_env jeptr ptr \in BR ->
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst_function_decls jeptr jfds b2 b1) (fun jrv => jrv = J.resvalue_empty).    
@@ -1833,7 +1832,7 @@ Proof.
     introv.
     unfolds E.init_funcs.
     inductions jfds gen BR k jst st;
-    introv Hlred Hcinv Hinv Hbinds1 Hbinds2 Hbinds3 Hf. {
+    introv Hlred Hcinv Hinv Hbinds1 Hbinds2 Hf. {
         repeat ljs_autoforward.
         jauto_js.
     }
@@ -1851,7 +1850,7 @@ Proof.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    inverts red_exprh H13. (* TODO *)
+    inverts red_exprh H12. (* TODO *)
     ljs_apply.
     ljs_context_invariant_after_apply.
     repeat ljs_autoforward.
@@ -1901,12 +1900,11 @@ Proof.
 Qed.
 
 Lemma binding_inst_var_decls_lemma : forall BR k jst jc c st st' r is jeptr ptr b1 b2,
-    L.red_exprh k c st (L.expr_basic (E.init_vars is)) (L.out_ter st' r) ->
+    L.red_exprh k c st (L.expr_basic (E.init_vars b1 is)) (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     binds c "$strict" (L.value_bool b2) ->
     binds c "$vcontext" (L.value_object ptr) ->
-    binds c "evalCode" (L.value_bool b1) ->
     fact_js_env jeptr ptr \in BR ->
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst_var_decls jeptr is b1 b2) (fun jrv => jrv = J.resvalue_empty).
@@ -1914,13 +1912,13 @@ Proof.
     introv.
     unfolds E.init_vars.
     inductions is gen BR k jst st;
-    introv Hlred Hcinv Hinv Hbinds1 Hbinds2 Hbinds3 Hf. {
+    introv Hlred Hcinv Hinv Hbinds1 Hbinds2 Hf. {
         repeat ljs_autoforward.
         jauto_js.
     }
     rew_map in Hlred.
     repeat ljs_autoforward.
-    inverts red_exprh H5.
+    inverts red_exprh H3.
     ljs_apply.
     ljs_context_invariant_after_apply.
     repeat ljs_autoforward.
@@ -1952,17 +1950,16 @@ Opaque E.init_args E.init_vars E.init_funcs.
 
 Lemma binding_inst_global_lemma : forall BR k jst jc c st st' r ptr jp,
     L.red_exprh k c st (L.expr_basic
-          (E.init_bindings_prog E.make_fobj (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
+          (E.init_bindings_prog false E.make_fobj (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
               (J.prog_vardecl jp))) (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     binds c "$strict" (L.value_bool (J.prog_intro_strictness jp)) ->
     binds c "$vcontext" (L.value_object ptr) ->
-    binds c "evalCode" (L.value_bool false) ->
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst J.codetype_global None jp []) (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv Hlred Hcinv Hinv Hbinds1 Hbinds2 Hbinds3.
+    introv Hlred Hcinv Hinv Hbinds1 Hbinds2.
     asserts_rewrite 
         (concat (List.map E.js_element_to_func (J.prog_elements jp)) = E.prog_funcs (E.js_prog_to_ejs jp)) in Hlred.
     { destruct jp. reflexivity. }
@@ -1989,17 +1986,16 @@ Qed.
 
 Lemma binding_inst_eval_lemma : forall BR k jst jc c st st' r ptr jp,
     L.red_exprh k c st (L.expr_basic
-          (E.init_bindings_prog E.make_fobj (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
+          (E.init_bindings_prog true E.make_fobj (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
               (J.prog_vardecl jp))) (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     binds c "$strict" (L.value_bool (J.prog_intro_strictness jp)) ->
     binds c "$vcontext" (L.value_object ptr) ->
-    binds c "evalCode" (L.value_bool true) ->
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst J.codetype_eval None jp []) (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv Hlred Hcinv Hinv Hbinds1 Hbinds2 Hbinds3.
+    introv Hlred Hcinv Hinv Hbinds1 Hbinds2.
     asserts_rewrite 
         (concat (List.map E.js_element_to_func (J.prog_elements jp)) = E.prog_funcs (E.js_prog_to_ejs jp)) in Hlred.
     { destruct jp. reflexivity. }

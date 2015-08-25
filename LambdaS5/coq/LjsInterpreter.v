@@ -7,6 +7,7 @@ Require Import LjsStore.
 Require Import Utils.
 Require Import LjsOperators.
 Require Import JsNumber.
+Require EjsFromJs.
 
 Open Scope list_scope.
 Open Scope string_scope.
@@ -587,7 +588,7 @@ Definition eval_eval runs c st estr bindings :=
     if_eval_return runs c st bindings (fun st v_bindings =>
       assert_get_string v_estr (fun s =>
         assert_get_object st v_bindings (fun obj => 
-          match desugar_expr s, ctx_of_obj obj with
+          match EjsFromJs.desugar_expr true s, ctx_of_obj obj with
           | Some e, Some c' => runs_type_eval runs c' st e          
           | None, _ => result_fail "Parse error"
           | _, None => result_fail "Invalid eval environment"

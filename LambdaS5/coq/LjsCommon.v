@@ -484,8 +484,6 @@ Definition set_attributes_pattr attrs pa v :=
 
 (* Desugaring function *)
 
-Parameter desugar_expr : string -> option expr.
-
 Definition _ascii_of_int (i : int) : Ascii.ascii := Ascii.ascii_of_N (Z.to_N i).
 
 Definition _int_of_ascii (c : Ascii.ascii) : int := Z.of_N (Ascii.N_of_ascii c).

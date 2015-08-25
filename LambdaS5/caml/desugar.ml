@@ -17,7 +17,7 @@ let set_js_parser_s5 filename = js_parser := Some (s5_js_parser filename)
 
 let builtin_js_parser jsfile =
     let data = File.with_file_in jsfile (fun ch -> IO.read_all ch) in
-    match EjsFromJs.desugar_expr (String.to_list data) with
+    match EjsFromJs.desugar_expr false (String.to_list data) with
     | Some e -> e 
     | None -> Coq_expr_app (Coq_expr_id (String.to_list "%SyntaxError"), [Coq_expr_string (String.to_list "Unknown parser error TODO")])
 

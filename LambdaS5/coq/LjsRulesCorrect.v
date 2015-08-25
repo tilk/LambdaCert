@@ -223,8 +223,7 @@ Opaque E.init_bindings_prog.
 
 Lemma javascript_correct_lemma : forall BR k c st st' r jp jp',
     jp' = JsSyntaxInfos.add_infos_prog false jp ->
-    L.red_exprh k c st (L.expr_basic (E.ejs_prog_to_ljs (E.js_prog_to_ejs jp')))
-        (L.out_ter st' r) -> (* TODO factorize in EjsFromJs *)
+    L.red_exprh k c st (L.expr_basic (js_prog_to_ljs false jp')) (L.out_ter st' r) ->
     context_invariant BR (J.execution_ctx_initial (J.prog_intro_strictness jp')) c ->
     state_invariant BR JsInit.state_initial st ->
     concl_javascript initBR st' r jp.
@@ -237,8 +236,8 @@ Admitted. (* TODO *)
 
 Lemma javascript_correct : forall st' jp jp' k r,
     jp' = JsSyntaxInfos.add_infos_prog false jp ->
-    L.red_exprh k LjsInitEnv.init_ctx LjsInitEnv.init_store (L.expr_basic (E.ejs_prog_to_ljs (E.js_prog_to_ejs jp')))
-        (L.out_ter st' r) -> (* TODO factorize in EjsFromJs *)
+    L.red_exprh k LjsInitEnv.init_ctx LjsInitEnv.init_store (L.expr_basic (js_prog_to_ljs false jp'))
+        (L.out_ter st' r) ->
     concl_javascript initBR st' r jp.
 Proof.
     introv EQjp' Hlred.

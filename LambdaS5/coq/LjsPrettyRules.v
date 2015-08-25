@@ -8,6 +8,7 @@ Require Import LjsPrettyInterm.
 Require Import LjsStore.
 Require Import LjsCommon.
 Require Import LjsValues.
+Require EjsFromJs.
 Import List.ListNotations.
 
 Open Scope list_scope.
@@ -452,7 +453,7 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_eval_1 : forall c c1 st s e ptr obj o,
     binds st ptr obj ->
     ctx_of_obj obj = Some c1 ->
-    desugar_expr s = Some e ->
+    EjsFromJs.desugar_expr true s = Some e ->
     red_expr c1 st e o ->
     red_expr c st (expr_eval_1 [value_string s; value_object ptr]) o
 

@@ -99,6 +99,7 @@ Implicit Type jpre : J.prealloc.
 Definition js_literal_to_ljs jli := E.ejs_to_ljs (E.js_literal_to_ejs jli).
 Definition js_expr_to_ljs je := E.ejs_to_ljs (E.js_expr_to_ejs je).
 Definition js_stat_to_ljs jt := E.ejs_to_ljs (E.js_stat_to_ejs jt).
+Definition js_prog_to_ljs isEval jp := E.ejs_prog_to_ljs isEval (E.js_prog_to_ejs jp).
 
 (** ** Relating JS and S5 *)
 
