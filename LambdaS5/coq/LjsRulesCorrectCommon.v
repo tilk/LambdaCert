@@ -273,12 +273,12 @@ Ltac inv_literal_ljs :=
 Ltac unfold_concl := 
     unfold concl_ext_expr_value, concl_ext_expr_resvalue, concl_expr_getvalue, 
         concl_ext_expr_value_gen, concl_ext_expr_resvalue_gen,
-        concl_stat, concl_spec, concl_prog, concl_javascript.
+        concl_ext_stat, concl_stat, concl_spec, concl_prog, concl_javascript.
  
 Tactic Notation "unfold_concl" "in" hyp(H) := 
     unfold concl_ext_expr_value, concl_ext_expr_resvalue, concl_expr_getvalue, 
         concl_ext_expr_value_gen, concl_ext_expr_resvalue_gen,
-        concl_stat, concl_spec, concl_prog, concl_javascript in H. 
+        concl_ext_stat, concl_stat, concl_spec, concl_prog, concl_javascript in H. 
 
 Ltac js_ljs_false_invert := match goal with 
     | H : J.abort_intercepted_expr _ |- _ => solve [inverts H; tryfalse]
@@ -310,6 +310,8 @@ Ltac destr_concl := match goal with
     | H : concl_spec _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_stat _ _ _ _ _ _ _ _ |- _ =>
+        unfold_concl in H; destruct_hyp H
+    | H : concl_ext_stat _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H
     | H : concl_ext_expr_value _ _ _ _ _ _ _ _ _ |- _ =>
         unfold_concl in H; destruct_hyp H

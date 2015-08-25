@@ -1007,6 +1007,13 @@ Definition concl_ext_expr_value_gen BR jst jc c st st' r jee P Q := (* TODO use 
 Definition concl_ext_expr_value BR jst jc c st st' r jee P :=
     concl_ext_expr_value_gen BR jst jc c st st' r jee (fun _ _ x => P x) True.
 
+Definition concl_ext_stat BR jst jc c st st' r jet :=
+    exists BR' jst' jr,
+    J.red_stat jst jc jet (J.out_ter jst' jr) /\ 
+    state_invariant BR' jst' st' /\
+    BR \c BR' /\
+    res_related BR' jst' st' jr r.
+
 Definition concl_stat BR jst jc c st st' r jt :=
     exists BR' jst' jr,
     J.red_stat jst jc (J.stat_basic jt) (J.out_ter jst' jr) /\ 

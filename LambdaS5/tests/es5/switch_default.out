@@ -1,0 +1,35 @@
+test 0
+0
+run0
+run1
+deflt
+run2
+run3
+test 1
+0
+1
+run1
+deflt
+run2
+run3
+test 2
+0
+1
+2
+run2
+run3
+test 3
+0
+1
+2
+3
+run3
+test 4
+0
+1
+2
+3
+deflt
+run2
+run3
+undefined
