@@ -357,16 +357,16 @@ Definition make_object ps :=
 
 Definition make_new e es := make_app_builtin "%PrimNew" [e; make_args_obj es].
 
-Definition make_case (tb : L.expr * L.expr) cont := let (test, body) := tb in
-    L.expr_let "found" (make_or (L.expr_id "found") (eq (L.expr_id "disc") test))
-        (make_seq (L.expr_if (L.expr_id "found") body L.expr_empty) cont).
+Definition make_case found (tb : L.expr * L.expr) cont := let (test, body) := tb in
+    L.expr_let found (make_or (L.expr_id found) (eq (L.expr_id "disc") test))
+        (make_seq (L.expr_if (L.expr_id found) body L.expr_empty) cont).
 
-Definition make_cases cls last := fold_right make_case last cls.
+Definition make_cases found cls last := fold_right (make_case found) last cls.
 
 Definition make_switch_nodefault e cls :=
     L.expr_let "disc" e (
     L.expr_let "found" L.expr_false (
-    make_cases cls L.expr_empty)).
+    make_cases "found" cls L.expr_empty)).
 
 Definition make_switch_withdefault e acls def bcls :=
     let last_case := L.expr_if (L.expr_id "found") L.expr_empty (L.expr_app (L.expr_id "deflt") []) in
@@ -375,7 +375,7 @@ Definition make_switch_withdefault e acls def bcls :=
     L.expr_let "disc" e (
     L.expr_let "deflt" (L.expr_lambda [] def) (
     L.expr_let "found" L.expr_false (
-    make_cases acls (deflt_case (make_cases bcls last_case))))).
+    make_cases "found" acls (deflt_case (make_cases "found" bcls last_case))))).
 
 Definition make_assign f (e1 : E.expr) e2 := 
     reference_match e1

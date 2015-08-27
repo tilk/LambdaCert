@@ -826,6 +826,53 @@ Qed.
  
 (** *** switch *)
 
+(* TODO
+Definition switch_case_fallthru k c e2 st' v' st v :=
+    exists v2,
+    L.red_exprh k c st (L.expr_basic e2) (L.out_ter st' (L.res_value v2)) /\
+    v' = L.overwrite_value_if_empty v v2.
+
+Definition switch_case_match k c v0 e1 e2 st'' v'' st v :=
+    exists st' v1 v2,
+    L.red_exprh k c st (L.expr_basic e1) (L.out_ter st' (L.res_value v1)) /\
+    L.red_exprh k c st' (L.expr_basic e2) (L.out_ter st'' (L.res_value v2)) /\
+    L.stx_eq v0 v1 /\
+    v'' = L.overwrite_value_if_empty v v2.
+
+Definition switch_case_next k c v0 e1 st' v' st v :=
+    exists v1,
+    L.red_exprh k c st (L.expr_basic e1) (L.out_ter st' (L.res_value v1)) /\
+    ~L.stx_eq v0 v1 /\
+    v' = v.
+
+Definition switch_case_fallthru_abort (k:nat) c e2 st' r st v := True. (* TODO *)
+
+Definition switch_case_case_abort (k:nat) c v0 e1 e2 st' r st v := True. (* TODO *)
+
+Inductive switch_cases_unroll P k c v b st r : list (L.expr * L.expr) -> bool -> L.store -> L.value -> Prop :=
+| switch_cases_unroll_nil : forall st' v', 
+    P st r b st' v' ->
+    switch_cases_unroll P k c v b st r [] b st v'
+| switch_cases_unroll_fallthru_abort : forall e1 e2 cl st' v',
+    switch_case_fallthru_abort k c e2 st r st' v' ->
+    switch_cases_unroll P k c v b st r ((e1,e2)::cl) true st' v'
+| switch_cases_unroll_case_abort : forall e1 e2 cl st' v',
+    switch_case_case_abort k c v e1 e2 st r st' v' ->
+    switch_cases_unroll P k c v b st r ((e1,e2)::cl) false st' v'
+| switch_cases_unroll_fallthru : forall e1 e2 cl st' st'' v' v'',
+    switch_case_fallthru k c e2 st' v' st'' v'' ->
+    switch_cases_unroll P k c v b st r cl true st' v' ->
+    switch_cases_unroll P k c v b st r ((e1,e2)::cl) true st'' v''
+| switch_cases_unroll_match : forall e1 e2 cl st' st'' v' v'',
+    switch_case_match k c v e1 e2 st' v' st'' v'' ->
+    switch_cases_unroll P k c v b st r cl true st' v' ->
+    switch_cases_unroll P k c v b st r ((e1,e2)::cl) false st'' v''
+| switch_cases_unroll_next : forall e1 e2 cl st' st'' v' v'',
+    switch_case_next k c v e1 st' v' st'' v'' ->
+    switch_cases_unroll P k c v b st r cl false st' v' ->
+    switch_cases_unroll P k c v b st r ((e1,e2)::cl) false st'' v''.
+*)
+
 Lemma red_stat_switch_nodefault_ok : forall k ls je cl,
     ih_stat k -> 
     ih_expr k -> 
