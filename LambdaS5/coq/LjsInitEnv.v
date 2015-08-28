@@ -431,6 +431,9 @@ expr_object
                    expr_false));
  ("%GtOp", property_data
            (data_intro (expr_id "%GtOp") expr_true expr_false expr_false));
+ ("%HasProperty", property_data
+                  (data_intro (expr_id "%HasProperty") expr_true expr_false
+                   expr_false));
  ("%InLeapYear", property_data
                  (data_intro (expr_id "%InLeapYear") expr_true expr_false
                   expr_false));
@@ -2804,7 +2807,7 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
    (expr_string "ObjEnvRec"))
   (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
    (expr_if
-    (expr_op2 binary_op_has_property (expr_id "bindings") (expr_id "id"))
+    (expr_app (expr_id "%HasProperty") [expr_id "bindings"; expr_id "id"])
     (expr_app (expr_id "f") [expr_id "context"])
     (expr_app (expr_id "%EnvGetId")
      [expr_get_internal "parent" (expr_id "context");
@@ -3115,6 +3118,15 @@ expr_get_field (expr_id "o") (expr_string "func")
 Definition ex_privGtOp := 
 expr_app (expr_id "%CompareOp")
 [expr_id "l"; expr_id "r"; expr_true; expr_false]
+.
+Definition ex_privHasProperty := 
+expr_if (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "id"))
+expr_true
+(expr_if
+ (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_proto (expr_id "obj"))
+  expr_null) expr_false
+ (expr_app (expr_id "%HasProperty")
+  [expr_get_obj_attr oattr_proto (expr_id "obj"); expr_id "id"]))
 .
 Definition ex_privInLeapYear := 
 expr_if
@@ -5434,12 +5446,9 @@ expr_op2 binary_op_has_own_property
 .
 Definition ex_privin := 
 expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "r")))
-(expr_app (expr_id "%TypeError")
- [expr_op2 binary_op_string_plus
-  (expr_app (expr_id "%ToString") [expr_id "r"])
-  (expr_string " is not an object")])
-(expr_op2 binary_op_has_property (expr_id "r")
- (expr_app (expr_id "%ToString") [expr_id "l"]))
+(expr_app (expr_id "%TypeError") [expr_string "not an object"])
+(expr_app (expr_id "%HasProperty")
+ [expr_id "r"; expr_app (expr_id "%ToString") [expr_id "l"]])
 .
 Definition ex_privinstanceof := 
 expr_label "ret"
@@ -8379,9 +8388,15 @@ value_closure
   ("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"] ex_privDelete)
 .
 Definition name_privDelete : id :=  "%Delete" .
+Definition privHasProperty := 
+value_closure
+(closure_intro [] (Some "%HasProperty") ["obj"; "id"] ex_privHasProperty)
+.
+Definition name_privHasProperty : id :=  "%HasProperty" .
 Definition privEnvGetId := 
 value_closure
-(closure_intro [] (Some "%EnvGetId") ["context"; "id"; "f"] ex_privEnvGetId)
+(closure_intro [("%HasProperty", privHasProperty)] (Some "%EnvGetId")
+ ["context"; "id"; "f"] ex_privEnvGetId)
 .
 Definition name_privEnvGetId : id :=  "%EnvGetId" .
 Definition privReferenceErrorProto :=  value_object 6 .
@@ -9475,8 +9490,10 @@ value_closure
 Definition name_privhasOwnPropertyCall : id :=  "%hasOwnPropertyCall" .
 Definition privin := 
 value_closure
-(closure_intro [("%ToString", privToString); ("%TypeError", privTypeError)]
- None ["l"; "r"] ex_privin)
+(closure_intro
+ [("%HasProperty", privHasProperty);
+  ("%ToString", privToString);
+  ("%TypeError", privTypeError)] None ["l"; "r"] ex_privin)
 .
 Definition name_privin : id :=  "%in" .
 Definition privinstanceof := 
@@ -10507,6 +10524,7 @@ Definition ctx_items :=
  (name_privGetterProxyFun, privGetterProxyFun);
  (name_privGetterValue, privGetterValue);
  (name_privGtOp, privGtOp);
+ (name_privHasProperty, privHasProperty);
  (name_privInLeapYear, privInLeapYear);
  (name_privIsCallable, privIsCallable);
  (name_privIsFinite, privIsFinite);
@@ -10957,6 +10975,7 @@ privGetField
 privGetterProxyFun
 privGetterValue
 privGtOp
+privHasProperty
 privInLeapYear
 privIsCallable
 privIsFinite
@@ -11417,6 +11436,7 @@ Definition store_items := [
                                              ("%GetterProxyFun", privGetterProxyFun);
                                              ("%GetterValue", privGetterValue);
                                              ("%GtOp", privGtOp);
+                                             ("%HasProperty", privHasProperty);
                                              ("%InLeapYear", privInLeapYear);
                                              ("%IsCallable", privIsCallable);
                                              ("%IsFinite", privIsFinite);

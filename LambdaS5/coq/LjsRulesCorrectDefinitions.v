@@ -563,10 +563,16 @@ Inductive func_strict_related : J.funcbody -> L.value -> Prop :=
 
 Definition option_func_strict_related := Option2 func_strict_related.
 
+Inductive object_or_null : L.value -> Prop :=
+| object_or_null_null : object_or_null L.value_null
+| object_or_null_object : forall ptr, object_or_null (L.value_object ptr)
+.
+
 Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_class : J.object_class_ jobj = L.object_class obj;
     object_prim_related_extensible : J.object_extensible_ jobj = L.object_extensible obj;
     object_prim_related_prototype : value_related BR (J.object_proto_ jobj) (L.object_proto obj);
+    object_prim_related_prototype_object_or_null : object_or_null (L.object_proto obj);
     object_prim_related_primval : 
         option_value_related BR (J.object_prim_value_ jobj) (L.object_internal obj\("primval"?));
     object_prim_related_call : option_call_related (J.object_call_ jobj) (L.object_code obj);

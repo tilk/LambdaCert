@@ -123,20 +123,21 @@ Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
        (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
+    object_or_null v1 ->
     (v2 = L.value_undefined \/ exists s, v2 = L.value_string s) ->
     value_related BR jv1 v1 ->
     value_related BR jv2 v2 ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_build_error jv1 jv2) 
         (fun jv => exists jptr, jv = J.value_object jptr).
 Proof.
-    introv Hlred Hcinv Hinv Hv Hvrel1 Hvrel2. 
+    introv Hlred Hcinv Hinv Hon Hv Hvrel1 Hvrel2. 
     inverts red_exprh Hlred; tryfalse.
     ljs_apply.
     repeat ljs_autoforward.
     destruct_hyp Hv;
     repeat ljs_autoforward. {
         inverts Hvrel2.
-        jauto_js 16.
+        jauto_js 22.
     }
     (* has message *)
     inv_ljs;
@@ -188,15 +189,15 @@ Proof.
     ljs_context_invariant_after_apply.
     repeat ljs_autoforward.
     destruct_hyp Hv;
-    (forwards_th : make_native_error_lemma; [eauto | idtac]);
-    destr_concl.
-    res_related_invert.
-    repeat inv_fwd_ljs.
-    forwards_th Hy : priv_js_error_lemma. destruct_hyp Hy.
-    repeat inv_fwd_ljs.
-    resvalue_related_invert.
-    jauto_js 8.
-    ljs_handle_abort.
+    (forwards_th : make_native_error_lemma; [eauto_js | eauto | idtac]);
+    destr_concl; try ljs_handle_abort. { (* no error message *)
+        res_related_invert.
+        repeat inv_fwd_ljs.
+        forwards_th Hy : priv_js_error_lemma. destruct_hyp Hy.
+        repeat inv_fwd_ljs.
+        resvalue_related_invert.
+        jauto_js 8.
+    }
     skip. (* TODO overspecification in jscert - https://github.com/resource-reasoning/jscert_dev/issues/14 *)
     skip.
 Qed.
@@ -286,6 +287,9 @@ Ltac decide_stx_eq :=
         [applys_to EQ eq_true_r; rew_refl in EQ; try solve [inverts EQ]
         |applys_to EQ eq_false_r; rew_refl in EQ; try solve [false; apply EQ; jauto_js]]
     end.
+
+(* TODO move *)
+Hint Extern 3 (object_or_null _) => eapply object_or_null_object : js_ljs.
 
 Lemma red_spec_to_object_ok : forall k,
     th_ext_expr_unary k LjsInitEnv.privToObject J.spec_to_object
@@ -520,6 +524,249 @@ Lemma stx_eq_empty_eq_lemma : forall v, L.stx_eq v L.value_empty = (v = L.value_
 Proof.
     introv. rew_logic. split; introv H. { inverts H. reflexivity. } { substs. eauto_js. }
 Qed.
+
+(* TODO move *)
+Lemma stx_eq_null_eq_lemma : forall v, L.stx_eq v L.value_null = (v = L.value_null).
+Proof.
+    introv. rew_logic. split; introv H. { inverts H. reflexivity. } { substs. eauto_js. }
+Qed.
+
+(* TODO move *)
+Lemma stx_eq_undefined_eq_lemma : forall v, L.stx_eq v L.value_undefined = (v = L.value_undefined).
+Proof.
+    introv. rew_logic. split; introv H. { inverts H. reflexivity. } { substs. eauto_js. }
+Qed.
+
+(* ** Accessing properties *)
+
+Lemma object_method_has_property_lemma : forall BR jst st jptr ptr,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    J.object_method J.object_has_prop_ jst jptr J.builtin_has_prop_default.
+Proof.
+Admitted. (* TODO: ignoring exotic objects for now *)
+
+Lemma object_method_get_property_lemma : forall BR jst st jptr ptr,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    J.object_method J.object_get_prop_ jst jptr J.builtin_get_prop_default.
+Proof.
+Admitted. (* TODO: ignoring exotic objects for now *)
+
+Lemma object_method_get_own_property_lemma : forall BR jst st jptr ptr,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    J.object_method J.object_get_own_prop_ jst jptr J.builtin_get_own_prop_default.
+Proof.
+Admitted. (* TODO: ignoring exotic objects for now *)
+
+(* TODO move *)
+Lemma object_property_not_index_lemma : forall BR jst st jptr ptr obj s,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    ~index (L.object_properties obj) s ->
+    J.object_property jst jptr s None.
+Proof.
+    introv Hinv Hf Hbinds Hnindex.
+    forwards (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hoprel : object_related_properties Horel s.
+    destruct_hyp Hoprel; [idtac|false; prove_bag].
+    exists (J.object_properties_ jobj). split. 
+    + unfolds. jauto_js.
+    + rew_heap_to_libbag. erewrite read_option_not_index_inv by eassumption. reflexivity.
+Qed.
+
+(* TODO move *)
+Lemma object_property_index_lemma : forall BR jst st jptr ptr obj s,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    index (L.object_properties obj) s ->
+    exists attrs jattrs,
+    J.object_property jst jptr s (Some jattrs) /\
+    binds (L.object_properties obj) s attrs /\
+    attributes_related BR jattrs attrs.
+Proof.
+    introv Hinv Hf Hbinds Hindex.
+    forwards (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hoprel : object_related_properties Horel s.
+    destruct_hyp Hoprel; [false; prove_bag|idtac].
+    exists attrs jattrs.
+    splits.
+    + exists (J.object_properties_ jobj). split.
+      - unfolds. jauto_js.
+      - rew_heap_to_libbag. erewrite read_option_binds_inv by eassumption. reflexivity.
+    + assumption.
+    + assumption.
+Qed.
+
+(* TODO move *)
+Lemma object_property_binds_lemma : forall BR jst st jptr ptr obj s attrs,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    binds (L.object_properties obj) s attrs ->
+    exists jattrs,
+    J.object_property jst jptr s (Some jattrs) /\
+    attributes_related BR jattrs attrs.
+Proof.
+    introv Hinv Hf Hbinds Hbindsa.
+    asserts Hindex : (index (L.object_properties obj) s). prove_bag.
+    lets Hx : object_property_index_lemma Hinv Hf Hbinds Hindex.
+    destruct_hyp Hx.
+    binds_determine.
+    jauto.
+Qed.
+
+Lemma object_method_get_own_property_default_not_index_lemma : forall BR jst jc st jptr ptr obj s,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    ~index (L.object_properties obj) s ->
+    J.object_method J.object_get_own_prop_ jst jptr J.builtin_get_own_prop_default ->
+    J.red_spec jst jc (J.spec_object_get_own_prop jptr s) (J.ret jst J.full_descriptor_undef).
+Proof.
+    introv Hinv Hf Hbinds Hnindex Hmeth.
+    lets Hx : object_property_not_index_lemma Hinv Hf Hbinds Hnindex.
+    eauto_js.
+Qed.
+
+Lemma object_method_get_own_property_default_binds_lemma : forall BR jst jc st jptr ptr obj s attrs,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    binds (L.object_properties obj) s attrs ->
+    J.object_method J.object_get_own_prop_ jst jptr J.builtin_get_own_prop_default ->
+    exists jattrs,
+    J.red_spec jst jc (J.spec_object_get_own_prop jptr s) (J.ret jst (J.full_descriptor_some jattrs)) /\
+    attributes_related BR jattrs attrs.
+Proof.
+    introv Hinv Hf Hbinds Hbinds2 Hmeth.
+    lets Hx : object_property_binds_lemma Hinv Hf Hbinds Hbinds2.
+    destruct_hyp Hx.
+    jauto_js.
+Qed.
+
+Lemma object_related_proto_null_lemma : forall BR jobj obj,
+    object_related BR jobj obj ->
+    L.object_proto obj = L.value_null ->
+    J.object_proto_ jobj = J.value_prim J.prim_null.
+Proof.
+    introv Horel Heq.
+    lets Hvrel : object_prim_related_prototype (object_related_prim Horel).
+    rewrite Heq in Hvrel.
+    inverts Hvrel. reflexivity.
+Qed.
+
+Lemma object_proto_null_lemma : forall BR jst st ptr obj jptr,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    L.object_proto obj = L.value_null ->
+    J.object_proto jst jptr (J.value_prim J.prim_null).
+Proof.
+    introv Hinv Hf Hbinds Heq.
+    forwards (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hjeq : object_related_proto_null_lemma Horel Heq.
+    unfolds. jauto.
+Qed.
+
+Lemma object_related_proto_not_null_lemma : forall BR jobj obj,
+    object_related BR jobj obj ->
+    L.object_proto obj <> L.value_null ->
+    exists jptr ptr,
+    L.object_proto obj = L.value_object ptr /\
+    J.object_proto_ jobj = J.value_object jptr /\
+    fact_js_obj jptr ptr \in BR.
+Proof.
+    introv Horel Heq.
+    lets Hvrel : object_prim_related_prototype (object_related_prim Horel).
+    lets Hobj : object_prim_related_prototype_object_or_null (object_related_prim Horel).
+    inverts Hobj as Heq1; tryfalse.
+    rewrite <- Heq1 in Hvrel.
+    inverts Hvrel. jauto.
+Qed.
+
+Lemma object_proto_not_null_lemma : forall BR jst st ptr obj jptr,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    L.object_proto obj <> L.value_null ->
+    exists jptr' ptr',
+    L.object_proto obj = L.value_object ptr' /\
+    J.object_proto jst jptr (J.value_object jptr') /\
+    fact_js_obj jptr' ptr' \in BR.
+Proof.
+    introv Hinv Hf Hbinds Heq.
+    forwards (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hjeq : object_related_proto_not_null_lemma Horel Heq.
+    destruct_hyp Hjeq.
+    unfolds J.object_proto.
+    jauto.
+Qed.
+
+Lemma has_property_lemma_lemma : forall k BR jst jc c st st' r jptr ptr s,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privHasProperty [L.value_object ptr; L.value_string s]) 
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_spec BR jst jc c st st' r (J.spec_object_get_prop jptr s) 
+        (fun _ _ jfd => r = L.res_value (L.value_bool (isTrue (jfd <> J.full_descriptor_undef)))).
+Proof.
+    intro k.
+    induction_wf IH : lt_wf k.
+    introv Hlred Hcinv Hinv Hf.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    forwards : object_method_get_property_lemma; try eassumption.
+    forwards : object_method_get_own_property_lemma; try eassumption.
+    repeat ljs_autoforward.
+    cases_decide as Hidx. { (* found *)
+        rewrite index_binds_eq in Hidx. destruct Hidx as (attrs&Hbinds).
+        forwards Hgop : object_method_get_own_property_default_binds_lemma; try eassumption.
+        destruct_hyp Hgop.
+        repeat ljs_autoforward.
+        jauto_js.
+    } { (* not found *)
+        forwards Hgop : object_method_get_own_property_default_not_index_lemma; try eassumption.
+        repeat ljs_autoforward.
+        cases_decide as Hprnul; rewrite stx_eq_null_eq_lemma in Hprnul. { (* prototype is null *)
+            forwards Hjproto : object_proto_null_lemma; try eassumption.
+            repeat ljs_autoforward.
+            jauto_js.
+        } { (* prototype not null *)
+            forwards Hjproto : object_proto_not_null_lemma; try eassumption.
+            destruct Hjproto as (jptr'&ptr'&Heq1&Heq2&Hf').
+            repeat ljs_autoforward.
+            unfolds L.object_proto. rewrite Heq1 in *.
+            forwards_th : IH. math. prove_bag.
+            destr_concl; try ljs_handle_abort.
+            jauto_js.
+        }
+    }
+Qed.
+
+Lemma has_property_lemma : forall BR k jst jc c st st' r jptr ptr s,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privHasProperty [L.value_object ptr; L.value_string s]) 
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_has_prop jptr s) 
+        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
+Proof.
+    introv Hlred Hcinv Hinv Hf.
+    forwards : object_method_has_property_lemma; try eassumption.
+    forwards_th : has_property_lemma_lemma. eassumption.
+    destr_concl; try ljs_handle_abort.
+    cases_isTrue;
+    jauto_js.
+Qed.
+
+(* ** More environment record manipulations TODO doc *)
 
 (* TODO move *)
 Lemma decl_env_record_vars_related_index_lemma : forall BR jx x s,

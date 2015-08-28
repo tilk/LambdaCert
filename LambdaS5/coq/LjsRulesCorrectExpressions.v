@@ -247,16 +247,19 @@ Opaque L.is_object_decidable. (* TODO MOVE *)
 Opaque index_decidable_from_read_option. (* TODO move *)
 
 Lemma not_object_hint : forall BR jv v,
-    value_related BR jv v ->
     ~L.is_object v ->
+    value_related BR jv v ->
     J.type_of jv <> J.type_object.
 Proof.
-    introv Hrel Hnobj Hjobj.
+    introv Hnobj Hrel Hjobj.
     destruct Hrel; tryfalse.
     apply Hnobj. constructor.
 Qed.
 
-Hint Resolve not_object_hint : js_ljs.
+Hint Extern 10 (J.type_of _ <> J.type_object) => 
+    match goal with
+    | H : ~L.is_object _ |- _ => applys not_object_hint H
+    end : js_ljs.
 
 Lemma red_expr_new_ok : forall k je jel,
     ih_expr k ->
@@ -572,7 +575,7 @@ Proof.
                     reflexivity.
                 }
             }
-            forwards_th : red_spec_call_ok; try eassumption. eauto_js.
+            forwards_th : red_spec_call_ok; try eassumption. prove_bag.
             destr_concl; try ljs_handle_abort. 
             res_related_invert.
             resvalue_related_only_invert.
@@ -1066,7 +1069,9 @@ Proof.
                 erewrite read_option_binds_inv in H25 by solve [eassumption]. (* TODO *)
                 repeat ljs_autoforward.
                 destruct obj.
-                jauto_js 15.
+                skip. (* TODO state_invariant_modify_env_record_preserved
+                              env_record_related_decl_rem
+                jauto_js 15. *)
             } {
                 rewrite mutability_not_deletable_lemma in H16 by eassumption.
                 repeat ljs_autoforward.
@@ -1885,6 +1890,44 @@ Proof.
     jauto_js 8.
 Qed.
 
+Lemma red_expr_binary_op_3_in_ok : forall k,
+    th_ext_expr_binary k LjsInitEnv.privin (J.expr_binary_op_3 J.binary_op_in)
+        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
+Proof.
+    introv Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+Opaque decide.
+    repeat ljs_autoforward.
+    cases_decide as Hobj. { (* v is object *)
+        repeat ljs_autoforward.
+        inverts Hobj.
+        inverts Hvrel2.
+        forwards_th : red_spec_to_string_unary_ok.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_invert.
+        repeat ljs_autoforward.
+        forwards_th : has_property_lemma. prove_bag. (* TODO *)
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        jauto_js.
+    } { (* v not an object, throw *)
+        repeat ljs_autoforward.
+(*
+        asserts Htp : (J.type_of jv2 <> J.type_object). {
+            intro Htp.
+            inverts Hvrel2; tryfalse.
+            apply Hobj. apply L.is_object_object.
+        }
+*)
+        forwards_th : type_error_lemma. iauto.
+        destr_concl; tryfalse; ljs_handle_abort.
+    }
+Qed.
+
 (* TODO move *)
 Lemma th_ext_expr_binary_clear_side_condition : forall k v j P,
     th_ext_expr_binary k v j P ->
@@ -1920,7 +1963,7 @@ Proof.
     applys red_expr_binary_op_3_inequality_ok J.inequality_op_gt Hrop.
     applys red_expr_binary_op_3_inequality_ok J.inequality_op_ge Hrop.
     skip. (* TODO instanceof *)
-    skip. (* TODO in *)
+    applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_in_ok.
     applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_equal_ok.
     applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_strict_equal_ok.
     applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_disequal_ok.

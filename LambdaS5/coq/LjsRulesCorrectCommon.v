@@ -100,6 +100,7 @@ Hint Constructors ref_base_type_related : js_ljs.
 Hint Constructors ref_base_type_var : js_ljs.
 Hint Constructors ref_base_type_obj : js_ljs.
 Hint Constructors js_reference_type : js_ljs.
+Hint Constructors object_or_null : js_ljs.
 
 Hint Constructors Option Option2 Option3 Option4 Forall Forall2 Forall3 : js_ljs.
 
@@ -355,9 +356,10 @@ Ltac ijauto_js := repeat intuition jauto_js.
 Ltac solve_ijauto_js := solve [ijauto_js; solve_jauto_js].
 
 Ltac cases_if_auto_js :=
-    let Hif := fresh "Hif" in 
-    first [case_if as Hif; [try solve [destruct_hyp Hif; tryfalse] | try solve [false; apply Hif; eauto_js]] 
-          |case_if as Hif; [idtac]].
+    let Hif := fresh "Hif" in
+    first [first [cases_isTrue as Hif | case_if as Hif]; tryfalse; 
+               [try solve [destruct_hyp Hif; tryfalse] | try solve [false; apply Hif; eauto_js]]
+          |first [cases_isTrue as Hif | case_if as Hif]; tryfalse; [idtac]].
 
 Hint Extern 11 => cases_if_auto_js; [idtac] : js_ljs.
 
