@@ -1015,6 +1015,14 @@ Proof.
     destruct jmut; tryfalse; try reflexivity.
 Qed.
 
+(* TODO move *)
+Lemma object_method_delete_lemma : forall BR jst st jptr ptr,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    J.object_method J.object_delete_ jst jptr J.builtin_delete_default.
+Proof.
+Admitted. (* TODO: ignoring exotic objects for now *)
+
 Lemma red_expr_unary_op_delete_ok : forall k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_delete je).
@@ -1086,7 +1094,12 @@ Proof.
             repeat ljs_autoforward.
             cases_decide as Heq1; rewrite stx_eq_string_eq_lemma in Heq1; tryfalse.
             repeat ljs_autoforward.
-            skip. (* TODO *)
+            forwards Hdel : object_method_delete_lemma; try eassumption.
+            forwards_th : delete_lemma. eassumption.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            resvalue_related_invert.
+            jauto_js 15.
         }
     } {
         repeat ljs_autoforward.
