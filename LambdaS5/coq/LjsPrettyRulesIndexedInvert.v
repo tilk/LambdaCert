@@ -84,8 +84,6 @@ Derive Inversion inv_red_exprh_delete_field with (forall k c st e1 e2 oo,
     red_exprh k c st (expr_delete_field e1 e2) oo) Sort Prop.
 Derive Inversion inv_red_exprh_delete_field_1 with (forall k c st vs oo,
     red_exprh k c st (expr_delete_field_1 vs) oo) Sort Prop.
-Derive Inversion inv_red_exprh_delete_field_2 with (forall k c st ptr obj oattr s oo,
-    red_exprh k c st (expr_delete_field_2 ptr obj oattr s) oo) Sort Prop.
 Derive Inversion inv_red_exprh_own_field_names with (forall k c st e oo,
     red_exprh k c st (expr_own_field_names e) oo) Sort Prop.
 Derive Inversion inv_red_exprh_own_field_names_1 with (forall k c st o oo,
@@ -238,8 +236,6 @@ Tactic Notation "invert" "keep" "red_exprh" hyp(H) :=
         inversion H using inv_red_exprh_delete_field
     | expr_delete_field_1 ?vs =>
         inversion H using inv_red_exprh_delete_field_1
-    | expr_delete_field_2 ?ptr ?obj ?oattr ?s =>
-        inversion H using inv_red_exprh_delete_field_2
     | expr_basic (expr_own_field_names ?e) =>
         inversion H using inv_red_exprh_own_field_names
     | expr_own_field_names_1 ?o =>

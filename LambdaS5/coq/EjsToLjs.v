@@ -240,7 +240,7 @@ Definition make_typeof f e :=
 
 Definition make_delete f e :=
     reference_match e
-        (fun obj fld => make_app_builtin "%Delete" [f obj; f fld; L.expr_id "$strict"])
+        (fun obj fld => make_app_builtin "%DeleteOp" [f obj; f fld; L.expr_id "$strict"])
         (fun varid => make_app_builtin "%EnvDelete" [context; L.expr_string varid; L.expr_id "$strict"])
         (fun _ => L.expr_seq (f e) L.expr_true).
 

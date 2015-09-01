@@ -137,7 +137,7 @@ Proof.
     destruct_hyp Hv;
     repeat ljs_autoforward. {
         inverts Hvrel2.
-        jauto_js 22.
+        jauto_js 25.
     }
     (* has message *)
     inv_ljs;
@@ -766,6 +766,117 @@ Proof.
     jauto_js.
 Qed.
 
+Lemma attributes_related_configurable_eq_lemma : forall BR attrs jattrs,
+    attributes_related BR jattrs attrs ->    
+    L.attributes_configurable attrs = J.attributes_configurable jattrs.
+Proof.
+    introv Hrel.
+    inverts Hrel as Hrel; inverts Hrel; trivial.
+Qed.
+
+(* TODO move to LibBagExt *)
+Lemma js_object_rem_property_lemma : forall jst jptr jobj s,
+    binds jst jptr jobj ->
+    JsPreliminary.object_rem_property jst jptr s
+        (jst \(jptr := J.object_map_properties jobj (fun jprops => J.Heap.rem jprops s))).
+Proof.
+    introv Hbinds. unfolds. unfolds. jauto.
+Qed.
+
+(* TODO move to Common *)
+Hint Resolve js_object_rem_property_lemma : js_ljs.
+
+(* TODO move to common *)
+Lemma object_properties_related_delete_lemma : forall BR jprops props s,
+    object_properties_related BR jprops props ->
+    object_properties_related BR (J.Heap.rem jprops s) (props \-- s). (* TODO heap delete in libbag *)
+Proof.
+    introv Hrel. intro s'.
+    destruct (classic (s' = s)) as [Heq|Heq]. { (* equal *)
+        skip. (* TODO *)
+    } { (* different *)
+        specializes Hrel s'.
+        destruct_hyp Hrel.
+        skip. skip. (* TODO *)
+    }
+Qed.
+
+Hint Resolve object_properties_related_delete_lemma : js_ljs.
+
+(* TODO move to common *)
+Lemma object_prim_related_delete_lemma : forall BR jobj obj s,
+    object_prim_related BR jobj obj ->
+    object_prim_related BR jobj (L.delete_object_property obj s).
+Proof.
+    introv Hrel.
+    destruct obj. simpls.
+    inverts Hrel. constructor; assumption.
+Qed.
+
+Hint Resolve object_prim_related_delete_lemma : js_ljs.
+
+(* TODO move to common *)
+Lemma object_related_delete_lemma : forall BR jobj obj s,
+    object_related BR jobj obj ->
+    object_related BR
+        (J.object_map_properties jobj (fun jprops => J.Heap.rem jprops s))
+        (L.delete_object_property obj s).
+Proof.
+    introv Horel. destruct Horel.
+    destruct obj.
+    apply object_related_map_properties_preserved. 
+    + eauto_js.
+    + simpl. eauto_js.
+Qed.
+
+Hint Resolve object_related_delete_lemma : js_ljs.
+
+Lemma delete_lemma : forall BR k jst jc c st st' r jptr ptr s b,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDelete [L.value_object ptr; L.value_string s; L.value_bool b]) 
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_delete_1 J.builtin_delete_default jptr s b) 
+        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
+Proof.
+    introv Hlred Hcinv Hinv Hf.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    forwards : object_method_get_own_property_lemma; try eassumption.
+Opaque decide. (* TODO *)
+    repeat ljs_autoforward.
+    cases_decide as Hidx. { (* field found *)
+        rewrite index_binds_eq in Hidx. destruct Hidx as (attrs&Hbinds).
+        forwards Hgop : object_method_get_own_property_default_binds_lemma; try eassumption.
+        destruct_hyp Hgop.
+        repeat ljs_autoforward.
+        sets_eq b1 : (L.attributes_configurable attrs).
+        destruct b1; symmetry in EQb1;
+        erewrite attributes_related_configurable_eq_lemma in EQb1 by eassumption. { (* configurable *)
+            forwards (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf. eassumption.
+            repeat ljs_autoforward.
+            jauto_js 8.
+        } { (* unconfigurable *)
+            repeat ljs_autoforward.
+            destruct b. { (* strict *)
+                repeat ljs_autoforward.
+                forwards_th : type_error_lemma. eauto.
+                destr_concl; tryfalse.
+                ljs_handle_abort.
+            } { (* non-strict *)
+                repeat ljs_autoforward.
+                jauto_js.
+            }
+        }
+    } { (* field not found *)
+        forwards Hgop : object_method_get_own_property_default_not_index_lemma; try eassumption.
+        repeat ljs_autoforward.
+        jauto_js.
+    }
+Qed.
+
 (* ** More environment record manipulations TODO doc *)
 
 (* TODO move *)
@@ -791,7 +902,7 @@ Lemma decl_env_record_vars_related_binds_lemma : forall BR jder props s attrs,
     decl_env_record_vars_related BR jder props ->
     binds props s attrs ->
     exists jmut jv v,
-    attrs = L.attributes_data_of (L.attributes_data_intro v 
+    attrs = L.attributes_data_of (L.attributes_data_intro v  
             (mutability_writable jmut) true (mutability_configurable jmut)) /\
     binds jder s (jmut, jv) /\ 
     decl_env_record_var_related BR jmut jv v.

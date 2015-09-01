@@ -35,7 +35,6 @@ Inductive ext_expr :=
 | expr_set_field_1 : list value -> ext_expr
 | expr_set_field_2 : object_ptr -> object -> option attributes -> prop_name -> value -> ext_expr
 | expr_delete_field_1 : list value -> ext_expr
-| expr_delete_field_2 : object_ptr -> object -> option attributes -> prop_name -> ext_expr
 | expr_get_internal_1 : string -> list value -> ext_expr
 | expr_set_internal_1 : string -> list value -> ext_expr
 | expr_own_field_names_1 : out -> ext_expr

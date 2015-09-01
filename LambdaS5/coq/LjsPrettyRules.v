@@ -205,21 +205,12 @@ Inductive red_expr : ctx -> store -> ext_expr -> out -> Prop :=
 | red_expr_delete_field : forall c st e1 e2 o,
     red_expr c st (expr_eval_many_1 [e1; e2] nil expr_delete_field_1) o ->
     red_expr c st (expr_delete_field e1 e2) o
-| red_expr_delete_field_1 : forall c st ptr s obj oattr o,
+| red_expr_delete_field_1 : forall c st st1 ptr s obj attr,
     binds st ptr obj ->
-    get_object_property obj s = oattr ->
-    red_expr c st (expr_delete_field_2 ptr obj oattr s) o ->
-    red_expr c st (expr_delete_field_1 [value_object ptr; value_string s]) o
-| red_expr_delete_field_2_not_found : forall c st ptr obj s,
-    red_expr c st (expr_delete_field_2 ptr obj None s) (out_ter st (res_value value_false))
-| red_expr_delete_field_2_unconfigurable : forall c st ptr obj attr s,
-    !attributes_configurable attr ->
-    red_expr c st (expr_delete_field_2 ptr obj (Some attr) s) 
-        (out_ter st (res_exception (value_string "unconfigurable-delete")))
-| red_expr_delete_field_2_found : forall c st st1 ptr obj attr s,
+    binds (object_properties obj) s attr ->
     attributes_configurable attr ->
     st1 = st \(ptr := delete_object_property obj s) ->
-    red_expr c st (expr_delete_field_2 ptr obj (Some attr) s) (out_ter st1 (res_value value_true))
+    red_expr c st (expr_delete_field_1 [value_object ptr; value_string s]) (out_ter st1 (res_value value_undefined))
 
 (* get_internal *)
 | red_expr_get_internal : forall c st s e o,

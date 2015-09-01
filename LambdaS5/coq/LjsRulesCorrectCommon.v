@@ -2681,12 +2681,12 @@ Qed.
 Hint Resolve state_invariant_new_exn_object_preserved : js_ljs.
 
 Lemma state_invariant_modify_object_preserved : forall BR jst st jptr jobj ptr obj,
-    fact_js_obj jptr ptr \in BR ->
     state_invariant BR jst st ->
     object_related BR jobj obj ->
+    fact_js_obj jptr ptr \in BR ->
     state_invariant BR (jst \(jptr:=jobj)) (st \(ptr:=obj)).
 Proof.
-    introv Hbi Hinv Horel.
+    introv Hinv Horel Hbi.
     inverts Hinv.
     asserts Hjindex : (index jst jptr). 
     applys heaps_bisim_consistent_lnoghost_obj; try eassumption.
@@ -2698,14 +2698,14 @@ Hint Extern 4 (state_invariant _ ?jst _) =>
 (* Hint Resolve state_invariant_modify_object_preserved : js_ljs. *)
 
 Lemma state_invariant_modify_env_record_preserved : forall BR jst st jeptr jer ptr obj obj0,
+    state_invariant BR jst st ->
     fact_js_env jeptr ptr \in BR ->
     binds st ptr obj0 ->
-    state_invariant BR jst st ->
     env_record_related BR jer obj ->
     L.object_internal obj0 \("parent"?) = L.object_internal obj \("parent"?) ->
     state_invariant BR (jst \(jeptr:=jer)) (st \(ptr:=obj)).
 Proof.
-    introv Hbi Hbinds Hinv Horel Hbindsp.
+    introv Hinv Hbi Hbinds Horel Hbindsp.
     inverts Hinv.
     asserts Hjindex : (index jst jeptr). 
     applys heaps_bisim_consistent_lnoghost_env; try eassumption.

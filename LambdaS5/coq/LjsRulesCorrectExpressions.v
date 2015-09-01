@@ -1065,19 +1065,27 @@ Proof.
             destruct (classic (jmut = J.mutability_deletable)) as [Hmut|Hmut]. { (* deletable *)
                 subst_hyp Hmut.
                 repeat ljs_autoforward.
-                unfolds L.get_object_property. (* TODO ? *)
-                erewrite read_option_binds_inv in H25 by solve [eassumption]. (* TODO *)
-                repeat ljs_autoforward.
                 destruct obj.
-                skip. (* TODO state_invariant_modify_env_record_preserved
-                              env_record_related_decl_rem
+                unfold_concl. jauto_set_slim; [eauto_js 10 | idtac | idtac | eauto_js 10].
+                eapply state_invariant_modify_env_record_preserved. eauto_js. eauto_js. eauto_js.
+                eapply env_record_related_decl_rem. eauto_js. eauto_js. eauto_js.
+(*
+                (* TODO state_invariant_modify_env_record_preserved
+                        env_record_related_decl_rem
                 jauto_js 15. *)
+*)
             } {
                 rewrite mutability_not_deletable_lemma in H16 by eassumption.
                 repeat ljs_autoforward.
                 jauto_js 15.
             }
         } { (* object records *)
+            inverts Herel.
+            unfolds L.object_class.
+            cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
+            repeat ljs_autoforward.
+            cases_decide as Heq1; rewrite stx_eq_string_eq_lemma in Heq1; tryfalse.
+            repeat ljs_autoforward.
             skip. (* TODO *)
         }
     } {

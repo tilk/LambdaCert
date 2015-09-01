@@ -312,9 +312,9 @@ Definition eval_delete_field runs c st (left_expr right_expr : expr) : result :=
             match get_object_property obj name with
             | Some attr => 
               if attributes_configurable attr 
-              then result_value (st \(left_ptr := delete_object_property obj name)) value_true
-              else result_exception st (value_string "unconfigurable-delete")
-            | None => result_value st value_false
+              then result_value (st \(left_ptr := delete_object_property obj name)) value_undefined
+              else result_fail "Deleting unconfigurable field"
+            | None => result_fail "Deleting nonexistent field"
             end
   )))))
 .

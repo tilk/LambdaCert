@@ -999,22 +999,21 @@ Lemma eval_delete_field_correct : forall runs c st e1 e2 o,
     eval_delete_field runs c st e1 e2 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
-            exists ptr obj s oattrs, v1 = value_object ptr /\
+            exists ptr obj s attrs, v1 = value_object ptr /\
                 st'' \(ptr?) = Some obj /\
                 v2 = value_string s /\
-                get_object_property obj s = oattrs /\
-                ((oattrs = None /\ o = out_ter st'' (res_value value_false)) \/
-                 (exists attrs, oattrs = Some attrs /\ 
-                  attributes_configurable attrs = false /\
-                  o = out_ter st'' (res_exception (value_string "unconfigurable-delete"))) \/
-                 (exists attrs, oattrs = Some attrs /\
-                  attributes_configurable attrs = true /\
-                  o = out_ter (st'' \(ptr := delete_object_property obj s)) (res_value value_true))))).
+                binds (object_properties obj) s attrs /\
+                attributes_configurable attrs /\
+                o = out_ter (st'' \(ptr := delete_object_property obj s)) (res_value value_undefined))).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
-    repeat eexists; try eassumption. 
-    repeat (cases_match_option || cases_if); try inverts R; substs; ljs_run_inv; intuition eauto.
+    cases_match_option as Hprop.
+    apply get_object_property_some_lemma in Hprop.
+    cases_if.
+    fold_bool.
+    do 4 eexists; try eassumption.
+    ljs_run_inv. substs. intuition eauto. 
 Qed. 
 
 Lemma eval_own_field_names_correct : forall runs c st e o,
@@ -1249,15 +1248,10 @@ Proof.
     lets H: eval_delete_field_correct IH R.
     eapply red_expr_delete_field.
     ljs_advance_eval_many.
-    destruct H as (ptr&obj&s&oattrs&Hv&Ho&Hs&Hp&H).
+    destruct H as (ptr&obj&s&oattrs&Hv&Ho&Hs&Hp&Hc&H).
     rewrite read_option_binds_eq in Ho. 
-    inverts Hv. inverts Hs.
-    eapply red_expr_delete_field_1; try eassumption.
-    repeat destruct_or H; repeat destruct_exists H; destructs H; fold_bool; subst o;
-    match goal with H : oattrs = _ |- _ => inverts H end.
-    eapply red_expr_delete_field_2_not_found.
-    eapply red_expr_delete_field_2_unconfigurable; eauto.
-    eapply red_expr_delete_field_2_found; eauto.
+    inverts Hv. inverts Hs. subst o.
+    eapply red_expr_delete_field_1; eauto.
     (* get_internal *)
     lets H: eval_get_internal_correct IH R.
     eapply red_expr_get_internal.

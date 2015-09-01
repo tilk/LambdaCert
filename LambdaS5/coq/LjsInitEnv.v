@@ -161,8 +161,11 @@ expr_seq
   (expr_seq
    (expr_app (expr_id "copy-when-defined")
     [expr_id "obj1"; expr_id "obj2"; expr_string "get"])
-   (expr_seq (expr_delete_field (expr_id "obj1") (expr_string "value"))
-    (expr_delete_field (expr_id "obj1") (expr_string "writable"))))))
+   (expr_seq
+    (expr_app (expr_id "%Delete")
+     [expr_id "obj1"; expr_string "value"; expr_false])
+    (expr_app (expr_id "%Delete")
+     [expr_id "obj1"; expr_string "writable"; expr_false])))))
 .
 Definition ex_copy_data_desc := 
 expr_seq
@@ -177,8 +180,11 @@ expr_seq
   (expr_seq
    (expr_app (expr_id "copy-when-defined")
     [expr_id "obj1"; expr_id "obj2"; expr_string "value"])
-   (expr_seq (expr_delete_field (expr_id "obj1") (expr_string "get"))
-    (expr_delete_field (expr_id "obj1") (expr_string "set"))))))
+   (expr_seq
+    (expr_app (expr_id "%Delete")
+     [expr_id "obj1"; expr_string "get"; expr_false])
+    (expr_app (expr_id "%Delete")
+     [expr_id "obj1"; expr_string "set"; expr_false])))))
 .
 Definition ex_copy_when_defined := 
 expr_if
@@ -310,6 +316,9 @@ expr_object
                         expr_false expr_false));
  ("%Delete", property_data
              (data_intro (expr_id "%Delete") expr_true expr_false expr_false));
+ ("%DeleteOp", property_data
+               (data_intro (expr_id "%DeleteOp") expr_true expr_false
+                expr_false));
  ("%EnvAppExpr", property_data
                  (data_intro (expr_id "%EnvAppExpr") expr_true expr_false
                   expr_false));
@@ -388,9 +397,6 @@ expr_object
  ("%ErrorConstructor", property_data
                        (data_intro (expr_id "%ErrorConstructor") expr_true
                         expr_false expr_false));
- ("%ErrorDispatch", property_data
-                    (data_intro (expr_id "%ErrorDispatch") expr_true
-                     expr_false expr_false));
  ("%ErrorGlobalFuncObj", property_data
                          (data_intro (expr_id "%ErrorGlobalFuncObj")
                           expr_true expr_false expr_false));
@@ -748,9 +754,6 @@ expr_object
                  expr_false));
  ("%UnsignedRightShift", property_data
                          (data_intro (expr_id "%UnsignedRightShift")
-                          expr_true expr_false expr_false));
- ("%UnwritableDispatch", property_data
-                         (data_intro (expr_id "%UnwritableDispatch")
                           expr_true expr_false expr_false));
  ("%Void", property_data
            (data_intro (expr_id "%Void") expr_true expr_false expr_false));
@@ -2172,8 +2175,8 @@ expr_let "oldlen"
  (expr_lambda ["i"]
   (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "oldlen"))
    (expr_seq
-    (expr_delete_field (expr_id "arr")
-     (expr_op1 unary_op_prim_to_str (expr_id "i")))
+    (expr_app (expr_id "%Delete")
+     [expr_id "arr"; expr_op1 unary_op_prim_to_str (expr_id "i"); expr_false])
     (expr_app (expr_id "fix")
      [expr_op2 binary_op_add (expr_id "i")
       (expr_number (JsNumber.of_int (1)))])) expr_undefined))
@@ -2546,14 +2549,23 @@ expr_let "cproto1"
     (expr_id "constr_ret") (expr_id "newobj")))))
 .
 Definition ex_privDelete := 
-expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
-(expr_let "fld" (expr_app (expr_id "%ToString") [expr_id "fld"])
- (expr_try_catch
-  (expr_seq (expr_delete_field (expr_id "obj") (expr_id "fld")) expr_true)
-  (expr_lambda ["e"]
-   (expr_if (expr_id "strict")
-    (expr_app (expr_id "%TypeError")
-     [expr_string "unconfigurable delete in strict mode"]) expr_false))))
+expr_if
+(expr_op1 unary_op_not
+ (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "fld")))
+expr_true
+(expr_if
+ (expr_op1 unary_op_not
+  (expr_get_attr pattr_config (expr_id "obj") (expr_id "fld")))
+ (expr_if (expr_id "strict")
+  (expr_app (expr_id "%TypeError")
+   [expr_string "unconfigurable delete in strict mode"]) expr_false)
+ (expr_seq (expr_delete_field (expr_id "obj") (expr_id "fld")) expr_true))
+.
+Definition ex_privDeleteOp := 
+expr_app (expr_id "%Delete")
+[expr_app (expr_id "%ToObject") [expr_id "obj"];
+ expr_app (expr_id "%ToString") [expr_id "fld"];
+ expr_id "strict"]
 .
 Definition ex_privEnvAppExpr := 
 expr_let "f"
@@ -3014,19 +3026,6 @@ expr_let "msg"
  (expr_app (expr_id "%ToString")
   [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
-.
-Definition ex_privErrorDispatch := 
-expr_if (expr_app (expr_id "%IsJSError") [expr_id "maybe-js-error"])
-(expr_throw (expr_id "maybe-js-error"))
-(expr_if
- (expr_op2 binary_op_stx_eq (expr_id "maybe-js-error")
-  (expr_string "unwritable-field"))
- (expr_app (expr_id "%TypeError") [expr_string "Field not writable"])
- (expr_if
-  (expr_op2 binary_op_stx_eq (expr_id "maybe-js-error")
-   (expr_string "unconfigurable-delete"))
-  (expr_app (expr_id "%TypeError") [expr_string "Field not deletable"])
-  (expr_throw (expr_id "maybe-js-error"))))
 .
 Definition ex_privEvalErrorConstructor := 
 expr_let "msg"
@@ -4079,15 +4078,6 @@ expr_app (expr_id "%ReferenceError")
 Definition ex_privUnsignedRightShift := 
 expr_op2 binary_op_zfshiftr (expr_app (expr_id "%ToUint32") [expr_id "l"])
 (expr_app (expr_id "%ToUint32") [expr_id "r"])
-.
-Definition ex_privUnwritableDispatch := 
-expr_lambda ["e"]
-(expr_if
- (expr_op2 binary_op_stx_eq (expr_id "e") (expr_string "unwritable-field"))
- (expr_app (expr_id "%TypeError")
-  [expr_op2 binary_op_string_plus (expr_id "id")
-   (expr_string " not writable")])
- (expr_app (expr_id "%ErrorDispatch") [expr_id "e"]))
 .
 Definition ex_privVoid :=  expr_undefined .
 Definition ex_privYearFromTime := 
@@ -6305,7 +6295,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      [expr_op2 binary_op_sub (expr_id "len")
       (expr_number (JsNumber.of_int (1)))])
     (expr_let "element" (expr_get_field (expr_id "O") (expr_id "indx"))
-     (expr_seq (expr_delete_field (expr_id "O") (expr_id "indx"))
+     (expr_seq
+      (expr_app (expr_id "%Delete") [expr_id "O"; expr_id "indx"; expr_false])
       (expr_seq
        (expr_set_field (expr_id "O") (expr_string "length")
         (expr_app (expr_id "%ToNumber") [expr_id "indx"]))
@@ -6711,7 +6702,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                   (expr_set_field (expr_id "O") (expr_id "lowerP")
                    (expr_id "upperValue"))
                   (expr_seq
-                   (expr_delete_field (expr_id "O") (expr_id "upperP"))
+                   (expr_app (expr_id "%Delete")
+                    [expr_id "O"; expr_id "upperP"; expr_false])
                    (expr_break "ret"
                     (expr_app (expr_id "loop")
                      [expr_op2 binary_op_add (expr_id "lower")
@@ -6719,7 +6711,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                 (expr_seq
                  (expr_if (expr_id "lowerExists")
                   (expr_seq
-                   (expr_delete_field (expr_id "O") (expr_id "lowerP"))
+                   (expr_app (expr_id "%Delete")
+                    [expr_id "O"; expr_id "lowerP"; expr_false])
                    (expr_seq
                     (expr_set_field (expr_id "O") (expr_id "upperP")
                      (expr_id "lowerValue"))
@@ -6866,7 +6859,9 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                (expr_app (expr_id "loop")
                 [expr_op2 binary_op_add (expr_id "k")
                  (expr_number (JsNumber.of_int (1)))])))
-             (expr_seq (expr_delete_field (expr_id "O") (expr_id "to"))
+             (expr_seq
+              (expr_app (expr_id "%Delete")
+               [expr_id "O"; expr_id "to"; expr_false])
               (expr_break "ret"
                (expr_app (expr_id "loop")
                 [expr_op2 binary_op_add (expr_id "k")
@@ -6876,8 +6871,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       (expr_op2 binary_op_sub (expr_id "len")
        (expr_number (JsNumber.of_int (1))))
       (expr_seq
-       (expr_delete_field (expr_id "O")
-        (expr_app (expr_id "%ToString") [expr_id "newLen"]))
+       (expr_app (expr_id "%Delete")
+        [expr_id "O";
+         expr_app (expr_id "%ToString") [expr_id "newLen"];
+         expr_false])
        (expr_seq
         (expr_set_field (expr_id "O") (expr_string "length")
          (expr_id "newLen")) (expr_id "first")))))))))
@@ -7337,7 +7334,8 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                          [expr_op2 binary_op_add (expr_id "k")
                           (expr_number (JsNumber.of_int (1)))]))
                        (expr_seq
-                        (expr_delete_field (expr_id "O") (expr_id "to"))
+                        (expr_app (expr_id "%Delete")
+                         [expr_id "O"; expr_id "to"; expr_false])
                         (expr_app (expr_id "writeToOLoop")
                          [expr_op2 binary_op_add (expr_id "k")
                           (expr_number (JsNumber.of_int (1)))])))))
@@ -7355,8 +7353,10 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                      (expr_op2 binary_op_sub (expr_id "k")
                       (expr_number (JsNumber.of_int (1))))
                      (expr_seq
-                      (expr_delete_field (expr_id "O")
-                       (expr_app (expr_id "%ToString") [expr_id "next"]))
+                      (expr_app (expr_id "%Delete")
+                       [expr_id "O";
+                        expr_app (expr_id "%ToString") [expr_id "next"];
+                        expr_false])
                       (expr_app (expr_id "deleteloop") [expr_id "next"])))
                     expr_undefined))
                   (expr_app (expr_id "deleteloop") [expr_id "len"]))))
@@ -7392,7 +7392,8 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                         [expr_op2 binary_op_sub (expr_id "k")
                          (expr_number (JsNumber.of_int (1)))]))
                       (expr_seq
-                       (expr_delete_field (expr_id "O") (expr_id "to"))
+                       (expr_app (expr_id "%Delete")
+                        [expr_id "O"; expr_id "to"; expr_false])
                        (expr_app (expr_id "writeToOLoop")
                         [expr_op2 binary_op_sub (expr_id "k")
                          (expr_number (JsNumber.of_int (1)))])))))
@@ -7751,7 +7752,9 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
            (expr_app (expr_id "Oloop")
             [expr_op2 binary_op_sub (expr_id "k")
              (expr_number (JsNumber.of_int (1)))]))
-          (expr_seq (expr_delete_field (expr_id "O") (expr_id "to"))
+          (expr_seq
+           (expr_app (expr_id "%Delete")
+            [expr_id "O"; expr_id "to"; expr_false])
            (expr_app (expr_id "Oloop")
             [expr_op2 binary_op_sub (expr_id "k")
              (expr_number (JsNumber.of_int (1)))]))))) expr_undefined))
@@ -8008,6 +8011,12 @@ Definition privToBoolean :=
 value_closure (closure_intro [] None ["x"] ex_privToBoolean)
 .
 Definition name_privToBoolean : id :=  "%ToBoolean" .
+Definition privDelete := 
+value_closure
+(closure_intro [("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"]
+ ex_privDelete)
+.
+Definition name_privDelete : id :=  "%Delete" .
 Definition copy_when_defined := 
 value_closure
 (closure_intro [] None ["obj1"; "obj2"; "s"] ex_copy_when_defined)
@@ -8015,14 +8024,16 @@ value_closure
 Definition name_copy_when_defined : id :=  "copy-when-defined" .
 Definition copy_access_desc := 
 value_closure
-(closure_intro [("copy-when-defined", copy_when_defined)] None
- ["obj1"; "obj2"] ex_copy_access_desc)
+(closure_intro
+ [("%Delete", privDelete); ("copy-when-defined", copy_when_defined)] 
+ None ["obj1"; "obj2"] ex_copy_access_desc)
 .
 Definition name_copy_access_desc : id :=  "copy-access-desc" .
 Definition copy_data_desc := 
 value_closure
-(closure_intro [("copy-when-defined", copy_when_defined)] None
- ["obj1"; "obj2"] ex_copy_data_desc)
+(closure_intro
+ [("%Delete", privDelete); ("copy-when-defined", copy_when_defined)] 
+ None ["obj1"; "obj2"] ex_copy_data_desc)
 .
 Definition name_copy_data_desc : id :=  "copy-data-desc" .
 Definition isAccessorDescriptor := 
@@ -8074,8 +8085,8 @@ value_closure (closure_intro [] None ["arr"; "idx"] ex_privArrayIdx)
 Definition name_privArrayIdx : id :=  "%ArrayIdx" .
 Definition privArrayLengthChange := 
 value_closure
-(closure_intro [("%ToUint32", privToUint32)] None ["arr"; "newlen"]
- ex_privArrayLengthChange)
+(closure_intro [("%Delete", privDelete); ("%ToUint32", privToUint32)] 
+ None ["arr"; "newlen"] ex_privArrayLengthChange)
 .
 Definition name_privArrayLengthChange : id :=  "%ArrayLengthChange" .
 Definition privrunConstruct := 
@@ -8380,14 +8391,14 @@ value_closure
  None ["constr"; "args"] ex_privDefaultConstruct)
 .
 Definition name_privDefaultConstruct : id :=  "%DefaultConstruct" .
-Definition privDelete := 
+Definition privDeleteOp := 
 value_closure
 (closure_intro
- [("%ToObject", privToObject);
-  ("%ToString", privToString);
-  ("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"] ex_privDelete)
+ [("%Delete", privDelete);
+  ("%ToObject", privToObject);
+  ("%ToString", privToString)] None ["obj"; "fld"; "strict"] ex_privDeleteOp)
 .
-Definition name_privDelete : id :=  "%Delete" .
+Definition name_privDeleteOp : id :=  "%DeleteOp" .
 Definition privHasProperty := 
 value_closure
 (closure_intro [] (Some "%HasProperty") ["obj"; "id"] ex_privHasProperty)
@@ -8661,16 +8672,6 @@ value_closure
   ("proto", privErrorProto)] None ["this"; "args"] ex_privErrorConstructor)
 .
 Definition name_privErrorConstructor : id :=  "%ErrorConstructor" .
-Definition privIsJSError := 
-value_closure (closure_intro [] None ["thing"] ex_privIsJSError)
-.
-Definition name_privIsJSError : id :=  "%IsJSError" .
-Definition privErrorDispatch := 
-value_closure
-(closure_intro [("%IsJSError", privIsJSError); ("%TypeError", privTypeError)]
- None ["maybe-js-error"] ex_privErrorDispatch)
-.
-Definition name_privErrorDispatch : id :=  "%ErrorDispatch" .
 Definition privErrorGlobalFuncObj :=  value_object 44 .
 Definition name_privErrorGlobalFuncObj : id :=  "%ErrorGlobalFuncObj" .
 Definition privEvalErrorProto :=  value_object 8 .
@@ -8727,6 +8728,10 @@ value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privGtOp)
 .
 Definition name_privGtOp : id :=  "%GtOp" .
+Definition privIsJSError := 
+value_closure (closure_intro [] None ["thing"] ex_privIsJSError)
+.
+Definition name_privIsJSError : id :=  "%IsJSError" .
 Definition privLeOp := 
 value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privLeOp)
@@ -9048,13 +9053,6 @@ value_closure
  ex_privUnsignedRightShift)
 .
 Definition name_privUnsignedRightShift : id :=  "%UnsignedRightShift" .
-Definition privUnwritableDispatch := 
-value_closure
-(closure_intro
- [("%ErrorDispatch", privErrorDispatch); ("%TypeError", privTypeError)] 
- None ["id"] ex_privUnwritableDispatch)
-.
-Definition name_privUnwritableDispatch : id :=  "%UnwritableDispatch" .
 Definition privVoid := 
 value_closure (closure_intro [] None ["val"] ex_privVoid)
 .
@@ -9748,7 +9746,8 @@ Definition name_privpop : id :=  "%pop" .
 Definition privpopCall := 
 value_closure
 (closure_intro
- [("%ToNumber", privToNumber);
+ [("%Delete", privDelete);
+  ("%ToNumber", privToNumber);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privpopCall)
@@ -9867,7 +9866,8 @@ Definition name_privreverse : id :=  "%reverse" .
 Definition privreverseCall := 
 value_closure
 (closure_intro
- [("%ToObject", privToObject);
+ [("%Delete", privDelete);
+  ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"]
  ex_privreverseCall)
@@ -9893,7 +9893,8 @@ Definition name_privshift : id :=  "%shift" .
 Definition privshiftCall := 
 value_closure
 (closure_intro
- [("%ToObject", privToObject);
+ [("%Delete", privDelete);
+  ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privshiftCall)
 .
@@ -9949,7 +9950,8 @@ Definition name_privsplice : id :=  "%splice" .
 Definition privspliceCall := 
 value_closure
 (closure_intro
- [("%MakeArray", privMakeArray);
+ [("%Delete", privDelete);
+  ("%MakeArray", privMakeArray);
   ("%ToInteger", privToInteger);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -10115,6 +10117,7 @@ Definition privunshiftCall :=
 value_closure
 (closure_intro
  [("%ComputeLength", privComputeLength);
+  ("%Delete", privDelete);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"]
@@ -10484,6 +10487,7 @@ Definition ctx_items :=
  (name_privDefaultCall, privDefaultCall);
  (name_privDefaultConstruct, privDefaultConstruct);
  (name_privDelete, privDelete);
+ (name_privDeleteOp, privDeleteOp);
  (name_privEnvAppExpr, privEnvAppExpr);
  (name_privEnvAssign, privEnvAssign);
  (name_privEnvCreateImmutableBinding, privEnvCreateImmutableBinding);
@@ -10509,7 +10513,6 @@ Definition ctx_items :=
  (name_privEnvTypeof, privEnvTypeof);
  (name_privEqEq, privEqEq);
  (name_privErrorConstructor, privErrorConstructor);
- (name_privErrorDispatch, privErrorDispatch);
  (name_privErrorGlobalFuncObj, privErrorGlobalFuncObj);
  (name_privErrorProto, privErrorProto);
  (name_privEvalErrorConstructor, privEvalErrorConstructor);
@@ -10631,7 +10634,6 @@ Definition ctx_items :=
  (name_privUnaryPlus, privUnaryPlus);
  (name_privUnboundId, privUnboundId);
  (name_privUnsignedRightShift, privUnsignedRightShift);
- (name_privUnwritableDispatch, privUnwritableDispatch);
  (name_privVoid, privVoid);
  (name_privYearFromTime, privYearFromTime);
  (name_privacos, privacos);
@@ -10935,6 +10937,7 @@ privDeclEnvAddBinding
 privDefaultCall
 privDefaultConstruct
 privDelete
+privDeleteOp
 privEnvAppExpr
 privEnvAssign
 privEnvCreateImmutableBinding
@@ -10960,7 +10963,6 @@ privEnvSetMutableBinding
 privEnvTypeof
 privEqEq
 privErrorConstructor
-privErrorDispatch
 privErrorGlobalFuncObj
 privErrorProto
 privEvalErrorConstructor
@@ -11082,7 +11084,6 @@ privUnaryNot
 privUnaryPlus
 privUnboundId
 privUnsignedRightShift
-privUnwritableDispatch
 privVoid
 privYearFromTime
 privacos
@@ -11396,6 +11397,7 @@ Definition store_items := [
                                              ("%DefaultCall", privDefaultCall);
                                              ("%DefaultConstruct", privDefaultConstruct);
                                              ("%Delete", privDelete);
+                                             ("%DeleteOp", privDeleteOp);
                                              ("%EnvAppExpr", privEnvAppExpr);
                                              ("%EnvAssign", privEnvAssign);
                                              ("%EnvCreateImmutableBinding", privEnvCreateImmutableBinding);
@@ -11421,7 +11423,6 @@ Definition store_items := [
                                              ("%EnvTypeof", privEnvTypeof);
                                              ("%EqEq", privEqEq);
                                              ("%ErrorConstructor", privErrorConstructor);
-                                             ("%ErrorDispatch", privErrorDispatch);
                                              ("%ErrorGlobalFuncObj", privErrorGlobalFuncObj);
                                              ("%ErrorProto", privErrorProto);
                                              ("%EvalErrorConstructor", privEvalErrorConstructor);
@@ -11543,7 +11544,6 @@ Definition store_items := [
                                              ("%UnaryPlus", privUnaryPlus);
                                              ("%UnboundId", privUnboundId);
                                              ("%UnsignedRightShift", privUnsignedRightShift);
-                                             ("%UnwritableDispatch", privUnwritableDispatch);
                                              ("%Void", privVoid);
                                              ("%YearFromTime", privYearFromTime);
                                              ("%acos", privacos);
@@ -14183,12 +14183,6 @@ Definition store_items := [
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
-                   ("notinspec", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 62;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
-                                         attributes_data_configurable := true|});
                    ("prototype", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 52;

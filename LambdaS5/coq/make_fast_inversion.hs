@@ -66,7 +66,6 @@ patterns = [
     ("set_field_2", "expr_set_field_2 ?ptr ?obj ?oattr ?s ?v3"),
     ("delete_field", "expr_delete_field ?e1 ?e2"),
     ("delete_field_1", "expr_delete_field_1 ?vs"),
-    ("delete_field_2", "expr_delete_field_2 ?ptr ?obj ?oattr ?s"),
     ("own_field_names", "expr_own_field_names ?e"),
     ("own_field_names_1", "expr_own_field_names_1 ?o"),
     ("op1", "expr_op1 ?op ?e"),

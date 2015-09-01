@@ -499,7 +499,13 @@ Proof.
     (* delete_field *)
     unfolds.
     repeat ljs_eval_push.
-    repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; tryfalse; bool_tryfalse; reflexivity.
+    repeat (ljs_eval || cases_if || cases_match_option); 
+    unfolds get_object_property, object_extensible; simpls; (* TODO tactic *)
+    try match goal with H : object_properties obj\(s?) = _ |- _ => 
+        apply read_option_binds in H || apply read_option_not_index in H end.
+    reflexivity.
+    binds_determine. bool_tryfalse.
+    false. prove_bag.
     (* get_internal *)
     unfolds.
     repeat ljs_eval_push.
