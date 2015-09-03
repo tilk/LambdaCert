@@ -42,11 +42,7 @@ Definition is_object_type e := L.expr_op1 L.unary_op_is_object e.
 
 Definition to_object e := make_app_builtin "%ToObject" [e].
 
-Definition to_string e :=
-    match e with
-    | L.expr_string s => e
-    | _ => make_app_builtin "%ToString" [e]
-    end.
+Definition to_string e := make_app_builtin "%ToString" [e].
 
 Definition to_bool e := make_app_builtin "%ToBoolean" [e].
 
@@ -240,7 +236,8 @@ Definition make_typeof f e :=
 
 Definition make_delete f e :=
     reference_match e
-        (fun obj fld => make_app_builtin "%DeleteOp" [f obj; f fld; L.expr_id "$strict"])
+        (fun obj fld => make_app_builtin "%PropertyAccess" 
+            [f obj; f fld; L.expr_id "$strict"; L.expr_id "%DeleteOp"])
         (fun varid => make_app_builtin "%EnvDelete" [context; L.expr_string varid; L.expr_id "$strict"])
         (fun _ => L.expr_seq (f e) L.expr_true).
 

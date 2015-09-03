@@ -581,6 +581,9 @@ expr_object
  ("%PrimitiveCompareOp", property_data
                          (data_intro (expr_id "%PrimitiveCompareOp")
                           expr_true expr_false expr_false));
+ ("%PropertyAccess", property_data
+                     (data_intro (expr_id "%PropertyAccess") expr_true
+                      expr_false expr_false));
  ("%RangeError", property_data
                  (data_intro (expr_id "%RangeError") expr_true expr_false
                   expr_false));
@@ -2241,7 +2244,7 @@ expr_if
 (expr_if (expr_op2 binary_op_stx_eq (expr_id "o") expr_undefined) expr_true
  (expr_op2 binary_op_stx_eq (expr_id "o") expr_null))
 (expr_app (expr_id "%TypeError") [expr_string "Not object coercible"])
-expr_undefined
+expr_empty
 .
 Definition ex_privCompareOp := 
 expr_let "px" (expr_app (expr_id "%ToPrimitive") [expr_id "l"])
@@ -2564,7 +2567,7 @@ expr_true
 Definition ex_privDeleteOp := 
 expr_app (expr_id "%Delete")
 [expr_app (expr_id "%ToObject") [expr_id "obj"];
- expr_app (expr_id "%ToString") [expr_id "fld"];
+ expr_id "fld";
  expr_id "strict"]
 .
 Definition ex_privEnvAppExpr := 
@@ -3581,7 +3584,7 @@ expr_app (expr_id "%ObjectCall")
 [expr_id "constr"; expr_undefined; expr_id "args"]
 .
 Definition ex_privObjectTypeCheck := 
-expr_if (expr_op1 unary_op_is_object (expr_id "o")) expr_null
+expr_if (expr_op1 unary_op_is_object (expr_id "o")) expr_empty
 (expr_app (expr_id "%TypeError")
  [expr_op2 binary_op_string_plus
   (expr_op1 unary_op_prim_to_str (expr_id "o"))
@@ -3673,6 +3676,13 @@ expr_if
 (expr_app (expr_id "%NumberCompareOp")
  [expr_op1 unary_op_prim_to_num (expr_id "l");
   expr_op1 unary_op_prim_to_num (expr_id "r")])
+.
+Definition ex_privPropertyAccess := 
+expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "o"])
+(expr_app (expr_id "cont")
+ [expr_id "o";
+  expr_app (expr_id "%ToString") [expr_id "fld"];
+  expr_id "strict"])
 .
 Definition ex_privRangeError := 
 expr_app (expr_id "%NativeError") [expr_id "%RangeErrorProto"; expr_id "msg"]
@@ -8393,10 +8403,8 @@ value_closure
 Definition name_privDefaultConstruct : id :=  "%DefaultConstruct" .
 Definition privDeleteOp := 
 value_closure
-(closure_intro
- [("%Delete", privDelete);
-  ("%ToObject", privToObject);
-  ("%ToString", privToString)] None ["obj"; "fld"; "strict"] ex_privDeleteOp)
+(closure_intro [("%Delete", privDelete); ("%ToObject", privToObject)] 
+ None ["obj"; "fld"; "strict"] ex_privDeleteOp)
 .
 Definition name_privDeleteOp : id :=  "%DeleteOp" .
 Definition privHasProperty := 
@@ -8888,6 +8896,14 @@ value_closure
  ex_privPrimSub)
 .
 Definition name_privPrimSub : id :=  "%PrimSub" .
+Definition privPropertyAccess := 
+value_closure
+(closure_intro
+ [("%CheckObjectCoercible", privCheckObjectCoercible);
+  ("%ToString", privToString)] None ["o"; "fld"; "strict"; "cont"]
+ ex_privPropertyAccess)
+.
+Definition name_privPropertyAccess : id :=  "%PropertyAccess" .
 Definition privRangeError := 
 value_closure
 (closure_intro
@@ -10576,6 +10592,7 @@ Definition ctx_items :=
  (name_privPrimNew, privPrimNew);
  (name_privPrimSub, privPrimSub);
  (name_privPrimitiveCompareOp, privPrimitiveCompareOp);
+ (name_privPropertyAccess, privPropertyAccess);
  (name_privRangeError, privRangeError);
  (name_privRangeErrorConstructor, privRangeErrorConstructor);
  (name_privRangeErrorGlobalFuncObj, privRangeErrorGlobalFuncObj);
@@ -11026,6 +11043,7 @@ privPrimMultOp
 privPrimNew
 privPrimSub
 privPrimitiveCompareOp
+privPropertyAccess
 privRangeError
 privRangeErrorConstructor
 privRangeErrorGlobalFuncObj
@@ -11486,6 +11504,7 @@ Definition store_items := [
                                              ("%PrimNew", privPrimNew);
                                              ("%PrimSub", privPrimSub);
                                              ("%PrimitiveCompareOp", privPrimitiveCompareOp);
+                                             ("%PropertyAccess", privPropertyAccess);
                                              ("%RangeError", privRangeError);
                                              ("%RangeErrorConstructor", privRangeErrorConstructor);
                                              ("%RangeErrorGlobalFuncObj", privRangeErrorGlobalFuncObj);

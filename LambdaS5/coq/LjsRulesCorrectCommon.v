@@ -101,6 +101,7 @@ Hint Constructors ref_base_type_var : js_ljs.
 Hint Constructors ref_base_type_obj : js_ljs.
 Hint Constructors js_reference_type : js_ljs.
 Hint Constructors object_or_null : js_ljs.
+Hint Constructors js_specret_state : js_ljs.
 
 Hint Constructors Option Option2 Option3 Option4 Forall Forall2 Forall3 : js_ljs.
 

@@ -281,18 +281,18 @@ Proof.
     ljs_apply.
     ljs_context_invariant_after_apply.
     repeat (repeat ljs_autoforward || cases_decide). {
-        inverts IH4. (* TODO *)
+        inverts IH5. (* TODO *)
         rewrite index_binds_eq in H7. destruct H7 as (?x&H7). (* TODO *)
-        forwards Hc : construct_related_lemma; try eassumption. eauto_js.
+        forwards Hc : construct_related_lemma; try eassumption. prove_bag.
         destruct_hyp Hc.
-        forwards Hx : object_method_construct_lemma; try eassumption. eauto_js. eauto_js.
-        forwards_th : red_spec_construct_ok; try eassumption. eauto_js. eauto_js. (* TODO *)
+        forwards Hx : object_method_construct_lemma; try eassumption. prove_bag. eauto_js.
+        forwards_th : red_spec_construct_ok; try eassumption. prove_bag. (* TODO *)
         destr_concl; try ljs_handle_abort.
         res_related_invert.
         resvalue_related_only_invert.
         jauto_js 12.
     } { 
-        inverts IH4. (* TODO *)
+        inverts IH5. (* TODO *)
         forwards Hx : object_method_construct_lemma; try eassumption; try eauto_js.
         forwards_th : type_error_lemma. iauto.
         destr_concl; tryfalse.
@@ -602,7 +602,7 @@ Proof.
         cases_isTrue as Hic. { (* is callable *)
             repeat ljs_autoforward.
             lets (jptr&Heq) : is_callable_obj Hic. subst_hyp Heq.
-            inverts IH4. (* TODO *)
+            inverts IH5. (* TODO *)
             forwards_th : red_spec_call_ok; try eassumption. eauto_js.
             asserts Hseval : (!J.is_syntactic_eval je). {
                 rew_refl.
@@ -1023,6 +1023,130 @@ Lemma object_method_delete_lemma : forall BR jst st jptr ptr,
 Proof.
 Admitted. (* TODO: ignoring exotic objects for now *)
 
+Hint Extern 3 (js_object_coercible ?jv) => not is_evar jv; unfolds : js_ljs.
+
+Lemma check_object_coercible_lemma : forall BR k jst jc c st st' r v1 jv1, (* TODO factorize to new th_ *)
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv1 v1 -> 
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privCheckObjectCoercible [v1]) (L.out_ter st' r) ->
+    concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_check_object_coercible jv1) 
+        (fun jrv => jrv = J.resvalue_empty /\ js_object_coercible jv1).
+Proof.
+    introv Hcinv Hinv Hvrel Hlred.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    cases_decide as Heq1; rewrite stx_eq_undefined_eq_lemma in Heq1. { (* undefined *)
+        subst_hyp Heq1.
+        inverts Hvrel.
+        repeat ljs_autoforward.
+        forwards_th : type_error_lemma. eauto.
+        destr_concl; tryfalse.
+        ljs_handle_abort.
+    }
+    repeat ljs_autoforward.
+    cases_decide as Heq2; rewrite stx_eq_null_eq_lemma in Heq2. { (* null *)
+        subst_hyp Heq2.
+        inverts Hvrel.
+        repeat ljs_autoforward.
+        forwards_th : type_error_lemma. eauto.
+        destr_concl; tryfalse.
+        ljs_handle_abort.
+    }
+    repeat ljs_autoforward.
+    inverts Hvrel; tryfalse;
+    jauto_js 10.
+Qed.
+
+Hint Extern 3 (J.red_expr _ _ (J.expr_access_3 _ _ _) _) => eapply J.red_expr_access_3 : js_ljs. (* TODO *)
+
+Lemma field_access_lemma : forall BR k jst jc c st st' r je ee1 ee2 s1,
+    ih_expr k ->
+    L.red_exprh k c st (L.expr_basic (E.make_app_builtin "%PropertyAccess" 
+        [E.ejs_to_ljs ee1; E.ejs_to_ljs ee2; L.expr_id "$strict"; L.expr_id s1])) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    js_field_access je ee1 ee2 ->
+    exists BR' jst'' jr,
+    J.red_expr jst jc (J.expr_basic je) (J.out_ter jst'' jr) /\
+    ((exists jv s c' k' v1 v2 st'', 
+      jr = J.res_ref (J.ref_intro (J.ref_base_type_value jv) s (J.execution_ctx_strict jc)) /\
+      binds c s1 v1 /\
+      L.red_exprh k' c' st''
+          (L.expr_app_2 v1 [v2; L.value_string s; L.value_bool (J.execution_ctx_strict jc)])
+          (L.out_ter st' r) /\
+      state_invariant BR' jst'' st'' /\
+      value_related BR' jv v2 /\
+      js_object_coercible jv /\
+      context_invariant BR' jc c' /\ BR \c BR' /\
+      k' < k) \/
+      J.abort (J.out_ter jst'' jr) /\ J.res_type jr = J.restype_throw /\ 
+      state_invariant BR' jst'' st' /\
+      res_related BR' jst'' st' jr r /\ BR \c BR').
+Proof.
+    introv IHe Hlred Hcinv Hinv Hfa.
+        inverts Hfa. { (* access *)
+            repeat ljs_autoforward.
+            destr_concl; try ljs_handle_abort.
+            repeat ljs_autoforward.
+            destr_concl; try ljs_handle_abort.
+            repeat ljs_autoforward.
+            lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
+                eassumption.
+            subst_hyp Hstrict.
+            inverts red_exprh H7. (* TODO *)
+            ljs_apply.
+            ljs_context_invariant_after_apply.
+            repeat ljs_autoforward.
+            forwards_th : check_object_coercible_lemma.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            repeat ljs_autoforward.
+            forwards_th : red_spec_to_string_unary_ok.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            resvalue_related_invert.
+            repeat ljs_autoforward.
+            jauto_js 25.
+        } { (* member *)
+            repeat ljs_autoforward.
+            destr_concl; try ljs_handle_abort.
+            repeat ljs_autoforward.
+            lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
+                eassumption.
+            subst_hyp Hstrict.
+            inverts red_exprh H7. (* TODO *)
+            ljs_apply.
+            ljs_context_invariant_after_apply.
+            repeat ljs_autoforward.
+            forwards_th : check_object_coercible_lemma.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            repeat ljs_autoforward.
+            forwards_th : red_spec_to_string_unary_ok.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            resvalue_related_invert.
+            repeat ljs_autoforward.
+            jauto_js 25.
+         }
+Qed.
+
+Lemma ref_is_property_object_coercible_hint : forall jref jv,
+    J.ref_base jref = J.ref_base_type_value jv ->
+    js_object_coercible jv ->
+    J.ref_is_property jref.
+Proof.
+    introv Heq Hoc.
+    destruct jref. simpls. substs.
+    destruct Hoc as (Hoc1&Hoc2).
+    destruct jv as [()|]; tryfalse; unfolds; unfolds J.ref_kind_of; simpl; iauto.
+Qed.
+
+Hint Resolve ref_is_property_object_coercible_hint : js_ljs.
+
 Lemma red_expr_unary_op_delete_ok : forall k je,
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_delete je).
@@ -1030,7 +1154,24 @@ Proof.
     introv IHe Hcinv Hinv Hlred.
     unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_delete.
     reference_match_cases Hlred Hx Heq Hrp. {
-        skip. (* TODO fields *)
+        forwards_th Hx : field_access_lemma. eassumption.
+        destruct_hyp Hx; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        inverts red_exprh Hx3. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        forwards_th : red_spec_to_object_ok.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_invert.
+        repeat ljs_autoforward.
+        forwards Hdel : object_method_delete_lemma; try eassumption.
+        forwards_th : delete_lemma. prove_bag.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_invert.
+        jauto_js 20.
     } {
         repeat ljs_autoforward.
         inverts red_exprh H7. (* TODO *)
@@ -1074,14 +1215,7 @@ Proof.
                 subst_hyp Hmut.
                 repeat ljs_autoforward.
                 destruct obj.
-                unfold_concl. jauto_set_slim; [eauto_js 10 | idtac | idtac | eauto_js 10].
-                eapply state_invariant_modify_env_record_preserved. eauto_js. eauto_js. eauto_js.
-                eapply env_record_related_decl_rem. eauto_js. eauto_js. eauto_js.
-(*
-                (* TODO state_invariant_modify_env_record_preserved
-                        env_record_related_decl_rem
-                jauto_js 15. *)
-*)
+                jauto_js 10.
             } {
                 rewrite mutability_not_deletable_lemma in H16 by eassumption.
                 repeat ljs_autoforward.
@@ -1551,11 +1685,8 @@ Proof.
     res_related_invert.
     resvalue_related_invert.
     destruct b; repeat ljs_autoforward.
-    destr_concl.
-    jauto_js 8. 
-    jauto_js 9.
-    exists BR'0. (* TODO *)
-    jauto_js 8.
+    + jauto_js 10.
+    + jauto_js 10.
 Qed.
 
 Lemma red_expr_binary_op_or_ok : forall k je1 je2,
@@ -1571,10 +1702,8 @@ Proof.
     res_related_invert.
     resvalue_related_invert.
     destruct b; repeat ljs_autoforward.
-    exists BR'0. jauto_js 8. (* TODO *) 
-    destr_concl. 
-    jauto_js 8.
-    jauto_js 9.
+    + jauto_js 10.
+    + jauto_js 10.
 Qed.
 
 (* TODO move *) 

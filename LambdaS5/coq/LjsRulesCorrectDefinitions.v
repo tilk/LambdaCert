@@ -1101,9 +1101,15 @@ Record js_red_expr_getvalue jst jc je jo jsr : Prop := {
     js_red_expr_getvalue_red_spec : js_red_spec_get_value_or_abort jc je jo jsr
 }.
 
+Inductive js_specret_state A : J.specret A -> J.state -> Prop :=
+| js_specret_state_val : forall jst x, js_specret_state (J.specret_val jst x) jst
+| js_specret_state_out : forall jst x, js_specret_state (J.specret_out (J.out_ter jst x)) jst
+.
+
 Definition concl_expr_getvalue BR jst jc c st st' r je := 
     exists BR' jst' jo sr,
     js_red_expr_getvalue jst jc je jo sr /\
+    js_specret_state sr jst' /\
     state_invariant BR' jst' st' /\ 
     BR \c BR' /\
     ((exists jv, sr = J.specret_val jst' jv /\ exists v, r = L.res_value v /\ value_related BR' jv v) \/
