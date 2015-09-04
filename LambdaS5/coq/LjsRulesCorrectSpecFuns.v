@@ -726,15 +726,12 @@ Lemma get_own_property_lemma : forall BR k jst jc c st st' r jptr ptr s v_d v_a 
             (L.out_ter st' r) /\
         state_invariant BR' jst'' st'' /\
         value_related BR' jv1 v1) \/
-       (exists v1 jv1 ptr1 v2 jv2 ptr2 b1 b2, 
+       (exists v1 jv1 v2 jv2 b1 b2, 
         jfd = J.full_descriptor_some (J.attributes_accessor_of (J.attributes_accessor_intro jv1 jv2 b1 b2)) /\
-        L.red_exprh k' c' st'' (L.expr_app_2 v_a [L.value_object ptr1; L.value_object ptr2; 
-                                                  L.value_bool b1; L.value_bool b2]) 
+        L.red_exprh k' c' st'' (L.expr_app_2 v_a [v1; v2; L.value_bool b1; L.value_bool b2]) 
             (L.out_ter st' r) /\
         state_invariant BR' jst'' st'' /\
-        value_related BR' jv1 v1 /\ value_related BR' jv2 v2 /\
-        fact_getter_proxy ptr1 v1 \in BR' /\
-        fact_setter_proxy ptr2 v2 \in BR')) /\
+        value_related BR' jv1 v1 /\ value_related BR' jv2 v2)) /\
       context_invariant BR' jc c' /\ BR \c BR' /\
       k' < k) \/
       exists jr, 
@@ -792,15 +789,12 @@ Lemma get_property_lemma : forall k BR jst jc c st st' r jptr ptr s v_d v_a v_u,
             (L.out_ter st' r) /\
         state_invariant BR' jst'' st'' /\
         value_related BR' jv1 v1) \/
-       (exists v1 jv1 ptr1 v2 jv2 ptr2 b1 b2, 
+       (exists v1 jv1 v2 jv2 b1 b2, 
         jfd = J.full_descriptor_some (J.attributes_accessor_of (J.attributes_accessor_intro jv1 jv2 b1 b2)) /\
-        L.red_exprh k' c' st'' (L.expr_app_2 v_a [L.value_object ptr1; L.value_object ptr2; 
-                                                  L.value_bool b1; L.value_bool b2]) 
+        L.red_exprh k' c' st'' (L.expr_app_2 v_a [v1; v2; L.value_bool b1; L.value_bool b2]) 
             (L.out_ter st' r) /\
         state_invariant BR' jst'' st'' /\
-        value_related BR' jv1 v1 /\ value_related BR' jv2 v2 /\
-        fact_getter_proxy ptr1 v1 \in BR' /\
-        fact_setter_proxy ptr2 v2 \in BR')) /\
+        value_related BR' jv1 v1 /\ value_related BR' jv2 v2)) /\
       context_invariant BR' jc c' /\ BR \c BR' /\
       k' < k) \/
       exists jr, 
@@ -1131,64 +1125,6 @@ Proof.
         simpls. rew_index_eq. iauto.
         right. simpls. do 3 eexists. rew_heap_to_libbag in *. rew_binds_eq. iauto.
     }
-Qed.
-
-Lemma make_getter_lemma : forall k c st v st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeGetter [v]) (L.out_ter st' r) ->
-    exists ptr obj,
-    ~index st ptr /\
-    getter_proxy obj v /\
-    st' = st \(ptr := obj) /\
-    r = L.res_value (L.value_object ptr).
-Proof.
-    introv Hlred.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    repeat ljs_autoforward.
-    do 2 eexists. splits; eauto_js; eauto_js.
-Qed.
-
-Lemma make_setter_lemma : forall k c st v st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeSetter [v]) (L.out_ter st' r) ->
-    exists ptr obj,
-    ~index st ptr /\
-    setter_proxy obj v /\
-    st' = st \(ptr := obj) /\
-    r = L.res_value (L.value_object ptr).
-Proof.
-    introv Hlred.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    repeat ljs_autoforward.
-    do 2 eexists. splits; eauto_js; eauto_js.
-Qed.
-
-Lemma make_getter_invariant_lemma : forall BR k c jst st v st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeGetter [v]) (L.out_ter st' r) ->
-    state_invariant BR jst st ->
-    exists ptr,
-    st \c st' /\ 
-    state_invariant (\{fact_getter_proxy ptr v} \u BR) jst st' /\
-    r = L.res_value (L.value_object ptr).
-Proof.
-    introv Hlred Hinv.
-    lets Hx : make_getter_lemma Hlred.
-    destruct_hyp Hx.
-    jauto_js.
-Qed.
-
-Lemma make_setter_invariant_lemma : forall BR k c jst st v st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeSetter [v]) (L.out_ter st' r) ->
-    state_invariant BR jst st ->
-    exists ptr,
-    st \c st' /\ 
-    state_invariant (\{fact_setter_proxy ptr v} \u BR) jst st' /\
-    r = L.res_value (L.value_object ptr).
-Proof.
-    introv Hlred Hinv.
-    lets Hx : make_setter_lemma Hlred.
-    destruct_hyp Hx.
-    jauto_js.
 Qed.
 
 Lemma add_accessor_field_lemma : forall k c st st' r s v1 v2 b1 b2 ptr obj,

@@ -109,8 +109,6 @@ Definition js_prog_to_ljs isEval jp := E.ejs_prog_to_ljs isEval (E.js_prog_to_ej
 Inductive fact :=
 | fact_js_obj : J.object_loc -> L.object_ptr -> fact
 | fact_js_env : J.env_loc -> L.object_ptr -> fact
-| fact_getter_proxy : L.object_ptr -> L.value -> fact
-| fact_setter_proxy : L.object_ptr -> L.value -> fact
 | fact_iarray : L.object_ptr -> list L.value -> fact
 | fact_ctx_parent : L.object_ptr -> L.value -> fact
 .
@@ -122,8 +120,6 @@ Implicit Type BR : fact_set.
 Inductive fact_ptr : fact -> L.object_ptr -> Prop :=
 | fact_ptr_js_obj : forall jptr ptr, fact_ptr (fact_js_obj jptr ptr) ptr
 | fact_ptr_js_env : forall jeptr ptr, fact_ptr (fact_js_env jeptr ptr) ptr
-| fact_ptr_getter_proxy : forall ptr v, fact_ptr (fact_getter_proxy ptr v) ptr
-| fact_ptr_setter_proxy : forall ptr v, fact_ptr (fact_setter_proxy ptr v) ptr
 | fact_ptr_iarray : forall ptr vs, fact_ptr (fact_iarray ptr vs) ptr
 .
 
@@ -192,14 +188,12 @@ Inductive attributes_data_related BR : J.attributes_data -> L.attributes_data ->
 .
 
 Inductive attributes_accessor_related BR : J.attributes_accessor -> L.attributes_accessor -> Prop := 
-| attributes_accessor_related_intro : forall jv1 jv2 v1 v2 b1 b2 ptr1 ptr2, 
+| attributes_accessor_related_intro : forall jv1 jv2 v1 v2 b1 b2, 
     value_related BR jv1 v1 ->
     value_related BR jv2 v2 ->
-    fact_getter_proxy ptr1 v1 \in BR ->
-    fact_setter_proxy ptr2 v2 \in BR ->
     attributes_accessor_related BR
         (J.attributes_accessor_intro jv1 jv2 b1 b2) 
-        (L.attributes_accessor_intro (L.value_object ptr1) (L.value_object ptr2) b1 b2)
+        (L.attributes_accessor_intro v1 v2 b1 b2)
 .
 
 Inductive attributes_related BR : J.attributes -> L.attributes -> Prop :=
@@ -649,24 +643,6 @@ Inductive env_record_related BR : J.env_record -> L.object -> Prop :=
 
 (** *** Definitions of helper objects *)
 
-Record getter_proxy obj v : Prop := {
-    getter_proxy_proto : L.object_proto obj = L.value_null;
-    getter_proxy_class : L.object_class obj = "GetterProxy";
-    getter_proxy_extensible : L.object_extensible obj = false;
-    getter_proxy_code : L.object_code obj = LjsInitEnv.privGetterProxyFun;
-    getter_proxy_func : binds (L.object_properties obj) "func"
-        (L.attributes_data_of (L.attributes_data_intro v false false false))
-}.
-
-Record setter_proxy obj v : Prop := {
-    setter_proxy_proto : L.object_proto obj = L.value_null;
-    setter_proxy_class : L.object_class obj = "SetterProxy";
-    setter_proxy_extensible : L.object_extensible obj = false;
-    setter_proxy_code : L.object_code obj = LjsInitEnv.privSetterProxyFun;
-    setter_proxy_func : binds (L.object_properties obj) "func"
-        (L.attributes_data_of (L.attributes_data_intro v false false false))
-}.
-
 Record js_exn_object obj v : Prop := { 
     js_exn_object_proto : L.object_proto obj = L.value_null;
     js_exn_object_class : L.object_class obj = "JSError";
@@ -760,18 +736,6 @@ Definition heaps_bisim_env BR jst st := forall jeptr ptr jer obj,
      binds st ptr obj ->
      env_record_related BR jer obj.
 
-Definition heaps_bisim_getter_proxy BR st :=
-    forall ptr obj v,
-    fact_getter_proxy ptr v \in BR ->
-    binds st ptr obj ->
-    getter_proxy obj v.
-
-Definition heaps_bisim_setter_proxy BR st :=
-    forall ptr obj v,
-    fact_setter_proxy ptr v \in BR ->
-    binds st ptr obj ->
-    setter_proxy obj v.
-
 Definition heaps_bisim_iarray BR st :=
     forall ptr obj vs,
     fact_iarray ptr vs \in BR ->
@@ -781,8 +745,6 @@ Definition heaps_bisim_iarray BR st :=
 Record heaps_bisim_consistent BR jst st : Prop := {
     heaps_bisim_consistent_bisim_obj : heaps_bisim_obj BR jst st;
     heaps_bisim_consistent_bisim_env : heaps_bisim_env BR jst st;
-    heaps_bisim_consistent_getter_proxy : heaps_bisim_getter_proxy BR st;
-    heaps_bisim_consistent_setter_proxy : heaps_bisim_setter_proxy BR st;
     heaps_bisim_consistent_iarray : heaps_bisim_iarray BR st;
     heaps_bisim_consistent_lfun_obj : heaps_bisim_lfun_obj BR;
     heaps_bisim_consistent_lfun_env : heaps_bisim_lfun_env BR;

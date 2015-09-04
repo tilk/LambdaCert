@@ -89,8 +89,6 @@ Hint Constructors object_related : js_ljs.
 Hint Constructors object_prim_related : js_ljs.
 Hint Constructors js_exn_object_ptr : js_ljs.
 Hint Constructors js_exn_object : js_ljs.
-Hint Constructors getter_proxy : js_ljs.
-Hint Constructors setter_proxy : js_ljs.
 Hint Constructors fact_ptr : js_ljs.
 (* Hint Constructors arg_list : js_ljs. *)
 Hint Constructors js_red_spec_get_value_or_abort : js_ljs.
@@ -687,22 +685,6 @@ Proof.
 
     introv Hrel Hbinds.
     lets Hx : heaps_bisim_consistent_rnoghost Hrel ___. eauto_js.
-    applys heaps_bisim_consistent_getter_proxy; try eassumption.
-    apply index_binds in Hx.
-    destruct Hx as (?obj&Hb1).
-    lets Hb2 : (incl_binds _ _ _ _ Hni Hb1). 
-    binds_determine. assumption.
-
-    introv Hrel Hbinds.
-    lets Hx : heaps_bisim_consistent_rnoghost Hrel ___. eauto_js.
-    applys heaps_bisim_consistent_setter_proxy; try eassumption.
-    apply index_binds in Hx.
-    destruct Hx as (?obj&Hb1).
-    lets Hb2 : (incl_binds _ _ _ _ Hni Hb1). 
-    binds_determine. assumption.
-
-    introv Hrel Hbinds.
-    lets Hx : heaps_bisim_consistent_rnoghost Hrel ___. eauto_js.
     applys heaps_bisim_consistent_iarray; try eassumption.
     apply index_binds in Hx.
     destruct Hx as (?obj&Hb1).
@@ -1118,8 +1100,6 @@ Proof.
     constructor.
     + apply init_heaps_bisim_obj_ok.
     + apply init_heaps_bisim_env_ok.
-    + introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse.
-    + introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse.
     + introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse.
     + apply init_heaps_bisim_lfun_obj_ok.
     + apply init_heaps_bisim_lfun_env_ok.
@@ -1777,110 +1757,95 @@ Proof.
     inverts Hbisim.
     asserts Hsub : (BR \c \{fact_js_obj jptr ptr} \u BR). jauto_js.
     constructor; unfolds.
-    (* bisim_obj *)
-    introv Hbi Hbinds1 Hbinds2.
-    rew_in_eq in Hbi.
-    rew_binds_eq in Hbinds1. 
-    rew_binds_eq in Hbinds2. 
-    apply case_classic_l in Hbi.
-    destruct_hyp Hbi.
-    injects.
-    destruct_hyp Hbinds1; tryfalse.
-    destruct_hyp Hbinds2; tryfalse.
-    assumption.
-    destruct_hyp Hbinds1;
-    destruct_hyp Hbinds2.
-    jauto_js.
-    false. jauto_js.
-    false. jauto_js.
-    jauto_js.
-    (* bisim_env *)
-    introv Hbi Hbinds1 Hbinds2.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse. 
-    rew_binds_eq in Hbinds1. 
-    rew_binds_eq in Hbinds2. 
-    destruct_hyp Hbinds2. 
-    false. jauto_js.
-    jauto_js.
-    (* getter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse. 
-    rew_binds_eq in Hbinds. 
-    destruct_hyp Hbinds.
-    false. jauto_js.
-    jauto_js.
-    (* setter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse. 
-    rew_binds_eq in Hbinds. 
-    destruct_hyp Hbinds.
-    false. jauto_js.
-    jauto_js.
-    (* iarray *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse. 
-    rew_binds_eq in Hbinds. 
-    destruct_hyp Hbinds.
-    false. jauto_js.
-    jauto_js.
-    (* lfun_obj *)
-    introv Hbi1 Hbi2.
-    rew_in_eq in Hbi1.
-    rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects.
-    reflexivity.
-    false; jauto_js.
-    false; jauto_js.
-    jauto_js.
-    (* lfun_env *)
-    introv Hbi1 Hbi2.
-    rew_in_eq in Hbi1.
-    rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2; tryfalse.
-    jauto_js.
-    (* rfun *)
-    introv Hbi1 Hbi2 Hfp1 Hfp2.
-    rew_in_eq in Hbi1.
-    rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects.
-    reflexivity.
-    inverts Hfp1. false; jauto_js.
-    inverts Hfp2. false; jauto_js.
-    jauto_js.
-    (* ltotal_inl *)
-    introv Hindex.
-    rew_index_eq in Hindex.
-    destruct_hyp Hindex.
-    lets Hth : heaps_bisim_consistent_ltotal_obj Hindex. 
-    destruct_hyp Hth. jauto_js. 
-    jauto_js.
-    (* ltotal_inr *)
-    introv Hindex.
-    rew_index_eq in Hindex.
-    lets Hth : heaps_bisim_consistent_ltotal_env Hindex. 
-    destruct_hyp Hth. jauto_js. 
-    (* lnoghost_inl *)
-    introv Hbi.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi.
-    injects. jauto_js.
-    jauto_js.
-    (* lnoghost_inr *)
-    introv Hbi.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_index_eq. 
-    jauto_js.
-    (* rnoghost *)
-    introv Hbi Hfp.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi.
-    inverts Hfp. jauto_js.
-    jauto_js.
+    { (* bisim_obj *)
+        introv Hbi Hbinds1 Hbinds2.
+        rew_in_eq in Hbi.
+        rew_binds_eq in Hbinds1. 
+        rew_binds_eq in Hbinds2. 
+        apply case_classic_l in Hbi.
+        destruct_hyp Hbi.
+        injects.
+        destruct_hyp Hbinds1; tryfalse.
+        destruct_hyp Hbinds2; tryfalse.
+        assumption.
+        destruct_hyp Hbinds1;
+        destruct_hyp Hbinds2.
+        jauto_js.
+        false. jauto_js.
+        false. jauto_js.
+        jauto_js.
+    } { (* bisim_env *)
+        introv Hbi Hbinds1 Hbinds2.
+        rew_in_eq in Hbi.
+        destruct_hyp Hbi; tryfalse. 
+        rew_binds_eq in Hbinds1. 
+        rew_binds_eq in Hbinds2. 
+        destruct_hyp Hbinds2. 
+        false. jauto_js.
+        jauto_js.
+    } { (* iarray *)
+        introv Hbi Hbinds.
+        rew_in_eq in Hbi.
+        destruct_hyp Hbi; tryfalse. 
+        rew_binds_eq in Hbinds. 
+        destruct_hyp Hbinds.
+        false. jauto_js.
+        jauto_js.
+    } { (* lfun_obj *)
+        introv Hbi1 Hbi2.
+        rew_in_eq in Hbi1.
+        rew_in_eq in Hbi2.
+        destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects.
+        reflexivity.
+        false; jauto_js.
+        false; jauto_js.
+        jauto_js.
+    } { (* lfun_env *)
+        introv Hbi1 Hbi2.
+        rew_in_eq in Hbi1.
+        rew_in_eq in Hbi2.
+        destruct_hyp Hbi1; destruct_hyp Hbi2; tryfalse.
+        jauto_js.
+    } { (* rfun *)
+        introv Hbi1 Hbi2 Hfp1 Hfp2.
+        rew_in_eq in Hbi1.
+        rew_in_eq in Hbi2.
+        destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects.
+        reflexivity.
+        inverts Hfp1. false; jauto_js.
+        inverts Hfp2. false; jauto_js.
+        jauto_js.
+    } { (* ltotal_inl *)
+        introv Hindex.
+        rew_index_eq in Hindex.
+        destruct_hyp Hindex.
+        lets Hth : heaps_bisim_consistent_ltotal_obj Hindex. 
+        destruct_hyp Hth. jauto_js. 
+        jauto_js.
+    } { (* ltotal_inr *)
+        introv Hindex.
+        rew_index_eq in Hindex.
+        lets Hth : heaps_bisim_consistent_ltotal_env Hindex. 
+        destruct_hyp Hth. jauto_js. 
+        } { (* lnoghost_inl *)
+        introv Hbi.
+        rew_in_eq in Hbi.
+        destruct_hyp Hbi.
+        injects. jauto_js.
+        jauto_js.
+    } { (* lnoghost_inr *)
+        introv Hbi.
+        rew_in_eq in Hbi.
+        destruct_hyp Hbi; tryfalse.
+        rew_index_eq. 
+        jauto_js.
+    } { (* rnoghost *)
+        introv Hbi Hfp.
+        rew_in_eq in Hbi.
+        destruct_hyp Hbi.
+        inverts Hfp. jauto_js.
+        jauto_js.
+    }
 Qed.
 
 Hint Resolve heaps_bisim_consistent_new_object_preserved : js_ljs.
@@ -1896,110 +1861,95 @@ Proof.
     inverts Hbisim.
     asserts Hsub : (BR \c \{fact_js_env jeptr ptr} \u BR). jauto_js.
     constructor; unfolds.
-    (* bisim_obj *)
-    introv Hbi Hbinds1 Hbinds2.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse. 
-    rew_binds_eq in Hbinds1. 
-    rew_binds_eq in Hbinds2. 
-    destruct_hyp Hbinds2. 
-    false. jauto_js.
-    jauto_js.
-    (* bisim_env *)
-    introv Hbi Hbinds1 Hbinds2.
-    rew_in_eq in Hbi.
-    rew_binds_eq in Hbinds1. 
-    rew_binds_eq in Hbinds2. 
-    apply case_classic_l in Hbi.
-    destruct_hyp Hbi.
-    injects.
-    destruct_hyp Hbinds1; tryfalse.
-    destruct_hyp Hbinds2; tryfalse.
-    assumption.
-    destruct_hyp Hbinds1;
-    destruct_hyp Hbinds2.
-    jauto_js.
-    false. jauto_js.
-    false. jauto_js.
-    jauto_js.
-    (* getter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse. 
-    rew_binds_eq in Hbinds. 
-    destruct_hyp Hbinds.
-    false. jauto_js.
-    jauto_js.
-    (* setter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse. 
-    rew_binds_eq in Hbinds. 
-    destruct_hyp Hbinds.
-    false. jauto_js.
-    jauto_js.
-    (* iarray *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse. 
-    rew_binds_eq in Hbinds. 
-    destruct_hyp Hbinds.
-    false. jauto_js.
-    jauto_js.
-    (* lfun_obj *)
-    introv Hbi1 Hbi2.
-    rew_in_eq in Hbi1.
-    rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2; tryfalse.
-    jauto_js.
-    (* lfun_env *)
-    introv Hbi1 Hbi2.
-    rew_in_eq in Hbi1.
-    rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects.
-    reflexivity.
-    false; jauto_js.
-    false; jauto_js.
-    jauto_js.
-    (* rfun *)
-    introv Hbi1 Hbi2 Hfp1 Hfp2.
-    rew_in_eq in Hbi1.
-    rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects.
-    reflexivity.
-    inverts Hfp1. false; jauto_js.
-    inverts Hfp2. false; jauto_js.
-    jauto_js.
-    (* ltotal_inl *)
-    introv Hindex.
-    rew_index_eq in Hindex.
-    lets Hth : heaps_bisim_consistent_ltotal_obj Hindex. 
-    destruct_hyp Hth. jauto_js. 
-    (* ltotal_inr *) 
-    introv Hindex.
-    rew_index_eq in Hindex.
-    destruct_hyp Hindex.
-    lets Hth : heaps_bisim_consistent_ltotal_env Hindex. 
-    destruct_hyp Hth. jauto_js. 
-    jauto_js.
-    (* lnoghost_inl *)
-    introv Hbi.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_index_eq. 
-    jauto_js.
-    (* lnoghost_inr *)
-    introv Hbi.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi.
-    injects. jauto_js.
-    jauto_js.
-    (* rnoghost *)
-    introv Hbi Hfp.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi.
-    inverts Hfp. jauto_js.
-    jauto_js.
+    { (* bisim_obj *)
+        introv Hbi Hbinds1 Hbinds2.
+        rew_in_eq in Hbi.
+        destruct_hyp Hbi; tryfalse. 
+        rew_binds_eq in Hbinds1. 
+        rew_binds_eq in Hbinds2. 
+        destruct_hyp Hbinds2. 
+        false. jauto_js.
+        jauto_js.
+    } { (* bisim_env *)
+        introv Hbi Hbinds1 Hbinds2.
+        rew_in_eq in Hbi.
+        rew_binds_eq in Hbinds1. 
+        rew_binds_eq in Hbinds2. 
+        apply case_classic_l in Hbi.
+        destruct_hyp Hbi.
+        injects.
+        destruct_hyp Hbinds1; tryfalse.
+        destruct_hyp Hbinds2; tryfalse.
+        assumption.
+        destruct_hyp Hbinds1;
+        destruct_hyp Hbinds2.
+        jauto_js.
+        false. jauto_js.
+        false. jauto_js.
+        jauto_js.
+    } { (* iarray *)
+        introv Hbi Hbinds.
+        rew_in_eq in Hbi.
+        destruct_hyp Hbi; tryfalse. 
+        rew_binds_eq in Hbinds. 
+        destruct_hyp Hbinds.
+        false. jauto_js.
+        jauto_js.
+    } { (* lfun_obj *)
+        introv Hbi1 Hbi2.
+        rew_in_eq in Hbi1.
+        rew_in_eq in Hbi2.
+        destruct_hyp Hbi1; destruct_hyp Hbi2; tryfalse.
+        jauto_js.
+    } { (* lfun_env *)
+        introv Hbi1 Hbi2.
+        rew_in_eq in Hbi1.
+        rew_in_eq in Hbi2.
+        destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects.
+        reflexivity.
+        false; jauto_js.
+        false; jauto_js.
+        jauto_js.
+    } { (* rfun *)
+        introv Hbi1 Hbi2 Hfp1 Hfp2.
+        rew_in_eq in Hbi1.
+        rew_in_eq in Hbi2.
+        destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects.
+        reflexivity.
+        inverts Hfp1. false; jauto_js.
+        inverts Hfp2. false; jauto_js.
+        jauto_js.
+    } { (* ltotal_inl *)
+        introv Hindex.
+        rew_index_eq in Hindex.
+        lets Hth : heaps_bisim_consistent_ltotal_obj Hindex. 
+        destruct_hyp Hth. jauto_js. 
+    } { (* ltotal_inr *) 
+        introv Hindex.
+        rew_index_eq in Hindex.
+        destruct_hyp Hindex.
+        lets Hth : heaps_bisim_consistent_ltotal_env Hindex. 
+        destruct_hyp Hth. jauto_js. 
+        jauto_js.
+    } { (* lnoghost_inl *)
+        introv Hbi.
+        rew_in_eq in Hbi.
+        destruct_hyp Hbi; tryfalse.
+        rew_index_eq. 
+        jauto_js.
+    } { (* lnoghost_inr *)
+        introv Hbi.
+        rew_in_eq in Hbi.
+        destruct_hyp Hbi.
+        injects. jauto_js.
+        jauto_js.
+    } { (* rnoghost *)
+        introv Hbi Hfp.
+        rew_in_eq in Hbi.
+        destruct_hyp Hbi.
+        inverts Hfp. jauto_js.
+        jauto_js.
+    }
 Qed.
 
 Hint Resolve heaps_bisim_consistent_new_env_record_preserved : js_ljs.
@@ -2078,66 +2028,53 @@ Proof.
     introv Hbi0 Horel Hbisim.
     inverts Hbisim.
     constructor; unfolds.
-    (* bisim_obj *)
-    introv Hbi Hbinds1 Hbinds2.
-    rew_binds_eq in Hbinds1.
-    asserts He : (ptr0 <> ptr).
-    intro Heq. substs.
-    lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_js_obj fact_ptr_js_env. tryfalse.
-    rewrite binds_update_diff_eq in Hbinds2 by eauto.
-    eauto.
-    (* bisim_env *)
-    introv Hbi Hbinds1 Hbinds2.
-    destruct (classic (ptr = ptr0)) as [He1|He1].
-    substs.
-    lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_js_env fact_ptr_js_env. injects.
-    binds_inv. binds_inv. assumption.
-    asserts He2 : (jeptr <> jeptr0).
-    intro Heq. substs. eauto. 
-    rewrite binds_update_diff_eq in Hbinds1 by eauto.
-    rewrite binds_update_diff_eq in Hbinds2 by eauto.
-    eauto.
-    (* getter *)
-    introv Hbi Hbinds.
-    asserts He : (ptr0 <> ptr).
-    intro Heq. substs.
-    lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_getter_proxy fact_ptr_js_env. tryfalse. 
-    rewrite binds_update_diff_eq in Hbinds by eauto.
-    eauto.
-    (* setter *)
-    introv Hbi Hbinds.
-    asserts He : (ptr0 <> ptr).
-    intro Heq. substs.
-    lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_setter_proxy fact_ptr_js_env. tryfalse. 
-    rewrite binds_update_diff_eq in Hbinds by eauto.
-    eauto.
-    (* iarray *)
-    introv Hbi Hbinds.
-    asserts He : (ptr0 <> ptr).
-    intro Heq. substs.
-    lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_iarray fact_ptr_js_env. tryfalse. 
-    rewrite binds_update_diff_eq in Hbinds by eauto.
-    eauto.
-    (* lfun_obj *)
-    jauto_js.
-    (* lfun_env *)
-    jauto_js.
-    (* rfun *)
-    jauto_js.
-    (* ltotal_obj *)
-    introv Hind. 
-    rew_index_eq in Hind.
-    eauto.
-    (* ltotal_env *)
-    introv Hind.
-    rew_index_eq in Hind.
-    destruct_hyp Hind; eauto. 
-    (* lnoghost_obj *)
-    introv Hbi. rew_index_eq. eauto.
-    (* lnoghost_env *)
-    jauto_js.
-    (* rnoghost *)
-    jauto_js.
+    { (* bisim_obj *)
+        introv Hbi Hbinds1 Hbinds2.
+        rew_binds_eq in Hbinds1.
+        asserts He : (ptr0 <> ptr).
+        intro Heq. substs.
+        lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_js_obj fact_ptr_js_env. tryfalse.
+        rewrite binds_update_diff_eq in Hbinds2 by eauto.
+        eauto.
+    } { (* bisim_env *)
+        introv Hbi Hbinds1 Hbinds2.
+        destruct (classic (ptr = ptr0)) as [He1|He1].
+        substs.
+        lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_js_env fact_ptr_js_env. injects.
+        binds_inv. binds_inv. assumption.
+        asserts He2 : (jeptr <> jeptr0).
+        intro Heq. substs. eauto. 
+        rewrite binds_update_diff_eq in Hbinds1 by eauto.
+        rewrite binds_update_diff_eq in Hbinds2 by eauto.
+        eauto.
+    } { (* iarray *)
+        introv Hbi Hbinds.
+        asserts He : (ptr0 <> ptr).
+        intro Heq. substs.
+        lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_iarray fact_ptr_js_env. tryfalse. 
+        rewrite binds_update_diff_eq in Hbinds by eauto.
+        eauto.
+    } { (* lfun_obj *)
+        jauto_js.
+    } { (* lfun_env *)
+        jauto_js.
+    } { (* rfun *)
+        jauto_js.
+    } { (* ltotal_obj *)
+        introv Hind. 
+        rew_index_eq in Hind.
+        eauto.
+    } { (* ltotal_env *)
+        introv Hind.
+        rew_index_eq in Hind.
+        destruct_hyp Hind; eauto. 
+    } { (* lnoghost_obj *)
+        introv Hbi. rew_index_eq. eauto.
+    } { (* lnoghost_env *)
+        jauto_js.
+    } { (* rnoghost *)
+        jauto_js.
+    }
 Qed.
 
 Hint Resolve heaps_bisim_consistent_modify_env_record_preserved : js_ljs.
@@ -2151,66 +2088,53 @@ Proof.
     introv Hbi0 Horel Hbisim.
     inverts Hbisim.
     constructor; unfolds.
-    (* bisim_obj *)
-    introv Hbi Hbinds1 Hbinds2.
-    destruct (classic (ptr = ptr0)) as [He1|He1].
-    substs.
-    lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_js_obj fact_ptr_js_obj. injects.
-    binds_inv. binds_inv. assumption.
-    asserts He2 : (jptr <> jptr0).
-    intro Heq. substs. eauto. 
-    rewrite binds_update_diff_eq in Hbinds1 by eauto.
-    rewrite binds_update_diff_eq in Hbinds2 by eauto.
-    eauto.
-    (* bisim_env *)
-    introv Hbi Hbinds1 Hbinds2.
-    rew_binds_eq in Hbinds1.
-    asserts He : (ptr0 <> ptr).
-    intro Heq. substs.
-    lets Hx : heaps_bisim_consistent_rfun Hbi0 Hbi fact_ptr_js_obj fact_ptr_js_env. tryfalse.
-    rewrite binds_update_diff_eq in Hbinds2 by eauto.
-    eauto.
-    (* getter *)
-    introv Hbi Hbinds.
-    asserts He : (ptr0 <> ptr).
-    intro Heq. substs.
-    lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_getter_proxy fact_ptr_js_obj. tryfalse. 
-    rewrite binds_update_diff_eq in Hbinds by eauto.
-    eauto.
-    (* setter *)
-    introv Hbi Hbinds.
-    asserts He : (ptr0 <> ptr).
-    intro Heq. substs.
-    lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_setter_proxy fact_ptr_js_obj. tryfalse. 
-    rewrite binds_update_diff_eq in Hbinds by eauto.
-    eauto.
-    (* iarray *)
-    introv Hbi Hbinds.
-    asserts He : (ptr0 <> ptr).
-    intro Heq. substs.
-    lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_iarray fact_ptr_js_obj. tryfalse. 
-    rewrite binds_update_diff_eq in Hbinds by eauto.
-    eauto.
-    (* lfun_obj *)
-    jauto_js.
-    (* lfun_env *)
-    jauto_js.
-    (* rfun *)
-    jauto_js.
-    (* ltotal_obj *)
-    introv Hind.
-    rew_index_eq in Hind.
-    destruct_hyp Hind; eauto. 
-    (* ltotal_env *)
-    introv Hind. 
-    rew_index_eq in Hind.
-    eauto.
-    (* lnoghost_obj *)
-    jauto_js.
-    (* lnoghost_env *)
-    introv Hbi. rew_index_eq. eauto.
-    (* rnoghost *)
-    jauto_js.
+    { (* bisim_obj *)
+        introv Hbi Hbinds1 Hbinds2.
+        destruct (classic (ptr = ptr0)) as [He1|He1].
+        substs.
+        lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_js_obj fact_ptr_js_obj. injects.
+        binds_inv. binds_inv. assumption.
+        asserts He2 : (jptr <> jptr0).
+        intro Heq. substs. eauto. 
+        rewrite binds_update_diff_eq in Hbinds1 by eauto.
+        rewrite binds_update_diff_eq in Hbinds2 by eauto.
+        eauto.
+    } { (* bisim_env *)
+        introv Hbi Hbinds1 Hbinds2.
+        rew_binds_eq in Hbinds1.
+        asserts He : (ptr0 <> ptr).
+        intro Heq. substs.
+        lets Hx : heaps_bisim_consistent_rfun Hbi0 Hbi fact_ptr_js_obj fact_ptr_js_env. tryfalse.
+        rewrite binds_update_diff_eq in Hbinds2 by eauto.
+        eauto.
+    } { (* iarray *)
+        introv Hbi Hbinds.
+        asserts He : (ptr0 <> ptr).
+        intro Heq. substs.
+        lets Hx : heaps_bisim_consistent_rfun Hbi Hbi0 fact_ptr_iarray fact_ptr_js_obj. tryfalse. 
+        rewrite binds_update_diff_eq in Hbinds by eauto.
+        eauto.
+    } { (* lfun_obj *)
+        jauto_js.
+    } { (* lfun_env *)
+        jauto_js.
+    } { (* rfun *)
+        jauto_js.
+    } { (* ltotal_obj *)
+        introv Hind.
+        rew_index_eq in Hind.
+        destruct_hyp Hind; eauto. 
+    } { (* ltotal_env *)
+        introv Hind. 
+        rew_index_eq in Hind.
+        eauto.
+    } { (* lnoghost_obj *)
+        jauto_js.
+    } { (* lnoghost_env *)
+        introv Hbi. rew_index_eq. eauto.
+    } { (* rnoghost *)
+        jauto_js.
+    }
 Qed.
 
 Hint Resolve heaps_bisim_consistent_modify_object_preserved : js_ljs.
@@ -2225,202 +2149,6 @@ Proof.
 Qed.
 
 Hint Resolve heaps_bisim_consistent_next_fresh_preserved : js_ljs.
-
-Lemma heaps_bisim_consistent_add_getter_proxy_preserved : forall BR jst st ptr obj v,
-    ~index st ptr ->
-    getter_proxy obj v ->
-    heaps_bisim_consistent BR jst st ->
-    heaps_bisim_consistent (\{fact_getter_proxy ptr v} \u BR) jst (st \(ptr := obj)).
-Proof.
-    introv Hnindex Hproxy Hbisim.
-    inverts Hbisim.
-    constructor; unfolds.
-    (* bisim_obj *)
-    introv Hbi Hbinds1 Hbinds2.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_binds_eq in Hbinds2.
-    destruct_hyp Hbinds2. 
-    false; eauto_js.
-    specializes heaps_bisim_consistent_bisim_obj; try eassumption. 
-    jauto_js.
-    (* bisim_env *)
-    introv Hbi Hbinds1 Hbinds2.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_binds_eq in Hbinds2.
-    destruct_hyp Hbinds2. 
-    false; eauto_js.
-    specializes heaps_bisim_consistent_bisim_env; try eassumption. 
-    jauto_js.
-    (* getter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi. injects. binds_inv. assumption.
-    rew_binds_eq in Hbinds.
-    destruct_hyp Hbinds. 
-    false; eauto_js.
-    eauto.    
-    (* setter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_binds_eq in Hbinds.
-    destruct_hyp Hbinds.
-    false; eauto_js.
-    eauto.
-    (* iarray *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_binds_eq in Hbinds.
-    destruct_hyp Hbinds.
-    false; eauto_js.
-    eauto.
-    (* lfun_obj *)
-    introv Hbi1 Hbi2.
-    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects; try solve [false; eapply Hdif1; reflexivity]. 
-    eauto.
-    (* lfun_env *)
-    introv Hbi1 Hbi2.
-    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects; try solve [false; eapply Hdif1; reflexivity]. 
-    eauto.
-    (* rfun *)
-    introv Hbi1 Hbi2 Hfp1 Hfp2.
-    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2. 
-    reflexivity.
-    inverts Hfp1. false; eauto.
-    inverts Hfp2. false; eauto.
-    eauto.
-    (* ltotal_obj *)
-    introv Hindex.
-    lets Hx : heaps_bisim_consistent_ltotal_obj Hindex.
-    destruct_hyp Hx.
-    jauto_js.
-    (* ltotal_env *)
-    introv Hindex.
-    lets Hx : heaps_bisim_consistent_ltotal_env Hindex.
-    destruct_hyp Hx.
-    jauto_js.
-    (* lnoghost_obj *)
-    introv Hbi.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    eauto.
-    (* lnoghost_env *)
-    introv Hbi.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    eauto.
-    (* rnoghost *)
-    introv Hbi Hfp.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi. inverts Hfp. prove_bag. 
-    prove_bag.
-Qed.
-
-Hint Resolve heaps_bisim_consistent_add_getter_proxy_preserved : js_ljs.
-
-Lemma heaps_bisim_consistent_add_setter_proxy_preserved : forall BR jst st ptr obj v,
-    ~index st ptr ->
-    setter_proxy obj v ->
-    heaps_bisim_consistent BR jst st ->
-    heaps_bisim_consistent (\{fact_setter_proxy ptr v} \u BR) jst (st \(ptr := obj)).
-Proof.
-    introv Hnindex Hproxy Hbisim.
-    inverts Hbisim.
-    constructor; unfolds.
-    (* bisim_obj *)
-    introv Hbi Hbinds1 Hbinds2.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_binds_eq in Hbinds2.
-    destruct_hyp Hbinds2. 
-    false; eauto_js.
-    specializes heaps_bisim_consistent_bisim_obj; try eassumption. 
-    jauto_js.
-    (* bisim_env *)
-    introv Hbi Hbinds1 Hbinds2.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_binds_eq in Hbinds2.
-    destruct_hyp Hbinds2. 
-    false; eauto_js.
-    specializes heaps_bisim_consistent_bisim_env; try eassumption. 
-    jauto_js.
-    (* getter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_binds_eq in Hbinds.
-    destruct_hyp Hbinds. 
-    false; eauto_js.
-    eauto.    
-    (* setter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi. injects. binds_inv. assumption.
-    rew_binds_eq in Hbinds.
-    destruct_hyp Hbinds.
-    false; eauto_js.
-    eauto.
-    (* iarray *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_binds_eq in Hbinds.
-    destruct_hyp Hbinds. 
-    false; eauto_js.
-    eauto.    
-    (* lfun_obj *)
-    introv Hbi1 Hbi2.
-    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects; try solve [false; eapply Hdif1; reflexivity]. 
-    eauto.
-    (* lfun_env *)
-    introv Hbi1 Hbi2.
-    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2; repeat injects; try solve [false; eapply Hdif1; reflexivity]. 
-    eauto.
-    (* rfun *)
-    introv Hbi1 Hbi2 Hfp1 Hfp2.
-    rew_in_eq in Hbi1. rew_in_eq in Hbi2.
-    destruct_hyp Hbi1; destruct_hyp Hbi2. 
-    reflexivity.
-    inverts Hfp1. false; eauto.
-    inverts Hfp2. false; eauto.
-    eauto.
-    (* ltotal_obj *)
-    introv Hindex.
-    lets Hx : heaps_bisim_consistent_ltotal_obj Hindex.
-    destruct_hyp Hx.
-    jauto_js.
-    (* ltotal_env *)
-    introv Hindex.
-    lets Hx : heaps_bisim_consistent_ltotal_env Hindex.
-    destruct_hyp Hx.
-    jauto_js.
-    (* lnoghost_obj *)
-    introv Hbi.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    eauto.
-    (* lnoghost_env *)
-    introv Hbi.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    eauto.
-    (* rnoghost *)
-    introv Hbi Hfp.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi. inverts Hfp. prove_bag. 
-    prove_bag.
-Qed.
-
-Hint Resolve heaps_bisim_consistent_add_setter_proxy_preserved : js_ljs.
 
 Lemma heaps_bisim_consistent_add_iarray_preserved : forall BR jst st ptr obj vs,
     ~index st ptr ->
@@ -2449,22 +2177,6 @@ Proof.
     false; eauto_js.
     specializes heaps_bisim_consistent_bisim_env; try eassumption. 
     jauto_js.
-    (* getter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_binds_eq in Hbinds.
-    destruct_hyp Hbinds. 
-    false; eauto_js.
-    eauto.    
-    (* setter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct_hyp Hbi; tryfalse.
-    rew_binds_eq in Hbinds.
-    destruct_hyp Hbinds.
-    false; eauto_js.
-    eauto.
     (* iarray *)
     introv Hbi Hbinds.
     rew_in_eq in Hbi.
@@ -2539,16 +2251,6 @@ Proof.
     destruct_hyp Hbi; tryfalse. 
     specializes heaps_bisim_consistent_bisim_env; try eassumption. 
     jauto_js.
-    (* getter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct Hbi; tryfalse.
-    eauto_js.
-    (* setter *)
-    introv Hbi Hbinds.
-    rew_in_eq in Hbi.
-    destruct Hbi; tryfalse.
-    eauto_js.
     (* iarray *)
     introv Hbi Hbinds.
     rew_in_eq in Hbi.
@@ -2629,32 +2331,6 @@ Proof.
 Qed.
 
 Hint Resolve state_invariant_new_env_record_preserved : js_ljs.
-
-Lemma state_invariant_new_getter_proxy_preserved : forall BR jst st v ptr obj,
-    ~index st ptr ->
-    state_invariant BR jst st ->
-    getter_proxy obj v ->
-    state_invariant (\{fact_getter_proxy ptr v} \u BR) jst (st \(ptr:=obj)).
-Proof.
-    introv Hnindex Hinv Hinfo.
-    inverts Hinv.
-    constructor; jauto_js.
-Qed.
-
-Hint Resolve state_invariant_new_getter_proxy_preserved : js_ljs.
-
-Lemma state_invariant_new_setter_proxy_preserved : forall BR jst st v ptr obj,
-    ~index st ptr ->
-    state_invariant BR jst st ->
-    setter_proxy obj v ->
-    state_invariant (\{fact_setter_proxy ptr v} \u BR) jst (st \(ptr:=obj)).
-Proof.
-    introv Hnindex Hinv Hinfo.
-    inverts Hinv.
-    constructor; jauto_js.
-Qed.
-
-Hint Resolve state_invariant_new_setter_proxy_preserved : js_ljs.
 
 Lemma state_invariant_new_iarray_object_preserved : forall BR jst st vs ptr obj,
     ~index st ptr ->

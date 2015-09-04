@@ -58,7 +58,7 @@ Definition make_set_field_naked obj fld v :=
     L.expr_set_field obj (to_string fld) v.
 
 Definition make_set_field obj fld v :=
-    with_error_dispatch (make_app_builtin "%set-property" [to_object obj; to_string fld; v]).
+    with_error_dispatch (make_app_builtin "%SetField" [to_object obj; to_string fld; v]).
 
 Definition make_var_modify fld f v :=
     make_app_builtin "%EnvModify" 
@@ -72,10 +72,6 @@ Definition make_var_set fld v :=
 
 Definition make_var_id i :=    
     make_app_builtin "%EnvGet" [L.expr_id "$context"; L.expr_string i; strict].
-
-Definition make_getter e := make_app_builtin "%MakeGetter" [e].
-
-Definition make_setter e := make_app_builtin "%MakeSetter" [e].
 
 Definition while_body (tst bdy after : L.expr) := 
     (L.expr_if (to_bool tst) 
@@ -448,9 +444,9 @@ with property_to_ljs (p : E.property) : L.property :=
     | E.property_data d => 
         L.property_data (L.data_intro (ejs_to_ljs d) L.expr_true L.expr_true L.expr_true)
     | E.property_getter d => 
-        L.property_accessor (L.accessor_intro (make_getter (ejs_to_ljs d)) L.expr_undefined L.expr_true L.expr_true)
+        L.property_accessor (L.accessor_intro (ejs_to_ljs d) L.expr_undefined L.expr_true L.expr_true)
     | E.property_setter d =>
-        L.property_accessor (L.accessor_intro L.expr_undefined (make_setter (ejs_to_ljs d)) L.expr_true L.expr_true)
+        L.property_accessor (L.accessor_intro L.expr_undefined (ejs_to_ljs d) L.expr_true L.expr_true)
     end
 with make_fobj fd :=
     let 'E.func_intro is p s := fd in

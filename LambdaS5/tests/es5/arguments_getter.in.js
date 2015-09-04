@@ -1,3 +1,3 @@
-var x = {get x() { return arguments.length }, set y(v) { return arguments.length }};
+var x = {get x() { return 1 }, set y(v) { return 2 }};
 print(x.x);
-print(x.y = 0)
+print(x.y = 42)
