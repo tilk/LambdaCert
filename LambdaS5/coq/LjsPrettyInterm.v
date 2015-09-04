@@ -243,7 +243,7 @@ Inductive eval_binary_op : binary_op -> store -> value -> value -> value -> Prop
     eval_binary_op binary_op_locale_compare st (value_string s1) (value_string s2) (value_bool (string_lt s1 s2))
 | eval_binary_op_is_accessor : forall st s ptr obj attrs,
     binds st ptr obj -> 
-    object_property_is st obj s (Some attrs) ->
+    binds (object_properties obj) s attrs ->
     eval_binary_op binary_op_is_accessor st (value_object ptr) (value_string s) 
         (value_bool (decide (is_accessor attrs)))
 | eval_binary_op_char_at : forall st s ch n,

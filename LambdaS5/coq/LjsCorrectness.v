@@ -765,7 +765,6 @@ Proof.
     (* is_accessor *)
     unfolds is_accessor, assert_get_object_ptr.
     ljs_run_push_post_auto.
-    forwards Hx : object_property_is_from_get_property. eassumption. 
     cases_match_option; repeat injects; substs. 
     eexists. split. prove_bag. eauto. 
 Qed.

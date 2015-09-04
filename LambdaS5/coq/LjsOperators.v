@@ -176,12 +176,11 @@ Definition is_accessor store v1_loc v2 :=
     match v2 with
     | value_string s =>
       assert_get_object_from_ptr store ptr (fun obj =>
-        if_result_some (get_property store obj s) (fun ret =>
-          match ret with
-          | Some attrs => result_some (value_bool (decide (is_accessor attrs)))
-          | None => result_fail "isAccessor topped out."
-          end
-      ))
+        match get_object_property obj s with
+        | Some attrs => result_some (value_bool (decide (is_accessor attrs)))
+        | None => result_fail "isAccessor did not found own property"
+        end
+      )
     | _ => result_fail "isAccessor expected an object and a string."
     end
   )

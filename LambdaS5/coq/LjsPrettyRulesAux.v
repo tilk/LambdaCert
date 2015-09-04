@@ -138,7 +138,7 @@ Fixpoint bool_expr_pred c st e : Prop :=
     | expr_op2 binary_op_is_accessor e1 e2 => 
         match pure_expr_val c st e1, pure_expr_val c st e2 with
         | value_object ptr, value_string s =>
-            is_accessor (unsome (epsilon (object_property_is st (epsilon (binds st ptr)) s)))
+            is_accessor (epsilon (binds (object_properties (epsilon (binds st ptr))) s))
         | _, _ => False
         end
     | expr_op2 binary_op_string_lt e1 e2 => 

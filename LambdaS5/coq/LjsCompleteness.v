@@ -377,7 +377,7 @@ Proof.
     inverts He as Hee; try inverts Hee; try reflexivity.
     (* has_property *)
     unfolds binary_operator, has_property. 
-    repeat ljs_eval_push. skip.
+    repeat ljs_eval_push. skip. (* TODO! *)
     (* has_own_property *)
     unfolds binary_operator, has_own_property.
     repeat ljs_eval_push. unfolds get_object_property. simpl. 
@@ -388,7 +388,10 @@ Proof.
     repeat ljs_eval_push. 
     (* is_accessor *)
     unfolds binary_operator, is_accessor.
-    repeat ljs_eval_push.
+    repeat ljs_eval_push. unfolds get_object_property. simpl. 
+    cases_match_option as Eq1; 
+    [rewrite read_option_binds_eq in Eq1 | rewrite read_option_not_index_eq in Eq1; false; prove_bag].
+    binds_determine. reflexivity.
     (* char_at *)
     unfolds binary_operator, char_at.
     cases_if. rewrite H1. reflexivity. false. auto.
