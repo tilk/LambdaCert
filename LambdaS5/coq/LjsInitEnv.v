@@ -429,6 +429,12 @@ expr_object
  ("%GetField", property_data
                (data_intro (expr_id "%GetField") expr_true expr_false
                 expr_false));
+ ("%GetOwnProperty", property_data
+                     (data_intro (expr_id "%GetOwnProperty") expr_true
+                      expr_false expr_false));
+ ("%GetProperty", property_data
+                  (data_intro (expr_id "%GetProperty") expr_true expr_false
+                   expr_false));
  ("%GetterProxyFun", property_data
                      (data_intro (expr_id "%GetterProxyFun") expr_true
                       expr_false expr_false));
@@ -3105,6 +3111,38 @@ expr_app (expr_id "%CompareOp")
 Definition ex_privGetField := 
 expr_get_field (expr_app (expr_id "%ToObjectVirtual") [expr_id "v"])
 (expr_app (expr_id "%ToString") [expr_id "fld"])
+.
+Definition ex_privGetOwnProperty := 
+expr_if (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "id"))
+(expr_if (expr_op2 binary_op_is_accessor (expr_id "obj") (expr_id "id"))
+ (expr_app (expr_id "f_acc")
+  [expr_get_attr pattr_getter (expr_id "obj") (expr_id "id");
+   expr_get_attr pattr_setter (expr_id "obj") (expr_id "id");
+   expr_get_attr pattr_enum (expr_id "obj") (expr_id "id");
+   expr_get_attr pattr_config (expr_id "obj") (expr_id "id")])
+ (expr_app (expr_id "f_data")
+  [expr_get_attr pattr_value (expr_id "obj") (expr_id "id");
+   expr_get_attr pattr_writable (expr_id "obj") (expr_id "id");
+   expr_get_attr pattr_enum (expr_id "obj") (expr_id "id");
+   expr_get_attr pattr_config (expr_id "obj") (expr_id "id")]))
+(expr_app (expr_id "f_undef") [])
+.
+Definition ex_privGetProperty := 
+expr_app (expr_id "%GetOwnProperty")
+[expr_id "obj";
+ expr_id "id";
+ expr_id "f_data";
+ expr_id "f_acc";
+ expr_lambda []
+ (expr_if
+  (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_proto (expr_id "obj"))
+   expr_null) (expr_app (expr_id "f_undef") [])
+  (expr_app (expr_id "%GetProperty")
+   [expr_get_obj_attr oattr_proto (expr_id "obj");
+    expr_id "id";
+    expr_id "f_data";
+    expr_id "f_acc";
+    expr_id "f_undef"]))]
 .
 Definition ex_privGetterProxyFun := 
 expr_app (expr_id "%AppExprCheck")
@@ -8727,6 +8765,19 @@ value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privGeOp)
 .
 Definition name_privGeOp : id :=  "%GeOp" .
+Definition privGetOwnProperty := 
+value_closure
+(closure_intro [] None ["obj"; "id"; "f_data"; "f_acc"; "f_undef"]
+ ex_privGetOwnProperty)
+.
+Definition name_privGetOwnProperty : id :=  "%GetOwnProperty" .
+Definition privGetProperty := 
+value_closure
+(closure_intro [("%GetOwnProperty", privGetOwnProperty)]
+ (Some "%GetProperty") ["obj"; "id"; "f_data"; "f_acc"; "f_undef"]
+ ex_privGetProperty)
+.
+Definition name_privGetProperty : id :=  "%GetProperty" .
 Definition privGetterValue := 
 value_closure (closure_intro [] None ["o"] ex_privGetterValue)
 .
@@ -10540,6 +10591,8 @@ Definition ctx_items :=
  (name_privFunctionProtoCall, privFunctionProtoCall);
  (name_privGeOp, privGeOp);
  (name_privGetField, privGetField);
+ (name_privGetOwnProperty, privGetOwnProperty);
+ (name_privGetProperty, privGetProperty);
  (name_privGetterProxyFun, privGetterProxyFun);
  (name_privGetterValue, privGetterValue);
  (name_privGtOp, privGtOp);
@@ -10991,6 +11044,8 @@ privFunctionProto
 privFunctionProtoCall
 privGeOp
 privGetField
+privGetOwnProperty
+privGetProperty
 privGetterProxyFun
 privGetterValue
 privGtOp
@@ -11452,6 +11507,8 @@ Definition store_items := [
                                              ("%FunctionProtoCall", privFunctionProtoCall);
                                              ("%GeOp", privGeOp);
                                              ("%GetField", privGetField);
+                                             ("%GetOwnProperty", privGetOwnProperty);
+                                             ("%GetProperty", privGetProperty);
                                              ("%GetterProxyFun", privGetterProxyFun);
                                              ("%GetterValue", privGetterValue);
                                              ("%GtOp", privGtOp);

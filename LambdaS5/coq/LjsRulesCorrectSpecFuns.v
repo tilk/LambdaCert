@@ -706,6 +706,144 @@ Proof.
     jauto.
 Qed.
 
+Lemma get_own_property_lemma : forall BR k jst jc c st st' r jptr ptr s v_d v_a v_u,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGetOwnProperty 
+        [L.value_object ptr; L.value_string s; v_d; v_a; v_u]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    exists BR' jst'' jsr,
+    J.red_spec jst jc (J.spec_object_get_own_prop jptr s) jsr /\
+    js_specret_state jsr jst'' /\
+    ((exists jfd st'' c' k', 
+      jsr = J.specret_val jst'' jfd /\
+      ((jfd = J.full_descriptor_undef /\
+        L.red_exprh k' c' st'' (L.expr_app_2 v_u []) (L.out_ter st' r)) /\
+        state_invariant BR' jst'' st'' \/
+       (exists jv1 v1 b1 b2 b3, 
+        jfd = J.full_descriptor_some (J.attributes_data_of (J.attributes_data_intro jv1 b1 b2 b3)) /\
+        L.red_exprh k' c' st'' (L.expr_app_2 v_d [v1; L.value_bool b1; L.value_bool b2; L.value_bool b3]) 
+            (L.out_ter st' r) /\
+        state_invariant BR' jst'' st'' /\
+        value_related BR' jv1 v1) \/
+       (exists v1 jv1 ptr1 v2 jv2 ptr2 b1 b2, 
+        jfd = J.full_descriptor_some (J.attributes_accessor_of (J.attributes_accessor_intro jv1 jv2 b1 b2)) /\
+        L.red_exprh k' c' st'' (L.expr_app_2 v_a [L.value_object ptr1; L.value_object ptr2; 
+                                                  L.value_bool b1; L.value_bool b2]) 
+            (L.out_ter st' r) /\
+        state_invariant BR' jst'' st'' /\
+        value_related BR' jv1 v1 /\ value_related BR' jv2 v2 /\
+        fact_getter_proxy ptr1 v1 \in BR' /\
+        fact_setter_proxy ptr2 v2 \in BR')) /\
+      context_invariant BR' jc c' /\ BR \c BR' /\
+      k' < k) \/
+      exists jr, 
+      jsr = @J.specret_out J.full_descriptor (J.out_ter jst'' jr) /\
+      J.abort (J.out_ter jst'' jr) /\ J.res_type jr = J.restype_throw /\ 
+      state_invariant BR' jst'' st' /\
+      res_related BR' jst'' st' jr r /\ BR \c BR').
+Proof.
+    introv Hlred Hcinv Hinv Hf.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    forwards : object_method_get_own_property_lemma; try eassumption.
+    repeat ljs_autoforward.
+    cases_decide as Hidx. { (* found *)
+        rewrite index_binds_eq in Hidx. destruct Hidx as (attrs&Hbinds).
+        forwards Hgop : object_method_get_own_property_default_binds_lemma; try eassumption.
+        destruct_hyp Hgop.
+        repeat ljs_autoforward.
+        cases_decide as Hacc. { (* is accessor *)
+            inverts Hacc.
+            inverts Hgop1 as Harel. inverts Harel.
+            repeat ljs_autoforward. simpls.
+            jauto_js 30.
+        } { (* is data *)
+            inverts Hgop1 as Harel; try solve [false; apply Hacc; eapply L.is_accessor_accessor]. inverts Harel.
+            repeat ljs_autoforward. simpls.
+            jauto_js 20.
+        }
+    } { (* not found *)
+        forwards Hgop : object_method_get_own_property_default_not_index_lemma; try eassumption.
+        repeat ljs_autoforward.
+        jauto_js 20.
+    }
+Qed.
+
+(* TODO: factorize the theorem statement *)
+Lemma get_property_lemma : forall k BR jst jc c st st' r jptr ptr s v_d v_a v_u,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGetProperty 
+        [L.value_object ptr; L.value_string s; v_d; v_a; v_u]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    exists BR' jst'' jsr,
+    J.red_spec jst jc (J.spec_object_get_prop jptr s) jsr /\
+    js_specret_state jsr jst'' /\
+    ((exists jfd st'' c' k', 
+      jsr = J.specret_val jst'' jfd /\
+      ((jfd = J.full_descriptor_undef /\
+        L.red_exprh k' c' st'' (L.expr_app_2 v_u []) (L.out_ter st' r)) /\
+        state_invariant BR' jst'' st'' \/
+       (exists jv1 v1 b1 b2 b3, 
+        jfd = J.full_descriptor_some (J.attributes_data_of (J.attributes_data_intro jv1 b1 b2 b3)) /\
+        L.red_exprh k' c' st'' (L.expr_app_2 v_d [v1; L.value_bool b1; L.value_bool b2; L.value_bool b3]) 
+            (L.out_ter st' r) /\
+        state_invariant BR' jst'' st'' /\
+        value_related BR' jv1 v1) \/
+       (exists v1 jv1 ptr1 v2 jv2 ptr2 b1 b2, 
+        jfd = J.full_descriptor_some (J.attributes_accessor_of (J.attributes_accessor_intro jv1 jv2 b1 b2)) /\
+        L.red_exprh k' c' st'' (L.expr_app_2 v_a [L.value_object ptr1; L.value_object ptr2; 
+                                                  L.value_bool b1; L.value_bool b2]) 
+            (L.out_ter st' r) /\
+        state_invariant BR' jst'' st'' /\
+        value_related BR' jv1 v1 /\ value_related BR' jv2 v2 /\
+        fact_getter_proxy ptr1 v1 \in BR' /\
+        fact_setter_proxy ptr2 v2 \in BR')) /\
+      context_invariant BR' jc c' /\ BR \c BR' /\
+      k' < k) \/
+      exists jr, 
+      jsr = @J.specret_out J.full_descriptor (J.out_ter jst'' jr) /\
+      J.abort (J.out_ter jst'' jr) /\ J.res_type jr = J.restype_throw /\ 
+      state_invariant BR' jst'' st' /\
+      res_related BR' jst'' st' jr r /\ BR \c BR').
+Proof.
+    intro k.
+    induction_wf IH : lt_wf k.
+    introv Hlred Hcinv Hinv Hf.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    forwards : object_method_get_property_lemma; try eassumption.
+    forwards : object_method_get_own_property_lemma; try eassumption.
+    repeat ljs_autoforward.
+    forwards_th Hx : get_own_property_lemma. eassumption.
+    destruct_hyp Hx; try ljs_handle_abort. { (* own property undefined, recurse *)
+        inverts red_exprh Hx6. (* TODO *)
+        ljs_apply.
+        ljs_context_invariant_after_apply.
+        repeat ljs_autoforward.
+        cases_decide as Hprnul; rewrite stx_eq_null_eq_lemma in Hprnul. { (* prototype is null *)
+            forwards Hjproto : object_proto_null_lemma; try prove_bag.
+            repeat ljs_autoforward.
+            jauto_js 30.
+        } { (* prototype not null *)
+            forwards Hjproto : object_proto_not_null_lemma; try prove_bag.
+            destruct Hjproto as (jptr'&ptr'&Heq1&Heq2&Hf').
+            repeat ljs_autoforward.
+            unfolds L.object_proto. rewrite Heq1 in *.
+            forwards_th Hx : IH. math. prove_bag.
+            destruct_hyp Hx; try ljs_handle_abort;
+            jauto_js 30.
+        }
+    } { (* found data *)
+        jauto_js 30.
+    } { (* found accessor *)
+        jauto_js 30.
+    }
+Qed.
+
 Lemma has_property_lemma_lemma : forall k BR jst jc c st st' r jptr ptr s,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privHasProperty [L.value_object ptr; L.value_string s]) 
         (L.out_ter st' r) ->
