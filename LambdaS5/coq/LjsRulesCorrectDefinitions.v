@@ -187,10 +187,17 @@ Inductive attributes_data_related BR : J.attributes_data -> L.attributes_data ->
         (L.attributes_data_intro v b1 b2 b3)
 .
 
+Inductive object_or_undefined : L.value -> Prop :=
+| object_or_undefined_null : object_or_undefined L.value_undefined
+| object_or_undefined_object : forall ptr, object_or_undefined (L.value_object ptr)
+.
+
 Inductive attributes_accessor_related BR : J.attributes_accessor -> L.attributes_accessor -> Prop := 
 | attributes_accessor_related_intro : forall jv1 jv2 v1 v2 b1 b2, 
     value_related BR jv1 v1 ->
     value_related BR jv2 v2 ->
+    object_or_undefined v1 ->
+    object_or_undefined v2 ->
     attributes_accessor_related BR
         (J.attributes_accessor_intro jv1 jv2 b1 b2) 
         (L.attributes_accessor_intro v1 v2 b1 b2)

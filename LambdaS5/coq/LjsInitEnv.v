@@ -3090,12 +3090,8 @@ expr_app (expr_id "%GetProperty")
  expr_lambda ["g"; "s"; "e"; "c"]
  (expr_if (expr_op2 binary_op_stx_eq (expr_id "g") expr_undefined)
   expr_undefined
-  (expr_app (expr_id "%AppExprCheck")
-   [expr_id "g";
-    expr_id "this";
-    expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
-    [] []]));
+  (expr_app (expr_id "%AppExpr")
+   [expr_id "g"; expr_id "this"; expr_app (expr_id "%zeroArgObj") []]));
  expr_lambda [] expr_undefined]
 .
 Definition ex_privGet1 := 
@@ -3924,11 +3920,7 @@ expr_if (expr_op1 unary_op_is_object (expr_id "val"))
     (expr_if (expr_app (expr_id "%IsCallable") [expr_id "f"])
      (expr_let "res"
       (expr_app (expr_id "%AppExpr")
-       [expr_id "f";
-        expr_id "val";
-        expr_object
-        (objattrs_intro (expr_string "Object") expr_true expr_null
-         expr_undefined) [] []])
+       [expr_id "f"; expr_id "val"; expr_app (expr_id "%zeroArgObj") []])
       (expr_if (expr_op1 unary_op_is_primitive (expr_id "res"))
        (expr_id "res") (expr_app (expr_id "next") [])))
      (expr_app (expr_id "next") [])))))
@@ -8065,11 +8057,16 @@ value_closure
  ex_privGetProperty)
 .
 Definition name_privGetProperty : id :=  "%GetProperty" .
+Definition privzeroArgObj := 
+value_closure (closure_intro [] None [] ex_privzeroArgObj)
+.
+Definition name_privzeroArgObj : id :=  "%zeroArgObj" .
 Definition privGet := 
 value_closure
 (closure_intro
- [("%AppExprCheck", privAppExprCheck); ("%GetProperty", privGetProperty)]
- None ["obj"; "this"; "fld"] ex_privGet)
+ [("%AppExpr", privAppExpr);
+  ("%GetProperty", privGetProperty);
+  ("%zeroArgObj", privzeroArgObj)] None ["obj"; "this"; "fld"] ex_privGet)
 .
 Definition name_privGet : id :=  "%Get" .
 Definition privBooleanProto :=  value_object 9 .
@@ -8121,7 +8118,9 @@ value_closure
  [("%AppExpr", privAppExpr);
   ("%Get1", privGet1);
   ("%IsCallable", privIsCallable);
-  ("%TypeError", privTypeError)] None ["val"; "hint"] ex_privToPrimitiveHint)
+  ("%TypeError", privTypeError);
+  ("%zeroArgObj", privzeroArgObj)] None ["val"; "hint"]
+ ex_privToPrimitiveHint)
 .
 Definition name_privToPrimitiveHint : id :=  "%ToPrimitiveHint" .
 Definition privToString := 
@@ -10380,10 +10379,6 @@ value_closure
  None ["this"; "args"; "proto"; "typestr"] ex_privvalueOfCall)
 .
 Definition name_privvalueOfCall : id :=  "%valueOfCall" .
-Definition privzeroArgObj := 
-value_closure (closure_intro [] None [] ex_privzeroArgObj)
-.
-Definition name_privzeroArgObj : id :=  "%zeroArgObj" .
 Definition isAccessorField := 
 value_closure (closure_intro [] None ["obj"; "field"] ex_isAccessorField)
 .
