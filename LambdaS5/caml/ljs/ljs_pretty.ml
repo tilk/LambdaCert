@@ -64,7 +64,6 @@ let string_of_binary_op s = match s with
     | Coq_binary_op_ge -> ">="
     | Coq_binary_op_stx_eq -> "stx="
     | Coq_binary_op_same_value -> "sameValue"
-    | Coq_binary_op_has_property -> "hasProperty"
     | Coq_binary_op_has_own_property -> "hasOwnProperty"
     | Coq_binary_op_has_internal -> "hasInternal"
     | Coq_binary_op_string_plus -> "string+"
@@ -101,10 +100,6 @@ let rec exp_helper exprec e = match e with
     | [] -> braces (attrsv exprec avs iprops)
     | _ -> braces (vert [attrsv exprec avs iprops; vert (vert_intersperse (text ",") (List.map (prop exprec) props))])
   end
-  | Coq_expr_set_field (o, f, v) ->
-    squish [exprec o; brackets (horzOrVert [exprec f; text "="; exprec v])]
-  | Coq_expr_get_field (o, f) ->
-    squish [exprec o; brackets (exprec f)]
   | Coq_expr_delete_field (o, f) ->
     squish [exprec o; brackets (horz [text "delete"; exprec f])]
   | Coq_expr_get_attr (a, o, f) ->

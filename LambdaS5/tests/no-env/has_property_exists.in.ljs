@@ -1,3 +1,2 @@
 let (foo = {[] 'foo_field': {#value 'bar', #writable true}})
-let (bar = {[#proto: foo]})
-prim("hasProperty", bar, "foo_field")
+prim("hasOwnProperty", foo, "foo_field")

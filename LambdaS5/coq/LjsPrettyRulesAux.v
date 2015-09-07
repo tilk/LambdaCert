@@ -117,12 +117,6 @@ Fixpoint bool_expr_pred c st e : Prop :=
         stx_eq (pure_expr_val c st e1) (pure_expr_val c st e2)
     | expr_op2 binary_op_same_value e1 e2 => 
         same_value (pure_expr_val c st e1) (pure_expr_val c st e2)
-    | expr_op2 binary_op_has_property e1 e2 => 
-        match pure_expr_val c st e1, pure_expr_val c st e2 with
-        | value_object ptr, value_string s =>
-            is_some (epsilon (object_property_is st (epsilon (binds st ptr)) s))
-        | _, _ => False
-        end
     | expr_op2 binary_op_has_own_property e1 e2 => 
         match pure_expr_val c st e1, pure_expr_val c st e2 with
         | value_object ptr, value_string s =>
@@ -407,9 +401,6 @@ Proof.
     rewrite decide_spec. jauto.
     (* same_value *)
     rewrite decide_spec. jauto.
-    (* object_has_property *)
-    rew_refl.
-    do 2 determine_epsilon. jauto.
     (* has_own_property *)
     rew_refl. determine_epsilon. jauto.
     (* has_internal *)
@@ -476,9 +467,6 @@ Proof.
     eauto 8 using pure_expr_lemma_inv.
     (* same_value *)
     rew_refl. rewrite <- decide_spec. 
-    eauto 8 using pure_expr_lemma_inv.
-    (* has_property *)
-    rew_refl. do 2 determine_epsilon.
     eauto 8 using pure_expr_lemma_inv.
     (* has_own_property *)
     determine_epsilon. rewrite <- decide_spec.

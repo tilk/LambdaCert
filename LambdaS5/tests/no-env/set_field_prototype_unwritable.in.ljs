@@ -1,1 +1,0 @@
-let (foo = {[#proto: {[] 'bar': {#value "one", #writable false}}]}) {foo['bar' = "two"]; foo}

@@ -124,7 +124,6 @@ Inductive binary_op_type : binary_op -> type -> type -> type -> Prop :=
 | binary_op_type_stx_eq : forall t1 t2, binary_op_type binary_op_stx_eq t1 t2 type_bool
 | binary_op_type_same_value : forall t1 t2, binary_op_type binary_op_same_value t1 t2 type_bool
 (* object inspection operators *)
-| binary_op_type_has_property : binary_op_type binary_op_has_property type_object type_string type_bool
 | binary_op_type_has_own_property : binary_op_type binary_op_has_own_property type_object type_string type_bool
 | binary_op_type_has_internal : binary_op_type binary_op_has_internal type_object type_string type_bool
 | binary_op_type_is_accessor : binary_op_type binary_op_is_accessor type_object type_string type_bool
@@ -160,7 +159,6 @@ Definition binary_op_ret_type op :=
     | binary_op_stx_eq 
     | binary_op_same_value 
     (* object inspection operators *)
-    | binary_op_has_property 
     | binary_op_has_own_property 
     | binary_op_has_internal 
     | binary_op_is_accessor => type_bool

@@ -1,3 +1,0 @@
-let (obj = {[] 'foo': {#value 'foo_value', #writable true}, 'bar': {#value 'bar_value', #writable true}})
-(obj [delete 'baz'])
-

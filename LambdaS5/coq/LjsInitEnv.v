@@ -5,12 +5,12 @@ Require Import String.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
-Definition ptr_privTypeErrorProto : object_ptr :=  5 .
-Definition ptr_privBooleanProto : object_ptr :=  12 .
-Definition ptr_privNumberProto : object_ptr :=  13 .
-Definition ptr_privStringProto : object_ptr :=  14 .
+Definition ptr_privTypeErrorProto : object_ptr :=  4 .
+Definition ptr_privBooleanProto : object_ptr :=  9 .
+Definition ptr_privNumberProto : object_ptr :=  10 .
+Definition ptr_privStringProto : object_ptr :=  11 .
 Definition ptr_privArrayProto : object_ptr :=  52 .
-Definition ptr_privRangeErrorProto : object_ptr :=  9 .
+Definition ptr_privRangeErrorProto : object_ptr :=  8 .
 Definition ptr_privArrayGlobalFuncObj : object_ptr :=  101 .
 Definition ptr_privconcat : object_ptr :=  95 .
 Definition ptr_privBooleanGlobalFuncObj : object_ptr :=  31 .
@@ -19,18 +19,18 @@ Definition ptr_privdateToString : object_ptr :=  168 .
 Definition ptr_privDateGlobalFuncObj : object_ptr :=  171 .
 Definition ptr_privglobal : object_ptr :=  2 .
 Definition ptr_privObjectProto : object_ptr :=  1 .
-Definition ptr_privReferenceErrorProto : object_ptr :=  6 .
+Definition ptr_privReferenceErrorProto : object_ptr :=  5 .
 Definition ptr_privmakeGlobalEnv : object_ptr :=  0 .
 Definition ptr_priveval : object_ptr :=  310 .
-Definition ptr_privThrowTypeError : object_ptr :=  10 .
+Definition ptr_privThrowTypeError : object_ptr :=  14 .
 Definition ptr_privglobalContext : object_ptr :=  307 .
-Definition ptr_privSyntaxErrorProto : object_ptr :=  7 .
-Definition ptr_privErrorProto : object_ptr :=  4 .
+Definition ptr_privSyntaxErrorProto : object_ptr :=  6 .
+Definition ptr_privErrorProto : object_ptr :=  3 .
 Definition ptr_privErrorGlobalFuncObj : object_ptr :=  44 .
-Definition ptr_privEvalErrorProto : object_ptr :=  8 .
+Definition ptr_privEvalErrorProto : object_ptr :=  7 .
 Definition ptr_privEvalErrorGlobalFuncObj : object_ptr :=  46 .
 Definition ptr_privFunctionGlobalFuncObj : object_ptr :=  311 .
-Definition ptr_privFunctionProto : object_ptr :=  3 .
+Definition ptr_privFunctionProto : object_ptr :=  12 .
 Definition ptr_privMath : object_ptr :=  255 .
 Definition ptr_privNumberGlobalFuncObj : object_ptr :=  24 .
 Definition ptr_privObjectGlobalFuncObj : object_ptr :=  33 .
@@ -80,7 +80,7 @@ Definition ptr_privfilter : object_ptr :=  133 .
 Definition ptr_privforeach : object_ptr :=  127 .
 Definition ptr_privfreeze : object_ptr :=  62 .
 Definition ptr_privfromCharCode : object_ptr :=  74 .
-Definition ptr_privfunctionToString : object_ptr :=  11 .
+Definition ptr_privfunctionToString : object_ptr :=  13 .
 Definition ptr_privgetMonth : object_ptr :=  166 .
 Definition ptr_privgetYear : object_ptr :=  165 .
 Definition ptr_privgopd : object_ptr :=  36 .
@@ -187,14 +187,11 @@ expr_seq
      [expr_id "obj1"; expr_string "set"; expr_false])))))
 .
 Definition ex_copy_when_defined := 
-expr_if
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq (expr_get_field (expr_id "obj2") (expr_id "s"))
-  expr_undefined))
-(expr_set_field (expr_id "obj1") (expr_id "s")
- (expr_get_field (expr_id "obj2") (expr_id "s"))) expr_undefined
+expr_if (expr_op2 binary_op_has_own_property (expr_id "obj2") (expr_id "s"))
+(expr_set_attr pattr_value (expr_id "obj1") (expr_id "s")
+ (expr_get_attr pattr_value (expr_id "obj2") (expr_id "s"))) expr_undefined
 .
-Definition ex_getter := 
+Definition ex_dataval := 
 expr_object
 (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined) 
 []
@@ -425,6 +422,8 @@ expr_object
            (data_intro (expr_id "%GeOp") expr_true expr_false expr_false));
  ("%Get", property_data
           (data_intro (expr_id "%Get") expr_true expr_false expr_false));
+ ("%Get1", property_data
+           (data_intro (expr_id "%Get1") expr_true expr_false expr_false));
  ("%GetField", property_data
                (data_intro (expr_id "%GetField") expr_true expr_false
                 expr_false));
@@ -579,6 +578,8 @@ expr_object
                       expr_false expr_false));
  ("%Put", property_data
           (data_intro (expr_id "%Put") expr_true expr_false expr_false));
+ ("%Put1", property_data
+           (data_intro (expr_id "%Put1") expr_true expr_false expr_false));
  ("%RangeError", property_data
                  (data_intro (expr_id "%RangeError") expr_true expr_false
                   expr_false));
@@ -1482,7 +1483,7 @@ expr_object
 .
 Definition ex_internal := 
 expr_let "cproto1"
-(expr_get_field (expr_id "constr") (expr_string "prototype"))
+(expr_app (expr_id "%Get1") [expr_id "constr"; expr_string "prototype"])
 (expr_let "cproto"
  (expr_if (expr_op1 unary_op_is_object (expr_id "cproto1"))
   (expr_id "cproto1") (expr_id "%ObjectProto"))
@@ -1503,14 +1504,15 @@ expr_app (expr_id "%MakeNumber")
   (expr_app (expr_id "%ComputeLength") [expr_id "args"])
   (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
  (expr_app (expr_id "%ToNumber")
-  [expr_get_field (expr_id "args") (expr_string "0")])]
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])]
 .
 Definition ex_internal10 := 
 expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_internal11 := 
@@ -1518,7 +1520,8 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_internal12 := 
@@ -1533,9 +1536,9 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
     (expr_recc "init"
      (expr_lambda ["n"]
       (expr_seq
-       (expr_set_field (expr_id "rtnobj")
+       (expr_set_attr pattr_value (expr_id "rtnobj")
         (expr_op1 unary_op_prim_to_str (expr_id "n"))
-        (expr_get_field (expr_id "args")
+        (expr_get_attr pattr_value (expr_id "args")
          (expr_op1 unary_op_prim_to_str (expr_id "n"))))
        (expr_if
         (expr_op2 binary_op_gt (expr_id "n")
@@ -1545,21 +1548,22 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
           (expr_number (JsNumber.of_int (1)))]) expr_undefined)))
      (expr_seq (expr_app (expr_id "init") [expr_id "argCount"])
       (expr_seq
-       (expr_set_field (expr_id "rtnobj") (expr_string "length")
+       (expr_set_attr pattr_value (expr_id "rtnobj") (expr_string "length")
         (expr_id "argCount")) (expr_break "ret" (expr_id "rtnobj"))))))
    expr_null)
   (expr_let "c1"
    (expr_op2 binary_op_stx_eq
     (expr_op1 unary_op_typeof
-     (expr_get_field (expr_id "args") (expr_string "0")))
+     (expr_get_attr pattr_value (expr_id "args") (expr_string "0")))
     (expr_string "number"))
    (expr_let "c2"
     (expr_if (expr_id "c1")
      (expr_op1 unary_op_not
       (expr_op2 binary_op_stx_eq
        (expr_app (expr_id "%ToUint32")
-        [expr_get_field (expr_id "args") (expr_string "0")])
-       (expr_get_field (expr_id "args") (expr_string "0")))) expr_false)
+        [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+       (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))))
+     expr_false)
     (expr_if (expr_id "c2")
      (expr_throw
       (expr_app (expr_id "%JSError")
@@ -1570,7 +1574,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
       (expr_break "ret"
        (expr_app (expr_id "%MakeArray")
         [expr_app (expr_id "%ToUint32")
-         [expr_get_field (expr_id "args") (expr_string "0")]]))
+         [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]]))
       (expr_let "rtn" (expr_app (expr_id "%MakeArray") [expr_id "argCount"])
        (expr_seq
         (expr_app (expr_id "%defineOwnProperty")
@@ -1581,8 +1585,8 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
            expr_undefined) []
           [("value", property_data
                      (data_intro
-                      (expr_get_field (expr_id "args") (expr_string "0"))
-                      expr_true expr_false expr_false));
+                      (expr_get_attr pattr_value (expr_id "args")
+                       (expr_string "0")) expr_true expr_false expr_false));
            ("writable", property_data
                         (data_intro expr_true expr_true expr_false expr_false));
            ("enumerable", property_data
@@ -1604,7 +1608,7 @@ expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
    (expr_number (JsNumber.of_int (1))))
   (expr_let "v"
    (expr_app (expr_id "%ToPrimitive")
-    [expr_get_field (expr_id "args") (expr_string "0")])
+    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
    (expr_let "V"
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "v"))
@@ -1616,45 +1620,45 @@ expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
        expr_undefined) [("primval", expr_id "clipped")] []))))
   (expr_let "y"
    (expr_app (expr_id "%ToNumber")
-    [expr_get_field (expr_id "args") (expr_string "0")])
+    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
    (expr_let "m"
     (expr_app (expr_id "%ToNumber")
-     [expr_get_field (expr_id "args") (expr_string "1")])
+     [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
     (expr_let "dt"
      (expr_if
       (expr_op2 binary_op_stx_eq
-       (expr_get_field (expr_id "args") (expr_string "2")) expr_undefined)
-      (expr_number (JsNumber.of_int (1)))
+       (expr_get_attr pattr_value (expr_id "args") (expr_string "2"))
+       expr_undefined) (expr_number (JsNumber.of_int (1)))
       (expr_app (expr_id "%ToNumber")
-       [expr_get_field (expr_id "args") (expr_string "2")]))
+       [expr_get_attr pattr_value (expr_id "args") (expr_string "2")]))
      (expr_let "h"
       (expr_if
        (expr_op2 binary_op_stx_eq
-        (expr_get_field (expr_id "args") (expr_string "3")) expr_undefined)
-       (expr_number (JsNumber.of_int (0)))
+        (expr_get_attr pattr_value (expr_id "args") (expr_string "3"))
+        expr_undefined) (expr_number (JsNumber.of_int (0)))
        (expr_app (expr_id "%ToNumber")
-        [expr_get_field (expr_id "args") (expr_string "3")]))
+        [expr_get_attr pattr_value (expr_id "args") (expr_string "3")]))
       (expr_let "min"
        (expr_if
         (expr_op2 binary_op_stx_eq
-         (expr_get_field (expr_id "args") (expr_string "4")) expr_undefined)
-        (expr_number (JsNumber.of_int (0)))
+         (expr_get_attr pattr_value (expr_id "args") (expr_string "4"))
+         expr_undefined) (expr_number (JsNumber.of_int (0)))
         (expr_app (expr_id "%ToNumber")
-         [expr_get_field (expr_id "args") (expr_string "4")]))
+         [expr_get_attr pattr_value (expr_id "args") (expr_string "4")]))
        (expr_let "s"
         (expr_if
          (expr_op2 binary_op_stx_eq
-          (expr_get_field (expr_id "args") (expr_string "5")) expr_undefined)
-         (expr_number (JsNumber.of_int (0)))
+          (expr_get_attr pattr_value (expr_id "args") (expr_string "5"))
+          expr_undefined) (expr_number (JsNumber.of_int (0)))
          (expr_app (expr_id "%ToNumber")
-          [expr_get_field (expr_id "args") (expr_string "5")]))
+          [expr_get_attr pattr_value (expr_id "args") (expr_string "5")]))
         (expr_let "milli"
          (expr_if
           (expr_op2 binary_op_stx_eq
-           (expr_get_field (expr_id "args") (expr_string "6")) expr_undefined)
-          (expr_number (JsNumber.of_int (0)))
+           (expr_get_attr pattr_value (expr_id "args") (expr_string "6"))
+           expr_undefined) (expr_number (JsNumber.of_int (0)))
           (expr_app (expr_id "%ToNumber")
-           [expr_get_field (expr_id "args") (expr_string "6")]))
+           [expr_get_attr pattr_value (expr_id "args") (expr_string "6")]))
          (expr_let "yr"
           (expr_let "tiy" (expr_app (expr_id "%ToInteger") [expr_id "y"])
            (expr_let "rangecond1"
@@ -1707,7 +1711,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
      (expr_number (JsNumber.of_int (1))))) (expr_id "result")
    (expr_let "currentArg"
     (expr_app (expr_id "%ToString")
-     [expr_get_field (expr_id "args")
+     [expr_get_attr pattr_value (expr_id "args")
       (expr_op1 unary_op_prim_to_str (expr_id "n"))])
     (expr_let "next"
      (expr_if
@@ -1727,7 +1731,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "argCount")
     (expr_number (JsNumber.of_int (0)))) (expr_string "")
-   (expr_get_field (expr_id "args")
+   (expr_get_attr pattr_value (expr_id "args")
     (expr_op1 unary_op_prim_to_str
      (expr_op2 binary_op_sub (expr_id "argCount")
       (expr_number (JsNumber.of_int (1)))))))
@@ -1764,7 +1768,7 @@ expr_app (expr_id "%MakeString")
 Definition ex_internal3 := 
 expr_app (expr_id "%MakeBoolean")
 [expr_app (expr_id "%ToBoolean")
- [expr_get_field (expr_id "args") (expr_string "0")]]
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]]
 .
 Definition ex_internal4 := 
 expr_app (expr_id "%ObjectCall")
@@ -1775,7 +1779,8 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_internal6 := 
@@ -1783,7 +1788,8 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_internal7 := 
@@ -1791,7 +1797,8 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_internal8 := 
@@ -1799,7 +1806,8 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_internal9 := 
@@ -1807,21 +1815,15 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_isAccessorDescriptor := 
 expr_if
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq
-  (expr_op1 unary_op_typeof
-   (expr_get_field (expr_id "attr-obj") (expr_string "set")))
-  (expr_string "undefined"))) expr_true
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq
-  (expr_op1 unary_op_typeof
-   (expr_get_field (expr_id "attr-obj") (expr_string "get")))
-  (expr_string "undefined")))
+(expr_op2 binary_op_has_own_property (expr_id "attr-obj") (expr_string "get"))
+expr_true
+(expr_op2 binary_op_has_own_property (expr_id "attr-obj") (expr_string "set"))
 .
 Definition ex_isAccessorField := 
 expr_if
@@ -1836,16 +1838,10 @@ expr_if
 .
 Definition ex_isDataDescriptor := 
 expr_if
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq
-  (expr_op1 unary_op_typeof
-   (expr_get_field (expr_id "attr-obj") (expr_string "value")))
-  (expr_string "undefined"))) expr_true
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq
-  (expr_op1 unary_op_typeof
-   (expr_get_field (expr_id "attr-obj") (expr_string "writable")))
-  (expr_string "undefined")))
+(expr_op2 binary_op_has_own_property (expr_id "attr-obj")
+ (expr_string "value")) expr_true
+(expr_op2 binary_op_has_own_property (expr_id "attr-obj")
+ (expr_string "writable"))
 .
 Definition ex_isDataField := 
 expr_if
@@ -2087,9 +2083,9 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
     (expr_recc "init"
      (expr_lambda ["n"]
       (expr_seq
-       (expr_set_field (expr_id "rtnobj")
+       (expr_set_attr pattr_value (expr_id "rtnobj")
         (expr_op1 unary_op_prim_to_str (expr_id "n"))
-        (expr_get_field (expr_id "args")
+        (expr_get_attr pattr_value (expr_id "args")
          (expr_op1 unary_op_prim_to_str (expr_id "n"))))
        (expr_if
         (expr_op2 binary_op_gt (expr_id "n")
@@ -2099,21 +2095,22 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
           (expr_number (JsNumber.of_int (1)))]) expr_undefined)))
      (expr_seq (expr_app (expr_id "init") [expr_id "argCount"])
       (expr_seq
-       (expr_set_field (expr_id "rtnobj") (expr_string "length")
+       (expr_set_attr pattr_value (expr_id "rtnobj") (expr_string "length")
         (expr_id "argCount")) (expr_break "ret" (expr_id "rtnobj"))))))
    expr_null)
   (expr_let "c1"
    (expr_op2 binary_op_stx_eq
     (expr_op1 unary_op_typeof
-     (expr_get_field (expr_id "args") (expr_string "0")))
+     (expr_get_attr pattr_value (expr_id "args") (expr_string "0")))
     (expr_string "number"))
    (expr_let "c2"
     (expr_if (expr_id "c1")
      (expr_op1 unary_op_not
       (expr_op2 binary_op_stx_eq
        (expr_app (expr_id "%ToUint32")
-        [expr_get_field (expr_id "args") (expr_string "0")])
-       (expr_get_field (expr_id "args") (expr_string "0")))) expr_false)
+        [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+       (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))))
+     expr_false)
     (expr_if (expr_id "c2")
      (expr_throw
       (expr_app (expr_id "%JSError")
@@ -2124,7 +2121,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
       (expr_break "ret"
        (expr_app (expr_id "%MakeArray")
         [expr_app (expr_id "%ToUint32")
-         [expr_get_field (expr_id "args") (expr_string "0")]]))
+         [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]]))
       (expr_let "rtn" (expr_app (expr_id "%MakeArray") [expr_id "argCount"])
        (expr_seq
         (expr_app (expr_id "%defineOwnProperty")
@@ -2135,8 +2132,8 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
            expr_undefined) []
           [("value", property_data
                      (data_intro
-                      (expr_get_field (expr_id "args") (expr_string "0"))
-                      expr_true expr_false expr_false));
+                      (expr_get_attr pattr_value (expr_id "args")
+                       (expr_string "0")) expr_true expr_false expr_false));
            ("writable", property_data
                         (data_intro expr_true expr_true expr_false expr_false));
            ("enumerable", property_data
@@ -2148,12 +2145,13 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
         (expr_break "ret" (expr_id "rtn"))))))))))
 .
 Definition ex_privArrayIdx := 
-expr_get_field (expr_id "arr") (expr_id "idx")
+expr_if (expr_op2 binary_op_has_own_property (expr_id "arr") (expr_id "idx"))
+(expr_get_attr pattr_value (expr_id "arr") (expr_id "idx")) expr_undefined
 .
 Definition ex_privArrayLengthChange := 
 expr_let "oldlen"
 (expr_app (expr_id "%ToUint32")
- [expr_get_field (expr_id "arr") (expr_string "length")])
+ [expr_app (expr_id "%Get1") [expr_id "arr"; expr_string "length"]])
 (expr_recc "fix"
  (expr_lambda ["i"]
   (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "oldlen"))
@@ -2212,12 +2210,12 @@ expr_app (expr_id "%BitwiseInfix")
 .
 Definition ex_privBooleanCall := 
 expr_app (expr_id "%ToBoolean")
-[expr_get_field (expr_id "args") (expr_string "0")]
+[expr_get_attr pattr_value (expr_id "args") (expr_string "0")]
 .
 Definition ex_privBooleanConstructor := 
 expr_app (expr_id "%MakeBoolean")
 [expr_app (expr_id "%ToBoolean")
- [expr_get_field (expr_id "args") (expr_string "0")]]
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]]
 .
 Definition ex_privCheckObjectCoercible := 
 expr_if
@@ -2269,7 +2267,7 @@ expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
    (expr_number (JsNumber.of_int (1))))
   (expr_let "v"
    (expr_app (expr_id "%ToPrimitive")
-    [expr_get_field (expr_id "args") (expr_string "0")])
+    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
    (expr_let "V"
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "v"))
@@ -2281,45 +2279,45 @@ expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
        expr_undefined) [("primval", expr_id "clipped")] []))))
   (expr_let "y"
    (expr_app (expr_id "%ToNumber")
-    [expr_get_field (expr_id "args") (expr_string "0")])
+    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
    (expr_let "m"
     (expr_app (expr_id "%ToNumber")
-     [expr_get_field (expr_id "args") (expr_string "1")])
+     [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
     (expr_let "dt"
      (expr_if
       (expr_op2 binary_op_stx_eq
-       (expr_get_field (expr_id "args") (expr_string "2")) expr_undefined)
-      (expr_number (JsNumber.of_int (1)))
+       (expr_get_attr pattr_value (expr_id "args") (expr_string "2"))
+       expr_undefined) (expr_number (JsNumber.of_int (1)))
       (expr_app (expr_id "%ToNumber")
-       [expr_get_field (expr_id "args") (expr_string "2")]))
+       [expr_get_attr pattr_value (expr_id "args") (expr_string "2")]))
      (expr_let "h"
       (expr_if
        (expr_op2 binary_op_stx_eq
-        (expr_get_field (expr_id "args") (expr_string "3")) expr_undefined)
-       (expr_number (JsNumber.of_int (0)))
+        (expr_get_attr pattr_value (expr_id "args") (expr_string "3"))
+        expr_undefined) (expr_number (JsNumber.of_int (0)))
        (expr_app (expr_id "%ToNumber")
-        [expr_get_field (expr_id "args") (expr_string "3")]))
+        [expr_get_attr pattr_value (expr_id "args") (expr_string "3")]))
       (expr_let "min"
        (expr_if
         (expr_op2 binary_op_stx_eq
-         (expr_get_field (expr_id "args") (expr_string "4")) expr_undefined)
-        (expr_number (JsNumber.of_int (0)))
+         (expr_get_attr pattr_value (expr_id "args") (expr_string "4"))
+         expr_undefined) (expr_number (JsNumber.of_int (0)))
         (expr_app (expr_id "%ToNumber")
-         [expr_get_field (expr_id "args") (expr_string "4")]))
+         [expr_get_attr pattr_value (expr_id "args") (expr_string "4")]))
        (expr_let "s"
         (expr_if
          (expr_op2 binary_op_stx_eq
-          (expr_get_field (expr_id "args") (expr_string "5")) expr_undefined)
-         (expr_number (JsNumber.of_int (0)))
+          (expr_get_attr pattr_value (expr_id "args") (expr_string "5"))
+          expr_undefined) (expr_number (JsNumber.of_int (0)))
          (expr_app (expr_id "%ToNumber")
-          [expr_get_field (expr_id "args") (expr_string "5")]))
+          [expr_get_attr pattr_value (expr_id "args") (expr_string "5")]))
         (expr_let "milli"
          (expr_if
           (expr_op2 binary_op_stx_eq
-           (expr_get_field (expr_id "args") (expr_string "6")) expr_undefined)
-          (expr_number (JsNumber.of_int (0)))
+           (expr_get_attr pattr_value (expr_id "args") (expr_string "6"))
+           expr_undefined) (expr_number (JsNumber.of_int (0)))
           (expr_app (expr_id "%ToNumber")
-           [expr_get_field (expr_id "args") (expr_string "6")]))
+           [expr_get_attr pattr_value (expr_id "args") (expr_string "6")]))
          (expr_let "yr"
           (expr_let "tiy" (expr_app (expr_id "%ToInteger") [expr_id "y"])
            (expr_let "rangecond1"
@@ -2517,7 +2515,7 @@ expr_app (expr_get_internal "usercode" (expr_id "obj"))
 .
 Definition ex_privDefaultConstruct := 
 expr_let "cproto1"
-(expr_get_field (expr_id "constr") (expr_string "prototype"))
+(expr_app (expr_id "%Get1") [expr_id "constr"; expr_string "prototype"])
 (expr_let "cproto"
  (expr_if (expr_op1 unary_op_is_object (expr_id "cproto1"))
   (expr_id "cproto1") (expr_id "%ObjectProto"))
@@ -2779,8 +2777,8 @@ expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))
   (expr_string "ObjEnvRec"))
- (expr_get_field (expr_get_internal "bindings" (expr_id "context"))
-  (expr_id "id"))
+ (expr_app (expr_id "%Get1")
+  [expr_get_internal "bindings" (expr_id "context"); expr_id "id"])
  (expr_throw
   (expr_string "[env] Context not well formed! In %EnvGetBindingValue")))
 .
@@ -3007,7 +3005,8 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_privEvalErrorConstructor := 
@@ -3015,7 +3014,8 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_privFunctionConstructor := 
@@ -3028,7 +3028,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
      (expr_number (JsNumber.of_int (1))))) (expr_id "result")
    (expr_let "currentArg"
     (expr_app (expr_id "%ToString")
-     [expr_get_field (expr_id "args")
+     [expr_get_attr pattr_value (expr_id "args")
       (expr_op1 unary_op_prim_to_str (expr_id "n"))])
     (expr_let "next"
      (expr_if
@@ -3048,7 +3048,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "argCount")
     (expr_number (JsNumber.of_int (0)))) (expr_string "")
-   (expr_get_field (expr_id "args")
+   (expr_get_attr pattr_value (expr_id "args")
     (expr_op1 unary_op_prim_to_str
      (expr_op2 binary_op_sub (expr_id "argCount")
       (expr_number (JsNumber.of_int (1)))))))
@@ -3097,6 +3097,9 @@ expr_app (expr_id "%GetProperty")
     (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
     [] []]));
  expr_lambda [] expr_undefined]
+.
+Definition ex_privGet1 := 
+expr_app (expr_id "%Get") [expr_id "obj"; expr_id "obj"; expr_id "fld"]
 .
 Definition ex_privGetField := 
 expr_app (expr_id "%Get")
@@ -3210,8 +3213,8 @@ expr_let "len"
   (expr_string "Function"))
  (expr_let "L"
   (expr_op2 binary_op_sub
-   (expr_get_field (expr_id "obj") (expr_string "length"))
-   (expr_get_field (expr_id "args") (expr_string "length")))
+   (expr_get_attr pattr_value (expr_id "obj") (expr_string "length"))
+   (expr_get_attr pattr_value (expr_id "args") (expr_string "length")))
   (expr_app (expr_id "%max") [expr_number (JsNumber.of_int (0)); expr_id "L"]))
  (expr_number (JsNumber.of_int (0))))
 (expr_object
@@ -3510,7 +3513,8 @@ expr_lambda ["this"; "args"]
  (expr_if
   (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
   (expr_app (expr_id "%ToString")
-   [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  expr_undefined)
  (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"]))
 .
 Definition ex_privNumberCall := 
@@ -3519,7 +3523,7 @@ expr_if
  (expr_app (expr_id "%ComputeLength") [expr_id "args"])
  (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
 (expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "args") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
 .
 Definition ex_privNumberCompareOp := 
 expr_if
@@ -3564,7 +3568,7 @@ expr_app (expr_id "%MakeNumber")
   (expr_app (expr_id "%ComputeLength") [expr_id "args"])
   (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
  (expr_app (expr_id "%ToNumber")
-  [expr_get_field (expr_id "args") (expr_string "0")])]
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])]
 .
 Definition ex_privObjectCall := 
 expr_if
@@ -3574,12 +3578,13 @@ expr_if
    (expr_app (expr_id "%ComputeLength") [expr_id "args"])
    (expr_number (JsNumber.of_int (0)))) expr_true
   (expr_op2 binary_op_stx_eq
-   (expr_get_field (expr_id "args") (expr_string "0")) expr_null)) expr_true
+   (expr_get_attr pattr_value (expr_id "args") (expr_string "0")) expr_null))
+ expr_true
  (expr_op2 binary_op_stx_eq
-  (expr_get_field (expr_id "args") (expr_string "0")) expr_undefined))
-(expr_app (expr_id "%MakeObject") [])
+  (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+  expr_undefined)) (expr_app (expr_id "%MakeObject") [])
 (expr_app (expr_id "%ToObject")
- [expr_get_field (expr_id "args") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
 .
 Definition ex_privObjectConstructor := 
 expr_app (expr_id "%ObjectCall")
@@ -3742,6 +3747,10 @@ expr_app (expr_id "%GetOwnProperty")
     (expr_app (expr_id "%TypeError")
      [expr_string "adding a field to a non-extensible object"]))])]
 .
+Definition ex_privPut1 := 
+expr_app (expr_id "%Put")
+[expr_id "obj"; expr_id "obj"; expr_id "fld"; expr_id "val"]
+.
 Definition ex_privRangeError := 
 expr_app (expr_id "%NativeError") [expr_id "%RangeErrorProto"; expr_id "msg"]
 .
@@ -3750,7 +3759,8 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_privReferenceError := 
@@ -3762,7 +3772,8 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_privRegExpCode := 
@@ -3795,7 +3806,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
  (expr_op2 binary_op_stx_eq (expr_id "argCount")
   (expr_number (JsNumber.of_int (0)))) (expr_string "")
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]))
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]))
 .
 Definition ex_privStringConstructor := 
 expr_app (expr_id "%MakeString")
@@ -3808,7 +3819,7 @@ expr_let "len" (expr_op1 unary_op_strlen (expr_id "s"))
  (expr_lambda ["i"]
   (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "len"))
    (expr_seq
-    (expr_set_field (expr_id "obj")
+    (expr_set_attr pattr_value (expr_id "obj")
      (expr_op1 unary_op_prim_to_str (expr_id "i"))
      (expr_op2 binary_op_char_at (expr_id "s") (expr_id "i")))
     (expr_app (expr_id "loop")
@@ -3828,11 +3839,12 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_privThrowTypeErrorFun := 
-expr_let "msg" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "msg" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_app (expr_id "%TypeError") [expr_id "msg"])
 .
 Definition ex_privTimeClip := 
@@ -3908,7 +3920,7 @@ expr_if (expr_op1 unary_op_is_object (expr_id "val"))
 (expr_let "check"
  (expr_lambda ["str"; "next"]
   (expr_lambda []
-   (expr_let "f" (expr_get_field (expr_id "val") (expr_id "str"))
+   (expr_let "f" (expr_app (expr_id "%Get1") [expr_id "val"; expr_id "str"])
     (expr_if (expr_app (expr_id "%IsCallable") [expr_id "f"])
      (expr_let "res"
       (expr_app (expr_id "%AppExpr")
@@ -3946,85 +3958,67 @@ expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
   (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
   [] [])
  (expr_seq
-  (expr_let "enumerable"
-   (expr_app (expr_id "%GetField")
+  (expr_if
+   (expr_app (expr_id "%HasProperty")
     [expr_id "propobj"; expr_string "enumerable"])
-   (expr_if
-    (expr_op1 unary_op_not
-     (expr_op2 binary_op_stx_eq
-      (expr_op1 unary_op_typeof (expr_id "enumerable"))
-      (expr_string "undefined")))
-    (expr_set_field (expr_id "attrobj") (expr_string "enumerable")
-     (expr_app (expr_id "%ToBoolean") [expr_id "enumerable"])) expr_undefined))
+   (expr_set_attr pattr_value (expr_id "attrobj") (expr_string "enumerable")
+    (expr_app (expr_id "%ToBoolean")
+     [expr_app (expr_id "%GetField")
+      [expr_id "propobj"; expr_string "enumerable"]])) expr_undefined)
   (expr_seq
-   (expr_let "configurable"
-    (expr_app (expr_id "%GetField")
+   (expr_if
+    (expr_app (expr_id "%HasProperty")
      [expr_id "propobj"; expr_string "configurable"])
-    (expr_if
-     (expr_op1 unary_op_not
-      (expr_op2 binary_op_stx_eq
-       (expr_op1 unary_op_typeof (expr_id "configurable"))
-       (expr_string "undefined")))
-     (expr_set_field (expr_id "attrobj") (expr_string "configurable")
-      (expr_app (expr_id "%ToBoolean") [expr_id "configurable"]))
-     expr_undefined))
+    (expr_set_attr pattr_value (expr_id "attrobj")
+     (expr_string "configurable")
+     (expr_app (expr_id "%ToBoolean")
+      [expr_app (expr_id "%GetField")
+       [expr_id "propobj"; expr_string "configurable"]])) expr_undefined)
    (expr_seq
-    (expr_let "writable"
-     (expr_app (expr_id "%GetField")
-      [expr_id "propobj"; expr_string "writable"])
-     (expr_if
-      (expr_op1 unary_op_not
-       (expr_op2 binary_op_stx_eq
-        (expr_op1 unary_op_typeof (expr_id "writable"))
-        (expr_string "undefined")))
-      (expr_set_field (expr_id "attrobj") (expr_string "writable")
-       (expr_app (expr_id "%ToBoolean") [expr_id "writable"])) expr_undefined))
-    (expr_seq
-     (expr_let "value"
+    (expr_if
+     (expr_app (expr_id "%HasProperty")
+      [expr_id "propobj"; expr_string "value"])
+     (expr_set_attr pattr_value (expr_id "attrobj") (expr_string "value")
       (expr_app (expr_id "%GetField")
-       [expr_id "propobj"; expr_string "value"])
-      (expr_if
-       (expr_op1 unary_op_not
-        (expr_op2 binary_op_stx_eq
-         (expr_op1 unary_op_typeof (expr_id "value"))
-         (expr_string "undefined")))
-       (expr_set_field (expr_id "attrobj") (expr_string "value")
-        (expr_id "value")) expr_undefined))
+       [expr_id "propobj"; expr_string "value"])) expr_undefined)
+    (expr_seq
+     (expr_if
+      (expr_app (expr_id "%HasProperty")
+       [expr_id "propobj"; expr_string "writable"])
+      (expr_set_attr pattr_value (expr_id "attrobj") (expr_string "writable")
+       (expr_app (expr_id "%ToBoolean")
+        [expr_app (expr_id "%GetField")
+         [expr_id "propobj"; expr_string "writable"]])) expr_undefined)
      (expr_seq
-      (expr_let "get"
-       (expr_app (expr_id "%GetField") [expr_id "propobj"; expr_string "get"])
-       (expr_if
-        (expr_if
-         (expr_op1 unary_op_not
-          (expr_op2 binary_op_stx_eq
-           (expr_op1 unary_op_typeof (expr_id "get"))
-           (expr_string "undefined")))
-         (expr_op1 unary_op_not
-          (expr_op2 binary_op_stx_eq
-           (expr_app (expr_id "%Typeof") [expr_id "get"])
-           (expr_string "function"))) expr_false)
-        (expr_app (expr_id "%TypeError")
-         [expr_string "defineProperty given a non-function getter"])
-        (expr_set_field (expr_id "attrobj") (expr_string "get")
-         (expr_id "get"))))
-      (expr_seq
-       (expr_let "set"
+      (expr_if
+       (expr_app (expr_id "%HasProperty")
+        [expr_id "propobj"; expr_string "get"])
+       (expr_let "get"
         (expr_app (expr_id "%GetField")
-         [expr_id "propobj"; expr_string "set"])
+         [expr_id "propobj"; expr_string "get"])
         (expr_if
+         (expr_if (expr_app (expr_id "%IsCallable") [expr_id "get"])
+          expr_true
+          (expr_op2 binary_op_stx_eq (expr_id "get") expr_undefined))
+         (expr_set_attr pattr_value (expr_id "propobj") (expr_string "get")
+          (expr_id "get"))
+         (expr_app (expr_id "%TypeError") [expr_string "non-function getter"])))
+       expr_undefined)
+      (expr_seq
+       (expr_if
+        (expr_app (expr_id "%HasProperty")
+         [expr_id "propobj"; expr_string "set"])
+        (expr_let "set"
+         (expr_app (expr_id "%GetField")
+          [expr_id "propobj"; expr_string "set"])
          (expr_if
-          (expr_op1 unary_op_not
-           (expr_op2 binary_op_stx_eq
-            (expr_op1 unary_op_typeof (expr_id "set"))
-            (expr_string "undefined")))
-          (expr_op1 unary_op_not
-           (expr_op2 binary_op_stx_eq
-            (expr_app (expr_id "%Typeof") [expr_id "set"])
-            (expr_string "function"))) expr_false)
-         (expr_app (expr_id "%TypeError")
-          [expr_string "defineProperty given a non-function setter"])
-         (expr_set_field (expr_id "attrobj") (expr_string "set")
-          (expr_id "set"))))
+          (expr_if (expr_app (expr_id "%IsCallable") [expr_id "set"])
+           expr_true
+           (expr_op2 binary_op_stx_eq (expr_id "set") expr_undefined))
+          (expr_set_attr pattr_value (expr_id "propobj") (expr_string "set")
+           (expr_id "set"))
+          (expr_app (expr_id "%TypeError")
+           [expr_string "non-function setter"]))) expr_undefined)
        (expr_seq
         (expr_if
          (expr_if (expr_app (expr_id "isDataDescriptor") [expr_id "attrobj"])
@@ -4082,7 +4076,8 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_privTypeof := 
@@ -4112,7 +4107,8 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")]) expr_undefined)
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
 Definition ex_privUTC :=  expr_id "t" .
@@ -4159,7 +4155,8 @@ expr_let "sign" (expr_op1 unary_op_sign (expr_id "t"))
 .
 Definition ex_privacosCall :=  expr_string "acos NYI" .
 Definition ex_privapplyCall := 
-expr_let "applyArgs1" (expr_get_field (expr_id "args") (expr_string "1"))
+expr_let "applyArgs1"
+(expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
 (expr_let "applyArgs"
  (expr_if
   (expr_if
@@ -4172,11 +4169,13 @@ expr_let "applyArgs1" (expr_get_field (expr_id "args") (expr_string "1"))
    [] []) (expr_id "applyArgs1"))
  (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "applyArgs"])
   (expr_app (expr_id "this")
-   [expr_get_field (expr_id "args") (expr_string "0"); expr_id "applyArgs"])))
+   [expr_get_attr pattr_value (expr_id "args") (expr_string "0");
+    expr_id "applyArgs"])))
 .
 Definition ex_privarrayIndexOfCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenValue"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
   (expr_label "ret"
    (expr_seq
@@ -4189,10 +4188,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_let "n"
      (expr_if
       (expr_op2 binary_op_stx_eq
-       (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined)
-      (expr_number (JsNumber.of_int (0)))
+       (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+       expr_undefined) (expr_number (JsNumber.of_int (0)))
       (expr_app (expr_id "%ToInteger")
-       [expr_get_field (expr_id "args") (expr_string "1")]))
+       [expr_get_attr pattr_value (expr_id "args") (expr_string "1")]))
      (expr_seq
       (expr_if (expr_op2 binary_op_ge (expr_id "n") (expr_id "len"))
        (expr_break "ret"
@@ -4203,13 +4202,13 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
          (expr_let "kStr" (expr_app (expr_id "%ToString") [expr_id "k"])
           (expr_if
-           (expr_op2 binary_op_has_property (expr_id "O") (expr_id "kStr"))
+           (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "kStr"])
            (expr_seq
             (expr_let "elementK"
-             (expr_get_field (expr_id "O") (expr_id "kStr"))
+             (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "kStr"])
              (expr_if
               (expr_op2 binary_op_stx_eq
-               (expr_get_field (expr_id "args") (expr_string "0"))
+               (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
                (expr_id "elementK")) (expr_break "ret" (expr_id "k"))
               expr_undefined))
             (expr_app (expr_id "loop")
@@ -4232,7 +4231,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 .
 Definition ex_privarrayLastIndexOfCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenValue"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
   (expr_label "ret"
    (expr_seq
@@ -4246,11 +4246,12 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_let "n"
       (expr_if
        (expr_op2 binary_op_stx_eq
-        (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined)
+        (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+        expr_undefined)
        (expr_op2 binary_op_sub (expr_id "len")
         (expr_number (JsNumber.of_int (1))))
        (expr_app (expr_id "%ToInteger")
-        [expr_get_field (expr_id "args") (expr_string "1")]))
+        [expr_get_attr pattr_value (expr_id "args") (expr_string "1")]))
       (expr_recc "loop"
        (expr_lambda ["k"]
         (expr_if
@@ -4258,11 +4259,11 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
           (expr_number (JsNumber.of_int (0))))
          (expr_let "kstr" (expr_app (expr_id "%ToString") [expr_id "k"])
           (expr_if
-           (expr_op2 binary_op_has_property (expr_id "O") (expr_id "kstr"))
+           (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "kstr"])
            (expr_if
             (expr_op2 binary_op_stx_eq
-             (expr_get_field (expr_id "O") (expr_id "kstr"))
-             (expr_get_field (expr_id "args") (expr_string "0")))
+             (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "kstr"])
+             (expr_get_attr pattr_value (expr_id "args") (expr_string "0")))
             (expr_break "ret" (expr_id "k"))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_sub (expr_id "k")
@@ -4299,7 +4300,7 @@ expr_let "isCallable"
     (expr_break "ret" expr_true)))))
 (expr_let "array" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_let "arrayLen"
-  (expr_get_field (expr_id "array") (expr_string "length"))
+  (expr_app (expr_id "%Get1") [expr_id "array"; expr_string "length"])
   (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "arrayLen"])
    (expr_let "separator" (expr_string " ")
     (expr_label "ret"
@@ -4309,7 +4310,7 @@ expr_let "isCallable"
         (expr_number (JsNumber.of_int (0))))
        (expr_break "ret" (expr_string "")) expr_null)
       (expr_let "firstElement"
-       (expr_get_field (expr_id "array") (expr_string "0"))
+       (expr_app (expr_id "%Get1") [expr_id "array"; expr_string "0"])
        (expr_let "R"
         (expr_if
          (expr_if
@@ -4320,8 +4321,8 @@ expr_let "isCallable"
          (expr_let "elementObj"
           (expr_app (expr_id "%ToObject") [expr_id "firstElement"])
           (expr_let "funcc"
-           (expr_get_field (expr_id "elementObj")
-            (expr_string "toLocaleString"))
+           (expr_app (expr_id "%Get1")
+            [expr_id "elementObj"; expr_string "toLocaleString"])
            (expr_seq
             (expr_if
              (expr_op1 unary_op_not
@@ -4342,8 +4343,8 @@ expr_let "isCallable"
              (expr_op1 unary_op_prim_to_str (expr_id "r"))
              (expr_id "separator"))
             (expr_let "nextElement"
-             (expr_get_field (expr_id "array")
-              (expr_op1 unary_op_prim_to_str (expr_id "k")))
+             (expr_app (expr_id "%Get1")
+              [expr_id "array"; expr_op1 unary_op_prim_to_str (expr_id "k")])
              (expr_let "toAppend"
               (expr_if
                (expr_if
@@ -4354,8 +4355,8 @@ expr_let "isCallable"
                (expr_let "elementObj"
                 (expr_app (expr_id "%ToObject") [expr_id "nextElement"])
                 (expr_let "funcc"
-                 (expr_get_field (expr_id "elementObj")
-                  (expr_string "toLocaleString"))
+                 (expr_app (expr_id "%Get1")
+                  [expr_id "elementObj"; expr_string "toLocaleString"])
                  (expr_seq
                   (expr_if
                    (expr_op1 unary_op_not
@@ -4383,7 +4384,8 @@ expr_let "isCallable"
 .
 Definition ex_privarrayToStringCall := 
 expr_let "array" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "thefunc" (expr_get_field (expr_id "array") (expr_string "join"))
+(expr_let "thefunc"
+ (expr_get_attr pattr_value (expr_id "array") (expr_string "join"))
  (expr_let "ffunc"
   (expr_if
    (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "thefunc")))
@@ -4410,7 +4412,8 @@ expr_seq
  (expr_op1 unary_op_not (expr_app (expr_id "%IsCallable") [expr_id "this"]))
  (expr_app (expr_id "%TypeError") [expr_string "this not function in bind"])
  expr_undefined)
-(expr_let "thisArg" (expr_get_field (expr_id "args") (expr_string "0"))
+(expr_let "thisArg"
+ (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
  (expr_let "A"
   (expr_app (expr_id "%slice")
    [expr_id "args";
@@ -4442,14 +4445,15 @@ expr_let "callArgs"
   expr_number (JsNumber.of_int (1));
   expr_app (expr_id "%len") [expr_id "args"]])
 (expr_app (expr_id "this")
- [expr_get_field (expr_id "args") (expr_string "0"); expr_id "callArgs"])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0");
+  expr_id "callArgs"])
 .
 Definition ex_privcharAtCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "position"
   (expr_app (expr_id "%ToInteger")
-   [expr_get_field (expr_id "args") (expr_string "0")])
+   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
   (expr_let "size" (expr_op1 unary_op_strlen (expr_id "S"))
    (expr_if
     (expr_if
@@ -4464,7 +4468,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "position"
   (expr_app (expr_id "%ToInteger")
-   [expr_get_field (expr_id "args") (expr_string "0")])
+   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
   (expr_let "size" (expr_op1 unary_op_strlen (expr_id "S"))
    (expr_if
     (expr_if
@@ -4489,22 +4493,26 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_let "procNormalElt"
      (expr_lambda ["nelt"; "k"]
       (expr_seq
-       (expr_set_field (expr_id "obj")
-        (expr_op1 unary_op_prim_to_str (expr_id "k")) (expr_id "nelt"))
+       (expr_app (expr_id "%Put1")
+        [expr_id "obj";
+         expr_op1 unary_op_prim_to_str (expr_id "k");
+         expr_id "nelt"])
        (expr_op2 binary_op_add (expr_id "k")
         (expr_number (JsNumber.of_int (1))))))
      (expr_recc "procArrayElt"
       (expr_lambda ["arr"; "fromIndex"; "toIndex"]
        (expr_if
         (expr_op2 binary_op_stx_eq
-         (expr_get_field (expr_id "arr")
-          (expr_op1 unary_op_prim_to_str (expr_id "fromIndex")))
+         (expr_app (expr_id "%Get1")
+          [expr_id "arr"; expr_op1 unary_op_prim_to_str (expr_id "fromIndex")])
          expr_undefined) (expr_id "toIndex")
         (expr_seq
-         (expr_set_field (expr_id "obj")
-          (expr_op1 unary_op_prim_to_str (expr_id "toIndex"))
-          (expr_get_field (expr_id "arr")
-           (expr_op1 unary_op_prim_to_str (expr_id "fromIndex"))))
+         (expr_app (expr_id "%Put1")
+          [expr_id "obj";
+           expr_op1 unary_op_prim_to_str (expr_id "toIndex");
+           expr_app (expr_id "%Get1")
+           [expr_id "arr";
+            expr_op1 unary_op_prim_to_str (expr_id "fromIndex")]])
          (expr_app (expr_id "procArrayElt")
           [expr_id "arr";
            expr_op2 binary_op_add (expr_id "fromIndex")
@@ -4525,14 +4533,14 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_if
       (expr_op1 unary_op_not
        (expr_op2 binary_op_stx_eq
-        (expr_get_field (expr_id "from")
-         (expr_op1 unary_op_prim_to_str (expr_id "fromIndex")))
+        (expr_app (expr_id "%Get1")
+         [expr_id "from"; expr_op1 unary_op_prim_to_str (expr_id "fromIndex")])
         expr_undefined))
       (expr_let "nextI"
        (expr_app (expr_id "procElt")
         [expr_id "A";
-         expr_get_field (expr_id "from")
-         (expr_op1 unary_op_prim_to_str (expr_id "fromIndex"));
+         expr_app (expr_id "%Get1")
+         [expr_id "from"; expr_op1 unary_op_prim_to_str (expr_id "fromIndex")];
          expr_id "toIndex"])
        (expr_app (expr_id "procAllElts")
         [expr_id "from";
@@ -4548,23 +4556,26 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         expr_number (JsNumber.of_int (0));
         expr_number (JsNumber.of_int (0))])
       (expr_seq
-       (expr_set_field (expr_id "A") (expr_string "0") (expr_id "O"))
-       (expr_number (JsNumber.of_int (1)))))
+       (expr_set_attr pattr_value (expr_id "A") (expr_string "0")
+        (expr_id "O")) (expr_number (JsNumber.of_int (1)))))
      (expr_let "end"
       (expr_app (expr_id "procAllElts")
        [expr_id "args"; expr_number (JsNumber.of_int (0)); expr_id "halftime"])
       (expr_seq
-       (expr_set_field (expr_id "A") (expr_string "length") (expr_id "end"))
-       (expr_id "A"))))))))
+       (expr_set_attr pattr_value (expr_id "A") (expr_string "length")
+        (expr_id "end")) (expr_id "A"))))))))
 .
 Definition ex_privconfigurableEval := 
-expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "evalStr"
+(expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_let "evalStr"
  (expr_if (expr_id "useStrict")
   (expr_op2 binary_op_string_plus (expr_string "'use strict';")
    (expr_id "evalStr")) (expr_id "evalStr"))
  (expr_let "globalEnv"
-  (expr_get_field (expr_id "%makeGlobalEnv") (expr_string "make"))
+  (expr_app
+   (expr_get_attr pattr_value (expr_id "%makeGlobalEnv") (expr_string "make"))
+   [])
   (expr_seq
    (expr_set_attr pattr_value (expr_id "globalEnv") (expr_string "$this")
     (expr_id "this"))
@@ -4586,7 +4597,7 @@ expr_let "evalStr" (expr_get_field (expr_id "args") (expr_string "0"))
 .
 Definition ex_privcosCall :=  expr_string "cos NYI" .
 Definition ex_privcreateCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_let "t" (expr_op1 unary_op_typeof (expr_id "O"))
  (expr_if
   (expr_if
@@ -4603,27 +4614,28 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
    (expr_if
     (expr_if
      (expr_op2 binary_op_ge
-      (expr_get_field (expr_id "args") (expr_string "length"))
+      (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
       (expr_number (JsNumber.of_int (2))))
      (expr_op1 unary_op_not
       (expr_op2 binary_op_stx_eq
-       (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined))
-     expr_false)
+       (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+       expr_undefined)) expr_false)
     (expr_let "Properties"
      (expr_app (expr_id "%ToObject")
-      [expr_get_field (expr_id "args") (expr_string "1")])
+      [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
      (expr_let "argsObj"
       (expr_object
        (objattrs_intro (expr_string "Object") expr_true expr_null
         expr_undefined) [] [])
       (expr_seq
-       (expr_set_field (expr_id "argsObj") (expr_string "0") (expr_id "obj"))
+       (expr_set_attr pattr_value (expr_id "argsObj") (expr_string "0")
+        (expr_id "obj"))
        (expr_seq
-        (expr_set_field (expr_id "argsObj") (expr_string "1")
+        (expr_set_attr pattr_value (expr_id "argsObj") (expr_string "1")
          (expr_id "Properties"))
         (expr_seq
-         (expr_set_field (expr_id "argsObj") (expr_string "length")
-          (expr_number (JsNumber.of_int (2))))
+         (expr_set_attr pattr_value (expr_id "argsObj")
+          (expr_string "length") (expr_number (JsNumber.of_int (2))))
          (expr_seq
           (expr_app (expr_id "%defineProperties")
            [expr_null; expr_id "argsObj"]) (expr_id "obj")))))))
@@ -4739,28 +4751,50 @@ expr_seq
      (expr_seq
       (expr_if (expr_app (expr_id "isDataDescriptor") [expr_id "attr-obj"])
        (expr_seq
-        (expr_set_attr pattr_value (expr_id "obj") (expr_id "fstr")
-         (expr_get_field (expr_id "attr-obj") (expr_string "value")))
-        (expr_set_attr pattr_writable (expr_id "obj") (expr_id "fstr")
-         (expr_app (expr_id "%ToBoolean")
-          [expr_get_field (expr_id "attr-obj") (expr_string "writable")])))
+        (expr_if
+         (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
+          (expr_string "value"))
+         (expr_set_attr pattr_value (expr_id "obj") (expr_id "fstr")
+          (expr_get_attr pattr_value (expr_id "attr-obj")
+           (expr_string "value"))) expr_undefined)
+        (expr_if
+         (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
+          (expr_string "writable"))
+         (expr_set_attr pattr_writable (expr_id "obj") (expr_id "fstr")
+          (expr_app (expr_id "%ToBoolean")
+           [expr_get_attr pattr_value (expr_id "attr-obj")
+            (expr_string "writable")])) expr_undefined))
        (expr_if
         (expr_app (expr_id "isAccessorDescriptor") [expr_id "attr-obj"])
         (expr_seq
-         (expr_set_attr pattr_getter (expr_id "obj") (expr_id "fstr")
-          (expr_get_field (expr_id "attr-obj") (expr_string "get")))
-         (expr_set_attr pattr_setter (expr_id "obj") (expr_id "fstr")
-          (expr_get_field (expr_id "attr-obj") (expr_string "set"))))
-        expr_undefined))
+         (expr_if
+          (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
+           (expr_string "get"))
+          (expr_set_attr pattr_getter (expr_id "obj") (expr_id "fstr")
+           (expr_get_attr pattr_value (expr_id "attr-obj")
+            (expr_string "get"))) expr_undefined)
+         (expr_if
+          (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
+           (expr_string "set"))
+          (expr_set_attr pattr_setter (expr_id "obj") (expr_id "fstr")
+           (expr_get_attr pattr_value (expr_id "attr-obj")
+            (expr_string "set"))) expr_undefined)) expr_undefined))
       (expr_seq
-       (expr_set_attr pattr_enum (expr_id "obj") (expr_id "fstr")
-        (expr_app (expr_id "%ToBoolean")
-         [expr_get_field (expr_id "attr-obj") (expr_string "enumerable")]))
-       (expr_seq
-        (expr_set_attr pattr_config (expr_id "obj") (expr_id "fstr")
+       (expr_if
+        (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
+         (expr_string "enumerable"))
+        (expr_set_attr pattr_enum (expr_id "obj") (expr_id "fstr")
          (expr_app (expr_id "%ToBoolean")
-          [expr_get_field (expr_id "attr-obj") (expr_string "configurable")]))
-        expr_true)))))
+          [expr_get_attr pattr_value (expr_id "attr-obj")
+           (expr_string "enumerable")])) expr_undefined)
+       (expr_seq
+        (expr_if
+         (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
+          (expr_string "configurable"))
+         (expr_set_attr pattr_config (expr_id "obj") (expr_id "fstr")
+          (expr_app (expr_id "%ToBoolean")
+           [expr_get_attr pattr_value (expr_id "attr-obj")
+            (expr_string "configurable")])) expr_undefined) expr_true)))))
    (expr_app (expr_id "%TypeError")
     [expr_string
      "(defineOwnProperty) Attempt to add a property to a non-extensible object."]))
@@ -4780,14 +4814,16 @@ expr_seq
     (expr_if
      (expr_op2 binary_op_is_accessor (expr_id "obj") (expr_id "fstr"))
      (expr_seq
-      (expr_set_field (expr_id "current-prop") (expr_string "get")
+      (expr_set_attr pattr_value (expr_id "current-prop") (expr_string "get")
        (expr_get_attr pattr_getter (expr_id "obj") (expr_id "fstr")))
-      (expr_set_field (expr_id "current-prop") (expr_string "set")
+      (expr_set_attr pattr_value (expr_id "current-prop") (expr_string "set")
        (expr_get_attr pattr_setter (expr_id "obj") (expr_id "fstr"))))
      (expr_seq
-      (expr_set_field (expr_id "current-prop") (expr_string "writable")
+      (expr_set_attr pattr_value (expr_id "current-prop")
+       (expr_string "writable")
        (expr_get_attr pattr_writable (expr_id "obj") (expr_id "fstr")))
-      (expr_set_field (expr_id "current-prop") (expr_string "value")
+      (expr_set_attr pattr_value (expr_id "current-prop")
+       (expr_string "value")
        (expr_get_attr pattr_value (expr_id "obj") (expr_id "fstr")))))
     (expr_seq
      (expr_if
@@ -4797,13 +4833,14 @@ expr_seq
       (expr_seq
        (expr_if
         (expr_op2 binary_op_stx_eq
-         (expr_get_field (expr_id "attr-obj") (expr_string "configurable"))
-         expr_true)
+         (expr_get_attr pattr_value (expr_id "attr-obj")
+          (expr_string "configurable")) expr_true)
         (expr_app (expr_id "%TypeError")
          [expr_string "escalating configurable from false to true"])
         (expr_if
          (expr_op2 binary_op_stx_eq
-          (expr_get_field (expr_id "attr-obj") (expr_string "enumerable"))
+          (expr_get_attr pattr_value (expr_id "attr-obj")
+           (expr_string "enumerable"))
           (expr_op2 binary_op_stx_eq
            (expr_get_attr pattr_enum (expr_id "obj") (expr_id "fstr"))
            expr_false))
@@ -4837,25 +4874,26 @@ expr_seq
         expr_false)
        (expr_if
         (expr_op2 binary_op_stx_eq
-         (expr_get_field (expr_id "current-prop")
+         (expr_get_attr pattr_value (expr_id "current-prop")
           (expr_string "configurable")) expr_false)
         (expr_if
          (expr_op2 binary_op_stx_eq
-          (expr_get_field (expr_id "current-prop") (expr_string "writable"))
-          expr_false)
+          (expr_get_attr pattr_value (expr_id "current-prop")
+           (expr_string "writable")) expr_false)
          (expr_if
           (expr_op2 binary_op_stx_eq
-           (expr_get_field (expr_id "attr-obj") (expr_string "writable"))
-           expr_true)
+           (expr_get_attr pattr_value (expr_id "attr-obj")
+            (expr_string "writable")) expr_true)
           (expr_app (expr_id "%TypeError")
            [expr_string
             "(defineOwnProperty) Cannot escalate writable from false to true."])
           (expr_if
            (expr_op2 binary_op_stx_eq
             (expr_op2 binary_op_same_value
-             (expr_get_field (expr_id "attr-obj") (expr_string "value"))
-             (expr_get_field (expr_id "current-prop") (expr_string "value")))
-            expr_false)
+             (expr_get_attr pattr_value (expr_id "attr-obj")
+              (expr_string "value"))
+             (expr_get_attr pattr_value (expr_id "current-prop")
+              (expr_string "value"))) expr_false)
            (expr_app (expr_id "%TypeError")
             [expr_string
              "(defineOwnProperty) Cannot change a non-configurable value"])
@@ -4867,20 +4905,22 @@ expr_seq
          [expr_id "current-prop"; expr_id "attr-obj"]))
        (expr_if
         (expr_op2 binary_op_stx_eq
-         (expr_get_field (expr_id "current-prop")
+         (expr_get_attr pattr_value (expr_id "current-prop")
           (expr_string "configurable")) expr_false)
         (expr_if
          (expr_if
           (expr_op2 binary_op_stx_eq
            (expr_op2 binary_op_same_value
-            (expr_get_field (expr_id "current-prop") (expr_string "set"))
-            (expr_get_field (expr_id "attr-obj") (expr_string "set")))
-           expr_false) expr_true
+            (expr_get_attr pattr_value (expr_id "current-prop")
+             (expr_string "set"))
+            (expr_get_attr pattr_value (expr_id "attr-obj")
+             (expr_string "set"))) expr_false) expr_true
           (expr_op2 binary_op_stx_eq
            (expr_op2 binary_op_same_value
-            (expr_get_field (expr_id "current-prop") (expr_string "get"))
-            (expr_get_field (expr_id "attr-obj") (expr_string "get")))
-           expr_false))
+            (expr_get_attr pattr_value (expr_id "current-prop")
+             (expr_string "get"))
+            (expr_get_attr pattr_value (expr_id "attr-obj")
+             (expr_string "get"))) expr_false))
          (expr_app (expr_id "%TypeError")
           [expr_op2 binary_op_string_plus
            (expr_string
@@ -4898,64 +4938,67 @@ expr_seq
           (expr_op2 binary_op_stx_eq
            (expr_op2 binary_op_same_value
             (expr_get_attr pattr_value (expr_id "obj") (expr_id "fstr"))
-            (expr_get_field (expr_id "current-prop") (expr_string "value")))
-           expr_false)
+            (expr_get_attr pattr_value (expr_id "current-prop")
+             (expr_string "value"))) expr_false)
           (expr_set_attr pattr_value (expr_id "obj") (expr_id "fstr")
-           (expr_get_field (expr_id "current-prop") (expr_string "value")))
-          expr_undefined)
+           (expr_get_attr pattr_value (expr_id "current-prop")
+            (expr_string "value"))) expr_undefined)
          (expr_if
           (expr_op1 unary_op_not
            (expr_op2 binary_op_stx_eq
             (expr_get_attr pattr_writable (expr_id "obj") (expr_id "fstr"))
-            (expr_get_field (expr_id "current-prop") (expr_string "writable"))))
+            (expr_get_attr pattr_value (expr_id "current-prop")
+             (expr_string "writable"))))
           (expr_set_attr pattr_writable (expr_id "obj") (expr_id "fstr")
-           (expr_get_field (expr_id "current-prop") (expr_string "writable")))
-          expr_undefined))
+           (expr_get_attr pattr_value (expr_id "current-prop")
+            (expr_string "writable"))) expr_undefined))
         (expr_if
          (expr_app (expr_id "isAccessorDescriptor") [expr_id "current-prop"])
          (expr_seq
           (expr_set_attr pattr_getter (expr_id "obj") (expr_id "fstr")
-           (expr_get_field (expr_id "current-prop") (expr_string "get")))
+           (expr_get_attr pattr_value (expr_id "current-prop")
+            (expr_string "get")))
           (expr_set_attr pattr_setter (expr_id "obj") (expr_id "fstr")
-           (expr_get_field (expr_id "current-prop") (expr_string "set"))))
-         expr_undefined))
+           (expr_get_attr pattr_value (expr_id "current-prop")
+            (expr_string "set")))) expr_undefined))
        (expr_seq
         (expr_if
          (expr_op1 unary_op_not
           (expr_op2 binary_op_stx_eq
            (expr_get_attr pattr_enum (expr_id "obj") (expr_id "fstr"))
-           (expr_get_field (expr_id "current-prop")
+           (expr_get_attr pattr_value (expr_id "current-prop")
             (expr_string "enumerable"))))
          (expr_set_attr pattr_enum (expr_id "obj") (expr_id "fstr")
-          (expr_get_field (expr_id "current-prop") (expr_string "enumerable")))
-         expr_undefined)
+          (expr_get_attr pattr_value (expr_id "current-prop")
+           (expr_string "enumerable"))) expr_undefined)
         (expr_seq
          (expr_if
           (expr_op1 unary_op_not
            (expr_op2 binary_op_stx_eq
             (expr_get_attr pattr_config (expr_id "obj") (expr_id "fstr"))
-            (expr_get_field (expr_id "current-prop")
+            (expr_get_attr pattr_value (expr_id "current-prop")
              (expr_string "configurable"))))
           (expr_set_attr pattr_config (expr_id "obj") (expr_id "fstr")
-           (expr_get_field (expr_id "current-prop")
+           (expr_get_attr pattr_value (expr_id "current-prop")
             (expr_string "configurable"))) expr_undefined) expr_true)))))))))
 .
 Definition ex_privdefinePropertiesCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_seq
   (expr_let "props"
    (expr_app (expr_id "%ToObject")
-    [expr_get_field (expr_id "args") (expr_string "1")])
+    [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
    (expr_let "names" (expr_own_field_names (expr_id "props"))
-    (expr_let "len" (expr_get_field (expr_id "names") (expr_string "length"))
+    (expr_let "len"
+     (expr_get_attr pattr_value (expr_id "names") (expr_string "length"))
      (expr_recc "loop"
       (expr_lambda ["i"]
        (expr_label "ret"
         (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "len"))
          (expr_let "indx" (expr_op1 unary_op_prim_to_str (expr_id "i"))
           (expr_let "name"
-           (expr_get_field (expr_id "names") (expr_id "indx"))
+           (expr_app (expr_id "%Get1") [expr_id "names"; expr_id "indx"])
            (expr_if
             (expr_get_attr pattr_enum (expr_id "props") (expr_id "name"))
             (expr_let "argsObj"
@@ -4963,17 +5006,19 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
               (objattrs_intro (expr_string "Object") expr_true expr_null
                expr_undefined) [] [])
              (expr_seq
-              (expr_set_field (expr_id "argsObj") (expr_string "0")
-               (expr_id "O"))
+              (expr_set_attr pattr_value (expr_id "argsObj")
+               (expr_string "0") (expr_id "O"))
               (expr_seq
-               (expr_set_field (expr_id "argsObj") (expr_string "1")
-                (expr_id "name"))
+               (expr_set_attr pattr_value (expr_id "argsObj")
+                (expr_string "1") (expr_id "name"))
                (expr_seq
-                (expr_set_field (expr_id "argsObj") (expr_string "2")
-                 (expr_get_field (expr_id "props") (expr_id "name")))
+                (expr_set_attr pattr_value (expr_id "argsObj")
+                 (expr_string "2")
+                 (expr_app (expr_id "%Get1")
+                  [expr_id "props"; expr_id "name"]))
                 (expr_seq
-                 (expr_set_field (expr_id "argsObj") (expr_string "length")
-                  (expr_number (JsNumber.of_int (3))))
+                 (expr_set_attr pattr_value (expr_id "argsObj")
+                  (expr_string "length") (expr_number (JsNumber.of_int (3))))
                  (expr_seq
                   (expr_app (expr_id "%defineProperty")
                    [expr_null; expr_id "argsObj"])
@@ -4990,9 +5035,11 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
   (expr_id "O")))
 .
 Definition ex_privdefinePropertyCall := 
-expr_let "obj" (expr_get_field (expr_id "args") (expr_string "0"))
-(expr_let "field" (expr_get_field (expr_id "args") (expr_string "1"))
- (expr_let "propobj" (expr_get_field (expr_id "args") (expr_string "2"))
+expr_let "obj" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+(expr_let "field"
+ (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+ (expr_let "propobj"
+  (expr_get_attr pattr_value (expr_id "args") (expr_string "2"))
   (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "obj"])
    (expr_app (expr_id "%defineOwnProperty")
     [expr_id "obj";
@@ -5012,17 +5059,17 @@ expr_if
 (expr_let "name"
  (expr_if
   (expr_op2 binary_op_stx_eq
-   (expr_get_field (expr_id "this") (expr_string "name")) expr_undefined)
-  (expr_string "Error")
+   (expr_app (expr_id "%Get1") [expr_id "this"; expr_string "name"])
+   expr_undefined) (expr_string "Error")
   (expr_app (expr_id "%ToString")
-   [expr_get_field (expr_id "this") (expr_string "name")]))
+   [expr_app (expr_id "%Get1") [expr_id "this"; expr_string "name"]]))
  (expr_let "msg"
   (expr_if
    (expr_op2 binary_op_stx_eq
-    (expr_get_field (expr_id "this") (expr_string "message")) expr_undefined)
-   (expr_string "")
+    (expr_app (expr_id "%Get1") [expr_id "this"; expr_string "message"])
+    expr_undefined) (expr_string "")
    (expr_app (expr_id "%ToString")
-    [expr_get_field (expr_id "this") (expr_string "message")]))
+    [expr_app (expr_id "%Get1") [expr_id "this"; expr_string "message"]]))
   (expr_let "c1"
    (expr_op2 binary_op_stx_eq (expr_id "name") (expr_string ""))
    (expr_let "c2"
@@ -5050,9 +5097,11 @@ expr_app (expr_id "%configurableEval")
 .
 Definition ex_priveveryCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenValue"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
-  (expr_let "callbackfn" (expr_get_field (expr_id "args") (expr_string "0"))
+  (expr_let "callbackfn"
+   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -5060,31 +5109,33 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not function in every"]) expr_null)
-     (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
+     (expr_let "T"
+      (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
       (expr_recc "loop"
        (expr_lambda ["k"]
         (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
          (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
           (expr_let "kPresent"
-           (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
+           (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
            (expr_if (expr_id "kPresent")
-            (expr_let "kValue" (expr_get_field (expr_id "O") (expr_id "Pk"))
+            (expr_let "kValue"
+             (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
                 expr_undefined) [] [])
               (expr_seq
-               (expr_set_field (expr_id "argsObj") (expr_string "0")
-                (expr_id "kValue"))
+               (expr_set_attr pattr_value (expr_id "argsObj")
+                (expr_string "0") (expr_id "kValue"))
                (expr_seq
-                (expr_set_field (expr_id "argsObj") (expr_string "1")
-                 (expr_id "k"))
+                (expr_set_attr pattr_value (expr_id "argsObj")
+                 (expr_string "1") (expr_id "k"))
                 (expr_seq
-                 (expr_set_field (expr_id "argsObj") (expr_string "2")
-                  (expr_id "O"))
+                 (expr_set_attr pattr_value (expr_id "argsObj")
+                  (expr_string "2") (expr_id "O"))
                  (expr_seq
-                  (expr_set_field (expr_id "argsObj") (expr_string "length")
-                   (expr_number (JsNumber.of_int (3))))
+                  (expr_set_attr pattr_value (expr_id "argsObj")
+                   (expr_string "length") (expr_number (JsNumber.of_int (3))))
                   (expr_let "testResult"
                    (expr_app (expr_id "callbackfn")
                     [expr_id "T"; expr_id "argsObj"])
@@ -5104,9 +5155,11 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 Definition ex_privexpCall :=  expr_undefined .
 Definition ex_privfilterCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenValue"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
-  (expr_let "callbackfn" (expr_get_field (expr_id "args") (expr_string "0"))
+  (expr_let "callbackfn"
+   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -5114,7 +5167,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not a function in filter"]) expr_null)
-     (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
+     (expr_let "T"
+      (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
       (expr_let "A"
        (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
        (expr_recc "loop"
@@ -5122,24 +5176,25 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
           (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
            (expr_if
-            (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
-            (expr_let "kValue" (expr_get_field (expr_id "O") (expr_id "Pk"))
+            (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
+            (expr_let "kValue"
+             (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
                 expr_undefined) [] [])
               (expr_seq
-               (expr_set_field (expr_id "argsObj") (expr_string "0")
-                (expr_id "kValue"))
+               (expr_set_attr pattr_value (expr_id "argsObj")
+                (expr_string "0") (expr_id "kValue"))
                (expr_seq
-                (expr_set_field (expr_id "argsObj") (expr_string "1")
-                 (expr_id "k"))
+                (expr_set_attr pattr_value (expr_id "argsObj")
+                 (expr_string "1") (expr_id "k"))
                 (expr_seq
-                 (expr_set_field (expr_id "argsObj") (expr_string "2")
-                  (expr_id "O"))
+                 (expr_set_attr pattr_value (expr_id "argsObj")
+                  (expr_string "2") (expr_id "O"))
                  (expr_seq
-                  (expr_set_field (expr_id "argsObj") (expr_string "length")
-                   (expr_number (JsNumber.of_int (3))))
+                  (expr_set_attr pattr_value (expr_id "argsObj")
+                   (expr_string "length") (expr_number (JsNumber.of_int (3))))
                   (expr_let "selected"
                    (expr_app (expr_id "callbackfn")
                     [expr_id "T"; expr_id "argsObj"])
@@ -5177,7 +5232,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              [expr_op2 binary_op_add (expr_id "k")
               (expr_number (JsNumber.of_int (1)));
               expr_id "to"])))
-          (expr_set_field (expr_id "A") (expr_string "length") (expr_id "to"))))
+          (expr_set_attr pattr_value (expr_id "A") (expr_string "length")
+           (expr_id "to"))))
         (expr_seq
          (expr_app (expr_id "loop")
           [expr_number (JsNumber.of_int (0));
@@ -5186,9 +5242,11 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 .
 Definition ex_privforeachCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenVal"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
-  (expr_let "callbackfn" (expr_get_field (expr_id "args") (expr_string "0"))
+  (expr_let "callbackfn"
+   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -5197,15 +5255,17 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not a function in forEach"]) expr_undefined)
      (expr_seq
-      (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
+      (expr_let "T"
+       (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
        (expr_recc "loop"
         (expr_lambda ["k"]
          (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
           (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
            (expr_if
-            (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
+            (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
             (expr_seq
-             (expr_let "kValue" (expr_get_field (expr_id "O") (expr_id "Pk"))
+             (expr_let "kValue"
+              (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
               (expr_let "argslist"
                (expr_object
                 (objattrs_intro (expr_string "Object") expr_true expr_null
@@ -5231,15 +5291,16 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       expr_undefined))))))
 .
 Definition ex_privfreezeCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
-  (expr_let "len" (expr_get_field (expr_id "names") (expr_string "length"))
+  (expr_let "len"
+   (expr_get_attr pattr_value (expr_id "names") (expr_string "length"))
    (expr_recc "loop"
     (expr_lambda ["i"]
      (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "len"))
       (expr_let "name"
-       (expr_get_field (expr_id "names")
+       (expr_get_attr pattr_value (expr_id "names")
         (expr_op1 unary_op_prim_to_str (expr_id "i")))
        (expr_seq
         (expr_if
@@ -5262,16 +5323,17 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 Definition ex_privfromccCall := 
 expr_if
 (expr_op2 binary_op_stx_eq
- (expr_get_field (expr_id "args") (expr_string "length"))
+ (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
  (expr_number (JsNumber.of_int (0)))) (expr_string "")
-(expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
+(expr_let "end"
+ (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
  (expr_recc "loop"
   (expr_lambda ["i"; "soFar"]
    (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "end"))
     (expr_let "char"
      (expr_op1 unary_op_ascii_ntoc
       (expr_app (expr_id "%ToUint16")
-       [expr_get_field (expr_id "args")
+       [expr_get_attr pattr_value (expr_id "args")
         (expr_op1 unary_op_prim_to_str (expr_id "i"))]))
      (expr_let "next"
       (expr_op2 binary_op_string_plus (expr_id "soFar") (expr_id "char"))
@@ -5303,11 +5365,11 @@ expr_op1 unary_op_current_utc_millis expr_undefined
 Definition ex_privgetMonthCall :=  expr_number (JsNumber.of_int (3)) .
 Definition ex_privgetYearCall :=  expr_number (JsNumber.of_int (78)) .
 Definition ex_privgopdCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "name"
   (expr_app (expr_id "%ToString")
-   [expr_get_field (expr_id "args") (expr_string "1")])
+   [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
   (expr_label "ret"
    (expr_seq
     (expr_if
@@ -5367,8 +5429,9 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
             expr_undefined) []
            [("value", property_data
                       (data_intro
-                       (expr_get_field (expr_id "O") (expr_id "name"))
-                       expr_true expr_false expr_false));
+                       (expr_app (expr_id "%Get1")
+                        [expr_id "O"; expr_id "name"]) expr_true expr_false
+                       expr_false));
             ("writable", property_data
                          (data_intro expr_true expr_true expr_false
                           expr_false));
@@ -5442,10 +5505,11 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
           (expr_break "ret" (expr_id "obj"))))))))))))
 .
 Definition ex_privgopnCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "props" (expr_own_field_names (expr_id "O"))
-  (expr_let "len" (expr_get_field (expr_id "props") (expr_string "length"))
+  (expr_let "len"
+   (expr_get_attr pattr_value (expr_id "props") (expr_string "length"))
    (expr_let "A" (expr_app (expr_id "%MakeArray") [expr_id "len"])
     (expr_recc "loop"
      (expr_lambda ["i"]
@@ -5458,7 +5522,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
             (expr_op2 binary_op_add (expr_id "i")
              (expr_number (JsNumber.of_int (1))))))
           (expr_set_attr pattr_value (expr_id "A") (expr_id "to")
-           (expr_get_field (expr_id "props") (expr_id "from")))))
+           (expr_app (expr_id "%Get1") [expr_id "props"; expr_id "from"]))))
         (expr_app (expr_id "loop")
          [expr_op2 binary_op_add (expr_id "i")
           (expr_number (JsNumber.of_int (1)))])) expr_undefined))
@@ -5467,7 +5531,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
       (expr_id "A")))))))
 .
 Definition ex_privgpoCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_get_obj_attr oattr_proto (expr_id "O")))
 .
@@ -5475,7 +5539,7 @@ Definition ex_privhasOwnPropertyCall :=
 expr_op2 binary_op_has_own_property
 (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_app (expr_id "%ToString")
- [expr_get_field (expr_id "args") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
 .
 Definition ex_privin := 
 expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "r")))
@@ -5496,7 +5560,8 @@ expr_label "ret"
   (expr_if
    (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "l")))
    (expr_break "ret" expr_false) expr_null)
-  (expr_let "O" (expr_get_field (expr_id "r") (expr_string "prototype"))
+  (expr_let "O"
+   (expr_app (expr_id "%Get1") [expr_id "r"; expr_string "prototype"])
    (expr_if
     (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
     (expr_app (expr_id "%TypeError")
@@ -5511,26 +5576,27 @@ expr_label "ret"
      (expr_break "ret" (expr_app (expr_id "search") [expr_id "l"])))))))
 .
 Definition ex_privisExtensibleCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_get_obj_attr oattr_extensible (expr_id "O")))
 .
 Definition ex_privisFiniteCall := 
 expr_app (expr_id "%IsFinite")
 [expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "args") (expr_string "0")]]
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]]
 .
 Definition ex_privisFrozenCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
-  (expr_let "len" (expr_get_field (expr_id "names") (expr_string "length"))
+  (expr_let "len"
+   (expr_get_attr pattr_value (expr_id "names") (expr_string "length"))
    (expr_recc "loop"
     (expr_lambda ["i"]
      (expr_label "ret"
       (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "len"))
        (expr_let "name"
-        (expr_get_field (expr_id "names")
+        (expr_get_attr pattr_value (expr_id "names")
          (expr_op1 unary_op_prim_to_str (expr_id "i")))
         (expr_let "isData"
          (expr_op1 unary_op_not
@@ -5556,7 +5622,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 Definition ex_privisNaNCall := 
 expr_op2 binary_op_same_value
 (expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "args") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
 (expr_number JsNumber.nan)
 .
 Definition ex_privisPrototypeOfCall := 
@@ -5571,23 +5637,25 @@ expr_recc "searchChain"
 (expr_if
  (expr_op1 unary_op_not
   (expr_op1 unary_op_is_object
-   (expr_get_field (expr_id "args") (expr_string "0")))) expr_false
+   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))))
+ expr_false
  (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_app (expr_id "searchChain")
-   [expr_id "O"; expr_get_field (expr_id "args") (expr_string "0")])))
+   [expr_id "O"; expr_get_attr pattr_value (expr_id "args") (expr_string "0")])))
 .
 Definition ex_privisSealedCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
-  (expr_let "len" (expr_get_field (expr_id "names") (expr_string "length"))
+  (expr_let "len"
+   (expr_get_attr pattr_value (expr_id "names") (expr_string "length"))
    (expr_recc "loop"
     (expr_lambda ["i"]
      (expr_label "ret"
       (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "len"))
        (expr_seq
         (expr_let "name"
-         (expr_get_field (expr_id "names")
+         (expr_get_attr pattr_value (expr_id "names")
           (expr_op1 unary_op_prim_to_str (expr_id "i")))
          (expr_if (expr_get_attr pattr_config (expr_id "O") (expr_id "name"))
           (expr_break "ret" expr_false) expr_null))
@@ -5602,15 +5670,16 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
 .
 Definition ex_privjoinCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenVal"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
   (expr_let "sep"
    (expr_if
     (expr_op2 binary_op_stx_eq
-     (expr_get_field (expr_id "args") (expr_string "0")) expr_undefined)
-    (expr_string ",")
+     (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+     expr_undefined) (expr_string ",")
     (expr_app (expr_id "%ToString")
-     [expr_get_field (expr_id "args") (expr_string "0")]))
+     [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]))
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -5624,8 +5693,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         (expr_let "S"
          (expr_op2 binary_op_string_plus (expr_id "R") (expr_id "sep"))
          (expr_let "element"
-          (expr_get_field (expr_id "O")
-           (expr_app (expr_id "%ToString") [expr_id "k"]))
+          (expr_app (expr_id "%Get1")
+           [expr_id "O"; expr_app (expr_id "%ToString") [expr_id "k"]])
           (expr_let "next"
            (expr_if
             (expr_if
@@ -5642,29 +5711,31 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_if
         (expr_if
          (expr_op2 binary_op_stx_eq
-          (expr_get_field (expr_id "O") (expr_string "0")) expr_undefined)
-         expr_true
+          (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "0"])
+          expr_undefined) expr_true
          (expr_op2 binary_op_stx_eq
-          (expr_get_field (expr_id "O") (expr_string "0")) expr_null))
-        (expr_string "")
+          (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "0"])
+          expr_null)) (expr_string "")
         (expr_app (expr_id "%ToString")
-         [expr_get_field (expr_id "O") (expr_string "0")]))
+         [expr_app (expr_id "%Get1") [expr_id "O"; expr_string "0"]]))
        (expr_break "ret"
         (expr_app (expr_id "loop")
          [expr_number (JsNumber.of_int (1)); expr_id "start"])))))))))
 .
 Definition ex_privkeysCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
-  (expr_let "len" (expr_get_field (expr_id "names") (expr_string "length"))
+  (expr_let "len"
+   (expr_get_attr pattr_value (expr_id "names") (expr_string "length"))
    (expr_let "A"
     (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
     (expr_recc "loop"
      (expr_lambda ["i"; "enumCount"]
       (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "len"))
        (expr_let "indx" (expr_op1 unary_op_prim_to_str (expr_id "i"))
-        (expr_let "name" (expr_get_field (expr_id "names") (expr_id "indx"))
+        (expr_let "name"
+         (expr_get_attr pattr_value (expr_id "names") (expr_id "indx"))
          (expr_if (expr_get_attr pattr_enum (expr_id "O") (expr_id "name"))
           (expr_seq
            (expr_let "pd"
@@ -5696,7 +5767,7 @@ expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
            [expr_op2 binary_op_add (expr_id "i")
             (expr_number (JsNumber.of_int (1)));
             expr_id "enumCount"]))))
-       (expr_set_field (expr_id "A") (expr_string "length")
+       (expr_set_attr pattr_value (expr_id "A") (expr_string "length")
         (expr_id "enumCount"))))
      (expr_seq
       (expr_app (expr_id "loop")
@@ -5720,18 +5791,18 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "That"
   (expr_app (expr_id "%ToString")
-   [expr_get_field (expr_id "args") (expr_string "0")])
+   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
   (expr_op2 binary_op_locale_compare (expr_id "S") (expr_id "That"))))
 .
 Definition ex_privlogCall := 
 expr_recc "loop"
 (expr_lambda ["i"]
  (expr_if
-  (expr_op2 binary_op_has_property (expr_id "s")
-   (expr_op1 unary_op_prim_to_str (expr_id "i")))
+  (expr_app (expr_id "%HasProperty")
+   [expr_id "args"; expr_op1 unary_op_prim_to_str (expr_id "i")])
   (expr_seq
    (expr_op1 unary_op_pretty
-    (expr_get_field (expr_id "s")
+    (expr_get_attr pattr_value (expr_id "args")
      (expr_op1 unary_op_prim_to_str (expr_id "i"))))
    (expr_app (expr_id "loop")
     [expr_op2 binary_op_add (expr_id "i") (expr_number (JsNumber.of_int (1)))]))
@@ -5740,9 +5811,11 @@ expr_recc "loop"
 .
 Definition ex_privmapCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenValue"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
-  (expr_let "callbackfn" (expr_get_field (expr_id "args") (expr_string "0"))
+  (expr_let "callbackfn"
+   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -5750,7 +5823,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not a function in map"]) expr_null)
-     (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
+     (expr_let "T"
+      (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
       (expr_let "A"
        (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
        (expr_recc "loop"
@@ -5758,24 +5832,25 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
           (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
            (expr_if
-            (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
-            (expr_let "kValue" (expr_get_field (expr_id "O") (expr_id "Pk"))
+            (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
+            (expr_let "kValue"
+             (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
                 expr_undefined) [] [])
               (expr_seq
-               (expr_set_field (expr_id "argsObj") (expr_string "0")
-                (expr_id "kValue"))
+               (expr_set_attr pattr_value (expr_id "argsObj")
+                (expr_string "0") (expr_id "kValue"))
                (expr_seq
-                (expr_set_field (expr_id "argsObj") (expr_string "1")
-                 (expr_id "k"))
+                (expr_set_attr pattr_value (expr_id "argsObj")
+                 (expr_string "1") (expr_id "k"))
                 (expr_seq
-                 (expr_set_field (expr_id "argsObj") (expr_string "2")
-                  (expr_id "O"))
+                 (expr_set_attr pattr_value (expr_id "argsObj")
+                  (expr_string "2") (expr_id "O"))
                  (expr_seq
-                  (expr_set_field (expr_id "argsObj") (expr_string "length")
-                   (expr_number (JsNumber.of_int (3))))
+                  (expr_set_attr pattr_value (expr_id "argsObj")
+                   (expr_string "length") (expr_number (JsNumber.of_int (3))))
                   (expr_seq
                    (expr_let "mappedValue"
                     (expr_app (expr_id "callbackfn")
@@ -5804,7 +5879,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_add (expr_id "k")
               (expr_number (JsNumber.of_int (1)))])))
-          (expr_set_field (expr_id "A") (expr_string "length") (expr_id "k"))))
+          (expr_set_attr pattr_value (expr_id "A") (expr_string "length")
+           (expr_id "k"))))
         (expr_seq
          (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
          (expr_break "ret" (expr_id "A")))))))))))
@@ -5812,7 +5888,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 Definition ex_privmathAbsCall := 
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "args") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
 (expr_label "ret"
  (expr_seq
   (expr_if
@@ -5829,7 +5905,7 @@ expr_let "n"
 Definition ex_privmathCeilCall := 
 expr_let "x"
 (expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "args") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
 (expr_label "ret"
  (expr_seq
   (expr_if
@@ -5849,7 +5925,7 @@ expr_let "x"
 Definition ex_privmathFloorCall := 
 expr_let "x"
 (expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "args") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
 (expr_label "ret"
  (expr_seq
   (expr_if
@@ -5869,7 +5945,7 @@ expr_let "x"
 Definition ex_privmathLogCall := 
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "args") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
 (expr_label "ret"
  (expr_seq
   (expr_if
@@ -5913,10 +5989,10 @@ expr_app (expr_id "%minMaxCall")
 Definition ex_privmathPowCall := 
 expr_let "x"
 (expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "args") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
 (expr_let "y"
  (expr_app (expr_id "%ToNumber")
-  [expr_get_field (expr_id "args") (expr_string "1")])
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
  (expr_label "ret"
   (expr_seq
    (expr_if
@@ -6110,7 +6186,8 @@ expr_if (expr_op2 binary_op_le (expr_id "a") (expr_id "b")) (expr_id "a")
 (expr_id "b")
 .
 Definition ex_privminMaxCall := 
-expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
+expr_let "end"
+(expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
 (expr_label "ret"
  (expr_seq
   (expr_if
@@ -6122,7 +6199,7 @@ expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
     (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "end"))
      (expr_let "curr"
       (expr_app (expr_id "%ToNumber")
-       [expr_get_field (expr_id "args")
+       [expr_get_attr pattr_value (expr_id "args")
         (expr_op1 unary_op_prim_to_str (expr_id "i"))])
       (expr_seq
        (expr_if
@@ -6173,7 +6250,7 @@ expr_let "argsObj"
      (expr_op2 binary_op_has_own_property (expr_id "args") (expr_id "strx"))
      (expr_seq
       (expr_set_attr pattr_value (expr_id "argsObj") (expr_id "strx")
-       (expr_get_field (expr_id "args") (expr_id "strx")))
+       (expr_get_attr pattr_value (expr_id "args") (expr_id "strx")))
       (expr_app (expr_id "loop")
        [expr_op2 binary_op_add (expr_id "iter")
         (expr_number (JsNumber.of_int (1)))]))
@@ -6277,10 +6354,10 @@ expr_let "val" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
 (expr_let "rint"
  (expr_if
   (expr_op2 binary_op_stx_eq
-   (expr_get_field (expr_id "args") (expr_string "0")) expr_undefined)
-  (expr_number (JsNumber.of_int (10)))
+   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+   expr_undefined) (expr_number (JsNumber.of_int (10)))
   (expr_app (expr_id "%ToInteger")
-   [expr_get_field (expr_id "args") (expr_string "0")]))
+   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]))
  (expr_if
   (expr_if
    (expr_op2 binary_op_lt (expr_id "rint")
@@ -6320,33 +6397,38 @@ Definition ex_privparseFloatCall :=  expr_string "parseFloat NYI" .
 Definition ex_privparseIntCall := 
 expr_let "numstr"
 (expr_app (expr_id "%ToString")
- [expr_get_field (expr_id "args") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
 (expr_op1 unary_op_prim_to_num (expr_id "numstr"))
 .
 Definition ex_privpopCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenVal"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "len")
     (expr_number (JsNumber.of_int (0))))
    (expr_seq
-    (expr_set_field (expr_id "O") (expr_string "length")
-     (expr_number (JsNumber.of_int (0)))) expr_undefined)
+    (expr_app (expr_id "%Put1")
+     [expr_id "O"; expr_string "length"; expr_number (JsNumber.of_int (0))])
+    expr_undefined)
    (expr_let "indx"
     (expr_app (expr_id "%ToString")
      [expr_op2 binary_op_sub (expr_id "len")
       (expr_number (JsNumber.of_int (1)))])
-    (expr_let "element" (expr_get_field (expr_id "O") (expr_id "indx"))
+    (expr_let "element"
+     (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "indx"])
      (expr_seq
       (expr_app (expr_id "%Delete") [expr_id "O"; expr_id "indx"; expr_false])
       (expr_seq
-       (expr_set_field (expr_id "O") (expr_string "length")
-        (expr_app (expr_id "%ToNumber") [expr_id "indx"]))
+       (expr_app (expr_id "%Put1")
+        [expr_id "O";
+         expr_string "length";
+         expr_app (expr_id "%ToNumber") [expr_id "indx"]])
        (expr_id "element"))))))))
 .
 Definition ex_privpreventExtensionsCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_seq (expr_set_obj_attr oattr_extensible (expr_id "O") expr_false)
   (expr_id "O")))
@@ -6359,7 +6441,7 @@ expr_recc "loop"
    (expr_op2 binary_op_has_own_property (expr_id "arr") (expr_id "istr"))
    (expr_seq
     (expr_app (expr_id "fn")
-     [expr_get_field (expr_id "arr") (expr_id "istr")])
+     [expr_app (expr_id "%Get1") [expr_id "arr"; expr_id "istr"]])
     (expr_app (expr_id "loop")
      [expr_op2 binary_op_add (expr_id "i")
       (expr_number (JsNumber.of_int (1)))])) expr_undefined)))
@@ -6368,20 +6450,20 @@ expr_recc "loop"
 Definition ex_privprintCall := 
 expr_op1 unary_op_print
 (expr_app (expr_id "%ToString")
- [expr_get_field (expr_id "s") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "s") (expr_string "0")])
 .
 Definition ex_privpropEnumCall := 
 expr_let "getOwnProperty"
 (expr_lambda ["o"; "f"]
  (expr_if (expr_op2 binary_op_has_own_property (expr_id "o") (expr_id "f"))
-  (expr_get_field (expr_id "o") (expr_id "f")) expr_undefined))
+  (expr_app (expr_id "%Get1") [expr_id "o"; expr_id "f"]) expr_undefined))
 (expr_if
  (expr_op2 binary_op_stx_eq
-  (expr_get_field (expr_id "args") (expr_string "0")) expr_undefined)
- expr_false
+  (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+  expr_undefined) expr_false
  (expr_let "P"
   (expr_app (expr_id "%ToString")
-   [expr_get_field (expr_id "args") (expr_string "0")])
+   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
   (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_let "desc"
     (expr_app (expr_id "getOwnProperty") [expr_id "O"; expr_id "P"])
@@ -6400,7 +6482,7 @@ expr_let "aux"
    (expr_seq
     (expr_let "cur" (expr_own_field_names (expr_id "obj"))
      (expr_let "length"
-      (expr_get_field (expr_id "cur") (expr_string "length"))
+      (expr_get_attr pattr_value (expr_id "cur") (expr_string "length"))
       (expr_recc "loop"
        (expr_lambda ["i"]
         (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "length"))
@@ -6409,11 +6491,11 @@ expr_let "aux"
            (expr_if
             (expr_if
              (expr_get_attr pattr_enum (expr_id "obj")
-              (expr_get_field (expr_id "cur") (expr_id "istr"))) expr_true
-             (expr_id "get-non-enumerable"))
-            (expr_set_field (expr_id "aux")
-             (expr_get_field (expr_id "cur") (expr_id "istr")) expr_true)
-            expr_undefined)
+              (expr_get_attr pattr_value (expr_id "cur") (expr_id "istr")))
+             expr_true (expr_id "get-non-enumerable"))
+            (expr_set_attr pattr_value (expr_id "aux")
+             (expr_get_attr pattr_value (expr_id "cur") (expr_id "istr"))
+             expr_true) expr_undefined)
            (expr_app (expr_id "loop")
             [expr_op2 binary_op_add (expr_id "i")
              (expr_number (JsNumber.of_int (1)))]))) expr_undefined))
@@ -6434,19 +6516,20 @@ expr_if (expr_op2 binary_op_stx_eq (expr_id "object") expr_null)
 .
 Definition ex_privpushCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenVal"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
   (expr_recc "loop"
    (expr_lambda ["i"; "n"]
     (expr_if
      (expr_op2 binary_op_lt (expr_id "i")
-      (expr_get_field (expr_id "args") (expr_string "length")))
+      (expr_get_attr pattr_value (expr_id "args") (expr_string "length")))
      (expr_seq
       (expr_let "ii" (expr_op1 unary_op_prim_to_str (expr_id "i"))
        (expr_app (expr_id "%SetField")
         [expr_id "O";
          expr_app (expr_id "%ToString") [expr_id "n"];
-         expr_get_field (expr_id "args") (expr_id "ii")]))
+         expr_get_attr pattr_value (expr_id "args") (expr_id "ii")]))
       (expr_app (expr_id "loop")
        [expr_op2 binary_op_add (expr_id "i")
         (expr_number (JsNumber.of_int (1)));
@@ -6458,12 +6541,14 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 Definition ex_privrandomCall :=  expr_number (JsNumber.of_int (4)) .
 Definition ex_privreduceCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenValue"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
-  (expr_let "callbackfn" (expr_get_field (expr_id "args") (expr_string "0"))
+  (expr_let "callbackfn"
+   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
    (expr_let "has_initial"
     (expr_op2 binary_op_ge
-     (expr_get_field (expr_id "args") (expr_string "length"))
+     (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
      (expr_number (JsNumber.of_int (2))))
     (expr_label "ret"
      (expr_seq
@@ -6489,7 +6574,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
            (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
             (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
              (expr_let "kPresent"
-              (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
+              (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
               (expr_if (expr_id "kPresent") (expr_id "k")
                (expr_app (expr_id "accumLoop")
                 [expr_op2 binary_op_add (expr_id "k")
@@ -6498,36 +6583,36 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
           (expr_app (expr_id "accumLoop") [expr_number (JsNumber.of_int (0))])))
         (expr_let "accumulator"
          (expr_if (expr_id "has_initial")
-          (expr_get_field (expr_id "args") (expr_string "1"))
-          (expr_get_field (expr_id "O")
-           (expr_app (expr_id "%ToString") [expr_id "origK"])))
+          (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+          (expr_app (expr_id "%Get1")
+           [expr_id "O"; expr_app (expr_id "%ToString") [expr_id "origK"]]))
          (expr_recc "outerLoop"
           (expr_lambda ["k"; "accumulator"]
            (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
             (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
              (expr_let "kPresent"
-              (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
+              (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
               (expr_if (expr_id "kPresent")
                (expr_let "kValue"
-                (expr_get_field (expr_id "O") (expr_id "Pk"))
+                (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
                 (expr_let "argsObj"
                  (expr_object
                   (objattrs_intro (expr_string "Object") expr_true expr_null
                    expr_undefined) [] [])
                  (expr_seq
-                  (expr_set_field (expr_id "argsObj") (expr_string "0")
-                   (expr_id "accumulator"))
+                  (expr_set_attr pattr_value (expr_id "argsObj")
+                   (expr_string "0") (expr_id "accumulator"))
                   (expr_seq
-                   (expr_set_field (expr_id "argsObj") (expr_string "1")
-                    (expr_id "kValue"))
+                   (expr_set_attr pattr_value (expr_id "argsObj")
+                    (expr_string "1") (expr_id "kValue"))
                    (expr_seq
-                    (expr_set_field (expr_id "argsObj") (expr_string "2")
-                     (expr_id "k"))
+                    (expr_set_attr pattr_value (expr_id "argsObj")
+                     (expr_string "2") (expr_id "k"))
                     (expr_seq
-                     (expr_set_field (expr_id "argsObj") (expr_string "3")
-                      (expr_id "O"))
+                     (expr_set_attr pattr_value (expr_id "argsObj")
+                      (expr_string "3") (expr_id "O"))
                      (expr_seq
-                      (expr_set_field (expr_id "argsObj")
+                      (expr_set_attr pattr_value (expr_id "argsObj")
                        (expr_string "length")
                        (expr_number (JsNumber.of_int (4))))
                       (expr_let "next"
@@ -6549,12 +6634,14 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 .
 Definition ex_privreduceRightCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenValue"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
-  (expr_let "callbackfn" (expr_get_field (expr_id "args") (expr_string "0"))
+  (expr_let "callbackfn"
+   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
    (expr_let "has_initial"
     (expr_op2 binary_op_ge
-     (expr_get_field (expr_id "args") (expr_string "length"))
+     (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
      (expr_number (JsNumber.of_int (2))))
     (expr_label "ret"
      (expr_seq
@@ -6580,7 +6667,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_number (JsNumber.of_int (0))))
             (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
              (expr_let "kPresent"
-              (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
+              (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
               (expr_if (expr_id "kPresent") (expr_id "k")
                (expr_app (expr_id "accumLoop")
                 [expr_op2 binary_op_sub (expr_id "k")
@@ -6591,9 +6678,9 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
             (expr_number (JsNumber.of_int (1)))])))
         (expr_let "accumulator"
          (expr_if (expr_id "has_initial")
-          (expr_get_field (expr_id "args") (expr_string "1"))
-          (expr_get_field (expr_id "O")
-           (expr_app (expr_id "%ToString") [expr_id "origK"])))
+          (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+          (expr_app (expr_id "%Get1")
+           [expr_id "O"; expr_app (expr_id "%ToString") [expr_id "origK"]]))
          (expr_recc "outerLoop"
           (expr_lambda ["k"; "accumulator"]
            (expr_if
@@ -6601,28 +6688,28 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_number (JsNumber.of_int (0))))
             (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
              (expr_let "kPresent"
-              (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
+              (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
               (expr_if (expr_id "kPresent")
                (expr_let "kValue"
-                (expr_get_field (expr_id "O") (expr_id "Pk"))
+                (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
                 (expr_let "argsObj"
                  (expr_object
                   (objattrs_intro (expr_string "Object") expr_true expr_null
                    expr_undefined) [] [])
                  (expr_seq
-                  (expr_set_field (expr_id "argsObj") (expr_string "0")
-                   (expr_id "accumulator"))
+                  (expr_set_attr pattr_value (expr_id "argsObj")
+                   (expr_string "0") (expr_id "accumulator"))
                   (expr_seq
-                   (expr_set_field (expr_id "argsObj") (expr_string "1")
-                    (expr_id "kValue"))
+                   (expr_set_attr pattr_value (expr_id "argsObj")
+                    (expr_string "1") (expr_id "kValue"))
                    (expr_seq
-                    (expr_set_field (expr_id "argsObj") (expr_string "2")
-                     (expr_id "k"))
+                    (expr_set_attr pattr_value (expr_id "argsObj")
+                     (expr_string "2") (expr_id "k"))
                     (expr_seq
-                     (expr_set_field (expr_id "argsObj") (expr_string "3")
-                      (expr_id "O"))
+                     (expr_set_attr pattr_value (expr_id "argsObj")
+                      (expr_string "3") (expr_id "O"))
                      (expr_seq
-                      (expr_set_field (expr_id "argsObj")
+                      (expr_set_attr pattr_value (expr_id "argsObj")
                        (expr_string "length")
                        (expr_number (JsNumber.of_int (4))))
                       (expr_let "next"
@@ -6646,8 +6733,9 @@ Definition ex_privreplaceCall :=
 expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
 (expr_let "search"
  (expr_app (expr_id "%ToString")
-  [expr_get_field (expr_id "args") (expr_string "0")])
- (expr_let "replace" (expr_get_field (expr_id "args") (expr_string "1"))
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ (expr_let "replace"
+  (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
   (expr_if
    (expr_op1 unary_op_not
     (expr_app (expr_id "%IsCallable") [expr_id "replace"]))
@@ -6696,7 +6784,8 @@ expr_if (expr_id "strict") (expr_id "obj")
 .
 Definition ex_privreverseCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenVal"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
   (expr_let "middle"
    (expr_op1 unary_op_floor
@@ -6716,25 +6805,25 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          (expr_let "lowerP"
           (expr_app (expr_id "%ToString") [expr_id "lower"])
           (expr_let "lowerValue"
-           (expr_get_field (expr_id "O") (expr_id "lowerP"))
+           (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "lowerP"])
            (expr_let "upperValue"
-            (expr_get_field (expr_id "O") (expr_id "upperP"))
+            (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "upperP"])
             (expr_let "lowerExists"
-             (expr_op2 binary_op_has_property (expr_id "O")
-              (expr_id "lowerP"))
+             (expr_app (expr_id "%HasProperty")
+              [expr_id "O"; expr_id "lowerP"])
              (expr_let "upperExists"
-              (expr_op2 binary_op_has_property (expr_id "O")
-               (expr_id "upperP"))
+              (expr_app (expr_id "%HasProperty")
+               [expr_id "O"; expr_id "upperP"])
               (expr_seq
                (expr_if
                 (expr_if (expr_id "lowerExists") (expr_id "upperExists")
                  expr_false)
                 (expr_seq
-                 (expr_set_field (expr_id "O") (expr_id "lowerP")
-                  (expr_id "upperValue"))
+                 (expr_app (expr_id "%Put1")
+                  [expr_id "O"; expr_id "lowerP"; expr_id "upperValue"])
                  (expr_seq
-                  (expr_set_field (expr_id "O") (expr_id "upperP")
-                   (expr_id "lowerValue"))
+                  (expr_app (expr_id "%Put1")
+                   [expr_id "O"; expr_id "upperP"; expr_id "lowerValue"])
                   (expr_break "ret"
                    (expr_app (expr_id "loop")
                     [expr_op2 binary_op_add (expr_id "lower")
@@ -6742,8 +6831,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                (expr_seq
                 (expr_if (expr_id "upperExists")
                  (expr_seq
-                  (expr_set_field (expr_id "O") (expr_id "lowerP")
-                   (expr_id "upperValue"))
+                  (expr_app (expr_id "%Put1")
+                   [expr_id "O"; expr_id "lowerP"; expr_id "upperValue"])
                   (expr_seq
                    (expr_app (expr_id "%Delete")
                     [expr_id "O"; expr_id "upperP"; expr_false])
@@ -6757,8 +6846,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                    (expr_app (expr_id "%Delete")
                     [expr_id "O"; expr_id "lowerP"; expr_false])
                    (expr_seq
-                    (expr_set_field (expr_id "O") (expr_id "upperP")
-                     (expr_id "lowerValue"))
+                    (expr_app (expr_id "%Put1")
+                     [expr_id "O"; expr_id "upperP"; expr_id "lowerValue"])
                     (expr_break "ret"
                      (expr_app (expr_id "loop")
                       [expr_op2 binary_op_add (expr_id "lower")
@@ -6777,17 +6866,18 @@ expr_app (expr_get_internal "construct" (expr_id "constr"))
 [expr_id "constr"; expr_id "args"]
 .
 Definition ex_privsealCall := 
-expr_let "O" (expr_get_field (expr_id "args") (expr_string "0"))
+expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_seq
   (expr_let "names" (expr_own_field_names (expr_id "O"))
-   (expr_let "len" (expr_get_field (expr_id "names") (expr_string "length"))
+   (expr_let "len"
+    (expr_get_attr pattr_value (expr_id "names") (expr_string "length"))
     (expr_recc "loop"
      (expr_lambda ["i"]
       (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "len"))
        (expr_seq
         (expr_let "name"
-         (expr_get_field (expr_id "names")
+         (expr_get_attr pattr_value (expr_id "names")
           (expr_op1 unary_op_prim_to_str (expr_id "i")))
          (expr_set_attr pattr_config (expr_id "O") (expr_id "name")
           expr_false))
@@ -6839,45 +6929,55 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
                  (expr_id "%RangeErrorProto") expr_undefined) [] []]))
              (expr_if
               (expr_op2 binary_op_lt (expr_id "newLen")
-               (expr_get_field (expr_id "obj") (expr_string "length")))
+               (expr_app (expr_id "%Get1")
+                [expr_id "obj"; expr_string "length"]))
               (expr_app (expr_id "%ArrayLengthChange")
                [expr_id "obj"; expr_id "newLen"]) expr_undefined))))
           expr_undefined))
         (expr_seq (expr_app (expr_id "lenCheck") [])
          (expr_seq
-          (expr_set_field (expr_id "obj") (expr_id "fld")
-           (expr_if
+          (expr_app (expr_id "%Put1")
+           [expr_id "obj";
+            expr_id "fld";
+            expr_if
             (expr_op2 binary_op_stx_eq (expr_id "fld") (expr_string "length"))
-            (expr_app (expr_id "%ToUint32") [expr_id "val"]) (expr_id "val")))
+            (expr_app (expr_id "%ToUint32") [expr_id "val"]) (expr_id "val")])
           (expr_if (expr_app (expr_id "isArrayIndex") [])
            (expr_let "uint" (expr_app (expr_id "%ToUint32") [expr_id "fld"])
             (expr_let "len"
-             (expr_get_field (expr_id "obj") (expr_string "length"))
+             (expr_app (expr_id "%Get1")
+              [expr_id "obj"; expr_string "length"])
              (expr_if
               (expr_op2 binary_op_lt (expr_id "len")
                (expr_op2 binary_op_add (expr_id "uint")
                 (expr_number (JsNumber.of_int (1)))))
-              (expr_set_field (expr_id "obj") (expr_string "length")
-               (expr_op2 binary_op_add (expr_id "uint")
-                (expr_number (JsNumber.of_int (1))))) expr_undefined)))
+              (expr_app (expr_id "%Put1")
+               [expr_id "obj";
+                expr_string "length";
+                expr_op2 binary_op_add (expr_id "uint")
+                (expr_number (JsNumber.of_int (1)))]) expr_undefined)))
            expr_undefined)))))
       (expr_if
        (expr_op2 binary_op_stx_eq
         (expr_get_obj_attr oattr_class (expr_id "obj")) (expr_string "Array"))
        (expr_app (expr_id "setArrayField") [])
-       (expr_set_field (expr_id "obj") (expr_id "fld") (expr_id "val")))))))))
+       (expr_app (expr_id "%Put1")
+        [expr_id "obj"; expr_id "fld"; expr_id "val"]))))))))
 .
 Definition ex_privshiftCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenVal"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
   (expr_if
    (expr_op2 binary_op_stx_eq (expr_id "len")
     (expr_number (JsNumber.of_int (0))))
    (expr_seq
-    (expr_set_field (expr_id "O") (expr_string "length")
-     (expr_number (JsNumber.of_int (0)))) expr_undefined)
-   (expr_let "first" (expr_get_field (expr_id "O") (expr_string "0"))
+    (expr_app (expr_id "%Put1")
+     [expr_id "O"; expr_string "length"; expr_number (JsNumber.of_int (0))])
+    expr_undefined)
+   (expr_let "first"
+    (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "0"])
     (expr_seq
      (expr_recc "loop"
       (expr_lambda ["k"]
@@ -6891,13 +6991,13 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
             [expr_op2 binary_op_sub (expr_id "k")
              (expr_number (JsNumber.of_int (1)))])
            (expr_let "fromPresent"
-            (expr_op2 binary_op_has_property (expr_id "O") (expr_id "from"))
+            (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "from"])
             (expr_if (expr_id "fromPresent")
              (expr_seq
               (expr_let "fromVal"
-               (expr_get_field (expr_id "O") (expr_id "from"))
-               (expr_set_field (expr_id "O") (expr_id "to")
-                (expr_id "fromVal")))
+               (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "from"])
+               (expr_app (expr_id "%Put1")
+                [expr_id "O"; expr_id "to"; expr_id "fromVal"]))
               (expr_break "ret"
                (expr_app (expr_id "loop")
                 [expr_op2 binary_op_add (expr_id "k")
@@ -6919,13 +7019,14 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          expr_app (expr_id "%ToString") [expr_id "newLen"];
          expr_false])
        (expr_seq
-        (expr_set_field (expr_id "O") (expr_string "length")
-         (expr_id "newLen")) (expr_id "first")))))))))
+        (expr_app (expr_id "%Put1")
+         [expr_id "O"; expr_string "length"; expr_id "newLen"])
+        (expr_id "first")))))))))
 .
 Definition ex_privsinCall := 
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
- [expr_get_field (expr_id "args") (expr_string "0")])
+ [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
 (expr_label "ret"
  (expr_seq
   (expr_if
@@ -6952,11 +7053,12 @@ Definition ex_privsliceCall :=
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "A"
  (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
- (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
+ (expr_let "lenVal"
+  (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
   (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
    (expr_let "relativeStart"
     (expr_app (expr_id "%ToInteger")
-     [expr_get_field (expr_id "args") (expr_string "0")])
+     [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
     (expr_let "initk"
      (expr_if
       (expr_op2 binary_op_lt (expr_id "relativeStart")
@@ -6973,10 +7075,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_let "relativeEnd"
       (expr_if
        (expr_op2 binary_op_stx_eq
-        (expr_get_field (expr_id "args") (expr_string "1")) expr_undefined)
-       (expr_id "len")
+        (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+        expr_undefined) (expr_id "len")
        (expr_app (expr_id "%ToInteger")
-        [expr_get_field (expr_id "args") (expr_string "1")]))
+        [expr_get_attr pattr_value (expr_id "args") (expr_string "1")]))
       (expr_let "final"
        (expr_if
         (expr_op2 binary_op_lt (expr_id "relativeEnd")
@@ -6998,11 +7100,11 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
             (expr_break "ret" (expr_id "finalLen")) expr_null)
            (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
             (expr_let "kPresent"
-             (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
+             (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
              (expr_if (expr_id "kPresent")
               (expr_seq
                (expr_let "kValue"
-                (expr_get_field (expr_id "O") (expr_id "Pk"))
+                (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
                 (expr_app (expr_id "%defineOwnProperty")
                  [expr_id "A";
                   expr_app (expr_id "%ToString") [expr_id "n"];
@@ -7038,7 +7140,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                  expr_op2 binary_op_add (expr_id "finalLen")
                  (expr_number (JsNumber.of_int (1)))]))))))))
         (expr_seq
-         (expr_set_field (expr_id "A") (expr_string "length")
+         (expr_set_attr pattr_value (expr_id "A") (expr_string "length")
           (expr_app (expr_id "loop")
            [expr_number (JsNumber.of_int (0));
             expr_id "initk";
@@ -7056,9 +7158,9 @@ expr_let "retObj"
     (expr_op2 binary_op_has_own_property (expr_id "list")
      (expr_op1 unary_op_prim_to_str (expr_id "iter")))
     (expr_seq
-     (expr_set_field (expr_id "retObj")
+     (expr_set_attr pattr_value (expr_id "retObj")
       (expr_op1 unary_op_prim_to_str (expr_id "ix"))
-      (expr_get_field (expr_id "list")
+      (expr_get_attr pattr_value (expr_id "list")
        (expr_op1 unary_op_prim_to_str (expr_id "iter"))))
      (expr_if (expr_op2 binary_op_gt (expr_id "iter") (expr_id "max"))
       expr_undefined
@@ -7067,15 +7169,18 @@ expr_let "retObj"
         (expr_number (JsNumber.of_int (1)));
         expr_op2 binary_op_add (expr_id "ix")
         (expr_number (JsNumber.of_int (1)))])))
-    (expr_set_field (expr_id "retObj") (expr_string "length") (expr_id "ix"))))
+    (expr_set_attr pattr_value (expr_id "retObj") (expr_string "length")
+     (expr_id "ix"))))
   (expr_app (expr_id "inner_slice")
    [expr_id "min"; expr_number (JsNumber.of_int (0))])) (expr_id "retObj"))
 .
 Definition ex_privsomeCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenValue" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenValue"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
-  (expr_let "callbackfn" (expr_get_field (expr_id "args") (expr_string "0"))
+  (expr_let "callbackfn"
+   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -7083,31 +7188,33 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not function in some"]) expr_null)
-     (expr_let "T" (expr_get_field (expr_id "args") (expr_string "1"))
+     (expr_let "T"
+      (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
       (expr_recc "loop"
        (expr_lambda ["k"]
         (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
          (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
           (expr_let "kPresent"
-           (expr_op2 binary_op_has_property (expr_id "O") (expr_id "Pk"))
+           (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
            (expr_if (expr_id "kPresent")
-            (expr_let "kValue" (expr_get_field (expr_id "O") (expr_id "Pk"))
+            (expr_let "kValue"
+             (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
              (expr_let "argsObj"
               (expr_object
                (objattrs_intro (expr_string "Object") expr_true expr_null
                 expr_undefined) [] [])
               (expr_seq
-               (expr_set_field (expr_id "argsObj") (expr_string "0")
-                (expr_id "kValue"))
+               (expr_set_attr pattr_value (expr_id "argsObj")
+                (expr_string "0") (expr_id "kValue"))
                (expr_seq
-                (expr_set_field (expr_id "argsObj") (expr_string "1")
-                 (expr_id "k"))
+                (expr_set_attr pattr_value (expr_id "argsObj")
+                 (expr_string "1") (expr_id "k"))
                 (expr_seq
-                 (expr_set_field (expr_id "argsObj") (expr_string "2")
-                  (expr_id "O"))
+                 (expr_set_attr pattr_value (expr_id "argsObj")
+                  (expr_string "2") (expr_id "O"))
                  (expr_seq
-                  (expr_set_field (expr_id "argsObj") (expr_string "length")
-                   (expr_number (JsNumber.of_int (3))))
+                  (expr_set_attr pattr_value (expr_id "argsObj")
+                   (expr_string "length") (expr_number (JsNumber.of_int (3))))
                   (expr_let "testResult"
                    (expr_app (expr_id "callbackfn")
                     [expr_id "T"; expr_id "argsObj"])
@@ -7131,9 +7238,9 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_let "jString" (expr_app (expr_id "%ToString") [expr_id "j"])
    (expr_let "kString" (expr_app (expr_id "%ToString") [expr_id "k"])
     (expr_let "hasj"
-     (expr_op2 binary_op_has_property (expr_id "obj") (expr_id "jString"))
+     (expr_app (expr_id "%HasProperty") [expr_id "obj"; expr_id "jString"])
      (expr_let "hask"
-      (expr_op2 binary_op_has_property (expr_id "obj") (expr_id "kString"))
+      (expr_app (expr_id "%HasProperty") [expr_id "obj"; expr_id "kString"])
       (expr_label "ret"
        (expr_seq
         (expr_if
@@ -7148,8 +7255,10 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
            (expr_break "ret"
             (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (1)))))
            expr_null)
-          (expr_let "x" (expr_get_field (expr_id "obj") (expr_id "jString"))
-           (expr_let "y" (expr_get_field (expr_id "obj") (expr_id "kString"))
+          (expr_let "x"
+           (expr_app (expr_id "%Get1") [expr_id "obj"; expr_id "jString"])
+           (expr_let "y"
+            (expr_app (expr_id "%Get1") [expr_id "obj"; expr_id "kString"])
             (expr_seq
              (expr_if
               (expr_if
@@ -7173,13 +7282,14 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                 (expr_if
                  (expr_op1 unary_op_not
                   (expr_op2 binary_op_stx_eq
-                   (expr_get_field (expr_id "args") (expr_string "0"))
-                   expr_undefined))
+                   (expr_get_attr pattr_value (expr_id "args")
+                    (expr_string "0")) expr_undefined))
                  (expr_seq
                   (expr_if
                    (expr_op1 unary_op_not
                     (expr_app (expr_id "%IsCallable")
-                     [expr_get_field (expr_id "args") (expr_string "0")]))
+                     [expr_get_attr pattr_value (expr_id "args")
+                      (expr_string "0")]))
                    (expr_throw
                     (expr_app (expr_id "%JSError")
                      [expr_object
@@ -7188,7 +7298,8 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                       []])) expr_null)
                   (expr_break "ret"
                    (expr_app
-                    (expr_get_field (expr_id "args") (expr_string "0"))
+                    (expr_get_attr pattr_value (expr_id "args")
+                     (expr_string "0"))
                     [expr_undefined;
                      expr_object
                      (objattrs_intro (expr_string "Object") expr_true
@@ -7222,9 +7333,11 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_recc "insertAndShift"
     (expr_lambda ["prior"; "i"]
      (expr_let "indx" (expr_op1 unary_op_prim_to_str (expr_id "i"))
-      (expr_let "next" (expr_get_field (expr_id "obj") (expr_id "indx"))
+      (expr_let "next"
+       (expr_app (expr_id "%Get1") [expr_id "obj"; expr_id "indx"])
        (expr_seq
-        (expr_set_field (expr_id "obj") (expr_id "indx") (expr_id "prior"))
+        (expr_app (expr_id "%Put1")
+         [expr_id "obj"; expr_id "indx"; expr_id "prior"])
         (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "before"))
          (expr_app (expr_id "insertAndShift")
           [expr_id "next";
@@ -7242,9 +7355,11 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
          (expr_if
           (expr_op2 binary_op_stx_eq (expr_id "result")
            (expr_number (JsNumber.of_int (1))))
-          (expr_let "old" (expr_get_field (expr_id "obj") (expr_id "indx"))
+          (expr_let "old"
+           (expr_app (expr_id "%Get1") [expr_id "obj"; expr_id "indx"])
            (expr_seq
-            (expr_set_field (expr_id "obj") (expr_id "indx") (expr_id "elt"))
+            (expr_app (expr_id "%Put1")
+             [expr_id "obj"; expr_id "indx"; expr_id "elt"])
             (expr_app (expr_id "insertAndShift")
              [expr_id "old";
               expr_op2 binary_op_add (expr_id "currIndex")
@@ -7253,14 +7368,15 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
            [expr_op2 binary_op_add (expr_id "currIndex")
             (expr_number (JsNumber.of_int (1)))]))))))
      (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))]))))
-  (expr_let "len" (expr_get_field (expr_id "obj") (expr_string "length"))
+  (expr_let "len"
+   (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "length"])
    (expr_recc "isort"
     (expr_lambda ["i"]
      (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "len"))
       (expr_seq
        (expr_app (expr_id "insert")
-        [expr_get_field (expr_id "obj")
-         (expr_op1 unary_op_prim_to_str (expr_id "i"));
+        [expr_app (expr_id "%Get1")
+         [expr_id "obj"; expr_op1 unary_op_prim_to_str (expr_id "i")];
          expr_id "i"])
        (expr_app (expr_id "isort")
         [expr_op2 binary_op_add (expr_id "i")
@@ -7268,8 +7384,10 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_app (expr_id "isort") [expr_number (JsNumber.of_int (1))])))))
 .
 Definition ex_privspliceCall := 
-expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
-(expr_let "deleteCount" (expr_get_field (expr_id "args") (expr_string "1"))
+expr_let "start"
+(expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+(expr_let "deleteCount"
+ (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
  (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_let "emptyobj"
    (expr_object
@@ -7277,7 +7395,8 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
     [] [])
    (expr_let "A"
     (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
-    (expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
+    (expr_let "lenVal"
+     (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
      (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
       (expr_let "relativeStart"
        (expr_app (expr_id "%ToInteger") [expr_id "start"])
@@ -7305,11 +7424,11 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
               (expr_app (expr_id "%ToString")
                [expr_op2 binary_op_add (expr_id "actualStart") (expr_id "k")])
               (expr_if
-               (expr_op2 binary_op_has_property (expr_id "O")
-                (expr_id "from"))
+               (expr_app (expr_id "%HasProperty")
+                [expr_id "O"; expr_id "from"])
                (expr_seq
                 (expr_let "fromValue"
-                 (expr_get_field (expr_id "O") (expr_id "from"))
+                 (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "from"])
                  (expr_app (expr_id "%defineOwnProperty")
                   [expr_id "A";
                    expr_app (expr_id "%ToString") [expr_id "k"];
@@ -7329,9 +7448,11 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                                      (data_intro expr_true expr_true
                                       expr_false expr_false))]]))
                 (expr_seq
-                 (expr_set_field (expr_id "A") (expr_string "length")
+                 (expr_set_attr pattr_value (expr_id "A")
+                  (expr_string "length")
                   (expr_op2 binary_op_add
-                   (expr_get_field (expr_id "A") (expr_string "length"))
+                   (expr_get_attr pattr_value (expr_id "A")
+                    (expr_string "length"))
                    (expr_number (JsNumber.of_int (1)))))
                  (expr_app (expr_id "writeToALoop")
                   [expr_op2 binary_op_add (expr_id "k")
@@ -7343,8 +7464,8 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
             [expr_number (JsNumber.of_int (0))]))
           (expr_let "itemCount"
            (expr_op2 binary_op_sub
-            (expr_get_field (expr_id "args") (expr_string "length"))
-            (expr_number (JsNumber.of_int (2))))
+            (expr_get_attr pattr_value (expr_id "args")
+             (expr_string "length")) (expr_number (JsNumber.of_int (2))))
            (expr_seq
             (expr_let "step1"
              (expr_lambda []
@@ -7368,11 +7489,14 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                        [expr_op2 binary_op_add (expr_id "k")
                         (expr_id "itemCount")])
                       (expr_if
-                       (expr_op2 binary_op_has_property (expr_id "O")
-                        (expr_id "from"))
+                       (expr_app (expr_id "%HasProperty")
+                        [expr_id "O"; expr_id "from"])
                        (expr_seq
-                        (expr_set_field (expr_id "O") (expr_id "to")
-                         (expr_get_field (expr_id "O") (expr_id "from")))
+                        (expr_app (expr_id "%Put1")
+                         [expr_id "O";
+                          expr_id "to";
+                          expr_app (expr_id "%Get1")
+                          [expr_id "O"; expr_id "from"]])
                         (expr_app (expr_id "writeToOLoop")
                          [expr_op2 binary_op_add (expr_id "k")
                           (expr_number (JsNumber.of_int (1)))]))
@@ -7426,11 +7550,14 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                        (expr_op2 binary_op_sub (expr_id "itemCount")
                         (expr_number (JsNumber.of_int (1))))])
                      (expr_if
-                      (expr_op2 binary_op_has_property (expr_id "O")
-                       (expr_id "from"))
+                      (expr_app (expr_id "%HasProperty")
+                       [expr_id "O"; expr_id "from"])
                       (expr_seq
-                       (expr_set_field (expr_id "O") (expr_id "to")
-                        (expr_get_field (expr_id "O") (expr_id "from")))
+                       (expr_app (expr_id "%Put1")
+                        [expr_id "O";
+                         expr_id "to";
+                         expr_app (expr_id "%Get1")
+                         [expr_id "O"; expr_id "from"]])
                        (expr_app (expr_id "writeToOLoop")
                         [expr_op2 binary_op_sub (expr_id "k")
                          (expr_number (JsNumber.of_int (1)))]))
@@ -7447,17 +7574,19 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
               (expr_app (expr_id "step2") []))
              (expr_seq
               (expr_let "outerEnd"
-               (expr_get_field (expr_id "args") (expr_string "length"))
+               (expr_get_attr pattr_value (expr_id "args")
+                (expr_string "length"))
                (expr_recc "outerloop"
                 (expr_lambda ["k"; "argsIndex"]
                  (expr_if
                   (expr_op2 binary_op_lt (expr_id "argsIndex")
                    (expr_id "outerEnd"))
                   (expr_seq
-                   (expr_set_field (expr_id "O")
-                    (expr_app (expr_id "%ToString") [expr_id "k"])
-                    (expr_get_field (expr_id "args")
-                     (expr_op1 unary_op_prim_to_str (expr_id "argsIndex"))))
+                   (expr_app (expr_id "%Put1")
+                    [expr_id "O";
+                     expr_app (expr_id "%ToString") [expr_id "k"];
+                     expr_get_attr pattr_value (expr_id "args")
+                     (expr_op1 unary_op_prim_to_str (expr_id "argsIndex"))])
                    (expr_app (expr_id "outerloop")
                     [expr_op2 binary_op_add (expr_id "k")
                      (expr_number (JsNumber.of_int (1)));
@@ -7466,10 +7595,11 @@ expr_let "start" (expr_get_field (expr_id "args") (expr_string "0"))
                 (expr_app (expr_id "outerloop")
                  [expr_id "actualStart"; expr_number (JsNumber.of_int (2))])))
               (expr_seq
-               (expr_set_field (expr_id "O") (expr_string "length")
-                (expr_op2 binary_op_add
+               (expr_app (expr_id "%Put1")
+                [expr_string "length";
+                 expr_op2 binary_op_add
                  (expr_op2 binary_op_sub (expr_id "len")
-                  (expr_id "actualDeleteCount")) (expr_id "itemCount")))
+                  (expr_id "actualDeleteCount")) (expr_id "itemCount")])
                (expr_id "A"))))))))))))))))
 .
 Definition ex_privsplitCall :=  expr_string "String.prototype.split NYI" .
@@ -7477,13 +7607,14 @@ Definition ex_privsqrtCall :=  expr_string "sqrt NYI" .
 Definition ex_privstringConcatCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
- (expr_let "end" (expr_get_field (expr_id "args") (expr_string "length"))
+ (expr_let "end"
+  (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
   (expr_recc "loop"
    (expr_lambda ["i"; "soFar"]
     (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "end"))
      (expr_let "next"
       (expr_app (expr_id "%ToString")
-       [expr_get_field (expr_id "args")
+       [expr_get_attr pattr_value (expr_id "args")
         (expr_op1 unary_op_prim_to_str (expr_id "i"))])
       (expr_app (expr_id "loop")
        [expr_op2 binary_op_add (expr_id "i")
@@ -7498,10 +7629,10 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "searchStr"
   (expr_app (expr_id "%ToString")
-   [expr_get_field (expr_id "args") (expr_string "0")])
+   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
   (expr_let "pos"
    (expr_app (expr_id "%ToInteger")
-    [expr_get_field (expr_id "args") (expr_string "1")])
+    [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
    (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
     (expr_let "start"
      (expr_app (expr_id "%min")
@@ -7554,10 +7685,10 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "searchStr"
   (expr_app (expr_id "%ToString")
-   [expr_get_field (expr_id "args") (expr_string "0")])
+   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
   (expr_let "numPos"
    (expr_app (expr_id "%ToNumber")
-    [expr_get_field (expr_id "args") (expr_string "1")])
+    [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
    (expr_let "pos"
     (expr_if
      (expr_op1 unary_op_not
@@ -7616,8 +7747,9 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
  (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
   (expr_let "intStart"
    (expr_app (expr_id "%ToInteger")
-    [expr_get_field (expr_id "args") (expr_string "0")])
-   (expr_let "end" (expr_get_field (expr_id "args") (expr_string "1"))
+    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+   (expr_let "end"
+    (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
     (expr_let "intEnd"
      (expr_if (expr_op2 binary_op_stx_eq (expr_id "end") expr_undefined)
       (expr_id "len") (expr_app (expr_id "%ToInteger") [expr_id "end"]))
@@ -7675,9 +7807,10 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
  (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
   (expr_let "intStart"
    (expr_app (expr_id "%ToInteger")
-    [expr_get_field (expr_id "args") (expr_string "0")])
+    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
    (expr_let "intEnd"
-    (expr_let "end" (expr_get_field (expr_id "args") (expr_string "1"))
+    (expr_let "end"
+     (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
      (expr_if (expr_op2 binary_op_stx_eq (expr_id "end") expr_undefined)
       (expr_id "len") (expr_app (expr_id "%ToInteger") [expr_id "end"])))
     (expr_let "finalStart"
@@ -7716,7 +7849,7 @@ Definition ex_privtoFixedCall :=
 expr_let "x" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
 (expr_let "f"
  (expr_app (expr_id "%ToInteger")
-  [expr_get_field (expr_id "args") (expr_string "0")])
+  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
  (expr_seq
   (expr_if
    (expr_if
@@ -7735,7 +7868,8 @@ expr_let "x" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
 .
 Definition ex_privtoLocaleStringCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "toString" (expr_get_field (expr_id "O") (expr_string "toString"))
+(expr_let "toString"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "toString"])
  (expr_if
   (expr_op2 binary_op_stx_eq
    (expr_get_obj_attr oattr_code (expr_id "toString")) expr_null)
@@ -7769,7 +7903,8 @@ expr_object
 Definition ex_privunescapeCall :=  expr_string "unescape NYI" .
 Definition ex_privunshiftCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
-(expr_let "lenVal" (expr_get_field (expr_id "O") (expr_string "length"))
+(expr_let "lenVal"
+ (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
   (expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
    (expr_seq
@@ -7788,10 +7923,12 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
            (expr_op2 binary_op_sub (expr_id "argCount")
             (expr_number (JsNumber.of_int (1))))])
          (expr_if
-          (expr_op2 binary_op_has_property (expr_id "O") (expr_id "from"))
+          (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "from"])
           (expr_seq
-           (expr_set_field (expr_id "O") (expr_id "to")
-            (expr_get_field (expr_id "O") (expr_id "from")))
+           (expr_app (expr_id "%Put1")
+            [expr_id "O";
+             expr_id "to";
+             expr_app (expr_id "%Get1") [expr_id "O"; expr_id "from"]])
            (expr_app (expr_id "Oloop")
             [expr_op2 binary_op_sub (expr_id "k")
              (expr_number (JsNumber.of_int (1)))]))
@@ -7809,10 +7946,11 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
         (expr_if
          (expr_op2 binary_op_lt (expr_id "argsIndex") (expr_id "end"))
          (expr_seq
-          (expr_set_field (expr_id "O")
-           (expr_app (expr_id "%ToString") [expr_id "j"])
-           (expr_get_field (expr_id "args")
-            (expr_op1 unary_op_prim_to_str (expr_id "argsIndex"))))
+          (expr_app (expr_id "%Put1")
+           [expr_id "O";
+            expr_app (expr_id "%ToString") [expr_id "j"];
+            expr_get_attr pattr_value (expr_id "args")
+            (expr_op1 unary_op_prim_to_str (expr_id "argsIndex"))])
           (expr_app (expr_id "argsLoop")
            [expr_op2 binary_op_add (expr_id "argsIndex")
             (expr_number (JsNumber.of_int (1)));
@@ -7823,8 +7961,9 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_let "finalLen"
       (expr_op2 binary_op_add (expr_id "len") (expr_id "argCount"))
       (expr_seq
-       (expr_set_field (expr_id "O") (expr_string "length")
-        (expr_id "finalLen")) (expr_id "finalLen"))))))))
+       (expr_app (expr_id "%Put1")
+        [expr_id "O"; expr_string "length"; expr_id "finalLen"])
+       (expr_id "finalLen"))))))))
 .
 Definition ex_privvalueOfCall := 
 expr_let "hasWrongProto"
@@ -7895,7 +8034,7 @@ value_closure
  None ["proto"; "msg"] ex_privNativeError)
 .
 Definition name_privNativeError : id :=  "%NativeError" .
-Definition privTypeErrorProto :=  value_object 5 .
+Definition privTypeErrorProto :=  value_object 4 .
 Definition name_privTypeErrorProto : id :=  "%TypeErrorProto" .
 Definition privTypeError := 
 value_closure
@@ -7933,7 +8072,7 @@ value_closure
  None ["obj"; "this"; "fld"] ex_privGet)
 .
 Definition name_privGet : id :=  "%Get" .
-Definition privBooleanProto :=  value_object 12 .
+Definition privBooleanProto :=  value_object 9 .
 Definition name_privBooleanProto : id :=  "%BooleanProto" .
 Definition privMakeBoolean := 
 value_closure
@@ -7941,7 +8080,7 @@ value_closure
  ex_privMakeBoolean)
 .
 Definition name_privMakeBoolean : id :=  "%MakeBoolean" .
-Definition privNumberProto :=  value_object 13 .
+Definition privNumberProto :=  value_object 10 .
 Definition name_privNumberProto : id :=  "%NumberProto" .
 Definition privMakeNumber := 
 value_closure
@@ -7953,7 +8092,7 @@ Definition privStringIndices :=
 value_closure (closure_intro [] None ["obj"; "s"] ex_privStringIndices)
 .
 Definition name_privStringIndices : id :=  "%StringIndices" .
-Definition privStringProto :=  value_object 14 .
+Definition privStringProto :=  value_object 11 .
 Definition name_privStringProto : id :=  "%StringProto" .
 Definition privMakeString := 
 value_closure
@@ -7971,10 +8110,16 @@ value_closure
   ("%TypeError", privTypeError)] None ["o"] ex_privToObject)
 .
 Definition name_privToObject : id :=  "%ToObject" .
+Definition privGet1 := 
+value_closure
+(closure_intro [("%Get", privGet)] None ["obj"; "fld"] ex_privGet1)
+.
+Definition name_privGet1 : id :=  "%Get1" .
 Definition privToPrimitiveHint := 
 value_closure
 (closure_intro
  [("%AppExpr", privAppExpr);
+  ("%Get1", privGet1);
   ("%IsCallable", privIsCallable);
   ("%TypeError", privTypeError)] None ["val"; "hint"] ex_privToPrimitiveHint)
 .
@@ -8011,7 +8156,7 @@ value_closure
  ex_privMakeArray)
 .
 Definition name_privMakeArray : id :=  "%MakeArray" .
-Definition privRangeErrorProto :=  value_object 9 .
+Definition privRangeErrorProto :=  value_object 8 .
 Definition name_privRangeErrorProto : id :=  "%RangeErrorProto" .
 Definition privToNumber := 
 value_closure
@@ -8106,7 +8251,8 @@ value_closure (closure_intro [] None ["arr"; "idx"] ex_privArrayIdx)
 Definition name_privArrayIdx : id :=  "%ArrayIdx" .
 Definition privArrayLengthChange := 
 value_closure
-(closure_intro [("%Delete", privDelete); ("%ToUint32", privToUint32)] 
+(closure_intro
+ [("%Delete", privDelete); ("%Get1", privGet1); ("%ToUint32", privToUint32)]
  None ["arr"; "newlen"] ex_privArrayLengthChange)
 .
 Definition name_privArrayLengthChange : id :=  "%ArrayLengthChange" .
@@ -8408,8 +8554,11 @@ Definition privObjectProto :=  value_object 1 .
 Definition name_privObjectProto : id :=  "%ObjectProto" .
 Definition privDefaultConstruct := 
 value_closure
-(closure_intro [("%AppExpr", privAppExpr); ("%ObjectProto", privObjectProto)]
- None ["constr"; "args"] ex_privDefaultConstruct)
+(closure_intro
+ [("%AppExpr", privAppExpr);
+  ("%Get1", privGet1);
+  ("%ObjectProto", privObjectProto)] None ["constr"; "args"]
+ ex_privDefaultConstruct)
 .
 Definition name_privDefaultConstruct : id :=  "%DefaultConstruct" .
 Definition privDeleteOp := 
@@ -8429,7 +8578,7 @@ value_closure
  ["context"; "id"; "f"] ex_privEnvGetId)
 .
 Definition name_privEnvGetId : id :=  "%EnvGetId" .
-Definition privReferenceErrorProto :=  value_object 6 .
+Definition privReferenceErrorProto :=  value_object 5 .
 Definition name_privReferenceErrorProto : id :=  "%ReferenceErrorProto" .
 Definition privReferenceError := 
 value_closure
@@ -8441,8 +8590,8 @@ value_closure
 Definition name_privReferenceError : id :=  "%ReferenceError" .
 Definition privEnvGetBindingValue := 
 value_closure
-(closure_intro [("%ReferenceError", privReferenceError)] None
- ["context"; "id"; "strict"] ex_privEnvGetBindingValue)
+(closure_intro [("%Get1", privGet1); ("%ReferenceError", privReferenceError)]
+ None ["context"; "id"; "strict"] ex_privEnvGetBindingValue)
 .
 Definition name_privEnvGetBindingValue : id :=  "%EnvGetBindingValue" .
 Definition privUnboundId := 
@@ -8575,7 +8724,7 @@ value_closure
  ex_privEnvInitializeImmutableBinding)
 .
 Definition name_privEnvInitializeImmutableBinding : id :=  "%EnvInitializeImmutableBinding" .
-Definition privThrowTypeError :=  value_object 10 .
+Definition privThrowTypeError :=  value_object 14 .
 Definition name_privThrowTypeError : id :=  "%ThrowTypeError" .
 Definition privmkArgsObj := 
 value_closure
@@ -8629,7 +8778,7 @@ value_closure
  ["context"; "id"; "configurableBindings"; "strict"] ex_privEnvDefineVar)
 .
 Definition name_privEnvDefineVar : id :=  "%EnvDefineVar" .
-Definition privSyntaxErrorProto :=  value_object 7 .
+Definition privSyntaxErrorProto :=  value_object 6 .
 Definition name_privSyntaxErrorProto : id :=  "%SyntaxErrorProto" .
 Definition privSyntaxError := 
 value_closure
@@ -8689,7 +8838,7 @@ value_closure
  ["x1"; "x2"] ex_privEqEq)
 .
 Definition name_privEqEq : id :=  "%EqEq" .
-Definition privErrorProto :=  value_object 4 .
+Definition privErrorProto :=  value_object 3 .
 Definition name_privErrorProto : id :=  "proto" .
 Definition privErrorConstructor := 
 value_closure
@@ -8701,7 +8850,7 @@ value_closure
 Definition name_privErrorConstructor : id :=  "%ErrorConstructor" .
 Definition privErrorGlobalFuncObj :=  value_object 44 .
 Definition name_privErrorGlobalFuncObj : id :=  "%ErrorGlobalFuncObj" .
-Definition privEvalErrorProto :=  value_object 8 .
+Definition privEvalErrorProto :=  value_object 7 .
 Definition name_privEvalErrorProto : id :=  "proto" .
 Definition privEvalErrorConstructor := 
 value_closure
@@ -8734,7 +8883,7 @@ value_closure
 Definition name_privFunctionConstructor : id :=  "%FunctionConstructor" .
 Definition privFunctionGlobalFuncObj :=  value_object 311 .
 Definition name_privFunctionGlobalFuncObj : id :=  "%FunctionGlobalFuncObj" .
-Definition privFunctionProto :=  value_object 3 .
+Definition privFunctionProto :=  value_object 12 .
 Definition name_privFunctionProto : id :=  "%FunctionProto" .
 Definition privFunctionProtoCall := 
 value_closure
@@ -8919,6 +9068,11 @@ value_closure
  ex_privPropertyAccess)
 .
 Definition name_privPropertyAccess : id :=  "%PropertyAccess" .
+Definition privPut1 := 
+value_closure
+(closure_intro [("%Put", privPut)] None ["obj"; "fld"; "val"] ex_privPut1)
+.
+Definition name_privPut1 : id :=  "%Put1" .
 Definition privRangeError := 
 value_closure
 (closure_intro
@@ -9021,10 +9175,11 @@ Definition privToPropertyDescriptor :=
 value_closure
 (closure_intro
  [("%GetField", privGetField);
+  ("%HasProperty", privHasProperty);
+  ("%IsCallable", privIsCallable);
   ("%ObjectTypeCheck", privObjectTypeCheck);
   ("%ToBoolean", privToBoolean);
   ("%TypeError", privTypeError);
-  ("%Typeof", privTypeof);
   ("isAccessorDescriptor", isAccessorDescriptor);
   ("isDataDescriptor", isDataDescriptor)] None ["propobj"]
  ex_privToPropertyDescriptor)
@@ -9103,7 +9258,9 @@ Definition name_privarrayIndexOf : id :=  "%arrayIndexOf" .
 Definition privarrayIndexOfCall := 
 value_closure
 (closure_intro
- [("%ToInteger", privToInteger);
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%ToInteger", privToInteger);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
@@ -9119,7 +9276,9 @@ Definition name_privmin : id :=  "%min" .
 Definition privarrayLastIndexOfCall := 
 value_closure
 (closure_intro
- [("%ToInteger", privToInteger);
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%ToInteger", privToInteger);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
@@ -9129,7 +9288,8 @@ Definition name_privarrayLastIndexOfCall : id :=  "%arrayLastIndexOfCall" .
 Definition privarrayTLSCall := 
 value_closure
 (closure_intro
- [("%JSError", privJSError);
+ [("%Get1", privGet1);
+  ("%JSError", privJSError);
   ("%ToObject", privToObject);
   ("%ToUint32", privToUint32);
   ("%TypeError", privTypeError);
@@ -9243,8 +9403,10 @@ Definition name_privcharCodeAtCall : id :=  "%charCodeAtCall" .
 Definition privconcatCall := 
 value_closure
 (closure_intro
- [("%ArrayConstructor", privArrayConstructor); ("%ToObject", privToObject)]
- None ["obj"; "this"; "args"] ex_privconcatCall)
+ [("%ArrayConstructor", privArrayConstructor);
+  ("%Get1", privGet1);
+  ("%Put1", privPut1);
+  ("%ToObject", privToObject)] None ["obj"; "this"; "args"] ex_privconcatCall)
 .
 Definition name_privconcatCall : id :=  "%concatCall" .
 Definition privconsole :=  value_object 309 .
@@ -9340,7 +9502,8 @@ Definition name_privdefineProperty : id :=  "%defineProperty" .
 Definition privdefinePropertiesCall := 
 value_closure
 (closure_intro
- [("%ObjectTypeCheck", privObjectTypeCheck);
+ [("%Get1", privGet1);
+  ("%ObjectTypeCheck", privObjectTypeCheck);
   ("%ToObject", privToObject);
   ("%defineProperty", privdefineProperty)] None ["obj"; "this"; "args"]
  ex_privdefinePropertiesCall)
@@ -9381,8 +9544,10 @@ Definition privets :=  value_object 22 .
 Definition name_privets : id :=  "%ets" .
 Definition privetsCall := 
 value_closure
-(closure_intro [("%ToString", privToString); ("%TypeError", privTypeError)]
- None ["obj"; "this"; "args"] ex_privetsCall)
+(closure_intro
+ [("%Get1", privGet1);
+  ("%ToString", privToString);
+  ("%TypeError", privTypeError)] None ["obj"; "this"; "args"] ex_privetsCall)
 .
 Definition name_privetsCall : id :=  "%etsCall" .
 Definition privevery :=  value_object 138 .
@@ -9390,7 +9555,9 @@ Definition name_privevery : id :=  "%every" .
 Definition priveveryCall := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable);
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%IsCallable", privIsCallable);
   ("%ToBoolean", privToBoolean);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -9410,7 +9577,9 @@ Definition name_privfilter : id :=  "%filter" .
 Definition privfilterCall := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable);
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%IsCallable", privIsCallable);
   ("%MakeArray", privMakeArray);
   ("%ToBoolean", privToBoolean);
   ("%ToObject", privToObject);
@@ -9426,7 +9595,9 @@ Definition name_privforeach : id :=  "%foreach" .
 Definition privforeachCall := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable);
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%IsCallable", privIsCallable);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
@@ -9450,7 +9621,7 @@ value_closure
  ex_privfromccCall)
 .
 Definition name_privfromccCall : id :=  "%fromccCall" .
-Definition privfunctionToString :=  value_object 11 .
+Definition privfunctionToString :=  value_object 13 .
 Definition name_privfunctionToString : id :=  "%functionToString" .
 Definition privfunctionToStringCall := 
 value_closure
@@ -9477,7 +9648,8 @@ Definition name_privgopd : id :=  "%gopd" .
 Definition privgopdCall := 
 value_closure
 (closure_intro
- [("%ObjectProto", privObjectProto);
+ [("%Get1", privGet1);
+  ("%ObjectProto", privObjectProto);
   ("%ObjectTypeCheck", privObjectTypeCheck);
   ("%ToString", privToString);
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
@@ -9489,8 +9661,10 @@ Definition name_privgopn : id :=  "%gopn" .
 Definition privgopnCall := 
 value_closure
 (closure_intro
- [("%MakeArray", privMakeArray); ("%ObjectTypeCheck", privObjectTypeCheck)]
- None ["obj"; "this"; "args"] ex_privgopnCall)
+ [("%Get1", privGet1);
+  ("%MakeArray", privMakeArray);
+  ("%ObjectTypeCheck", privObjectTypeCheck)] None ["obj"; "this"; "args"]
+ ex_privgopnCall)
 .
 Definition name_privgopnCall : id :=  "%gopnCall" .
 Definition privgpo :=  value_object 34 .
@@ -9519,7 +9693,8 @@ value_closure
 Definition name_privin : id :=  "%in" .
 Definition privinstanceof := 
 value_closure
-(closure_intro [("%TypeError", privTypeError); ("%Typeof", privTypeof)] 
+(closure_intro
+ [("%Get1", privGet1); ("%TypeError", privTypeError); ("%Typeof", privTypeof)]
  None ["l"; "r"] ex_privinstanceof)
 .
 Definition name_privinstanceof : id :=  "%instanceof" .
@@ -9576,7 +9751,8 @@ Definition name_privjoin : id :=  "%join" .
 Definition privjoinCall := 
 value_closure
 (closure_intro
- [("%ToObject", privToObject);
+ [("%Get1", privGet1);
+  ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privjoinCall)
 .
@@ -9605,7 +9781,9 @@ Definition name_privlocaleCompareCall : id :=  "%localeCompareCall" .
 Definition privlog :=  value_object 308 .
 Definition name_privlog : id :=  "%log" .
 Definition privlogCall := 
-value_closure (closure_intro [] None ["o"; "s"] ex_privlogCall)
+value_closure
+(closure_intro [("%HasProperty", privHasProperty)] None
+ ["obj"; "this"; "args"] ex_privlogCall)
 .
 Definition name_privlogCall : id :=  "%logCall" .
 Definition privmap :=  value_object 130 .
@@ -9613,7 +9791,9 @@ Definition name_privmap : id :=  "%map" .
 Definition privmapCall := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable);
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%IsCallable", privIsCallable);
   ("%MakeArray", privMakeArray);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -9770,6 +9950,8 @@ Definition privpopCall :=
 value_closure
 (closure_intro
  [("%Delete", privDelete);
+  ("%Get1", privGet1);
+  ("%Put1", privPut1);
   ("%ToNumber", privToNumber);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -9786,8 +9968,8 @@ value_closure
 Definition name_privpreventExtensionsCall : id :=  "%preventExtensionsCall" .
 Definition privprimEach := 
 value_closure
-(closure_intro [("%ToString", privToString)] None ["arr"; "fn"]
- ex_privprimEach)
+(closure_intro [("%Get1", privGet1); ("%ToString", privToString)] None
+ ["arr"; "fn"] ex_privprimEach)
 .
 Definition name_privprimEach : id :=  "%primEach" .
 Definition privprint :=  value_object 15 .
@@ -9802,8 +9984,11 @@ Definition privpropEnum :=  value_object 39 .
 Definition name_privpropEnum : id :=  "%propEnum" .
 Definition privpropEnumCall := 
 value_closure
-(closure_intro [("%ToObject", privToObject); ("%ToString", privToString)]
- None ["obj"; "this"; "args"] ex_privpropEnumCall)
+(closure_intro
+ [("%Get1", privGet1);
+  ("%ToObject", privToObject);
+  ("%ToString", privToString)] None ["obj"; "this"; "args"]
+ ex_privpropEnumCall)
 .
 Definition name_privpropEnumCall : id :=  "%propEnumCall" .
 Definition privpropertyNames := 
@@ -9822,7 +10007,8 @@ Definition name_privpush : id :=  "%push" .
 Definition privpushCall := 
 value_closure
 (closure_intro
- [("%SetField", privSetField);
+ [("%Get1", privGet1);
+  ("%SetField", privSetField);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privpushCall)
@@ -9840,7 +10026,9 @@ Definition name_privreduce : id :=  "%reduce" .
 Definition privreduceCall := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable);
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%IsCallable", privIsCallable);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
@@ -9853,7 +10041,9 @@ Definition name_privreduceRight : id :=  "%reduceRight" .
 Definition privreduceRightCall := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable);
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%IsCallable", privIsCallable);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32);
@@ -9889,6 +10079,9 @@ Definition privreverseCall :=
 value_closure
 (closure_intro
  [("%Delete", privDelete);
+  ("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%Put1", privPut1);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"]
@@ -9914,7 +10107,9 @@ Definition privset_property :=
 value_closure
 (closure_intro
  [("%ArrayLengthChange", privArrayLengthChange);
+  ("%Get1", privGet1);
   ("%JSError", privJSError);
+  ("%Put1", privPut1);
   ("%RangeErrorProto", privRangeErrorProto);
   ("%ToNumber", privToNumber);
   ("%ToObject", privToObject);
@@ -9930,6 +10125,9 @@ Definition privshiftCall :=
 value_closure
 (closure_intro
  [("%Delete", privDelete);
+  ("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%Put1", privPut1);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privshiftCall)
@@ -9946,7 +10144,9 @@ Definition name_privsinCall : id :=  "%sinCall" .
 Definition privsliceCall := 
 value_closure
 (closure_intro
- [("%MakeArray", privMakeArray);
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%MakeArray", privMakeArray);
   ("%ToInteger", privToInteger);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -9960,7 +10160,9 @@ Definition name_privsome : id :=  "%some" .
 Definition privsomeCall := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable);
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%IsCallable", privIsCallable);
   ("%ToBoolean", privToBoolean);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -9973,8 +10175,11 @@ Definition name_privsort : id :=  "%sort" .
 Definition privsortCall := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable);
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%IsCallable", privIsCallable);
   ("%JSError", privJSError);
+  ("%Put1", privPut1);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%TypeErrorProto", privTypeErrorProto)] None ["obj"; "this"; "args"]
@@ -9987,7 +10192,10 @@ Definition privspliceCall :=
 value_closure
 (closure_intro
  [("%Delete", privDelete);
+  ("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
   ("%MakeArray", privMakeArray);
+  ("%Put1", privPut1);
   ("%ToInteger", privToInteger);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -10109,8 +10317,11 @@ value_closure
 Definition name_privtoFixedCall : id :=  "%toFixedCall" .
 Definition privtoLocaleStringCall := 
 value_closure
-(closure_intro [("%ToObject", privToObject); ("%TypeError", privTypeError)]
- None ["obj"; "this"; "args"] ex_privtoLocaleStringCall)
+(closure_intro
+ [("%Get1", privGet1);
+  ("%ToObject", privToObject);
+  ("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
+ ex_privtoLocaleStringCall)
 .
 Definition name_privtoLocaleStringCall : id :=  "%toLocaleStringCall" .
 Definition privtoLowerCase :=  value_object 161 .
@@ -10154,6 +10365,9 @@ value_closure
 (closure_intro
  [("%ComputeLength", privComputeLength);
   ("%Delete", privDelete);
+  ("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%Put1", privPut1);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"]
@@ -10563,6 +10777,7 @@ Definition ctx_items :=
  (name_privFunctionProtoCall, privFunctionProtoCall);
  (name_privGeOp, privGeOp);
  (name_privGet, privGet);
+ (name_privGet1, privGet1);
  (name_privGetField, privGetField);
  (name_privGetOwnProperty, privGetOwnProperty);
  (name_privGetProperty, privGetProperty);
@@ -10616,6 +10831,7 @@ Definition ctx_items :=
  (name_privPrimitiveCompareOp, privPrimitiveCompareOp);
  (name_privPropertyAccess, privPropertyAccess);
  (name_privPut, privPut);
+ (name_privPut1, privPut1);
  (name_privRangeError, privRangeError);
  (name_privRangeErrorConstructor, privRangeErrorConstructor);
  (name_privRangeErrorGlobalFuncObj, privRangeErrorGlobalFuncObj);
@@ -11011,6 +11227,7 @@ privFunctionProto
 privFunctionProtoCall
 privGeOp
 privGet
+privGet1
 privGetField
 privGetOwnProperty
 privGetProperty
@@ -11064,6 +11281,7 @@ privPrimSub
 privPrimitiveCompareOp
 privPropertyAccess
 privPut
+privPut1
 privRangeError
 privRangeErrorConstructor
 privRangeErrorGlobalFuncObj
@@ -11390,462 +11608,461 @@ Definition store_items := [
         oattrs_code := objCode|};
       object_properties :=
       from_list [("make", 
-                  attributes_accessor_of {|attributes_accessor_get :=
-                                           value_closure
-                                           (closure_intro
-                                            [("%AddAccessorField", privAddAccessorField);
-                                             ("%AddDataField", privAddDataField);
-                                             ("%AppExpr", privAppExpr);
-                                             ("%AppExprCheck", privAppExprCheck);
-                                             ("%AppMethod", privAppMethod);
-                                             ("%ArrayCall", privArrayCall);
-                                             ("%ArrayConstructor", privArrayConstructor);
-                                             ("%ArrayGlobalFuncObj", privArrayGlobalFuncObj);
-                                             ("%ArrayIdx", privArrayIdx);
-                                             ("%ArrayLengthChange", privArrayLengthChange);
-                                             ("%ArrayProto", privArrayProto);
-                                             ("%BindConstructor", privBindConstructor);
-                                             ("%BindObjCall", privBindObjCall);
-                                             ("%BitwiseAnd", privBitwiseAnd);
-                                             ("%BitwiseInfix", privBitwiseInfix);
-                                             ("%BitwiseNot", privBitwiseNot);
-                                             ("%BitwiseOr", privBitwiseOr);
-                                             ("%BitwiseXor", privBitwiseXor);
-                                             ("%BooleanCall", privBooleanCall);
-                                             ("%BooleanConstructor", privBooleanConstructor);
-                                             ("%BooleanGlobalFuncObj", privBooleanGlobalFuncObj);
-                                             ("%BooleanProto", privBooleanProto);
-                                             ("%CheckObjectCoercible", privCheckObjectCoercible);
-                                             ("%CompareOp", privCompareOp);
-                                             ("%ComputeLength", privComputeLength);
-                                             ("%DateCall", privDateCall);
-                                             ("%DateConstructor", privDateConstructor);
-                                             ("%DateFromTime", privDateFromTime);
-                                             ("%DateGlobalFuncObj", privDateGlobalFuncObj);
-                                             ("%DateProto", privDateProto);
-                                             ("%Day", privDay);
-                                             ("%DayFromYear", privDayFromYear);
-                                             ("%DayWithinYear", privDayWithinYear);
-                                             ("%DaysInMonth", privDaysInMonth);
-                                             ("%DaysInYear", privDaysInYear);
-                                             ("%DeclEnvAddBinding", privDeclEnvAddBinding);
-                                             ("%DefaultCall", privDefaultCall);
-                                             ("%DefaultConstruct", privDefaultConstruct);
-                                             ("%Delete", privDelete);
-                                             ("%DeleteOp", privDeleteOp);
-                                             ("%EnvAppExpr", privEnvAppExpr);
-                                             ("%EnvAssign", privEnvAssign);
-                                             ("%EnvCreateImmutableBinding", privEnvCreateImmutableBinding);
-                                             ("%EnvCreateMutableBinding", privEnvCreateMutableBinding);
-                                             ("%EnvCreateSetMutableBinding", privEnvCreateSetMutableBinding);
-                                             ("%EnvDefineArg", privEnvDefineArg);
-                                             ("%EnvDefineArgsObj", privEnvDefineArgsObj);
-                                             ("%EnvDefineArgsObjOk", privEnvDefineArgsObjOk);
-                                             ("%EnvDefineFunc", privEnvDefineFunc);
-                                             ("%EnvDefineVar", privEnvDefineVar);
-                                             ("%EnvDelete", privEnvDelete);
-                                             ("%EnvGet", privEnvGet);
-                                             ("%EnvGetBindingValue", privEnvGetBindingValue);
-                                             ("%EnvGetId", privEnvGetId);
-                                             ("%EnvGetValue", privEnvGetValue);
-                                             ("%EnvHasBinding", privEnvHasBinding);
-                                             ("%EnvImplicitThis", privEnvImplicitThis);
-                                             ("%EnvInitializeImmutableBinding", privEnvInitializeImmutableBinding);
-                                             ("%EnvModify", privEnvModify);
-                                             ("%EnvPrepostOp", privEnvPrepostOp);
-                                             ("%EnvPutValue", privEnvPutValue);
-                                             ("%EnvSetMutableBinding", privEnvSetMutableBinding);
-                                             ("%EnvTypeof", privEnvTypeof);
-                                             ("%EqEq", privEqEq);
-                                             ("%ErrorConstructor", privErrorConstructor);
-                                             ("%ErrorGlobalFuncObj", privErrorGlobalFuncObj);
-                                             ("%ErrorProto", privErrorProto);
-                                             ("%EvalErrorConstructor", privEvalErrorConstructor);
-                                             ("%EvalErrorGlobalFuncObj", privEvalErrorGlobalFuncObj);
-                                             ("%EvalErrorProto", privEvalErrorProto);
-                                             ("%FunctionConstructor", privFunctionConstructor);
-                                             ("%FunctionGlobalFuncObj", privFunctionGlobalFuncObj);
-                                             ("%FunctionProto", privFunctionProto);
-                                             ("%FunctionProtoCall", privFunctionProtoCall);
-                                             ("%GeOp", privGeOp);
-                                             ("%Get", privGet);
-                                             ("%GetField", privGetField);
-                                             ("%GetOwnProperty", privGetOwnProperty);
-                                             ("%GetProperty", privGetProperty);
-                                             ("%GtOp", privGtOp);
-                                             ("%HasProperty", privHasProperty);
-                                             ("%InLeapYear", privInLeapYear);
-                                             ("%IsCallable", privIsCallable);
-                                             ("%IsFinite", privIsFinite);
-                                             ("%IsJSError", privIsJSError);
-                                             ("%JSError", privJSError);
-                                             ("%LeOp", privLeOp);
-                                             ("%LeftShift", privLeftShift);
-                                             ("%LocalTime", privLocalTime);
-                                             ("%LtOp", privLtOp);
-                                             ("%MakeArray", privMakeArray);
-                                             ("%MakeBind", privMakeBind);
-                                             ("%MakeBoolean", privMakeBoolean);
-                                             ("%MakeDate", privMakeDate);
-                                             ("%MakeDateDayTime", privMakeDateDayTime);
-                                             ("%MakeDay", privMakeDay);
-                                             ("%MakeFunctionObject", privMakeFunctionObject);
-                                             ("%MakeNativeError", privMakeNativeError);
-                                             ("%MakeNativeErrorProto", privMakeNativeErrorProto);
-                                             ("%MakeNumber", privMakeNumber);
-                                             ("%MakeObject", privMakeObject);
-                                             ("%MakeString", privMakeString);
-                                             ("%MakeTime", privMakeTime);
-                                             ("%Math", privMath);
-                                             ("%MonthFromTime", privMonthFromTime);
-                                             ("%NativeError", privNativeError);
-                                             ("%NativeErrorConstructor", privNativeErrorConstructor);
-                                             ("%NumberCall", privNumberCall);
-                                             ("%NumberCompareOp", privNumberCompareOp);
-                                             ("%NumberConstructor", privNumberConstructor);
-                                             ("%NumberGlobalFuncObj", privNumberGlobalFuncObj);
-                                             ("%NumberProto", privNumberProto);
-                                             ("%ObjectCall", privObjectCall);
-                                             ("%ObjectConstructor", privObjectConstructor);
-                                             ("%ObjectGlobalFuncObj", privObjectGlobalFuncObj);
-                                             ("%ObjectProto", privObjectProto);
-                                             ("%ObjectTypeCheck", privObjectTypeCheck);
-                                             ("%PrepostOp", privPrepostOp);
-                                             ("%PrimAdd", privPrimAdd);
-                                             ("%PrimComma", privPrimComma);
-                                             ("%PrimDiv", privPrimDiv);
-                                             ("%PrimMod", privPrimMod);
-                                             ("%PrimMult", privPrimMult);
-                                             ("%PrimMultOp", privPrimMultOp);
-                                             ("%PrimNew", privPrimNew);
-                                             ("%PrimSub", privPrimSub);
-                                             ("%PrimitiveCompareOp", privPrimitiveCompareOp);
-                                             ("%PropertyAccess", privPropertyAccess);
-                                             ("%Put", privPut);
-                                             ("%RangeError", privRangeError);
-                                             ("%RangeErrorConstructor", privRangeErrorConstructor);
-                                             ("%RangeErrorGlobalFuncObj", privRangeErrorGlobalFuncObj);
-                                             ("%RangeErrorProto", privRangeErrorProto);
-                                             ("%ReferenceError", privReferenceError);
-                                             ("%ReferenceErrorConstructor", privReferenceErrorConstructor);
-                                             ("%ReferenceErrorGlobalFuncObj", privReferenceErrorGlobalFuncObj);
-                                             ("%ReferenceErrorProto", privReferenceErrorProto);
-                                             ("%RegExpCode", privRegExpCode);
-                                             ("%RegExpConstructor", privRegExpConstructor);
-                                             ("%RegExpGlobalFuncObj", privRegExpGlobalFuncObj);
-                                             ("%RegExpProto", privRegExpProto);
-                                             ("%RunSelfConstructorCall", privRunSelfConstructorCall);
-                                             ("%SetField", privSetField);
-                                             ("%SignedRightShift", privSignedRightShift);
-                                             ("%StringCall", privStringCall);
-                                             ("%StringConstructor", privStringConstructor);
-                                             ("%StringGlobalFuncObj", privStringGlobalFuncObj);
-                                             ("%StringIndices", privStringIndices);
-                                             ("%StringProto", privStringProto);
-                                             ("%StxEq", privStxEq);
-                                             ("%SyntaxError", privSyntaxError);
-                                             ("%SyntaxErrorConstructor", privSyntaxErrorConstructor);
-                                             ("%SyntaxErrorGlobalFuncObj", privSyntaxErrorGlobalFuncObj);
-                                             ("%SyntaxErrorProto", privSyntaxErrorProto);
-                                             ("%ThrowTypeError", privThrowTypeError);
-                                             ("%ThrowTypeErrorFun", privThrowTypeErrorFun);
-                                             ("%TimeClip", privTimeClip);
-                                             ("%TimeFromYear", privTimeFromYear);
-                                             ("%TimeWithinDay", privTimeWithinDay);
-                                             ("%ToBoolean", privToBoolean);
-                                             ("%ToInt32", privToInt32);
-                                             ("%ToInteger", privToInteger);
-                                             ("%ToNumber", privToNumber);
-                                             ("%ToObject", privToObject);
-                                             ("%ToPrimitive", privToPrimitive);
-                                             ("%ToPrimitiveHint", privToPrimitiveHint);
-                                             ("%ToPropertyDescriptor", privToPropertyDescriptor);
-                                             ("%ToString", privToString);
-                                             ("%ToUint", privToUint);
-                                             ("%ToUint16", privToUint16);
-                                             ("%ToUint32", privToUint32);
-                                             ("%TypeError", privTypeError);
-                                             ("%TypeErrorConstructor", privTypeErrorConstructor);
-                                             ("%TypeErrorGlobalFuncObj", privTypeErrorGlobalFuncObj);
-                                             ("%TypeErrorProto", privTypeErrorProto);
-                                             ("%Typeof", privTypeof);
-                                             ("%URIErrorConstructor", privURIErrorConstructor);
-                                             ("%URIErrorGlobalFuncObj", privURIErrorGlobalFuncObj);
-                                             ("%URIErrorProto", privURIErrorProto);
-                                             ("%UTC", privUTC);
-                                             ("%UnaryNeg", privUnaryNeg);
-                                             ("%UnaryNot", privUnaryNot);
-                                             ("%UnaryPlus", privUnaryPlus);
-                                             ("%UnboundId", privUnboundId);
-                                             ("%UnsignedRightShift", privUnsignedRightShift);
-                                             ("%Void", privVoid);
-                                             ("%YearFromTime", privYearFromTime);
-                                             ("%acos", privacos);
-                                             ("%acosCall", privacosCall);
-                                             ("%apply", privapply);
-                                             ("%applyCall", privapplyCall);
-                                             ("%arrayIndexOf", privarrayIndexOf);
-                                             ("%arrayIndexOfCall", privarrayIndexOfCall);
-                                             ("%arrayLastIndexOf", privarrayLastIndexOf);
-                                             ("%arrayLastIndexOfCall", privarrayLastIndexOfCall);
-                                             ("%arrayTLSCall", privarrayTLSCall);
-                                             ("%arrayToLocaleString", privarrayToLocaleString);
-                                             ("%arrayToString", privarrayToString);
-                                             ("%arrayToStringCall", privarrayToStringCall);
-                                             ("%asin", privasin);
-                                             ("%asinCall", privasinCall);
-                                             ("%assert", privassert);
-                                             ("%atan", privatan);
-                                             ("%atan2", privatan2);
-                                             ("%atan2Call", privatan2Call);
-                                             ("%atanCall", privatanCall);
-                                             ("%bind", privbind);
-                                             ("%bindCall", privbindCall);
-                                             ("%booleanToString", privbooleanToString);
-                                             ("%booleanToStringCall", privbooleanToStringCall);
-                                             ("%booleanValueOf", privbooleanValueOf);
-                                             ("%call", privcall);
-                                             ("%callCall", privcallCall);
-                                             ("%charAt", privcharAt);
-                                             ("%charAtCall", privcharAtCall);
-                                             ("%charCodeAt", privcharCodeAt);
-                                             ("%charCodeAtCall", privcharCodeAtCall);
-                                             ("%concat", privconcat);
-                                             ("%concatCall", privconcatCall);
-                                             ("%configurableEval", privconfigurableEval);
-                                             ("%console", privconsole);
-                                             ("%cos", privcos);
-                                             ("%cosCall", privcosCall);
-                                             ("%create", privcreate);
-                                             ("%createCall", privcreateCall);
-                                             ("%dateGetTimezoneOffset", privdateGetTimezoneOffset);
-                                             ("%dateGetTimezoneOffsetCall", privdateGetTimezoneOffsetCall);
-                                             ("%dateToString", privdateToString);
-                                             ("%dateToStringCall", privdateToStringCall);
-                                             ("%dateValueOf", privdateValueOf);
-                                             ("%dateValueOfCall", privdateValueOfCall);
-                                             ("%dategetDate", privdategetDate);
-                                             ("%dategetDateCall", privdategetDateCall);
-                                             ("%dategetDay", privdategetDay);
-                                             ("%dategetDayCall", privdategetDayCall);
-                                             ("%decodeURI", privdecodeURI);
-                                             ("%decodeURICall", privdecodeURICall);
-                                             ("%decodeURIComponent", privdecodeURIComponent);
-                                             ("%decodeURIComponentCall", privdecodeURIComponentCall);
-                                             ("%define15Property", privdefine15Property);
-                                             ("%defineNYIProperty", privdefineNYIProperty);
-                                             ("%defineOwnProperty", privdefineOwnProperty);
-                                             ("%defineProperties", privdefineProperties);
-                                             ("%definePropertiesCall", privdefinePropertiesCall);
-                                             ("%defineProperty", privdefineProperty);
-                                             ("%definePropertyCall", privdefinePropertyCall);
-                                             ("%encodeURI", privencodeURI);
-                                             ("%encodeURICall", privencodeURICall);
-                                             ("%encodeURIComponent", privencodeURIComponent);
-                                             ("%encodeURIComponentCall", privencodeURIComponentCall);
-                                             ("%escape", privescape);
-                                             ("%escapeCall", privescapeCall);
-                                             ("%ets", privets);
-                                             ("%etsCall", privetsCall);
-                                             ("%eval", priveval);
-                                             ("%evalCall", privevalCall);
-                                             ("%every", privevery);
-                                             ("%everyCall", priveveryCall);
-                                             ("%exp", privexp);
-                                             ("%expCall", privexpCall);
-                                             ("%filter", privfilter);
-                                             ("%filterCall", privfilterCall);
-                                             ("%foreach", privforeach);
-                                             ("%foreachCall", privforeachCall);
-                                             ("%freeze", privfreeze);
-                                             ("%freezeCall", privfreezeCall);
-                                             ("%fromCharCode", privfromCharCode);
-                                             ("%fromccCall", privfromccCall);
-                                             ("%functionToString", privfunctionToString);
-                                             ("%functionToStringCall", privfunctionToStringCall);
-                                             ("%getCurrentUTC", privgetCurrentUTC);
-                                             ("%getMonth", privgetMonth);
-                                             ("%getMonthCall", privgetMonthCall);
-                                             ("%getYear", privgetYear);
-                                             ("%getYearCall", privgetYearCall);
-                                             ("%global", privglobal);
-                                             ("%globalContext", privglobalContext);
-                                             ("%gopd", privgopd);
-                                             ("%gopdCall", privgopdCall);
-                                             ("%gopn", privgopn);
-                                             ("%gopnCall", privgopnCall);
-                                             ("%gpo", privgpo);
-                                             ("%gpoCall", privgpoCall);
-                                             ("%hasOwnProperty", privhasOwnProperty);
-                                             ("%hasOwnPropertyCall", privhasOwnPropertyCall);
-                                             ("%in", privin);
-                                             ("%instanceof", privinstanceof);
-                                             ("%isExtensible", privisExtensible);
-                                             ("%isExtensibleCall", privisExtensibleCall);
-                                             ("%isFinite", privisFinite);
-                                             ("%isFiniteCall", privisFiniteCall);
-                                             ("%isFrozen", privisFrozen);
-                                             ("%isFrozenCall", privisFrozenCall);
-                                             ("%isNaN", privisNaN);
-                                             ("%isNaNCall", privisNaNCall);
-                                             ("%isPrototypeOf", privisPrototypeOf);
-                                             ("%isPrototypeOfCall", privisPrototypeOfCall);
-                                             ("%isSealed", privisSealed);
-                                             ("%isSealedCall", privisSealedCall);
-                                             ("%join", privjoin);
-                                             ("%joinCall", privjoinCall);
-                                             ("%keys", privkeys);
-                                             ("%keysCall", privkeysCall);
-                                             ("%len", privlen);
-                                             ("%localeCompare", privlocaleCompare);
-                                             ("%localeCompareCall", privlocaleCompareCall);
-                                             ("%log", privlog);
-                                             ("%logCall", privlogCall);
-                                             ("%makeGlobalEnv", privmakeGlobalEnv);
-                                             ("%map", privmap);
-                                             ("%mapCall", privmapCall);
-                                             ("%mathAbs", privmathAbs);
-                                             ("%mathAbsCall", privmathAbsCall);
-                                             ("%mathCeil", privmathCeil);
-                                             ("%mathCeilCall", privmathCeilCall);
-                                             ("%mathFloor", privmathFloor);
-                                             ("%mathFloorCall", privmathFloorCall);
-                                             ("%mathLog", privmathLog);
-                                             ("%mathLogCall", privmathLogCall);
-                                             ("%mathMax", privmathMax);
-                                             ("%mathMaxCall", privmathMaxCall);
-                                             ("%mathMin", privmathMin);
-                                             ("%mathMinCall", privmathMinCall);
-                                             ("%mathPow", privmathPow);
-                                             ("%mathPowCall", privmathPowCall);
-                                             ("%max", privmax);
-                                             ("%min", privmin);
-                                             ("%minMaxCall", privminMaxCall);
-                                             ("%mkArgsObj", privmkArgsObj);
-                                             ("%msPerDay", privmsPerDay);
-                                             ("%msPerHour", privmsPerHour);
-                                             ("%msPerMin", privmsPerMin);
-                                             ("%msPerSecond", privmsPerSecond);
-                                             ("%newDeclEnvRec", privnewDeclEnvRec);
-                                             ("%newObjEnvRec", privnewObjEnvRec);
-                                             ("%notEqEq", privnotEqEq);
-                                             ("%notStxEq", privnotStxEq);
-                                             ("%numTLS", privnumTLS);
-                                             ("%numTLSCall", privnumTLSCall);
-                                             ("%numToStringAbstract", privnumToStringAbstract);
-                                             ("%numberPrimval", privnumberPrimval);
-                                             ("%numberToString", privnumberToString);
-                                             ("%numberToStringCall", privnumberToStringCall);
-                                             ("%numberValueOf", privnumberValueOf);
-                                             ("%objectToString", privobjectToString);
-                                             ("%objectToStringCall", privobjectToStringCall);
-                                             ("%objectValueOf", privobjectValueOf);
-                                             ("%objectValueOfCall", privobjectValueOfCall);
-                                             ("%oneArgObj", privoneArgObj);
-                                             ("%parse", privparse);
-                                             ("%parseFloat", privparseFloat);
-                                             ("%parseFloatCall", privparseFloatCall);
-                                             ("%parseInt", privparseInt);
-                                             ("%parseIntCall", privparseIntCall);
-                                             ("%pop", privpop);
-                                             ("%popCall", privpopCall);
-                                             ("%preventExtensions", privpreventExtensions);
-                                             ("%preventExtensionsCall", privpreventExtensionsCall);
-                                             ("%primEach", privprimEach);
-                                             ("%print", privprint);
-                                             ("%printCall", privprintCall);
-                                             ("%propEnum", privpropEnum);
-                                             ("%propEnumCall", privpropEnumCall);
-                                             ("%propertyNames", privpropertyNames);
-                                             ("%protoOfField", privprotoOfField);
-                                             ("%push", privpush);
-                                             ("%pushCall", privpushCall);
-                                             ("%random", privrandom);
-                                             ("%randomCall", privrandomCall);
-                                             ("%reduce", privreduce);
-                                             ("%reduceCall", privreduceCall);
-                                             ("%reduceRight", privreduceRight);
-                                             ("%reduceRightCall", privreduceRightCall);
-                                             ("%replace", privreplace);
-                                             ("%replaceCall", privreplaceCall);
-                                             ("%resolveThis", privresolveThis);
-                                             ("%reverse", privreverse);
-                                             ("%reverseCall", privreverseCall);
-                                             ("%round", privround);
-                                             ("%roundCall", privroundCall);
-                                             ("%runConstruct", privrunConstruct);
-                                             ("%seal", privseal);
-                                             ("%sealCall", privsealCall);
-                                             ("%set-property", privset_property);
-                                             ("%shift", privshift);
-                                             ("%shiftCall", privshiftCall);
-                                             ("%sin", privsin);
-                                             ("%sinCall", privsinCall);
-                                             ("%slice", privslice);
-                                             ("%sliceCall", privsliceCall);
-                                             ("%slice_internal", privslice_internal);
-                                             ("%some", privsome);
-                                             ("%someCall", privsomeCall);
-                                             ("%sort", privsort);
-                                             ("%sortCall", privsortCall);
-                                             ("%splice", privsplice);
-                                             ("%spliceCall", privspliceCall);
-                                             ("%split", privsplit);
-                                             ("%splitCall", privsplitCall);
-                                             ("%sqrt", privsqrt);
-                                             ("%sqrtCall", privsqrtCall);
-                                             ("%stringConcat", privstringConcat);
-                                             ("%stringConcatCall", privstringConcatCall);
-                                             ("%stringIndexOf", privstringIndexOf);
-                                             ("%stringIndexOfCall", privstringIndexOfCall);
-                                             ("%stringLastIndexOf", privstringLastIndexOf);
-                                             ("%stringLastIndexOfCall", privstringLastIndexOfCall);
-                                             ("%stringSlice", privstringSlice);
-                                             ("%stringSliceCall", privstringSliceCall);
-                                             ("%stringToString", privstringToString);
-                                             ("%stringToStringCall", privstringToStringCall);
-                                             ("%stringValueOf", privstringValueOf);
-                                             ("%substring", privsubstring);
-                                             ("%substringCall", privsubstringCall);
-                                             ("%tan", privtan);
-                                             ("%tanCall", privtanCall);
-                                             ("%test", privtest);
-                                             ("%testCall", privtestCall);
-                                             ("%toExponential", privtoExponential);
-                                             ("%toExponentialCall", privtoExponentialCall);
-                                             ("%toFixed", privtoFixed);
-                                             ("%toFixedCall", privtoFixedCall);
-                                             ("%toLocaleString", privtoLocaleString);
-                                             ("%toLocaleStringCall", privtoLocaleStringCall);
-                                             ("%toLowerCase", privtoLowerCase);
-                                             ("%toLowerCaseCall", privtoLowerCaseCall);
-                                             ("%toPrecision", privtoPrecision);
-                                             ("%toPrecisionCall", privtoPrecisionCall);
-                                             ("%toUpperCase", privtoUpperCase);
-                                             ("%toUpperCaseCall", privtoUpperCaseCall);
-                                             ("%twoArgObj", privtwoArgObj);
-                                             ("%unescape", privunescape);
-                                             ("%unescapeCall", privunescapeCall);
-                                             ("%unshift", privunshift);
-                                             ("%unshiftCall", privunshiftCall);
-                                             ("%valueOfCall", privvalueOfCall);
-                                             ("%zeroArgObj", privzeroArgObj);
-                                             ("copy-access-desc", copy_access_desc);
-                                             ("copy-data-desc", copy_data_desc);
-                                             ("copy-when-defined", copy_when_defined);
-                                             ("isAccessorDescriptor", isAccessorDescriptor);
-                                             ("isAccessorField", isAccessorField);
-                                             ("isDataDescriptor", isDataDescriptor);
-                                             ("isDataField", isDataField);
-                                             ("isGenericDescriptor", isGenericDescriptor);
-                                             ("isGenericField", isGenericField)]
-                                            None ["%"] ex_getter);
-                                           attributes_accessor_set :=
-                                           value_undefined;
-                                           attributes_accessor_enumerable :=
-                                           true;
-                                           attributes_accessor_configurable :=
-                                           true|})];
+                  attributes_data_of {|attributes_data_value :=
+                                       value_closure
+                                       (closure_intro
+                                        [("%AddAccessorField", privAddAccessorField);
+                                         ("%AddDataField", privAddDataField);
+                                         ("%AppExpr", privAppExpr);
+                                         ("%AppExprCheck", privAppExprCheck);
+                                         ("%AppMethod", privAppMethod);
+                                         ("%ArrayCall", privArrayCall);
+                                         ("%ArrayConstructor", privArrayConstructor);
+                                         ("%ArrayGlobalFuncObj", privArrayGlobalFuncObj);
+                                         ("%ArrayIdx", privArrayIdx);
+                                         ("%ArrayLengthChange", privArrayLengthChange);
+                                         ("%ArrayProto", privArrayProto);
+                                         ("%BindConstructor", privBindConstructor);
+                                         ("%BindObjCall", privBindObjCall);
+                                         ("%BitwiseAnd", privBitwiseAnd);
+                                         ("%BitwiseInfix", privBitwiseInfix);
+                                         ("%BitwiseNot", privBitwiseNot);
+                                         ("%BitwiseOr", privBitwiseOr);
+                                         ("%BitwiseXor", privBitwiseXor);
+                                         ("%BooleanCall", privBooleanCall);
+                                         ("%BooleanConstructor", privBooleanConstructor);
+                                         ("%BooleanGlobalFuncObj", privBooleanGlobalFuncObj);
+                                         ("%BooleanProto", privBooleanProto);
+                                         ("%CheckObjectCoercible", privCheckObjectCoercible);
+                                         ("%CompareOp", privCompareOp);
+                                         ("%ComputeLength", privComputeLength);
+                                         ("%DateCall", privDateCall);
+                                         ("%DateConstructor", privDateConstructor);
+                                         ("%DateFromTime", privDateFromTime);
+                                         ("%DateGlobalFuncObj", privDateGlobalFuncObj);
+                                         ("%DateProto", privDateProto);
+                                         ("%Day", privDay);
+                                         ("%DayFromYear", privDayFromYear);
+                                         ("%DayWithinYear", privDayWithinYear);
+                                         ("%DaysInMonth", privDaysInMonth);
+                                         ("%DaysInYear", privDaysInYear);
+                                         ("%DeclEnvAddBinding", privDeclEnvAddBinding);
+                                         ("%DefaultCall", privDefaultCall);
+                                         ("%DefaultConstruct", privDefaultConstruct);
+                                         ("%Delete", privDelete);
+                                         ("%DeleteOp", privDeleteOp);
+                                         ("%EnvAppExpr", privEnvAppExpr);
+                                         ("%EnvAssign", privEnvAssign);
+                                         ("%EnvCreateImmutableBinding", privEnvCreateImmutableBinding);
+                                         ("%EnvCreateMutableBinding", privEnvCreateMutableBinding);
+                                         ("%EnvCreateSetMutableBinding", privEnvCreateSetMutableBinding);
+                                         ("%EnvDefineArg", privEnvDefineArg);
+                                         ("%EnvDefineArgsObj", privEnvDefineArgsObj);
+                                         ("%EnvDefineArgsObjOk", privEnvDefineArgsObjOk);
+                                         ("%EnvDefineFunc", privEnvDefineFunc);
+                                         ("%EnvDefineVar", privEnvDefineVar);
+                                         ("%EnvDelete", privEnvDelete);
+                                         ("%EnvGet", privEnvGet);
+                                         ("%EnvGetBindingValue", privEnvGetBindingValue);
+                                         ("%EnvGetId", privEnvGetId);
+                                         ("%EnvGetValue", privEnvGetValue);
+                                         ("%EnvHasBinding", privEnvHasBinding);
+                                         ("%EnvImplicitThis", privEnvImplicitThis);
+                                         ("%EnvInitializeImmutableBinding", privEnvInitializeImmutableBinding);
+                                         ("%EnvModify", privEnvModify);
+                                         ("%EnvPrepostOp", privEnvPrepostOp);
+                                         ("%EnvPutValue", privEnvPutValue);
+                                         ("%EnvSetMutableBinding", privEnvSetMutableBinding);
+                                         ("%EnvTypeof", privEnvTypeof);
+                                         ("%EqEq", privEqEq);
+                                         ("%ErrorConstructor", privErrorConstructor);
+                                         ("%ErrorGlobalFuncObj", privErrorGlobalFuncObj);
+                                         ("%ErrorProto", privErrorProto);
+                                         ("%EvalErrorConstructor", privEvalErrorConstructor);
+                                         ("%EvalErrorGlobalFuncObj", privEvalErrorGlobalFuncObj);
+                                         ("%EvalErrorProto", privEvalErrorProto);
+                                         ("%FunctionConstructor", privFunctionConstructor);
+                                         ("%FunctionGlobalFuncObj", privFunctionGlobalFuncObj);
+                                         ("%FunctionProto", privFunctionProto);
+                                         ("%FunctionProtoCall", privFunctionProtoCall);
+                                         ("%GeOp", privGeOp);
+                                         ("%Get", privGet);
+                                         ("%Get1", privGet1);
+                                         ("%GetField", privGetField);
+                                         ("%GetOwnProperty", privGetOwnProperty);
+                                         ("%GetProperty", privGetProperty);
+                                         ("%GtOp", privGtOp);
+                                         ("%HasProperty", privHasProperty);
+                                         ("%InLeapYear", privInLeapYear);
+                                         ("%IsCallable", privIsCallable);
+                                         ("%IsFinite", privIsFinite);
+                                         ("%IsJSError", privIsJSError);
+                                         ("%JSError", privJSError);
+                                         ("%LeOp", privLeOp);
+                                         ("%LeftShift", privLeftShift);
+                                         ("%LocalTime", privLocalTime);
+                                         ("%LtOp", privLtOp);
+                                         ("%MakeArray", privMakeArray);
+                                         ("%MakeBind", privMakeBind);
+                                         ("%MakeBoolean", privMakeBoolean);
+                                         ("%MakeDate", privMakeDate);
+                                         ("%MakeDateDayTime", privMakeDateDayTime);
+                                         ("%MakeDay", privMakeDay);
+                                         ("%MakeFunctionObject", privMakeFunctionObject);
+                                         ("%MakeNativeError", privMakeNativeError);
+                                         ("%MakeNativeErrorProto", privMakeNativeErrorProto);
+                                         ("%MakeNumber", privMakeNumber);
+                                         ("%MakeObject", privMakeObject);
+                                         ("%MakeString", privMakeString);
+                                         ("%MakeTime", privMakeTime);
+                                         ("%Math", privMath);
+                                         ("%MonthFromTime", privMonthFromTime);
+                                         ("%NativeError", privNativeError);
+                                         ("%NativeErrorConstructor", privNativeErrorConstructor);
+                                         ("%NumberCall", privNumberCall);
+                                         ("%NumberCompareOp", privNumberCompareOp);
+                                         ("%NumberConstructor", privNumberConstructor);
+                                         ("%NumberGlobalFuncObj", privNumberGlobalFuncObj);
+                                         ("%NumberProto", privNumberProto);
+                                         ("%ObjectCall", privObjectCall);
+                                         ("%ObjectConstructor", privObjectConstructor);
+                                         ("%ObjectGlobalFuncObj", privObjectGlobalFuncObj);
+                                         ("%ObjectProto", privObjectProto);
+                                         ("%ObjectTypeCheck", privObjectTypeCheck);
+                                         ("%PrepostOp", privPrepostOp);
+                                         ("%PrimAdd", privPrimAdd);
+                                         ("%PrimComma", privPrimComma);
+                                         ("%PrimDiv", privPrimDiv);
+                                         ("%PrimMod", privPrimMod);
+                                         ("%PrimMult", privPrimMult);
+                                         ("%PrimMultOp", privPrimMultOp);
+                                         ("%PrimNew", privPrimNew);
+                                         ("%PrimSub", privPrimSub);
+                                         ("%PrimitiveCompareOp", privPrimitiveCompareOp);
+                                         ("%PropertyAccess", privPropertyAccess);
+                                         ("%Put", privPut);
+                                         ("%Put1", privPut1);
+                                         ("%RangeError", privRangeError);
+                                         ("%RangeErrorConstructor", privRangeErrorConstructor);
+                                         ("%RangeErrorGlobalFuncObj", privRangeErrorGlobalFuncObj);
+                                         ("%RangeErrorProto", privRangeErrorProto);
+                                         ("%ReferenceError", privReferenceError);
+                                         ("%ReferenceErrorConstructor", privReferenceErrorConstructor);
+                                         ("%ReferenceErrorGlobalFuncObj", privReferenceErrorGlobalFuncObj);
+                                         ("%ReferenceErrorProto", privReferenceErrorProto);
+                                         ("%RegExpCode", privRegExpCode);
+                                         ("%RegExpConstructor", privRegExpConstructor);
+                                         ("%RegExpGlobalFuncObj", privRegExpGlobalFuncObj);
+                                         ("%RegExpProto", privRegExpProto);
+                                         ("%RunSelfConstructorCall", privRunSelfConstructorCall);
+                                         ("%SetField", privSetField);
+                                         ("%SignedRightShift", privSignedRightShift);
+                                         ("%StringCall", privStringCall);
+                                         ("%StringConstructor", privStringConstructor);
+                                         ("%StringGlobalFuncObj", privStringGlobalFuncObj);
+                                         ("%StringIndices", privStringIndices);
+                                         ("%StringProto", privStringProto);
+                                         ("%StxEq", privStxEq);
+                                         ("%SyntaxError", privSyntaxError);
+                                         ("%SyntaxErrorConstructor", privSyntaxErrorConstructor);
+                                         ("%SyntaxErrorGlobalFuncObj", privSyntaxErrorGlobalFuncObj);
+                                         ("%SyntaxErrorProto", privSyntaxErrorProto);
+                                         ("%ThrowTypeError", privThrowTypeError);
+                                         ("%ThrowTypeErrorFun", privThrowTypeErrorFun);
+                                         ("%TimeClip", privTimeClip);
+                                         ("%TimeFromYear", privTimeFromYear);
+                                         ("%TimeWithinDay", privTimeWithinDay);
+                                         ("%ToBoolean", privToBoolean);
+                                         ("%ToInt32", privToInt32);
+                                         ("%ToInteger", privToInteger);
+                                         ("%ToNumber", privToNumber);
+                                         ("%ToObject", privToObject);
+                                         ("%ToPrimitive", privToPrimitive);
+                                         ("%ToPrimitiveHint", privToPrimitiveHint);
+                                         ("%ToPropertyDescriptor", privToPropertyDescriptor);
+                                         ("%ToString", privToString);
+                                         ("%ToUint", privToUint);
+                                         ("%ToUint16", privToUint16);
+                                         ("%ToUint32", privToUint32);
+                                         ("%TypeError", privTypeError);
+                                         ("%TypeErrorConstructor", privTypeErrorConstructor);
+                                         ("%TypeErrorGlobalFuncObj", privTypeErrorGlobalFuncObj);
+                                         ("%TypeErrorProto", privTypeErrorProto);
+                                         ("%Typeof", privTypeof);
+                                         ("%URIErrorConstructor", privURIErrorConstructor);
+                                         ("%URIErrorGlobalFuncObj", privURIErrorGlobalFuncObj);
+                                         ("%URIErrorProto", privURIErrorProto);
+                                         ("%UTC", privUTC);
+                                         ("%UnaryNeg", privUnaryNeg);
+                                         ("%UnaryNot", privUnaryNot);
+                                         ("%UnaryPlus", privUnaryPlus);
+                                         ("%UnboundId", privUnboundId);
+                                         ("%UnsignedRightShift", privUnsignedRightShift);
+                                         ("%Void", privVoid);
+                                         ("%YearFromTime", privYearFromTime);
+                                         ("%acos", privacos);
+                                         ("%acosCall", privacosCall);
+                                         ("%apply", privapply);
+                                         ("%applyCall", privapplyCall);
+                                         ("%arrayIndexOf", privarrayIndexOf);
+                                         ("%arrayIndexOfCall", privarrayIndexOfCall);
+                                         ("%arrayLastIndexOf", privarrayLastIndexOf);
+                                         ("%arrayLastIndexOfCall", privarrayLastIndexOfCall);
+                                         ("%arrayTLSCall", privarrayTLSCall);
+                                         ("%arrayToLocaleString", privarrayToLocaleString);
+                                         ("%arrayToString", privarrayToString);
+                                         ("%arrayToStringCall", privarrayToStringCall);
+                                         ("%asin", privasin);
+                                         ("%asinCall", privasinCall);
+                                         ("%assert", privassert);
+                                         ("%atan", privatan);
+                                         ("%atan2", privatan2);
+                                         ("%atan2Call", privatan2Call);
+                                         ("%atanCall", privatanCall);
+                                         ("%bind", privbind);
+                                         ("%bindCall", privbindCall);
+                                         ("%booleanToString", privbooleanToString);
+                                         ("%booleanToStringCall", privbooleanToStringCall);
+                                         ("%booleanValueOf", privbooleanValueOf);
+                                         ("%call", privcall);
+                                         ("%callCall", privcallCall);
+                                         ("%charAt", privcharAt);
+                                         ("%charAtCall", privcharAtCall);
+                                         ("%charCodeAt", privcharCodeAt);
+                                         ("%charCodeAtCall", privcharCodeAtCall);
+                                         ("%concat", privconcat);
+                                         ("%concatCall", privconcatCall);
+                                         ("%configurableEval", privconfigurableEval);
+                                         ("%console", privconsole);
+                                         ("%cos", privcos);
+                                         ("%cosCall", privcosCall);
+                                         ("%create", privcreate);
+                                         ("%createCall", privcreateCall);
+                                         ("%dateGetTimezoneOffset", privdateGetTimezoneOffset);
+                                         ("%dateGetTimezoneOffsetCall", privdateGetTimezoneOffsetCall);
+                                         ("%dateToString", privdateToString);
+                                         ("%dateToStringCall", privdateToStringCall);
+                                         ("%dateValueOf", privdateValueOf);
+                                         ("%dateValueOfCall", privdateValueOfCall);
+                                         ("%dategetDate", privdategetDate);
+                                         ("%dategetDateCall", privdategetDateCall);
+                                         ("%dategetDay", privdategetDay);
+                                         ("%dategetDayCall", privdategetDayCall);
+                                         ("%decodeURI", privdecodeURI);
+                                         ("%decodeURICall", privdecodeURICall);
+                                         ("%decodeURIComponent", privdecodeURIComponent);
+                                         ("%decodeURIComponentCall", privdecodeURIComponentCall);
+                                         ("%define15Property", privdefine15Property);
+                                         ("%defineNYIProperty", privdefineNYIProperty);
+                                         ("%defineOwnProperty", privdefineOwnProperty);
+                                         ("%defineProperties", privdefineProperties);
+                                         ("%definePropertiesCall", privdefinePropertiesCall);
+                                         ("%defineProperty", privdefineProperty);
+                                         ("%definePropertyCall", privdefinePropertyCall);
+                                         ("%encodeURI", privencodeURI);
+                                         ("%encodeURICall", privencodeURICall);
+                                         ("%encodeURIComponent", privencodeURIComponent);
+                                         ("%encodeURIComponentCall", privencodeURIComponentCall);
+                                         ("%escape", privescape);
+                                         ("%escapeCall", privescapeCall);
+                                         ("%ets", privets);
+                                         ("%etsCall", privetsCall);
+                                         ("%eval", priveval);
+                                         ("%evalCall", privevalCall);
+                                         ("%every", privevery);
+                                         ("%everyCall", priveveryCall);
+                                         ("%exp", privexp);
+                                         ("%expCall", privexpCall);
+                                         ("%filter", privfilter);
+                                         ("%filterCall", privfilterCall);
+                                         ("%foreach", privforeach);
+                                         ("%foreachCall", privforeachCall);
+                                         ("%freeze", privfreeze);
+                                         ("%freezeCall", privfreezeCall);
+                                         ("%fromCharCode", privfromCharCode);
+                                         ("%fromccCall", privfromccCall);
+                                         ("%functionToString", privfunctionToString);
+                                         ("%functionToStringCall", privfunctionToStringCall);
+                                         ("%getCurrentUTC", privgetCurrentUTC);
+                                         ("%getMonth", privgetMonth);
+                                         ("%getMonthCall", privgetMonthCall);
+                                         ("%getYear", privgetYear);
+                                         ("%getYearCall", privgetYearCall);
+                                         ("%global", privglobal);
+                                         ("%globalContext", privglobalContext);
+                                         ("%gopd", privgopd);
+                                         ("%gopdCall", privgopdCall);
+                                         ("%gopn", privgopn);
+                                         ("%gopnCall", privgopnCall);
+                                         ("%gpo", privgpo);
+                                         ("%gpoCall", privgpoCall);
+                                         ("%hasOwnProperty", privhasOwnProperty);
+                                         ("%hasOwnPropertyCall", privhasOwnPropertyCall);
+                                         ("%in", privin);
+                                         ("%instanceof", privinstanceof);
+                                         ("%isExtensible", privisExtensible);
+                                         ("%isExtensibleCall", privisExtensibleCall);
+                                         ("%isFinite", privisFinite);
+                                         ("%isFiniteCall", privisFiniteCall);
+                                         ("%isFrozen", privisFrozen);
+                                         ("%isFrozenCall", privisFrozenCall);
+                                         ("%isNaN", privisNaN);
+                                         ("%isNaNCall", privisNaNCall);
+                                         ("%isPrototypeOf", privisPrototypeOf);
+                                         ("%isPrototypeOfCall", privisPrototypeOfCall);
+                                         ("%isSealed", privisSealed);
+                                         ("%isSealedCall", privisSealedCall);
+                                         ("%join", privjoin);
+                                         ("%joinCall", privjoinCall);
+                                         ("%keys", privkeys);
+                                         ("%keysCall", privkeysCall);
+                                         ("%len", privlen);
+                                         ("%localeCompare", privlocaleCompare);
+                                         ("%localeCompareCall", privlocaleCompareCall);
+                                         ("%log", privlog);
+                                         ("%logCall", privlogCall);
+                                         ("%makeGlobalEnv", privmakeGlobalEnv);
+                                         ("%map", privmap);
+                                         ("%mapCall", privmapCall);
+                                         ("%mathAbs", privmathAbs);
+                                         ("%mathAbsCall", privmathAbsCall);
+                                         ("%mathCeil", privmathCeil);
+                                         ("%mathCeilCall", privmathCeilCall);
+                                         ("%mathFloor", privmathFloor);
+                                         ("%mathFloorCall", privmathFloorCall);
+                                         ("%mathLog", privmathLog);
+                                         ("%mathLogCall", privmathLogCall);
+                                         ("%mathMax", privmathMax);
+                                         ("%mathMaxCall", privmathMaxCall);
+                                         ("%mathMin", privmathMin);
+                                         ("%mathMinCall", privmathMinCall);
+                                         ("%mathPow", privmathPow);
+                                         ("%mathPowCall", privmathPowCall);
+                                         ("%max", privmax);
+                                         ("%min", privmin);
+                                         ("%minMaxCall", privminMaxCall);
+                                         ("%mkArgsObj", privmkArgsObj);
+                                         ("%msPerDay", privmsPerDay);
+                                         ("%msPerHour", privmsPerHour);
+                                         ("%msPerMin", privmsPerMin);
+                                         ("%msPerSecond", privmsPerSecond);
+                                         ("%newDeclEnvRec", privnewDeclEnvRec);
+                                         ("%newObjEnvRec", privnewObjEnvRec);
+                                         ("%notEqEq", privnotEqEq);
+                                         ("%notStxEq", privnotStxEq);
+                                         ("%numTLS", privnumTLS);
+                                         ("%numTLSCall", privnumTLSCall);
+                                         ("%numToStringAbstract", privnumToStringAbstract);
+                                         ("%numberPrimval", privnumberPrimval);
+                                         ("%numberToString", privnumberToString);
+                                         ("%numberToStringCall", privnumberToStringCall);
+                                         ("%numberValueOf", privnumberValueOf);
+                                         ("%objectToString", privobjectToString);
+                                         ("%objectToStringCall", privobjectToStringCall);
+                                         ("%objectValueOf", privobjectValueOf);
+                                         ("%objectValueOfCall", privobjectValueOfCall);
+                                         ("%oneArgObj", privoneArgObj);
+                                         ("%parse", privparse);
+                                         ("%parseFloat", privparseFloat);
+                                         ("%parseFloatCall", privparseFloatCall);
+                                         ("%parseInt", privparseInt);
+                                         ("%parseIntCall", privparseIntCall);
+                                         ("%pop", privpop);
+                                         ("%popCall", privpopCall);
+                                         ("%preventExtensions", privpreventExtensions);
+                                         ("%preventExtensionsCall", privpreventExtensionsCall);
+                                         ("%primEach", privprimEach);
+                                         ("%print", privprint);
+                                         ("%printCall", privprintCall);
+                                         ("%propEnum", privpropEnum);
+                                         ("%propEnumCall", privpropEnumCall);
+                                         ("%propertyNames", privpropertyNames);
+                                         ("%protoOfField", privprotoOfField);
+                                         ("%push", privpush);
+                                         ("%pushCall", privpushCall);
+                                         ("%random", privrandom);
+                                         ("%randomCall", privrandomCall);
+                                         ("%reduce", privreduce);
+                                         ("%reduceCall", privreduceCall);
+                                         ("%reduceRight", privreduceRight);
+                                         ("%reduceRightCall", privreduceRightCall);
+                                         ("%replace", privreplace);
+                                         ("%replaceCall", privreplaceCall);
+                                         ("%resolveThis", privresolveThis);
+                                         ("%reverse", privreverse);
+                                         ("%reverseCall", privreverseCall);
+                                         ("%round", privround);
+                                         ("%roundCall", privroundCall);
+                                         ("%runConstruct", privrunConstruct);
+                                         ("%seal", privseal);
+                                         ("%sealCall", privsealCall);
+                                         ("%set-property", privset_property);
+                                         ("%shift", privshift);
+                                         ("%shiftCall", privshiftCall);
+                                         ("%sin", privsin);
+                                         ("%sinCall", privsinCall);
+                                         ("%slice", privslice);
+                                         ("%sliceCall", privsliceCall);
+                                         ("%slice_internal", privslice_internal);
+                                         ("%some", privsome);
+                                         ("%someCall", privsomeCall);
+                                         ("%sort", privsort);
+                                         ("%sortCall", privsortCall);
+                                         ("%splice", privsplice);
+                                         ("%spliceCall", privspliceCall);
+                                         ("%split", privsplit);
+                                         ("%splitCall", privsplitCall);
+                                         ("%sqrt", privsqrt);
+                                         ("%sqrtCall", privsqrtCall);
+                                         ("%stringConcat", privstringConcat);
+                                         ("%stringConcatCall", privstringConcatCall);
+                                         ("%stringIndexOf", privstringIndexOf);
+                                         ("%stringIndexOfCall", privstringIndexOfCall);
+                                         ("%stringLastIndexOf", privstringLastIndexOf);
+                                         ("%stringLastIndexOfCall", privstringLastIndexOfCall);
+                                         ("%stringSlice", privstringSlice);
+                                         ("%stringSliceCall", privstringSliceCall);
+                                         ("%stringToString", privstringToString);
+                                         ("%stringToStringCall", privstringToStringCall);
+                                         ("%stringValueOf", privstringValueOf);
+                                         ("%substring", privsubstring);
+                                         ("%substringCall", privsubstringCall);
+                                         ("%tan", privtan);
+                                         ("%tanCall", privtanCall);
+                                         ("%test", privtest);
+                                         ("%testCall", privtestCall);
+                                         ("%toExponential", privtoExponential);
+                                         ("%toExponentialCall", privtoExponentialCall);
+                                         ("%toFixed", privtoFixed);
+                                         ("%toFixedCall", privtoFixedCall);
+                                         ("%toLocaleString", privtoLocaleString);
+                                         ("%toLocaleStringCall", privtoLocaleStringCall);
+                                         ("%toLowerCase", privtoLowerCase);
+                                         ("%toLowerCaseCall", privtoLowerCaseCall);
+                                         ("%toPrecision", privtoPrecision);
+                                         ("%toPrecisionCall", privtoPrecisionCall);
+                                         ("%toUpperCase", privtoUpperCase);
+                                         ("%toUpperCaseCall", privtoUpperCaseCall);
+                                         ("%twoArgObj", privtwoArgObj);
+                                         ("%unescape", privunescape);
+                                         ("%unescapeCall", privunescapeCall);
+                                         ("%unshift", privunshift);
+                                         ("%unshiftCall", privunshiftCall);
+                                         ("%valueOfCall", privvalueOfCall);
+                                         ("%zeroArgObj", privzeroArgObj);
+                                         ("copy-access-desc", copy_access_desc);
+                                         ("copy-data-desc", copy_data_desc);
+                                         ("copy-when-defined", copy_when_defined);
+                                         ("isAccessorDescriptor", isAccessorDescriptor);
+                                         ("isAccessorField", isAccessorField);
+                                         ("isDataDescriptor", isDataDescriptor);
+                                         ("isDataField", isDataField);
+                                         ("isGenericDescriptor", isGenericDescriptor);
+                                         ("isGenericField", isGenericField)]
+                                        None [] ex_dataval);
+                                       attributes_data_writable := true;
+                                       attributes_data_enumerable := true;
+                                       attributes_data_configurable := true|})];
       object_internal := from_list []|});
 (1, {|object_attrs :=
       {|oattrs_proto := proto;
@@ -12103,55 +12320,6 @@ Definition store_items := [
       object_internal := from_list []|});
 (3, {|object_attrs :=
       {|oattrs_proto := privObjectProto;
-        oattrs_class := "Function";
-        oattrs_extensible := true;
-        oattrs_code := privFunctionProtoCall|};
-      object_properties :=
-      from_list [("apply", 
-                  attributes_data_of {|attributes_data_value :=
-                                       value_object 18;
-                                       attributes_data_writable := true;
-                                       attributes_data_enumerable := false;
-                                       attributes_data_configurable := true|});
-                 ("bind", 
-                  attributes_data_of {|attributes_data_value :=
-                                       value_object 150;
-                                       attributes_data_writable := true;
-                                       attributes_data_enumerable := false;
-                                       attributes_data_configurable := true|});
-                 ("call", 
-                  attributes_data_of {|attributes_data_value :=
-                                       value_object 17;
-                                       attributes_data_writable := true;
-                                       attributes_data_enumerable := false;
-                                       attributes_data_configurable := true|});
-                 ("constructor", 
-                  attributes_data_of {|attributes_data_value :=
-                                       value_object 311;
-                                       attributes_data_writable := true;
-                                       attributes_data_enumerable := false;
-                                       attributes_data_configurable := true|});
-                 ("length", 
-                  attributes_data_of {|attributes_data_value :=
-                                       value_number (JsNumber.of_int (0));
-                                       attributes_data_writable := true;
-                                       attributes_data_enumerable := false;
-                                       attributes_data_configurable := false|});
-                 ("toString", 
-                  attributes_data_of {|attributes_data_value :=
-                                       value_object 11;
-                                       attributes_data_writable := true;
-                                       attributes_data_enumerable := false;
-                                       attributes_data_configurable := true|})];
-      object_internal :=
-      from_list [("construct", 
-                  value_closure
-                  (closure_intro
-                   [("%AppExpr", privAppExpr);
-                    ("%ObjectProto", privObjectProto)] None
-                   ["constr"; "args"] ex_internal))]|});
-(4, {|object_attrs :=
-      {|oattrs_proto := privObjectProto;
         oattrs_class := "Error";
         oattrs_extensible := true;
         oattrs_code := objCode|};
@@ -12177,11 +12345,11 @@ Definition store_items := [
                  ("toString", 
                   attributes_data_of {|attributes_data_value :=
                                        value_object 22;
-                                       attributes_data_writable := false;
-                                       attributes_data_enumerable := false;
+                                       attributes_data_writable := true;
+                                       attributes_data_enumerable := true;
                                        attributes_data_configurable := true|})];
       object_internal := from_list []|});
-(5, {|object_attrs :=
+(4, {|object_attrs :=
       {|oattrs_proto := privErrorProto;
         oattrs_class := "Error";
         oattrs_extensible := true;
@@ -12206,7 +12374,7 @@ Definition store_items := [
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})];
       object_internal := from_list []|});
-(6, {|object_attrs :=
+(5, {|object_attrs :=
       {|oattrs_proto := privErrorProto;
         oattrs_class := "Error";
         oattrs_extensible := true;
@@ -12231,7 +12399,7 @@ Definition store_items := [
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})];
       object_internal := from_list []|});
-(7, {|object_attrs :=
+(6, {|object_attrs :=
       {|oattrs_proto := privErrorProto;
         oattrs_class := "Error";
         oattrs_extensible := true;
@@ -12256,7 +12424,7 @@ Definition store_items := [
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})];
       object_internal := from_list []|});
-(8, {|object_attrs :=
+(7, {|object_attrs :=
       {|oattrs_proto := privErrorProto;
         oattrs_class := "Error";
         oattrs_extensible := true;
@@ -12281,7 +12449,7 @@ Definition store_items := [
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})];
       object_internal := from_list []|});
-(9, {|object_attrs :=
+(8, {|object_attrs :=
       {|oattrs_proto := privErrorProto;
         oattrs_class := "Error";
         oattrs_extensible := true;
@@ -12306,58 +12474,32 @@ Definition store_items := [
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})];
       object_internal := from_list []|});
+(9, {|object_attrs :=
+      {|oattrs_proto := privObjectProto;
+        oattrs_class := "Boolean";
+        oattrs_extensible := true;
+        oattrs_code := objCode|};
+      object_properties :=
+      from_list [("constructor", 
+                  attributes_data_of {|attributes_data_value :=
+                                       value_object 31;
+                                       attributes_data_writable := true;
+                                       attributes_data_enumerable := true;
+                                       attributes_data_configurable := true|});
+                 ("toString", 
+                  attributes_data_of {|attributes_data_value :=
+                                       value_object 28;
+                                       attributes_data_writable := true;
+                                       attributes_data_enumerable := false;
+                                       attributes_data_configurable := true|});
+                 ("valueOf", 
+                  attributes_data_of {|attributes_data_value :=
+                                       value_object 296;
+                                       attributes_data_writable := true;
+                                       attributes_data_enumerable := true;
+                                       attributes_data_configurable := true|})];
+      object_internal := from_list [("primval",  value_false)]|});
 (10, {|object_attrs :=
-       {|oattrs_proto := privFunctionProto;
-         oattrs_class := "Function";
-         oattrs_extensible := false;
-         oattrs_code := privThrowTypeErrorFun|};
-       object_properties :=
-       from_list [("length", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(11, {|object_attrs :=
-       {|oattrs_proto := privFunctionProto;
-         oattrs_class := "Function";
-         oattrs_extensible := true;
-         oattrs_code := privfunctionToStringCall|};
-       object_properties :=
-       from_list [("length", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(12, {|object_attrs :=
-       {|oattrs_proto := privObjectProto;
-         oattrs_class := "Boolean";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("constructor", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 31;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
-                                        attributes_data_configurable := true|});
-                  ("toString", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 28;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := true|});
-                  ("valueOf", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 296;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := true|})];
-       object_internal := from_list [("primval",  value_false)]|});
-(13, {|object_attrs :=
        {|oattrs_proto := privObjectProto;
          oattrs_class := "Number";
          oattrs_extensible := true;
@@ -12373,25 +12515,25 @@ Definition store_items := [
                    attributes_data_of {|attributes_data_value :=
                                         value_object 303;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toFixed", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 298;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toLocaleString", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 301;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toPrecision", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 305;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toString", 
                    attributes_data_of {|attributes_data_value :=
@@ -12403,11 +12545,11 @@ Definition store_items := [
                    attributes_data_of {|attributes_data_value :=
                                         value_object 294;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|})];
        object_internal :=
        from_list [("primval",  value_number (JsNumber.of_int (0)))]|});
-(14, {|object_attrs :=
+(11, {|object_attrs :=
        {|oattrs_proto := privObjectProto;
          oattrs_class := "String";
          oattrs_extensible := true;
@@ -12416,20 +12558,20 @@ Definition store_items := [
        from_list [("charAt", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 103;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("charCodeAt", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 106;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("concat", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 109;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("constructor", 
                    attributes_data_of {|attributes_data_value :=
@@ -12476,14 +12618,14 @@ Definition store_items := [
                   ("split", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 163;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("substring", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 112;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toLocaleLowerCase", 
                    attributes_data_of {|attributes_data_value :=
@@ -12507,7 +12649,7 @@ Definition store_items := [
                    attributes_data_of {|attributes_data_value :=
                                         value_object 25;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toUpperCase", 
                    attributes_data_of {|attributes_data_value :=
@@ -12519,9 +12661,85 @@ Definition store_items := [
                    attributes_data_of {|attributes_data_value :=
                                         value_object 292;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|})];
        object_internal := from_list [("primval",  value_string "")]|});
+(12, {|object_attrs :=
+       {|oattrs_proto := privObjectProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privFunctionProtoCall|};
+       object_properties :=
+       from_list [("apply", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 18;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
+                                        attributes_data_configurable := true|});
+                  ("bind", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 150;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("call", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 17;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
+                                        attributes_data_configurable := true|});
+                  ("constructor", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 311;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (0));
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("toString", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 13;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|})];
+       object_internal :=
+       from_list [("construct", 
+                   value_closure
+                   (closure_intro
+                    [("%AppExpr", privAppExpr);
+                     ("%Get1", privGet1);
+                     ("%ObjectProto", privObjectProto)] None
+                    ["constr"; "args"] ex_internal))]|});
+(13, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privfunctionToStringCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (0));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(14, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := false;
+         oattrs_code := privThrowTypeErrorFun|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (0));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
 (15, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
@@ -12672,7 +12890,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 13;
+                                        value_object 10;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
@@ -12730,7 +12948,7 @@ Definition store_items := [
                    attributes_data_of {|attributes_data_value :=
                                         value_object 74;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12740,7 +12958,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 14;
+                                        value_object 11;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
@@ -12834,9 +13052,9 @@ Definition store_items := [
                                         attributes_data_configurable := true|});
                   ("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 12;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        value_object 9;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := false|})];
        object_internal :=
        from_list [("construct", 
@@ -12858,7 +13076,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("value", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 12;
+                                        value_object 9;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
@@ -12872,14 +13090,14 @@ Definition store_items := [
        from_list [("create", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 58;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("defineProperties", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 56;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("defineProperty", 
                    attributes_data_of {|attributes_data_value :=
@@ -12896,8 +13114,8 @@ Definition store_items := [
                   ("getOwnPropertyDescriptor", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 36;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("getOwnPropertyNames", 
                    attributes_data_of {|attributes_data_value :=
@@ -12908,8 +13126,8 @@ Definition store_items := [
                   ("getPrototypeOf", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 34;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("isExtensible", 
                    attributes_data_of {|attributes_data_value :=
@@ -12932,8 +13150,8 @@ Definition store_items := [
                   ("keys", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 72;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -13100,7 +13318,7 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 4;
+                                        value_object 3;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
@@ -13120,7 +13338,7 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 7;
+                                        value_object 6;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
@@ -13140,7 +13358,7 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 8;
+                                        value_object 7;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
@@ -13160,7 +13378,7 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 9;
+                                        value_object 8;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
@@ -13180,7 +13398,7 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 6;
+                                        value_object 5;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
@@ -13200,7 +13418,7 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 5;
+                                        value_object 4;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
@@ -13260,26 +13478,26 @@ Definition store_items := [
        from_list [("concat", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 95;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
+                                        attributes_data_configurable := true|});
                   ("constructor", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 101;
-                                        attributes_data_writable := false;
+                                        attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("every", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 138;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("filter", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 133;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("forEach", 
                    attributes_data_of {|attributes_data_value :=
@@ -13290,20 +13508,20 @@ Definition store_items := [
                   ("indexOf", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 121;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("join", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 76;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("lastIndexOf", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 124;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -13314,56 +13532,56 @@ Definition store_items := [
                   ("map", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 130;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("pop", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 78;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("push", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 81;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("reduce", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 135;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("reduceRight", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 144;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("reverse", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 84;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("shift", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 87;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("slice", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 147;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("some", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 141;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("sort", 
                    attributes_data_of {|attributes_data_value :=
@@ -13374,26 +13592,26 @@ Definition store_items := [
                   ("splice", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 115;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toLocaleString", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 93;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toString", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 90;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("unshift", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 118;
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := true|})];
        object_internal := from_list []|});
 (53, {|object_attrs :=
@@ -13789,7 +14007,7 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (1));
-                                        attributes_data_writable := false;
+                                        attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
@@ -13825,8 +14043,8 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (79, {|object_attrs :=
@@ -13874,8 +14092,8 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (1));
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (82, {|object_attrs :=
@@ -13923,8 +14141,8 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (85, {|object_attrs :=
@@ -13972,8 +14190,8 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := false;
-                                        attributes_data_enumerable := false;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := true;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (88, {|object_attrs :=
@@ -14106,9 +14324,9 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (1));
-                                        attributes_data_writable := false;
+                                        attributes_data_writable := true;
                                         attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
+                                        attributes_data_configurable := true|})];
        object_internal := from_list []|});
 (96, {|object_attrs :=
        {|oattrs_proto := proto;
@@ -14150,9 +14368,9 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (1));
-                                        attributes_data_writable := false;
+                                        attributes_data_writable := true;
                                         attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
+                                        attributes_data_configurable := true|})];
        object_internal := from_list []|});
 (99, {|object_attrs :=
        {|oattrs_proto := proto;
@@ -14270,10 +14488,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (104, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14324,10 +14541,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (107, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14378,10 +14594,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (110, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14432,10 +14647,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (113, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14486,10 +14700,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (116, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14540,10 +14753,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (119, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14594,10 +14806,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (122, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14648,10 +14859,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (125, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14702,10 +14912,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (128, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14768,10 +14977,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (131, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14849,10 +15057,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (136, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14903,10 +15110,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (139, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -14957,10 +15163,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (142, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -15011,10 +15216,9 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
+                                         attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (145, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -15065,8 +15269,8 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
@@ -15119,8 +15323,8 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
@@ -17306,44 +17510,44 @@ Definition store_items := [
                    ("abs", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 262;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("acos", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 264;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("asin", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 266;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("atan", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 268;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("atan2", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 270;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("ceil", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 286;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("cos", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 272;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("exp", 
                     attributes_data_of {|attributes_data_value :=
@@ -17355,62 +17559,62 @@ Definition store_items := [
                    ("floor", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 288;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("log", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 284;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("max", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 259;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("min", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 256;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("pow", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 290;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("random", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 274;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("round", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 276;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("sin", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 278;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("sqrt", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 280;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("tan", 
                     attributes_data_of {|attributes_data_value :=
                                          value_object 282;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_writable := true;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (256, {|object_attrs :=
@@ -17422,7 +17626,7 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
@@ -17482,7 +17686,7 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := false;
+                                         attributes_data_writable := true;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
@@ -18047,7 +18251,7 @@ Definition store_items := [
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
+                                         attributes_data_enumerable := true;
                                          attributes_data_configurable := true|})];
         object_internal := from_list []|});
 (299, {|object_attrs :=
@@ -18275,7 +18479,7 @@ Definition store_items := [
                                          false|});
                    ("prototype", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 3;
+                                         value_object 12;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=

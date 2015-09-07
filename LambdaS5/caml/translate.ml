@@ -65,7 +65,6 @@ let translate_binary_op s = match s with
     | ">=" -> Cs.Coq_binary_op_ge
     | "stx=" -> Cs.Coq_binary_op_stx_eq
     | "sameValue" -> Cs.Coq_binary_op_same_value
-    | "hasProperty" -> Cs.Coq_binary_op_has_property
     | "hasOwnProperty" -> Cs.Coq_binary_op_has_own_property
     | "hasInternal" -> Cs.Coq_binary_op_has_internal
     | "string+" -> Cs.Coq_binary_op_string_plus
@@ -95,8 +94,6 @@ let rec translate_expr e = match e with
     | Ljs.SetAttr (_, p, e1, e2, e3) -> Cs.Coq_expr_set_attr (translate_pattr p, translate_expr e1, translate_expr e2, translate_expr e3)
     | Ljs.GetObjAttr (_, p, e) -> Cs.Coq_expr_get_obj_attr (translate_oattr p, translate_expr e)
     | Ljs.SetObjAttr (_, p, e1, e2) -> Cs.Coq_expr_set_obj_attr (translate_oattr p, translate_expr e1, translate_expr e2)
-    | Ljs.GetField (_, e, e1) -> Cs.Coq_expr_get_field (translate_expr e, translate_expr e1)
-    | Ljs.SetField (_, e, e1, e2) -> Cs.Coq_expr_set_field (translate_expr e, translate_expr e1, translate_expr e2)
     | Ljs.DeleteField (_, e, e1) -> Cs.Coq_expr_delete_field (translate_expr e, translate_expr e1)
     | Ljs.GetInternal (_, s, e) -> Cs.Coq_expr_get_internal (String.to_list s, translate_expr e)
     | Ljs.SetInternal (_, s, e1, e2) -> Cs.Coq_expr_set_internal (String.to_list s, translate_expr e1, translate_expr e2)

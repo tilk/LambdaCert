@@ -741,12 +741,6 @@ Proof.
     ljs_run_inv. 
     destruct op; destruct v; tryfalse; destruct v0; tryfalse; repeat injects; repeat substs; eauto;
     unfolds binary_operator.
-    (* has_property *)
-    unfolds has_property, assert_get_object_ptr.
-    ljs_run_push_post_auto.
-    cases_match_option; repeat injects; substs; eexists; (split; [prove_bag | idtac]);
-    apply func_eq_2; try reflexivity; apply func_eq_1; apply func_eq_1;
-    fold_bool; rew_refl; eauto.
     (* has_own_property *)
     unfolds has_own_property.
     ljs_run_push_post_auto. 
@@ -913,84 +907,6 @@ Proof.
     destruct pa;
     try match goal with H : context [ value_to_bool ?v ] |- _ => destruct v; simpl in H; tryfalse end;
     injects; injects; jauto.
-Qed.
-
-Lemma eval_get_field_correct : forall runs c st e1 e2 o,
-    runs_type_correct runs ->
-    eval_get_field runs c st e1 e2 = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
-        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
-            exists ptr obj s oattrs, v1 = value_object ptr /\
-                v2 = value_string s /\
-                st'' \(ptr?) = Some obj /\
-                get_property st'' obj s = result_some oattrs /\
-                ((oattrs = None /\ o = out_ter st'' (res_value value_undefined)) \/
-                 (exists data, oattrs = Some (attributes_data_of data) /\
-                    o = out_ter st'' (res_value (attributes_data_value data))) \/
-                 (exists acc, oattrs = Some (attributes_accessor_of acc) /\
-                    apply_post runs c st'' (attributes_accessor_get acc) [value_object ptr] o)))).
-Proof.
-    introv IH RR. unfolds in RR.
-    ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
-    repeat eexists; try eassumption.
-    cases_match_option;
-    [cases_match_attributes | ];
-    ljs_run_inv; jauto.
-    lets HR: apply_correct IH R0.
-    match goal with H : _ = value_object _ |- _ => inverts H end.
-    intuition jauto.
-Qed.
-
-Lemma eval_set_field_correct : forall runs c st e1 e2 e3 o,
-    runs_type_correct runs ->
-    eval_set_field runs c st e1 e2 e3 = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
-        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
-            is_some_value o (runs_type_eval runs c st'' e3) (fun st''' v3 =>
-                exists ptr obj s oattrs, v1 = value_object ptr /\
-                    st''' \(ptr?) = Some obj /\
-                    v2 = value_string s /\
-                    get_property st''' obj s = result_some oattrs /\
-                    ((oattrs = None /\ object_extensible obj = true /\
-                        o = out_ter (st''' \(ptr := set_object_property obj s 
-                            (attributes_data_of (attributes_data_intro v3 true true true)))) (res_value v3)) \/
-                     (oattrs = None /\ object_extensible obj = false /\
-                        o = out_ter st''' (res_exception (value_string "unextensible-set"))) \/
-                     (exists data, oattrs = Some (attributes_data_of data) /\
-                        attributes_data_writable data = false /\
-                        o = out_ter st''' (res_exception (value_string "unwritable-field"))) \/
-                     (exists data, oattrs = Some (attributes_data_of data) /\
-                        get_object_property obj s <> None /\
-                        attributes_data_writable data = true /\
-                        o = out_ter (st''' \(ptr := set_object_property obj s
-                            (attributes_data_of (attributes_data_value_update data v3)))) (res_value v3)) \/
-                     (exists data, oattrs = Some (attributes_data_of data) /\
-                        get_object_property obj s = None /\
-                        object_extensible obj = true /\
-                        attributes_data_writable data = true /\
-                        o = out_ter (st''' \(ptr := set_object_property obj s 
-                            (attributes_data_of (attributes_data_intro v3 true true true)))) (res_value v3)) \/
-                     (exists data, oattrs = Some (attributes_data_of data) /\
-                        attributes_data_writable data = true /\
-                        get_object_property obj s = None /\
-                        object_extensible obj = false /\
-                        o = out_ter st''' (res_exception (value_string "unextensible-shadow"))) \/
-                     (exists acc, oattrs = Some (attributes_accessor_of acc) /\
-                        apply_post runs c st''' (attributes_accessor_set acc) [value_object ptr; v3] o))))).
-Proof.
-    introv IH RR. unfolds in RR.
-    ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
-    repeat eexists; try eassumption. 
-    repeat (cases_match_option || cases_match_attributes || cases_let || cases_if || unfolds change_object_property, change_object_property_cont, change_object_cont); inverts R; ljs_run_inv; substs.
-    branch 4. eexists. intuition (eauto ; tryfalse).
-    branch 3. jauto. 
-    branch 7. eexists. forwards HR: apply_correct IH. eassumption. eauto.
-    branch 5. jauto.
-    branch 6. jauto.
-    branch 3. jauto.
-    branch 7. eexists. forwards HR: apply_correct IH. eassumption. eauto.
-    branch 1. jauto.
-    branch 2. jauto.
 Qed.
 
 Lemma eval_delete_field_correct : forall runs c st e1 e2 o,
@@ -1219,30 +1135,6 @@ Proof.
     ljs_advance_eval_many.
     destruct_hyp H.
     eapply red_expr_set_obj_attr_1; eauto.
-    (* get_field *)
-    lets H: eval_get_field_correct IH R.
-    eapply red_expr_get_field.
-    ljs_advance_eval_many.
-    destruct_hyp H;
-    eapply red_expr_get_field_1; try eauto using read_option_binds.
-    eapply red_expr_get_field_2_no_field.
-    eapply red_expr_get_field_2_get_field.
-    eapply red_expr_get_field_2_getter; try eassumption.
-    eauto using red_expr_app_2_lemma. 
-    (* set_field *)
-    lets H: eval_set_field_correct IH R.
-    eapply red_expr_set_field.
-    ljs_advance_eval_many.
-    destruct_hyp H; fold_bool; destruct obj; unfolds get_object_property; simpls;
-    eapply red_expr_set_field_1; try eauto using read_option_binds.
-    eapply red_expr_set_field_2_add_field; eauto.
-    eapply red_expr_set_field_2_unextensible_add; eauto. 
-    eapply red_expr_set_field_2_unwritable; eauto. 
-    eapply red_expr_set_field_2_set_field; option_neq_positivize; prove_bag.
-    eapply red_expr_set_field_2_shadow_field; prove_bag.
-    eapply red_expr_set_field_2_unextensible_shadow; prove_bag. 
-    eapply red_expr_set_field_2_setter; try eassumption.
-    eauto using red_expr_app_2_lemma. 
     (* delete_field *)
     lets H: eval_delete_field_correct IH R.
     eapply red_expr_delete_field.

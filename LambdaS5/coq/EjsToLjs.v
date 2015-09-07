@@ -54,9 +54,6 @@ Definition make_seq e1 e2 := L.expr_jseq e1 e2.
 Definition make_get_field obj fld :=
     make_app_builtin "%GetField" [obj; fld].
 
-Definition make_set_field_naked obj fld v :=
-    L.expr_set_field obj (to_string fld) v.
-
 Definition make_set_field obj fld v :=
     with_error_dispatch (make_app_builtin "%SetField" [to_object obj; to_string fld; v]).
 
@@ -205,7 +202,7 @@ Definition make_rec_fobj (ff : E.func -> L.expr) i fd :=
 
 Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda ["exc"] (
-        make_var_decl [(i, L.expr_get_field (L.expr_id "exc") (L.expr_string "%js-exn"), true)] catch)).
+        make_var_decl [(i, L.expr_get_attr L.pattr_value (L.expr_id "exc") (L.expr_string "%js-exn"), true)] catch)).
 
 Definition op2_func op := L.expr_lambda ["x1";"x2"] (L.expr_op2 op (L.expr_id "x1") (L.expr_id "x2")).
 

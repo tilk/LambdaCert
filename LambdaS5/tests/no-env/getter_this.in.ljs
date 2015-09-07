@@ -1,2 +1,0 @@
-{[] 'a': {#value 1, #writable false}, 'foo': {#getter (func (this) { this['a'] }), #setter undefined}}['foo']
-

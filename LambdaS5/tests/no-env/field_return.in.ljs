@@ -1,1 +1,1 @@
-let (foo = {[] 'bar': {#value {[]}, #writable true, #configurable true}}) foo['bar' = {[#class: 'Foobar']}]
+let (foo = {[] 'bar': {#value {[]}, #writable true, #configurable true}}) foo['bar'<#value> = {[#class: 'Foobar']}]

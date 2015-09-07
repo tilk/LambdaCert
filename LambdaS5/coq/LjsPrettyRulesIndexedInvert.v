@@ -68,18 +68,6 @@ Derive Inversion inv_red_exprh_set_internal with (forall k c st s e1 e2 oo,
     red_exprh k c st (expr_set_internal s e1 e2) oo) Sort Prop.
 Derive Inversion inv_red_exprh_set_internal_1 with (forall k c st s vs oo,
     red_exprh k c st (expr_set_internal_1 s vs) oo) Sort Prop.
-Derive Inversion inv_red_exprh_get_field with (forall k c st e1 e2 oo,
-    red_exprh k c st (expr_get_field e1 e2) oo) Sort Prop.
-Derive Inversion inv_red_exprh_get_field_1 with (forall k c st vs oo,
-    red_exprh k c st (expr_get_field_1 vs) oo) Sort Prop.
-Derive Inversion inv_red_exprh_get_field_2 with (forall k c st ptr oattr oo,
-    red_exprh k c st (expr_get_field_2 ptr oattr) oo) Sort Prop.
-Derive Inversion inv_red_exprh_set_field with (forall k c st e1 e2 e3 oo,
-    red_exprh k c st (expr_set_field e1 e2 e3) oo) Sort Prop.
-Derive Inversion inv_red_exprh_set_field_1 with (forall k c st vs oo,
-    red_exprh k c st (expr_set_field_1 vs) oo) Sort Prop.
-Derive Inversion inv_red_exprh_set_field_2 with (forall k c st ptr obj oattr s v3 oo,
-    red_exprh k c st (expr_set_field_2 ptr obj oattr s v3) oo) Sort Prop.
 Derive Inversion inv_red_exprh_delete_field with (forall k c st e1 e2 oo,
     red_exprh k c st (expr_delete_field e1 e2) oo) Sort Prop.
 Derive Inversion inv_red_exprh_delete_field_1 with (forall k c st vs oo,
@@ -220,18 +208,6 @@ Tactic Notation "invert" "keep" "red_exprh" hyp(H) :=
         inversion H using inv_red_exprh_set_internal
     | expr_set_internal_1 ?s ?vs =>
         inversion H using inv_red_exprh_set_internal_1
-    | expr_basic (expr_get_field ?e1 ?e2) =>
-        inversion H using inv_red_exprh_get_field
-    | expr_get_field_1 ?vs =>
-        inversion H using inv_red_exprh_get_field_1
-    | expr_get_field_2 ?ptr ?oattr =>
-        inversion H using inv_red_exprh_get_field_2
-    | expr_basic (expr_set_field ?e1 ?e2 ?e3) =>
-        inversion H using inv_red_exprh_set_field
-    | expr_set_field_1 ?vs =>
-        inversion H using inv_red_exprh_set_field_1
-    | expr_set_field_2 ?ptr ?obj ?oattr ?s ?v3 =>
-        inversion H using inv_red_exprh_set_field_2
     | expr_basic (expr_delete_field ?e1 ?e2) =>
         inversion H using inv_red_exprh_delete_field
     | expr_delete_field_1 ?vs =>

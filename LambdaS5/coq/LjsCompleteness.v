@@ -375,9 +375,6 @@ Lemma binary_op_lemma : forall op st v v1 v',
 Proof.
     introv He.
     inverts He as Hee; try inverts Hee; try reflexivity.
-    (* has_property *)
-    unfolds binary_operator, has_property. 
-    repeat ljs_eval_push. skip. (* TODO! *)
     (* has_own_property *)
     unfolds binary_operator, has_own_property.
     repeat ljs_eval_push. unfolds get_object_property. simpl. 
@@ -478,27 +475,6 @@ Proof.
     match goal with H : object_oattr_modifiable _ _ |- _ => inverts H end;
     match goal with H : object_oattr_valid _ _ |- _ => inverts H end;
     cases_let; substs; try cases_if; simpls; tryfalse; repeat ljs_eval_push.
-    (* get_field *)
-    unfolds.
-    repeat ljs_eval_push.
-    destruct oattr as [[|]|].
-    ljs_inv_red. reflexivity.
-    ljs_inv_red_internal.
-    eapply apply_lemma; eauto.
-    ljs_inv_red. reflexivity.
-    (* set_field *)
-    unfolds.
-    repeat ljs_eval_push.
-    unfold change_object_property, change_object_property_cont.
-    destruct oattr as [[|]|]. destruct obj.
-    repeat (ljs_eval || cases_if || cases_match_option); ljs_inv_red; 
-    unfolds get_object_property, object_extensible; simpls;
-    try match goal with H : object_properties\(s?) = _ |- _ => 
-        apply read_option_binds in H || apply read_option_not_index in H end;
-    tryfalse; bool_tryfalse; try solve [false; prove_bag 8]; try reflexivity.
-    ljs_inv_red_internal.
-    eapply apply_lemma; eauto. 
-    cases_if; ljs_inv_red; unfolds object_extensible; simpls; tryfalse; bool_tryfalse; try ljs_eval; reflexivity.
     (* delete_field *)
     unfolds.
     repeat ljs_eval_push.

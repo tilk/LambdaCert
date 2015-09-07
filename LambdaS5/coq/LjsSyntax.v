@@ -59,7 +59,6 @@ Inductive binary_op : Type :=
 | binary_op_ge
 | binary_op_stx_eq
 | binary_op_same_value
-| binary_op_has_property
 | binary_op_has_own_property
 | binary_op_has_internal
 | binary_op_string_plus
@@ -108,8 +107,6 @@ Inductive expr : Type :=
 | expr_set_attr : pattr -> expr -> expr -> expr -> expr (* property -> object -> field_name -> new_value -> expr *)
 | expr_get_obj_attr : oattr -> expr -> expr
 | expr_set_obj_attr : oattr -> expr -> expr -> expr
-| expr_get_field : expr -> expr -> expr (* object -> field -> expr *)
-| expr_set_field : expr -> expr -> expr -> expr (* object -> field -> new_val -> expr *)
 | expr_delete_field : expr -> expr -> expr (* object -> field -> expr *)
 | expr_get_internal : string -> expr -> expr
 | expr_set_internal : string -> expr -> expr -> expr
@@ -162,9 +159,7 @@ Fixpoint expr_fv e : finset id := match e with
 | expr_get_attr _ e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_set_attr _ e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
 | expr_get_obj_attr _ e1 => expr_fv e1 
-| expr_set_obj_attr _ e1 e2 => expr_fv e1 \u expr_fv e2 
-| expr_get_field e1 e2 => expr_fv e1 \u expr_fv e2
-| expr_set_field e1 e2 e3 => expr_fv e1 \u expr_fv e2 \u expr_fv e3
+| expr_set_obj_attr _ e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_delete_field e1 e2 => expr_fv e1 \u expr_fv e2
 | expr_get_internal _ e1 => expr_fv e1
 | expr_set_internal _ e1 e2 => expr_fv e1 \u expr_fv e2

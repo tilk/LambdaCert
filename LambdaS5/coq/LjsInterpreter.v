@@ -241,68 +241,6 @@ Definition eval_object_decl runs c st (attrs : objattrs) (iattrs : list (string 
           ))))))))
 .
 
-(* left[right].
-* Evaluate left, then right.
-* Fails if left does not evaluate to a location of an object pointer.
-* Otherwise, if the `right` attribute of the object pointed to by `left`
-* is a value field, return it; and if it is an “accessor field”, call
-* the getter. *)
-Definition eval_get_field runs c st (left_expr right_expr  : expr) : result :=
-  if_eval_return runs c st left_expr (fun st left_loc =>
-    if_eval_return runs c st right_expr (fun st right_loc =>
-      assert_get_object st left_loc (fun obj =>
-        assert_get_string right_loc (fun name =>
-          if_result_some (get_property st obj name) (fun ret =>
-            match ret with
-            | Some (attributes_data_of data) => result_value st (attributes_data_value data)
-            | Some (attributes_accessor_of acc) =>
-                apply runs c st (attributes_accessor_get acc) (left_loc :: nil)
-            | None =>
-                result_value st value_undefined
-            end
-  )))))
-.
-
-(* left[right] = new_val
-* Evaluate left, then right, then the new_val.
-* Fails if left does not evaluate to a location of an object pointer.
-* Otherwise, if the `right` attribute of the object pointed to by `left`
-* is a value field, set it to the `new_val` and return the `new_val`;
-* and if it is an “accessor field”, call the getter with the arguments. *)
-Definition eval_set_field runs c st (left_expr right_expr new_val_expr : expr) : result :=
-  if_eval_return runs c st left_expr (fun st left_loc =>
-    if_eval_return runs c st right_expr (fun st right_loc =>
-      if_eval_return runs c st new_val_expr (fun st new_val =>
-        assert_get_object_ptr left_loc (fun left_ptr =>
-          assert_get_string right_loc (fun name =>
-            assert_get_object_from_ptr st left_ptr (fun object =>
-              if_result_some (get_property st object name) (fun ret =>
-                match ret with
-                | Some (attributes_data_of data) =>
-                  if attributes_data_writable data
-                  then change_object_property_cont st left_ptr name (fun prop cont =>
-                    match get_object_property object name with
-                    | Some _ => 
-                      let attrs := attributes_data_of (attributes_data_value_update data new_val) in
-                      cont st (Some attrs) new_val
-                    | None => 
-                      if object_extensible object
-                      then let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
-                        cont st (Some attrs) new_val
-                      else result_exception st (value_string "unextensible-shadow")
-                    end)
-                  else result_exception st (value_string "unwritable-field")
-                | Some (attributes_accessor_of acc) =>
-                    apply runs c st (attributes_accessor_set acc) (left_loc :: new_val :: nil)
-                | None => 
-                  if object_extensible object 
-                  then change_object_property st left_ptr name (fun prop =>
-                    let attrs := attributes_data_of (attributes_data_intro new_val true true true) in
-                    (st, Some attrs, new_val))
-                  else result_exception st (value_string "unextensible-set")
-                end)))))))
-. (* get_object_property object name *)
-
 Definition eval_delete_field runs c st (left_expr right_expr : expr) : result :=
   if_eval_return runs c st left_expr (fun st left_loc =>
     if_eval_return runs c st right_expr (fun st right_loc =>
@@ -368,7 +306,7 @@ Definition eval_app runs c st (f : expr) (args_expr : list expr) : result :=
 
 Definition get_object_pattr obj s (pa : pattr) : resultof value :=
   match get_object_property obj s with
-  | None => result_fail "Accessing nonexistent attribute"
+  | None => result_fail ("Accessing nonexistent attribute " ++ s)
   | Some prop =>
     match pa, prop with
     | pattr_enum, _ => result_some (value_bool (attributes_enumerable prop))
@@ -626,8 +564,6 @@ Definition eval runs c st (e : expr) : result :=
   | expr_seq e1 e2 => eval_seq runs c st e1 e2
   | expr_jseq e1 e2 => eval_jseq runs c st e1 e2
   | expr_object attrs iattrs l => eval_object_decl runs c st attrs iattrs l
-  | expr_get_field left_ right_ => eval_get_field runs c st left_ right_ 
-  | expr_set_field left_ right_ new_val => eval_set_field runs c st left_ right_ new_val
   | expr_delete_field left_ right_ => eval_delete_field runs c st left_ right_
   | expr_let id value body => eval_let runs c st id value body
   | expr_recc id value body => eval_rec runs c st id value body

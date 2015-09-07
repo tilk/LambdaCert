@@ -139,68 +139,6 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     st1 = st \(ptr := set_object_oattr obj oa v) ->
     red_exprh k c st (expr_set_obj_attr_1 oa [value_object ptr; v]) (out_ter st1 (res_value v))
 
-(* get_field *)
-| red_exprh_get_field : forall k c st e1 e2 o,
-    red_exprh k c st (expr_eval_many_1 [e1; e2] nil expr_get_field_1) o ->
-    red_exprh (S k) c st (expr_get_field e1 e2) o
-| red_exprh_get_field_1 : forall k c st ptr obj s oattr o,
-    binds st ptr obj ->
-    object_property_is st obj s oattr ->
-    red_exprh k c st (expr_get_field_2 ptr oattr) o ->
-    red_exprh k c st (expr_get_field_1 [value_object ptr; value_string s]) o
-| red_exprh_get_field_2_no_field : forall k c st ptr,
-    red_exprh k c st (expr_get_field_2 ptr None) (out_ter st (res_value value_undefined))
-| red_exprh_get_field_2_get_field : forall k c st ptr data,
-    red_exprh k c st (expr_get_field_2 ptr (Some (attributes_data_of data))) 
-        (out_ter st (res_value (attributes_data_value data)))
-| red_exprh_get_field_2_getter : forall k c st ptr acc o,
-    red_exprh k c st (expr_app_2 (attributes_accessor_get acc) [value_object ptr]) o ->
-    red_exprh k c st (expr_get_field_2 ptr (Some (attributes_accessor_of acc))) o
-
-(* set_field *)
-| red_exprh_set_field : forall k c st e1 e2 e3 o,
-    red_exprh k c st (expr_eval_many_1 [e1; e2; e3] nil expr_set_field_1) o ->
-    red_exprh (S k) c st (expr_set_field e1 e2 e3) o
-| red_exprh_set_field_1 : forall k c st ptr obj oattr s v3 v4 o,
-    binds st ptr obj ->
-    object_property_is st obj s oattr ->
-    red_exprh k c st (expr_set_field_2 ptr obj oattr s v3) o ->
-    red_exprh k c st (expr_set_field_1 [value_object ptr; value_string s; v3]) o
-| red_exprh_set_field_2_set_field : forall k c st st1 ptr obj data s v3,
-    index (object_properties obj) s ->
-    attributes_data_writable data ->
-    st1 = st \(ptr := set_object_property obj s (attributes_data_of (attributes_data_value_update data v3))) ->
-    red_exprh k c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) 
-        (out_ter st1 (res_value v3))
-| red_exprh_set_field_2_shadow_field : forall k c st st1 ptr obj data s v3,
-    ~index (object_properties obj) s ->
-    object_extensible obj ->
-    attributes_data_writable data ->
-    st1 = st \(ptr := set_object_property obj s (attributes_data_of (attributes_data_intro v3 true true true))) ->
-    red_exprh k c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) 
-        (out_ter st1 (res_value v3))
-| red_exprh_set_field_2_add_field : forall k c st st1 ptr obj s v3,
-    object_extensible obj ->
-    st1 = st \(ptr := set_object_property obj s (attributes_data_of (attributes_data_intro v3 true true true))) ->
-    red_exprh k c st (expr_set_field_2 ptr obj None s v3) (out_ter st1 (res_value v3))
-| red_exprh_set_field_2_setter : forall k c st ptr obj acc s v3 o,
-    red_exprh k c st (expr_app_2 (attributes_accessor_set acc) [value_object ptr; v3]) o ->
-    red_exprh k c st (expr_set_field_2 ptr obj (Some (attributes_accessor_of acc)) s v3) o
-| red_exprh_set_field_2_unwritable : forall k c st ptr obj data s v3,
-    !attributes_data_writable data ->
-    red_exprh k c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) 
-        (out_ter st (res_exception (value_string "unwritable-field")))
-| red_exprh_set_field_2_unextensible_add : forall k c st ptr obj s v3,
-    !object_extensible obj ->
-    red_exprh k c st (expr_set_field_2 ptr obj None s v3) 
-        (out_ter st (res_exception (value_string "unextensible-set")))
-| red_exprh_set_field_2_unextensible_shadow : forall k c st ptr obj data s v3,
-    attributes_data_writable data ->
-    ~index (object_properties obj) s ->
-    !object_extensible obj ->
-    red_exprh k c st (expr_set_field_2 ptr obj (Some (attributes_data_of data)) s v3) 
-        (out_ter st (res_exception (value_string "unextensible-shadow")))
-
 (* delete_field *)
 | red_exprh_delete_field : forall k c st e1 e2 o,
     red_exprh k c st (expr_eval_many_1 [e1; e2] nil expr_delete_field_1) o ->

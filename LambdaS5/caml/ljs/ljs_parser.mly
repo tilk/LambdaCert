@@ -210,14 +210,6 @@ exp :
  | exp BANGEQEQUALS exp
      { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3) in
          Op1(p, "!", Op2 (p, "sameValue", $1, $3)) }
- | exp LBRACK unbraced_seq_exp EQUALS unbraced_seq_exp RBRACK
-   { SetField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), $1, $3, $5) }
- | exp LBRACK unbraced_seq_exp EQUALS unbraced_seq_exp COMMA unbraced_seq_exp RBRACK   
- { SetField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8), $1, $3, $5) }
- | exp LBRACK unbraced_seq_exp RBRACK
-   { GetField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $1, $3) }
- | exp LBRACK unbraced_seq_exp COMMA unbraced_seq_exp RBRACK   
-   { GetField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), $1, $3) }
  | exp LBRACK DELETE unbraced_seq_exp RBRACK
      { DeleteField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5), $1, $4) }
  | exp LBRACK unbraced_seq_exp LT attr_name GT RBRACK

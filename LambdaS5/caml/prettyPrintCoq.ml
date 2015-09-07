@@ -121,7 +121,6 @@ let format_binary_op o = match o with
     | Coq_binary_op_ge -> text "binary_op_ge"
     | Coq_binary_op_stx_eq -> text "binary_op_stx_eq"
     | Coq_binary_op_same_value -> text "binary_op_same_value"
-    | Coq_binary_op_has_property -> text "binary_op_has_property"
     | Coq_binary_op_has_own_property -> text "binary_op_has_own_property"
     | Coq_binary_op_has_internal -> text "binary_op_has_internal"
     | Coq_binary_op_string_plus -> text "binary_op_string_plus"
@@ -174,8 +173,6 @@ let rec format_expr b e = match e with
     | Coq_expr_set_attr (a, e1, e2, e3) -> coqconstr b "expr_set_attr" [format_pattr a; format_expr true e1; format_expr true e2; format_expr true e3]
     | Coq_expr_get_obj_attr (a, e1) -> coqconstr b "expr_get_obj_attr" [format_oattr a; format_expr true e1]
     | Coq_expr_set_obj_attr (a, e1, e2) -> coqconstr b "expr_set_obj_attr" [format_oattr a; format_expr true e1; format_expr true e2]
-    | Coq_expr_get_field (e1, e2) -> coqconstr b "expr_get_field" [format_expr true e1; format_expr true e2]
-    | Coq_expr_set_field (e1, e2, e3) -> coqconstr b "expr_set_field" [format_expr true e1; format_expr true e2; format_expr true e3]
     | Coq_expr_delete_field (e1, e2) -> coqconstr b "expr_delete_field" [format_expr true e1; format_expr true e2]
     | Coq_expr_get_internal (a, e1) -> coqconstr b "expr_get_internal" [format_id a; format_expr true e1]
     | Coq_expr_set_internal (a, e1, e2) -> coqconstr b "expr_set_internal" [format_id a; format_expr true e1; format_expr true e2]

@@ -1,2 +1,2 @@
-let (foo = {[#extensible: false]}) {foo['bar' = "two"]; foo['bar']}
+let (foo = {[#extensible: false]}) {foo['bar'<#value> = "two"]}
 

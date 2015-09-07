@@ -113,22 +113,6 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
 
 (****** Binary operators ******)
 
-Definition has_property store v1_loc v2 :=
-  assert_get_object_ptr v1_loc (fun ptr =>
-    match v2 with
-    | value_string s =>
-      assert_get_object_from_ptr store ptr (fun obj =>
-        if_result_some (get_property store obj s) (fun ret =>
-          match ret with
-          | Some _ => result_some value_true
-          | None => result_some value_false
-          end
-      ))
-    | _ => result_fail "hasProperty expected a string."
-    end
-  )
-.
-
 Definition has_own_property store v1 v2 :=
   match v1, v2 with
   | value_object ptr, value_string s =>
@@ -234,7 +218,6 @@ Definition binary_operator (op : binary_op) store v1 v2 : resultof value :=
       | binary_op_ge => cmp num_ge v1 v2
       | binary_op_stx_eq => result_some (value_bool (decide (stx_eq v1 v2)))
       | binary_op_same_value => result_some (value_bool (decide (same_value v1 v2)))
-      | binary_op_has_property => has_property store v1 v2
       | binary_op_has_own_property => has_own_property store v1 v2
       | binary_op_has_internal => has_internal store v1 v2
       | binary_op_string_plus => string_plus store v1 v2
