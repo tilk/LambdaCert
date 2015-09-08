@@ -427,9 +427,14 @@ expr_object
  ("%GetField", property_data
                (data_intro (expr_id "%GetField") expr_true expr_false
                 expr_false));
+ ("%GetOp", property_data
+            (data_intro (expr_id "%GetOp") expr_true expr_false expr_false));
  ("%GetOwnProperty", property_data
                      (data_intro (expr_id "%GetOwnProperty") expr_true
                       expr_false expr_false));
+ ("%GetPrim", property_data
+              (data_intro (expr_id "%GetPrim") expr_true expr_false
+               expr_false));
  ("%GetProperty", property_data
                   (data_intro (expr_id "%GetProperty") expr_true expr_false
                    expr_false));
@@ -3103,6 +3108,13 @@ expr_app (expr_id "%Get")
  expr_id "v";
  expr_app (expr_id "%ToString") [expr_id "fld"]]
 .
+Definition ex_privGetOp := 
+expr_if
+(expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "v"))
+ (expr_string "object"))
+(expr_app (expr_id "%Get1") [expr_id "v"; expr_id "fld"])
+(expr_app (expr_id "%GetPrim") [expr_id "v"; expr_id "fld"])
+.
 Definition ex_privGetOwnProperty := 
 expr_if (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "id"))
 (expr_if (expr_op2 binary_op_is_accessor (expr_id "obj") (expr_id "id"))
@@ -3117,6 +3129,10 @@ expr_if (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "id"))
    expr_get_attr pattr_enum (expr_id "obj") (expr_id "id");
    expr_get_attr pattr_config (expr_id "obj") (expr_id "id")]))
 (expr_app (expr_id "f_undef") [])
+.
+Definition ex_privGetPrim := 
+expr_app (expr_id "%Get")
+[expr_app (expr_id "%ToObject") [expr_id "obj"]; expr_id "obj"; expr_id "fld"]
 .
 Definition ex_privGetProperty := 
 expr_app (expr_id "%GetOwnProperty")
@@ -3955,7 +3971,7 @@ expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
     [expr_id "propobj"; expr_string "enumerable"])
    (expr_set_attr pattr_value (expr_id "attrobj") (expr_string "enumerable")
     (expr_app (expr_id "%ToBoolean")
-     [expr_app (expr_id "%GetField")
+     [expr_app (expr_id "%Get1")
       [expr_id "propobj"; expr_string "enumerable"]])) expr_undefined)
   (expr_seq
    (expr_if
@@ -3964,30 +3980,29 @@ expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
     (expr_set_attr pattr_value (expr_id "attrobj")
      (expr_string "configurable")
      (expr_app (expr_id "%ToBoolean")
-      [expr_app (expr_id "%GetField")
+      [expr_app (expr_id "%Get1")
        [expr_id "propobj"; expr_string "configurable"]])) expr_undefined)
    (expr_seq
     (expr_if
      (expr_app (expr_id "%HasProperty")
       [expr_id "propobj"; expr_string "value"])
      (expr_set_attr pattr_value (expr_id "attrobj") (expr_string "value")
-      (expr_app (expr_id "%GetField")
-       [expr_id "propobj"; expr_string "value"])) expr_undefined)
+      (expr_app (expr_id "%Get1") [expr_id "propobj"; expr_string "value"]))
+     expr_undefined)
     (expr_seq
      (expr_if
       (expr_app (expr_id "%HasProperty")
        [expr_id "propobj"; expr_string "writable"])
       (expr_set_attr pattr_value (expr_id "attrobj") (expr_string "writable")
        (expr_app (expr_id "%ToBoolean")
-        [expr_app (expr_id "%GetField")
+        [expr_app (expr_id "%Get1")
          [expr_id "propobj"; expr_string "writable"]])) expr_undefined)
      (expr_seq
       (expr_if
        (expr_app (expr_id "%HasProperty")
         [expr_id "propobj"; expr_string "get"])
        (expr_let "get"
-        (expr_app (expr_id "%GetField")
-         [expr_id "propobj"; expr_string "get"])
+        (expr_app (expr_id "%Get1") [expr_id "propobj"; expr_string "get"])
         (expr_if
          (expr_if (expr_app (expr_id "%IsCallable") [expr_id "get"])
           expr_true
@@ -4001,8 +4016,7 @@ expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
         (expr_app (expr_id "%HasProperty")
          [expr_id "propobj"; expr_string "set"])
         (expr_let "set"
-         (expr_app (expr_id "%GetField")
-          [expr_id "propobj"; expr_string "set"])
+         (expr_app (expr_id "%Get1") [expr_id "propobj"; expr_string "set"])
          (expr_if
           (expr_if (expr_app (expr_id "%IsCallable") [expr_id "set"])
            expr_true
@@ -8894,6 +8908,18 @@ value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privGeOp)
 .
 Definition name_privGeOp : id :=  "%GeOp" .
+Definition privGetPrim := 
+value_closure
+(closure_intro [("%Get", privGet); ("%ToObject", privToObject)] None
+ ["obj"; "fld"] ex_privGetPrim)
+.
+Definition name_privGetPrim : id :=  "%GetPrim" .
+Definition privGetOp := 
+value_closure
+(closure_intro [("%Get1", privGet1); ("%GetPrim", privGetPrim)] None
+ ["v"; "fld"; "strict"] ex_privGetOp)
+.
+Definition name_privGetOp : id :=  "%GetOp" .
 Definition privGtOp := 
 value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privGtOp)
@@ -9063,7 +9089,7 @@ Definition privPropertyAccess :=
 value_closure
 (closure_intro
  [("%CheckObjectCoercible", privCheckObjectCoercible);
-  ("%ToString", privToString)] None ["o"; "fld"; "strict"; "cont"]
+  ("%ToString", privToString)] None ["cont"; "o"; "fld"; "strict"]
  ex_privPropertyAccess)
 .
 Definition name_privPropertyAccess : id :=  "%PropertyAccess" .
@@ -9173,7 +9199,7 @@ Definition name_privTimeWithinDay : id :=  "%TimeWithinDay" .
 Definition privToPropertyDescriptor := 
 value_closure
 (closure_intro
- [("%GetField", privGetField);
+ [("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
   ("%ObjectTypeCheck", privObjectTypeCheck);
@@ -10774,7 +10800,9 @@ Definition ctx_items :=
  (name_privGet, privGet);
  (name_privGet1, privGet1);
  (name_privGetField, privGetField);
+ (name_privGetOp, privGetOp);
  (name_privGetOwnProperty, privGetOwnProperty);
+ (name_privGetPrim, privGetPrim);
  (name_privGetProperty, privGetProperty);
  (name_privGtOp, privGtOp);
  (name_privHasProperty, privHasProperty);
@@ -11224,7 +11252,9 @@ privGeOp
 privGet
 privGet1
 privGetField
+privGetOp
 privGetOwnProperty
+privGetPrim
 privGetProperty
 privGtOp
 privHasProperty
@@ -11684,7 +11714,9 @@ Definition store_items := [
                                          ("%Get", privGet);
                                          ("%Get1", privGet1);
                                          ("%GetField", privGetField);
+                                         ("%GetOp", privGetOp);
                                          ("%GetOwnProperty", privGetOwnProperty);
+                                         ("%GetPrim", privGetPrim);
                                          ("%GetProperty", privGetProperty);
                                          ("%GtOp", privGtOp);
                                          ("%HasProperty", privHasProperty);

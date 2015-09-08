@@ -987,20 +987,19 @@ Ltac js_exn_object_ptr_invert :=
     | H : js_exn_object_ptr _ _ _ |- _ => inverts H
     end.
 
-Lemma js_exn_object_extract_lemma : forall obj v st oattr,
+Lemma js_exn_object_extract_lemma : forall obj v attr,
     js_exn_object obj v ->
-    L.object_property_is st obj "%js-exn" oattr ->
-    oattr = Some (L.attributes_data_of (L.attributes_data_intro v false false false)).
+    binds (L.object_properties obj) "%js-exn" attr ->
+    attr = L.attributes_data_of (L.attributes_data_intro v false false false).
 Proof.
     introv Hex Hpis.
     destruct Hex.
-    inverts Hpis; try (false; prove_bag).
     binds_determine. reflexivity. 
 Qed.
 
 Ltac js_exn_object_extract :=
     match goal with
-    | Hex : js_exn_object ?obj _, Hpis : L.object_property_is _ ?obj "%js-exn" _ |- _ =>
+    | Hex : js_exn_object ?obj _, Hpis : binds (L.object_properties ?obj) "%js-exn" _ |- _ =>
         let H := fresh in
         lets H : js_exn_object_extract_lemma Hex Hpis;
         destruct_hyp H;
@@ -1040,7 +1039,7 @@ Proof.
     destruct_hyp Hx.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
-    jauto_js 8.
+    jauto_js 12.
 Qed.
 
 Lemma red_stat_try_catch_finally_ok : forall k jt1 jt2 jt3 s,
@@ -1080,6 +1079,17 @@ Proof.
     res_related_invert;
     try ljs_abort;
     jauto_js 7.
+Qed.
+
+Lemma red_stat_try_ok : forall k jt1 ojt1 ojt2,
+    ih_stat k ->
+    th_stat k (J.stat_try jt1 ojt1 ojt2).
+Proof.
+    destruct ojt1 as [(?x&?x)|]; destruct ojt2.
+    apply red_stat_try_catch_finally_ok.
+    apply red_stat_try_catch_ok.
+    apply red_stat_try_finally_ok.
+    skip. (* syntactically impossible *)
 Qed.
 
 (** *** throw *)

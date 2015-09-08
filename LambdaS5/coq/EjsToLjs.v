@@ -51,12 +51,6 @@ Definition with_error_dispatch e :=
 
 Definition make_seq e1 e2 := L.expr_jseq e1 e2.
 
-Definition make_get_field obj fld :=
-    make_app_builtin "%GetField" [obj; fld].
-
-Definition make_set_field obj fld v :=
-    with_error_dispatch (make_app_builtin "%SetField" [to_object obj; to_string fld; v]).
-
 Definition make_var_modify fld f v :=
     make_app_builtin "%EnvModify" 
         [L.expr_id "$context"; L.expr_string fld; 
@@ -230,7 +224,7 @@ Definition make_typeof f e :=
 Definition make_delete f e :=
     reference_match e
         (fun obj fld => make_app_builtin "%PropertyAccess" 
-            [f obj; f fld; L.expr_id "$strict"; L.expr_id "%DeleteOp"])
+            [L.expr_id "%DeleteOp"; f obj; f fld; L.expr_id "$strict"])
         (fun varid => make_app_builtin "%EnvDelete" [context; L.expr_string varid; L.expr_id "$strict"])
         (fun _ => L.expr_seq (f e) L.expr_true).
 
@@ -366,6 +360,12 @@ Definition make_switch_withdefault e acls def bcls :=
     L.expr_let "deflt" (L.expr_lambda [] def) (
     L.expr_let "found" L.expr_false (
     make_cases "found" acls (deflt_case (make_cases "found" bcls last_case))))).
+
+Definition make_get_field obj fld :=
+    make_app_builtin "%PropertyAccess" [L.expr_id "%GetOp"; obj; fld; L.expr_id "$strict"].
+
+Definition make_set_field obj fld v :=
+    with_error_dispatch (make_app_builtin "%SetField" [to_object obj; to_string fld; v]).
 
 Definition make_assign f (e1 : E.expr) e2 := 
     reference_match e1

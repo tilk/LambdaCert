@@ -85,7 +85,7 @@ Proof.
     (* stat_continue *)
     applys red_stat_continue_ok.
     (* stat_try *)
-    skip.
+    applys red_stat_try_ok.
     (* stat_for *)
     skip.
     (* stat_for_var *)
@@ -114,13 +114,13 @@ Proof.
     (* expr_function *)
     skip.
     (* expr_access *)
-    skip.
+    applys red_expr_access_ok; eassumption.
     (* expr_member *)
-    skip.
+    applys red_expr_member_ok; eassumption.
     (* expr_new *)
     applys red_expr_new_ok; eassumption.
     (* expr_call *)
-    skip.
+    applys red_expr_call_ok; eassumption.
     (* expr_unary_op *)
     applys red_expr_unary_op_ok; eassumption.
     (* expr_binary_op *)
@@ -128,7 +128,7 @@ Proof.
     (* expr_conditional *)
     applys red_expr_conditional_ok; eassumption.
     (* expr_assign *)
-    skip.
+    applys red_expr_assign_ok; eassumption.
     } {
     (* BUILT-IN FUNCTIONS *)
     destruct 0.

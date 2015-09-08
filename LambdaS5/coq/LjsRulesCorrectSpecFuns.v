@@ -2837,6 +2837,73 @@ Proof.
     }
 Qed.
 
+Lemma get_1_lemma : forall BR k jst jc c st st' r ptr jptr v jv s x,
+    ih_stat k ->
+    ih_call_prealloc k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGet [L.value_object ptr; v; L.value_string s])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    value_related BR jv v ->
+    J.object_method J.object_get_ jst jptr x ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_get_1 x jv jptr s) (fun _ => True).
+Proof.
+    introv IHt IHp Hlred Hcinv Hinv Hf Hvrel Hm.
+    forwards Hmm : object_method_get_lemma; try eassumption. (* TODO *)
+    asserts Heq : (x = J.builtin_get_default). skip. (* TODO exotic objects *) subst_hyp Heq.
+    forwards_th : get_default_lemma. eassumption.
+    destr_concl; try ljs_handle_abort.
+    jauto_js.
+Qed.
+
+Lemma get_lemma : forall BR k jst jc c st st' r ptr jptr s,
+    ih_stat k ->
+    ih_call_prealloc k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGet1 [L.value_object ptr; L.value_string s])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_get jptr s) (fun _ => True).
+Proof.
+    introv IHt IHp Hlred Hcinv Hinv Hf.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    forwards Hmm : object_method_get_lemma; try eassumption. (* TODO *)
+    repeat ljs_autoforward.
+    forwards_th : get_1_lemma; try eassumption.
+    destr_concl; try ljs_handle_abort.
+    jauto_js.
+Qed.
+
+Lemma get_prim_lemma : forall BR k jst jc c st st' r v jv s,
+    ih_stat k ->
+    ih_call_prealloc k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGetPrim [v; L.value_string s])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_prim_value_get jv s) (fun _ => True).
+Proof.
+    introv IHt IHp Hlred Hcinv Hinv Hvrel.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    ljs_context_invariant_after_apply.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_object_ok.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    forwards Hmm : object_method_get_lemma; try eassumption. (* TODO *)
+    repeat ljs_autoforward.
+    forwards_th : get_1_lemma; try eassumption.
+    destr_concl; try ljs_handle_abort.
+    jauto_js.
+Qed.
+
 Definition post_to_primitive jv jv' := 
     exists jp', jv' = J.value_prim jp' /\ forall jp, jv = J.value_prim jp -> jp = jp'.
 
