@@ -520,8 +520,8 @@ Qed.
 Lemma prop_get_value_lemma : forall BR k jst jc c st st' r jv v s b,
     ih_stat k ->
     ih_call_prealloc k ->
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGetOp
-           [v; L.value_string s; L.value_bool b]) (L.out_ter st' r) ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGetField
+           [v; L.value_string s]) (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     value_related BR jv v ->
@@ -583,6 +583,10 @@ Proof.
     introv IHe IHt IHp Hlred Hcinv Hinv Hfa.
     forwards_th Hx : field_access_lemma. eassumption.
     destruct_hyp Hx; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    inverts red_exprh Hx3. (* TODO *)
+    ljs_apply.
+    ljs_context_invariant_after_apply.
     repeat ljs_autoforward.
     forwards_th : prop_get_value_lemma. eassumption.
     destr_concl; try ljs_handle_abort.

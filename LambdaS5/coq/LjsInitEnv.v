@@ -3103,17 +3103,14 @@ Definition ex_privGet1 :=
 expr_app (expr_id "%Get") [expr_id "obj"; expr_id "obj"; expr_id "fld"]
 .
 Definition ex_privGetField := 
-expr_app (expr_id "%Get")
-[expr_app (expr_id "%ToObject") [expr_id "v"];
- expr_id "v";
- expr_app (expr_id "%ToString") [expr_id "fld"]]
-.
-Definition ex_privGetOp := 
 expr_if
 (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "v"))
  (expr_string "object"))
 (expr_app (expr_id "%Get1") [expr_id "v"; expr_id "fld"])
 (expr_app (expr_id "%GetPrim") [expr_id "v"; expr_id "fld"])
+.
+Definition ex_privGetOp := 
+expr_app (expr_id "%GetField") [expr_id "v"; expr_id "fld"]
 .
 Definition ex_privGetOwnProperty := 
 expr_if (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "id"))
@@ -8083,6 +8080,11 @@ value_closure
   ("%zeroArgObj", privzeroArgObj)] None ["obj"; "this"; "fld"] ex_privGet)
 .
 Definition name_privGet : id :=  "%Get" .
+Definition privGet1 := 
+value_closure
+(closure_intro [("%Get", privGet)] None ["obj"; "fld"] ex_privGet1)
+.
+Definition name_privGet1 : id :=  "%Get1" .
 Definition privBooleanProto :=  value_object 9 .
 Definition name_privBooleanProto : id :=  "%BooleanProto" .
 Definition privMakeBoolean := 
@@ -8121,33 +8123,16 @@ value_closure
   ("%TypeError", privTypeError)] None ["o"] ex_privToObject)
 .
 Definition name_privToObject : id :=  "%ToObject" .
-Definition privGet1 := 
+Definition privGetPrim := 
 value_closure
-(closure_intro [("%Get", privGet)] None ["obj"; "fld"] ex_privGet1)
+(closure_intro [("%Get", privGet); ("%ToObject", privToObject)] None
+ ["obj"; "fld"] ex_privGetPrim)
 .
-Definition name_privGet1 : id :=  "%Get1" .
-Definition privToPrimitiveHint := 
-value_closure
-(closure_intro
- [("%AppExpr", privAppExpr);
-  ("%Get1", privGet1);
-  ("%IsCallable", privIsCallable);
-  ("%TypeError", privTypeError);
-  ("%zeroArgObj", privzeroArgObj)] None ["val"; "hint"]
- ex_privToPrimitiveHint)
-.
-Definition name_privToPrimitiveHint : id :=  "%ToPrimitiveHint" .
-Definition privToString := 
-value_closure
-(closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["val"]
- ex_privToString)
-.
-Definition name_privToString : id :=  "%ToString" .
+Definition name_privGetPrim : id :=  "%GetPrim" .
 Definition privGetField := 
 value_closure
-(closure_intro
- [("%Get", privGet); ("%ToObject", privToObject); ("%ToString", privToString)]
- None ["v"; "fld"] ex_privGetField)
+(closure_intro [("%Get1", privGet1); ("%GetPrim", privGetPrim)] None
+ ["v"; "fld"] ex_privGetField)
 .
 Definition name_privGetField : id :=  "%GetField" .
 Definition privAppMethod := 
@@ -8171,6 +8156,17 @@ value_closure
 Definition name_privMakeArray : id :=  "%MakeArray" .
 Definition privRangeErrorProto :=  value_object 8 .
 Definition name_privRangeErrorProto : id :=  "%RangeErrorProto" .
+Definition privToPrimitiveHint := 
+value_closure
+(closure_intro
+ [("%AppExpr", privAppExpr);
+  ("%Get1", privGet1);
+  ("%IsCallable", privIsCallable);
+  ("%TypeError", privTypeError);
+  ("%zeroArgObj", privzeroArgObj)] None ["val"; "hint"]
+ ex_privToPrimitiveHint)
+.
+Definition name_privToPrimitiveHint : id :=  "%ToPrimitiveHint" .
 Definition privToNumber := 
 value_closure
 (closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["x"]
@@ -8192,6 +8188,12 @@ Definition privToBoolean :=
 value_closure (closure_intro [] None ["x"] ex_privToBoolean)
 .
 Definition name_privToBoolean : id :=  "%ToBoolean" .
+Definition privToString := 
+value_closure
+(closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["val"]
+ ex_privToString)
+.
+Definition name_privToString : id :=  "%ToString" .
 Definition privDelete := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"]
@@ -8908,16 +8910,10 @@ value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privGeOp)
 .
 Definition name_privGeOp : id :=  "%GeOp" .
-Definition privGetPrim := 
-value_closure
-(closure_intro [("%Get", privGet); ("%ToObject", privToObject)] None
- ["obj"; "fld"] ex_privGetPrim)
-.
-Definition name_privGetPrim : id :=  "%GetPrim" .
 Definition privGetOp := 
 value_closure
-(closure_intro [("%Get1", privGet1); ("%GetPrim", privGetPrim)] None
- ["v"; "fld"; "strict"] ex_privGetOp)
+(closure_intro [("%GetField", privGetField)] None ["v"; "fld"; "strict"]
+ ex_privGetOp)
 .
 Definition name_privGetOp : id :=  "%GetOp" .
 Definition privGtOp := 
