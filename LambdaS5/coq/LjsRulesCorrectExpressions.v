@@ -444,10 +444,17 @@ Qed.
 
 Hint Resolve ref_is_property_object_coercible_hint : js_ljs.
 
-Lemma field_access_lemma : forall BR k jst jc c st st' r je ee1 ee2 s1,
+(* TODO move to common *)
+Ltac ljs_invert_apply :=
+    match goal with
+    | H : L.red_exprh _ _ _ (L.expr_app_2 _ _) (L.out_ter _ _) |- _ =>
+        inverts red_exprh H; ljs_apply; try ljs_context_invariant_after_apply
+    end.
+
+Lemma field_access_lemma : forall BR k jst jc c st st' r je ee1 ee2 s0,
     ih_expr k ->
     L.red_exprh k c st (L.expr_basic (E.make_app_builtin "%PropertyAccess" 
-        [L.expr_id s1; E.ejs_to_ljs ee1; E.ejs_to_ljs ee2; L.expr_id "$strict"])) (L.out_ter st' r) ->
+        [L.expr_id s0; E.ejs_to_ljs ee1; E.ejs_to_ljs ee2; L.expr_id "$strict"])) (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     js_field_access je ee1 ee2 ->
@@ -455,7 +462,7 @@ Lemma field_access_lemma : forall BR k jst jc c st st' r je ee1 ee2 s1,
     J.red_expr jst jc (J.expr_basic je) (J.out_ter jst'' jr) /\
     ((exists jv s c' k' v1 v2 st'', 
       jr = J.res_ref (J.ref_intro (J.ref_base_type_value jv) s (J.execution_ctx_strict jc)) /\
-      binds c s1 v1 /\
+      binds c s0 v1 /\
       L.red_exprh k' c' st''
           (L.expr_app_2 v1 [v2; L.value_string s; L.value_bool (J.execution_ctx_strict jc)])
           (L.out_ter st' r) /\
@@ -478,9 +485,7 @@ Proof.
             lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
                 eassumption.
             subst_hyp Hstrict.
-            inverts red_exprh H7. (* TODO *)
-            ljs_apply.
-            ljs_context_invariant_after_apply.
+            ljs_invert_apply.
             repeat ljs_autoforward.
             forwards_th : check_object_coercible_lemma.
             destr_concl; try ljs_handle_abort.
@@ -499,9 +504,7 @@ Proof.
             lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
                 eassumption.
             subst_hyp Hstrict.
-            inverts red_exprh H7. (* TODO *)
-            ljs_apply.
-            ljs_context_invariant_after_apply.
+            ljs_invert_apply.
             repeat ljs_autoforward.
             forwards_th : check_object_coercible_lemma.
             destr_concl; try ljs_handle_abort.
@@ -532,9 +535,7 @@ Lemma prop_get_value_lemma : forall BR k jst jc c st st' r jv v s b,
             exists v', r = L.res_value v' /\ value_related BR' jv v' ).
 Proof.
     introv IHt IHp Hlred Hcinv Hinv Hvrel Hoc.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    ljs_context_invariant_after_apply.
+    ljs_invert_apply.
     repeat ljs_autoforward.
     cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq. { (* object *)
         inverts Hvrel; tryfalse.
@@ -581,12 +582,10 @@ Lemma red_expr_access_generic_ok : forall BR k jst jc c st st' r ee1 ee2 je,
     concl_expr_getvalue BR jst jc c st st' r je.
 Proof.
     introv IHe IHt IHp Hlred Hcinv Hinv Hfa.
-    forwards_th Hx : field_access_lemma. eassumption.
+    forwards_th Hx : field_access_lemma. eassumption. 
     destruct_hyp Hx; try ljs_handle_abort.
     repeat ljs_autoforward.
-    inverts red_exprh Hx3. (* TODO *)
-    ljs_apply.
-    ljs_context_invariant_after_apply.
+    ljs_invert_apply.
     repeat ljs_autoforward.
     forwards_th : prop_get_value_lemma. eassumption.
     destr_concl; try ljs_handle_abort.
@@ -725,12 +724,45 @@ Proof.
     unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_app.
     reference_match_cases Hlred Hx Heq Hrp. 
     {
-        skip.
+        repeat ljs_autoforward.
+        ljs_invert_apply.
+        do 2 ljs_autoforward.
+        forwards_th Hx : field_access_lemma. eassumption. 
+        destruct_hyp Hx; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        forwards_th : prop_get_value_lemma. assumption.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        ljs_invert_apply.
+        forwards_th : red_spec_list_ok.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        forwards_th Hx : is_callable_lemma.
+        destruct_hyp Hx.
+        cases_isTrue as Hic. { (* is callable *)
+            repeat ljs_autoforward.
+            lets (jptr&Heqc) : is_callable_obj Hic. subst_hyp Heqc.
+            inverts H14. (* TODO *) (* inverting value_related *)
+            asserts Hseval : (!J.is_syntactic_eval je). {
+                rew_refl. inverts Heq; eauto_js.
+            }
+            forwards_th : red_spec_call_ok; try eassumption. prove_bag.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            resvalue_related_only_invert.
+            jauto_js 15.
+        } { (* not callable *)
+            repeat ljs_autoforward.
+            forwards_th : type_error_lemma. eauto.
+            destr_concl; tryfalse; try ljs_handle_abort.
+        }
     } {
         repeat ljs_autoforward.
-        inverts red_exprh H7. (* TODO *)
-        ljs_apply.
-        ljs_context_invariant_after_apply.
+        ljs_invert_apply.
         repeat ljs_autoforward. 
         lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
             eassumption.
@@ -746,9 +778,7 @@ Proof.
         forwards_th Hx : env_get_value_lemma. eauto_js. eassumption.
         destr_concl; try ljs_handle_abort.
         repeat ljs_autoforward.
-        inverts red_exprh H22. (* TODO *)
-        ljs_apply.
-        ljs_context_invariant_after_apply.
+        ljs_invert_apply.
         forwards_th : red_spec_list_ok.
         destr_concl; try ljs_handle_abort.
 (* TODO place for better boolean condition handling  *)
@@ -814,9 +844,7 @@ Proof.
         forwards_th : red_spec_list_ok.
         destr_concl; try ljs_handle_abort.
         repeat ljs_autoforward.
-        inverts red_exprh H7. (* TODO *)
-        ljs_apply.
-        ljs_context_invariant_after_apply.
+        ljs_invert_apply.
         repeat ljs_autoforward.
         forwards_th Hx : is_callable_lemma.
         destruct_hyp Hx.

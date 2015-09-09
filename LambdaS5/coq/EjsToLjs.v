@@ -291,7 +291,8 @@ Definition appexpr_check e1 e2 e3 := make_app_builtin "%AppExprCheck" [e1; e2; e
 Definition make_app f (e : E.expr) es := 
     let args_obj := make_args_obj es in 
     reference_match e
-        (fun obj fld => make_app_builtin "%AppMethod" [f obj; f fld; args_obj])
+        (fun obj fld => L.expr_let "f" (make_app_builtin "%AppMethodOp" [L.expr_lambda [] args_obj]) (
+            make_app_builtin "%PropertyAccess" [L.expr_id "f"; f obj; f fld; L.expr_id "$strict"]))
         (fun s => make_app_builtin "%EnvAppExpr" 
             [context; vcontext; L.expr_string s; L.expr_id "$this"; L.expr_lambda [] args_obj; L.expr_id "$strict"])
         (fun e => make_app_builtin "%AppExprCheck" [f e; L.expr_undefined; args_obj]).

@@ -207,9 +207,9 @@ expr_object
  ("%AppExprCheck", property_data
                    (data_intro (expr_id "%AppExprCheck") expr_true expr_false
                     expr_false));
- ("%AppMethod", property_data
-                (data_intro (expr_id "%AppMethod") expr_true expr_false
-                 expr_false));
+ ("%AppMethodOp", property_data
+                  (data_intro (expr_id "%AppMethodOp") expr_true expr_false
+                   expr_false));
  ("%ArrayCall", property_data
                 (data_intro (expr_id "%ArrayCall") expr_true expr_false
                  expr_false));
@@ -2067,11 +2067,12 @@ expr_if (expr_app (expr_id "%IsCallable") [expr_id "fun"])
  [expr_id "fun"; expr_id "this"; expr_id "args"])
 (expr_app (expr_id "%TypeError") [expr_string "Not a function"])
 .
-Definition ex_privAppMethod := 
-expr_let "fun"
-(expr_app (expr_id "%GetField") [expr_id "obj"; expr_id "fld"])
-(expr_app (expr_id "%AppExprCheck")
- [expr_id "fun"; expr_id "obj"; expr_id "args"])
+Definition ex_privAppMethodOp := 
+expr_lambda ["v"; "fld"; "strict"]
+(expr_let "fun" (expr_app (expr_id "%GetField") [expr_id "v"; expr_id "fld"])
+ (expr_let "args" (expr_app (expr_id "fargs") [])
+  (expr_app (expr_id "%AppExprCheck")
+   [expr_id "fun"; expr_id "v"; expr_id "args"])))
 .
 Definition ex_privArrayCall := 
 expr_app (expr_id "%ArrayConstructor") [expr_id "obj"; expr_id "args"]
@@ -8135,13 +8136,13 @@ value_closure
  ["v"; "fld"] ex_privGetField)
 .
 Definition name_privGetField : id :=  "%GetField" .
-Definition privAppMethod := 
+Definition privAppMethodOp := 
 value_closure
 (closure_intro
  [("%AppExprCheck", privAppExprCheck); ("%GetField", privGetField)] None
- ["obj"; "fld"; "args"] ex_privAppMethod)
+ ["fargs"] ex_privAppMethodOp)
 .
-Definition name_privAppMethod : id :=  "%AppMethod" .
+Definition name_privAppMethodOp : id :=  "%AppMethodOp" .
 Definition privComputeLength := 
 value_closure (closure_intro [] None ["args"] ex_privComputeLength)
 .
@@ -10722,7 +10723,7 @@ Definition ctx_items :=
  (name_privAddDataField, privAddDataField);
  (name_privAppExpr, privAppExpr);
  (name_privAppExprCheck, privAppExprCheck);
- (name_privAppMethod, privAppMethod);
+ (name_privAppMethodOp, privAppMethodOp);
  (name_privArrayCall, privArrayCall);
  (name_privArrayConstructor, privArrayConstructor);
  (name_privArrayGlobalFuncObj, privArrayGlobalFuncObj);
@@ -11174,7 +11175,7 @@ privAddAccessorField
 privAddDataField
 privAppExpr
 privAppExprCheck
-privAppMethod
+privAppMethodOp
 privArrayCall
 privArrayConstructor
 privArrayGlobalFuncObj
@@ -11636,7 +11637,7 @@ Definition store_items := [
                                          ("%AddDataField", privAddDataField);
                                          ("%AppExpr", privAppExpr);
                                          ("%AppExprCheck", privAppExprCheck);
-                                         ("%AppMethod", privAppMethod);
+                                         ("%AppMethodOp", privAppMethodOp);
                                          ("%ArrayCall", privArrayCall);
                                          ("%ArrayConstructor", privArrayConstructor);
                                          ("%ArrayGlobalFuncObj", privArrayGlobalFuncObj);
