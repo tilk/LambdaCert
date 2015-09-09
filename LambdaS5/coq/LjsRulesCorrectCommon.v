@@ -2962,6 +2962,12 @@ Ltac ljs_autoforward := first [
     apply_ih_stat | apply_ih_expr | ljs_autoinject | 
     binds_inv | binds_determine | ljs_get_builtin ].
 
+Ltac ljs_invert_apply :=
+    match goal with
+    | H : L.red_exprh _ _ _ (L.expr_app_2 _ _) (L.out_ter _ _) |- _ =>
+        inverts red_exprh H; ljs_apply; try ljs_context_invariant_after_apply
+    end.
+
 Lemma js_red_expr_getvalue_lemma : forall jst jc je jo jsr,
     js_red_expr_getvalue jst jc je jo jsr ->
     J.red_spec jst jc (J.spec_expr_get_value je) jsr.

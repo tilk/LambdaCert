@@ -444,13 +444,6 @@ Qed.
 
 Hint Resolve ref_is_property_object_coercible_hint : js_ljs.
 
-(* TODO move to common *)
-Ltac ljs_invert_apply :=
-    match goal with
-    | H : L.red_exprh _ _ _ (L.expr_app_2 _ _) (L.out_ter _ _) |- _ =>
-        inverts red_exprh H; ljs_apply; try ljs_context_invariant_after_apply
-    end.
-
 Lemma field_access_lemma : forall BR k jst jc c st st' r je ee1 ee2 s0,
     ih_expr k ->
     L.red_exprh k c st (L.expr_basic (E.make_app_builtin "%PropertyAccess" 

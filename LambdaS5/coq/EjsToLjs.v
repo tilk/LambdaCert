@@ -46,9 +46,6 @@ Definition to_string e := make_app_builtin "%ToString" [e].
 
 Definition to_bool e := make_app_builtin "%ToBoolean" [e].
 
-Definition with_error_dispatch e :=
-    L.expr_try_catch e (make_builtin "%ErrorDispatch").
-
 Definition make_seq e1 e2 := L.expr_jseq e1 e2.
 
 Definition make_var_modify fld f v :=
@@ -366,7 +363,8 @@ Definition make_get_field obj fld :=
     make_app_builtin "%PropertyAccess" [L.expr_id "%GetOp"; obj; fld; L.expr_id "$strict"].
 
 Definition make_set_field obj fld v :=
-    with_error_dispatch (make_app_builtin "%SetField" [to_object obj; to_string fld; v]).
+    L.expr_let "f" (make_app_builtin "%SetOp" [L.expr_lambda [] v]) (
+    make_app_builtin "%PropertyAccess" [L.expr_id "f"; obj; fld; L.expr_id "$strict"]).
 
 Definition make_assign f (e1 : E.expr) e2 := 
     reference_match e1
