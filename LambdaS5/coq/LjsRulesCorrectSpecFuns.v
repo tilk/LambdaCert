@@ -766,12 +766,12 @@ Lemma get_own_property_lemma : forall BR k jst jc c st st' r jptr ptr s v_d v_a 
         value_related BR' jv1 v1 /\ value_related BR' jv2 v2 /\ 
         object_or_undefined v1 /\ object_or_undefined v2)) /\
       context_invariant BR' jc c' /\ BR \c BR' /\
-      k' < k /\ jst'' = jst) \/ (* no state changes by the lookup - OK in ES5 *)
+      k' < k /\ jst'' = jst)  ). (* \/ (* no state changes by the lookup - OK in ES5 *)
       exists jr, 
       jsr = @J.specret_out J.full_descriptor (J.out_ter jst'' jr) /\
       J.abort (J.out_ter jst'' jr) /\ J.res_type jr = J.restype_throw /\ 
       state_invariant BR' jst'' st' /\
-      res_related BR' jst'' st' jr r /\ BR \c BR').
+      res_related BR' jst'' st' jr r /\ BR \c BR'). *)
 Proof.
     introv Hlred Hcinv Hinv Hf.
     inverts red_exprh Hlred.
@@ -830,27 +830,23 @@ Lemma get_property_lemma : forall k BR jst jc c st st' r jptr ptr s v_d v_a v_u,
         value_related BR' jv1 v1 /\ value_related BR' jv2 v2 /\
         object_or_undefined v1 /\ object_or_undefined v2)) /\
       context_invariant BR' jc c' /\ BR \c BR' /\
-      k' < k /\ jst'' = jst) \/ (* no state changes by the lookup - OK in ES5 *)
+      k' < k /\ jst'' = jst) ). (*\/ (* no state changes by the lookup - OK in ES5 *)
       exists jr, 
       jsr = @J.specret_out J.full_descriptor (J.out_ter jst'' jr) /\
       J.abort (J.out_ter jst'' jr) /\ J.res_type jr = J.restype_throw /\ 
       state_invariant BR' jst'' st' /\
-      res_related BR' jst'' st' jr r /\ BR \c BR').
+      res_related BR' jst'' st' jr r /\ BR \c BR'). *)
 Proof.
     intro k.
     induction_wf IH : lt_wf k.
     introv Hlred Hcinv Hinv Hf.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    ljs_context_invariant_after_apply.
+    ljs_invert_apply.
     forwards : object_method_get_property_lemma; try eassumption.
     forwards : object_method_get_own_property_lemma; try eassumption.
     repeat ljs_autoforward.
     forwards_th Hx : get_own_property_lemma. eassumption.
     destruct_hyp Hx; try ljs_handle_abort. { (* own property undefined, recurse *)
-        inverts red_exprh Hx6. (* TODO *)
-        ljs_apply.
-        ljs_context_invariant_after_apply.
+        ljs_invert_apply.
         repeat ljs_autoforward.
         cases_decide as Hprnul; rewrite stx_eq_null_eq_lemma in Hprnul. { (* prototype is null *)
             forwards Hjproto : object_proto_null_lemma; try prove_bag.
@@ -2955,6 +2951,7 @@ Proof.
         repeat ljs_autoforward.
         inv_ljs. { (* writable *)
             repeat ljs_autoforward.
+            inv_ljs. skip.
             skip. (* TODO *)
         } { (* not writable *)
             repeat ljs_autoforward.
