@@ -2920,9 +2920,10 @@ expr_if
 (expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_attr pattr_value (expr_id "context") (expr_id "id")) expr_empty)
- (expr_app (expr_id "%TypeError")
-  [expr_op2 binary_op_string_plus (expr_id "id")
-   (expr_string " is (uninitialized) read-only")])
+ (expr_if (expr_id "strict")
+  (expr_app (expr_id "%TypeError")
+   [expr_op2 binary_op_string_plus (expr_id "id")
+    (expr_string " is (uninitialized) read-only")]) expr_empty)
  (expr_if (expr_get_attr pattr_writable (expr_id "context") (expr_id "id"))
   (expr_seq
    (expr_set_attr pattr_value (expr_id "context") (expr_id "id")

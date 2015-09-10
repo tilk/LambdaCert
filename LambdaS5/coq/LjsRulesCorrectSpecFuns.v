@@ -1303,7 +1303,9 @@ Qed.
 
 Lemma js_mutability_of_bool_is_mutable : forall b,
     J.mutability_is_mutable (J.mutability_of_bool b).
-Proof. destruct b; intro; tryfalse. Qed.
+Proof. 
+    introv. destruct b; unfolds; eauto.
+Qed.
 
 Hint Resolve js_mutability_of_bool_is_mutable : js_ljs.
 
@@ -1387,8 +1389,19 @@ Proof.
         repeat ljs_autoforward.
         lets Hx : decl_env_record_vars_related_binds_lemma ___; try eassumption.
         destruct_hyp Hx.
-        cases_decide as Hd; rewrite stx_eq_empty_eq_lemma in Hd. { (* TODO uninitialized immutable *)
-            skip. (* TODO *)
+        cases_decide as Hd; rewrite stx_eq_empty_eq_lemma in Hd. { (* uninitialized immutable *)
+            simpl in Hd. subst_hyp Hd.
+            forwards (Heq1&Heq2) : decl_env_record_var_related_empty_lemma; try eassumption.
+            subst_hyp Heq1. subst_hyp Heq2.
+            destruct b. { (* strict *)
+                repeat ljs_autoforward.
+                forwards_th : reference_error_lemma. eauto_js.
+                destr_concl; tryfalse.
+                ljs_handle_abort.
+            } { (* not strict *)
+                repeat ljs_autoforward.
+                jauto_js 10.
+            }
         } {
             repeat ljs_autoforward.
             simpl.
@@ -1536,6 +1549,22 @@ Qed.
 Hint Extern 3 (env_record_related _ ?jer _) => not (is_evar jer); eapply env_record_related_decl_write : js_ljs.
 *)
 
+Lemma mutability_is_mutable_uninitialized_immutable :
+    ~JsPreliminary.mutability_is_mutable J.mutability_uninitialized_immutable.
+Proof.
+    intro H. unfolds in H. destruct_hyp H. tryfalse.
+Qed.
+
+Hint Resolve mutability_is_mutable_uninitialized_immutable : js_ljs.
+
+Lemma mutability_is_mutable_immutable :
+    ~JsPreliminary.mutability_is_mutable J.mutability_immutable.
+Proof.
+    intro H. unfolds in H. destruct_hyp H. tryfalse.
+Qed.
+
+Hint Resolve mutability_is_mutable_immutable : js_ljs.
+
 Lemma set_mutable_binding_lemma : forall BR k jst jc c st st' r v ptr s b jeptr jv,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvSetMutableBinding 
         [L.value_object ptr; L.value_string s; v; L.value_bool b]) (L.out_ter st' r) ->
@@ -1559,12 +1588,25 @@ Proof.
         repeat ljs_autoforward.
         lets Hx : decl_env_record_vars_related_binds_lemma ___; try eassumption.
         destruct_hyp Hx.
-        cases_decide as Hd; rewrite stx_eq_empty_eq_lemma in Hd. { (* TODO uninitialized immutable *)
-            skip. (* TODO *)
+        cases_decide as Hd; rewrite stx_eq_empty_eq_lemma in Hd. { (* uninitialized immutable *)
+            lets Hmutmut : mutability_is_mutable_uninitialized_immutable.
+            simpl in Hd. subst_hyp Hd.
+            forwards (Heq1&Heq2) : decl_env_record_var_related_empty_lemma; try eassumption.
+            subst_hyp Heq1. subst_hyp Heq2.
+            destruct b. { (* strict *)
+                repeat ljs_autoforward.
+                forwards_th : type_error_lemma. eauto_js.
+                destr_concl; tryfalse.
+                ljs_handle_abort.
+            } { (* not strict *)
+                repeat ljs_autoforward.
+                jauto_js 10.
+            }
         }
         simpl in Hd.
         forwards (Hvrel'&Hjmut) : decl_env_record_var_related_not_empty_lemma; try eassumption.
         destruct (classic (jmut = J.mutability_immutable)) as [Heqmut|Heqmut]. { (* immutable binding *)
+            lets Hmutmut : mutability_is_mutable_immutable.
             subst_hyp Heqmut.
             destruct b. { (* strict *)
                 repeat ljs_autoforward.
@@ -1576,6 +1618,7 @@ Proof.
                 jauto_js 10. 
             }
         } { (* mutable binding *)
+            asserts Hmutmut : (J.mutability_is_mutable jmut). { unfolds. eauto. }
             repeat ljs_autoforward.
             rewrite mutability_not_immutable_lemma in H8 by eassumption. (* TODO *)
             repeat ljs_autoforward.
@@ -1737,6 +1780,81 @@ Proof.
     eapply create_set_mutable_binding_lemma; try eassumption. reflexivity.
 Qed.
 
+(* TODO move *)
+Lemma decl_env_record_related_write_immutable_preserved : forall BR jder obj s,
+    decl_env_record_related BR jder obj ->
+    decl_env_record_related BR 
+        (J.decl_env_record_write jder s J.mutability_uninitialized_immutable (J.value_prim J.prim_undef))
+        (L.set_object_property obj s (L.attributes_data_of (L.attributes_data_intro L.value_empty true true false))).
+Proof.
+    introv Herel.
+    unfolds J.decl_env_record_write.
+    destruct obj.
+    simpls.
+    rew_heap_to_libbag.
+    destruct Herel.
+    constructor; try eassumption.
+    unfolds.
+    intro s'.
+    destruct (classic (s = s')). { (* equal *)
+        substs.
+        right.
+        do 3 eexists. splits; [rew_binds_eq; iauto | idtac | idtac]. {
+            simpls.
+            rewrite binds_update_same_eq. reflexivity.
+        } {
+            unfolds. right. eauto.
+        }
+    } { (* disequal *)
+        lets Hx : decl_env_record_related_vars s'.
+        destruct_hyp Hx.
+        left. split. rew_index_eq. iauto.
+        simpls. rew_index_eq. iauto.
+        right. simpls. do 3 eexists. rew_heap_to_libbag in *. rew_binds_eq. iauto.
+    }
+Qed.
+
+(* TODO move *)
+Lemma decl_env_add_immutable_binding_lemma : forall BR k jst jc c st st' r jder jeptr ptr obj s,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDeclEnvAddBinding
+        [L.value_object ptr; L.value_string s; L.value_empty; L.value_true; L.value_false]) (L.out_ter st' r) ->
+    binds st ptr obj ->
+    binds jst jeptr (J.env_record_decl jder) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    decl_env_record_related BR jder obj ->
+    fact_js_env jeptr ptr \in BR ->
+    st' = st \(ptr := L.set_object_property obj s (L.attributes_data_of
+        (L.attributes_data_intro L.value_empty true true false))) /\
+    r = L.res_value L.value_undefined /\
+    ~index (L.object_properties obj) s /\ ~index jder s /\
+    state_invariant BR (J.env_record_write_decl_env jst jeptr jder s 
+        J.mutability_uninitialized_immutable (J.value_prim J.prim_undef)) st'.
+Proof.
+    introv Hlred Hbinds Hjbinds Hcinv Hinv Herel Hfact.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : add_data_field_lemma. eassumption.
+    destruct_hyp Hx.
+    splits; try eauto_js.
+    {
+    lets Hx : decl_env_record_related_vars Herel s.
+    destruct_hyp Hx; prove_bag.
+    }
+    {
+    destruct obj.
+    eapply state_invariant_modify_env_record_preserved; try eassumption.
+    eapply env_record_related_decl.
+    lets Hx : decl_env_record_related_write_immutable_preserved Herel.
+    eapply Hx.
+    reflexivity.
+    }
+Qed.
+
+(* TODO should not be needed *)
+Hint Extern 1 (J.red_expr _ _ (J.spec_env_record_create_immutable_binding _ _) _) =>
+    eapply J.red_spec_env_record_create_immutable_binding : js_ljs.
+
 Lemma create_immutable_binding_lemma : forall BR k jst jc c st st' r ptr s jeptr,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvCreateImmutableBinding
         [L.value_object ptr; L.value_string s]) (L.out_ter st' r) ->
@@ -1757,13 +1875,10 @@ Proof.
         unfolds L.object_class.
         cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
         repeat ljs_autoforward.
-        skip. (* TODO *)
-(*
-        forwards_th Hx : decl_env_add_mutable_binding_lemma; try prove_bag.
+        forwards_th Hx : decl_env_add_immutable_binding_lemma; try prove_bag.
         destruct_hyp Hx.
         repeat ljs_autoforward.
         jauto_js 15.
-*)
     } { (* object records *)
         inverts keep Herel.
         unfolds L.object_class.
