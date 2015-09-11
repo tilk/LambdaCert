@@ -1128,14 +1128,27 @@ Definition th_ext_expr_binary k v jeef P :=
     L.red_exprh k c st (L.expr_app_2 v [v1; v2]) (L.out_ter st' r) ->
     concl_ext_expr_value BR jst jc c st st' r (jeef jv1 jv2) P.
 
+Definition th_call k :=
+    forall BR jst jc c st st' r jvs vs jv v jptr ptr ptr1,
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    fact_iarray ptr1 vs \in BR ->
+    fact_js_obj jptr ptr \in BR ->
+    values_related BR jvs vs ->
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privAppExpr [L.value_object ptr; v; L.value_object ptr1]) 
+        (L.out_ter st' r) ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_call jptr jv jvs) (fun jv => True).
+
 Definition th_call_prealloc k jpre :=
     forall BR jst jc c st st' r jv v jvs vs v' v'' ptr,
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     value_related BR jv v ->
-    values_related BR jvs vs ->
     fact_iarray ptr vs \in BR ->
     call_prealloc_related jpre v' ->
+    values_related BR jvs vs ->
     L.red_exprh k c st (L.expr_app_2 v' [v''; v; L.value_object ptr]) (L.out_ter st' r) ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_call_prealloc jpre jv jvs) (fun _ => True).
 
@@ -1143,8 +1156,8 @@ Definition th_construct_prealloc k jpre :=
     forall BR jst jc c st st' r jvs vs v' v'' ptr,
     context_invariant BR jc c ->
     state_invariant BR jst st ->
-    values_related BR jvs vs ->
     fact_iarray ptr vs \in BR ->
+    values_related BR jvs vs ->
     construct_prealloc_related jpre v' ->
     L.red_exprh k c st (L.expr_app_2 v' [v''; L.value_object ptr]) (L.out_ter st' r) ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_construct_prealloc jpre jvs) (fun _ => True).
@@ -1157,4 +1170,4 @@ Definition ih_expr k := forall je k', (k' < k)%nat -> th_expr k' je.
 
 Definition ih_stat k := forall jt k', (k' < k)%nat -> th_stat k' jt.
 
-Definition ih_call_prealloc k := forall jpre k', (k' < k)%nat -> th_call_prealloc k' jpre.
+Definition ih_call k := forall k', (k' < k)%nat -> th_call k'.

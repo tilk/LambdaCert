@@ -264,10 +264,10 @@ Hint Extern 10 (J.type_of _ <> J.type_object) =>
 Lemma red_expr_new_ok : forall k je jel,
     ih_expr k ->
     ih_stat k ->
-    ih_call_prealloc k ->
+    ih_call k ->
     th_expr k (J.expr_new je jel).
 Proof.
-    introv IHe IHt IHp HCinv Hinv Hlred.
+    introv IHe IHt IHc HCinv Hinv Hlred.
     inverts red_exprh Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
@@ -515,7 +515,7 @@ Qed.
 (* TODO why get_value is an ext_spec, and put_value is ext_expr? *)
 Lemma prop_get_value_lemma : forall BR k jst jc c st st' r jv v s b,
     ih_stat k ->
-    ih_call_prealloc k ->
+    ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGetField
            [v; L.value_string s]) (L.out_ter st' r) ->
     context_invariant BR jc c ->
@@ -527,7 +527,7 @@ Lemma prop_get_value_lemma : forall BR k jst jc c st st' r jv v s b,
         (fun BR' _ jv =>
             exists v', r = L.res_value v' /\ value_related BR' jv v' ).
 Proof.
-    introv IHt IHp Hlred Hcinv Hinv Hvrel Hoc.
+    introv IHt IHe Hlred Hcinv Hinv Hvrel Hoc.
     ljs_invert_apply.
     repeat ljs_autoforward.
     cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq. { (* object *)
@@ -566,7 +566,7 @@ Hint Extern 3 (js_reference_type _ _) => eapply js_reference_type_object_hint : 
 Lemma red_expr_access_generic_ok : forall BR k jst jc c st st' r ee1 ee2 je,
     ih_expr k ->
     ih_stat k ->
-    ih_call_prealloc k ->
+    ih_call k ->
     L.red_exprh k c st (L.expr_basic
         (E.ejs_to_ljs (E.expr_get_field ee1 ee2))) (L.out_ter st' r) ->
     context_invariant BR jc c ->
@@ -574,7 +574,7 @@ Lemma red_expr_access_generic_ok : forall BR k jst jc c st st' r ee1 ee2 je,
     js_field_access je ee1 ee2 ->
     concl_expr_getvalue BR jst jc c st st' r je.
 Proof.
-    introv IHe IHt IHp Hlred Hcinv Hinv Hfa.
+    introv IHe IHt IHc Hlred Hcinv Hinv Hfa.
     forwards_th Hx : field_access_lemma. eassumption. 
     destruct_hyp Hx; try ljs_handle_abort.
     repeat ljs_autoforward.
@@ -588,21 +588,21 @@ Qed.
 Lemma red_expr_member_ok : forall k je s,
     ih_expr k ->
     ih_stat k ->
-    ih_call_prealloc k ->
+    ih_call k ->
     th_expr k (J.expr_member je s).
 Proof.
-    introv IHe IHt IHp Hcinv Hinv Hlred.
-    applys red_expr_access_generic_ok IHe IHt IHp Hlred; try eassumption. eapply js_field_access_member.
+    introv IHe IHt IHc Hcinv Hinv Hlred.
+    applys red_expr_access_generic_ok IHe IHt IHc Hlred; try eassumption. eapply js_field_access_member.
 Qed.
 
 Lemma red_expr_access_ok : forall k je1 je2,
     ih_expr k ->
     ih_stat k ->
-    ih_call_prealloc k ->
+    ih_call k ->
     th_expr k (J.expr_access je1 je2).
 Proof.
-    introv IHe IHt IHp Hcinv Hinv Hlred.
-    applys red_expr_access_generic_ok IHe IHt IHp Hlred; try eassumption. eapply js_field_access_access.
+    introv IHe IHt IHc Hcinv Hinv Hlred.
+    applys red_expr_access_generic_ok IHe IHt IHc Hlred; try eassumption. eapply js_field_access_access.
 Qed.
 
 Lemma is_callable_lemma : forall BR k c st st' r jst jv v,
@@ -710,10 +710,10 @@ Hint Extern 3 (J.red_expr _ _ (J.expr_call_1 _ _ _) _) => eapply J.red_expr_call
 Lemma red_expr_call_ok : forall k je jel,
     ih_expr k ->
     ih_stat k ->
-    ih_call_prealloc k ->
+    ih_call k ->
     th_expr k (J.expr_call je jel).
 Proof.
-    introv IHe IHs IHp Hcinv Hinv Hlred. 
+    introv IHe IHs IHc Hcinv Hinv Hlred. 
     unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_app.
     reference_match_cases Hlred Hx Heq Hrp. 
     {
@@ -743,7 +743,7 @@ Proof.
             asserts Hseval : (!J.is_syntactic_eval je). {
                 rew_refl. inverts Heq; eauto_js.
             }
-            forwards_th : red_spec_call_ok; try eassumption. prove_bag.
+            apply_ih_call. eauto_js.
             destr_concl; try ljs_handle_abort.
             res_related_invert.
             resvalue_related_only_invert.
@@ -819,7 +819,7 @@ Proof.
                     reflexivity.
                 }
             }
-            forwards_th : red_spec_call_ok; try eassumption. prove_bag.
+            apply_ih_call. eassumption.
             destr_concl; try ljs_handle_abort. 
             res_related_invert.
             resvalue_related_only_invert.
@@ -845,7 +845,7 @@ Proof.
             repeat ljs_autoforward.
             lets (jptr&Heq) : is_callable_obj Hic. subst_hyp Heq.
             inverts IH5. (* TODO *)
-            forwards_th : red_spec_call_ok; try eassumption. eauto_js.
+            apply_ih_call. eassumption.
             asserts Hseval : (!J.is_syntactic_eval je). {
                 rew_refl.
                 eauto using is_syntactic_eval_reference_producing_lemma.

@@ -2657,7 +2657,7 @@ Proof.
     apply He. omega.
 Qed.
 
-Lemma ih_call_prealloc_leq : forall k k', (k' <= k)%nat -> ih_call_prealloc k -> ih_call_prealloc k'.
+Lemma ih_call_leq : forall k k', (k' <= k)%nat -> ih_call k -> ih_call k'.
 Proof.
     introv Hle He Hlt.
     apply He. omega.
@@ -2673,9 +2673,9 @@ Proof.
     introv He. eapply ih_stat_leq; try eassumption; omega.
 Qed.
 
-Lemma ih_call_prealloc_S : forall k, ih_call_prealloc (S k) -> ih_call_prealloc k.
+Lemma ih_call_S : forall k, ih_call (S k) -> ih_call k.
 Proof.
-    introv He. eapply ih_call_prealloc_leq; try eassumption; omega.
+    introv He. eapply ih_call_leq; try eassumption; omega.
 Qed.
 
 (* TODO move S5-only tactics! *)
@@ -2860,8 +2860,8 @@ Ltac ih_leq :=
     | H : ih_expr ?k |- ih_expr ?k' => eapply ih_expr_leq; try eapply H; math
     | H : ih_stat ?k |- ih_stat ?k' => is_evar k'; eapply H
     | H : ih_stat ?k |- ih_stat ?k' => eapply ih_stat_leq; try eapply H; math
-    | H : ih_call_prealloc ?k |- ih_call_prealloc ?k' => is_evar k'; eapply H
-    | H : ih_call_prealloc ?k |- ih_call_prealloc ?k' => eapply ih_call_prealloc_leq; try eapply H; math
+    | H : ih_call ?k |- ih_call ?k' => is_evar k'; eapply H
+    | H : ih_call ?k |- ih_call ?k' => eapply ih_call_leq; try eapply H; math
     end.
 
 Ltac specializes_th_clean :=
@@ -2893,7 +2893,7 @@ Ltac specializes_th_clean :=
     try ih_leq.
 
 Ltac specializes_th H :=
-    try unfold th_stat, th_spec, th_call_prealloc, th_ext_expr_unary, th_ext_expr_binary,
+    try unfold th_stat, th_spec, th_call, th_call_prealloc, th_ext_expr_unary, th_ext_expr_binary,
         th_construct_prealloc in H;
     let rec spec := 
         match type of H  with

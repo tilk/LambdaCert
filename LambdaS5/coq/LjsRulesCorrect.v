@@ -9,6 +9,7 @@ Require Import LjsRulesCorrectSpecFuns.
 Require Import LjsRulesCorrectStatements.
 Require Import LjsRulesCorrectExpressions.
 Require Import LjsRulesCorrectCallPrealloc.
+Require Import LjsRulesCorrectCall.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
@@ -48,13 +49,13 @@ Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 
 Lemma main_lemma : forall k, 
-    (forall jt, th_stat k jt) /\ (forall je, th_expr k je) /\ (forall jpre, th_call_prealloc k jpre).
+    (forall jt, th_stat k jt) /\ (forall je, th_expr k je) /\ th_call k.
 Proof.
     intro k.
     induction_wf IH : lt_wf k.
     asserts IHt : (ih_stat k). unfolds. introv Hle. specializes IH Hle. jauto.
     asserts IHe : (ih_expr k). unfolds. introv Hle. specializes IH Hle. jauto.
-    asserts IHp : (ih_call_prealloc k). unfolds. introv Hle. specializes IH Hle. jauto.
+    asserts IHc : (ih_call k). unfolds. introv Hle. specializes IH Hle. jauto.
     clear IH.
     splits.
     {
@@ -85,7 +86,7 @@ Proof.
     (* stat_continue *)
     applys red_stat_continue_ok.
     (* stat_try *)
-    applys red_stat_try_ok.
+    applys red_stat_try_ok; eassumption.
     (* stat_for *)
     skip.
     (* stat_for_var *)
@@ -129,73 +130,8 @@ Proof.
     applys red_expr_conditional_ok; eassumption.
     (* expr_assign *)
     applys red_expr_assign_ok; eassumption.
-    } {
-    (* BUILT-IN FUNCTIONS *)
-    destruct 0.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
     }
+    applys red_spec_call_ok; eassumption.
 Qed.
 
 Lemma stat_lemma : forall k jt, th_stat k jt.

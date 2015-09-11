@@ -48,11 +48,9 @@ Implicit Type jlenv : J.lexical_env.
 
 Lemma red_expr_call_global_is_finite_ok : forall k, th_call_prealloc k J.prealloc_global_is_finite.
 Proof.
-    introv Hcinv Hinv Hvrel Hvrels Halo Hcrel Hlred.
+    introv Hcinv Hinv Hvrel Halo Hcrel Hvrels Hlred.
     inverts Hcrel.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    ljs_context_invariant_after_apply.
+    ljs_invert_apply.
 Admitted.
 
 Lemma red_expr_call_global_is_nan_ok : forall k, th_call_prealloc k J.prealloc_global_is_nan.
@@ -61,19 +59,14 @@ Admitted.
 
 Lemma red_expr_call_number_ok : forall k, th_call_prealloc k J.prealloc_number.
 Proof.
-    introv Hcinv Hinv Hvrel Hvrels Halo Hcrel Hlred.
+    introv Hcinv Hinv Hvrel Halo Hcrel Hvrels Hlred.
     inverts Hcrel.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    ljs_context_invariant_after_apply.
+    ljs_invert_apply.
 Admitted.
 
 Lemma red_expr_call_boolean_ok : forall k, th_call_prealloc k J.prealloc_bool.
 Proof.
-    introv Hcinv Hinv Hvrel Hvrels Halo Hcrel Hlred.
+    introv Hcinv Hinv Hvrel Halo Hcrel Hvrels Hlred.
     inverts Hcrel.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    ljs_context_invariant_after_apply.
-    repeat ljs_autoforward.
+    ljs_invert_apply.
 Admitted.

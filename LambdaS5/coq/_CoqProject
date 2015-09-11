@@ -25,6 +25,7 @@ LjsPrettyRulesIndexed.v
 LjsPrettyRulesSecurity.v
 LjsPrettyRules.v
 LjsRulesCorrectCallPrealloc.v
+LjsRulesCorrectCall.v
 LjsRulesCorrectCommon.v
 LjsRulesCorrectDefinitions.v
 LjsRulesCorrectExpressions.v
