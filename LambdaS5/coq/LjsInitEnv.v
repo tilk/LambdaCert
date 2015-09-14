@@ -2788,8 +2788,13 @@ expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))
   (expr_string "ObjEnvRec"))
- (expr_app (expr_id "%Get1")
-  [expr_get_internal "bindings" (expr_id "context"); expr_id "id"])
+ (expr_let "bindings" (expr_get_internal "bindings" (expr_id "context"))
+  (expr_if
+   (expr_app (expr_id "%HasProperty") [expr_id "bindings"; expr_id "id"])
+   (expr_app (expr_id "%Get1") [expr_id "bindings"; expr_id "id"])
+   (expr_if (expr_id "strict")
+    (expr_app (expr_id "%ReferenceError")
+     [expr_string "reading nonexistent binding"]) expr_undefined)))
  (expr_throw
   (expr_string "[env] Context not well formed! In %EnvGetBindingValue")))
 .
@@ -2835,8 +2840,8 @@ expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))
   (expr_string "ObjEnvRec"))
- (expr_op2 binary_op_has_own_property
-  (expr_get_internal "bindings" (expr_id "context")) (expr_id "id"))
+ (expr_app (expr_id "%HasProperty")
+  [expr_get_internal "bindings" (expr_id "context"); expr_id "id"])
  (expr_throw (expr_string "[env] Context not well formed! In %EnvHasBinding")))
 .
 Definition ex_privEnvImplicitThis := 
@@ -8664,8 +8669,11 @@ value_closure
 Definition name_privReferenceError : id :=  "%ReferenceError" .
 Definition privEnvGetBindingValue := 
 value_closure
-(closure_intro [("%Get1", privGet1); ("%ReferenceError", privReferenceError)]
- None ["context"; "id"; "strict"] ex_privEnvGetBindingValue)
+(closure_intro
+ [("%Get1", privGet1);
+  ("%HasProperty", privHasProperty);
+  ("%ReferenceError", privReferenceError)] None ["context"; "id"; "strict"]
+ ex_privEnvGetBindingValue)
 .
 Definition name_privEnvGetBindingValue : id :=  "%EnvGetBindingValue" .
 Definition privUnboundId := 
@@ -8779,7 +8787,9 @@ value_closure
 .
 Definition name_privEnvCreateSetMutableBinding : id :=  "%EnvCreateSetMutableBinding" .
 Definition privEnvHasBinding := 
-value_closure (closure_intro [] None ["context"; "id"] ex_privEnvHasBinding)
+value_closure
+(closure_intro [("%HasProperty", privHasProperty)] None ["context"; "id"]
+ ex_privEnvHasBinding)
 .
 Definition name_privEnvHasBinding : id :=  "%EnvHasBinding" .
 Definition privEnvDefineArg := 

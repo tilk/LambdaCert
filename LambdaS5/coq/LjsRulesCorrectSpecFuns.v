@@ -1364,9 +1364,261 @@ Qed.
 Hint Resolve create_set_mutable_binding_none_lemma : js_ljs.
 (* TODO end big block of moving! *)
 
+(* *** Getting and setting of object fields *)
+
+(* TODO move to common *)
+Ltac apply_ih_call := match goal with
+    | H : ih_call ?k', 
+      HS : state_invariant ?BR ?jst ?st,
+      HC' : context_invariant ?BR' ?jc ?c', 
+      HR : L.red_exprh ?k ?c ?st (L.expr_app_2 LjsInitEnv.privAppExpr _) _ |- _ =>
+        let Hle := fresh "Hle" in
+        let HC := fresh "HC" in
+        let Hsec := fresh "Hsec" in
+        let Hsub := fresh "H" in
+        asserts Hle : (k < k')%nat; [math | idtac];
+        asserts Hsub : (BR' \c BR); [prove_bag | idtac];
+        asserts HC : (context_invariant BR jc c); 
+            [applys context_invariant_bisim_incl_preserved Hsub; ljs_context_invariant | idtac]; 
+        lets Hih : H Hle HC HS HR; 
+        [eauto_js
+        |prove_bag|prove_bag
+        |try repeat first [eapply Forall2_nil | eapply Forall2_cons; [eauto_js | idtac]]
+        |clear Hle; clear Hsub; clear HS; clear HR; clear HC]
+   (*     lets Hsec : L.red_exprh_state_security_ok HR;  *)
+    end.
+
+Lemma get_default_lemma : forall BR k jst jc c st st' r ptr jptr v jv s,
+    ih_stat k ->
+    ih_call k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGet [L.value_object ptr; v; L.value_string s])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    value_related BR jv v ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_get_1 J.builtin_get_default jv jptr s) (fun _ => True).
+Proof.
+    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : get_property_lemma. eassumption.
+    destruct_hyp Hx; try ljs_handle_abort. { (* field not found *)
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        jauto_js.
+    } { (* data field *)
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        jauto_js.
+    } { (* accessor field *)
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        cases_decide as Heq; rewrite stx_eq_undefined_eq_lemma in Heq. { (* getter undefined *)
+            subst_hyp Heq.
+            inverts Hx4. (* TODO *) (* inverting value_related *)
+            repeat ljs_autoforward.
+            jauto_js.
+        } { (* getter defined *)
+            inverts Hx7; tryfalse. (* TODO *) (* inverting object_or_undefined *)
+            inverts Hx4. (* inverting value_related *)
+            repeat ljs_autoforward.
+            forwards_th Hy : zero_arg_obj_lemma.
+            destruct_hyp Hy.
+            repeat ljs_autoforward.
+            apply_ih_call.
+            destr_concl; try ljs_handle_abort.
+            jauto_js.
+        }
+    }
+Qed.
+
+Lemma get_1_lemma : forall BR k jst jc c st st' r ptr jptr v jv s x,
+    ih_stat k ->
+    ih_call k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGet [L.value_object ptr; v; L.value_string s])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    value_related BR jv v ->
+    J.object_method J.object_get_ jst jptr x ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_get_1 x jv jptr s) (fun _ => True).
+Proof.
+    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel Hm.
+    forwards Hmm : object_method_get_lemma; try eassumption. (* TODO *)
+    asserts Heq : (x = J.builtin_get_default). skip. (* TODO exotic objects *) subst_hyp Heq.
+    forwards_th : get_default_lemma. eassumption.
+    destr_concl; try ljs_handle_abort.
+    jauto_js.
+Qed.
+
+Lemma get_lemma : forall BR k jst jc c st st' r ptr jptr s,
+    ih_stat k ->
+    ih_call k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGet1 [L.value_object ptr; L.value_string s])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_get jptr s) (fun _ => True).
+Proof.
+    introv IHt IHc Hlred Hcinv Hinv Hf.
+    ljs_invert_apply.
+    forwards Hmm : object_method_get_lemma; try eassumption. (* TODO *)
+    repeat ljs_autoforward.
+    forwards_th : get_1_lemma; try eassumption.
+    destr_concl; try ljs_handle_abort.
+    jauto_js.
+Qed.
+
+Lemma get_prim_lemma : forall BR k jst jc c st st' r v jv s,
+    ih_stat k ->
+    ih_call k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGetPrim [v; L.value_string s])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_prim_value_get jv s) (fun _ => True).
+Proof.
+    introv IHt IHc Hlred Hcinv Hinv Hvrel.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_object_ok.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    forwards Hmm : object_method_get_lemma; try eassumption. (* TODO *)
+    repeat ljs_autoforward.
+    forwards_th : get_1_lemma; try eassumption.
+    destr_concl; try ljs_handle_abort.
+    jauto_js.
+Qed.
+
+(* TODO move *)
+Lemma object_method_can_put_lemma : forall BR jst st jptr ptr,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    J.object_method J.object_can_put_ jst jptr J.builtin_can_put_default.
+Proof.
+Admitted. (* TODO: ignoring exotic objects for now *)
+
+(* TODO move to utils *)
+Parameter string_of_nat_0_lemma : string_of_nat 0 = "0".
+
+(* TODO move *)
+Lemma one_arg_obj_lemma : forall BR k jst jc c st st' r v1,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privoneArgObj [v1]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    exists BR' ptr,
+    state_invariant BR' jst st' /\
+    BR \c BR' /\
+    st \c st' /\
+    fact_iarray ptr [v1] \in BR' /\
+    r = L.res_value (L.value_object ptr).
+Proof.
+    introv Hlred Hcinv Hinv.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    evar (obj : L.object).
+    cuts Hiobj : (iarray_object obj [v]); subst obj. {
+        exists (\{fact_iarray (fresh st) [v]} \u BR) (fresh st).
+        jauto_js.
+    }
+    constructor.
+    + introv Hnth. inverts Hnth as Hnth; try inverts Hnth. simpl. rewrite string_of_nat_0_lemma. prove_bag.
+    + introv Hindex. simpl in Hindex. rew_index_eq in Hindex. destruct_hyp Hindex; tryfalse.
+      exists 0 v. rewrite string_of_nat_0_lemma. split. reflexivity. eapply Nth_here.
+Qed.
+
+Lemma put_default_lemma : forall BR k jst jc c st st' r ptr jptr v jv v1 jv1 s b,
+    ih_stat k ->
+    ih_call k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privPut 
+        [L.value_object ptr; v; L.value_string s; v1; L.value_bool b]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    value_related BR jv v ->
+    value_related BR jv1 v1 ->
+    concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_object_put_1 J.builtin_put_default jv jptr s jv1 b) 
+        (fun jrv => jrv = J.resvalue_empty).
+Proof.
+    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel1 Hvrel2.
+    ljs_invert_apply.
+    forwards Hcp : object_method_can_put_lemma; try eassumption.
+    forwards Hgp : object_method_get_property_lemma; try eassumption.
+    repeat ljs_autoforward.
+    forwards_th Hx : get_own_property_lemma. eassumption.
+    destruct_hyp Hx; try ljs_handle_abort. { (* field not found *)
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        forwards_th Hy : get_property_lemma. prove_bag.
+        skip. (* TODO *)
+        (* destruct_hyp Hy; try ljs_handle_abort. *)
+    } { (* data field *) 
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        inv_ljs. { (* writable *)
+            repeat ljs_autoforward.
+            inv_ljs. skip.
+            skip. (* TODO *)
+        } { (* not writable *)
+            repeat ljs_autoforward.
+            ljs_invert_apply.
+            repeat ljs_autoforward.
+            destruct b. { (* strict *)
+                repeat ljs_autoforward.
+                forwards_th : type_error_lemma. eauto_js.
+                destr_concl; tryfalse.
+                ljs_handle_abort.
+            } { (* not strict *)
+                repeat ljs_autoforward.
+                jauto_js 20.
+            }
+        }
+    } { (* accessor field *)
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        cases_decide as Heq; rewrite stx_eq_undefined_eq_lemma in Heq. { (* getter undefined *)
+            subst_hyp Heq.
+            inverts Hx6. (* TODO *) (* inverting value_related *)
+            repeat ljs_autoforward.
+            ljs_invert_apply.
+            repeat ljs_autoforward.
+            destruct b. { (* strict *)
+                repeat ljs_autoforward.
+                forwards_th : type_error_lemma. eauto_js.
+                destr_concl; tryfalse.
+                ljs_handle_abort.
+            } { (* not strict *)
+                repeat ljs_autoforward.
+                jauto_js 20.
+            }
+        } { (* setter defined *)
+            inverts Hx9; tryfalse. (* TODO *) (* inverting object_or_undefined *)
+            inverts Hx6. (* inverting value_related *)
+            repeat ljs_autoforward.
+            forwards_th Hy : one_arg_obj_lemma.
+            destruct_hyp Hy.
+            repeat ljs_autoforward.
+            apply_ih_call.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            resvalue_related_only_invert.
+            repeat ljs_autoforward.
+            jauto_js 30.
+        }
+    }
+Qed.
+
 (* *** Methods of environment records *)
 
 Lemma get_binding_value_lemma : forall BR k jst jc c st st' r ptr s b jeptr,
+    ih_stat k ->
+    ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvGetBindingValue 
         [L.value_object ptr; L.value_string s; L.value_bool b]) (L.out_ter st' r) ->
     context_invariant BR jc c ->
@@ -1374,7 +1626,7 @@ Lemma get_binding_value_lemma : forall BR k jst jc c st st' r ptr s b jeptr,
     fact_js_env jeptr ptr \in BR ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_env_record_get_binding_value jeptr s b) (fun _ => True).
 Proof.
-    introv Hlred Hcinv Hinv Hf.
+    introv IHt IHc Hlred Hcinv Hinv Hf.
     inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply.
@@ -1407,7 +1659,36 @@ Proof.
             jauto_js 15.
         }
     } { (* object records *)
-        skip.
+        inverts Herel.
+        unfolds L.object_class.
+        cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
+        repeat ljs_autoforward.
+        cases_decide as Heq1; rewrite stx_eq_string_eq_lemma in Heq1; tryfalse.
+        repeat ljs_autoforward.
+        forwards_th : has_property_lemma. eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_invert.
+        inv_ljs. { (* field found *)
+            repeat ljs_autoforward.
+            asserts Hskip : (v1 = L.value_object ptr). skip. subst_hyp Hskip. (* TODO heap consistency *)
+            forwards_th : get_lemma. prove_bag.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            resvalue_related_only_invert.
+            jauto_js 10.
+        } { (* field not found *)
+            repeat ljs_autoforward.
+            destruct b. { (* strict *)
+                repeat ljs_autoforward.
+                forwards_th : reference_error_lemma. eauto_js.
+                destr_concl; tryfalse.
+                ljs_handle_abort.
+            } { (* not strict *)
+                repeat ljs_autoforward.
+                jauto_js 10.
+            }
+        }
     }
 Qed.
 
@@ -1658,7 +1939,17 @@ Proof.
             jauto_js 10.
         }
     } { (* object records *)
-        skip. (* TODO *)
+        inverts Herel.
+        unfolds L.object_class.
+        cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
+        repeat ljs_autoforward.
+        cases_decide as Heq1; rewrite stx_eq_string_eq_lemma in Heq1; tryfalse.
+        repeat ljs_autoforward.
+        forwards_th : has_property_lemma. eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_invert.
+        jauto_js.
     }
 Qed.
 
@@ -2268,254 +2559,6 @@ Lemma prog_ok_call_lemma : forall BR k jst jc c st st' r jp,
     res_related BR' jst' st' jr r.
 Proof.
     intros. destruct jp. eapply prog_ok_lemma; eassumption.
-Qed.
-
-(* TODO move to common *)
-Ltac apply_ih_call := match goal with
-    | H : ih_call ?k', 
-      HS : state_invariant ?BR ?jst ?st,
-      HC' : context_invariant ?BR' ?jc ?c', 
-      HR : L.red_exprh ?k ?c ?st (L.expr_app_2 LjsInitEnv.privAppExpr _) _ |- _ =>
-        let Hle := fresh "Hle" in
-        let HC := fresh "HC" in
-        let Hsec := fresh "Hsec" in
-        let Hsub := fresh "H" in
-        asserts Hle : (k < k')%nat; [math | idtac];
-        asserts Hsub : (BR' \c BR); [prove_bag | idtac];
-        asserts HC : (context_invariant BR jc c); 
-            [applys context_invariant_bisim_incl_preserved Hsub; ljs_context_invariant | idtac]; 
-        lets Hih : H Hle HC HS HR; 
-        [eauto_js
-        |prove_bag|prove_bag
-        |try repeat first [eapply Forall2_nil | eapply Forall2_cons; [eauto_js | idtac]]
-        |clear Hle; clear Hsub; clear HS; clear HR; clear HC]
-   (*     lets Hsec : L.red_exprh_state_security_ok HR;  *)
-    end.
-
-Lemma get_default_lemma : forall BR k jst jc c st st' r ptr jptr v jv s,
-    ih_stat k ->
-    ih_call k ->
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGet [L.value_object ptr; v; L.value_string s])
-        (L.out_ter st' r) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    value_related BR jv v ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_get_1 J.builtin_get_default jv jptr s) (fun _ => True).
-Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel.
-    ljs_invert_apply.
-    repeat ljs_autoforward.
-    forwards_th Hx : get_property_lemma. eassumption.
-    destruct_hyp Hx; try ljs_handle_abort. { (* field not found *)
-        ljs_invert_apply.
-        repeat ljs_autoforward.
-        jauto_js.
-    } { (* data field *)
-        ljs_invert_apply.
-        repeat ljs_autoforward.
-        jauto_js.
-    } { (* accessor field *)
-        ljs_invert_apply.
-        repeat ljs_autoforward.
-        cases_decide as Heq; rewrite stx_eq_undefined_eq_lemma in Heq. { (* getter undefined *)
-            subst_hyp Heq.
-            inverts Hx4. (* TODO *) (* inverting value_related *)
-            repeat ljs_autoforward.
-            jauto_js.
-        } { (* getter defined *)
-            inverts Hx7; tryfalse. (* TODO *) (* inverting object_or_undefined *)
-            inverts Hx4. (* inverting value_related *)
-            repeat ljs_autoforward.
-            forwards_th Hy : zero_arg_obj_lemma.
-            destruct_hyp Hy.
-            repeat ljs_autoforward.
-            apply_ih_call.
-            destr_concl; try ljs_handle_abort.
-            jauto_js.
-        }
-    }
-Qed.
-
-Lemma get_1_lemma : forall BR k jst jc c st st' r ptr jptr v jv s x,
-    ih_stat k ->
-    ih_call k ->
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGet [L.value_object ptr; v; L.value_string s])
-        (L.out_ter st' r) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    value_related BR jv v ->
-    J.object_method J.object_get_ jst jptr x ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_get_1 x jv jptr s) (fun _ => True).
-Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel Hm.
-    forwards Hmm : object_method_get_lemma; try eassumption. (* TODO *)
-    asserts Heq : (x = J.builtin_get_default). skip. (* TODO exotic objects *) subst_hyp Heq.
-    forwards_th : get_default_lemma. eassumption.
-    destr_concl; try ljs_handle_abort.
-    jauto_js.
-Qed.
-
-Lemma get_lemma : forall BR k jst jc c st st' r ptr jptr s,
-    ih_stat k ->
-    ih_call k ->
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGet1 [L.value_object ptr; L.value_string s])
-        (L.out_ter st' r) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_get jptr s) (fun _ => True).
-Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hf.
-    ljs_invert_apply.
-    forwards Hmm : object_method_get_lemma; try eassumption. (* TODO *)
-    repeat ljs_autoforward.
-    forwards_th : get_1_lemma; try eassumption.
-    destr_concl; try ljs_handle_abort.
-    jauto_js.
-Qed.
-
-Lemma get_prim_lemma : forall BR k jst jc c st st' r v jv s,
-    ih_stat k ->
-    ih_call k ->
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGetPrim [v; L.value_string s])
-        (L.out_ter st' r) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    value_related BR jv v ->
-    concl_ext_expr_value BR jst jc c st st' r (J.spec_prim_value_get jv s) (fun _ => True).
-Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hvrel.
-    ljs_invert_apply.
-    repeat ljs_autoforward.
-    forwards_th : red_spec_to_object_ok.
-    destr_concl; try ljs_handle_abort.
-    res_related_invert.
-    resvalue_related_invert.
-    forwards Hmm : object_method_get_lemma; try eassumption. (* TODO *)
-    repeat ljs_autoforward.
-    forwards_th : get_1_lemma; try eassumption.
-    destr_concl; try ljs_handle_abort.
-    jauto_js.
-Qed.
-
-(* TODO move *)
-Lemma object_method_can_put_lemma : forall BR jst st jptr ptr,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    J.object_method J.object_can_put_ jst jptr J.builtin_can_put_default.
-Proof.
-Admitted. (* TODO: ignoring exotic objects for now *)
-
-(* TODO move to utils *)
-Parameter string_of_nat_0_lemma : string_of_nat 0 = "0".
-
-(* TODO move *)
-Lemma one_arg_obj_lemma : forall BR k jst jc c st st' r v1,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privoneArgObj [v1]) (L.out_ter st' r) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    exists BR' ptr,
-    state_invariant BR' jst st' /\
-    BR \c BR' /\
-    st \c st' /\
-    fact_iarray ptr [v1] \in BR' /\
-    r = L.res_value (L.value_object ptr).
-Proof.
-    introv Hlred Hcinv Hinv.
-    ljs_invert_apply.
-    repeat ljs_autoforward.
-    evar (obj : L.object).
-    cuts Hiobj : (iarray_object obj [v]); subst obj. {
-        exists (\{fact_iarray (fresh st) [v]} \u BR) (fresh st).
-        jauto_js.
-    }
-    constructor.
-    + introv Hnth. inverts Hnth as Hnth; try inverts Hnth. simpl. rewrite string_of_nat_0_lemma. prove_bag.
-    + introv Hindex. simpl in Hindex. rew_index_eq in Hindex. destruct_hyp Hindex; tryfalse.
-      exists 0 v. rewrite string_of_nat_0_lemma. split. reflexivity. eapply Nth_here.
-Qed.
-
-Lemma put_default_lemma : forall BR k jst jc c st st' r ptr jptr v jv v1 jv1 s b,
-    ih_stat k ->
-    ih_call k ->
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privPut 
-        [L.value_object ptr; v; L.value_string s; v1; L.value_bool b]) (L.out_ter st' r) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    value_related BR jv v ->
-    value_related BR jv1 v1 ->
-    concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_object_put_1 J.builtin_put_default jv jptr s jv1 b) 
-        (fun jrv => jrv = J.resvalue_empty).
-Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel1 Hvrel2.
-    ljs_invert_apply.
-    forwards Hcp : object_method_can_put_lemma; try eassumption.
-    forwards Hgp : object_method_get_property_lemma; try eassumption.
-    repeat ljs_autoforward.
-    forwards_th Hx : get_own_property_lemma. eassumption.
-    destruct_hyp Hx; try ljs_handle_abort. { (* field not found *)
-        ljs_invert_apply.
-        repeat ljs_autoforward.
-        forwards_th Hy : get_property_lemma. prove_bag.
-        skip. (* TODO *)
-        (* destruct_hyp Hy; try ljs_handle_abort. *)
-    } { (* data field *) 
-        ljs_invert_apply.
-        repeat ljs_autoforward.
-        inv_ljs. { (* writable *)
-            repeat ljs_autoforward.
-            inv_ljs. skip.
-            skip. (* TODO *)
-        } { (* not writable *)
-            repeat ljs_autoforward.
-            ljs_invert_apply.
-            repeat ljs_autoforward.
-            destruct b. { (* strict *)
-                repeat ljs_autoforward.
-                forwards_th : type_error_lemma. eauto_js.
-                destr_concl; tryfalse.
-                ljs_handle_abort.
-            } { (* not strict *)
-                repeat ljs_autoforward.
-                jauto_js 20.
-            }
-        }
-    } { (* accessor field *)
-        ljs_invert_apply.
-        repeat ljs_autoforward.
-        cases_decide as Heq; rewrite stx_eq_undefined_eq_lemma in Heq. { (* getter undefined *)
-            subst_hyp Heq.
-            inverts Hx6. (* TODO *) (* inverting value_related *)
-            repeat ljs_autoforward.
-            ljs_invert_apply.
-            repeat ljs_autoforward.
-            destruct b. { (* strict *)
-                repeat ljs_autoforward.
-                forwards_th : type_error_lemma. eauto_js.
-                destr_concl; tryfalse.
-                ljs_handle_abort.
-            } { (* not strict *)
-                repeat ljs_autoforward.
-                jauto_js 20.
-            }
-        } { (* setter defined *)
-            inverts Hx9; tryfalse. (* TODO *) (* inverting object_or_undefined *)
-            inverts Hx6. (* inverting value_related *)
-            repeat ljs_autoforward.
-            forwards_th Hy : one_arg_obj_lemma.
-            destruct_hyp Hy.
-            repeat ljs_autoforward.
-            apply_ih_call.
-            destr_concl; try ljs_handle_abort.
-            res_related_invert.
-            resvalue_related_only_invert.
-            repeat ljs_autoforward.
-            jauto_js 30.
-        }
-    }
 Qed.
 
 Definition post_to_primitive jv jv' := 
