@@ -3785,6 +3785,7 @@ expr_app (expr_id "%Put")
 Definition ex_privPutPrim := 
 expr_app (expr_id "%Put")
 [expr_app (expr_id "%ToObject") [expr_id "v"];
+ expr_id "v";
  expr_id "fld";
  expr_id "val";
  expr_id "strict"]

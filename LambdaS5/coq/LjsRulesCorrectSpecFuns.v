@@ -1614,6 +1614,82 @@ Proof.
     }
 Qed.
 
+Lemma object_method_put_lemma : forall BR jst st jptr ptr,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    J.object_method J.object_put_ jst jptr J.builtin_put_default.
+Proof.
+Admitted. (* TODO: ignoring exotic objects for now *)
+
+Lemma put_1_lemma : forall BR k jst jc c st st' r ptr jptr v jv s x v1 jv1 b,
+    ih_stat k ->
+    ih_call k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privPut 
+        [L.value_object ptr; v; L.value_string s; v1; L.value_bool b]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    value_related BR jv v ->
+    value_related BR jv1 v1 ->
+    J.object_method J.object_put_ jst jptr x ->
+    concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_object_put_1 x jv jptr s jv1 b) 
+       (fun jrv => jrv = J.resvalue_empty).
+Proof.
+    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel Hvrels Hm.
+    forwards Hmm : object_method_put_lemma; try eassumption. (* TODO *)
+    asserts Heq : (x = J.builtin_put_default). skip. (* TODO exotic objects *) subst_hyp Heq.
+    forwards_th : put_default_lemma. eassumption.
+    destr_concl; try ljs_handle_abort.
+    jauto_js.
+Qed.
+
+Lemma put_lemma : forall BR k jst jc c st st' r ptr jptr s v1 jv1 b,
+    ih_stat k ->
+    ih_call k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privPut1 [L.value_object ptr; L.value_string s; v1; L.value_bool b])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    value_related BR jv1 v1 ->
+    concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_object_put jptr s jv1 b) 
+        (fun jrv => jrv = J.resvalue_empty).
+Proof.
+    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel.
+    ljs_invert_apply.
+    forwards Hmm : object_method_put_lemma; try eassumption. (* TODO *)
+    repeat ljs_autoforward.
+    forwards_th : put_1_lemma; try eassumption.
+    destr_concl; try ljs_handle_abort.
+    jauto_js.
+Qed.
+
+Lemma put_prim_lemma : forall BR k jst jc c st st' r v jv s v1 jv1 b,
+    ih_stat k ->
+    ih_call k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privPutPrim [v; L.value_string s; v1; L.value_bool b])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    value_related BR jv1 v1 ->
+    concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_prim_value_put jv s jv1 b) 
+        (fun jrv => jrv = J.resvalue_empty).
+Proof.
+    introv IHt IHc Hlred Hcinv Hinv Hvrel Hvrel1.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_object_ok.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    forwards Hmm : object_method_put_lemma; try eassumption. (* TODO *)
+    repeat ljs_autoforward.
+    forwards_th : put_1_lemma; try eassumption.
+    destr_concl; try ljs_handle_abort.
+    jauto_js.
+Qed.
+
 (* *** Methods of environment records *)
 
 Lemma get_binding_value_lemma : forall BR k jst jc c st st' r ptr s b jeptr,
@@ -1671,7 +1747,6 @@ Proof.
         resvalue_related_invert.
         inv_ljs. { (* field found *)
             repeat ljs_autoforward.
-            asserts Hskip : (v1 = L.value_object ptr). skip. subst_hyp Hskip. (* TODO heap consistency *)
             forwards_th : get_lemma. prove_bag.
             destr_concl; try ljs_handle_abort.
             res_related_invert.
