@@ -1389,7 +1389,6 @@ Ltac apply_ih_call := match goal with
     end.
 
 Lemma get_default_lemma : forall BR k jst jc c st st' r ptr jptr v jv s,
-    ih_stat k ->
     ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGet [L.value_object ptr; v; L.value_string s])
         (L.out_ter st' r) ->
@@ -1399,7 +1398,7 @@ Lemma get_default_lemma : forall BR k jst jc c st st' r ptr jptr v jv s,
     value_related BR jv v ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_object_get_1 J.builtin_get_default jv jptr s) (fun _ => True).
 Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel.
+    introv IHc Hlred Hcinv Hinv Hf Hvrel.
     ljs_invert_apply.
     repeat ljs_autoforward.
     forwards_th Hx : get_property_lemma. eassumption.
@@ -1434,7 +1433,6 @@ Proof.
 Qed.
 
 Lemma get_1_lemma : forall BR k jst jc c st st' r ptr jptr v jv s x,
-    ih_stat k ->
     ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGet [L.value_object ptr; v; L.value_string s])
         (L.out_ter st' r) ->
@@ -1445,7 +1443,7 @@ Lemma get_1_lemma : forall BR k jst jc c st st' r ptr jptr v jv s x,
     J.object_method J.object_get_ jst jptr x ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_object_get_1 x jv jptr s) (fun _ => True).
 Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel Hm.
+    introv IHc Hlred Hcinv Hinv Hf Hvrel Hm.
     forwards Hmm : object_method_get_lemma; try eassumption. (* TODO *)
     asserts Heq : (x = J.builtin_get_default). skip. (* TODO exotic objects *) subst_hyp Heq.
     forwards_th : get_default_lemma. eassumption.
@@ -1454,7 +1452,6 @@ Proof.
 Qed.
 
 Lemma get_lemma : forall BR k jst jc c st st' r ptr jptr s,
-    ih_stat k ->
     ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGet1 [L.value_object ptr; L.value_string s])
         (L.out_ter st' r) ->
@@ -1463,7 +1460,7 @@ Lemma get_lemma : forall BR k jst jc c st st' r ptr jptr s,
     fact_js_obj jptr ptr \in BR ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_object_get jptr s) (fun _ => True).
 Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hf.
+    introv IHc Hlred Hcinv Hinv Hf.
     ljs_invert_apply.
     forwards Hmm : object_method_get_lemma; try eassumption. (* TODO *)
     repeat ljs_autoforward.
@@ -1473,7 +1470,6 @@ Proof.
 Qed.
 
 Lemma get_prim_lemma : forall BR k jst jc c st st' r v jv s,
-    ih_stat k ->
     ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGetPrim [v; L.value_string s])
         (L.out_ter st' r) ->
@@ -1482,7 +1478,7 @@ Lemma get_prim_lemma : forall BR k jst jc c st st' r v jv s,
     value_related BR jv v ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_prim_value_get jv s) (fun _ => True).
 Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hvrel.
+    introv IHc Hlred Hcinv Hinv Hvrel.
     ljs_invert_apply.
     repeat ljs_autoforward.
     forwards_th : red_spec_to_object_ok.
@@ -1534,7 +1530,6 @@ Proof.
 Qed.
 
 Lemma put_default_lemma : forall BR k jst jc c st st' r ptr jptr v jv v1 jv1 s b,
-    ih_stat k ->
     ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privPut 
         [L.value_object ptr; v; L.value_string s; v1; L.value_bool b]) (L.out_ter st' r) ->
@@ -1546,7 +1541,7 @@ Lemma put_default_lemma : forall BR k jst jc c st st' r ptr jptr v jv v1 jv1 s b
     concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_object_put_1 J.builtin_put_default jv jptr s jv1 b) 
         (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel1 Hvrel2.
+    introv IHc Hlred Hcinv Hinv Hf Hvrel1 Hvrel2.
     ljs_invert_apply.
     forwards Hcp : object_method_can_put_lemma; try eassumption.
     forwards Hgp : object_method_get_property_lemma; try eassumption.
@@ -1622,7 +1617,6 @@ Proof.
 Admitted. (* TODO: ignoring exotic objects for now *)
 
 Lemma put_1_lemma : forall BR k jst jc c st st' r ptr jptr v jv s x v1 jv1 b,
-    ih_stat k ->
     ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privPut 
         [L.value_object ptr; v; L.value_string s; v1; L.value_bool b]) (L.out_ter st' r) ->
@@ -1635,7 +1629,7 @@ Lemma put_1_lemma : forall BR k jst jc c st st' r ptr jptr v jv s x v1 jv1 b,
     concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_object_put_1 x jv jptr s jv1 b) 
        (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel Hvrels Hm.
+    introv IHc Hlred Hcinv Hinv Hf Hvrel Hvrels Hm.
     forwards Hmm : object_method_put_lemma; try eassumption. (* TODO *)
     asserts Heq : (x = J.builtin_put_default). skip. (* TODO exotic objects *) subst_hyp Heq.
     forwards_th : put_default_lemma. eassumption.
@@ -1644,7 +1638,6 @@ Proof.
 Qed.
 
 Lemma put_lemma : forall BR k jst jc c st st' r ptr jptr s v1 jv1 b,
-    ih_stat k ->
     ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privPut1 [L.value_object ptr; L.value_string s; v1; L.value_bool b])
         (L.out_ter st' r) ->
@@ -1655,7 +1648,7 @@ Lemma put_lemma : forall BR k jst jc c st st' r ptr jptr s v1 jv1 b,
     concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_object_put jptr s jv1 b) 
         (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hf Hvrel.
+    introv IHc Hlred Hcinv Hinv Hf Hvrel.
     ljs_invert_apply.
     forwards Hmm : object_method_put_lemma; try eassumption. (* TODO *)
     repeat ljs_autoforward.
@@ -1665,7 +1658,6 @@ Proof.
 Qed.
 
 Lemma put_prim_lemma : forall BR k jst jc c st st' r v jv s v1 jv1 b,
-    ih_stat k ->
     ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privPutPrim [v; L.value_string s; v1; L.value_bool b])
         (L.out_ter st' r) ->
@@ -1676,7 +1668,7 @@ Lemma put_prim_lemma : forall BR k jst jc c st st' r v jv s v1 jv1 b,
     concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_prim_value_put jv s jv1 b) 
         (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hvrel Hvrel1.
+    introv IHc Hlred Hcinv Hinv Hvrel Hvrel1.
     ljs_invert_apply.
     repeat ljs_autoforward.
     forwards_th : red_spec_to_object_ok.
@@ -1693,7 +1685,6 @@ Qed.
 (* *** Methods of environment records *)
 
 Lemma get_binding_value_lemma : forall BR k jst jc c st st' r ptr s b jeptr,
-    ih_stat k ->
     ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvGetBindingValue 
         [L.value_object ptr; L.value_string s; L.value_bool b]) (L.out_ter st' r) ->
@@ -1702,7 +1693,7 @@ Lemma get_binding_value_lemma : forall BR k jst jc c st st' r ptr s b jeptr,
     fact_js_env jeptr ptr \in BR ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_env_record_get_binding_value jeptr s b) (fun _ => True).
 Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hf.
+    introv IHc Hlred Hcinv Hinv Hf.
     inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply.
@@ -2893,7 +2884,6 @@ Proof.
 Admitted.
 
 Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 vs r jptr jvs,
-    ih_stat k ->
     ih_call k ->
     L.red_exprh k c st 
         (L.expr_app_2 LjsInitEnv.privrunConstruct [L.value_object ptr; L.value_object ptr1]) 
@@ -2905,7 +2895,7 @@ Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 vs r jptr jvs
     fact_js_obj jptr ptr \in BR ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_construct jptr jvs) (fun jv => True).
 Proof.
-    introv IHt IHc Hlred Hcinv Hinv Hvrels Halo Hbs.
+    introv IHc Hlred Hcinv Hinv Hvrels Halo Hbs.
     inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply.
@@ -3156,6 +3146,7 @@ Ltac ref_base_type_var_invert :=
 
 (* TODO why get_value is an ext_spec, and put_value is ext_expr? *)
 Lemma env_get_value_lemma : forall BR k jst jc c st st' r v s b jrbt,
+    ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvGetValue 
         [v; L.value_string s; L.value_bool b]) (L.out_ter st' r) ->
     context_invariant BR jc c ->
@@ -3168,7 +3159,7 @@ Lemma env_get_value_lemma : forall BR k jst jc c st st' r v s b jrbt,
             v <> L.value_null /\
             exists v', r = L.res_value v' /\ value_related BR' jv v' ).
 Proof.
-    introv Hlred Hcinv Hinv Hrbt Hrbtv.
+    introv IHc Hlred Hcinv Hinv Hrbt Hrbtv.
     inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply.
@@ -3186,6 +3177,7 @@ Proof.
 Qed.
 
 Lemma env_put_value_lemma : forall BR k jst jc c st st' r v v' s b jrbt jv,
+    ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvPutValue 
         [v; L.value_string s; v'; L.value_bool b]) (L.out_ter st' r) ->
     context_invariant BR jc c ->
@@ -3197,7 +3189,7 @@ Lemma env_put_value_lemma : forall BR k jst jc c st st' r v v' s b jrbt jv,
         (J.spec_put_value (J.resvalue_ref (J.ref_intro jrbt s b)) jv) 
             (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv Hlred Hcinv Hinv Hrbt Hrbtv Hvrel.
+    introv IHc Hlred Hcinv Hinv Hrbt Hrbtv Hvrel.
     inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply. 

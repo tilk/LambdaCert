@@ -74,10 +74,11 @@ Qed.
 
 Lemma red_stat_var_decl_ok : forall vdl k,
     ih_expr k ->
+    ih_call k ->
     th_stat k (J.stat_var_decl vdl).
 Proof.
     induction vdl;
-    introv IHe Hcinv Hinv Hlred. {
+    introv IHe IHc Hcinv Hinv Hlred. {
         repeat ljs_autoforward.
         jauto_js.
     } {
@@ -93,13 +94,9 @@ Proof.
                 eassumption.
             forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
             destruct_hyp Hx.
-            inverts red_exprh Hx3.
-            ljs_apply.
-            ljs_context_invariant_after_apply.
+            ljs_invert_apply.
             repeat ljs_autoforward.
-            inverts red_exprh H13. (* TODO *)
-            ljs_apply.
-            ljs_context_invariant_after_apply.
+            ljs_invert_apply.
             repeat ljs_autoforward.
             destr_concl; try ljs_handle_abort.
             repeat ljs_autoforward.
