@@ -2244,6 +2244,45 @@ Qed.
 
 (** *** Assignment *)
 
+(* TODO move *)
+Lemma prop_set_value_lemma : forall BR k jst jc c st st' r jv v jv' v' s b,
+    ih_call k ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privSetField
+        [v; L.value_string s; v'; L.value_bool b]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    js_object_coercible jv ->
+    value_related BR jv' v' ->
+    concl_ext_expr_resvalue BR jst jc c st st' r 
+        (J.spec_put_value (J.resvalue_ref (J.ref_intro (J.ref_base_type_value jv) s b)) jv') 
+            (fun jrv => jrv = J.resvalue_empty).
+Proof.
+    introv IHc Hlred Hcinv Hinv Hvrel Hoc Hvrel'.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq. { (* object *)
+        inverts Hvrel; tryfalse.
+        repeat ljs_autoforward.
+        forwards_th : put_lemma. eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        jauto_js 10.
+    } { (* primitive value *)
+        asserts Hpb : (J.ref_has_primitive_base (J.ref_intro (J.ref_base_type_value jv) s b)). {
+            inverts Hoc; inverts Hvrel; tryfalse; try solve [false; apply Heq; reflexivity]; reflexivity.
+        }
+        repeat ljs_autoforward.
+        forwards_th : put_prim_lemma.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        jauto_js 15.
+    }
+Qed.
+
 (* TODO should not be necessary *)
 Hint Extern 3 (J.red_expr _ _ (J.expr_assign_1 _ (Some _) _) _) =>
     eapply J.red_expr_assign_1_compound : js_ljs.
@@ -2264,9 +2303,7 @@ Proof.
         lets (s'&Heqq&Hbuiltin) : make_op2_red_expr_lemma Himpl.
         rewrite Heqq in Hlred. clear Heqq.
         repeat ljs_autoforward.
-        inverts red_exprh H7. (* TODO *)
-        ljs_apply.
-        ljs_context_invariant_after_apply.
+        ljs_invert_apply.
         repeat ljs_autoforward.
         lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
             eassumption.
@@ -2280,15 +2317,11 @@ Proof.
         forwards_th Hx : env_get_value_lemma. eauto_js. eassumption.
         destr_concl; try ljs_handle_abort.
         repeat ljs_autoforward.
-        inverts red_exprh H23. (* TODO *)
-        ljs_apply.
-        ljs_context_invariant_after_apply.
+        ljs_invert_apply.
         repeat ljs_autoforward.
         destr_concl; try ljs_handle_abort.
         repeat ljs_autoforward.
-        inverts red_exprh H17. (* TODO *)
-        ljs_apply.
-        ljs_context_invariant_after_apply.
+        ljs_invert_apply.
         repeat ljs_autoforward.
         lets Heq : Hbuiltin ___; try eassumption. subst_hyp Heq.
         forwards_th Hx : red_expr_binary_op_3_regular_ok. eassumption.
@@ -2329,7 +2362,25 @@ Proof.
     introv IHe IHk Hcinv Hinv Hlred.
     unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_assign.
     reference_match_cases Hlred Hx Heq Hrp. { (* object field assign *)
-        skip. (* TODO *)
+        unfolds E.make_set_field.
+        repeat ljs_autoforward.
+        ljs_invert_apply.
+        do 2 ljs_autoforward. (* TODO stopping condition for autoforward *)
+        forwards_th Hx : field_access_lemma. eassumption.
+        destruct_hyp Hx; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        forwards_th : prop_set_value_lemma. eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        jauto_js 15.
     } { (* variable assign *)
         repeat ljs_autoforward.
         ljs_invert_apply.

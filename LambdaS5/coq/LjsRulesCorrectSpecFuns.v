@@ -2896,9 +2896,7 @@ Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 vs r jptr jvs
     concl_ext_expr_value BR jst jc c st st' r (J.spec_construct jptr jvs) (fun jv => True).
 Proof.
     introv IHc Hlred Hcinv Hinv Hvrels Halo Hbs.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    ljs_context_invariant_after_apply.
+    ljs_invert_apply.
     repeat ljs_autoforward.
     forwards Hx : construct_related_lemma Hinv Hbs; try eassumption. 
     destruct Hx as (jcon&Hcrel).
@@ -2909,6 +2907,12 @@ Proof.
         destr_concl; try ljs_handle_abort.
         jauto_js.
     } { (* default *)
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        forwards_th : get_lemma. eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        repeat ljs_autoforward.
         skip. (* TODO *)
     } { (* bind *)
         skip. (* TODO *) (* NOT YET IN JSCERT *)
@@ -2937,23 +2941,23 @@ Qed.
 Lemma red_spec_lexical_env_get_identifier_ref_lemma : forall k BR jst jc c st st' r v s b v1 jlenv,
     L.red_exprh k c st
         (L.expr_app_2 LjsInitEnv.privEnvGetId [v; L.value_string s; v1]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
     state_invariant BR jst st ->
     lexical_env_related BR jlenv v -> 
     exists k' c' v' jrbt jst' st'' BR',
-    k' < k /\
-    BR \c BR' /\
-    state_invariant BR' jst' st'' /\
     L.red_exprh k' c' st'' (L.expr_app_2 v1 [v']) (L.out_ter st' r) /\
     J.red_spec jst jc (J.spec_lexical_env_get_identifier_ref jlenv s b) 
         (J.specret_val jst' (J.ref_intro jrbt s b)) /\
+    state_invariant BR' jst' st'' /\
     ref_base_type_related BR' jrbt v' /\
-    ref_base_type_var jrbt.
+    ref_base_type_var jrbt /\
+    k' < k /\
+    BR \c BR'. (* TODO possible exceptions *)
 Proof.
     intro k.
     induction_wf IH : lt_wf k.
-    introv Hlred Hinv Hlrel.
-    inverts red_exprh Hlred.
-    ljs_apply.
+    introv Hlred Hcinv Hinv Hlrel.
+    ljs_invert_apply.
     inverts Hlrel as Hlrel1 Hlrel2 Hlrel3. {
         repeat ljs_autoforward.
         jauto_js. 
@@ -2977,7 +2981,28 @@ Proof.
             destruct_hyp IH. jauto_js 8. 
         }
     } {
-        skip. (* TODO object environments *)
+        inverts Herel.
+        unfolds L.object_class.
+        cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
+        repeat ljs_autoforward.
+        cases_decide as Heq1; rewrite stx_eq_string_eq_lemma in Heq1; tryfalse.
+        repeat ljs_autoforward.
+        forwards_th : has_property_lemma. eassumption.
+        destr_concl. (*; try ljs_handle_abort. TODO *)
+        res_related_invert.
+        resvalue_related_invert.
+        inv_ljs. { (* var found *)
+            repeat ljs_autoforward.
+            jauto_js 8.
+        } { (* not found *)
+            repeat ljs_autoforward.
+            lets Hp : state_invariant_ctx_parent_ok ___. eassumption.
+            unfolds in Hp. specializes Hp ___. eauto_js.
+            destruct_hyp Hp. repeat binds_determine.
+            specializes IH ___; try eassumption. math. eauto_js. eauto_js.
+            destruct_hyp IH. jauto_js 8.
+        }
+        skip. (* TODO exceptions *)
     }
 Qed.
 

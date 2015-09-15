@@ -3831,20 +3831,18 @@ Definition ex_privSetField :=
 expr_if
 (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "v"))
  (expr_string "object"))
-(expr_seq
- (expr_app (expr_id "%Put1")
-  [expr_id "v"; expr_id "fld"; expr_id "val"; expr_id "strict"])
- (expr_id "val"))
-(expr_seq
- (expr_app (expr_id "%PutPrim")
-  [expr_id "v"; expr_id "fld"; expr_id "val"; expr_id "strict"])
- (expr_id "val"))
+(expr_app (expr_id "%Put1")
+ [expr_id "v"; expr_id "fld"; expr_id "val"; expr_id "strict"])
+(expr_app (expr_id "%PutPrim")
+ [expr_id "v"; expr_id "fld"; expr_id "val"; expr_id "strict"])
 .
 Definition ex_privSetOp := 
 expr_lambda ["v"; "fld"; "strict"]
 (expr_let "val" (expr_app (expr_id "cval") [])
- (expr_app (expr_id "%SetField")
-  [expr_id "v"; expr_id "fld"; expr_id "val"; expr_id "strict"]))
+ (expr_seq
+  (expr_app (expr_id "%SetField")
+   [expr_id "v"; expr_id "fld"; expr_id "val"; expr_id "strict"])
+  (expr_id "val")))
 .
 Definition ex_privSignedRightShift := 
 expr_op2 binary_op_shiftr (expr_app (expr_id "%ToInt32") [expr_id "l"])
