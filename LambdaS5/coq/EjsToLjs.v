@@ -48,16 +48,6 @@ Definition to_bool e := make_app_builtin "%ToBoolean" [e].
 
 Definition make_seq e1 e2 := L.expr_jseq e1 e2.
 
-Definition make_var_modify fld f v :=
-    make_app_builtin "%EnvModify" 
-        [L.expr_id "$context"; L.expr_string fld; 
-            L.expr_lambda ["x1";"x2"] (f (L.expr_id "x1") (L.expr_id "x2"));
-            L.expr_lambda [] v; strict].
-
-Definition make_var_set fld v :=
-    make_app_builtin "%EnvAssign" 
-        [L.expr_id "$context"; L.expr_string fld; L.expr_lambda [] v; strict].
-
 Definition make_var_id i :=    
     make_app_builtin "%EnvGet" [L.expr_id "$context"; L.expr_string i; strict].
 
@@ -195,6 +185,8 @@ Definition make_try_catch body i catch :=
     L.expr_try_catch body (L.expr_lambda ["exc"] (
         make_var_decl [(i, L.expr_get_attr L.pattr_value (L.expr_id "exc") (L.expr_string "%js-exn"), true)] catch)).
 
+Definition thunk e := L.expr_lambda [] e.
+
 Definition op2_func op := L.expr_lambda ["x1";"x2"] (L.expr_op2 op (L.expr_id "x1") (L.expr_id "x2")).
 
 Definition reference_match {A : Type} (e : E.expr) f_get_field f_var_id f_other : A :=
@@ -206,7 +198,9 @@ Definition reference_match {A : Type} (e : E.expr) f_get_field f_var_id f_other 
 
 Definition make_xfix op b f e :=
     reference_match e
-        (fun obj fld => make_app_builtin "%PrepostOp" [f obj; f fld; op2_func op; L.expr_bool b])
+        (fun obj fld => 
+            L.expr_let "f" (make_app_builtin "%PrepostOp" [op2_func op; L.expr_bool b]) (
+            make_app_builtin "%PropertyAccess" [L.expr_id "f"; f obj; f fld; L.expr_id "$strict"]))
         (fun varid => make_app_builtin "%EnvPrepostOp" 
             [context; L.expr_string varid; op2_func op; L.expr_bool b; L.expr_id "$strict"])
         (fun _ => L.expr_seq (make_app_builtin "%ToNumber" [f e])
@@ -271,6 +265,8 @@ Definition make_op2 op e1 e2 :=
     | J.binary_op_disequal => make_app_builtin "%notEqEq" [e1; e2]
     | J.binary_op_strict_disequal => make_app_builtin "%notStxEq" [e1; e2]
     end.
+
+Definition js_op2_func op := L.expr_lambda ["x1";"x2"] (make_op2 op (L.expr_id "x1") (L.expr_id "x2")).
 
 Definition make_array es :=
     let f oe :=
@@ -355,7 +351,7 @@ Definition make_switch_withdefault e acls def bcls :=
     let deflt_case cont := 
         make_seq (L.expr_if (L.expr_id "found") (L.expr_app (L.expr_id "deflt") []) L.expr_empty) cont in
     L.expr_let "disc" e (
-    L.expr_let "deflt" (L.expr_lambda [] def) (
+    L.expr_let "deflt" (thunk def) (
     L.expr_let "found" L.expr_false (
     make_cases "found" acls (deflt_case (make_cases "found" bcls last_case))))).
 
@@ -363,8 +359,20 @@ Definition make_get_field obj fld :=
     make_app_builtin "%PropertyAccess" [L.expr_id "%GetOp"; obj; fld; L.expr_id "$strict"].
 
 Definition make_set_field obj fld v :=
-    L.expr_let "f" (make_app_builtin "%SetOp" [L.expr_lambda [] v]) (
+    L.expr_let "f" (make_app_builtin "%SetOp" [thunk v]) (
     make_app_builtin "%PropertyAccess" [L.expr_id "f"; obj; fld; L.expr_id "$strict"]).
+
+Definition make_modify_field obj fld op v :=
+    L.expr_let "f" (make_app_builtin "%ModifyOp" [js_op2_func op; thunk v]) (
+    make_app_builtin "%PropertyAccess" [L.expr_id "f"; obj; fld; L.expr_id "$strict"]).
+
+Definition make_var_set fld v :=
+    make_app_builtin "%EnvAssign" 
+        [L.expr_id "$context"; L.expr_string fld; thunk v; strict].
+
+Definition make_var_modify fld op v :=
+    make_app_builtin "%EnvModify" 
+        [L.expr_id "$context"; L.expr_string fld; js_op2_func op; thunk v; strict].
 
 Definition make_assign f (e1 : E.expr) e2 := 
     reference_match e1
@@ -374,12 +382,8 @@ Definition make_assign f (e1 : E.expr) e2 :=
 
 Definition make_op_assign f (e1 : E.expr) op e2 := 
     reference_match e1
-        (fun obj fld => 
-            L.expr_let "obj" (f obj) (
-            L.expr_let "fld" (f fld) (
-            make_set_field (L.expr_id "obj") (L.expr_id "fld") (make_op2 op 
-                (make_get_field (L.expr_id "obj") (L.expr_id "fld")) e2))))
-        (fun s => make_var_modify s (make_op2 op) e2)
+        (fun obj fld => make_modify_field (f obj) (f fld) op e2)
+        (fun s => make_var_modify s op e2)
         (fun e => L.expr_seq (make_op2 op (f e) e2) 
             (reference_error "invalid lhs for assignment")).
 

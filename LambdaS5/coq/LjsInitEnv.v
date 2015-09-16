@@ -509,6 +509,9 @@ expr_object
                 expr_false));
  ("%Math", property_data
            (data_intro (expr_id "%Math") expr_true expr_false expr_false));
+ ("%ModifyOp", property_data
+               (data_intro (expr_id "%ModifyOp") expr_true expr_false
+                expr_false));
  ("%MonthFromTime", property_data
                     (data_intro (expr_id "%MonthFromTime") expr_true
                      expr_false expr_false));
@@ -3440,6 +3443,17 @@ expr_if
        (expr_op2 binary_op_mul (expr_id "sec") (expr_id "%msPerSecond")))
       (expr_id "millis")) (expr_id "t"))))))
 .
+Definition ex_privModifyOp := 
+expr_lambda ["v"; "fld"; "strict"]
+(expr_let "val"
+ (expr_app (expr_id "op")
+  [expr_app (expr_id "%GetField") [expr_id "v"; expr_id "fld"];
+   expr_app (expr_id "val_thunk") []])
+ (expr_seq
+  (expr_app (expr_id "%SetField")
+   [expr_id "v"; expr_id "fld"; expr_id "val"; expr_id "strict"])
+  (expr_id "val")))
+.
 Definition ex_privMonthFromTime := 
 expr_let "DayWithinYear"
 (expr_lambda ["t"]
@@ -3620,16 +3634,17 @@ expr_if (expr_op1 unary_op_is_object (expr_id "o")) expr_empty
   (expr_string " is not an object")])
 .
 Definition ex_privPrepostOp := 
-expr_let "oldValue"
-(expr_app (expr_id "%ToNumber")
- [expr_app (expr_id "%GetField") [expr_id "obj"; expr_id "fld"]])
-(expr_let "newValue"
- (expr_app (expr_id "op")
-  [expr_id "oldValue"; expr_number (JsNumber.of_int (1))])
- (expr_seq
-  (expr_app (expr_id "%SetField")
-   [expr_id "obj"; expr_id "fld"; expr_id "newValue"])
-  (expr_if (expr_id "is_pre") (expr_id "newValue") (expr_id "oldValue"))))
+expr_lambda ["v"; "fld"; "strict"]
+(expr_let "oldValue"
+ (expr_app (expr_id "%ToNumber")
+  [expr_app (expr_id "%GetField") [expr_id "v"; expr_id "fld"]])
+ (expr_let "newValue"
+  (expr_app (expr_id "op")
+   [expr_id "oldValue"; expr_number (JsNumber.of_int (1))])
+  (expr_seq
+   (expr_app (expr_id "%SetField")
+    [expr_id "v"; expr_id "fld"; expr_id "newValue"; expr_id "strict"])
+   (expr_if (expr_id "is_pre") (expr_id "newValue") (expr_id "oldValue")))))
 .
 Definition ex_privPrimAdd := 
 expr_let "l" (expr_app (expr_id "%ToPrimitive") [expr_id "l"])
@@ -3838,7 +3853,7 @@ expr_if
 .
 Definition ex_privSetOp := 
 expr_lambda ["v"; "fld"; "strict"]
-(expr_let "val" (expr_app (expr_id "cval") [])
+(expr_let "val" (expr_app (expr_id "val_thunk") [])
  (expr_seq
   (expr_app (expr_id "%SetField")
    [expr_id "v"; expr_id "fld"; expr_id "val"; expr_id "strict"])
@@ -9052,6 +9067,24 @@ value_closure
 Definition name_privMakeObject : id :=  "%MakeObject" .
 Definition privMath :=  value_object 255 .
 Definition name_privMath : id :=  "%Math" .
+Definition privPutPrim := 
+value_closure
+(closure_intro [("%Put", privPut); ("%ToObject", privToObject)] None
+ ["v"; "fld"; "val"; "strict"] ex_privPutPrim)
+.
+Definition name_privPutPrim : id :=  "%PutPrim" .
+Definition privSetField := 
+value_closure
+(closure_intro [("%Put1", privPut1); ("%PutPrim", privPutPrim)] None
+ ["v"; "fld"; "val"; "strict"] ex_privSetField)
+.
+Definition name_privSetField : id :=  "%SetField" .
+Definition privModifyOp := 
+value_closure
+(closure_intro [("%GetField", privGetField); ("%SetField", privSetField)]
+ None ["op"; "val_thunk"] ex_privModifyOp)
+.
+Definition name_privModifyOp : id :=  "%ModifyOp" .
 Definition privNativeErrorConstructor := 
 value_closure
 (closure_intro
@@ -9099,25 +9132,12 @@ value_closure
  ex_privObjectTypeCheck)
 .
 Definition name_privObjectTypeCheck : id :=  "%ObjectTypeCheck" .
-Definition privPutPrim := 
-value_closure
-(closure_intro [("%Put", privPut); ("%ToObject", privToObject)] None
- ["v"; "fld"; "val"; "strict"] ex_privPutPrim)
-.
-Definition name_privPutPrim : id :=  "%PutPrim" .
-Definition privSetField := 
-value_closure
-(closure_intro [("%Put1", privPut1); ("%PutPrim", privPutPrim)] None
- ["v"; "fld"; "val"; "strict"] ex_privSetField)
-.
-Definition name_privSetField : id :=  "%SetField" .
 Definition privPrepostOp := 
 value_closure
 (closure_intro
  [("%GetField", privGetField);
   ("%SetField", privSetField);
-  ("%ToNumber", privToNumber)] None ["obj"; "fld"; "op"; "is_pre"]
- ex_privPrepostOp)
+  ("%ToNumber", privToNumber)] None ["op"; "is_pre"] ex_privPrepostOp)
 .
 Definition name_privPrepostOp : id :=  "%PrepostOp" .
 Definition privPrimAdd := 
@@ -9220,7 +9240,7 @@ value_closure
 Definition name_privRunSelfConstructorCall : id :=  "%RunSelfConstructorCall" .
 Definition privSetOp := 
 value_closure
-(closure_intro [("%SetField", privSetField)] None ["cval"] ex_privSetOp)
+(closure_intro [("%SetField", privSetField)] None ["val_thunk"] ex_privSetOp)
 .
 Definition name_privSetOp : id :=  "%SetOp" .
 Definition privSignedRightShift := 
@@ -10904,6 +10924,7 @@ Definition ctx_items :=
  (name_privMakeString, privMakeString);
  (name_privMakeTime, privMakeTime);
  (name_privMath, privMath);
+ (name_privModifyOp, privModifyOp);
  (name_privMonthFromTime, privMonthFromTime);
  (name_privNativeError, privNativeError);
  (name_privNativeErrorConstructor, privNativeErrorConstructor);
@@ -11358,6 +11379,7 @@ privMakeObject
 privMakeString
 privMakeTime
 privMath
+privModifyOp
 privMonthFromTime
 privNativeError
 privNativeErrorConstructor
@@ -11822,6 +11844,7 @@ Definition store_items := [
                                          ("%MakeString", privMakeString);
                                          ("%MakeTime", privMakeTime);
                                          ("%Math", privMath);
+                                         ("%ModifyOp", privModifyOp);
                                          ("%MonthFromTime", privMonthFromTime);
                                          ("%NativeError", privNativeError);
                                          ("%NativeErrorConstructor", privNativeErrorConstructor);
