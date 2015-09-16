@@ -83,7 +83,7 @@ Proof.
     destruct_hyp Hx.
     repeat ljs_autoforward.
     rewrite exprjs_prog_strictness_eq in *.
-    forwards_th Hx : create_immutable_binding_lemma. skip. (* TODO *) prove_bag.
+    forwards_th Hx : create_immutable_binding_lemma. prove_bag.
     destr_concl; try solve [progress repeat (ljs_propagate_abort || ljs_abort_from_js); jauto_js 10]. (* TODO *)
     res_related_invert.
     repeat ljs_autoforward.
@@ -97,7 +97,7 @@ Proof.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    forwards_th Hx : initialize_immutable_binding_lemma. skip. (* TODO *) prove_bag 8.
+    forwards_th Hx : initialize_immutable_binding_lemma. (* TODO *) prove_bag 8.
     destr_concl; try solve [progress repeat (ljs_propagate_abort || ljs_abort_from_js); jauto_js 11]. (* TODO *)
     res_related_invert.
     repeat ljs_autoforward.
