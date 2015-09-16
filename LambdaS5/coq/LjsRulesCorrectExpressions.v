@@ -150,6 +150,9 @@ Proof.
     constructor; assumption.
 Qed.
 
+(* TODO move *)
+Parameter string_of_nat_injection_lemma : forall k1 k2, string_of_nat k1 = string_of_nat k2 -> k1 = k2. (* TODO *)
+
 Lemma iarray_object_snoc_lemma : forall obj vl v,
     iarray_object obj vl ->
     iarray_object (L.set_object_property obj (string_of_nat (length vl))
@@ -163,7 +166,11 @@ Proof.
         apply Nth_app_inv in Hnth.
         destruct Hnth as [Hnth|Hnth]. {
             lets Hlen : Nth_lt_length Hnth.
-            simpl. skip. (* TODO *) 
+            lets Hx : iarray_has_args Hnth. 
+            asserts Hdiff : (string_of_nat k <> string_of_nat (length vl)). {
+                introv Heq. apply string_of_nat_injection_lemma in Heq. math.
+            }
+            prove_bag.
         }
         destruct Hnth as (m&Hk&Hnth).
         inverts Hnth as Hnth; [idtac | inverts Hnth].
