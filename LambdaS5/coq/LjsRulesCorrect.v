@@ -105,9 +105,9 @@ Proof.
     (* expr_this *)
     eapply red_expr_this_ok.
     (* expr_identifier *)
-    eapply red_expr_identifier_ok. 
+    eapply red_expr_identifier_ok; eassumption.
     (* expr_literal *)
-    eapply red_expr_literal_ok.
+    eapply red_expr_literal_ok; eassumption.
     (* expr_object *)
     skip.
     (* expr_array *)
