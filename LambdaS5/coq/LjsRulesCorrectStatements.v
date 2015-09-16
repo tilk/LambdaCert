@@ -86,9 +86,7 @@ Proof.
         rewrite stat_vardecl_ejs_last_lemma in Hlred.
         destruct a. destruct o; unfolds E.js_vardecl_to_ejs. {
             repeat ljs_autoforward.
-            inverts red_exprh H3.
-            ljs_apply.
-            ljs_context_invariant_after_apply.
+            ljs_invert_apply.
             repeat ljs_autoforward.
             lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
                 eassumption.
@@ -915,20 +913,15 @@ Lemma red_stat_return_ok : forall k oje,
     th_stat k (J.stat_return oje).
 Proof.
     introv IHe Hcinv Hinv Hlred.
-    inverts red_exprh Hlred.
-    ljs_out_redh_ter.
-    destruct oje as [je|].
-    apply_ih_expr.
-    inv_internal_ljs.
-    jauto_js.
-    injects.
-    jauto_js.
-    jauto_js.
-    ljs_abort.
-    simpls.
-    inv_literal_ljs.
-    inv_internal_fwd_ljs.
-    jauto_js.
+    destruct oje as [je|]. { (* return with expr *)
+        repeat ljs_autoforward.
+        destr_concl; try ljs_handle_abort.
+        repeat ljs_autoforward.
+        jauto_js.
+     } { (* return with no expr *)
+        repeat ljs_autoforward.
+        jauto_js.
+    }
 Qed.
 
 (** *** break *)

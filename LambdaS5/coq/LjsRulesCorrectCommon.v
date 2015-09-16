@@ -54,7 +54,9 @@ Create HintDb js_ljs discriminated.
 
 Create HintDb xcore discriminated.
 
-Hint Resolve conj or_introl or_intror ex_intro : xcore.
+Hint Extern 1 (_ /\ _) => progress jauto_set_goal : xcore.
+Hint Extern 1 (exists _, _) => progress jauto_set_goal : xcore.
+Hint Resolve or_introl or_intror : xcore.
 Hint Extern 0 => reflexivity : xcore.
 Hint Extern 50 (~_) => progress rew_logic : xcore.
 Hint Extern 60 (~_) => solve [let H := fresh in intro H; inversion H] : xcore.
@@ -343,8 +345,7 @@ Ltac jauto_set_slim :=
   intros; jauto_set_goal.
 
 Tactic Notation "jauto_js" integer(k) := 
-    repeat destr_concl; jauto_set_slim; eauto with js_ljs bag nocore xcore; 
-    repeat (try unfold_concl; jauto_set_slim; eauto k with js_ljs bag nocore xcore).
+    repeat destr_concl; repeat unfold_concl; repeat progress (jauto_set_slim; eauto k with js_ljs bag nocore xcore).
 
 Tactic Notation "jauto_js" := jauto_js 5.
 
@@ -1740,8 +1741,6 @@ Proof.
     specializes Hrel2 s'.
     destruct_hyp Hrel2; eauto_js. 
     repeat rewrite index_update_diff_eq; eauto.
-    right. do 2 eexists.
-    repeat rewrite binds_update_diff_eq; eauto.
 Qed.
 
 Hint Resolve object_properties_related_update : js_ljs.
