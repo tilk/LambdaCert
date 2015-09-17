@@ -148,49 +148,6 @@ Definition ptr_privtoPrecision : object_ptr :=  167 .
 Definition ptr_privtoUpperCase : object_ptr :=  89 .
 Definition ptr_privunescape : object_ptr :=  176 .
 Definition ptr_privunshift : object_ptr :=  70 .
-Definition ex_copy_access_desc := 
-expr_seq
-(expr_app (expr_id "copy-when-defined")
- [expr_id "obj1"; expr_id "obj2"; expr_string "configurable"])
-(expr_seq
- (expr_app (expr_id "copy-when-defined")
-  [expr_id "obj1"; expr_id "obj2"; expr_string "enumerable"])
- (expr_seq
-  (expr_app (expr_id "copy-when-defined")
-   [expr_id "obj1"; expr_id "obj2"; expr_string "set"])
-  (expr_seq
-   (expr_app (expr_id "copy-when-defined")
-    [expr_id "obj1"; expr_id "obj2"; expr_string "get"])
-   (expr_seq
-    (expr_app (expr_id "%Delete")
-     [expr_id "obj1"; expr_string "value"; expr_false])
-    (expr_app (expr_id "%Delete")
-     [expr_id "obj1"; expr_string "writable"; expr_false])))))
-.
-Definition ex_copy_data_desc := 
-expr_seq
-(expr_app (expr_id "copy-when-defined")
- [expr_id "obj1"; expr_id "obj2"; expr_string "configurable"])
-(expr_seq
- (expr_app (expr_id "copy-when-defined")
-  [expr_id "obj1"; expr_id "obj2"; expr_string "enumerable"])
- (expr_seq
-  (expr_app (expr_id "copy-when-defined")
-   [expr_id "obj1"; expr_id "obj2"; expr_string "writable"])
-  (expr_seq
-   (expr_app (expr_id "copy-when-defined")
-    [expr_id "obj1"; expr_id "obj2"; expr_string "value"])
-   (expr_seq
-    (expr_app (expr_id "%Delete")
-     [expr_id "obj1"; expr_string "get"; expr_false])
-    (expr_app (expr_id "%Delete")
-     [expr_id "obj1"; expr_string "set"; expr_false])))))
-.
-Definition ex_copy_when_defined := 
-expr_if (expr_op2 binary_op_has_own_property (expr_id "obj2") (expr_id "s"))
-(expr_set_attr pattr_value (expr_id "obj1") (expr_id "s")
- (expr_get_attr pattr_value (expr_id "obj2") (expr_id "s"))) expr_undefined
-.
 Definition ex_dataval := 
 expr_object
 (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined) 
@@ -432,6 +389,10 @@ expr_object
  ("%GetOwnProperty", property_data
                      (data_intro (expr_id "%GetOwnProperty") expr_true
                       expr_false expr_false));
+ ("%GetOwnPropertyDescriptor", property_data
+                               (data_intro
+                                (expr_id "%GetOwnPropertyDescriptor")
+                                expr_true expr_false expr_false));
  ("%GetPrim", property_data
               (data_intro (expr_id "%GetPrim") expr_true expr_false
                expr_false));
@@ -521,6 +482,9 @@ expr_object
  ("%NativeErrorConstructor", property_data
                              (data_intro (expr_id "%NativeErrorConstructor")
                               expr_true expr_false expr_false));
+ ("%NativeErrorOr", property_data
+                    (data_intro (expr_id "%NativeErrorOr") expr_true
+                     expr_false expr_false));
  ("%NumberCall", property_data
                  (data_intro (expr_id "%NumberCall") expr_true expr_false
                   expr_false));
@@ -601,6 +565,9 @@ expr_object
                               (data_intro
                                (expr_id "%RangeErrorGlobalFuncObj") expr_true
                                expr_false expr_false));
+ ("%RangeErrorOr", property_data
+                   (data_intro (expr_id "%RangeErrorOr") expr_true expr_false
+                    expr_false));
  ("%RangeErrorProto", property_data
                       (data_intro (expr_id "%RangeErrorProto") expr_true
                        expr_false expr_false));
@@ -615,6 +582,9 @@ expr_object
                                   (data_intro
                                    (expr_id "%ReferenceErrorGlobalFuncObj")
                                    expr_true expr_false expr_false));
+ ("%ReferenceErrorOr", property_data
+                       (data_intro (expr_id "%ReferenceErrorOr") expr_true
+                        expr_false expr_false));
  ("%ReferenceErrorProto", property_data
                           (data_intro (expr_id "%ReferenceErrorProto")
                            expr_true expr_false expr_false));
@@ -668,6 +638,9 @@ expr_object
                                (data_intro
                                 (expr_id "%SyntaxErrorGlobalFuncObj")
                                 expr_true expr_false expr_false));
+ ("%SyntaxErrorOr", property_data
+                    (data_intro (expr_id "%SyntaxErrorOr") expr_true
+                     expr_false expr_false));
  ("%SyntaxErrorProto", property_data
                        (data_intro (expr_id "%SyntaxErrorProto") expr_true
                         expr_false expr_false));
@@ -730,6 +703,9 @@ expr_object
  ("%TypeErrorGlobalFuncObj", property_data
                              (data_intro (expr_id "%TypeErrorGlobalFuncObj")
                               expr_true expr_false expr_false));
+ ("%TypeErrorOr", property_data
+                  (data_intro (expr_id "%TypeErrorOr") expr_true expr_false
+                   expr_false));
  ("%TypeErrorProto", property_data
                      (data_intro (expr_id "%TypeErrorProto") expr_true
                       expr_false expr_false));
@@ -766,6 +742,10 @@ expr_object
  ("%YearFromTime", property_data
                    (data_intro (expr_id "%YearFromTime") expr_true expr_false
                     expr_false));
+ ("%accessorDescriptorWrite", property_data
+                              (data_intro
+                               (expr_id "%accessorDescriptorWrite") expr_true
+                               expr_false expr_false));
  ("%acos", property_data
            (data_intro (expr_id "%acos") expr_true expr_false expr_false));
  ("%acosCall", property_data
@@ -868,6 +848,9 @@ expr_object
  ("%createCall", property_data
                  (data_intro (expr_id "%createCall") expr_true expr_false
                   expr_false));
+ ("%dataDescriptorWrite", property_data
+                          (data_intro (expr_id "%dataDescriptorWrite")
+                           expr_true expr_false expr_false));
  ("%dateGetTimezoneOffset", property_data
                             (data_intro (expr_id "%dateGetTimezoneOffset")
                              expr_true expr_false expr_false));
@@ -911,6 +894,13 @@ expr_object
  ("%decodeURIComponentCall", property_data
                              (data_intro (expr_id "%decodeURIComponentCall")
                               expr_true expr_false expr_false));
+ ("%defaultAccessorDescriptor", property_data
+                                (data_intro
+                                 (expr_id "%defaultAccessorDescriptor")
+                                 expr_true expr_false expr_false));
+ ("%defaultDataDescriptor", property_data
+                            (data_intro (expr_id "%defaultDataDescriptor")
+                             expr_true expr_false expr_false));
  ("%define15Property", property_data
                        (data_intro (expr_id "%define15Property") expr_true
                         expr_false expr_false));
@@ -932,6 +922,35 @@ expr_object
  ("%definePropertyCall", property_data
                          (data_intro (expr_id "%definePropertyCall")
                           expr_true expr_false expr_false));
+ ("%descriptorCantChangeAccessor", property_data
+                                   (data_intro
+                                    (expr_id "%descriptorCantChangeAccessor")
+                                    expr_true expr_false expr_false));
+ ("%descriptorCantChangeData", property_data
+                               (data_intro
+                                (expr_id "%descriptorCantChangeData")
+                                expr_true expr_false expr_false));
+ ("%descriptorCantChangeEnumerable", property_data
+                                     (data_intro
+                                      (expr_id
+                                       "%descriptorCantChangeEnumerable")
+                                      expr_true expr_false expr_false));
+ ("%descriptorContains", property_data
+                         (data_intro (expr_id "%descriptorContains")
+                          expr_true expr_false expr_false));
+ ("%descriptorFieldContains", property_data
+                              (data_intro
+                               (expr_id "%descriptorFieldContains") expr_true
+                               expr_false expr_false));
+ ("%descriptorFieldGet", property_data
+                         (data_intro (expr_id "%descriptorFieldGet")
+                          expr_true expr_false expr_false));
+ ("%descriptorFieldNotSame", property_data
+                             (data_intro (expr_id "%descriptorFieldNotSame")
+                              expr_true expr_false expr_false));
+ ("%descriptorWrite", property_data
+                      (data_intro (expr_id "%descriptorWrite") expr_true
+                       expr_false expr_false));
  ("%encodeURI", property_data
                 (data_intro (expr_id "%encodeURI") expr_true expr_false
                  expr_false));
@@ -1043,6 +1062,12 @@ expr_object
  ("%instanceof", property_data
                  (data_intro (expr_id "%instanceof") expr_true expr_false
                   expr_false));
+ ("%isAccessorDescriptor", property_data
+                           (data_intro (expr_id "%isAccessorDescriptor")
+                            expr_true expr_false expr_false));
+ ("%isDataDescriptor", property_data
+                       (data_intro (expr_id "%isDataDescriptor") expr_true
+                        expr_false expr_false));
  ("%isExtensible", property_data
                    (data_intro (expr_id "%isExtensible") expr_true expr_false
                     expr_false));
@@ -1061,6 +1086,9 @@ expr_object
  ("%isFrozenCall", property_data
                    (data_intro (expr_id "%isFrozenCall") expr_true expr_false
                     expr_false));
+ ("%isGenericDescriptor", property_data
+                          (data_intro (expr_id "%isGenericDescriptor")
+                           expr_true expr_false expr_false));
  ("%isNaN", property_data
             (data_intro (expr_id "%isNaN") expr_true expr_false expr_false));
  ("%isNaNCall", property_data
@@ -1101,6 +1129,12 @@ expr_object
  ("%logCall", property_data
               (data_intro (expr_id "%logCall") expr_true expr_false
                expr_false));
+ ("%makeAccessorDescriptor", property_data
+                             (data_intro (expr_id "%makeAccessorDescriptor")
+                              expr_true expr_false expr_false));
+ ("%makeDataDescriptor", property_data
+                         (data_intro (expr_id "%makeDataDescriptor")
+                          expr_true expr_false expr_false));
  ("%makeGlobalEnv", property_data
                     (data_intro (expr_id "%makeGlobalEnv") expr_true
                      expr_false expr_false));
@@ -1409,6 +1443,12 @@ expr_object
  ("%testCall", property_data
                (data_intro (expr_id "%testCall") expr_true expr_false
                 expr_false));
+ ("%toAccessorDescriptor", property_data
+                           (data_intro (expr_id "%toAccessorDescriptor")
+                            expr_true expr_false expr_false));
+ ("%toDataDescriptor", property_data
+                       (data_intro (expr_id "%toDataDescriptor") expr_true
+                        expr_false expr_false));
  ("%toExponential", property_data
                     (data_intro (expr_id "%toExponential") expr_true
                      expr_false expr_false));
@@ -1460,39 +1500,22 @@ expr_object
  ("%unshiftCall", property_data
                   (data_intro (expr_id "%unshiftCall") expr_true expr_false
                    expr_false));
+ ("%updateAccessorDescriptor", property_data
+                               (data_intro
+                                (expr_id "%updateAccessorDescriptor")
+                                expr_true expr_false expr_false));
+ ("%updateDataDescriptor", property_data
+                           (data_intro (expr_id "%updateDataDescriptor")
+                            expr_true expr_false expr_false));
+ ("%updateDescriptor", property_data
+                       (data_intro (expr_id "%updateDescriptor") expr_true
+                        expr_false expr_false));
  ("%valueOfCall", property_data
                   (data_intro (expr_id "%valueOfCall") expr_true expr_false
                    expr_false));
  ("%zeroArgObj", property_data
                  (data_intro (expr_id "%zeroArgObj") expr_true expr_false
-                  expr_false));
- ("copy-access-desc", property_data
-                      (data_intro (expr_id "copy-access-desc") expr_true
-                       expr_false expr_false));
- ("copy-data-desc", property_data
-                    (data_intro (expr_id "copy-data-desc") expr_true
-                     expr_false expr_false));
- ("copy-when-defined", property_data
-                       (data_intro (expr_id "copy-when-defined") expr_true
-                        expr_false expr_false));
- ("isAccessorDescriptor", property_data
-                          (data_intro (expr_id "isAccessorDescriptor")
-                           expr_true expr_false expr_false));
- ("isAccessorField", property_data
-                     (data_intro (expr_id "isAccessorField") expr_true
-                      expr_false expr_false));
- ("isDataDescriptor", property_data
-                      (data_intro (expr_id "isDataDescriptor") expr_true
-                       expr_false expr_false));
- ("isDataField", property_data
-                 (data_intro (expr_id "isDataField") expr_true expr_false
-                  expr_false));
- ("isGenericDescriptor", property_data
-                         (data_intro (expr_id "isGenericDescriptor")
-                          expr_true expr_false expr_false));
- ("isGenericField", property_data
-                    (data_intro (expr_id "isGenericField") expr_true
-                     expr_false expr_false))]
+                  expr_false))]
 .
 Definition ex_internal := 
 expr_let "cproto1"
@@ -1607,8 +1630,8 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
                            expr_false));
            ("configurable", property_data
                             (data_intro expr_true expr_true expr_false
-                             expr_false))]])
-        (expr_break "ret" (expr_id "rtn"))))))))))
+                             expr_false))];
+          expr_true]) (expr_break "ret" (expr_id "rtn"))))))))))
 .
 Definition ex_internal13 := 
 expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
@@ -1831,58 +1854,6 @@ expr_let "msg"
   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
-.
-Definition ex_isAccessorDescriptor := 
-expr_if
-(expr_op2 binary_op_has_own_property (expr_id "attr-obj") (expr_string "get"))
-expr_true
-(expr_op2 binary_op_has_own_property (expr_id "attr-obj") (expr_string "set"))
-.
-Definition ex_isAccessorField := 
-expr_if
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq
-  (expr_get_attr pattr_setter (expr_id "obj") (expr_id "field"))
-  expr_undefined)) expr_true
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq
-  (expr_get_attr pattr_getter (expr_id "obj") (expr_id "field"))
-  expr_undefined))
-.
-Definition ex_isDataDescriptor := 
-expr_if
-(expr_op2 binary_op_has_own_property (expr_id "attr-obj")
- (expr_string "value")) expr_true
-(expr_op2 binary_op_has_own_property (expr_id "attr-obj")
- (expr_string "writable"))
-.
-Definition ex_isDataField := 
-expr_if
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq
-  (expr_get_attr pattr_value (expr_id "obj") (expr_id "field"))
-  expr_undefined)) expr_true
-(expr_op1 unary_op_not
- (expr_op2 binary_op_stx_eq
-  (expr_get_attr pattr_writable (expr_id "obj") (expr_id "field"))
-  expr_undefined))
-.
-Definition ex_isGenericDescriptor := 
-expr_if
-(expr_op2 binary_op_stx_eq
- (expr_app (expr_id "isAccessorDescriptor") [expr_id "attr-obj"]) expr_false)
-(expr_op2 binary_op_stx_eq
- (expr_app (expr_id "isDataDescriptor") [expr_id "attr-obj"]) expr_false)
-expr_false
-.
-Definition ex_isGenericField := 
-expr_if
-(expr_op2 binary_op_stx_eq
- (expr_app (expr_id "isDataField") [expr_id "obj"; expr_id "field"])
- expr_false)
-(expr_op2 binary_op_stx_eq
- (expr_app (expr_id "isAccessorField") [expr_id "obj"; expr_id "field"])
- expr_false) expr_false
 .
 Definition ex_objCode1 := 
 expr_app (expr_id "%TypeError")
@@ -2155,8 +2126,8 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
                            expr_false));
            ("configurable", property_data
                             (data_intro expr_true expr_true expr_false
-                             expr_false))]])
-        (expr_break "ret" (expr_id "rtn"))))))))))
+                             expr_false))];
+          expr_true]) (expr_break "ret" (expr_id "rtn"))))))))))
 .
 Definition ex_privArrayIdx := 
 expr_if (expr_op2 binary_op_has_own_property (expr_id "arr") (expr_id "idx"))
@@ -3143,6 +3114,14 @@ expr_if (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "id"))
    expr_get_attr pattr_config (expr_id "obj") (expr_id "id")]))
 (expr_app (expr_id "f_undef") [])
 .
+Definition ex_privGetOwnPropertyDescriptor := 
+expr_app (expr_id "%GetOwnProperty")
+[expr_id "obj";
+ expr_id "field";
+ expr_id "%makeDataDescriptor";
+ expr_id "%makeAccessorDescriptor";
+ expr_lambda [] expr_undefined]
+.
 Definition ex_privGetPrim := 
 expr_app (expr_id "%Get")
 [expr_app (expr_id "%ToObject") [expr_id "obj"]; expr_id "obj"; expr_id "fld"]
@@ -3553,6 +3532,11 @@ expr_lambda ["this"; "args"]
   expr_undefined)
  (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"]))
 .
+Definition ex_privNativeErrorOr := 
+expr_if (expr_id "strict")
+(expr_app (expr_id "%NativeError") [expr_id "proto"; expr_id "msg"])
+(expr_id "v")
+.
 Definition ex_privNumberCall := 
 expr_if
 (expr_op2 binary_op_stx_eq
@@ -3731,8 +3715,8 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "o"])
 Definition ex_privPut := 
 expr_let "optTypeError"
 (expr_lambda ["msg"]
- (expr_if (expr_id "strict")
-  (expr_app (expr_id "%TypeError") [expr_id "msg"]) expr_empty))
+ (expr_app (expr_id "%TypeErrorOr")
+  [expr_id "msg"; expr_empty; expr_id "strict"]))
 (expr_app (expr_id "%GetOwnProperty")
  [expr_id "obj";
   expr_id "fld";
@@ -3817,6 +3801,10 @@ expr_let "msg"
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
+Definition ex_privRangeErrorOr := 
+expr_app (expr_id "%NativeErrorOr")
+[expr_id "%RangeErrorProto"; expr_id "v"; expr_id "strict"]
+.
 Definition ex_privReferenceError := 
 expr_app (expr_id "%NativeError")
 [expr_id "%ReferenceErrorProto"; expr_id "msg"]
@@ -3829,6 +3817,10 @@ expr_let "msg"
   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+.
+Definition ex_privReferenceErrorOr := 
+expr_app (expr_id "%NativeErrorOr")
+[expr_id "%ReferenceErrorProto"; expr_id "v"; expr_id "strict"]
 .
 Definition ex_privRegExpCode := 
 expr_app (expr_id "%RegExpConstructor") [expr_id "obj"; expr_id "args"]
@@ -3905,6 +3897,10 @@ expr_let "msg"
   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+.
+Definition ex_privSyntaxErrorOr := 
+expr_app (expr_id "%NativeErrorOr")
+[expr_id "%SyntaxErrorProto"; expr_id "v"; expr_id "strict"]
 .
 Definition ex_privThrowTypeErrorFun := 
 expr_let "msg" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
@@ -4014,40 +4010,58 @@ Definition ex_privToPropertyDescriptor :=
 expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
 (expr_let "attrobj"
  (expr_object
-  (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
+  (objattrs_intro (expr_string "PropDesc") expr_true expr_null expr_undefined)
   [] [])
  (expr_seq
   (expr_if
    (expr_app (expr_id "%HasProperty")
     [expr_id "propobj"; expr_string "enumerable"])
-   (expr_set_attr pattr_value (expr_id "attrobj") (expr_string "enumerable")
-    (expr_app (expr_id "%ToBoolean")
+   (expr_app (expr_id "%AddDataField")
+    [expr_id "attrobj";
+     expr_string "enumerable";
+     expr_app (expr_id "%ToBoolean")
      [expr_app (expr_id "%Get1")
-      [expr_id "propobj"; expr_string "enumerable"]])) expr_undefined)
+      [expr_id "propobj"; expr_string "enumerable"]];
+     expr_false;
+     expr_false;
+     expr_false]) expr_undefined)
   (expr_seq
    (expr_if
     (expr_app (expr_id "%HasProperty")
      [expr_id "propobj"; expr_string "configurable"])
-    (expr_set_attr pattr_value (expr_id "attrobj")
-     (expr_string "configurable")
-     (expr_app (expr_id "%ToBoolean")
+    (expr_app (expr_id "%AddDataField")
+     [expr_id "attrobj";
+      expr_string "configurable";
+      expr_app (expr_id "%ToBoolean")
       [expr_app (expr_id "%Get1")
-       [expr_id "propobj"; expr_string "configurable"]])) expr_undefined)
+       [expr_id "propobj"; expr_string "configurable"]];
+      expr_false;
+      expr_false;
+      expr_false]) expr_undefined)
    (expr_seq
     (expr_if
      (expr_app (expr_id "%HasProperty")
       [expr_id "propobj"; expr_string "value"])
-     (expr_set_attr pattr_value (expr_id "attrobj") (expr_string "value")
-      (expr_app (expr_id "%Get1") [expr_id "propobj"; expr_string "value"]))
-     expr_undefined)
+     (expr_app (expr_id "%AddDataField")
+      [expr_id "attrobj";
+       expr_string "value";
+       expr_app (expr_id "%Get1") [expr_id "propobj"; expr_string "value"];
+       expr_false;
+       expr_false;
+       expr_false]) expr_undefined)
     (expr_seq
      (expr_if
       (expr_app (expr_id "%HasProperty")
        [expr_id "propobj"; expr_string "writable"])
-      (expr_set_attr pattr_value (expr_id "attrobj") (expr_string "writable")
-       (expr_app (expr_id "%ToBoolean")
+      (expr_app (expr_id "%AddDataField")
+       [expr_id "attrobj";
+        expr_string "writable";
+        expr_app (expr_id "%ToBoolean")
         [expr_app (expr_id "%Get1")
-         [expr_id "propobj"; expr_string "writable"]])) expr_undefined)
+         [expr_id "propobj"; expr_string "writable"]];
+        expr_false;
+        expr_false;
+        expr_false]) expr_undefined)
      (expr_seq
       (expr_if
        (expr_app (expr_id "%HasProperty")
@@ -4058,8 +4072,13 @@ expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
          (expr_if (expr_app (expr_id "%IsCallable") [expr_id "get"])
           expr_true
           (expr_op2 binary_op_stx_eq (expr_id "get") expr_undefined))
-         (expr_set_attr pattr_value (expr_id "propobj") (expr_string "get")
-          (expr_id "get"))
+         (expr_app (expr_id "%AddDataField")
+          [expr_id "propobj";
+           expr_string "get";
+           expr_id "get";
+           expr_false;
+           expr_false;
+           expr_false])
          (expr_app (expr_id "%TypeError") [expr_string "non-function getter"])))
        expr_undefined)
       (expr_seq
@@ -4072,19 +4091,28 @@ expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
           (expr_if (expr_app (expr_id "%IsCallable") [expr_id "set"])
            expr_true
            (expr_op2 binary_op_stx_eq (expr_id "set") expr_undefined))
-          (expr_set_attr pattr_value (expr_id "propobj") (expr_string "set")
-           (expr_id "set"))
+          (expr_app (expr_id "%AddDataField")
+           [expr_id "propobj";
+            expr_string "set";
+            expr_id "set";
+            expr_false;
+            expr_false;
+            expr_false])
           (expr_app (expr_id "%TypeError")
            [expr_string "non-function setter"]))) expr_undefined)
        (expr_seq
         (expr_if
-         (expr_if (expr_app (expr_id "isDataDescriptor") [expr_id "attrobj"])
-          (expr_app (expr_id "isAccessorDescriptor") [expr_id "attrobj"])
+         (expr_if
+          (expr_app (expr_id "%isDataDescriptor") [expr_id "attrobj"])
+          (expr_app (expr_id "%isAccessorDescriptor") [expr_id "attrobj"])
           expr_false)
          (expr_app (expr_id "%TypeError")
           [expr_string
            "The attributes given to defineProperty were inconsistent"])
-         expr_undefined) (expr_id "attrobj")))))))))
+         expr_undefined)
+        (expr_seq
+         (expr_set_obj_attr oattr_extensible (expr_id "attrobj") expr_false)
+         (expr_id "attrobj"))))))))))
 .
 Definition ex_privToString := 
 expr_op1 unary_op_prim_to_str
@@ -4136,6 +4164,10 @@ expr_let "msg"
   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+.
+Definition ex_privTypeErrorOr := 
+expr_app (expr_id "%NativeErrorOr")
+[expr_id "%TypeErrorProto"; expr_id "v"; expr_id "strict"]
 .
 Definition ex_privTypeof := 
 expr_let "tp" (expr_op1 unary_op_typeof (expr_id "val"))
@@ -4209,6 +4241,21 @@ expr_let "sign" (expr_op1 unary_op_sign (expr_id "t"))
     (expr_app (expr_id "loop")
      [expr_op2 binary_op_add (expr_id "y") (expr_id "sign")])))
   (expr_app (expr_id "loop") [expr_id "start"])))
+.
+Definition ex_privaccessorDescriptorWrite := 
+expr_seq
+(expr_set_attr pattr_getter (expr_id "obj") (expr_id "field")
+ (expr_get_attr pattr_value (expr_id "fd") (expr_string "get")))
+(expr_seq
+ (expr_set_attr pattr_setter (expr_id "obj") (expr_id "field")
+  (expr_get_attr pattr_value (expr_id "fd") (expr_string "set")))
+ (expr_seq
+  (expr_set_attr pattr_enum (expr_id "obj") (expr_id "field")
+   (expr_get_attr pattr_value (expr_id "fd") (expr_string "enumerable")))
+  (expr_seq
+   (expr_set_attr pattr_config (expr_id "obj") (expr_id "field")
+    (expr_get_attr pattr_value (expr_id "fd") (expr_string "configurable")))
+   expr_empty)))
 .
 Definition ex_privacosCall :=  expr_string "acos NYI" .
 Definition ex_privapplyCall := 
@@ -4700,6 +4747,23 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
            [expr_null; expr_id "argsObj"]) (expr_id "obj")))))))
     (expr_id "obj")))))
 .
+Definition ex_privdataDescriptorWrite := 
+expr_seq
+(expr_set_attr pattr_writable (expr_id "obj") (expr_id "field") expr_true)
+(expr_seq
+ (expr_set_attr pattr_value (expr_id "obj") (expr_id "field")
+  (expr_get_attr pattr_value (expr_id "fd") (expr_string "value")))
+ (expr_seq
+  (expr_set_attr pattr_writable (expr_id "obj") (expr_id "field")
+   (expr_get_attr pattr_value (expr_id "fd") (expr_string "writable")))
+  (expr_seq
+   (expr_set_attr pattr_enum (expr_id "obj") (expr_id "field")
+    (expr_get_attr pattr_value (expr_id "fd") (expr_string "enumerable")))
+   (expr_seq
+    (expr_set_attr pattr_config (expr_id "obj") (expr_id "field")
+     (expr_get_attr pattr_value (expr_id "fd") (expr_string "configurable")))
+    expr_empty))))
+.
 Definition ex_privdateGetTimezoneOffsetCall := 
 expr_let "t" (expr_get_internal "primval" (expr_id "this"))
 (expr_if (expr_op2 binary_op_stx_eq (expr_id "t") (expr_number JsNumber.nan))
@@ -4730,6 +4794,14 @@ Definition ex_privdecodeURICall :=  expr_string "decodeURI NYI" .
 Definition ex_privdecodeURIComponentCall := 
 expr_string "decodeURIComponent NYI"
 .
+Definition ex_privdefaultAccessorDescriptor := 
+expr_app (expr_id "%makeAccessorDescriptor")
+[expr_undefined; expr_undefined; expr_false; expr_false]
+.
+Definition ex_privdefaultDataDescriptor := 
+expr_app (expr_id "%makeDataDescriptor")
+[expr_undefined; expr_false; expr_false; expr_false]
+.
 Definition ex_privdefine15Property := 
 expr_app (expr_id "%AddDataField")
 [expr_id "obj";
@@ -4752,254 +4824,103 @@ expr_let "unimplFunc"
   [expr_id "base"; expr_id "name"; expr_id "unimplObj"]))
 .
 Definition ex_privdefineOwnProperty := 
-expr_seq
-(expr_if
- (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "obj")))
- (expr_throw (expr_string "defineOwnProperty didn't get object"))
- expr_undefined)
-(expr_let "fstr" (expr_app (expr_id "%ToString") [expr_id "field"])
- (expr_if
-  (expr_op2 binary_op_stx_eq
-   (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "fstr"))
-   expr_false)
-  (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
-   (expr_seq
-    (expr_set_attr pattr_config (expr_id "obj") (expr_id "fstr") expr_true)
-    (expr_seq
-     (expr_set_attr pattr_writable (expr_id "obj") (expr_id "fstr") expr_true)
-     (expr_seq
-      (expr_if (expr_app (expr_id "isDataDescriptor") [expr_id "attr-obj"])
-       (expr_seq
-        (expr_if
-         (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
-          (expr_string "value"))
-         (expr_set_attr pattr_value (expr_id "obj") (expr_id "fstr")
-          (expr_get_attr pattr_value (expr_id "attr-obj")
-           (expr_string "value"))) expr_undefined)
-        (expr_if
-         (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
-          (expr_string "writable"))
-         (expr_set_attr pattr_writable (expr_id "obj") (expr_id "fstr")
-          (expr_app (expr_id "%ToBoolean")
-           [expr_get_attr pattr_value (expr_id "attr-obj")
-            (expr_string "writable")])) expr_undefined))
-       (expr_if
-        (expr_app (expr_id "isAccessorDescriptor") [expr_id "attr-obj"])
-        (expr_seq
-         (expr_if
-          (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
-           (expr_string "get"))
-          (expr_set_attr pattr_getter (expr_id "obj") (expr_id "fstr")
-           (expr_get_attr pattr_value (expr_id "attr-obj")
-            (expr_string "get"))) expr_undefined)
-         (expr_if
-          (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
-           (expr_string "set"))
-          (expr_set_attr pattr_setter (expr_id "obj") (expr_id "fstr")
-           (expr_get_attr pattr_value (expr_id "attr-obj")
-            (expr_string "set"))) expr_undefined)) expr_undefined))
-      (expr_seq
-       (expr_if
-        (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
-         (expr_string "enumerable"))
-        (expr_set_attr pattr_enum (expr_id "obj") (expr_id "fstr")
-         (expr_app (expr_id "%ToBoolean")
-          [expr_get_attr pattr_value (expr_id "attr-obj")
-           (expr_string "enumerable")])) expr_undefined)
-       (expr_seq
-        (expr_if
-         (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
-          (expr_string "configurable"))
-         (expr_set_attr pattr_config (expr_id "obj") (expr_id "fstr")
-          (expr_app (expr_id "%ToBoolean")
-           [expr_get_attr pattr_value (expr_id "attr-obj")
-            (expr_string "configurable")])) expr_undefined) expr_true)))))
-   (expr_app (expr_id "%TypeError")
-    [expr_string
-     "(defineOwnProperty) Attempt to add a property to a non-extensible object."]))
-  (expr_let "current-prop"
-   (expr_object
-    (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
-    []
-    [("configurable", property_data
-                      (data_intro
-                       (expr_get_attr pattr_config (expr_id "obj")
-                        (expr_id "fstr")) expr_true expr_false expr_false));
-     ("enumerable", property_data
-                    (data_intro
-                     (expr_get_attr pattr_enum (expr_id "obj")
-                      (expr_id "fstr")) expr_true expr_false expr_false))])
+expr_let "current"
+(expr_app (expr_id "%GetOwnPropertyDescriptor")
+ [expr_id "obj"; expr_id "field"])
+(expr_let "reject"
+ (expr_lambda ["msg"]
+  (expr_app (expr_id "%TypeErrorOr")
+   [expr_id "msg"; expr_false; expr_id "strict"]))
+ (expr_let "accept"
+  (expr_lambda ["ncurrent"]
    (expr_seq
     (expr_if
-     (expr_op2 binary_op_is_accessor (expr_id "obj") (expr_id "fstr"))
-     (expr_seq
-      (expr_set_attr pattr_value (expr_id "current-prop") (expr_string "get")
-       (expr_get_attr pattr_getter (expr_id "obj") (expr_id "fstr")))
-      (expr_set_attr pattr_value (expr_id "current-prop") (expr_string "set")
-       (expr_get_attr pattr_setter (expr_id "obj") (expr_id "fstr"))))
-     (expr_seq
-      (expr_set_attr pattr_value (expr_id "current-prop")
-       (expr_string "writable")
-       (expr_get_attr pattr_writable (expr_id "obj") (expr_id "fstr")))
-      (expr_set_attr pattr_value (expr_id "current-prop")
-       (expr_string "value")
-       (expr_get_attr pattr_value (expr_id "obj") (expr_id "fstr")))))
-    (expr_seq
+     (expr_get_attr pattr_value (expr_id "current")
+      (expr_string "configurable"))
+     (expr_app (expr_id "%descriptorWrite")
+      [expr_id "obj";
+       expr_id "field";
+       expr_app (expr_id "%updateDescriptor")
+       [expr_id "ncurrent"; expr_id "attr-obj"]]) expr_undefined) expr_true))
+  (expr_if (expr_op2 binary_op_stx_eq (expr_id "current") expr_undefined)
+   (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
+    (expr_if
      (expr_if
-      (expr_op2 binary_op_stx_eq
-       (expr_get_attr pattr_config (expr_id "obj") (expr_id "fstr"))
-       expr_false)
-      (expr_seq
-       (expr_if
+      (expr_app (expr_id "%isGenericDescriptor") [expr_id "attr-obj"])
+      expr_true (expr_app (expr_id "%isDataDescriptor") [expr_id "attr-obj"]))
+     (expr_seq
+      (expr_let "fd"
+       (expr_app (expr_id "%toDataDescriptor") [expr_id "attr-obj"])
+       (expr_app (expr_id "%AddDataField")
+        [expr_id "obj";
+         expr_id "field";
+         expr_get_attr pattr_value (expr_id "fd") (expr_string "value");
+         expr_get_attr pattr_value (expr_id "fd") (expr_string "writable");
+         expr_get_attr pattr_value (expr_id "fd") (expr_string "enumerable");
+         expr_get_attr pattr_value (expr_id "fd")
+         (expr_string "configurable")])) expr_true)
+     (expr_seq
+      (expr_let "fd"
+       (expr_app (expr_id "%toAccessorDescriptor") [expr_id "attr-obj"])
+       (expr_app (expr_id "%AddAccessorField")
+        [expr_id "obj";
+         expr_id "field";
+         expr_get_attr pattr_value (expr_id "fd") (expr_string "get");
+         expr_get_attr pattr_value (expr_id "fd") (expr_string "set");
+         expr_get_attr pattr_value (expr_id "fd") (expr_string "enumerable");
+         expr_get_attr pattr_value (expr_id "fd")
+         (expr_string "configurable")])) expr_true))
+    (expr_app (expr_id "reject")
+     [expr_string "defineOwnProperty: object not extensible"]))
+   (expr_if
+    (expr_app (expr_id "%descriptorContains")
+     [expr_id "attr-obj"; expr_id "current"]) expr_true
+    (expr_if
+     (expr_app (expr_id "%descriptorCantChangeEnumerable")
+      [expr_id "current"; expr_id "attr-obj"])
+     (expr_app (expr_id "reject")
+      [expr_string "defineOwnProperty: field not configurable"])
+     (expr_if
+      (expr_app (expr_id "%isGenericDescriptor") [expr_id "attr-obj"])
+      (expr_app (expr_id "accept") [expr_id "current"])
+      (expr_if
+       (expr_op1 unary_op_not
         (expr_op2 binary_op_stx_eq
-         (expr_get_attr pattr_value (expr_id "attr-obj")
-          (expr_string "configurable")) expr_true)
-        (expr_app (expr_id "%TypeError")
-         [expr_string "escalating configurable from false to true"])
-        (expr_if
-         (expr_op2 binary_op_stx_eq
-          (expr_get_attr pattr_value (expr_id "attr-obj")
-           (expr_string "enumerable"))
-          (expr_op2 binary_op_stx_eq
-           (expr_get_attr pattr_enum (expr_id "obj") (expr_id "fstr"))
-           expr_false))
-         (expr_app (expr_id "%TypeError")
-          [expr_string
-           "(defineOwnPoperty) Can't change enumerable of a non-configurable property"])
-         expr_undefined))
+         (expr_app (expr_id "%isDataDescriptor") [expr_id "current"])
+         (expr_app (expr_id "%isDataDescriptor") [expr_id "attr-obj"])))
        (expr_if
         (expr_op1 unary_op_not
-         (expr_op2 binary_op_stx_eq
-          (expr_app (expr_id "isDataDescriptor") [expr_id "current-prop"])
-          (expr_app (expr_id "isDataDescriptor") [expr_id "attr-obj"])))
+         (expr_get_attr pattr_value (expr_id "current")
+          (expr_string "configurable")))
+        (expr_app (expr_id "reject")
+         [expr_string "defineOwnProperty: cannot change type of property"])
+        (expr_if (expr_app (expr_id "%isDataDescriptor") [expr_id "current"])
+         (expr_app (expr_id "accept")
+          [expr_app (expr_id "%toAccessorDescriptor") [expr_id "current"]])
+         (expr_app (expr_id "accept")
+          [expr_app (expr_id "%toDataDescriptor") [expr_id "current"]])))
+       (expr_if
+        (expr_if (expr_app (expr_id "%isDataDescriptor") [expr_id "current"])
+         (expr_app (expr_id "%isDataDescriptor") [expr_id "attr-obj"])
+         expr_false)
         (expr_if
-         (expr_op2 binary_op_stx_eq
-          (expr_get_attr pattr_config (expr_id "obj") (expr_id "fstr"))
+         (expr_app (expr_id "%descriptorCantChangeData")
+          [expr_id "current"; expr_id "attr-obj"])
+         (expr_app (expr_id "reject")
+          [expr_string "defineOwnProperty: cannot change data"])
+         (expr_app (expr_id "accept") [expr_id "current"]))
+        (expr_if
+         (expr_if
+          (expr_app (expr_id "%isAccessorDescriptor") [expr_id "current"])
+          (expr_app (expr_id "%isAccessorDescriptor") [expr_id "attr-obj"])
           expr_false)
-         (expr_app (expr_id "%TypeError")
-          [expr_string "(defineOwnProperty) Non-configurable property"])
          (expr_if
-          (expr_app (expr_id "isDataDescriptor") [expr_id "current-prop"])
-          (expr_app (expr_id "copy-data-desc")
-           [expr_id "current-prop"; expr_id "attr-obj"])
-          (expr_app (expr_id "copy-access-desc")
-           [expr_id "current-prop"; expr_id "attr-obj"]))) expr_undefined))
-      expr_undefined)
-     (expr_seq
-      (expr_if
-       (expr_if
-        (expr_app (expr_id "isDataDescriptor") [expr_id "current-prop"])
-        (expr_app (expr_id "isDataDescriptor") [expr_id "attr-obj"])
-        expr_false)
-       (expr_if
-        (expr_op2 binary_op_stx_eq
-         (expr_get_attr pattr_value (expr_id "current-prop")
-          (expr_string "configurable")) expr_false)
-        (expr_if
-         (expr_op2 binary_op_stx_eq
-          (expr_get_attr pattr_value (expr_id "current-prop")
-           (expr_string "writable")) expr_false)
-         (expr_if
-          (expr_op2 binary_op_stx_eq
-           (expr_get_attr pattr_value (expr_id "attr-obj")
-            (expr_string "writable")) expr_true)
-          (expr_app (expr_id "%TypeError")
-           [expr_string
-            "(defineOwnProperty) Cannot escalate writable from false to true."])
-          (expr_if
-           (expr_op2 binary_op_stx_eq
-            (expr_op2 binary_op_same_value
-             (expr_get_attr pattr_value (expr_id "attr-obj")
-              (expr_string "value"))
-             (expr_get_attr pattr_value (expr_id "current-prop")
-              (expr_string "value"))) expr_false)
-           (expr_app (expr_id "%TypeError")
-            [expr_string
-             "(defineOwnProperty) Cannot change a non-configurable value"])
-           (expr_app (expr_id "copy-data-desc")
-            [expr_id "current-prop"; expr_id "attr-obj"])))
-         (expr_app (expr_id "copy-data-desc")
-          [expr_id "current-prop"; expr_id "attr-obj"]))
-        (expr_app (expr_id "copy-data-desc")
-         [expr_id "current-prop"; expr_id "attr-obj"]))
-       (expr_if
-        (expr_op2 binary_op_stx_eq
-         (expr_get_attr pattr_value (expr_id "current-prop")
-          (expr_string "configurable")) expr_false)
-        (expr_if
-         (expr_if
-          (expr_op2 binary_op_stx_eq
-           (expr_op2 binary_op_same_value
-            (expr_get_attr pattr_value (expr_id "current-prop")
-             (expr_string "set"))
-            (expr_get_attr pattr_value (expr_id "attr-obj")
-             (expr_string "set"))) expr_false) expr_true
-          (expr_op2 binary_op_stx_eq
-           (expr_op2 binary_op_same_value
-            (expr_get_attr pattr_value (expr_id "current-prop")
-             (expr_string "get"))
-            (expr_get_attr pattr_value (expr_id "attr-obj")
-             (expr_string "get"))) expr_false))
-         (expr_app (expr_id "%TypeError")
-          [expr_op2 binary_op_string_plus
-           (expr_string
-            "(defineOwnProperty) Cannot change setter or getter of non-configurable property ")
-           (expr_id "fstr")])
-         (expr_app (expr_id "copy-access-desc")
-          [expr_id "current-prop"; expr_id "attr-obj"]))
-        (expr_app (expr_id "copy-access-desc")
-         [expr_id "current-prop"; expr_id "attr-obj"])))
-      (expr_seq
-       (expr_if
-        (expr_app (expr_id "isDataDescriptor") [expr_id "current-prop"])
-        (expr_seq
-         (expr_if
-          (expr_op2 binary_op_stx_eq
-           (expr_op2 binary_op_same_value
-            (expr_get_attr pattr_value (expr_id "obj") (expr_id "fstr"))
-            (expr_get_attr pattr_value (expr_id "current-prop")
-             (expr_string "value"))) expr_false)
-          (expr_set_attr pattr_value (expr_id "obj") (expr_id "fstr")
-           (expr_get_attr pattr_value (expr_id "current-prop")
-            (expr_string "value"))) expr_undefined)
-         (expr_if
-          (expr_op1 unary_op_not
-           (expr_op2 binary_op_stx_eq
-            (expr_get_attr pattr_writable (expr_id "obj") (expr_id "fstr"))
-            (expr_get_attr pattr_value (expr_id "current-prop")
-             (expr_string "writable"))))
-          (expr_set_attr pattr_writable (expr_id "obj") (expr_id "fstr")
-           (expr_get_attr pattr_value (expr_id "current-prop")
-            (expr_string "writable"))) expr_undefined))
-        (expr_if
-         (expr_app (expr_id "isAccessorDescriptor") [expr_id "current-prop"])
-         (expr_seq
-          (expr_set_attr pattr_getter (expr_id "obj") (expr_id "fstr")
-           (expr_get_attr pattr_value (expr_id "current-prop")
-            (expr_string "get")))
-          (expr_set_attr pattr_setter (expr_id "obj") (expr_id "fstr")
-           (expr_get_attr pattr_value (expr_id "current-prop")
-            (expr_string "set")))) expr_undefined))
-       (expr_seq
-        (expr_if
-         (expr_op1 unary_op_not
-          (expr_op2 binary_op_stx_eq
-           (expr_get_attr pattr_enum (expr_id "obj") (expr_id "fstr"))
-           (expr_get_attr pattr_value (expr_id "current-prop")
-            (expr_string "enumerable"))))
-         (expr_set_attr pattr_enum (expr_id "obj") (expr_id "fstr")
-          (expr_get_attr pattr_value (expr_id "current-prop")
-           (expr_string "enumerable"))) expr_undefined)
-        (expr_seq
-         (expr_if
-          (expr_op1 unary_op_not
-           (expr_op2 binary_op_stx_eq
-            (expr_get_attr pattr_config (expr_id "obj") (expr_id "fstr"))
-            (expr_get_attr pattr_value (expr_id "current-prop")
-             (expr_string "configurable"))))
-          (expr_set_attr pattr_config (expr_id "obj") (expr_id "fstr")
-           (expr_get_attr pattr_value (expr_id "current-prop")
-            (expr_string "configurable"))) expr_undefined) expr_true)))))))))
+          (expr_app (expr_id "%descriptorCantChangeAccessor")
+           [expr_id "current"; expr_id "attr-obj"])
+          (expr_app (expr_id "reject")
+           [expr_string "defineOwnProperty: cannot change accessor"])
+          (expr_app (expr_id "accept") [expr_id "current"]))
+         (expr_app (expr_id "accept") [expr_id "current"]))))))))))
 .
 Definition ex_privdefinePropertiesCall := 
 expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
@@ -5063,7 +4984,91 @@ expr_let "obj" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
    (expr_app (expr_id "%defineOwnProperty")
     [expr_id "obj";
      expr_app (expr_id "%ToString") [expr_id "field"];
-     expr_app (expr_id "%ToPropertyDescriptor") [expr_id "propobj"]]))))
+     expr_app (expr_id "%ToPropertyDescriptor") [expr_id "propobj"];
+     expr_true]))))
+.
+Definition ex_privdescriptorCantChangeAccessor := 
+expr_if
+(expr_get_attr pattr_value (expr_id "fd") (expr_string "configurable"))
+expr_false
+(expr_if
+ (expr_app (expr_id "%descriptorFieldNotSame")
+  [expr_id "fd"; expr_id "d"; expr_string "get"]) expr_true
+ (expr_app (expr_id "%descriptorFieldNotSame")
+  [expr_id "fd"; expr_id "d"; expr_string "set"]))
+.
+Definition ex_privdescriptorCantChangeData := 
+expr_if
+(expr_get_attr pattr_value (expr_id "fd") (expr_string "configurable"))
+expr_false
+(expr_if (expr_get_attr pattr_value (expr_id "fd") (expr_string "writable"))
+ expr_false
+ (expr_if
+  (expr_if
+   (expr_op2 binary_op_has_own_property (expr_id "d")
+    (expr_string "writable"))
+   (expr_get_attr pattr_value (expr_id "d") (expr_string "writable"))
+   expr_false) expr_true
+  (expr_app (expr_id "%descriptorFieldNotSame")
+   [expr_id "fd"; expr_id "d"; expr_string "value"])))
+.
+Definition ex_privdescriptorCantChangeEnumerable := 
+expr_if
+(expr_get_attr pattr_value (expr_id "fd") (expr_string "configurable"))
+expr_false
+(expr_if
+ (expr_if
+  (expr_op2 binary_op_has_own_property (expr_id "d")
+   (expr_string "configurable"))
+  (expr_get_attr pattr_value (expr_id "d") (expr_string "configurable"))
+  expr_false) expr_true
+ (expr_app (expr_id "%descriptorFieldNotSame")
+  [expr_id "fd"; expr_id "d"; expr_string "enumerable"]))
+.
+Definition ex_privdescriptorContains := 
+expr_if
+(expr_if
+ (expr_if
+  (expr_if
+   (expr_if
+    (expr_app (expr_id "%descriptorFieldContains")
+     [expr_id "d1"; expr_id "d2"; expr_string "value"])
+    (expr_app (expr_id "%descriptorFieldContains")
+     [expr_id "d1"; expr_id "d2"; expr_string "writable"]) expr_false)
+   (expr_app (expr_id "%descriptorFieldContains")
+    [expr_id "d1"; expr_id "d2"; expr_string "get"]) expr_false)
+  (expr_app (expr_id "%descriptorFieldContains")
+   [expr_id "d1"; expr_id "d2"; expr_string "set"]) expr_false)
+ (expr_app (expr_id "%descriptorFieldContains")
+  [expr_id "d1"; expr_id "d2"; expr_string "enumerable"]) expr_false)
+(expr_app (expr_id "%descriptorFieldContains")
+ [expr_id "d1"; expr_id "d2"; expr_string "configurable"]) expr_false
+.
+Definition ex_privdescriptorFieldContains := 
+expr_if (expr_op2 binary_op_has_own_property (expr_id "d1") (expr_id "f"))
+(expr_if (expr_op2 binary_op_has_own_property (expr_id "d2") (expr_id "f"))
+ (expr_op2 binary_op_same_value
+  (expr_get_attr pattr_value (expr_id "d1") (expr_id "f"))
+  (expr_get_attr pattr_value (expr_id "d2") (expr_id "f"))) expr_false)
+expr_true
+.
+Definition ex_privdescriptorFieldGet := 
+expr_if (expr_op2 binary_op_has_own_property (expr_id "d") (expr_id "f"))
+(expr_get_attr pattr_value (expr_id "d") (expr_id "f")) (expr_id "deflt")
+.
+Definition ex_privdescriptorFieldNotSame := 
+expr_if (expr_op2 binary_op_has_own_property (expr_id "d") (expr_id "f"))
+(expr_op1 unary_op_not
+ (expr_op2 binary_op_same_value
+  (expr_get_attr pattr_value (expr_id "d") (expr_id "f"))
+  (expr_get_attr pattr_value (expr_id "fd") (expr_id "f")))) expr_false
+.
+Definition ex_privdescriptorWrite := 
+expr_if (expr_app (expr_id "%isDataDescriptor") [expr_id "fd"])
+(expr_app (expr_id "%dataDescriptorWrite")
+ [expr_id "obj"; expr_id "field"; expr_id "fd"])
+(expr_app (expr_id "%accessorDescriptorWrite")
+ [expr_id "obj"; expr_id "field"; expr_id "fd"])
 .
 Definition ex_privencodeURICall :=  expr_string "encodeURI NYI" .
 Definition ex_privencodeURIComponentCall := 
@@ -5237,7 +5242,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                                         expr_false expr_false));
                         ("configurable", property_data
                                          (data_intro expr_true expr_true
-                                          expr_false expr_false))]])
+                                          expr_false expr_false))];
+                       expr_false])
                      (expr_app (expr_id "loop")
                       [expr_op2 binary_op_add (expr_id "k")
                        (expr_number (JsNumber.of_int (1)));
@@ -5416,7 +5422,8 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
                         (data_intro expr_true expr_true expr_false expr_false));
          ("configurable", property_data
                           (data_intro expr_true expr_true expr_false
-                           expr_false))]])
+                           expr_false))];
+        expr_true])
       (expr_seq
        (expr_app (expr_id "%defineOwnProperty")
         [expr_id "obj";
@@ -5435,7 +5442,8 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
                           expr_false));
           ("configurable", property_data
                            (data_intro expr_true expr_true expr_false
-                            expr_false))]])
+                            expr_false))];
+         expr_true])
        (expr_if
         (expr_op1 unary_op_not
          (expr_op2 binary_op_is_accessor (expr_id "O") (expr_id "name")))
@@ -5459,7 +5467,8 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
                             expr_false));
             ("configurable", property_data
                              (data_intro expr_true expr_true expr_false
-                              expr_false))]])
+                              expr_false))];
+           expr_true])
          (expr_seq
           (expr_app (expr_id "%defineOwnProperty")
            [expr_id "obj";
@@ -5479,8 +5488,8 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
                              expr_false));
              ("configurable", property_data
                               (data_intro expr_true expr_true expr_false
-                               expr_false))]])
-          (expr_break "ret" (expr_id "obj"))))
+                               expr_false))];
+            expr_true]) (expr_break "ret" (expr_id "obj"))))
         (expr_seq
          (expr_app (expr_id "%defineOwnProperty")
           [expr_id "obj";
@@ -5500,7 +5509,8 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
                             expr_false));
             ("configurable", property_data
                              (data_intro expr_true expr_true expr_false
-                              expr_false))]])
+                              expr_false))];
+           expr_true])
          (expr_seq
           (expr_app (expr_id "%defineOwnProperty")
            [expr_id "obj";
@@ -5520,8 +5530,8 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
                              expr_false));
              ("configurable", property_data
                               (data_intro expr_true expr_true expr_false
-                               expr_false))]])
-          (expr_break "ret" (expr_id "obj"))))))))))))
+                               expr_false))];
+            expr_true]) (expr_break "ret" (expr_id "obj"))))))))))))
 .
 Definition ex_privgopnCall := 
 expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
@@ -5594,6 +5604,19 @@ expr_label "ret"
          expr_true (expr_app (expr_id "search") [expr_id "vp"])))))
      (expr_break "ret" (expr_app (expr_id "search") [expr_id "l"])))))))
 .
+Definition ex_privisAccessorDescriptor := 
+expr_if
+(expr_op2 binary_op_has_own_property (expr_id "attr-obj") (expr_string "get"))
+expr_true
+(expr_op2 binary_op_has_own_property (expr_id "attr-obj") (expr_string "set"))
+.
+Definition ex_privisDataDescriptor := 
+expr_if
+(expr_op2 binary_op_has_own_property (expr_id "attr-obj")
+ (expr_string "value")) expr_true
+(expr_op2 binary_op_has_own_property (expr_id "attr-obj")
+ (expr_string "writable"))
+.
 Definition ex_privisExtensibleCall := 
 expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
@@ -5637,6 +5660,14 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
         (expr_op1 unary_op_not
          (expr_get_obj_attr oattr_extensible (expr_id "O")))))))
     (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])))))
+.
+Definition ex_privisGenericDescriptor := 
+expr_if
+(expr_op2 binary_op_stx_eq
+ (expr_app (expr_id "%isAccessorDescriptor") [expr_id "attr-obj"]) expr_false)
+(expr_op2 binary_op_stx_eq
+ (expr_app (expr_id "%isDataDescriptor") [expr_id "attr-obj"]) expr_false)
+expr_false
 .
 Definition ex_privisNaNCall := 
 expr_op2 binary_op_same_value
@@ -5776,7 +5807,8 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
             (expr_app (expr_id "%defineOwnProperty")
              [expr_id "A";
               expr_op1 unary_op_prim_to_str (expr_id "enumCount");
-              expr_id "pd"]))
+              expr_id "pd";
+              expr_true]))
            (expr_app (expr_id "loop")
             [expr_op2 binary_op_add (expr_id "i")
              (expr_number (JsNumber.of_int (1)));
@@ -5827,6 +5859,32 @@ expr_recc "loop"
     [expr_op2 binary_op_add (expr_id "i") (expr_number (JsNumber.of_int (1)))]))
   expr_undefined))
 (expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
+.
+Definition ex_privmakeAccessorDescriptor := 
+expr_object
+(objattrs_intro (expr_string "PropDesc") expr_false expr_null expr_undefined)
+[]
+[("get", property_data
+         (data_intro (expr_id "g") expr_false expr_false expr_false));
+ ("set", property_data
+         (data_intro (expr_id "s") expr_false expr_false expr_false));
+ ("enumerable", property_data
+                (data_intro (expr_id "e") expr_false expr_false expr_false));
+ ("configurable", property_data
+                  (data_intro (expr_id "c") expr_false expr_false expr_false))]
+.
+Definition ex_privmakeDataDescriptor := 
+expr_object
+(objattrs_intro (expr_string "PropDesc") expr_false expr_null expr_undefined)
+[]
+[("value", property_data
+           (data_intro (expr_id "v") expr_false expr_false expr_false));
+ ("writable", property_data
+              (data_intro (expr_id "w") expr_false expr_false expr_false));
+ ("enumerable", property_data
+                (data_intro (expr_id "e") expr_false expr_false expr_false));
+ ("configurable", property_data
+                  (data_intro (expr_id "c") expr_false expr_false expr_false))]
 .
 Definition ex_privmapCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -5891,7 +5949,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                                        expr_false expr_false));
                        ("configurable", property_data
                                         (data_intro expr_true expr_true
-                                         expr_false expr_false))]]))
+                                         expr_false expr_false))];
+                      expr_false]))
                    (expr_app (expr_id "loop")
                     [expr_op2 binary_op_add (expr_id "k")
                      (expr_number (JsNumber.of_int (1)))]))))))))
@@ -7158,7 +7217,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
                                      expr_false expr_false));
                    ("enumerable", property_data
                                   (data_intro expr_true expr_true expr_false
-                                   expr_false))]]))
+                                   expr_false))];
+                  expr_false]))
                (expr_break "ret"
                 (expr_app (expr_id "loop")
                  [expr_op2 binary_op_add (expr_id "n")
@@ -7482,7 +7542,8 @@ expr_let "start"
                                     expr_false));
                     ("configurable", property_data
                                      (data_intro expr_true expr_true
-                                      expr_false expr_false))]]))
+                                      expr_false expr_false))];
+                   expr_false]))
                 (expr_seq
                  (expr_set_attr pattr_value (expr_id "A")
                   (expr_string "length")
@@ -7883,6 +7944,14 @@ expr_op1 unary_op_print
 (expr_string
  "You used the es5.env testCall.  Are you sure you didn't forget to include the regexp.js library, or regexp.env?")
 .
+Definition ex_privtoAccessorDescriptor := 
+expr_app (expr_id "%updateAccessorDescriptor")
+[expr_app (expr_id "%defaultAccessorDescriptor") []; expr_id "d"]
+.
+Definition ex_privtoDataDescriptor := 
+expr_app (expr_id "%updateDataDescriptor")
+[expr_app (expr_id "%defaultDataDescriptor") []; expr_id "d"]
+.
 Definition ex_privtoExponentialCall :=  expr_string "toExponential NYI" .
 Definition ex_privtoFixedCall := 
 expr_let "x" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
@@ -8005,6 +8074,51 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        (expr_app (expr_id "%Put1")
         [expr_id "O"; expr_string "length"; expr_id "finalLen"; expr_true])
        (expr_id "finalLen"))))))))
+.
+Definition ex_privupdateAccessorDescriptor := 
+expr_app (expr_id "%makeAccessorDescriptor")
+[expr_app (expr_id "%descriptorFieldGet")
+ [expr_id "d";
+  expr_string "get";
+  expr_get_attr pattr_value (expr_id "fd") (expr_string "get")];
+ expr_app (expr_id "%descriptorFieldGet")
+ [expr_id "d";
+  expr_string "set";
+  expr_get_attr pattr_value (expr_id "fd") (expr_string "set")];
+ expr_app (expr_id "%descriptorFieldGet")
+ [expr_id "d";
+  expr_string "enumerable";
+  expr_get_attr pattr_value (expr_id "fd") (expr_string "enumerable")];
+ expr_app (expr_id "%descriptorFieldGet")
+ [expr_id "d";
+  expr_string "configurable";
+  expr_get_attr pattr_value (expr_id "fd") (expr_string "configurable")]]
+.
+Definition ex_privupdateDataDescriptor := 
+expr_app (expr_id "%makeDataDescriptor")
+[expr_app (expr_id "%descriptorFieldGet")
+ [expr_id "d";
+  expr_string "value";
+  expr_get_attr pattr_value (expr_id "fd") (expr_string "value")];
+ expr_app (expr_id "%descriptorFieldGet")
+ [expr_id "d";
+  expr_string "writable";
+  expr_get_attr pattr_value (expr_id "fd") (expr_string "writable")];
+ expr_app (expr_id "%descriptorFieldGet")
+ [expr_id "d";
+  expr_string "enumerable";
+  expr_get_attr pattr_value (expr_id "fd") (expr_string "enumerable")];
+ expr_app (expr_id "%descriptorFieldGet")
+ [expr_id "d";
+  expr_string "configurable";
+  expr_get_attr pattr_value (expr_id "fd") (expr_string "configurable")]]
+.
+Definition ex_privupdateDescriptor := 
+expr_if (expr_app (expr_id "%isDataDescriptor") [expr_id "fd"])
+(expr_app (expr_id "%updateDataDescriptor") [expr_id "fd"; expr_id "d"])
+(expr_if (expr_app (expr_id "%isAccessorDescriptor") [expr_id "fd"])
+ (expr_app (expr_id "%updateAccessorDescriptor") [expr_id "fd"; expr_id "d"])
+ (expr_throw (expr_string "[env] updateDescriptor: not a full descriptor")))
 .
 Definition ex_privvalueOfCall := 
 expr_let "hasWrongProto"
@@ -8222,60 +8336,187 @@ value_closure
 (closure_intro [("%ToUint", privToUint)] None ["n"] ex_privToUint32)
 .
 Definition name_privToUint32 : id :=  "%ToUint32" .
-Definition privToBoolean := 
-value_closure (closure_intro [] None ["x"] ex_privToBoolean)
-.
-Definition name_privToBoolean : id :=  "%ToBoolean" .
-Definition privToString := 
+Definition privmakeAccessorDescriptor := 
 value_closure
-(closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["val"]
- ex_privToString)
+(closure_intro [] None ["g"; "s"; "e"; "c"] ex_privmakeAccessorDescriptor)
 .
-Definition name_privToString : id :=  "%ToString" .
-Definition privDelete := 
+Definition name_privmakeAccessorDescriptor : id :=  "%makeAccessorDescriptor" .
+Definition privmakeDataDescriptor := 
 value_closure
-(closure_intro [("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"]
- ex_privDelete)
+(closure_intro [] None ["v"; "w"; "e"; "c"] ex_privmakeDataDescriptor)
 .
-Definition name_privDelete : id :=  "%Delete" .
-Definition copy_when_defined := 
-value_closure
-(closure_intro [] None ["obj1"; "obj2"; "s"] ex_copy_when_defined)
-.
-Definition name_copy_when_defined : id :=  "copy-when-defined" .
-Definition copy_access_desc := 
+Definition name_privmakeDataDescriptor : id :=  "%makeDataDescriptor" .
+Definition privGetOwnPropertyDescriptor := 
 value_closure
 (closure_intro
- [("%Delete", privDelete); ("copy-when-defined", copy_when_defined)] 
- None ["obj1"; "obj2"] ex_copy_access_desc)
+ [("%GetOwnProperty", privGetOwnProperty);
+  ("%makeAccessorDescriptor", privmakeAccessorDescriptor);
+  ("%makeDataDescriptor", privmakeDataDescriptor)] None ["obj"; "field"]
+ ex_privGetOwnPropertyDescriptor)
 .
-Definition name_copy_access_desc : id :=  "copy-access-desc" .
-Definition copy_data_desc := 
+Definition name_privGetOwnPropertyDescriptor : id :=  "%GetOwnPropertyDescriptor" .
+Definition privNativeErrorOr := 
+value_closure
+(closure_intro [("%NativeError", privNativeError)] None
+ ["proto"; "msg"; "v"; "strict"] ex_privNativeErrorOr)
+.
+Definition name_privNativeErrorOr : id :=  "%NativeErrorOr" .
+Definition privTypeErrorOr := 
 value_closure
 (closure_intro
- [("%Delete", privDelete); ("copy-when-defined", copy_when_defined)] 
- None ["obj1"; "obj2"] ex_copy_data_desc)
+ [("%NativeErrorOr", privNativeErrorOr);
+  ("%TypeErrorProto", privTypeErrorProto)] None ["msg"; "v"; "strict"]
+ ex_privTypeErrorOr)
 .
-Definition name_copy_data_desc : id :=  "copy-data-desc" .
-Definition isAccessorDescriptor := 
-value_closure (closure_intro [] None ["attr-obj"] ex_isAccessorDescriptor)
+Definition name_privTypeErrorOr : id :=  "%TypeErrorOr" .
+Definition privdescriptorFieldNotSame := 
+value_closure
+(closure_intro [] None ["fd"; "d"; "f"] ex_privdescriptorFieldNotSame)
 .
-Definition name_isAccessorDescriptor : id :=  "isAccessorDescriptor" .
-Definition isDataDescriptor := 
-value_closure (closure_intro [] None ["attr-obj"] ex_isDataDescriptor)
+Definition name_privdescriptorFieldNotSame : id :=  "%descriptorFieldNotSame" .
+Definition privdescriptorCantChangeAccessor := 
+value_closure
+(closure_intro [("%descriptorFieldNotSame", privdescriptorFieldNotSame)] 
+ None ["fd"; "d"] ex_privdescriptorCantChangeAccessor)
 .
-Definition name_isDataDescriptor : id :=  "isDataDescriptor" .
+Definition name_privdescriptorCantChangeAccessor : id :=  "%descriptorCantChangeAccessor" .
+Definition privdescriptorCantChangeData := 
+value_closure
+(closure_intro [("%descriptorFieldNotSame", privdescriptorFieldNotSame)] 
+ None ["fd"; "d"] ex_privdescriptorCantChangeData)
+.
+Definition name_privdescriptorCantChangeData : id :=  "%descriptorCantChangeData" .
+Definition privdescriptorCantChangeEnumerable := 
+value_closure
+(closure_intro [("%descriptorFieldNotSame", privdescriptorFieldNotSame)] 
+ None ["fd"; "d"] ex_privdescriptorCantChangeEnumerable)
+.
+Definition name_privdescriptorCantChangeEnumerable : id :=  "%descriptorCantChangeEnumerable" .
+Definition privdescriptorFieldContains := 
+value_closure
+(closure_intro [] None ["d1"; "d2"; "f"] ex_privdescriptorFieldContains)
+.
+Definition name_privdescriptorFieldContains : id :=  "%descriptorFieldContains" .
+Definition privdescriptorContains := 
+value_closure
+(closure_intro [("%descriptorFieldContains", privdescriptorFieldContains)]
+ None ["d1"; "d2"] ex_privdescriptorContains)
+.
+Definition name_privdescriptorContains : id :=  "%descriptorContains" .
+Definition privaccessorDescriptorWrite := 
+value_closure
+(closure_intro [] None ["obj"; "field"; "fd"] ex_privaccessorDescriptorWrite)
+.
+Definition name_privaccessorDescriptorWrite : id :=  "%accessorDescriptorWrite" .
+Definition privdataDescriptorWrite := 
+value_closure
+(closure_intro [] None ["obj"; "field"; "fd"] ex_privdataDescriptorWrite)
+.
+Definition name_privdataDescriptorWrite : id :=  "%dataDescriptorWrite" .
+Definition privisDataDescriptor := 
+value_closure (closure_intro [] None ["attr-obj"] ex_privisDataDescriptor)
+.
+Definition name_privisDataDescriptor : id :=  "%isDataDescriptor" .
+Definition privdescriptorWrite := 
+value_closure
+(closure_intro
+ [("%accessorDescriptorWrite", privaccessorDescriptorWrite);
+  ("%dataDescriptorWrite", privdataDescriptorWrite);
+  ("%isDataDescriptor", privisDataDescriptor)] None ["obj"; "field"; "fd"]
+ ex_privdescriptorWrite)
+.
+Definition name_privdescriptorWrite : id :=  "%descriptorWrite" .
+Definition privisAccessorDescriptor := 
+value_closure
+(closure_intro [] None ["attr-obj"] ex_privisAccessorDescriptor)
+.
+Definition name_privisAccessorDescriptor : id :=  "%isAccessorDescriptor" .
+Definition privisGenericDescriptor := 
+value_closure
+(closure_intro
+ [("%isAccessorDescriptor", privisAccessorDescriptor);
+  ("%isDataDescriptor", privisDataDescriptor)] None ["attr-obj"]
+ ex_privisGenericDescriptor)
+.
+Definition name_privisGenericDescriptor : id :=  "%isGenericDescriptor" .
+Definition privdefaultAccessorDescriptor := 
+value_closure
+(closure_intro [("%makeAccessorDescriptor", privmakeAccessorDescriptor)] 
+ None [] ex_privdefaultAccessorDescriptor)
+.
+Definition name_privdefaultAccessorDescriptor : id :=  "%defaultAccessorDescriptor" .
+Definition privdescriptorFieldGet := 
+value_closure
+(closure_intro [] None ["d"; "f"; "deflt"] ex_privdescriptorFieldGet)
+.
+Definition name_privdescriptorFieldGet : id :=  "%descriptorFieldGet" .
+Definition privupdateAccessorDescriptor := 
+value_closure
+(closure_intro
+ [("%descriptorFieldGet", privdescriptorFieldGet);
+  ("%makeAccessorDescriptor", privmakeAccessorDescriptor)] None ["fd"; "d"]
+ ex_privupdateAccessorDescriptor)
+.
+Definition name_privupdateAccessorDescriptor : id :=  "%updateAccessorDescriptor" .
+Definition privtoAccessorDescriptor := 
+value_closure
+(closure_intro
+ [("%defaultAccessorDescriptor", privdefaultAccessorDescriptor);
+  ("%updateAccessorDescriptor", privupdateAccessorDescriptor)] None ["d"]
+ ex_privtoAccessorDescriptor)
+.
+Definition name_privtoAccessorDescriptor : id :=  "%toAccessorDescriptor" .
+Definition privdefaultDataDescriptor := 
+value_closure
+(closure_intro [("%makeDataDescriptor", privmakeDataDescriptor)] None 
+ [] ex_privdefaultDataDescriptor)
+.
+Definition name_privdefaultDataDescriptor : id :=  "%defaultDataDescriptor" .
+Definition privupdateDataDescriptor := 
+value_closure
+(closure_intro
+ [("%descriptorFieldGet", privdescriptorFieldGet);
+  ("%makeDataDescriptor", privmakeDataDescriptor)] None ["fd"; "d"]
+ ex_privupdateDataDescriptor)
+.
+Definition name_privupdateDataDescriptor : id :=  "%updateDataDescriptor" .
+Definition privtoDataDescriptor := 
+value_closure
+(closure_intro
+ [("%defaultDataDescriptor", privdefaultDataDescriptor);
+  ("%updateDataDescriptor", privupdateDataDescriptor)] None ["d"]
+ ex_privtoDataDescriptor)
+.
+Definition name_privtoDataDescriptor : id :=  "%toDataDescriptor" .
+Definition privupdateDescriptor := 
+value_closure
+(closure_intro
+ [("%isAccessorDescriptor", privisAccessorDescriptor);
+  ("%isDataDescriptor", privisDataDescriptor);
+  ("%updateAccessorDescriptor", privupdateAccessorDescriptor);
+  ("%updateDataDescriptor", privupdateDataDescriptor)] None ["fd"; "d"]
+ ex_privupdateDescriptor)
+.
+Definition name_privupdateDescriptor : id :=  "%updateDescriptor" .
 Definition privdefineOwnProperty := 
 value_closure
 (closure_intro
- [("%ToBoolean", privToBoolean);
-  ("%ToString", privToString);
-  ("%TypeError", privTypeError);
-  ("copy-access-desc", copy_access_desc);
-  ("copy-data-desc", copy_data_desc);
-  ("isAccessorDescriptor", isAccessorDescriptor);
-  ("isDataDescriptor", isDataDescriptor)] None ["obj"; "field"; "attr-obj"]
- ex_privdefineOwnProperty)
+ [("%AddAccessorField", privAddAccessorField);
+  ("%AddDataField", privAddDataField);
+  ("%GetOwnPropertyDescriptor", privGetOwnPropertyDescriptor);
+  ("%TypeErrorOr", privTypeErrorOr);
+  ("%descriptorCantChangeAccessor", privdescriptorCantChangeAccessor);
+  ("%descriptorCantChangeData", privdescriptorCantChangeData);
+  ("%descriptorCantChangeEnumerable", privdescriptorCantChangeEnumerable);
+  ("%descriptorContains", privdescriptorContains);
+  ("%descriptorWrite", privdescriptorWrite);
+  ("%isAccessorDescriptor", privisAccessorDescriptor);
+  ("%isDataDescriptor", privisDataDescriptor);
+  ("%isGenericDescriptor", privisGenericDescriptor);
+  ("%toAccessorDescriptor", privtoAccessorDescriptor);
+  ("%toDataDescriptor", privtoDataDescriptor);
+  ("%updateDescriptor", privupdateDescriptor)] None
+ ["obj"; "field"; "attr-obj"; "strict"] ex_privdefineOwnProperty)
 .
 Definition name_privdefineOwnProperty : id :=  "%defineOwnProperty" .
 Definition privArrayConstructor := 
@@ -8302,6 +8543,12 @@ Definition privArrayIdx :=
 value_closure (closure_intro [] None ["arr"; "idx"] ex_privArrayIdx)
 .
 Definition name_privArrayIdx : id :=  "%ArrayIdx" .
+Definition privDelete := 
+value_closure
+(closure_intro [("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"]
+ ex_privDelete)
+.
+Definition name_privDelete : id :=  "%Delete" .
 Definition privArrayLengthChange := 
 value_closure
 (closure_intro
@@ -8368,6 +8615,10 @@ value_closure
  ex_privBitwiseXor)
 .
 Definition name_privBitwiseXor : id :=  "%BitwiseXor" .
+Definition privToBoolean := 
+value_closure (closure_intro [] None ["x"] ex_privToBoolean)
+.
+Definition name_privToBoolean : id :=  "%ToBoolean" .
 Definition privBooleanCall := 
 value_closure
 (closure_intro [("%ToBoolean", privToBoolean)] None ["obj"; "this"; "args"]
@@ -8704,7 +8955,7 @@ value_closure
   ("%AppExpr", privAppExpr);
   ("%GetOwnProperty", privGetOwnProperty);
   ("%GetProperty", privGetProperty);
-  ("%TypeError", privTypeError);
+  ("%TypeErrorOr", privTypeErrorOr);
   ("%oneArgObj", privoneArgObj)] None ["obj"; "this"; "fld"; "val"; "strict"]
  ex_privPut)
 .
@@ -8895,6 +9146,12 @@ value_closure
  ["x1"; "x2"] ex_privEqEq)
 .
 Definition name_privEqEq : id :=  "%EqEq" .
+Definition privToString := 
+value_closure
+(closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["val"]
+ ex_privToString)
+.
+Definition name_privToString : id :=  "%ToString" .
 Definition privErrorProto :=  value_object 3 .
 Definition name_privErrorProto : id :=  "proto" .
 Definition privErrorConstructor := 
@@ -9166,6 +9423,14 @@ value_closure
 Definition name_privRangeErrorConstructor : id :=  "%RangeErrorConstructor" .
 Definition privRangeErrorGlobalFuncObj :=  value_object 38 .
 Definition name_privRangeErrorGlobalFuncObj : id :=  "%RangeErrorGlobalFuncObj" .
+Definition privRangeErrorOr := 
+value_closure
+(closure_intro
+ [("%NativeErrorOr", privNativeErrorOr);
+  ("%RangeErrorProto", privRangeErrorProto)] None ["msg"; "v"; "strict"]
+ ex_privRangeErrorOr)
+.
+Definition name_privRangeErrorOr : id :=  "%RangeErrorOr" .
 Definition privReferenceErrorConstructor := 
 value_closure
 (closure_intro
@@ -9177,6 +9442,14 @@ value_closure
 Definition name_privReferenceErrorConstructor : id :=  "%ReferenceErrorConstructor" .
 Definition privReferenceErrorGlobalFuncObj :=  value_object 39 .
 Definition name_privReferenceErrorGlobalFuncObj : id :=  "%ReferenceErrorGlobalFuncObj" .
+Definition privReferenceErrorOr := 
+value_closure
+(closure_intro
+ [("%NativeErrorOr", privNativeErrorOr);
+  ("%ReferenceErrorProto", privReferenceErrorProto)] None
+ ["msg"; "v"; "strict"] ex_privReferenceErrorOr)
+.
+Definition name_privReferenceErrorOr : id :=  "%ReferenceErrorOr" .
 Definition privRegExpProto :=  value_object 135 .
 Definition name_privRegExpProto : id :=  "%RegExpProto" .
 Definition privRegExpConstructor := 
@@ -9240,6 +9513,14 @@ value_closure
 Definition name_privSyntaxErrorConstructor : id :=  "%SyntaxErrorConstructor" .
 Definition privSyntaxErrorGlobalFuncObj :=  value_object 36 .
 Definition name_privSyntaxErrorGlobalFuncObj : id :=  "%SyntaxErrorGlobalFuncObj" .
+Definition privSyntaxErrorOr := 
+value_closure
+(closure_intro
+ [("%NativeErrorOr", privNativeErrorOr);
+  ("%SyntaxErrorProto", privSyntaxErrorProto)] None ["msg"; "v"; "strict"]
+ ex_privSyntaxErrorOr)
+.
+Definition name_privSyntaxErrorOr : id :=  "%SyntaxErrorOr" .
 Definition privThrowTypeErrorFun := 
 value_closure
 (closure_intro [("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
@@ -9254,14 +9535,15 @@ Definition name_privTimeWithinDay : id :=  "%TimeWithinDay" .
 Definition privToPropertyDescriptor := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%AddDataField", privAddDataField);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
   ("%ObjectTypeCheck", privObjectTypeCheck);
   ("%ToBoolean", privToBoolean);
   ("%TypeError", privTypeError);
-  ("isAccessorDescriptor", isAccessorDescriptor);
-  ("isDataDescriptor", isDataDescriptor)] None ["propobj"]
+  ("%isAccessorDescriptor", privisAccessorDescriptor);
+  ("%isDataDescriptor", privisDataDescriptor)] None ["propobj"]
  ex_privToPropertyDescriptor)
 .
 Definition name_privToPropertyDescriptor : id :=  "%ToPropertyDescriptor" .
@@ -10459,29 +10741,6 @@ value_closure
  None ["this"; "args"; "proto"; "typestr"] ex_privvalueOfCall)
 .
 Definition name_privvalueOfCall : id :=  "%valueOfCall" .
-Definition isAccessorField := 
-value_closure (closure_intro [] None ["obj"; "field"] ex_isAccessorField)
-.
-Definition name_isAccessorField : id :=  "isAccessorField" .
-Definition isDataField := 
-value_closure (closure_intro [] None ["obj"; "field"] ex_isDataField)
-.
-Definition name_isDataField : id :=  "isDataField" .
-Definition isGenericDescriptor := 
-value_closure
-(closure_intro
- [("isAccessorDescriptor", isAccessorDescriptor);
-  ("isDataDescriptor", isDataDescriptor)] None ["attr-obj"]
- ex_isGenericDescriptor)
-.
-Definition name_isGenericDescriptor : id :=  "isGenericDescriptor" .
-Definition isGenericField := 
-value_closure
-(closure_intro
- [("isAccessorField", isAccessorField); ("isDataField", isDataField)] 
- None ["obj"; "field"] ex_isGenericField)
-.
-Definition name_isGenericField : id :=  "isGenericField" .
 Definition name :=  value_string "parse" .
 Definition name_name : id :=  "name" .
 Definition objCode1 := 
@@ -10856,6 +11115,7 @@ Definition ctx_items :=
  (name_privGetField, privGetField);
  (name_privGetOp, privGetOp);
  (name_privGetOwnProperty, privGetOwnProperty);
+ (name_privGetOwnPropertyDescriptor, privGetOwnPropertyDescriptor);
  (name_privGetPrim, privGetPrim);
  (name_privGetProperty, privGetProperty);
  (name_privGtOp, privGtOp);
@@ -10887,6 +11147,7 @@ Definition ctx_items :=
  (name_privMonthFromTime, privMonthFromTime);
  (name_privNativeError, privNativeError);
  (name_privNativeErrorConstructor, privNativeErrorConstructor);
+ (name_privNativeErrorOr, privNativeErrorOr);
  (name_privNumberCall, privNumberCall);
  (name_privNumberCompareOp, privNumberCompareOp);
  (name_privNumberConstructor, privNumberConstructor);
@@ -10914,10 +11175,12 @@ Definition ctx_items :=
  (name_privRangeError, privRangeError);
  (name_privRangeErrorConstructor, privRangeErrorConstructor);
  (name_privRangeErrorGlobalFuncObj, privRangeErrorGlobalFuncObj);
+ (name_privRangeErrorOr, privRangeErrorOr);
  (name_privRangeErrorProto, privRangeErrorProto);
  (name_privReferenceError, privReferenceError);
  (name_privReferenceErrorConstructor, privReferenceErrorConstructor);
  (name_privReferenceErrorGlobalFuncObj, privReferenceErrorGlobalFuncObj);
+ (name_privReferenceErrorOr, privReferenceErrorOr);
  (name_privReferenceErrorProto, privReferenceErrorProto);
  (name_privRegExpCode, privRegExpCode);
  (name_privRegExpConstructor, privRegExpConstructor);
@@ -10936,6 +11199,7 @@ Definition ctx_items :=
  (name_privSyntaxError, privSyntaxError);
  (name_privSyntaxErrorConstructor, privSyntaxErrorConstructor);
  (name_privSyntaxErrorGlobalFuncObj, privSyntaxErrorGlobalFuncObj);
+ (name_privSyntaxErrorOr, privSyntaxErrorOr);
  (name_privSyntaxErrorProto, privSyntaxErrorProto);
  (name_privThrowTypeError, privThrowTypeError);
  (name_privThrowTypeErrorFun, privThrowTypeErrorFun);
@@ -10957,6 +11221,7 @@ Definition ctx_items :=
  (name_privTypeError, privTypeError);
  (name_privTypeErrorConstructor, privTypeErrorConstructor);
  (name_privTypeErrorGlobalFuncObj, privTypeErrorGlobalFuncObj);
+ (name_privTypeErrorOr, privTypeErrorOr);
  (name_privTypeErrorProto, privTypeErrorProto);
  (name_privTypeof, privTypeof);
  (name_privURIErrorConstructor, privURIErrorConstructor);
@@ -10970,6 +11235,7 @@ Definition ctx_items :=
  (name_privUnsignedRightShift, privUnsignedRightShift);
  (name_privVoid, privVoid);
  (name_privYearFromTime, privYearFromTime);
+ (name_privaccessorDescriptorWrite, privaccessorDescriptorWrite);
  (name_privacos, privacos);
  (name_privacosCall, privacosCall);
  (name_privapply, privapply);
@@ -11008,6 +11274,7 @@ Definition ctx_items :=
  (name_privcosCall, privcosCall);
  (name_privcreate, privcreate);
  (name_privcreateCall, privcreateCall);
+ (name_privdataDescriptorWrite, privdataDescriptorWrite);
  (name_privdateGetTimezoneOffset, privdateGetTimezoneOffset);
  (name_privdateGetTimezoneOffsetCall, privdateGetTimezoneOffsetCall);
  (name_privdateToString, privdateToString);
@@ -11022,6 +11289,8 @@ Definition ctx_items :=
  (name_privdecodeURICall, privdecodeURICall);
  (name_privdecodeURIComponent, privdecodeURIComponent);
  (name_privdecodeURIComponentCall, privdecodeURIComponentCall);
+ (name_privdefaultAccessorDescriptor, privdefaultAccessorDescriptor);
+ (name_privdefaultDataDescriptor, privdefaultDataDescriptor);
  (name_privdefine15Property, privdefine15Property);
  (name_privdefineNYIProperty, privdefineNYIProperty);
  (name_privdefineOwnProperty, privdefineOwnProperty);
@@ -11029,6 +11298,14 @@ Definition ctx_items :=
  (name_privdefinePropertiesCall, privdefinePropertiesCall);
  (name_privdefineProperty, privdefineProperty);
  (name_privdefinePropertyCall, privdefinePropertyCall);
+ (name_privdescriptorCantChangeAccessor, privdescriptorCantChangeAccessor);
+ (name_privdescriptorCantChangeData, privdescriptorCantChangeData);
+ (name_privdescriptorCantChangeEnumerable, privdescriptorCantChangeEnumerable);
+ (name_privdescriptorContains, privdescriptorContains);
+ (name_privdescriptorFieldContains, privdescriptorFieldContains);
+ (name_privdescriptorFieldGet, privdescriptorFieldGet);
+ (name_privdescriptorFieldNotSame, privdescriptorFieldNotSame);
+ (name_privdescriptorWrite, privdescriptorWrite);
  (name_privencodeURI, privencodeURI);
  (name_privencodeURICall, privencodeURICall);
  (name_privencodeURIComponent, privencodeURIComponent);
@@ -11070,12 +11347,15 @@ Definition ctx_items :=
  (name_privhasOwnPropertyCall, privhasOwnPropertyCall);
  (name_privin, privin);
  (name_privinstanceof, privinstanceof);
+ (name_privisAccessorDescriptor, privisAccessorDescriptor);
+ (name_privisDataDescriptor, privisDataDescriptor);
  (name_privisExtensible, privisExtensible);
  (name_privisExtensibleCall, privisExtensibleCall);
  (name_privisFinite, privisFinite);
  (name_privisFiniteCall, privisFiniteCall);
  (name_privisFrozen, privisFrozen);
  (name_privisFrozenCall, privisFrozenCall);
+ (name_privisGenericDescriptor, privisGenericDescriptor);
  (name_privisNaN, privisNaN);
  (name_privisNaNCall, privisNaNCall);
  (name_privisPrototypeOf, privisPrototypeOf);
@@ -11091,6 +11371,8 @@ Definition ctx_items :=
  (name_privlocaleCompareCall, privlocaleCompareCall);
  (name_privlog, privlog);
  (name_privlogCall, privlogCall);
+ (name_privmakeAccessorDescriptor, privmakeAccessorDescriptor);
+ (name_privmakeDataDescriptor, privmakeDataDescriptor);
  (name_privmakeGlobalEnv, privmakeGlobalEnv);
  (name_privmap, privmap);
  (name_privmapCall, privmapCall);
@@ -11201,6 +11483,8 @@ Definition ctx_items :=
  (name_privtanCall, privtanCall);
  (name_privtest, privtest);
  (name_privtestCall, privtestCall);
+ (name_privtoAccessorDescriptor, privtoAccessorDescriptor);
+ (name_privtoDataDescriptor, privtoDataDescriptor);
  (name_privtoExponential, privtoExponential);
  (name_privtoExponentialCall, privtoExponentialCall);
  (name_privtoFixed, privtoFixed);
@@ -11218,17 +11502,11 @@ Definition ctx_items :=
  (name_privunescapeCall, privunescapeCall);
  (name_privunshift, privunshift);
  (name_privunshiftCall, privunshiftCall);
+ (name_privupdateAccessorDescriptor, privupdateAccessorDescriptor);
+ (name_privupdateDataDescriptor, privupdateDataDescriptor);
+ (name_privupdateDescriptor, privupdateDescriptor);
  (name_privvalueOfCall, privvalueOfCall);
- (name_privzeroArgObj, privzeroArgObj);
- (name_copy_access_desc, copy_access_desc);
- (name_copy_data_desc, copy_data_desc);
- (name_copy_when_defined, copy_when_defined);
- (name_isAccessorDescriptor, isAccessorDescriptor);
- (name_isAccessorField, isAccessorField);
- (name_isDataDescriptor, isDataDescriptor);
- (name_isDataField, isDataField);
- (name_isGenericDescriptor, isGenericDescriptor);
- (name_isGenericField, isGenericField)]
+ (name_privzeroArgObj, privzeroArgObj)]
 .
 Ltac ctx_compute := cbv beta iota zeta delta -[
 privAddAccessorField
@@ -11311,6 +11589,7 @@ privGet1
 privGetField
 privGetOp
 privGetOwnProperty
+privGetOwnPropertyDescriptor
 privGetPrim
 privGetProperty
 privGtOp
@@ -11342,6 +11621,7 @@ privModifyOp
 privMonthFromTime
 privNativeError
 privNativeErrorConstructor
+privNativeErrorOr
 privNumberCall
 privNumberCompareOp
 privNumberConstructor
@@ -11369,10 +11649,12 @@ privPutPrim
 privRangeError
 privRangeErrorConstructor
 privRangeErrorGlobalFuncObj
+privRangeErrorOr
 privRangeErrorProto
 privReferenceError
 privReferenceErrorConstructor
 privReferenceErrorGlobalFuncObj
+privReferenceErrorOr
 privReferenceErrorProto
 privRegExpCode
 privRegExpConstructor
@@ -11391,6 +11673,7 @@ privStxEq
 privSyntaxError
 privSyntaxErrorConstructor
 privSyntaxErrorGlobalFuncObj
+privSyntaxErrorOr
 privSyntaxErrorProto
 privThrowTypeError
 privThrowTypeErrorFun
@@ -11412,6 +11695,7 @@ privToUint32
 privTypeError
 privTypeErrorConstructor
 privTypeErrorGlobalFuncObj
+privTypeErrorOr
 privTypeErrorProto
 privTypeof
 privURIErrorConstructor
@@ -11425,6 +11709,7 @@ privUnboundId
 privUnsignedRightShift
 privVoid
 privYearFromTime
+privaccessorDescriptorWrite
 privacos
 privacosCall
 privapply
@@ -11463,6 +11748,7 @@ privcos
 privcosCall
 privcreate
 privcreateCall
+privdataDescriptorWrite
 privdateGetTimezoneOffset
 privdateGetTimezoneOffsetCall
 privdateToString
@@ -11477,6 +11763,8 @@ privdecodeURI
 privdecodeURICall
 privdecodeURIComponent
 privdecodeURIComponentCall
+privdefaultAccessorDescriptor
+privdefaultDataDescriptor
 privdefine15Property
 privdefineNYIProperty
 privdefineOwnProperty
@@ -11484,6 +11772,14 @@ privdefineProperties
 privdefinePropertiesCall
 privdefineProperty
 privdefinePropertyCall
+privdescriptorCantChangeAccessor
+privdescriptorCantChangeData
+privdescriptorCantChangeEnumerable
+privdescriptorContains
+privdescriptorFieldContains
+privdescriptorFieldGet
+privdescriptorFieldNotSame
+privdescriptorWrite
 privencodeURI
 privencodeURICall
 privencodeURIComponent
@@ -11525,12 +11821,15 @@ privhasOwnProperty
 privhasOwnPropertyCall
 privin
 privinstanceof
+privisAccessorDescriptor
+privisDataDescriptor
 privisExtensible
 privisExtensibleCall
 privisFinite
 privisFiniteCall
 privisFrozen
 privisFrozenCall
+privisGenericDescriptor
 privisNaN
 privisNaNCall
 privisPrototypeOf
@@ -11546,6 +11845,8 @@ privlocaleCompare
 privlocaleCompareCall
 privlog
 privlogCall
+privmakeAccessorDescriptor
+privmakeDataDescriptor
 privmakeGlobalEnv
 privmap
 privmapCall
@@ -11656,6 +11957,8 @@ privtan
 privtanCall
 privtest
 privtestCall
+privtoAccessorDescriptor
+privtoDataDescriptor
 privtoExponential
 privtoExponentialCall
 privtoFixed
@@ -11673,17 +11976,11 @@ privunescape
 privunescapeCall
 privunshift
 privunshiftCall
+privupdateAccessorDescriptor
+privupdateDataDescriptor
+privupdateDescriptor
 privvalueOfCall
 privzeroArgObj
-copy_access_desc
-copy_data_desc
-copy_when_defined
-isAccessorDescriptor
-isAccessorField
-isDataDescriptor
-isDataField
-isGenericDescriptor
-isGenericField
 ].
 Definition store_items := [
 (0, {|object_attrs :=
@@ -11776,6 +12073,7 @@ Definition store_items := [
                                          ("%GetField", privGetField);
                                          ("%GetOp", privGetOp);
                                          ("%GetOwnProperty", privGetOwnProperty);
+                                         ("%GetOwnPropertyDescriptor", privGetOwnPropertyDescriptor);
                                          ("%GetPrim", privGetPrim);
                                          ("%GetProperty", privGetProperty);
                                          ("%GtOp", privGtOp);
@@ -11807,6 +12105,7 @@ Definition store_items := [
                                          ("%MonthFromTime", privMonthFromTime);
                                          ("%NativeError", privNativeError);
                                          ("%NativeErrorConstructor", privNativeErrorConstructor);
+                                         ("%NativeErrorOr", privNativeErrorOr);
                                          ("%NumberCall", privNumberCall);
                                          ("%NumberCompareOp", privNumberCompareOp);
                                          ("%NumberConstructor", privNumberConstructor);
@@ -11834,10 +12133,12 @@ Definition store_items := [
                                          ("%RangeError", privRangeError);
                                          ("%RangeErrorConstructor", privRangeErrorConstructor);
                                          ("%RangeErrorGlobalFuncObj", privRangeErrorGlobalFuncObj);
+                                         ("%RangeErrorOr", privRangeErrorOr);
                                          ("%RangeErrorProto", privRangeErrorProto);
                                          ("%ReferenceError", privReferenceError);
                                          ("%ReferenceErrorConstructor", privReferenceErrorConstructor);
                                          ("%ReferenceErrorGlobalFuncObj", privReferenceErrorGlobalFuncObj);
+                                         ("%ReferenceErrorOr", privReferenceErrorOr);
                                          ("%ReferenceErrorProto", privReferenceErrorProto);
                                          ("%RegExpCode", privRegExpCode);
                                          ("%RegExpConstructor", privRegExpConstructor);
@@ -11856,6 +12157,7 @@ Definition store_items := [
                                          ("%SyntaxError", privSyntaxError);
                                          ("%SyntaxErrorConstructor", privSyntaxErrorConstructor);
                                          ("%SyntaxErrorGlobalFuncObj", privSyntaxErrorGlobalFuncObj);
+                                         ("%SyntaxErrorOr", privSyntaxErrorOr);
                                          ("%SyntaxErrorProto", privSyntaxErrorProto);
                                          ("%ThrowTypeError", privThrowTypeError);
                                          ("%ThrowTypeErrorFun", privThrowTypeErrorFun);
@@ -11877,6 +12179,7 @@ Definition store_items := [
                                          ("%TypeError", privTypeError);
                                          ("%TypeErrorConstructor", privTypeErrorConstructor);
                                          ("%TypeErrorGlobalFuncObj", privTypeErrorGlobalFuncObj);
+                                         ("%TypeErrorOr", privTypeErrorOr);
                                          ("%TypeErrorProto", privTypeErrorProto);
                                          ("%Typeof", privTypeof);
                                          ("%URIErrorConstructor", privURIErrorConstructor);
@@ -11890,6 +12193,7 @@ Definition store_items := [
                                          ("%UnsignedRightShift", privUnsignedRightShift);
                                          ("%Void", privVoid);
                                          ("%YearFromTime", privYearFromTime);
+                                         ("%accessorDescriptorWrite", privaccessorDescriptorWrite);
                                          ("%acos", privacos);
                                          ("%acosCall", privacosCall);
                                          ("%apply", privapply);
@@ -11928,6 +12232,7 @@ Definition store_items := [
                                          ("%cosCall", privcosCall);
                                          ("%create", privcreate);
                                          ("%createCall", privcreateCall);
+                                         ("%dataDescriptorWrite", privdataDescriptorWrite);
                                          ("%dateGetTimezoneOffset", privdateGetTimezoneOffset);
                                          ("%dateGetTimezoneOffsetCall", privdateGetTimezoneOffsetCall);
                                          ("%dateToString", privdateToString);
@@ -11942,6 +12247,8 @@ Definition store_items := [
                                          ("%decodeURICall", privdecodeURICall);
                                          ("%decodeURIComponent", privdecodeURIComponent);
                                          ("%decodeURIComponentCall", privdecodeURIComponentCall);
+                                         ("%defaultAccessorDescriptor", privdefaultAccessorDescriptor);
+                                         ("%defaultDataDescriptor", privdefaultDataDescriptor);
                                          ("%define15Property", privdefine15Property);
                                          ("%defineNYIProperty", privdefineNYIProperty);
                                          ("%defineOwnProperty", privdefineOwnProperty);
@@ -11949,6 +12256,14 @@ Definition store_items := [
                                          ("%definePropertiesCall", privdefinePropertiesCall);
                                          ("%defineProperty", privdefineProperty);
                                          ("%definePropertyCall", privdefinePropertyCall);
+                                         ("%descriptorCantChangeAccessor", privdescriptorCantChangeAccessor);
+                                         ("%descriptorCantChangeData", privdescriptorCantChangeData);
+                                         ("%descriptorCantChangeEnumerable", privdescriptorCantChangeEnumerable);
+                                         ("%descriptorContains", privdescriptorContains);
+                                         ("%descriptorFieldContains", privdescriptorFieldContains);
+                                         ("%descriptorFieldGet", privdescriptorFieldGet);
+                                         ("%descriptorFieldNotSame", privdescriptorFieldNotSame);
+                                         ("%descriptorWrite", privdescriptorWrite);
                                          ("%encodeURI", privencodeURI);
                                          ("%encodeURICall", privencodeURICall);
                                          ("%encodeURIComponent", privencodeURIComponent);
@@ -11990,12 +12305,15 @@ Definition store_items := [
                                          ("%hasOwnPropertyCall", privhasOwnPropertyCall);
                                          ("%in", privin);
                                          ("%instanceof", privinstanceof);
+                                         ("%isAccessorDescriptor", privisAccessorDescriptor);
+                                         ("%isDataDescriptor", privisDataDescriptor);
                                          ("%isExtensible", privisExtensible);
                                          ("%isExtensibleCall", privisExtensibleCall);
                                          ("%isFinite", privisFinite);
                                          ("%isFiniteCall", privisFiniteCall);
                                          ("%isFrozen", privisFrozen);
                                          ("%isFrozenCall", privisFrozenCall);
+                                         ("%isGenericDescriptor", privisGenericDescriptor);
                                          ("%isNaN", privisNaN);
                                          ("%isNaNCall", privisNaNCall);
                                          ("%isPrototypeOf", privisPrototypeOf);
@@ -12011,6 +12329,8 @@ Definition store_items := [
                                          ("%localeCompareCall", privlocaleCompareCall);
                                          ("%log", privlog);
                                          ("%logCall", privlogCall);
+                                         ("%makeAccessorDescriptor", privmakeAccessorDescriptor);
+                                         ("%makeDataDescriptor", privmakeDataDescriptor);
                                          ("%makeGlobalEnv", privmakeGlobalEnv);
                                          ("%map", privmap);
                                          ("%mapCall", privmapCall);
@@ -12121,6 +12441,8 @@ Definition store_items := [
                                          ("%tanCall", privtanCall);
                                          ("%test", privtest);
                                          ("%testCall", privtestCall);
+                                         ("%toAccessorDescriptor", privtoAccessorDescriptor);
+                                         ("%toDataDescriptor", privtoDataDescriptor);
                                          ("%toExponential", privtoExponential);
                                          ("%toExponentialCall", privtoExponentialCall);
                                          ("%toFixed", privtoFixed);
@@ -12138,17 +12460,11 @@ Definition store_items := [
                                          ("%unescapeCall", privunescapeCall);
                                          ("%unshift", privunshift);
                                          ("%unshiftCall", privunshiftCall);
+                                         ("%updateAccessorDescriptor", privupdateAccessorDescriptor);
+                                         ("%updateDataDescriptor", privupdateDataDescriptor);
+                                         ("%updateDescriptor", privupdateDescriptor);
                                          ("%valueOfCall", privvalueOfCall);
-                                         ("%zeroArgObj", privzeroArgObj);
-                                         ("copy-access-desc", copy_access_desc);
-                                         ("copy-data-desc", copy_data_desc);
-                                         ("copy-when-defined", copy_when_defined);
-                                         ("isAccessorDescriptor", isAccessorDescriptor);
-                                         ("isAccessorField", isAccessorField);
-                                         ("isDataDescriptor", isDataDescriptor);
-                                         ("isDataField", isDataField);
-                                         ("isGenericDescriptor", isGenericDescriptor);
-                                         ("isGenericField", isGenericField)]
+                                         ("%zeroArgObj", privzeroArgObj)]
                                         None [] ex_dataval);
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := true;
