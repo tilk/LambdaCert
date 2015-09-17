@@ -9,145 +9,145 @@ Definition ptr_privTypeErrorProto : object_ptr :=  4 .
 Definition ptr_privBooleanProto : object_ptr :=  9 .
 Definition ptr_privNumberProto : object_ptr :=  10 .
 Definition ptr_privStringProto : object_ptr :=  11 .
-Definition ptr_privArrayProto : object_ptr :=  52 .
+Definition ptr_privArrayProto : object_ptr :=  43 .
 Definition ptr_privRangeErrorProto : object_ptr :=  8 .
-Definition ptr_privArrayGlobalFuncObj : object_ptr :=  101 .
-Definition ptr_privconcat : object_ptr :=  95 .
-Definition ptr_privBooleanGlobalFuncObj : object_ptr :=  31 .
-Definition ptr_privDateProto : object_ptr :=  167 .
-Definition ptr_privdateToString : object_ptr :=  168 .
-Definition ptr_privDateGlobalFuncObj : object_ptr :=  171 .
+Definition ptr_privArrayGlobalFuncObj : object_ptr :=  64 .
+Definition ptr_privconcat : object_ptr :=  62 .
+Definition ptr_privBooleanGlobalFuncObj : object_ptr :=  25 .
+Definition ptr_privDateProto : object_ptr :=  93 .
+Definition ptr_privdateToString : object_ptr :=  94 .
+Definition ptr_privDateGlobalFuncObj : object_ptr :=  96 .
 Definition ptr_privglobal : object_ptr :=  2 .
 Definition ptr_privObjectProto : object_ptr :=  1 .
 Definition ptr_privReferenceErrorProto : object_ptr :=  5 .
 Definition ptr_privmakeGlobalEnv : object_ptr :=  0 .
-Definition ptr_priveval : object_ptr :=  310 .
+Definition ptr_priveval : object_ptr :=  171 .
 Definition ptr_privThrowTypeError : object_ptr :=  14 .
-Definition ptr_privglobalContext : object_ptr :=  307 .
+Definition ptr_privglobalContext : object_ptr :=  168 .
 Definition ptr_privSyntaxErrorProto : object_ptr :=  6 .
 Definition ptr_privErrorProto : object_ptr :=  3 .
-Definition ptr_privErrorGlobalFuncObj : object_ptr :=  44 .
+Definition ptr_privErrorGlobalFuncObj : object_ptr :=  35 .
 Definition ptr_privEvalErrorProto : object_ptr :=  7 .
-Definition ptr_privEvalErrorGlobalFuncObj : object_ptr :=  46 .
-Definition ptr_privFunctionGlobalFuncObj : object_ptr :=  311 .
+Definition ptr_privEvalErrorGlobalFuncObj : object_ptr :=  37 .
+Definition ptr_privFunctionGlobalFuncObj : object_ptr :=  172 .
 Definition ptr_privFunctionProto : object_ptr :=  12 .
-Definition ptr_privMath : object_ptr :=  255 .
-Definition ptr_privNumberGlobalFuncObj : object_ptr :=  24 .
-Definition ptr_privObjectGlobalFuncObj : object_ptr :=  33 .
-Definition ptr_privRangeErrorGlobalFuncObj : object_ptr :=  47 .
-Definition ptr_privReferenceErrorGlobalFuncObj : object_ptr :=  48 .
-Definition ptr_privRegExpProto : object_ptr :=  247 .
-Definition ptr_privRegExpGlobalFuncObj : object_ptr :=  248 .
-Definition ptr_privStringGlobalFuncObj : object_ptr :=  27 .
-Definition ptr_privSyntaxErrorGlobalFuncObj : object_ptr :=  45 .
-Definition ptr_privTypeErrorGlobalFuncObj : object_ptr :=  49 .
-Definition ptr_privURIErrorProto : object_ptr :=  50 .
-Definition ptr_privURIErrorGlobalFuncObj : object_ptr :=  51 .
-Definition ptr_privacos : object_ptr :=  264 .
+Definition ptr_privMath : object_ptr :=  143 .
+Definition ptr_privNumberGlobalFuncObj : object_ptr :=  21 .
+Definition ptr_privObjectGlobalFuncObj : object_ptr :=  26 .
+Definition ptr_privRangeErrorGlobalFuncObj : object_ptr :=  38 .
+Definition ptr_privReferenceErrorGlobalFuncObj : object_ptr :=  39 .
+Definition ptr_privRegExpProto : object_ptr :=  135 .
+Definition ptr_privRegExpGlobalFuncObj : object_ptr :=  136 .
+Definition ptr_privStringGlobalFuncObj : object_ptr :=  23 .
+Definition ptr_privSyntaxErrorGlobalFuncObj : object_ptr :=  36 .
+Definition ptr_privTypeErrorGlobalFuncObj : object_ptr :=  40 .
+Definition ptr_privURIErrorProto : object_ptr :=  41 .
+Definition ptr_privURIErrorGlobalFuncObj : object_ptr :=  42 .
+Definition ptr_privacos : object_ptr :=  147 .
 Definition ptr_privapply : object_ptr :=  18 .
-Definition ptr_privarrayIndexOf : object_ptr :=  121 .
-Definition ptr_privarrayLastIndexOf : object_ptr :=  124 .
-Definition ptr_privarrayToLocaleString : object_ptr :=  93 .
-Definition ptr_privarrayToString : object_ptr :=  90 .
-Definition ptr_privasin : object_ptr :=  266 .
-Definition ptr_privatan : object_ptr :=  268 .
-Definition ptr_privatan2 : object_ptr :=  270 .
-Definition ptr_privbind : object_ptr :=  150 .
-Definition ptr_privslice : object_ptr :=  147 .
-Definition ptr_privbooleanToString : object_ptr :=  28 .
-Definition ptr_privbooleanValueOf : object_ptr :=  296 .
+Definition ptr_privarrayIndexOf : object_ptr :=  71 .
+Definition ptr_privarrayLastIndexOf : object_ptr :=  72 .
+Definition ptr_privarrayToLocaleString : object_ptr :=  61 .
+Definition ptr_privarrayToString : object_ptr :=  60 .
+Definition ptr_privasin : object_ptr :=  148 .
+Definition ptr_privatan : object_ptr :=  149 .
+Definition ptr_privatan2 : object_ptr :=  150 .
+Definition ptr_privbind : object_ptr :=  81 .
+Definition ptr_privslice : object_ptr :=  80 .
+Definition ptr_privbooleanToString : object_ptr :=  24 .
+Definition ptr_privbooleanValueOf : object_ptr :=  163 .
 Definition ptr_privcall : object_ptr :=  17 .
-Definition ptr_privcharAt : object_ptr :=  103 .
-Definition ptr_privcharCodeAt : object_ptr :=  106 .
-Definition ptr_privconsole : object_ptr :=  309 .
-Definition ptr_privcos : object_ptr :=  272 .
-Definition ptr_privcreate : object_ptr :=  58 .
-Definition ptr_privdefineProperties : object_ptr :=  56 .
-Definition ptr_privdateGetTimezoneOffset : object_ptr :=  172 .
-Definition ptr_privdateValueOf : object_ptr :=  170 .
-Definition ptr_privdategetDate : object_ptr :=  176 .
-Definition ptr_privdategetDay : object_ptr :=  174 .
-Definition ptr_privdecodeURI : object_ptr :=  250 .
-Definition ptr_privdecodeURIComponent : object_ptr :=  251 .
+Definition ptr_privcharAt : object_ptr :=  65 .
+Definition ptr_privcharCodeAt : object_ptr :=  66 .
+Definition ptr_privconsole : object_ptr :=  170 .
+Definition ptr_privcos : object_ptr :=  151 .
+Definition ptr_privcreate : object_ptr :=  46 .
+Definition ptr_privdefineProperties : object_ptr :=  45 .
+Definition ptr_privdateGetTimezoneOffset : object_ptr :=  97 .
+Definition ptr_privdateValueOf : object_ptr :=  95 .
+Definition ptr_privdategetDate : object_ptr :=  99 .
+Definition ptr_privdategetDay : object_ptr :=  98 .
+Definition ptr_privdecodeURI : object_ptr :=  138 .
+Definition ptr_privdecodeURIComponent : object_ptr :=  139 .
 Definition ptr_privdefineProperty : object_ptr :=  16 .
-Definition ptr_privencodeURI : object_ptr :=  252 .
-Definition ptr_privencodeURIComponent : object_ptr :=  253 .
-Definition ptr_privescape : object_ptr :=  314 .
-Definition ptr_privets : object_ptr :=  22 .
-Definition ptr_privevery : object_ptr :=  138 .
-Definition ptr_privexp : object_ptr :=  254 .
-Definition ptr_privfilter : object_ptr :=  133 .
-Definition ptr_privforeach : object_ptr :=  127 .
-Definition ptr_privfreeze : object_ptr :=  62 .
-Definition ptr_privfromCharCode : object_ptr :=  74 .
+Definition ptr_privencodeURI : object_ptr :=  140 .
+Definition ptr_privencodeURIComponent : object_ptr :=  141 .
+Definition ptr_privescape : object_ptr :=  175 .
+Definition ptr_privets : object_ptr :=  20 .
+Definition ptr_privevery : object_ptr :=  77 .
+Definition ptr_privexp : object_ptr :=  142 .
+Definition ptr_privfilter : object_ptr :=  75 .
+Definition ptr_privforeach : object_ptr :=  73 .
+Definition ptr_privfreeze : object_ptr :=  48 .
+Definition ptr_privfromCharCode : object_ptr :=  54 .
 Definition ptr_privfunctionToString : object_ptr :=  13 .
-Definition ptr_privgetMonth : object_ptr :=  166 .
-Definition ptr_privgetYear : object_ptr :=  165 .
-Definition ptr_privgopd : object_ptr :=  36 .
-Definition ptr_privgopn : object_ptr :=  53 .
-Definition ptr_privgpo : object_ptr :=  34 .
-Definition ptr_privhasOwnProperty : object_ptr :=  42 .
-Definition ptr_privisExtensible : object_ptr :=  70 .
-Definition ptr_privisFinite : object_ptr :=  312 .
-Definition ptr_privisFrozen : object_ptr :=  66 .
-Definition ptr_privisNaN : object_ptr :=  21 .
-Definition ptr_privisPrototypeOf : object_ptr :=  43 .
-Definition ptr_privisSealed : object_ptr :=  68 .
-Definition ptr_privjoin : object_ptr :=  76 .
-Definition ptr_privkeys : object_ptr :=  72 .
-Definition ptr_privlocaleCompare : object_ptr :=  159 .
-Definition ptr_privlog : object_ptr :=  308 .
-Definition ptr_privmap : object_ptr :=  130 .
-Definition ptr_privmathAbs : object_ptr :=  262 .
-Definition ptr_privmathCeil : object_ptr :=  286 .
-Definition ptr_privmathFloor : object_ptr :=  288 .
-Definition ptr_privmathLog : object_ptr :=  284 .
-Definition ptr_privmathMax : object_ptr :=  259 .
-Definition ptr_privmathMin : object_ptr :=  256 .
-Definition ptr_privmathPow : object_ptr :=  290 .
-Definition ptr_privnumTLS : object_ptr :=  301 .
-Definition ptr_privtoLocaleString : object_ptr :=  40 .
-Definition ptr_privnumberToString : object_ptr :=  153 .
-Definition ptr_privnumberValueOf : object_ptr :=  294 .
-Definition ptr_privobjectToString : object_ptr :=  38 .
-Definition ptr_privobjectValueOf : object_ptr :=  41 .
-Definition ptr_privparseFloat : object_ptr :=  313 .
-Definition ptr_privparseInt : object_ptr :=  249 .
-Definition ptr_privpop : object_ptr :=  78 .
-Definition ptr_privpreventExtensions : object_ptr :=  64 .
+Definition ptr_privgetMonth : object_ptr :=  92 .
+Definition ptr_privgetYear : object_ptr :=  91 .
+Definition ptr_privgopd : object_ptr :=  28 .
+Definition ptr_privgopn : object_ptr :=  44 .
+Definition ptr_privgpo : object_ptr :=  27 .
+Definition ptr_privhasOwnProperty : object_ptr :=  33 .
+Definition ptr_privisExtensible : object_ptr :=  52 .
+Definition ptr_privisFinite : object_ptr :=  173 .
+Definition ptr_privisFrozen : object_ptr :=  50 .
+Definition ptr_privisNaN : object_ptr :=  19 .
+Definition ptr_privisPrototypeOf : object_ptr :=  34 .
+Definition ptr_privisSealed : object_ptr :=  51 .
+Definition ptr_privjoin : object_ptr :=  55 .
+Definition ptr_privkeys : object_ptr :=  53 .
+Definition ptr_privlocaleCompare : object_ptr :=  86 .
+Definition ptr_privlog : object_ptr :=  169 .
+Definition ptr_privmap : object_ptr :=  74 .
+Definition ptr_privmathAbs : object_ptr :=  146 .
+Definition ptr_privmathCeil : object_ptr :=  158 .
+Definition ptr_privmathFloor : object_ptr :=  159 .
+Definition ptr_privmathLog : object_ptr :=  157 .
+Definition ptr_privmathMax : object_ptr :=  145 .
+Definition ptr_privmathMin : object_ptr :=  144 .
+Definition ptr_privmathPow : object_ptr :=  160 .
+Definition ptr_privnumTLS : object_ptr :=  165 .
+Definition ptr_privtoLocaleString : object_ptr :=  31 .
+Definition ptr_privnumberToString : object_ptr :=  82 .
+Definition ptr_privnumberValueOf : object_ptr :=  162 .
+Definition ptr_privobjectToString : object_ptr :=  29 .
+Definition ptr_privobjectValueOf : object_ptr :=  32 .
+Definition ptr_privparseFloat : object_ptr :=  174 .
+Definition ptr_privparseInt : object_ptr :=  137 .
+Definition ptr_privpop : object_ptr :=  56 .
+Definition ptr_privpreventExtensions : object_ptr :=  49 .
 Definition ptr_privprint : object_ptr :=  15 .
-Definition ptr_privpropEnum : object_ptr :=  39 .
-Definition ptr_privpush : object_ptr :=  81 .
-Definition ptr_privrandom : object_ptr :=  274 .
-Definition ptr_privreduce : object_ptr :=  135 .
-Definition ptr_privreduceRight : object_ptr :=  144 .
-Definition ptr_privreplace : object_ptr :=  157 .
-Definition ptr_privstringIndexOf : object_ptr :=  156 .
-Definition ptr_privsubstring : object_ptr :=  112 .
-Definition ptr_privreverse : object_ptr :=  84 .
-Definition ptr_privround : object_ptr :=  276 .
-Definition ptr_privseal : object_ptr :=  60 .
-Definition ptr_privshift : object_ptr :=  87 .
-Definition ptr_privsin : object_ptr :=  278 .
-Definition ptr_privsome : object_ptr :=  141 .
-Definition ptr_privsort : object_ptr :=  98 .
-Definition ptr_privsplice : object_ptr :=  115 .
-Definition ptr_privsplit : object_ptr :=  163 .
-Definition ptr_privsqrt : object_ptr :=  280 .
-Definition ptr_privstringConcat : object_ptr :=  109 .
-Definition ptr_privstringLastIndexOf : object_ptr :=  158 .
-Definition ptr_privstringSlice : object_ptr :=  160 .
-Definition ptr_privstringToString : object_ptr :=  25 .
-Definition ptr_privstringValueOf : object_ptr :=  292 .
-Definition ptr_privtan : object_ptr :=  282 .
-Definition ptr_privtest : object_ptr :=  246 .
-Definition ptr_privtoExponential : object_ptr :=  303 .
-Definition ptr_privtoFixed : object_ptr :=  298 .
-Definition ptr_privtoLowerCase : object_ptr :=  161 .
-Definition ptr_privtoPrecision : object_ptr :=  305 .
-Definition ptr_privtoUpperCase : object_ptr :=  162 .
-Definition ptr_privunescape : object_ptr :=  316 .
-Definition ptr_privunshift : object_ptr :=  118 .
+Definition ptr_privpropEnum : object_ptr :=  30 .
+Definition ptr_privpush : object_ptr :=  57 .
+Definition ptr_privrandom : object_ptr :=  152 .
+Definition ptr_privreduce : object_ptr :=  76 .
+Definition ptr_privreduceRight : object_ptr :=  79 .
+Definition ptr_privreplace : object_ptr :=  84 .
+Definition ptr_privstringIndexOf : object_ptr :=  83 .
+Definition ptr_privsubstring : object_ptr :=  68 .
+Definition ptr_privreverse : object_ptr :=  58 .
+Definition ptr_privround : object_ptr :=  153 .
+Definition ptr_privseal : object_ptr :=  47 .
+Definition ptr_privshift : object_ptr :=  59 .
+Definition ptr_privsin : object_ptr :=  154 .
+Definition ptr_privsome : object_ptr :=  78 .
+Definition ptr_privsort : object_ptr :=  63 .
+Definition ptr_privsplice : object_ptr :=  69 .
+Definition ptr_privsplit : object_ptr :=  90 .
+Definition ptr_privsqrt : object_ptr :=  155 .
+Definition ptr_privstringConcat : object_ptr :=  67 .
+Definition ptr_privstringLastIndexOf : object_ptr :=  85 .
+Definition ptr_privstringSlice : object_ptr :=  87 .
+Definition ptr_privstringToString : object_ptr :=  22 .
+Definition ptr_privstringValueOf : object_ptr :=  161 .
+Definition ptr_privtan : object_ptr :=  156 .
+Definition ptr_privtest : object_ptr :=  134 .
+Definition ptr_privtoExponential : object_ptr :=  166 .
+Definition ptr_privtoFixed : object_ptr :=  164 .
+Definition ptr_privtoLowerCase : object_ptr :=  88 .
+Definition ptr_privtoPrecision : object_ptr :=  167 .
+Definition ptr_privtoUpperCase : object_ptr :=  89 .
+Definition ptr_privunescape : object_ptr :=  176 .
+Definition ptr_privunshift : object_ptr :=  70 .
 Definition ex_copy_access_desc := 
 expr_seq
 (expr_app (expr_id "copy-when-defined")
@@ -4731,53 +4731,13 @@ Definition ex_privdecodeURIComponentCall :=
 expr_string "decodeURIComponent NYI"
 .
 Definition ex_privdefine15Property := 
-expr_let "%mkPropObj"
-(expr_lambda ["value"; "writable"; "enumerable"; "configurable"]
- (expr_if
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_id "value") expr_null))
-  (expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
-   []
-   [("value", property_data
-              (data_intro (expr_id "value") expr_true expr_false expr_false));
-    ("writable", property_data
-                 (data_intro (expr_id "writable") expr_true expr_false
-                  expr_false));
-    ("enumerable", property_data
-                   (data_intro (expr_id "enumerable") expr_true expr_false
-                    expr_false));
-    ("configurable", property_data
-                     (data_intro (expr_id "configurable") expr_true
-                      expr_false expr_false))])
-  (expr_object
-   (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
-   []
-   [("writable", property_data
-                 (data_intro (expr_id "writable") expr_true expr_false
-                  expr_false));
-    ("enumerable", property_data
-                   (data_intro (expr_id "enumerable") expr_true expr_false
-                    expr_false));
-    ("configurable", property_data
-                     (data_intro (expr_id "configurable") expr_true
-                      expr_false expr_false))])))
-(expr_if
- (expr_if
-  (expr_op2 binary_op_stx_eq (expr_app (expr_id "%Typeof") [expr_id "obj"])
-   (expr_string "function"))
-  (expr_op2 binary_op_stx_eq (expr_id "field") (expr_string "length"))
-  expr_false)
- (expr_app (expr_id "%defineOwnProperty")
-  [expr_id "obj";
-   expr_id "field";
-   expr_app (expr_id "%mkPropObj")
-   [expr_id "prop"; expr_false; expr_false; expr_false]])
- (expr_app (expr_id "%defineOwnProperty")
-  [expr_id "obj";
-   expr_id "field";
-   expr_app (expr_id "%mkPropObj")
-   [expr_id "prop"; expr_true; expr_false; expr_true]]))
+expr_app (expr_id "%AddDataField")
+[expr_id "obj";
+ expr_id "field";
+ expr_id "prop";
+ expr_true;
+ expr_false;
+ expr_true]
 .
 Definition ex_privdefineNYIProperty := 
 expr_let "unimplFunc"
@@ -8224,7 +8184,7 @@ Definition privComputeLength :=
 value_closure (closure_intro [] None ["args"] ex_privComputeLength)
 .
 Definition name_privComputeLength : id :=  "%ComputeLength" .
-Definition privArrayProto :=  value_object 52 .
+Definition privArrayProto :=  value_object 43 .
 Definition name_privArrayProto : id :=  "%ArrayProto" .
 Definition privMakeArray := 
 value_closure
@@ -8336,7 +8296,7 @@ value_closure
  ["obj"; "this"; "args"] ex_privArrayCall)
 .
 Definition name_privArrayCall : id :=  "%ArrayCall" .
-Definition privArrayGlobalFuncObj :=  value_object 101 .
+Definition privArrayGlobalFuncObj :=  value_object 64 .
 Definition name_privArrayGlobalFuncObj : id :=  "%ArrayGlobalFuncObj" .
 Definition privArrayIdx := 
 value_closure (closure_intro [] None ["arr"; "idx"] ex_privArrayIdx)
@@ -8360,7 +8320,7 @@ value_closure
  None ["constr"; "args"] ex_privPrimNew)
 .
 Definition name_privPrimNew : id :=  "%PrimNew" .
-Definition privconcat :=  value_object 95 .
+Definition privconcat :=  value_object 62 .
 Definition name_privconcat : id :=  "%concat" .
 Definition privBindConstructor := 
 value_closure
@@ -8421,7 +8381,7 @@ value_closure
  ["constr"; "args"] ex_privBooleanConstructor)
 .
 Definition name_privBooleanConstructor : id :=  "%BooleanConstructor" .
-Definition privBooleanGlobalFuncObj :=  value_object 31 .
+Definition privBooleanGlobalFuncObj :=  value_object 25 .
 Definition name_privBooleanGlobalFuncObj : id :=  "%BooleanGlobalFuncObj" .
 Definition privCheckObjectCoercible := 
 value_closure
@@ -8453,14 +8413,14 @@ value_closure
  ex_privCompareOp)
 .
 Definition name_privCompareOp : id :=  "%CompareOp" .
-Definition privDateProto :=  value_object 167 .
+Definition privDateProto :=  value_object 93 .
 Definition name_privDateProto : id :=  "%DateProto" .
 Definition privMakeDate := 
 value_closure
 (closure_intro [("%DateProto", privDateProto)] None ["v"] ex_privMakeDate)
 .
 Definition name_privMakeDate : id :=  "%MakeDate" .
-Definition privdateToString :=  value_object 168 .
+Definition privdateToString :=  value_object 94 .
 Definition name_privdateToString : id :=  "%dateToString" .
 Definition privgetCurrentUTC := 
 value_closure (closure_intro [] None [] ex_privgetCurrentUTC)
@@ -8621,7 +8581,7 @@ value_closure
   ("%parse", privparse)] None ["constr"; "args"] ex_privDateConstructor)
 .
 Definition name_privDateConstructor : id :=  "%DateConstructor" .
-Definition privDateGlobalFuncObj :=  value_object 171 .
+Definition privDateGlobalFuncObj :=  value_object 96 .
 Definition name_privDateGlobalFuncObj : id :=  "%DateGlobalFuncObj" .
 Definition privDeclEnvAddBinding := 
 value_closure
@@ -8716,7 +8676,7 @@ value_closure
  ["this"; "context"; "vcontext"; "useStrict"; "args"] ex_privconfigurableEval)
 .
 Definition name_privconfigurableEval : id :=  "%configurableEval" .
-Definition priveval :=  value_object 310 .
+Definition priveval :=  value_object 171 .
 Definition name_priveval : id :=  "%eval" .
 Definition privEnvAppExpr := 
 value_closure
@@ -8851,7 +8811,7 @@ value_closure
  ["context"; "ids"; "args"; "obj"; "strict"] ex_privEnvDefineArgsObj)
 .
 Definition name_privEnvDefineArgsObj : id :=  "%EnvDefineArgsObj" .
-Definition privglobalContext :=  value_object 307 .
+Definition privglobalContext :=  value_object 168 .
 Definition name_privglobalContext : id :=  "%globalContext" .
 Definition privEnvDefineFunc := 
 value_closure
@@ -8945,7 +8905,7 @@ value_closure
   ("proto", privErrorProto)] None ["this"; "args"] ex_privErrorConstructor)
 .
 Definition name_privErrorConstructor : id :=  "%ErrorConstructor" .
-Definition privErrorGlobalFuncObj :=  value_object 44 .
+Definition privErrorGlobalFuncObj :=  value_object 35 .
 Definition name_privErrorGlobalFuncObj : id :=  "%ErrorGlobalFuncObj" .
 Definition privEvalErrorProto :=  value_object 7 .
 Definition name_privEvalErrorProto : id :=  "proto" .
@@ -8958,7 +8918,7 @@ value_closure
  ex_privEvalErrorConstructor)
 .
 Definition name_privEvalErrorConstructor : id :=  "%EvalErrorConstructor" .
-Definition privEvalErrorGlobalFuncObj :=  value_object 46 .
+Definition privEvalErrorGlobalFuncObj :=  value_object 37 .
 Definition name_privEvalErrorGlobalFuncObj : id :=  "%EvalErrorGlobalFuncObj" .
 Definition privevalCall := 
 value_closure
@@ -8978,7 +8938,7 @@ value_closure
  ex_privFunctionConstructor)
 .
 Definition name_privFunctionConstructor : id :=  "%FunctionConstructor" .
-Definition privFunctionGlobalFuncObj :=  value_object 311 .
+Definition privFunctionGlobalFuncObj :=  value_object 172 .
 Definition name_privFunctionGlobalFuncObj : id :=  "%FunctionGlobalFuncObj" .
 Definition privFunctionProto :=  value_object 12 .
 Definition name_privFunctionProto : id :=  "%FunctionProto" .
@@ -9065,7 +9025,7 @@ value_closure
 (closure_intro [("%ObjectProto", privObjectProto)] None [] ex_privMakeObject)
 .
 Definition name_privMakeObject : id :=  "%MakeObject" .
-Definition privMath :=  value_object 255 .
+Definition privMath :=  value_object 143 .
 Definition name_privMath : id :=  "%Math" .
 Definition privPutPrim := 
 value_closure
@@ -9108,7 +9068,7 @@ value_closure
  ex_privNumberConstructor)
 .
 Definition name_privNumberConstructor : id :=  "%NumberConstructor" .
-Definition privNumberGlobalFuncObj :=  value_object 24 .
+Definition privNumberGlobalFuncObj :=  value_object 21 .
 Definition name_privNumberGlobalFuncObj : id :=  "%NumberGlobalFuncObj" .
 Definition privObjectCall := 
 value_closure
@@ -9124,7 +9084,7 @@ value_closure
  ex_privObjectConstructor)
 .
 Definition name_privObjectConstructor : id :=  "%ObjectConstructor" .
-Definition privObjectGlobalFuncObj :=  value_object 33 .
+Definition privObjectGlobalFuncObj :=  value_object 26 .
 Definition name_privObjectGlobalFuncObj : id :=  "%ObjectGlobalFuncObj" .
 Definition privObjectTypeCheck := 
 value_closure
@@ -9204,7 +9164,7 @@ value_closure
  ex_privRangeErrorConstructor)
 .
 Definition name_privRangeErrorConstructor : id :=  "%RangeErrorConstructor" .
-Definition privRangeErrorGlobalFuncObj :=  value_object 47 .
+Definition privRangeErrorGlobalFuncObj :=  value_object 38 .
 Definition name_privRangeErrorGlobalFuncObj : id :=  "%RangeErrorGlobalFuncObj" .
 Definition privReferenceErrorConstructor := 
 value_closure
@@ -9215,9 +9175,9 @@ value_closure
  ex_privReferenceErrorConstructor)
 .
 Definition name_privReferenceErrorConstructor : id :=  "%ReferenceErrorConstructor" .
-Definition privReferenceErrorGlobalFuncObj :=  value_object 48 .
+Definition privReferenceErrorGlobalFuncObj :=  value_object 39 .
 Definition name_privReferenceErrorGlobalFuncObj : id :=  "%ReferenceErrorGlobalFuncObj" .
-Definition privRegExpProto :=  value_object 247 .
+Definition privRegExpProto :=  value_object 135 .
 Definition name_privRegExpProto : id :=  "%RegExpProto" .
 Definition privRegExpConstructor := 
 value_closure
@@ -9231,7 +9191,7 @@ value_closure
  ["obj"; "this"; "args"] ex_privRegExpCode)
 .
 Definition name_privRegExpCode : id :=  "%RegExpCode" .
-Definition privRegExpGlobalFuncObj :=  value_object 248 .
+Definition privRegExpGlobalFuncObj :=  value_object 136 .
 Definition name_privRegExpGlobalFuncObj : id :=  "%RegExpGlobalFuncObj" .
 Definition privRunSelfConstructorCall := 
 value_closure
@@ -9263,7 +9223,7 @@ value_closure
  ["constr"; "args"] ex_privStringConstructor)
 .
 Definition name_privStringConstructor : id :=  "%StringConstructor" .
-Definition privStringGlobalFuncObj :=  value_object 27 .
+Definition privStringGlobalFuncObj :=  value_object 23 .
 Definition name_privStringGlobalFuncObj : id :=  "%StringGlobalFuncObj" .
 Definition privStxEq := 
 value_closure (closure_intro [] None ["x1"; "x2"] ex_privStxEq)
@@ -9278,7 +9238,7 @@ value_closure
  ex_privSyntaxErrorConstructor)
 .
 Definition name_privSyntaxErrorConstructor : id :=  "%SyntaxErrorConstructor" .
-Definition privSyntaxErrorGlobalFuncObj :=  value_object 45 .
+Definition privSyntaxErrorGlobalFuncObj :=  value_object 36 .
 Definition name_privSyntaxErrorGlobalFuncObj : id :=  "%SyntaxErrorGlobalFuncObj" .
 Definition privThrowTypeErrorFun := 
 value_closure
@@ -9319,9 +9279,9 @@ value_closure
  ex_privTypeErrorConstructor)
 .
 Definition name_privTypeErrorConstructor : id :=  "%TypeErrorConstructor" .
-Definition privTypeErrorGlobalFuncObj :=  value_object 49 .
+Definition privTypeErrorGlobalFuncObj :=  value_object 40 .
 Definition name_privTypeErrorGlobalFuncObj : id :=  "%TypeErrorGlobalFuncObj" .
-Definition privURIErrorProto :=  value_object 50 .
+Definition privURIErrorProto :=  value_object 41 .
 Definition name_privURIErrorProto : id :=  "proto" .
 Definition privURIErrorConstructor := 
 value_closure
@@ -9332,7 +9292,7 @@ value_closure
  ex_privURIErrorConstructor)
 .
 Definition name_privURIErrorConstructor : id :=  "%URIErrorConstructor" .
-Definition privURIErrorGlobalFuncObj :=  value_object 51 .
+Definition privURIErrorGlobalFuncObj :=  value_object 42 .
 Definition name_privURIErrorGlobalFuncObj : id :=  "%URIErrorGlobalFuncObj" .
 Definition privUnaryNeg := 
 value_closure
@@ -9359,7 +9319,7 @@ Definition privVoid :=
 value_closure (closure_intro [] None ["val"] ex_privVoid)
 .
 Definition name_privVoid : id :=  "%Void" .
-Definition privacos :=  value_object 264 .
+Definition privacos :=  value_object 147 .
 Definition name_privacos : id :=  "%acos" .
 Definition privacosCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privacosCall)
@@ -9373,7 +9333,7 @@ value_closure
  ["this"; "args"] ex_privapplyCall)
 .
 Definition name_privapplyCall : id :=  "%applyCall" .
-Definition privarrayIndexOf :=  value_object 121 .
+Definition privarrayIndexOf :=  value_object 71 .
 Definition name_privarrayIndexOf : id :=  "%arrayIndexOf" .
 Definition privarrayIndexOfCall := 
 value_closure
@@ -9387,7 +9347,7 @@ value_closure
   ("%max", privmax)] None ["obj"; "this"; "args"] ex_privarrayIndexOfCall)
 .
 Definition name_privarrayIndexOfCall : id :=  "%arrayIndexOfCall" .
-Definition privarrayLastIndexOf :=  value_object 124 .
+Definition privarrayLastIndexOf :=  value_object 72 .
 Definition name_privarrayLastIndexOf : id :=  "%arrayLastIndexOf" .
 Definition privmin := 
 value_closure (closure_intro [] None ["a"; "b"] ex_privmin)
@@ -9417,9 +9377,9 @@ value_closure
  ex_privarrayTLSCall)
 .
 Definition name_privarrayTLSCall : id :=  "%arrayTLSCall" .
-Definition privarrayToLocaleString :=  value_object 93 .
+Definition privarrayToLocaleString :=  value_object 61 .
 Definition name_privarrayToLocaleString : id :=  "%arrayToLocaleString" .
-Definition privarrayToString :=  value_object 90 .
+Definition privarrayToString :=  value_object 60 .
 Definition name_privarrayToString : id :=  "%arrayToString" .
 Definition privobjectToStringCall := 
 value_closure
@@ -9435,7 +9395,7 @@ value_closure
  ["obj"; "this"; "args"] ex_privarrayToStringCall)
 .
 Definition name_privarrayToStringCall : id :=  "%arrayToStringCall" .
-Definition privasin :=  value_object 266 .
+Definition privasin :=  value_object 148 .
 Definition name_privasin : id :=  "%asin" .
 Definition privasinCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privasinCall)
@@ -9445,9 +9405,9 @@ Definition privassert :=
 value_closure (closure_intro [] None ["b"; "s"] ex_privassert)
 .
 Definition name_privassert : id :=  "%assert" .
-Definition privatan :=  value_object 268 .
+Definition privatan :=  value_object 149 .
 Definition name_privatan : id :=  "%atan" .
-Definition privatan2 :=  value_object 270 .
+Definition privatan2 :=  value_object 150 .
 Definition name_privatan2 : id :=  "%atan2" .
 Definition privatan2Call := 
 value_closure
@@ -9458,9 +9418,9 @@ Definition privatanCall :=
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privatanCall)
 .
 Definition name_privatanCall : id :=  "%atanCall" .
-Definition privbind :=  value_object 150 .
+Definition privbind :=  value_object 81 .
 Definition name_privbind : id :=  "%bind" .
-Definition privslice :=  value_object 147 .
+Definition privslice :=  value_object 80 .
 Definition name_privslice : id :=  "%slice" .
 Definition privbindCall := 
 value_closure
@@ -9472,7 +9432,7 @@ value_closure
   ("%slice", privslice)] None ["obj"; "this"; "args"] ex_privbindCall)
 .
 Definition name_privbindCall : id :=  "%bindCall" .
-Definition privbooleanToString :=  value_object 28 .
+Definition privbooleanToString :=  value_object 24 .
 Definition name_privbooleanToString : id :=  "%booleanToString" .
 Definition privbooleanToStringCall := 
 value_closure
@@ -9480,7 +9440,7 @@ value_closure
  ex_privbooleanToStringCall)
 .
 Definition name_privbooleanToStringCall : id :=  "%booleanToStringCall" .
-Definition privbooleanValueOf :=  value_object 296 .
+Definition privbooleanValueOf :=  value_object 163 .
 Definition name_privbooleanValueOf : id :=  "%booleanValueOf" .
 Definition privcall :=  value_object 17 .
 Definition name_privcall : id :=  "%call" .
@@ -9499,7 +9459,7 @@ value_closure
  None ["this"; "args"] ex_privcallCall)
 .
 Definition name_privcallCall : id :=  "%callCall" .
-Definition privcharAt :=  value_object 103 .
+Definition privcharAt :=  value_object 65 .
 Definition name_privcharAt : id :=  "%charAt" .
 Definition privcharAtCall := 
 value_closure
@@ -9509,7 +9469,7 @@ value_closure
   ("%ToString", privToString)] None ["obj"; "this"; "args"] ex_privcharAtCall)
 .
 Definition name_privcharAtCall : id :=  "%charAtCall" .
-Definition privcharCodeAt :=  value_object 106 .
+Definition privcharCodeAt :=  value_object 66 .
 Definition name_privcharCodeAt : id :=  "%charCodeAt" .
 Definition privcharCodeAtCall := 
 value_closure
@@ -9529,17 +9489,17 @@ value_closure
   ("%ToObject", privToObject)] None ["obj"; "this"; "args"] ex_privconcatCall)
 .
 Definition name_privconcatCall : id :=  "%concatCall" .
-Definition privconsole :=  value_object 309 .
+Definition privconsole :=  value_object 170 .
 Definition name_privconsole : id :=  "%console" .
-Definition privcos :=  value_object 272 .
+Definition privcos :=  value_object 151 .
 Definition name_privcos : id :=  "%cos" .
 Definition privcosCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privcosCall)
 .
 Definition name_privcosCall : id :=  "%cosCall" .
-Definition privcreate :=  value_object 58 .
+Definition privcreate :=  value_object 46 .
 Definition name_privcreate : id :=  "%create" .
-Definition privdefineProperties :=  value_object 56 .
+Definition privdefineProperties :=  value_object 45 .
 Definition name_privdefineProperties : id :=  "%defineProperties" .
 Definition privcreateCall := 
 value_closure
@@ -9550,7 +9510,7 @@ value_closure
  ex_privcreateCall)
 .
 Definition name_privcreateCall : id :=  "%createCall" .
-Definition privdateGetTimezoneOffset :=  value_object 172 .
+Definition privdateGetTimezoneOffset :=  value_object 97 .
 Definition name_privdateGetTimezoneOffset : id :=  "%dateGetTimezoneOffset" .
 Definition privdateGetTimezoneOffsetCall := 
 value_closure
@@ -9563,14 +9523,14 @@ value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privdateToStringCall)
 .
 Definition name_privdateToStringCall : id :=  "%dateToStringCall" .
-Definition privdateValueOf :=  value_object 170 .
+Definition privdateValueOf :=  value_object 95 .
 Definition name_privdateValueOf : id :=  "%dateValueOf" .
 Definition privdateValueOfCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privdateValueOfCall)
 .
 Definition name_privdateValueOfCall : id :=  "%dateValueOfCall" .
-Definition privdategetDate :=  value_object 176 .
+Definition privdategetDate :=  value_object 99 .
 Definition name_privdategetDate : id :=  "%dategetDate" .
 Definition privdategetDateCall := 
 value_closure
@@ -9579,7 +9539,7 @@ value_closure
  None ["obj"; "this"; "args"] ex_privdategetDateCall)
 .
 Definition name_privdategetDateCall : id :=  "%dategetDateCall" .
-Definition privdategetDay :=  value_object 174 .
+Definition privdategetDay :=  value_object 98 .
 Definition name_privdategetDay : id :=  "%dategetDay" .
 Definition privdategetDayCall := 
 value_closure
@@ -9587,14 +9547,14 @@ value_closure
  ex_privdategetDayCall)
 .
 Definition name_privdategetDayCall : id :=  "%dategetDayCall" .
-Definition privdecodeURI :=  value_object 250 .
+Definition privdecodeURI :=  value_object 138 .
 Definition name_privdecodeURI : id :=  "%decodeURI" .
 Definition privdecodeURICall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privdecodeURICall)
 .
 Definition name_privdecodeURICall : id :=  "%decodeURICall" .
-Definition privdecodeURIComponent :=  value_object 251 .
+Definition privdecodeURIComponent :=  value_object 139 .
 Definition name_privdecodeURIComponent : id :=  "%decodeURIComponent" .
 Definition privdecodeURIComponentCall := 
 value_closure
@@ -9603,9 +9563,8 @@ value_closure
 Definition name_privdecodeURIComponentCall : id :=  "%decodeURIComponentCall" .
 Definition privdefine15Property := 
 value_closure
-(closure_intro
- [("%Typeof", privTypeof); ("%defineOwnProperty", privdefineOwnProperty)]
- None ["obj"; "field"; "prop"] ex_privdefine15Property)
+(closure_intro [("%AddDataField", privAddDataField)] None
+ ["obj"; "field"; "prop"] ex_privdefine15Property)
 .
 Definition name_privdefine15Property : id :=  "%define15Property" .
 Definition privdefineNYIProperty := 
@@ -9639,28 +9598,28 @@ value_closure
  ex_privdefinePropertyCall)
 .
 Definition name_privdefinePropertyCall : id :=  "%definePropertyCall" .
-Definition privencodeURI :=  value_object 252 .
+Definition privencodeURI :=  value_object 140 .
 Definition name_privencodeURI : id :=  "%encodeURI" .
 Definition privencodeURICall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privencodeURICall)
 .
 Definition name_privencodeURICall : id :=  "%encodeURICall" .
-Definition privencodeURIComponent :=  value_object 253 .
+Definition privencodeURIComponent :=  value_object 141 .
 Definition name_privencodeURIComponent : id :=  "%encodeURIComponent" .
 Definition privencodeURIComponentCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privencodeURIComponentCall)
 .
 Definition name_privencodeURIComponentCall : id :=  "%encodeURIComponentCall" .
-Definition privescape :=  value_object 314 .
+Definition privescape :=  value_object 175 .
 Definition name_privescape : id :=  "%escape" .
 Definition privescapeCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privescapeCall)
 .
 Definition name_privescapeCall : id :=  "%escapeCall" .
-Definition privets :=  value_object 22 .
+Definition privets :=  value_object 20 .
 Definition name_privets : id :=  "%ets" .
 Definition privetsCall := 
 value_closure
@@ -9670,7 +9629,7 @@ value_closure
   ("%TypeError", privTypeError)] None ["obj"; "this"; "args"] ex_privetsCall)
 .
 Definition name_privetsCall : id :=  "%etsCall" .
-Definition privevery :=  value_object 138 .
+Definition privevery :=  value_object 77 .
 Definition name_privevery : id :=  "%every" .
 Definition priveveryCall := 
 value_closure
@@ -9686,13 +9645,13 @@ value_closure
  ex_priveveryCall)
 .
 Definition name_priveveryCall : id :=  "%everyCall" .
-Definition privexp :=  value_object 254 .
+Definition privexp :=  value_object 142 .
 Definition name_privexp : id :=  "%exp" .
 Definition privexpCall := 
 value_closure (closure_intro [] None [] ex_privexpCall)
 .
 Definition name_privexpCall : id :=  "%expCall" .
-Definition privfilter :=  value_object 133 .
+Definition privfilter :=  value_object 75 .
 Definition name_privfilter : id :=  "%filter" .
 Definition privfilterCall := 
 value_closure
@@ -9710,7 +9669,7 @@ value_closure
  ex_privfilterCall)
 .
 Definition name_privfilterCall : id :=  "%filterCall" .
-Definition privforeach :=  value_object 127 .
+Definition privforeach :=  value_object 73 .
 Definition name_privforeach : id :=  "%foreach" .
 Definition privforeachCall := 
 value_closure
@@ -9725,7 +9684,7 @@ value_closure
  ex_privforeachCall)
 .
 Definition name_privforeachCall : id :=  "%foreachCall" .
-Definition privfreeze :=  value_object 62 .
+Definition privfreeze :=  value_object 48 .
 Definition name_privfreeze : id :=  "%freeze" .
 Definition privfreezeCall := 
 value_closure
@@ -9733,7 +9692,7 @@ value_closure
  ["obj"; "this"; "args"] ex_privfreezeCall)
 .
 Definition name_privfreezeCall : id :=  "%freezeCall" .
-Definition privfromCharCode :=  value_object 74 .
+Definition privfromCharCode :=  value_object 54 .
 Definition name_privfromCharCode : id :=  "%fromCharCode" .
 Definition privfromccCall := 
 value_closure
@@ -9749,21 +9708,21 @@ value_closure
  ex_privfunctionToStringCall)
 .
 Definition name_privfunctionToStringCall : id :=  "%functionToStringCall" .
-Definition privgetMonth :=  value_object 166 .
+Definition privgetMonth :=  value_object 92 .
 Definition name_privgetMonth : id :=  "%getMonth" .
 Definition privgetMonthCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privgetMonthCall)
 .
 Definition name_privgetMonthCall : id :=  "%getMonthCall" .
-Definition privgetYear :=  value_object 165 .
+Definition privgetYear :=  value_object 91 .
 Definition name_privgetYear : id :=  "%getYear" .
 Definition privgetYearCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privgetYearCall)
 .
 Definition name_privgetYearCall : id :=  "%getYearCall" .
-Definition privgopd :=  value_object 36 .
+Definition privgopd :=  value_object 28 .
 Definition name_privgopd : id :=  "%gopd" .
 Definition privgopdCall := 
 value_closure
@@ -9776,7 +9735,7 @@ value_closure
  ex_privgopdCall)
 .
 Definition name_privgopdCall : id :=  "%gopdCall" .
-Definition privgopn :=  value_object 53 .
+Definition privgopn :=  value_object 44 .
 Definition name_privgopn : id :=  "%gopn" .
 Definition privgopnCall := 
 value_closure
@@ -9787,7 +9746,7 @@ value_closure
  ex_privgopnCall)
 .
 Definition name_privgopnCall : id :=  "%gopnCall" .
-Definition privgpo :=  value_object 34 .
+Definition privgpo :=  value_object 27 .
 Definition name_privgpo : id :=  "%gpo" .
 Definition privgpoCall := 
 value_closure
@@ -9795,7 +9754,7 @@ value_closure
  ["obj"; "this"; "args"] ex_privgpoCall)
 .
 Definition name_privgpoCall : id :=  "%gpoCall" .
-Definition privhasOwnProperty :=  value_object 42 .
+Definition privhasOwnProperty :=  value_object 33 .
 Definition name_privhasOwnProperty : id :=  "%hasOwnProperty" .
 Definition privhasOwnPropertyCall := 
 value_closure
@@ -9818,7 +9777,7 @@ value_closure
  None ["l"; "r"] ex_privinstanceof)
 .
 Definition name_privinstanceof : id :=  "%instanceof" .
-Definition privisExtensible :=  value_object 70 .
+Definition privisExtensible :=  value_object 52 .
 Definition name_privisExtensible : id :=  "%isExtensible" .
 Definition privisExtensibleCall := 
 value_closure
@@ -9826,7 +9785,7 @@ value_closure
  ["obj"; "this"; "args"] ex_privisExtensibleCall)
 .
 Definition name_privisExtensibleCall : id :=  "%isExtensibleCall" .
-Definition privisFinite :=  value_object 312 .
+Definition privisFinite :=  value_object 173 .
 Definition name_privisFinite : id :=  "%isFinite" .
 Definition privisFiniteCall := 
 value_closure
@@ -9834,7 +9793,7 @@ value_closure
  None ["obj"; "this"; "args"] ex_privisFiniteCall)
 .
 Definition name_privisFiniteCall : id :=  "%isFiniteCall" .
-Definition privisFrozen :=  value_object 66 .
+Definition privisFrozen :=  value_object 50 .
 Definition name_privisFrozen : id :=  "%isFrozen" .
 Definition privisFrozenCall := 
 value_closure
@@ -9842,7 +9801,7 @@ value_closure
  ["obj"; "this"; "args"] ex_privisFrozenCall)
 .
 Definition name_privisFrozenCall : id :=  "%isFrozenCall" .
-Definition privisNaN :=  value_object 21 .
+Definition privisNaN :=  value_object 19 .
 Definition name_privisNaN : id :=  "%isNaN" .
 Definition privisNaNCall := 
 value_closure
@@ -9850,7 +9809,7 @@ value_closure
  ex_privisNaNCall)
 .
 Definition name_privisNaNCall : id :=  "%isNaNCall" .
-Definition privisPrototypeOf :=  value_object 43 .
+Definition privisPrototypeOf :=  value_object 34 .
 Definition name_privisPrototypeOf : id :=  "%isPrototypeOf" .
 Definition privisPrototypeOfCall := 
 value_closure
@@ -9858,7 +9817,7 @@ value_closure
  ex_privisPrototypeOfCall)
 .
 Definition name_privisPrototypeOfCall : id :=  "%isPrototypeOfCall" .
-Definition privisSealed :=  value_object 68 .
+Definition privisSealed :=  value_object 51 .
 Definition name_privisSealed : id :=  "%isSealed" .
 Definition privisSealedCall := 
 value_closure
@@ -9866,7 +9825,7 @@ value_closure
  ["obj"; "this"; "args"] ex_privisSealedCall)
 .
 Definition name_privisSealedCall : id :=  "%isSealedCall" .
-Definition privjoin :=  value_object 76 .
+Definition privjoin :=  value_object 55 .
 Definition name_privjoin : id :=  "%join" .
 Definition privjoinCall := 
 value_closure
@@ -9877,7 +9836,7 @@ value_closure
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privjoinCall)
 .
 Definition name_privjoinCall : id :=  "%joinCall" .
-Definition privkeys :=  value_object 72 .
+Definition privkeys :=  value_object 53 .
 Definition name_privkeys : id :=  "%keys" .
 Definition privkeysCall := 
 value_closure
@@ -9888,7 +9847,7 @@ value_closure
  ex_privkeysCall)
 .
 Definition name_privkeysCall : id :=  "%keysCall" .
-Definition privlocaleCompare :=  value_object 159 .
+Definition privlocaleCompare :=  value_object 86 .
 Definition name_privlocaleCompare : id :=  "%localeCompare" .
 Definition privlocaleCompareCall := 
 value_closure
@@ -9898,7 +9857,7 @@ value_closure
  ex_privlocaleCompareCall)
 .
 Definition name_privlocaleCompareCall : id :=  "%localeCompareCall" .
-Definition privlog :=  value_object 308 .
+Definition privlog :=  value_object 169 .
 Definition name_privlog : id :=  "%log" .
 Definition privlogCall := 
 value_closure
@@ -9906,7 +9865,7 @@ value_closure
  ["obj"; "this"; "args"] ex_privlogCall)
 .
 Definition name_privlogCall : id :=  "%logCall" .
-Definition privmap :=  value_object 130 .
+Definition privmap :=  value_object 74 .
 Definition name_privmap : id :=  "%map" .
 Definition privmapCall := 
 value_closure
@@ -9923,7 +9882,7 @@ value_closure
  ex_privmapCall)
 .
 Definition name_privmapCall : id :=  "%mapCall" .
-Definition privmathAbs :=  value_object 262 .
+Definition privmathAbs :=  value_object 146 .
 Definition name_privmathAbs : id :=  "%mathAbs" .
 Definition privmathAbsCall := 
 value_closure
@@ -9931,7 +9890,7 @@ value_closure
  ex_privmathAbsCall)
 .
 Definition name_privmathAbsCall : id :=  "%mathAbsCall" .
-Definition privmathCeil :=  value_object 286 .
+Definition privmathCeil :=  value_object 158 .
 Definition name_privmathCeil : id :=  "%mathCeil" .
 Definition privmathCeilCall := 
 value_closure
@@ -9939,7 +9898,7 @@ value_closure
  ex_privmathCeilCall)
 .
 Definition name_privmathCeilCall : id :=  "%mathCeilCall" .
-Definition privmathFloor :=  value_object 288 .
+Definition privmathFloor :=  value_object 159 .
 Definition name_privmathFloor : id :=  "%mathFloor" .
 Definition privmathFloorCall := 
 value_closure
@@ -9947,7 +9906,7 @@ value_closure
  ex_privmathFloorCall)
 .
 Definition name_privmathFloorCall : id :=  "%mathFloorCall" .
-Definition privmathLog :=  value_object 284 .
+Definition privmathLog :=  value_object 157 .
 Definition name_privmathLog : id :=  "%mathLog" .
 Definition privmathLogCall := 
 value_closure
@@ -9955,7 +9914,7 @@ value_closure
  ex_privmathLogCall)
 .
 Definition name_privmathLogCall : id :=  "%mathLogCall" .
-Definition privmathMax :=  value_object 259 .
+Definition privmathMax :=  value_object 145 .
 Definition name_privmathMax : id :=  "%mathMax" .
 Definition privminMaxCall := 
 value_closure
@@ -9969,7 +9928,7 @@ value_closure
  ["obj"; "this"; "args"] ex_privmathMaxCall)
 .
 Definition name_privmathMaxCall : id :=  "%mathMaxCall" .
-Definition privmathMin :=  value_object 256 .
+Definition privmathMin :=  value_object 144 .
 Definition name_privmathMin : id :=  "%mathMin" .
 Definition privmathMinCall := 
 value_closure
@@ -9977,7 +9936,7 @@ value_closure
  ["obj"; "this"; "args"] ex_privmathMinCall)
 .
 Definition name_privmathMinCall : id :=  "%mathMinCall" .
-Definition privmathPow :=  value_object 290 .
+Definition privmathPow :=  value_object 160 .
 Definition name_privmathPow : id :=  "%mathPow" .
 Definition privmathPowCall := 
 value_closure
@@ -10004,9 +9963,9 @@ value_closure
 (closure_intro [("%StxEq", privStxEq)] None ["x1"; "x2"] ex_privnotStxEq)
 .
 Definition name_privnotStxEq : id :=  "%notStxEq" .
-Definition privnumTLS :=  value_object 301 .
+Definition privnumTLS :=  value_object 165 .
 Definition name_privnumTLS : id :=  "%numTLS" .
-Definition privtoLocaleString :=  value_object 40 .
+Definition privtoLocaleString :=  value_object 31 .
 Definition name_privtoLocaleString : id :=  "%toLocaleString" .
 Definition privnumTLSCall := 
 value_closure
@@ -10025,7 +9984,7 @@ value_closure
  ex_privnumberPrimval)
 .
 Definition name_privnumberPrimval : id :=  "%numberPrimval" .
-Definition privnumberToString :=  value_object 153 .
+Definition privnumberToString :=  value_object 82 .
 Definition name_privnumberToString : id :=  "%numberToString" .
 Definition privnumberToStringCall := 
 value_closure
@@ -10037,11 +9996,11 @@ value_closure
  ex_privnumberToStringCall)
 .
 Definition name_privnumberToStringCall : id :=  "%numberToStringCall" .
-Definition privnumberValueOf :=  value_object 294 .
+Definition privnumberValueOf :=  value_object 162 .
 Definition name_privnumberValueOf : id :=  "%numberValueOf" .
-Definition privobjectToString :=  value_object 38 .
+Definition privobjectToString :=  value_object 29 .
 Definition name_privobjectToString : id :=  "%objectToString" .
-Definition privobjectValueOf :=  value_object 41 .
+Definition privobjectValueOf :=  value_object 32 .
 Definition name_privobjectValueOf : id :=  "%objectValueOf" .
 Definition privobjectValueOfCall := 
 value_closure
@@ -10049,14 +10008,14 @@ value_closure
  ex_privobjectValueOfCall)
 .
 Definition name_privobjectValueOfCall : id :=  "%objectValueOfCall" .
-Definition privparseFloat :=  value_object 313 .
+Definition privparseFloat :=  value_object 174 .
 Definition name_privparseFloat : id :=  "%parseFloat" .
 Definition privparseFloatCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privparseFloatCall)
 .
 Definition name_privparseFloatCall : id :=  "%parseFloatCall" .
-Definition privparseInt :=  value_object 249 .
+Definition privparseInt :=  value_object 137 .
 Definition name_privparseInt : id :=  "%parseInt" .
 Definition privparseIntCall := 
 value_closure
@@ -10064,7 +10023,7 @@ value_closure
  ex_privparseIntCall)
 .
 Definition name_privparseIntCall : id :=  "%parseIntCall" .
-Definition privpop :=  value_object 78 .
+Definition privpop :=  value_object 56 .
 Definition name_privpop : id :=  "%pop" .
 Definition privpopCall := 
 value_closure
@@ -10078,7 +10037,7 @@ value_closure
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privpopCall)
 .
 Definition name_privpopCall : id :=  "%popCall" .
-Definition privpreventExtensions :=  value_object 64 .
+Definition privpreventExtensions :=  value_object 49 .
 Definition name_privpreventExtensions : id :=  "%preventExtensions" .
 Definition privpreventExtensionsCall := 
 value_closure
@@ -10100,7 +10059,7 @@ value_closure
  ex_privprintCall)
 .
 Definition name_privprintCall : id :=  "%printCall" .
-Definition privpropEnum :=  value_object 39 .
+Definition privpropEnum :=  value_object 30 .
 Definition name_privpropEnum : id :=  "%propEnum" .
 Definition privpropEnumCall := 
 value_closure
@@ -10122,7 +10081,7 @@ value_closure
  ex_privprotoOfField)
 .
 Definition name_privprotoOfField : id :=  "%protoOfField" .
-Definition privpush :=  value_object 81 .
+Definition privpush :=  value_object 57 .
 Definition name_privpush : id :=  "%push" .
 Definition privpushCall := 
 value_closure
@@ -10134,14 +10093,14 @@ value_closure
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privpushCall)
 .
 Definition name_privpushCall : id :=  "%pushCall" .
-Definition privrandom :=  value_object 274 .
+Definition privrandom :=  value_object 152 .
 Definition name_privrandom : id :=  "%random" .
 Definition privrandomCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privrandomCall)
 .
 Definition name_privrandomCall : id :=  "%randomCall" .
-Definition privreduce :=  value_object 135 .
+Definition privreduce :=  value_object 76 .
 Definition name_privreduce : id :=  "%reduce" .
 Definition privreduceCall := 
 value_closure
@@ -10156,7 +10115,7 @@ value_closure
  ex_privreduceCall)
 .
 Definition name_privreduceCall : id :=  "%reduceCall" .
-Definition privreduceRight :=  value_object 144 .
+Definition privreduceRight :=  value_object 79 .
 Definition name_privreduceRight : id :=  "%reduceRight" .
 Definition privreduceRightCall := 
 value_closure
@@ -10171,11 +10130,11 @@ value_closure
  ex_privreduceRightCall)
 .
 Definition name_privreduceRightCall : id :=  "%reduceRightCall" .
-Definition privreplace :=  value_object 157 .
+Definition privreplace :=  value_object 84 .
 Definition name_privreplace : id :=  "%replace" .
-Definition privstringIndexOf :=  value_object 156 .
+Definition privstringIndexOf :=  value_object 83 .
 Definition name_privstringIndexOf : id :=  "%stringIndexOf" .
-Definition privsubstring :=  value_object 112 .
+Definition privsubstring :=  value_object 68 .
 Definition name_privsubstring : id :=  "%substring" .
 Definition privtwoArgObj := 
 value_closure (closure_intro [] None ["arg1"; "arg2"] ex_privtwoArgObj)
@@ -10193,7 +10152,7 @@ value_closure
  ex_privreplaceCall)
 .
 Definition name_privreplaceCall : id :=  "%replaceCall" .
-Definition privreverse :=  value_object 84 .
+Definition privreverse :=  value_object 58 .
 Definition name_privreverse : id :=  "%reverse" .
 Definition privreverseCall := 
 value_closure
@@ -10208,14 +10167,14 @@ value_closure
  ex_privreverseCall)
 .
 Definition name_privreverseCall : id :=  "%reverseCall" .
-Definition privround :=  value_object 276 .
+Definition privround :=  value_object 153 .
 Definition name_privround : id :=  "%round" .
 Definition privroundCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privroundCall)
 .
 Definition name_privroundCall : id :=  "%roundCall" .
-Definition privseal :=  value_object 60 .
+Definition privseal :=  value_object 47 .
 Definition name_privseal : id :=  "%seal" .
 Definition privsealCall := 
 value_closure
@@ -10239,7 +10198,7 @@ value_closure
  ex_privset_property)
 .
 Definition name_privset_property : id :=  "%set-property" .
-Definition privshift :=  value_object 87 .
+Definition privshift :=  value_object 59 .
 Definition name_privshift : id :=  "%shift" .
 Definition privshiftCall := 
 value_closure
@@ -10253,7 +10212,7 @@ value_closure
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privshiftCall)
 .
 Definition name_privshiftCall : id :=  "%shiftCall" .
-Definition privsin :=  value_object 278 .
+Definition privsin :=  value_object 154 .
 Definition name_privsin : id :=  "%sin" .
 Definition privsinCall := 
 value_closure
@@ -10275,7 +10234,7 @@ value_closure
  ex_privsliceCall)
 .
 Definition name_privsliceCall : id :=  "%sliceCall" .
-Definition privsome :=  value_object 141 .
+Definition privsome :=  value_object 78 .
 Definition name_privsome : id :=  "%some" .
 Definition privsomeCall := 
 value_closure
@@ -10290,7 +10249,7 @@ value_closure
   ("%TypeError", privTypeError)] None ["obj"; "this"; "args"] ex_privsomeCall)
 .
 Definition name_privsomeCall : id :=  "%someCall" .
-Definition privsort :=  value_object 98 .
+Definition privsort :=  value_object 63 .
 Definition name_privsort : id :=  "%sort" .
 Definition privsortCall := 
 value_closure
@@ -10306,7 +10265,7 @@ value_closure
  ex_privsortCall)
 .
 Definition name_privsortCall : id :=  "%sortCall" .
-Definition privsplice :=  value_object 115 .
+Definition privsplice :=  value_object 69 .
 Definition name_privsplice : id :=  "%splice" .
 Definition privspliceCall := 
 value_closure
@@ -10325,20 +10284,20 @@ value_closure
   ("%min", privmin)] None ["obj"; "this"; "args"] ex_privspliceCall)
 .
 Definition name_privspliceCall : id :=  "%spliceCall" .
-Definition privsplit :=  value_object 163 .
+Definition privsplit :=  value_object 90 .
 Definition name_privsplit : id :=  "%split" .
 Definition privsplitCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privsplitCall)
 .
 Definition name_privsplitCall : id :=  "%splitCall" .
-Definition privsqrt :=  value_object 280 .
+Definition privsqrt :=  value_object 155 .
 Definition name_privsqrt : id :=  "%sqrt" .
 Definition privsqrtCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privsqrtCall)
 .
 Definition name_privsqrtCall : id :=  "%sqrtCall" .
-Definition privstringConcat :=  value_object 109 .
+Definition privstringConcat :=  value_object 67 .
 Definition name_privstringConcat : id :=  "%stringConcat" .
 Definition privstringConcatCall := 
 value_closure
@@ -10358,7 +10317,7 @@ value_closure
   ("%min", privmin)] None ["obj"; "this"; "args"] ex_privstringIndexOfCall)
 .
 Definition name_privstringIndexOfCall : id :=  "%stringIndexOfCall" .
-Definition privstringLastIndexOf :=  value_object 158 .
+Definition privstringLastIndexOf :=  value_object 85 .
 Definition name_privstringLastIndexOf : id :=  "%stringLastIndexOf" .
 Definition privstringLastIndexOfCall := 
 value_closure
@@ -10372,7 +10331,7 @@ value_closure
  ex_privstringLastIndexOfCall)
 .
 Definition name_privstringLastIndexOfCall : id :=  "%stringLastIndexOfCall" .
-Definition privstringSlice :=  value_object 160 .
+Definition privstringSlice :=  value_object 87 .
 Definition name_privstringSlice : id :=  "%stringSlice" .
 Definition privstringSliceCall := 
 value_closure
@@ -10384,7 +10343,7 @@ value_closure
   ("%min", privmin)] None ["obj"; "this"; "args"] ex_privstringSliceCall)
 .
 Definition name_privstringSliceCall : id :=  "%stringSliceCall" .
-Definition privstringToString :=  value_object 25 .
+Definition privstringToString :=  value_object 22 .
 Definition name_privstringToString : id :=  "%stringToString" .
 Definition privstringToStringCall := 
 value_closure
@@ -10392,7 +10351,7 @@ value_closure
  ex_privstringToStringCall)
 .
 Definition name_privstringToStringCall : id :=  "%stringToStringCall" .
-Definition privstringValueOf :=  value_object 292 .
+Definition privstringValueOf :=  value_object 161 .
 Definition name_privstringValueOf : id :=  "%stringValueOf" .
 Definition privsubstringCall := 
 value_closure
@@ -10404,26 +10363,26 @@ value_closure
   ("%min", privmin)] None ["obj"; "this"; "args"] ex_privsubstringCall)
 .
 Definition name_privsubstringCall : id :=  "%substringCall" .
-Definition privtan :=  value_object 282 .
+Definition privtan :=  value_object 156 .
 Definition name_privtan : id :=  "%tan" .
 Definition privtanCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privtanCall)
 .
 Definition name_privtanCall : id :=  "%tanCall" .
-Definition privtest :=  value_object 246 .
+Definition privtest :=  value_object 134 .
 Definition name_privtest : id :=  "%test" .
 Definition privtestCall := 
 value_closure (closure_intro [] None ["obj"; "this"; "args"] ex_privtestCall)
 .
 Definition name_privtestCall : id :=  "%testCall" .
-Definition privtoExponential :=  value_object 303 .
+Definition privtoExponential :=  value_object 166 .
 Definition name_privtoExponential : id :=  "%toExponential" .
 Definition privtoExponentialCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privtoExponentialCall)
 .
 Definition name_privtoExponentialCall : id :=  "%toExponentialCall" .
-Definition privtoFixed :=  value_object 298 .
+Definition privtoFixed :=  value_object 164 .
 Definition name_privtoFixed : id :=  "%toFixed" .
 Definition privtoFixedCall := 
 value_closure
@@ -10444,7 +10403,7 @@ value_closure
  ex_privtoLocaleStringCall)
 .
 Definition name_privtoLocaleStringCall : id :=  "%toLocaleStringCall" .
-Definition privtoLowerCase :=  value_object 161 .
+Definition privtoLowerCase :=  value_object 88 .
 Definition name_privtoLowerCase : id :=  "%toLowerCase" .
 Definition privtoLowerCaseCall := 
 value_closure
@@ -10454,14 +10413,14 @@ value_closure
  ex_privtoLowerCaseCall)
 .
 Definition name_privtoLowerCaseCall : id :=  "%toLowerCaseCall" .
-Definition privtoPrecision :=  value_object 305 .
+Definition privtoPrecision :=  value_object 167 .
 Definition name_privtoPrecision : id :=  "%toPrecision" .
 Definition privtoPrecisionCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privtoPrecisionCall)
 .
 Definition name_privtoPrecisionCall : id :=  "%toPrecisionCall" .
-Definition privtoUpperCase :=  value_object 162 .
+Definition privtoUpperCase :=  value_object 89 .
 Definition name_privtoUpperCase : id :=  "%toUpperCase" .
 Definition privtoUpperCaseCall := 
 value_closure
@@ -10471,14 +10430,14 @@ value_closure
  ex_privtoUpperCaseCall)
 .
 Definition name_privtoUpperCaseCall : id :=  "%toUpperCaseCall" .
-Definition privunescape :=  value_object 316 .
+Definition privunescape :=  value_object 176 .
 Definition name_privunescape : id :=  "%unescape" .
 Definition privunescapeCall := 
 value_closure
 (closure_intro [] None ["obj"; "this"; "args"] ex_privunescapeCall)
 .
 Definition name_privunescapeCall : id :=  "%unescapeCall" .
-Definition privunshift :=  value_object 118 .
+Definition privunshift :=  value_object 70 .
 Definition name_privunshift : id :=  "%unshift" .
 Definition privunshiftCall := 
 value_closure
@@ -12203,43 +12162,43 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 33;
+                                       value_object 26;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("hasOwnProperty", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 42;
-                                       attributes_data_writable := false;
+                                       value_object 33;
+                                       attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("isPrototypeOf", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 43;
-                                       attributes_data_writable := false;
+                                       value_object 34;
+                                       attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("propertyIsEnumerable", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 39;
+                                       value_object 30;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("toLocaleString", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 40;
-                                       attributes_data_writable := false;
+                                       value_object 31;
+                                       attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("toString", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 38;
+                                       value_object 29;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("valueOf", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 41;
+                                       value_object 32;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})];
@@ -12252,37 +12211,37 @@ Definition store_items := [
       object_properties :=
       from_list [("Array", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 101;
+                                       value_object 64;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("Boolean", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 31;
+                                       value_object 25;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("Date", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 171;
+                                       value_object 96;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("Error", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 44;
+                                       value_object 35;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("EvalError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 46;
+                                       value_object 37;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("Function", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 311;
+                                       value_object 172;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -12294,7 +12253,7 @@ Definition store_items := [
                                        attributes_data_configurable := false|});
                  ("Math", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 255;
+                                       value_object 143;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -12306,121 +12265,121 @@ Definition store_items := [
                                        attributes_data_configurable := false|});
                  ("Number", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 24;
+                                       value_object 21;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("Object", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 33;
+                                       value_object 26;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("RangeError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 47;
+                                       value_object 38;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("ReferenceError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 48;
+                                       value_object 39;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("RegExp", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 248;
+                                       value_object 136;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("String", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 27;
+                                       value_object 23;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("SyntaxError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 45;
+                                       value_object 36;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("TypeError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 49;
+                                       value_object 40;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("URIError", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 51;
+                                       value_object 42;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("console", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 309;
+                                       value_object 170;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("decodeURI", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 250;
+                                       value_object 138;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("decodeURIComponent", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 251;
+                                       value_object 139;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("encodeURI", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 252;
+                                       value_object 140;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("encodeURIComponent", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 253;
+                                       value_object 141;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("escape", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 314;
+                                       value_object 175;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("eval", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 310;
+                                       value_object 171;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("isFinite", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 312;
+                                       value_object 173;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("isNaN", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 21;
+                                       value_object 19;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("parseFloat", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 313;
+                                       value_object 174;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("parseInt", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 249;
+                                       value_object 137;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -12428,7 +12387,7 @@ Definition store_items := [
                   attributes_data_of {|attributes_data_value :=
                                        value_object 15;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("undefined", 
                   attributes_data_of {|attributes_data_value :=
@@ -12438,7 +12397,7 @@ Definition store_items := [
                                        attributes_data_configurable := false|});
                  ("unescape", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 316;
+                                       value_object 176;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
@@ -12446,7 +12405,7 @@ Definition store_items := [
                   attributes_data_of {|attributes_data_value :=
                                        value_object 2;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})];
       object_internal := from_list []|});
 (3, {|object_attrs :=
@@ -12457,7 +12416,7 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 44;
+                                       value_object 35;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := true;
                                        attributes_data_configurable := true|});
@@ -12475,9 +12434,9 @@ Definition store_items := [
                                        attributes_data_configurable := true|});
                  ("toString", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 22;
+                                       value_object 20;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})];
       object_internal := from_list []|});
 (4, {|object_attrs :=
@@ -12488,7 +12447,7 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 49;
+                                       value_object 40;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := true;
                                        attributes_data_configurable := true|});
@@ -12513,7 +12472,7 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 48;
+                                       value_object 39;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := true;
                                        attributes_data_configurable := true|});
@@ -12538,7 +12497,7 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 45;
+                                       value_object 36;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := true;
                                        attributes_data_configurable := true|});
@@ -12563,7 +12522,7 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 46;
+                                       value_object 37;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := true;
                                        attributes_data_configurable := true|});
@@ -12588,7 +12547,7 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 47;
+                                       value_object 38;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := true;
                                        attributes_data_configurable := true|});
@@ -12613,21 +12572,21 @@ Definition store_items := [
       object_properties :=
       from_list [("constructor", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 31;
+                                       value_object 25;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("toString", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 28;
+                                       value_object 24;
                                        attributes_data_writable := true;
                                        attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("valueOf", 
                   attributes_data_of {|attributes_data_value :=
-                                       value_object 296;
+                                       value_object 163;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|})];
       object_internal := from_list [("primval",  value_false)]|});
 (10, {|object_attrs :=
@@ -12638,45 +12597,45 @@ Definition store_items := [
        object_properties :=
        from_list [("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 24;
+                                        value_object 21;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
                   ("toExponential", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 303;
+                                        value_object 166;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toFixed", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 298;
+                                        value_object 164;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toLocaleString", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 301;
+                                        value_object 165;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toPrecision", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 305;
+                                        value_object 167;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toString", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 153;
+                                        value_object 82;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("valueOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 294;
+                                        value_object 162;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})];
        object_internal :=
        from_list [("primval",  value_number (JsNumber.of_int (0)))]|});
@@ -12688,39 +12647,39 @@ Definition store_items := [
        object_properties :=
        from_list [("charAt", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 103;
+                                        value_object 65;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("charCodeAt", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 106;
+                                        value_object 66;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("concat", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 109;
+                                        value_object 67;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 27;
+                                        value_object 23;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("indexOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 156;
+                                        value_object 83;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("lastIndexOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 158;
+                                        value_object 85;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -12730,69 +12689,69 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("localeCompare", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 159;
+                                        value_object 86;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("replace", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 157;
+                                        value_object 84;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("slice", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 160;
+                                        value_object 87;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("split", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 163;
+                                        value_object 90;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("substring", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 112;
+                                        value_object 68;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toLocaleLowerCase", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 161;
+                                        value_object 88;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toLocaleUpperCase", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 162;
+                                        value_object 89;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toLowerCase", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 161;
+                                        value_object 88;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toString", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 25;
+                                        value_object 22;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toUpperCase", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 162;
+                                        value_object 89;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("valueOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 292;
+                                        value_object 161;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})];
        object_internal := from_list [("primval",  value_string "")]|});
 (12, {|object_attrs :=
@@ -12805,11 +12764,11 @@ Definition store_items := [
                    attributes_data_of {|attributes_data_value :=
                                         value_object 18;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("bind", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 150;
+                                        value_object 81;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
@@ -12817,11 +12776,11 @@ Definition store_items := [
                    attributes_data_of {|attributes_data_value :=
                                         value_object 17;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 311;
+                                        value_object 172;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
@@ -12900,84 +12859,20 @@ Definition store_items := [
        object_properties := from_list [];
        object_internal := from_list []|});
 (19, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 17;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(20, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 18;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(21, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privisNaNCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(22, {|object_attrs :=
+(20, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privetsCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(23, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 22;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(24, {|object_attrs :=
+(21, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13033,7 +12928,7 @@ Definition store_items := [
                      ("%MakeNumber", privMakeNumber);
                      ("%ToNumber", privToNumber)] None ["constr"; "args"]
                     ex_internal1))]|});
-(25, {|object_attrs :=
+(22, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13046,30 +12941,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(26, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 25;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(27, {|object_attrs :=
+(23, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13077,9 +12949,9 @@ Definition store_items := [
        object_properties :=
        from_list [("fromCharCode", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 74;
+                                        value_object 54;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -13100,7 +12972,7 @@ Definition store_items := [
                     [("%MakeString", privMakeString);
                      ("%StringCall", privStringCall)] None ["constr"; "args"]
                     ex_internal2))]|});
-(28, {|object_attrs :=
+(24, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13113,63 +12985,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(29, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(30, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 28;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(31, {|object_attrs :=
+(25, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13178,14 +12994,14 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (1));
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
-                                        attributes_data_configurable := true|});
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
                   ("prototype", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 9;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal :=
        from_list [("construct", 
@@ -13194,25 +13010,7 @@ Definition store_items := [
                     [("%MakeBoolean", privMakeBoolean);
                      ("%ToBoolean", privToBoolean)] None ["constr"; "args"]
                     ex_internal3))]|});
-(32, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 9;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(33, {|object_attrs :=
+(26, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13220,15 +13018,15 @@ Definition store_items := [
        object_properties :=
        from_list [("create", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 58;
+                                        value_object 46;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("defineProperties", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 56;
+                                        value_object 45;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("defineProperty", 
                    attributes_data_of {|attributes_data_value :=
@@ -13238,51 +13036,51 @@ Definition store_items := [
                                         attributes_data_configurable := true|});
                   ("freeze", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 62;
+                                        value_object 48;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("getOwnPropertyDescriptor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 36;
+                                        value_object 28;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("getOwnPropertyNames", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 53;
+                                        value_object 44;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("getPrototypeOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 34;
+                                        value_object 27;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("isExtensible", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 70;
+                                        value_object 52;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("isFrozen", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 66;
+                                        value_object 50;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("isSealed", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 68;
+                                        value_object 51;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("keys", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 72;
+                                        value_object 53;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -13292,7 +13090,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("preventExtensions", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 64;
+                                        value_object 49;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
@@ -13304,7 +13102,7 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("seal", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 60;
+                                        value_object 47;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})];
@@ -13313,57 +13111,21 @@ Definition store_items := [
                    value_closure
                    (closure_intro [("%ObjectCall", privObjectCall)] None
                     ["constr"; "args"] ex_internal4))]|});
-(34, {|object_attrs :=
+(27, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privgpoCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(35, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 34;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(36, {|object_attrs :=
+(28, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privgopdCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(37, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 36;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(38, {|object_attrs :=
+(29, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13376,7 +13138,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(39, {|object_attrs :=
+(30, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13389,7 +13151,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(40, {|object_attrs :=
+(31, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13402,7 +13164,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(41, {|object_attrs :=
+(32, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13415,7 +13177,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(42, {|object_attrs :=
+(33, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13428,7 +13190,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(43, {|object_attrs :=
+(34, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13441,7 +13203,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(44, {|object_attrs :=
+(35, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13461,7 +13223,7 @@ Definition store_items := [
                      ("%ToString", privToString);
                      ("proto", privErrorProto)] None ["this"; "args"]
                     ex_internal5))]|});
-(45, {|object_attrs :=
+(36, {|object_attrs :=
        {|oattrs_proto := privSyntaxErrorProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13481,7 +13243,7 @@ Definition store_items := [
                      ("%ToString", privToString);
                      ("proto", privSyntaxErrorProto)] None ["this"; "args"]
                     ex_internal6))]|});
-(46, {|object_attrs :=
+(37, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13501,7 +13263,7 @@ Definition store_items := [
                      ("%ToString", privToString);
                      ("proto", privEvalErrorProto)] None ["this"; "args"]
                     ex_internal7))]|});
-(47, {|object_attrs :=
+(38, {|object_attrs :=
        {|oattrs_proto := privRangeErrorProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13521,7 +13283,7 @@ Definition store_items := [
                      ("%ToString", privToString);
                      ("proto", privRangeErrorProto)] None ["this"; "args"]
                     ex_internal8))]|});
-(48, {|object_attrs :=
+(39, {|object_attrs :=
        {|oattrs_proto := privReferenceErrorProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13541,7 +13303,7 @@ Definition store_items := [
                      ("%ToString", privToString);
                      ("proto", privReferenceErrorProto)] None
                     ["this"; "args"] ex_internal9))]|});
-(49, {|object_attrs :=
+(40, {|object_attrs :=
        {|oattrs_proto := privTypeErrorProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13561,7 +13323,7 @@ Definition store_items := [
                      ("%ToString", privToString);
                      ("proto", privTypeErrorProto)] None ["this"; "args"]
                     ex_internal10))]|});
-(50, {|object_attrs :=
+(41, {|object_attrs :=
        {|oattrs_proto := privErrorProto;
          oattrs_class := "Object";
          oattrs_extensible := true;
@@ -13569,7 +13331,7 @@ Definition store_items := [
        object_properties :=
        from_list [("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 51;
+                                        value_object 42;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := true;
                                         attributes_data_configurable := true|});
@@ -13580,7 +13342,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(51, {|object_attrs :=
+(42, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -13588,7 +13350,7 @@ Definition store_items := [
        object_properties :=
        from_list [("prototype", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 50;
+                                        value_object 41;
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
@@ -13600,7 +13362,7 @@ Definition store_items := [
                      ("%ToString", privToString);
                      ("proto", privURIErrorProto)] None ["this"; "args"]
                     ex_internal11))]|});
-(52, {|object_attrs :=
+(43, {|object_attrs :=
        {|oattrs_proto := privObjectProto;
          oattrs_class := "Array";
          oattrs_extensible := true;
@@ -13608,51 +13370,51 @@ Definition store_items := [
        object_properties :=
        from_list [("concat", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 95;
+                                        value_object 62;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("constructor", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 101;
+                                        value_object 64;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("every", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 138;
+                                        value_object 77;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("filter", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 133;
+                                        value_object 75;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("forEach", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 127;
+                                        value_object 73;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("indexOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 121;
+                                        value_object 71;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("join", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 76;
+                                        value_object 55;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("lastIndexOf", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 124;
+                                        value_object 72;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -13662,438 +13424,160 @@ Definition store_items := [
                                         attributes_data_configurable := false|});
                   ("map", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 130;
+                                        value_object 74;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("pop", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 78;
+                                        value_object 56;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("push", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 81;
+                                        value_object 57;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("reduce", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 135;
+                                        value_object 76;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("reduceRight", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 144;
+                                        value_object 79;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("reverse", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 84;
+                                        value_object 58;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("shift", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 87;
+                                        value_object 59;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("slice", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 147;
+                                        value_object 80;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("some", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 141;
+                                        value_object 78;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("sort", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 98;
+                                        value_object 63;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("splice", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 115;
+                                        value_object 69;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toLocaleString", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 93;
+                                        value_object 61;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("toString", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 90;
+                                        value_object 60;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|});
                   ("unshift", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_object 118;
+                                        value_object 70;
                                         attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})];
        object_internal := from_list []|});
-(53, {|object_attrs :=
+(44, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privgopnCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(54, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 53;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(55, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 16;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(56, {|object_attrs :=
+(45, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privdefinePropertiesCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(57, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 56;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(58, {|object_attrs :=
+(46, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privcreateCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(59, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 58;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(60, {|object_attrs :=
+(47, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privsealCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(61, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 60;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(62, {|object_attrs :=
+(48, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privfreezeCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(63, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 62;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(64, {|object_attrs :=
+(49, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privpreventExtensionsCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(65, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 64;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(66, {|object_attrs :=
+(50, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privisFrozenCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(67, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 66;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(68, {|object_attrs :=
+(51, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privisSealedCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(69, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 68;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(70, {|object_attrs :=
+(52, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privisExtensibleCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(71, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 70;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(72, {|object_attrs :=
+(53, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privkeysCall|};
        object_properties := from_list [];
        object_internal := from_list []|});
-(73, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 72;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(74, {|object_attrs :=
+(54, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -14106,30 +13590,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(75, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 74;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(76, {|object_attrs :=
+(55, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -14138,34 +13599,11 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (1));
-                                        attributes_data_writable := true;
+                                        attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(77, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int (1));
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(78, {|object_attrs :=
+(56, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -14174,47 +13612,11 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(79, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := true;
+                                        attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(80, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 78;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(81, {|object_attrs :=
+(57, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -14223,47 +13625,11 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (1));
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(82, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int (1));
-                                        attributes_data_writable := true;
+                                        attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(83, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 81;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(84, {|object_attrs :=
+(58, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -14272,47 +13638,11 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(85, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := true;
+                                        attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(86, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 84;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(87, {|object_attrs :=
+(59, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -14321,47 +13651,11 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := true;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(88, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int (0));
-                                        attributes_data_writable := true;
+                                        attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(89, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 87;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(90, {|object_attrs :=
+(60, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -14374,48 +13668,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(91, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 90;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("writable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(92, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 76;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(93, {|object_attrs :=
+(61, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -14428,25 +13681,7 @@ Definition store_items := [
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(94, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("configurable", 
-                   attributes_data_of {|attributes_data_value := value_true;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 93;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(95, {|object_attrs :=
+(62, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -14455,42 +13690,11 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (1));
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := true|})];
-       object_internal := from_list []|});
-(96, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|});
-                  ("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int (1));
-                                        attributes_data_writable := true;
+                                        attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
        object_internal := from_list []|});
-(97, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
-         oattrs_extensible := true;
-         oattrs_code := objCode|};
-       object_properties :=
-       from_list [("value", 
-                   attributes_data_of {|attributes_data_value :=
-                                        value_object 95;
-                                        attributes_data_writable := true;
-                                        attributes_data_enumerable := false;
-                                        attributes_data_configurable := false|})];
-       object_internal := from_list []|});
-(98, {|object_attrs :=
+(63, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
@@ -14499,2997 +13703,949 @@ Definition store_items := [
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
                                         value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(64, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privArrayCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("prototype", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 43;
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal :=
+       from_list [("construct", 
+                   value_closure
+                   (closure_intro
+                    [("%ComputeLength", privComputeLength);
+                     ("%JSError", privJSError);
+                     ("%MakeArray", privMakeArray);
+                     ("%RangeErrorProto", privRangeErrorProto);
+                     ("%ToUint32", privToUint32);
+                     ("%defineOwnProperty", privdefineOwnProperty)] None
+                    ["this"; "args"] ex_internal12))]|});
+(65, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privcharAtCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(66, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privcharCodeAtCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(67, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privstringConcatCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(68, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privsubstringCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (2));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(69, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privspliceCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (2));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(70, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privunshiftCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(71, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privarrayIndexOfCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(72, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privarrayLastIndexOfCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(73, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privforeachCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(74, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privmapCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(75, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privfilterCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(76, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privreduceCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(77, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := priveveryCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(78, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privsomeCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(79, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privreduceRightCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(80, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privsliceCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (2));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(81, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privbindCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(82, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privnumberToStringCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(83, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privstringIndexOfCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(84, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privreplaceCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (2));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(85, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privstringLastIndexOfCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(86, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privlocaleCompareCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(87, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privstringSliceCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (2));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(88, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privtoLowerCaseCall|};
+       object_properties := from_list [];
+       object_internal := from_list []|});
+(89, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privtoUpperCaseCall|};
+       object_properties := from_list [];
+       object_internal := from_list []|});
+(90, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privsplitCall|};
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (2));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
+       object_internal := from_list []|});
+(91, {|object_attrs :=
+       {|oattrs_proto := proto;
+         oattrs_class := "Object";
+         oattrs_extensible := true;
+         oattrs_code := privgetYearCall|};
+       object_properties := from_list [];
+       object_internal := from_list []|});
+(92, {|object_attrs :=
+       {|oattrs_proto := proto;
+         oattrs_class := "Object";
+         oattrs_extensible := true;
+         oattrs_code := privgetMonthCall|};
+       object_properties := from_list [];
+       object_internal := from_list []|});
+(93, {|object_attrs :=
+       {|oattrs_proto := privObjectProto;
+         oattrs_class := "Date";
+         oattrs_extensible := true;
+         oattrs_code := objCode|};
+       object_properties :=
+       from_list [("getDate", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 99;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getDay", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 98;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getFullYear", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 103;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getHours", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 108;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getMilliseconds", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 114;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getMinutes", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 110;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getMonth", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 92;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getSeconds", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 112;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getTime", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 102;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getTimezoneOffset", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 97;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getUTCDate", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 106;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getUTCDay", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 107;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getUTCFullYear", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 104;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getUTCHours", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 109;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getUTCMilliseconds", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 115;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getUTCMinutes", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 111;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getUTCMonth", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 105;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getUTCSeconds", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 113;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("getYear", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 91;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setDate", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 125;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setFullYear", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 129;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setHours", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 123;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setMilliseconds", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 117;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setMinutes", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 121;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setMonth", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 127;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setSeconds", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 119;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setTime", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 116;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setUTCDate", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 126;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setUTCFullYear", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 130;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setUTCHours", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 124;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setUTCMilliseconds", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 118;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setUTCMinutes", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 122;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setUTCMonth", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 128;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setUTCSeconds", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 120;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("setYear", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 133;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("toGMTString", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 132;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("toString", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 94;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("toUTCString", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 131;
+                                        attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("valueOf", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 95;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := true|})];
        object_internal := from_list []|});
-(99, {|object_attrs :=
-       {|oattrs_proto := proto;
-         oattrs_class := "Object";
+(94, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
          oattrs_extensible := true;
-         oattrs_code := objCode|};
+         oattrs_code := privdateToStringCall|};
+       object_properties := from_list [];
+       object_internal := from_list []|});
+(95, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privdateValueOfCall|};
+       object_properties := from_list [];
+       object_internal := from_list []|});
+(96, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privDateCall|};
        object_properties :=
-       from_list [("enumerable", 
-                   attributes_data_of {|attributes_data_value := value_false;
+       from_list [("UTC", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 101;
                                         attributes_data_writable := true;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (7));
+                                        attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|});
-                  ("value", 
+                  ("parse", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int (1));
+                                        value_object 100;
                                         attributes_data_writable := true;
                                         attributes_data_enumerable := false;
+                                        attributes_data_configurable := true|});
+                  ("prototype", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_object 93;
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
+       object_internal :=
+       from_list [("construct", 
+                   value_closure
+                   (closure_intro
+                    [("%ComputeLength", privComputeLength);
+                     ("%DateProto", privDateProto);
+                     ("%MakeDate", privMakeDate);
+                     ("%MakeDateDayTime", privMakeDateDayTime);
+                     ("%MakeDay", privMakeDay);
+                     ("%MakeTime", privMakeTime);
+                     ("%TimeClip", privTimeClip);
+                     ("%ToInteger", privToInteger);
+                     ("%ToNumber", privToNumber);
+                     ("%ToPrimitive", privToPrimitive);
+                     ("%UTC", privUTC);
+                     ("%getCurrentUTC", privgetCurrentUTC);
+                     ("%parse", privparse)] None ["constr"; "args"]
+                    ex_internal13))]|});
+(97, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Object";
+         oattrs_extensible := true;
+         oattrs_code := privdateGetTimezoneOffsetCall|};
+       object_properties := from_list [];
+       object_internal := from_list []|});
+(98, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privdategetDayCall|};
+       object_properties := from_list [];
+       object_internal := from_list []|});
+(99, {|object_attrs :=
+       {|oattrs_proto := privFunctionProto;
+         oattrs_class := "Function";
+         oattrs_extensible := true;
+         oattrs_code := privdategetDateCall|};
+       object_properties := from_list [];
        object_internal := from_list []|});
 (100, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 98;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(101, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privArrayCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("prototype", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 52;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal :=
-        from_list [("construct", 
-                    value_closure
-                    (closure_intro
-                     [("%ComputeLength", privComputeLength);
-                      ("%JSError", privJSError);
-                      ("%MakeArray", privMakeArray);
-                      ("%RangeErrorProto", privRangeErrorProto);
-                      ("%ToUint32", privToUint32);
-                      ("%defineOwnProperty", privdefineOwnProperty)] 
-                     None ["this"; "args"] ex_internal12))]|});
-(102, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 101;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(103, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privcharAtCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(104, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(105, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 103;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(106, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privcharCodeAtCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(107, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(108, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 106;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(109, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privstringConcatCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(110, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(111, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 109;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(112, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privsubstringCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(113, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(114, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 112;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(115, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privspliceCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(116, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(117, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 115;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(118, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privunshiftCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(119, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(120, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 118;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(121, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privarrayIndexOfCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(122, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(123, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 121;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(124, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privarrayLastIndexOfCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(125, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(126, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 124;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(127, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privforeachCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(128, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(129, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 127;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(130, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privmapCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(131, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(132, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 130;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(133, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privfilterCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(134, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 133;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(135, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privreduceCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(136, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(137, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 135;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(138, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := priveveryCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(139, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(140, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 138;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(141, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privsomeCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(142, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(143, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 141;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(144, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privreduceRightCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(145, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(146, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 144;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(147, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privsliceCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(148, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(149, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 147;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(150, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privbindCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(151, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(152, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 150;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(153, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privnumberToStringCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(154, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(155, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 153;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(156, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privstringIndexOfCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(157, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privreplaceCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(158, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privstringLastIndexOfCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(159, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privlocaleCompareCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(160, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privstringSliceCall|};
-        object_properties :=
-        from_list [("length", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(161, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privtoLowerCaseCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(162, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privtoUpperCaseCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(163, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privsplitCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(164, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 163;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(165, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := privgetYearCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(166, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := privgetMonthCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(167, {|object_attrs :=
-        {|oattrs_proto := privObjectProto;
-          oattrs_class := "Date";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("getDate", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 176;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getDay", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 174;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getFullYear", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 184;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getHours", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 194;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getMilliseconds", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 206;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getMinutes", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 198;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getMonth", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 166;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("getSeconds", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 202;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getTime", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 182;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getTimezoneOffset", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 172;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCDate", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 190;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCDay", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 192;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCFullYear", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 186;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCHours", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 196;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCMilliseconds", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 208;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCMinutes", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 200;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCMonth", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 188;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getUTCSeconds", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 204;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("getYear", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 165;
-                                         attributes_data_writable := false;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("setDate", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 228;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setFullYear", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 236;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setHours", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 224;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setMilliseconds", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 212;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setMinutes", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 220;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setMonth", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 232;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setSeconds", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 216;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setTime", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 210;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setUTCDate", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 230;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setUTCFullYear", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 238;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setUTCHours", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 226;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setUTCMilliseconds", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 214;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setUTCMinutes", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 222;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setUTCMonth", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 234;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setUTCSeconds", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 218;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("setYear", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 244;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("toGMTString", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 242;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("toString", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 168;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("toUTCString", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 240;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("valueOf", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 170;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(168, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privdateToStringCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(169, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 168;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(170, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privdateValueOfCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(171, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privDateCall|};
-        object_properties :=
-        from_list [("UTC", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 180;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("parse", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 178;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable := true|});
-                   ("prototype", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 167;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal :=
-        from_list [("construct", 
-                    value_closure
-                    (closure_intro
-                     [("%ComputeLength", privComputeLength);
-                      ("%DateProto", privDateProto);
-                      ("%MakeDate", privMakeDate);
-                      ("%MakeDateDayTime", privMakeDateDayTime);
-                      ("%MakeDay", privMakeDay);
-                      ("%MakeTime", privMakeTime);
-                      ("%TimeClip", privTimeClip);
-                      ("%ToInteger", privToInteger);
-                      ("%ToNumber", privToNumber);
-                      ("%ToPrimitive", privToPrimitive);
-                      ("%UTC", privUTC);
-                      ("%getCurrentUTC", privgetCurrentUTC);
-                      ("%parse", privparse)] None ["constr"; "args"]
-                     ex_internal13))]|});
-(172, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := privdateGetTimezoneOffsetCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(173, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 172;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(174, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privdategetDayCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(175, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 174;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(176, {|object_attrs :=
-        {|oattrs_proto := privFunctionProto;
-          oattrs_class := "Function";
-          oattrs_extensible := true;
-          oattrs_code := privdategetDateCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(177, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 176;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(178, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode1|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(179, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 178;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(180, {|object_attrs :=
+(101, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode2|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(181, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 180;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(182, {|object_attrs :=
+(102, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode3|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(183, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 182;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(184, {|object_attrs :=
+(103, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode4|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(185, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 184;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(186, {|object_attrs :=
+(104, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode5|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(187, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 186;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(188, {|object_attrs :=
+(105, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode6|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(189, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 188;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(190, {|object_attrs :=
+(106, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode7|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(191, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 190;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(192, {|object_attrs :=
+(107, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode8|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(193, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 192;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(194, {|object_attrs :=
+(108, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode9|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(195, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 194;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(196, {|object_attrs :=
+(109, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode10|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(197, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 196;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(198, {|object_attrs :=
+(110, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode11|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(199, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 198;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(200, {|object_attrs :=
+(111, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode12|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(201, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 200;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(202, {|object_attrs :=
+(112, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode13|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(203, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 202;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(204, {|object_attrs :=
+(113, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode14|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(205, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 204;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(206, {|object_attrs :=
+(114, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode15|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(207, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 206;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(208, {|object_attrs :=
+(115, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode16|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(209, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 208;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(210, {|object_attrs :=
+(116, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode17|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(211, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 210;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(212, {|object_attrs :=
+(117, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode18|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(213, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 212;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(214, {|object_attrs :=
+(118, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode19|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(215, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 214;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(216, {|object_attrs :=
+(119, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode20|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(217, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 216;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(218, {|object_attrs :=
+(120, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode21|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(219, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 218;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(220, {|object_attrs :=
+(121, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode22|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(221, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 220;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(222, {|object_attrs :=
+(122, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode23|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(223, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 222;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(224, {|object_attrs :=
+(123, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode24|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(225, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 224;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(226, {|object_attrs :=
+(124, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode25|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(227, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 226;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(228, {|object_attrs :=
+(125, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode26|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(229, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 228;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(230, {|object_attrs :=
+(126, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode27|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(231, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 230;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(232, {|object_attrs :=
+(127, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode28|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(233, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 232;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(234, {|object_attrs :=
+(128, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode29|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(235, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 234;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(236, {|object_attrs :=
+(129, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode30|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(237, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 236;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(238, {|object_attrs :=
+(130, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode31|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(239, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 238;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(240, {|object_attrs :=
+(131, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode32|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(241, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 240;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(242, {|object_attrs :=
+(132, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode33|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(243, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 242;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(244, {|object_attrs :=
+(133, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode34|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(245, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 244;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(246, {|object_attrs :=
+(134, {|object_attrs :=
         {|oattrs_proto := proto;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_code := privtestCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(247, {|object_attrs :=
+(135, {|object_attrs :=
         {|oattrs_proto := privObjectProto;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -17497,19 +14653,19 @@ Definition store_items := [
         object_properties :=
         from_list [("constructor", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 248;
+                                         value_object 136;
                                          attributes_data_writable := true;
                                          attributes_data_enumerable := true;
                                          attributes_data_configurable := true|});
                    ("test", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 246;
+                                         value_object 134;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(248, {|object_attrs :=
+(136, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
@@ -17524,7 +14680,7 @@ Definition store_items := [
                                          false|});
                    ("prototype", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 247;
+                                         value_object 135;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
@@ -17534,49 +14690,49 @@ Definition store_items := [
                     value_closure
                     (closure_intro [("%RegExpProto", privRegExpProto)] 
                      None ["obj"; "this"; "args"] ex_internal14))]|});
-(249, {|object_attrs :=
+(137, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privparseIntCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(250, {|object_attrs :=
+(138, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privdecodeURICall|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(251, {|object_attrs :=
+(139, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privdecodeURIComponentCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(252, {|object_attrs :=
+(140, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privencodeURICall|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(253, {|object_attrs :=
+(141, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privencodeURIComponentCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(254, {|object_attrs :=
+(142, {|object_attrs :=
         {|oattrs_proto := proto;
           oattrs_class := "Object";
           oattrs_extensible := true;
           oattrs_code := privexpCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(255, {|object_attrs :=
+(143, {|object_attrs :=
         {|oattrs_proto := proto;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -17640,115 +14796,115 @@ Definition store_items := [
                                          false|});
                    ("abs", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 262;
+                                         value_object 146;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("acos", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 264;
+                                         value_object 147;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("asin", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 266;
+                                         value_object 148;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("atan", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 268;
+                                         value_object 149;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("atan2", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 270;
+                                         value_object 150;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("ceil", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 286;
+                                         value_object 158;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("cos", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 272;
+                                         value_object 151;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("exp", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 254;
+                                         value_object 142;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("floor", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 288;
+                                         value_object 159;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("log", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 284;
+                                         value_object 157;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("max", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 259;
+                                         value_object 145;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("min", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 256;
+                                         value_object 144;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("pow", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 290;
+                                         value_object 160;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("random", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 274;
+                                         value_object 152;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("round", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 276;
+                                         value_object 153;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("sin", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 278;
+                                         value_object 154;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("sqrt", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 280;
+                                         value_object 155;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|});
                    ("tan", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 282;
+                                         value_object 156;
                                          attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
+                                         attributes_data_enumerable := false;
                                          attributes_data_configurable := true|})];
         object_internal := from_list []|});
-(256, {|object_attrs :=
+(144, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
@@ -17757,58 +14913,12 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := true;
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(257, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(258, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 256;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(259, {|object_attrs :=
+(145, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
@@ -17817,562 +14927,264 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := true;
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(260, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (2));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(261, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 259;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(262, {|object_attrs :=
+(146, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privmathAbsCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(263, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 262;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(264, {|object_attrs :=
+(147, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privacosCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(265, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 264;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(266, {|object_attrs :=
+(148, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privasinCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(267, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 266;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(268, {|object_attrs :=
+(149, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privatanCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(269, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 268;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(270, {|object_attrs :=
+(150, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privatan2Call|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(271, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 270;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (2));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(272, {|object_attrs :=
+(151, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privcosCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(273, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 272;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(274, {|object_attrs :=
+(152, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privrandomCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(275, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 274;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (0));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(276, {|object_attrs :=
+(153, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privroundCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(277, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 276;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(278, {|object_attrs :=
+(154, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privsinCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(279, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 278;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(280, {|object_attrs :=
+(155, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privsqrtCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(281, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 280;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(282, {|object_attrs :=
+(156, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privtanCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(283, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 282;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(284, {|object_attrs :=
+(157, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privmathLogCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(285, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 284;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(286, {|object_attrs :=
+(158, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privmathCeilCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(287, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 286;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(288, {|object_attrs :=
+(159, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privmathFloorCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(289, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 288;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(290, {|object_attrs :=
+(160, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privmathPowCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(291, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 290;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (2));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(292, {|object_attrs :=
+(161, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode35|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(293, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 292;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (0));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(294, {|object_attrs :=
+(162, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode36|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(295, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 294;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (0));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(296, {|object_attrs :=
+(163, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := objCode37|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(297, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 296;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (0));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(298, {|object_attrs :=
+(164, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
@@ -18381,162 +15193,54 @@ Definition store_items := [
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
                                          value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := true;
-                                         attributes_data_configurable := true|})];
-        object_internal := from_list []|});
-(299, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_number (JsNumber.of_int (1));
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(300, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
-        object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
-                    attributes_data_of {|attributes_data_value :=
-                                         value_object 298;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|})];
-        object_internal := from_list []|});
-(301, {|object_attrs :=
+(165, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privnumTLSCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(302, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 301;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (0));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(303, {|object_attrs :=
+(166, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privtoExponentialCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(304, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 303;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(305, {|object_attrs :=
+(167, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privtoPrecisionCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(306, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 305;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(307, {|object_attrs :=
+(168, {|object_attrs :=
         {|oattrs_proto := proto;
           oattrs_class := "ObjEnvRec";
           oattrs_extensible := true;
@@ -18546,14 +15250,14 @@ Definition store_items := [
         from_list [("bindings",  value_object 2);
                    ("parent",  value_null);
                    ("provideThis",  value_false)]|});
-(308, {|object_attrs :=
+(169, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privlogCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(309, {|object_attrs :=
+(170, {|object_attrs :=
         {|oattrs_proto := proto;
           oattrs_class := "Object";
           oattrs_extensible := true;
@@ -18561,41 +15265,41 @@ Definition store_items := [
         object_properties :=
         from_list [("error", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 308;
+                                         value_object 169;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("info", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 308;
+                                         value_object 169;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("log", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 308;
+                                         value_object 169;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|});
                    ("warn", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 308;
+                                         value_object 169;
                                          attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(310, {|object_attrs :=
+(171, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privevalCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(311, {|object_attrs :=
+(172, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
@@ -18623,94 +15327,44 @@ Definition store_items := [
                       ("%ToString", privToString);
                       ("%evalCall", privevalCall)] None ["this"; "args"]
                      ex_internal15))]|});
-(312, {|object_attrs :=
+(173, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privisFiniteCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(313, {|object_attrs :=
+(174, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privparseFloatCall|};
         object_properties := from_list [];
         object_internal := from_list []|});
-(314, {|object_attrs :=
+(175, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privescapeCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(315, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 314;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
         object_internal := from_list []|});
-(316, {|object_attrs :=
+(176, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privunescapeCall|};
-        object_properties := from_list [];
-        object_internal := from_list []|});
-(317, {|object_attrs :=
-        {|oattrs_proto := proto;
-          oattrs_class := "Object";
-          oattrs_extensible := true;
-          oattrs_code := objCode|};
         object_properties :=
-        from_list [("configurable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("enumerable", 
-                    attributes_data_of {|attributes_data_value := value_false;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("value", 
+        from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
-                                         value_object 316;
-                                         attributes_data_writable := true;
-                                         attributes_data_enumerable := false;
-                                         attributes_data_configurable :=
-                                         false|});
-                   ("writable", 
-                    attributes_data_of {|attributes_data_value := value_true;
-                                         attributes_data_writable := true;
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
                                          attributes_data_enumerable := false;
                                          attributes_data_configurable :=
                                          false|})];
