@@ -593,6 +593,79 @@ Record object_related BR jobj obj : Prop := {
     object_related_properties : object_properties_related BR (J.object_properties_ jobj) (L.object_properties obj)
 }.
 
+(** *** Relating descriptors *)
+
+Inductive descriptor_attr_related BR : J.value -> L.attributes -> Prop :=
+| descriptor_attr_related_intro : forall jv v,
+    value_related BR jv v ->
+    descriptor_attr_related BR jv (L.attributes_data_of (L.attributes_data_intro v false false false)).
+
+Inductive descriptor_bool_attr_related BR : bool -> L.attributes -> Prop :=
+| descriptor_bool_attr_related_intro : forall b,
+    descriptor_bool_attr_related BR b 
+        (L.attributes_data_of (L.attributes_data_intro (L.value_bool b) false false false)).
+
+Definition option_descriptor_attr_related BR := Option2 (descriptor_attr_related BR).
+
+Definition option_descriptor_bool_attr_related BR := Option2 (descriptor_bool_attr_related BR).
+
+Record descriptor_related BR jdesc obj : Prop := {
+    descriptor_related_class : L.object_class obj = "PropDesc";
+    descriptor_related_extensible : L.object_extensible obj = false;
+    descriptor_related_value : option_descriptor_attr_related BR 
+        (J.descriptor_value jdesc) (L.object_properties obj\("value"?));
+    descriptor_related_writable : option_descriptor_bool_attr_related BR 
+        (J.descriptor_writable jdesc) (L.object_properties obj\("writable"?));
+    descriptor_related_get : option_descriptor_attr_related BR 
+        (J.descriptor_get jdesc) (L.object_properties obj\("get"?));
+    descriptor_related_set : option_descriptor_attr_related BR 
+        (J.descriptor_set jdesc) (L.object_properties obj\("set"?));
+    descriptor_related_enumerable : option_descriptor_bool_attr_related BR 
+        (J.descriptor_enumerable jdesc) (L.object_properties obj\("enumerable"?));
+    descriptor_related_configurable : option_descriptor_bool_attr_related BR 
+        (J.descriptor_configurable jdesc) (L.object_properties obj\("configurable"?))
+}.
+
+Record data_descriptor_related BR jdata obj : Prop := {
+    data_descriptor_related_class : L.object_class obj = "PropDesc";
+    data_descriptor_related_extensible : L.object_extensible obj = false;
+    data_descriptor_related_has_value : index (L.object_properties obj) "value";
+    data_descriptor_related_has_writable : index (L.object_properties obj) "writable";
+    data_descriptor_related_has_enumerable : index (L.object_properties obj) "enumerable";
+    data_descriptor_related_has_configurable : index (L.object_properties obj) "configurable";
+    data_descriptor_related_value : descriptor_attr_related BR 
+        (J.attributes_data_value jdata) (L.object_properties obj\("value"));
+    data_descriptor_related_writable : descriptor_bool_attr_related BR 
+        (J.attributes_data_writable jdata) (L.object_properties obj\("writable"));
+    data_descriptor_related_enumerable : descriptor_bool_attr_related BR 
+        (J.attributes_data_enumerable jdata) (L.object_properties obj\("enumerable"));
+    data_descriptor_related_configurable : descriptor_bool_attr_related BR 
+        (J.attributes_data_configurable jdata) (L.object_properties obj\("configurable"))
+}.
+
+Record accessor_descriptor_related BR jacc obj : Prop := {
+    accessor_descriptor_related_class : L.object_class obj = "PropDesc";
+    accessor_descriptor_related_extensible : L.object_extensible obj = false;
+    accessor_descriptor_related_has_get : index (L.object_properties obj) "get";
+    accessor_descriptor_related_has_set : index (L.object_properties obj) "set";
+    accessor_descriptor_related_has_enumerable : index (L.object_properties obj) "enumerable";
+    accessor_descriptor_related_has_configurable : index (L.object_properties obj) "configurable";
+    accessor_descriptor_related_get : descriptor_attr_related BR 
+        (J.attributes_accessor_get jacc) (L.object_properties obj\("get"));
+    accessor_descriptor_related_set : descriptor_attr_related BR 
+        (J.attributes_accessor_set jacc) (L.object_properties obj\("set"));
+    accessor_descriptor_related_enumerable : descriptor_bool_attr_related BR 
+        (J.attributes_accessor_enumerable jacc) (L.object_properties obj\("enumerable"));
+    accessor_descriptor_related_configurable : descriptor_bool_attr_related BR 
+        (J.attributes_accessor_configurable jacc) (L.object_properties obj\("configurable"))
+}.
+
+Inductive attributes_descriptor_related BR : J.attributes -> L.object -> Prop := 
+| attributes_descriptor_related_data : forall jdata obj,
+    attributes_descriptor_related BR (J.attributes_data_of jdata) obj
+| attributes_descriptor_related_accessor : forall jacc obj,
+    attributes_descriptor_related BR (J.attributes_accessor_of jacc) obj.
+
 (** *** Relating environment records *)
 
 (* Relates declarative environment records *)
