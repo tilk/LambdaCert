@@ -91,7 +91,7 @@ Proof.
             lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
                 eassumption.
             forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
-            destruct_hyp Hx.
+            destruct_hyp Hx; try ljs_handle_abort.
             ljs_invert_apply.
             repeat ljs_autoforward.
             ljs_invert_apply.

@@ -762,7 +762,7 @@ Proof.
         lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
             eassumption.
         forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
-        destruct_hyp Hx.
+        destruct_hyp Hx; try ljs_handle_abort.
         ljs_invert_apply.
         repeat ljs_autoforward.
         lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
@@ -798,6 +798,7 @@ Proof.
             resvalue_related_only_invert.
             repeat ljs_autoforward.
             inverts keep Hx11. (* TODO *)
+            inverts keep Hx12. (* TODO *)
             asserts Hseval : (jptr <> J.object_loc_prealloc J.prealloc_global_eval \/ 
                     !J.is_syntactic_eval (J.expr_identifier s)). {
                 apply case_classic_l in Hevcond.
@@ -875,7 +876,7 @@ Proof.
     lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
         eassumption.
     forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
-    destruct_hyp Hx.
+    destruct_hyp Hx; try ljs_handle_abort.
     ljs_invert_apply.
     repeat ljs_autoforward.
     lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
@@ -1036,7 +1037,7 @@ Proof.
         lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
             eassumption.
         forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
-        destruct_hyp Hx.
+        destruct_hyp Hx; try ljs_handle_abort.
         ljs_invert_apply.
         repeat ljs_autoforward.
         lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
@@ -1222,7 +1223,7 @@ Proof.
         lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
             eassumption.
         forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
-        destruct_hyp Hx.
+        destruct_hyp Hx; try ljs_handle_abort.
         ljs_invert_apply.
         ref_base_type_var_invert. {
             repeat ljs_autoforward.
@@ -1347,7 +1348,7 @@ Proof.
         lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
             eassumption.
         forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
-        destruct_hyp Hx.
+        destruct_hyp Hx; try ljs_handle_abort.
         ljs_invert_apply.
         repeat ljs_autoforward.
         lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
@@ -2363,7 +2364,7 @@ Proof.
         lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
             eassumption.
         forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
-        destruct_hyp Hx.
+        destruct_hyp Hx; try ljs_handle_abort.
         ljs_invert_apply.
         repeat ljs_autoforward.
         lets Hstrict : execution_ctx_related_strictness_flag (context_invariant_execution_ctx_related Hcinv) ___.
@@ -2443,7 +2444,7 @@ Proof.
         lets Hlerel : execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv) ___.
             eassumption.
         forwards_th Hx : red_spec_lexical_env_get_identifier_ref_lemma.
-        destruct_hyp Hx.
+        destruct_hyp Hx; try ljs_handle_abort.
         ljs_invert_apply.
         repeat ljs_autoforward.
         ljs_invert_apply.

@@ -3092,15 +3092,22 @@ Lemma red_spec_lexical_env_get_identifier_ref_lemma : forall k BR jst jc c st st
     context_invariant BR jc c ->
     state_invariant BR jst st ->
     lexical_env_related BR jlenv v -> 
-    exists k' c' v' jrbt jst' st'' BR',
-    L.red_exprh k' c' st'' (L.expr_app_2 v1 [v']) (L.out_ter st' r) /\
-    J.red_spec jst jc (J.spec_lexical_env_get_identifier_ref jlenv s b) 
-        (J.specret_val jst' (J.ref_intro jrbt s b)) /\
-    state_invariant BR' jst' st'' /\
-    ref_base_type_related BR' jrbt v' /\
-    ref_base_type_var jrbt /\
-    k' < k /\
-    BR \c BR'. (* TODO possible exceptions *)
+    exists BR' jst' jsr,
+    J.red_spec jst jc (J.spec_lexical_env_get_identifier_ref jlenv s b) jsr /\
+    js_specret_state jsr jst' /\
+    ((exists k' c' v' jrbt st'',
+      jsr = J.specret_val jst' (J.ref_intro jrbt s b) /\
+      L.red_exprh k' c' st'' (L.expr_app_2 v1 [v']) (L.out_ter st' r) /\ 
+      state_invariant BR' jst' st'' /\
+      ref_base_type_related BR' jrbt v' /\
+      ref_base_type_var jrbt /\
+      k' < k /\
+      BR \c BR') \/ 
+     (exists jr,
+      jsr = J.specret_out (J.out_ter jst' jr) /\
+      J.abort (J.out_ter jst' jr) /\ J.res_type jr = J.restype_throw /\ 
+      state_invariant BR' jst' st' /\
+      res_related BR' jst' st' jr r /\ BR \c BR')).
 Proof.
     intro k.
     induction_wf IH : lt_wf k.
@@ -3126,7 +3133,8 @@ Proof.
             lets Hp : state_invariant_ctx_parent_ok Hinv Hlrel2.
             destruct_hyp Hp. repeat binds_determine.
             specializes IH ___; try eassumption. math.
-            destruct_hyp IH. jauto_js 8. 
+            destruct_hyp IH; try ljs_handle_abort.
+            jauto_js 20.
         }
     } {
         inverts Herel.
@@ -3136,7 +3144,7 @@ Proof.
         cases_decide as Heq1; rewrite stx_eq_string_eq_lemma in Heq1; tryfalse.
         repeat ljs_autoforward.
         forwards_th : has_property_lemma. eassumption.
-        destr_concl. (*; try ljs_handle_abort. TODO *)
+        destr_concl; try ljs_handle_abort.
         res_related_invert.
         resvalue_related_invert.
         inv_ljs. { (* var found *)
@@ -3148,9 +3156,8 @@ Proof.
             unfolds in Hp. specializes Hp ___. eauto_js.
             destruct_hyp Hp. repeat binds_determine.
             specializes IH ___; try eassumption. math. eauto_js. eauto_js.
-            destruct_hyp IH. jauto_js 8.
+            destruct_hyp IH; try ljs_handle_abort. jauto_js 8.
         }
-        skip. (* TODO exceptions *)
     }
 Qed.
 
