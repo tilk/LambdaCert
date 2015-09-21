@@ -2047,6 +2047,7 @@ Qed.
 Hint Resolve mutability_is_mutable_immutable : js_ljs.
 
 Lemma set_mutable_binding_lemma : forall BR k jst jc c st st' r v ptr s b jeptr jv,
+    ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvSetMutableBinding 
         [L.value_object ptr; L.value_string s; v; L.value_bool b]) (L.out_ter st' r) ->
     context_invariant BR jc c ->
@@ -2056,7 +2057,7 @@ Lemma set_mutable_binding_lemma : forall BR k jst jc c st st' r v ptr s b jeptr 
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_env_record_set_mutable_binding jeptr s jv b) (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv Hlred Hcinv Hinv Hf Hvrel.
+    introv IHc Hlred Hcinv Hinv Hf Hvrel.
     inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply. 
@@ -2108,7 +2109,17 @@ Proof.
             jauto_js 10. 
         }
     } { (* object records *)
-        skip. (* TODO *)
+        inverts Herel.
+        unfolds L.object_class.
+        cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
+        repeat ljs_autoforward.
+        cases_decide as Heq1; rewrite stx_eq_string_eq_lemma in Heq1; tryfalse.
+        repeat ljs_autoforward.
+        forwards_th : put_lemma. prove_bag.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        jauto_js 10.
     }
 Qed.
 
@@ -2212,6 +2223,7 @@ Proof.
 Qed.
 
 Lemma create_set_mutable_binding_lemma : forall BR k jst jc c st st' r ptr s jeptr b b' ob v jv,
+    ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvCreateSetMutableBinding
         [L.value_object ptr; L.value_string s; v; L.value_bool b; L.value_bool b']) 
             (L.out_ter st' r) ->
@@ -2224,10 +2236,8 @@ Lemma create_set_mutable_binding_lemma : forall BR k jst jc c st st' r ptr s jep
         (J.spec_env_record_create_set_mutable_binding jeptr s ob jv b') 
         (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv Hlred Hcinv Hinv Hf Hvrel Hb.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    ljs_context_invariant_after_apply. 
+    introv IHc Hlred Hcinv Hinv Hf Hvrel Hb.
+    ljs_invert_apply.
     repeat ljs_autoforward.
     forwards_th : create_mutable_binding_lemma; try eassumption.
     destr_concl; try ljs_handle_abort.
@@ -2240,6 +2250,7 @@ Proof.
 Qed.
 
 Lemma create_set_mutable_binding_lemma_some : forall BR k jst jc c st st' r ptr s jeptr b b' v jv,
+    ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvCreateSetMutableBinding
         [L.value_object ptr; L.value_string s; v; L.value_bool b; L.value_bool b']) 
             (L.out_ter st' r) ->
@@ -2251,11 +2262,12 @@ Lemma create_set_mutable_binding_lemma_some : forall BR k jst jc c st st' r ptr 
         (J.spec_env_record_create_set_mutable_binding jeptr s (Some b) jv b') 
         (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv Hlred Hcinv Hinv Hf Hvrel.
+    introv IHc Hlred Hcinv Hinv Hf Hvrel.
     eapply create_set_mutable_binding_lemma; try eassumption. reflexivity.
 Qed.
 
 Lemma create_set_mutable_binding_lemma_none : forall BR k jst jc c st st' r ptr s jeptr b' v jv,
+    ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvCreateSetMutableBinding
         [L.value_object ptr; L.value_string s; v; L.value_bool false; L.value_bool b']) 
             (L.out_ter st' r) ->
@@ -2267,7 +2279,7 @@ Lemma create_set_mutable_binding_lemma_none : forall BR k jst jc c st st' r ptr 
         (J.spec_env_record_create_set_mutable_binding jeptr s None jv b') 
         (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv Hlred Hcinv Hinv Hf Hvrel.
+    introv IHc Hlred Hcinv Hinv Hf Hvrel.
     eapply create_set_mutable_binding_lemma; try eassumption. reflexivity.
 Qed.
 
