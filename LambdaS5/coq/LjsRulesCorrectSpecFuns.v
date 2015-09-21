@@ -173,7 +173,7 @@ Proof.
     rew_bag_simpl. 
     simpls.
     binds_inv.
-    inverts Hvrel2. 
+    inverts Hvrel2.
     unfold_concl. jauto_set_slim. (* TODO automation? *)
     + eauto_js 15.
     + eauto_js.
@@ -295,6 +295,48 @@ Proof.
     ljs_context_invariant_after_apply. clear Hcinv.
     repeat ljs_autoforward.
     forwards_th Hx : reference_error_lemma; try eassumption.
+    jauto_js.
+Qed.
+
+Lemma native_error_or_void_lemma : forall BR k jst jc c st st' jne ptr v r b,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privNativeErrorOr [L.value_object ptr; v; L.value_empty; L.value_bool b]) 
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    (v = L.value_undefined \/ exists s, v = L.value_string s) -> (* TODO error messages in jscert *)
+    fact_js_obj (J.object_loc_prealloc (J.prealloc_native_error_proto jne)) ptr \in BR ->
+    concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_error_or_void b jne) 
+        (fun jrv => !b /\ jrv = J.resvalue_empty).
+Proof.
+    introv Hlred Hcinv Hinv Hv Hbr.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    destruct b. { (* strict *)
+        repeat ljs_autoforward.
+        forwards_th : native_error_lemma; try eassumption.
+        destr_concl; tryfalse.
+        ljs_handle_abort.
+    } { (* non-strict *)
+        repeat ljs_autoforward.
+        jauto_js.
+    }
+Qed.
+
+Lemma type_error_or_void_lemma : forall BR k jst jc c st st' v r b,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privTypeErrorOr [v; L.value_empty; L.value_bool b]) 
+        (L.out_ter st' r) ->
+    (v = L.value_undefined \/ exists s, v = L.value_string s) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_error_or_void b J.native_error_type) 
+        (fun jrv => !b /\ jrv = J.resvalue_empty).
+Proof.
+    introv Hlred Hv Hcinv Hinv.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : native_error_or_void_lemma; try eassumption.
     jauto_js.
 Qed.
 
@@ -736,6 +778,19 @@ Proof.
     destruct_hyp Hjeq.
     unfolds J.object_proto.
     jauto.
+Qed.
+
+Lemma object_extensible_lemma : forall BR jst st ptr obj jptr b,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    L.object_extensible obj = b ->
+    J.object_extensible jst jptr b.
+Proof.
+    introv Hinv Hf Hbinds Heq.
+    forwards (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hpeq : object_prim_related_extensible (object_related_prim Horel).
+    unfolds. jauto.
 Qed.
 
 Lemma get_own_property_lemma : forall BR k jst jc c st st' r jptr ptr s v_d v_a v_u,
@@ -1550,29 +1605,114 @@ Proof.
     destruct_hyp Hx; try ljs_handle_abort. { (* field not found *)
         ljs_invert_apply.
         repeat ljs_autoforward.
-        forwards_th Hy : get_property_lemma. prove_bag.
-        skip. (* TODO *)
-        (* destruct_hyp Hy; try ljs_handle_abort. *)
+        cases_decide as Hpnull; rewrite stx_eq_null_eq_lemma in Hpnull. { (* proto is null *)
+            forwards Hjproto : object_proto_null_lemma; try prove_bag.
+            repeat ljs_autoforward.
+            forwards Hjext : object_extensible_lemma; try prove_bag.
+            unfold L.object_extensible in Hjext. 
+            inv_ljs. { (* extensible *)
+                repeat ljs_autoforward.
+                skip. (* TODO DefineOwnProperty *)
+            } { (* not extensible *)
+                rewrite <- H11 in Hjext. (* TODO *)
+                repeat ljs_autoforward.
+                ljs_invert_apply.
+                repeat ljs_autoforward.
+                forwards_th : type_error_or_void_lemma. eauto_js.
+                destr_concl; try ljs_handle_abort.
+                res_related_invert.
+                resvalue_related_only_invert.
+                jauto_js 12.
+            }
+        } { (* proto not null *)
+            forwards Hjproto : object_proto_not_null_lemma; try prove_bag.
+            destruct_hyp Hjproto.
+            repeat ljs_autoforward.
+            unfolds L.object_proto. rewrite Hjproto0 in *. (* TODO *)
+            forwards_th Hy : get_property_lemma. prove_bag.
+            destruct_hyp Hy; try ljs_handle_abort. { (* field not found in prototype *)
+                repeat ljs_autoforward.
+                ljs_invert_apply.
+                repeat ljs_autoforward.
+                forwards Hjext : object_extensible_lemma; try eapply H10; try prove_bag. (* TODO *)
+                unfold L.object_extensible in Hjext. 
+                inv_ljs. { (* extensible *)
+                    skip. (* TODO DefineOwnProperty *)
+                } { (* not extensible *)
+                    rewrite <- H21 in Hjext. (* TODO *)
+                    repeat ljs_autoforward.
+                    ljs_invert_apply.
+                    repeat ljs_autoforward.
+                    forwards_th : type_error_or_void_lemma. eauto_js.
+                    destr_concl; try ljs_handle_abort.
+                    res_related_invert.
+                    resvalue_related_only_invert.
+                    jauto_js 12.
+                }
+            } { (* data field in prototype *) 
+                ljs_invert_apply.
+                repeat ljs_autoforward.
+                forwards Hjext : object_extensible_lemma; try eapply H10; try prove_bag. (* TODO *)
+                unfold L.object_extensible in Hjext. 
+                inv_ljs. { (* extensible *)
+                    skip. (* TODO defineownproperty *)
+                } { (* not extensible *)
+                    rewrite <- H21 in Hjext. (* TODO *)
+                    repeat ljs_autoforward.
+                    ljs_invert_apply.
+                    repeat ljs_autoforward.
+                    forwards_th : type_error_or_void_lemma. eauto_js.
+                    destr_concl; try ljs_handle_abort.
+                    res_related_invert.
+                    resvalue_related_only_invert.
+                    jauto_js 12.
+                }
+            } { (* accessor field in prototype *)
+                ljs_invert_apply.
+                repeat ljs_autoforward.
+                cases_decide as Heq; rewrite stx_eq_undefined_eq_lemma in Heq. { (* setter undefined *)
+                    subst_hyp Heq.
+                    inverts Hy6. (* TODO *) (* inverting value_related *)
+                    repeat ljs_autoforward.
+                    ljs_invert_apply.
+                    repeat ljs_autoforward.
+                    forwards_th : type_error_or_void_lemma. eauto_js.
+                    destr_concl; try ljs_handle_abort.
+                    res_related_invert.
+                    resvalue_related_only_invert.
+                    jauto_js 12.
+                } { (* setter defined *)
+                    inverts Hy9; tryfalse. (* TODO *) (* inverting object_or_undefined *)
+                    inverts Hy6. (* TODO *) (* inverting value_related *)
+                    repeat ljs_autoforward.
+                    forwards_th Hy : one_arg_obj_lemma.
+                    destruct_hyp Hy.
+                    repeat ljs_autoforward.
+                    apply_ih_call.
+                    destr_concl; try ljs_handle_abort.
+                    res_related_invert.
+                    resvalue_related_only_invert.
+                    repeat ljs_autoforward.
+                    jauto_js 30.
+                }
+            }
+        }
     } { (* data field *) 
         ljs_invert_apply.
         repeat ljs_autoforward.
         inv_ljs. { (* writable *)
             repeat ljs_autoforward.
             inv_ljs. skip.
-            skip. (* TODO *)
+            skip. (* TODO DefineOwnproperty *)
         } { (* not writable *)
             repeat ljs_autoforward.
             ljs_invert_apply.
             repeat ljs_autoforward.
-            destruct b. { (* strict *)
-                repeat ljs_autoforward.
-                forwards_th : type_error_lemma. eauto_js.
-                destr_concl; tryfalse.
-                ljs_handle_abort.
-            } { (* not strict *)
-                repeat ljs_autoforward.
-                jauto_js 20.
-            }
+            forwards_th : type_error_or_void_lemma. eauto_js.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            resvalue_related_only_invert.
+            jauto_js 12.
         }
     } { (* accessor field *)
         ljs_invert_apply.
@@ -1583,15 +1723,11 @@ Proof.
             repeat ljs_autoforward.
             ljs_invert_apply.
             repeat ljs_autoforward.
-            destruct b. { (* strict *)
-                repeat ljs_autoforward.
-                forwards_th : type_error_lemma. eauto_js.
-                destr_concl; tryfalse.
-                ljs_handle_abort.
-            } { (* not strict *)
-                repeat ljs_autoforward.
-                jauto_js 20.
-            }
+            forwards_th : type_error_or_void_lemma. eauto_js.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            resvalue_related_only_invert.
+            jauto_js 12.
         } { (* setter defined *)
             inverts Hx9; tryfalse. (* TODO *) (* inverting object_or_undefined *)
             inverts Hx6. (* inverting value_related *)

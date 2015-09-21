@@ -3737,12 +3737,49 @@ expr_let "optTypeError"
       expr_id "this";
       expr_app (expr_id "%oneArgObj") [expr_id "val"]]) expr_empty));
   expr_lambda []
-  (expr_app (expr_id "%GetProperty")
-   [expr_id "obj";
-    expr_id "fld";
-    expr_lambda ["v"; "w"; "e"; "c"]
-    (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
-     (expr_if (expr_id "w")
+  (expr_if
+   (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_proto (expr_id "obj"))
+    expr_null)
+   (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
+    (expr_seq
+     (expr_app (expr_id "%AddDataField")
+      [expr_id "obj";
+       expr_id "fld";
+       expr_id "val";
+       expr_true;
+       expr_true;
+       expr_true]) expr_empty)
+    (expr_app (expr_id "optTypeError")
+     [expr_string "adding a field to a non-extensible object"]))
+   (expr_app (expr_id "%GetProperty")
+    [expr_get_obj_attr oattr_proto (expr_id "obj");
+     expr_id "fld";
+     expr_lambda ["v"; "w"; "e"; "c"]
+     (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
+      (expr_if (expr_id "w")
+       (expr_seq
+        (expr_app (expr_id "%AddDataField")
+         [expr_id "obj";
+          expr_id "fld";
+          expr_id "val";
+          expr_true;
+          expr_true;
+          expr_true]) expr_empty)
+       (expr_app (expr_id "optTypeError")
+        [expr_string "shadowing unwritable field"]))
+      (expr_app (expr_id "optTypeError")
+       [expr_string "adding a field to a non-extensible object"]));
+     expr_lambda ["g"; "s"; "e"; "c"]
+     (expr_if (expr_op2 binary_op_stx_eq (expr_id "s") expr_undefined)
+      (expr_app (expr_id "optTypeError")
+       [expr_string "setting accessor field with no setter"])
+      (expr_seq
+       (expr_app (expr_id "%AppExpr")
+        [expr_id "s";
+         expr_id "this";
+         expr_app (expr_id "%oneArgObj") [expr_id "val"]]) expr_empty));
+     expr_lambda []
+     (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
       (expr_seq
        (expr_app (expr_id "%AddDataField")
         [expr_id "obj";
@@ -3752,30 +3789,7 @@ expr_let "optTypeError"
          expr_true;
          expr_true]) expr_empty)
       (expr_app (expr_id "optTypeError")
-       [expr_string "shadowing unwritable field"]))
-     (expr_app (expr_id "optTypeError")
-      [expr_string "adding a field to a non-extensible object"]));
-    expr_lambda ["g"; "s"; "e"; "c"]
-    (expr_if (expr_op2 binary_op_stx_eq (expr_id "s") expr_undefined)
-     (expr_app (expr_id "optTypeError")
-      [expr_string "setting accessor field with no setter"])
-     (expr_seq
-      (expr_app (expr_id "%AppExpr")
-       [expr_id "s";
-        expr_id "this";
-        expr_app (expr_id "%oneArgObj") [expr_id "val"]]) expr_empty));
-    expr_lambda []
-    (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
-     (expr_seq
-      (expr_app (expr_id "%AddDataField")
-       [expr_id "obj";
-        expr_id "fld";
-        expr_id "val";
-        expr_true;
-        expr_true;
-        expr_true]) expr_empty)
-     (expr_app (expr_id "optTypeError")
-      [expr_string "adding a field to a non-extensible object"]))])])
+       [expr_string "adding a field to a non-extensible object"]))]))])
 .
 Definition ex_privPut1 := 
 expr_app (expr_id "%Put")
@@ -3803,7 +3817,7 @@ expr_let "msg"
 .
 Definition ex_privRangeErrorOr := 
 expr_app (expr_id "%NativeErrorOr")
-[expr_id "%RangeErrorProto"; expr_id "v"; expr_id "strict"]
+[expr_id "%RangeErrorProto"; expr_id "msg"; expr_id "v"; expr_id "strict"]
 .
 Definition ex_privReferenceError := 
 expr_app (expr_id "%NativeError")
@@ -3820,7 +3834,7 @@ expr_let "msg"
 .
 Definition ex_privReferenceErrorOr := 
 expr_app (expr_id "%NativeErrorOr")
-[expr_id "%ReferenceErrorProto"; expr_id "v"; expr_id "strict"]
+[expr_id "%ReferenceErrorProto"; expr_id "msg"; expr_id "v"; expr_id "strict"]
 .
 Definition ex_privRegExpCode := 
 expr_app (expr_id "%RegExpConstructor") [expr_id "obj"; expr_id "args"]
@@ -3900,7 +3914,7 @@ expr_let "msg"
 .
 Definition ex_privSyntaxErrorOr := 
 expr_app (expr_id "%NativeErrorOr")
-[expr_id "%SyntaxErrorProto"; expr_id "v"; expr_id "strict"]
+[expr_id "%SyntaxErrorProto"; expr_id "msg"; expr_id "v"; expr_id "strict"]
 .
 Definition ex_privThrowTypeErrorFun := 
 expr_let "msg" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
@@ -4167,7 +4181,7 @@ expr_let "msg"
 .
 Definition ex_privTypeErrorOr := 
 expr_app (expr_id "%NativeErrorOr")
-[expr_id "%TypeErrorProto"; expr_id "v"; expr_id "strict"]
+[expr_id "%TypeErrorProto"; expr_id "msg"; expr_id "v"; expr_id "strict"]
 .
 Definition ex_privTypeof := 
 expr_let "tp" (expr_op1 unary_op_typeof (expr_id "val"))
