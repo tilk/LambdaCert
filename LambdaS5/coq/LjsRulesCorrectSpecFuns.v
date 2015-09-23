@@ -142,6 +142,732 @@ Proof.
     jauto.
 Qed.
 
+(* *** descriptors *)
+
+Definition concl_ljs_new_descriptor st st' r desc :=
+    exists ptr obj,
+    property_descriptor desc obj /\
+    r = L.res_value (L.value_object ptr) /\
+    st \c st' /\
+    binds st' ptr obj /\
+    ~index st ptr.
+
+Lemma make_data_descriptor_ljs_lemma : forall k c st st' r v b1 b2 b3,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privmakeDataDescriptor 
+        [v; L.value_bool b1; L.value_bool b2; L.value_bool b3]) (L.out_ter st' r) ->
+    concl_ljs_new_descriptor st st' r (data_descriptor v b1 b2 b3).
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    unfolds.
+    jauto_js.
+    unfolds data_descriptor.
+    constructor; try reflexivity; simpl; 
+    (eapply read_option_binds_inv; rew_binds_eq) || (eapply read_option_not_index_inv; rew_index_eq);
+    auto 10.
+Qed.
+
+Lemma make_accessor_descriptor_ljs_lemma : forall k c st st' r v1 v2 b1 b2,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privmakeAccessorDescriptor 
+        [v1; v2; L.value_bool b1; L.value_bool b2]) (L.out_ter st' r) ->
+    concl_ljs_new_descriptor st st' r (accessor_descriptor v1 v2 b1 b2).
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    unfolds.
+    jauto_js.
+    unfolds accessor_descriptor.
+    constructor; try reflexivity; simpl; 
+    (eapply read_option_binds_inv; rew_binds_eq) || (eapply read_option_not_index_inv; rew_index_eq);
+    auto 10.
+Qed.
+
+Lemma default_data_descriptor_ljs_lemma : forall k c st st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefaultDataDescriptor []) (L.out_ter st' r) ->
+    concl_ljs_new_descriptor st st' r default_data_descriptor.
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th : make_data_descriptor_ljs_lemma.
+    assumption.
+Qed.
+
+Lemma default_accessor_descriptor_ljs_lemma : forall k c st st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefaultAccessorDescriptor []) (L.out_ter st' r) ->
+    concl_ljs_new_descriptor st st' r default_accessor_descriptor.
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th : make_accessor_descriptor_ljs_lemma.
+    assumption.
+Qed.
+
+Lemma is_data_descriptor_ljs_lemma : forall k c st st' r ptr obj desc,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privisDataDescriptor [L.value_object ptr]) (L.out_ter st' r) ->
+    binds st ptr obj ->
+    property_descriptor desc obj ->
+    st = st' /\ r = L.res_value (L.value_bool (isTrue (is_data_descriptor desc))).
+Proof.
+    introv Hlred Hbinds Hpdesc.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Hidx. { (* has value field *)
+        skip.
+    }
+    repeat ljs_autoforward.
+    cases_decide as Hidx2. { (* has writable field *)
+        skip.
+    }
+    skip.
+Qed.
+
+Lemma is_accessor_descriptor_ljs_lemma : forall k c st st' r ptr obj desc,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privisAccessorDescriptor [L.value_object ptr]) (L.out_ter st' r) ->
+    binds st ptr obj ->
+    property_descriptor desc obj ->
+    st = st' /\ r = L.res_value (L.value_bool (isTrue (is_accessor_descriptor desc))).
+Proof.
+    introv Hlred Hbinds Hpdesc.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Hidx. { (* has value field *)
+        skip.
+    }
+    repeat ljs_autoforward.
+    cases_decide as Hidx2. { (* has writable field *)
+        skip.
+    }
+    skip.
+Qed.
+
+Lemma is_generic_descriptor_ljs_lemma : forall k c st st' r ptr obj desc,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privisGenericDescriptor [L.value_object ptr]) (L.out_ter st' r) ->
+    binds st ptr obj ->
+    property_descriptor desc obj ->
+    st = st' /\ r = L.res_value (L.value_bool (isTrue (is_generic_descriptor desc))).
+Proof.
+    introv Hlred Hbinds Hpdesc.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : is_accessor_descriptor_ljs_lemma; try eassumption.
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    cases_isTrue in * as Heq1. { (* is accessor *)
+        repeat ljs_autoforward.
+        unfolds is_generic_descriptor.
+        cases_isTrue as Heq3; iauto.
+    }
+    repeat ljs_autoforward.
+    forwards_th Hx : is_data_descriptor_ljs_lemma; try eassumption.
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    cases_isTrue in * as Heq2. { (* is data *)
+        unfolds is_generic_descriptor.
+        cases_isTrue as Heq3; iauto.
+    }
+    unfolds is_generic_descriptor.
+    cases_isTrue as Heq3; iauto.
+Qed.
+
+(* TODO move *)
+Lemma ljs_descriptor_attr_read_option_lemma : forall desc obj s fu,
+    property_descriptor desc obj ->
+    ljs_descriptor_attr s fu ->
+    L.object_properties obj\(s?) = LibOption.map frozen_data_attr (fu desc).
+Proof.
+    introv Hpdescr Hattr.
+    destruct Hpdescr.
+    destruct Hattr; assumption.
+Qed.
+
+(* TODO move *)
+Lemma ljs_descriptor_attr_binds_lemma : forall desc obj s attrs fu,
+    property_descriptor desc obj ->
+    ljs_descriptor_attr s fu ->
+    binds (L.object_properties obj) s attrs ->
+    exists v,
+    fu desc = Some v /\
+    attrs = frozen_data_attr v.
+Proof.
+    introv Hpdesc Hattr Hbinds.
+    lets Heq : ljs_descriptor_attr_read_option_lemma Hpdesc Hattr.
+    erewrite read_option_binds_inv in Heq by eassumption.
+    destruct (fu desc); simpl in Heq; tryfalse.
+    injects. jauto.
+Qed.
+
+(* TODO move *)
+Lemma ljs_descriptor_attr_not_index_lemma : forall desc obj s fu,
+    property_descriptor desc obj ->
+    ljs_descriptor_attr s fu ->
+    ~index (L.object_properties obj) s ->
+    fu desc = None.
+Proof.
+    introv Hpdesc Hattr Hnindex.
+    lets Heq : ljs_descriptor_attr_read_option_lemma Hpdesc Hattr.
+    erewrite read_option_not_index_inv in Heq by eassumption.
+    destruct (fu desc); simpl in Heq; tryfalse.
+    reflexivity.
+Qed.
+
+Lemma descriptor_field_get_ljs_lemma : forall k c st st' r v s fu ptr obj desc,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdescriptorFieldGet [L.value_object ptr; L.value_string s; v])
+        (L.out_ter st' r) ->
+    ljs_descriptor_attr s fu ->
+    property_descriptor desc obj ->
+    binds st ptr obj ->
+    st = st' /\ r = L.res_value (unsome_default v (fu desc)).
+Proof.
+    introv Hlred Hattr Hpdesc Hbinds.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Hidx. { (* has prop *)
+        repeat ljs_autoforward.
+        lets (vv&Hfu&Hattrs) : ljs_descriptor_attr_binds_lemma Hpdesc Hattr. eassumption.
+        subst_hyp Hattrs. rewrite Hfu.
+        jauto.
+    }
+    repeat ljs_autoforward.
+    forwards Hfu : ljs_descriptor_attr_not_index_lemma Hpdesc Hattr. eassumption.
+    rewrite Hfu.
+    jauto.
+Qed.
+
+(* TODO move to definitions *)
+Inductive data_descriptor_attr : string -> bool -> Prop :=
+| data_descriptor_attr_value : data_descriptor_attr "value" true
+| data_descriptor_attr_writable : data_descriptor_attr "writable" true
+| data_descriptor_attr_get : data_descriptor_attr "get" false
+| data_descriptor_attr_set : data_descriptor_attr "set" false
+| data_descriptor_attr_enumerable : data_descriptor_attr "enumerable" true
+| data_descriptor_attr_configurable : data_descriptor_attr "configurable" true.
+
+Inductive accessor_descriptor_attr : string -> bool -> Prop :=
+| accessor_descriptor_attr_get : accessor_descriptor_attr "get" true
+| accessor_descriptor_attr_set : accessor_descriptor_attr "set" true
+| accessor_descriptor_attr_value : accessor_descriptor_attr "value" false
+| accessor_descriptor_attr_writable : accessor_descriptor_attr "writable" false
+| accessor_descriptor_attr_enumerable : accessor_descriptor_attr "enumerable" true
+| accessor_descriptor_attr_configurable : accessor_descriptor_attr "configurable" true.
+
+(* TODO move *)
+Lemma is_full_data_descriptor_read_option_lemma : forall desc obj s b,
+    property_descriptor desc obj ->
+    is_full_data_descriptor desc ->
+    data_descriptor_attr s b ->
+    is_some (L.object_properties obj\(s?)) = b.
+Proof.
+    introv Hpdesc Hfdd Hdattr.
+    unfolds in Hfdd.
+    destruct_hyp Hfdd.
+    destruct Hpdesc.
+    simpls.
+    unfolds L.prop_name.
+    destruct Hdattr; match goal with H : _\(_?) = _ |- _ => rewrite H end; reflexivity.
+Qed.
+
+(* TODO move *)
+Lemma is_full_data_descriptor_index_lemma : forall desc obj s,
+    property_descriptor desc obj ->
+    is_full_data_descriptor desc ->
+    data_descriptor_attr s true ->
+    index (L.object_properties obj) s.
+Proof.
+    introv Hpdesc Hfdd Hdattr.
+    lets Hs : is_full_data_descriptor_read_option_lemma Hpdesc Hfdd Hdattr.
+    unfolds is_some. cases_match_option.
+    prove_bag.
+Qed.
+
+(* TODO move *)
+Lemma is_full_data_descriptor_not_index_lemma : forall desc obj s,
+    property_descriptor desc obj ->
+    is_full_data_descriptor desc ->
+    data_descriptor_attr s false ->
+    ~index (L.object_properties obj) s.
+Proof.
+    introv Hpdesc Hfdd Hdattr.
+    lets Hs : is_full_data_descriptor_read_option_lemma Hpdesc Hfdd Hdattr.
+    unfolds is_some. cases_match_option.
+    prove_bag.
+Qed.
+
+(* TODO move *)
+Lemma is_full_data_descriptor_binds_lemma_2 : forall desc obj s fu,
+    property_descriptor desc obj ->
+    is_full_data_descriptor desc ->
+    ljs_descriptor_attr s fu ->
+    data_descriptor_attr s true ->
+    exists v,
+    fu desc = Some v /\
+    binds (L.object_properties obj) s (frozen_data_attr v).
+Proof.
+    introv Hpdesc Hfdd Hattr Hdattr.
+    forwards Hidx : is_full_data_descriptor_index_lemma Hpdesc Hfdd Hdattr.
+    rewrite index_binds_eq in Hidx.
+    destruct Hidx as (attrs&Hbinds).
+    forwards (v&Hfu&Hattrs) : ljs_descriptor_attr_binds_lemma Hpdesc Hattr Hbinds.
+    subst_hyp Hattrs.
+    jauto.
+Qed.
+
+(* TODO move *)
+Lemma is_full_data_descriptor_not_index_lemma_2 : forall desc obj s fu,
+    property_descriptor desc obj ->
+    is_full_data_descriptor desc ->
+    ljs_descriptor_attr s fu ->
+    data_descriptor_attr s false ->
+    fu desc = None /\
+    ~index (L.object_properties obj) s.
+Proof.
+    introv Hpdesc Hfdd Hattr Hdattr.
+    forwards Hidx : is_full_data_descriptor_not_index_lemma Hpdesc Hfdd Hdattr.
+    forwards Hfu : ljs_descriptor_attr_not_index_lemma Hpdesc Hattr Hidx.
+    jauto.
+Qed.
+
+(* TODO move *)
+Lemma is_full_accessor_descriptor_read_option_lemma : forall desc obj s b,
+    property_descriptor desc obj ->
+    is_full_accessor_descriptor desc ->
+    accessor_descriptor_attr s b ->
+    is_some (L.object_properties obj\(s?)) = b.
+Proof.
+    introv Hpdesc Hfdd Hdattr.
+    unfolds in Hfdd.
+    destruct_hyp Hfdd.
+    destruct Hpdesc.
+    simpls.
+    unfolds L.prop_name.
+    destruct Hdattr; match goal with H : _\(_?) = _ |- _ => rewrite H end; reflexivity.
+Qed.
+
+(* TODO move *)
+Lemma is_full_accessor_descriptor_index_lemma : forall desc obj s,
+    property_descriptor desc obj ->
+    is_full_accessor_descriptor desc ->
+    accessor_descriptor_attr s true ->
+    index (L.object_properties obj) s.
+Proof.
+    introv Hpdesc Hfdd Hdattr.
+    lets Hs : is_full_accessor_descriptor_read_option_lemma Hpdesc Hfdd Hdattr.
+    unfolds is_some. cases_match_option.
+    prove_bag.
+Qed.
+
+(* TODO move *)
+Lemma is_full_accessor_descriptor_not_index_lemma : forall desc obj s,
+    property_descriptor desc obj ->
+    is_full_accessor_descriptor desc ->
+    accessor_descriptor_attr s false ->
+    ~index (L.object_properties obj) s.
+Proof.
+    introv Hpdesc Hfdd Hdattr.
+    lets Hs : is_full_accessor_descriptor_read_option_lemma Hpdesc Hfdd Hdattr.
+    unfolds is_some. cases_match_option.
+    prove_bag.
+Qed.
+
+(* TODO move *)
+Lemma is_full_accessor_descriptor_binds_lemma_2 : forall desc obj s fu,
+    property_descriptor desc obj ->
+    is_full_accessor_descriptor desc ->
+    ljs_descriptor_attr s fu ->
+    accessor_descriptor_attr s true ->
+    exists v,
+    fu desc = Some v /\
+    binds (L.object_properties obj) s (frozen_data_attr v).
+Proof.
+    introv Hpdesc Hfdd Hattr Hdattr.
+    forwards Hidx : is_full_accessor_descriptor_index_lemma Hpdesc Hfdd Hdattr.
+    rewrite index_binds_eq in Hidx.
+    destruct Hidx as (attrs&Hbinds).
+    forwards (v&Hfu&Hattrs) : ljs_descriptor_attr_binds_lemma Hpdesc Hattr Hbinds.
+    subst_hyp Hattrs.
+    jauto.
+Qed.
+
+(* TODO move *)
+Lemma is_full_accessor_descriptor_not_index_lemma_2 : forall desc obj s fu,
+    property_descriptor desc obj ->
+    is_full_accessor_descriptor desc ->
+    ljs_descriptor_attr s fu ->
+    accessor_descriptor_attr s false ->
+    fu desc = None /\
+    ~index (L.object_properties obj) s.
+Proof.
+    introv Hpdesc Hfdd Hattr Hdattr.
+    forwards Hidx : is_full_accessor_descriptor_not_index_lemma Hpdesc Hfdd Hdattr.
+    forwards Hfu : ljs_descriptor_attr_not_index_lemma Hpdesc Hattr Hidx.
+    jauto.
+Qed.
+
+(* TODO to LibOption *)
+Lemma unsome_default_map_lemma : forall A B (f : A -> B) a oa,
+    unsome_default (f a) (LibOption.map f oa) = f (unsome_default a oa).
+Proof.
+    introv.
+    destruct oa; reflexivity.
+Qed.
+
+(* TODO move *)
+Lemma descriptor_attr_update_lemma : forall A (a : A) oa,
+    Some (unsome_default a oa) = descriptor_attr_update (Some a) oa.
+Proof.
+    introv. destruct oa; reflexivity.
+Qed.
+
+Lemma update_data_descriptor_ljs_lemma : forall k c st st' r ptr1 obj1 desc1 ptr2 obj2 desc2,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privupdateDataDescriptor [L.value_object ptr1; L.value_object ptr2]) 
+        (L.out_ter st' r) ->
+    binds st ptr1 obj1 ->
+    binds st ptr2 obj2 ->
+    property_descriptor desc1 obj1 ->
+    property_descriptor desc2 obj2 ->
+    is_full_data_descriptor desc1 ->
+    concl_ljs_new_descriptor st st' r (descriptor_update desc1 desc2).
+Proof.
+    introv Hlred Hbinds1 Hbinds2 Hpdesc1 Hpdesc2 Hfdd.
+    ljs_invert_apply.
+    forwards (v1&Hfu1&Hpb1) : is_full_data_descriptor_binds_lemma_2 Hpdesc1 Hfdd 
+        ljs_descriptor_attr_value data_descriptor_attr_value.
+    forwards (v2&Hfu2&Hpb2) : is_full_data_descriptor_binds_lemma_2 Hpdesc1 Hfdd 
+        ljs_descriptor_attr_writable data_descriptor_attr_writable.
+    forwards (v3&Hfu3&Hpb3) : is_full_data_descriptor_binds_lemma_2 Hpdesc1 Hfdd 
+        ljs_descriptor_attr_enumerable data_descriptor_attr_enumerable.
+    forwards (v4&Hfu4&Hpb4) : is_full_data_descriptor_binds_lemma_2 Hpdesc1 Hfdd 
+        ljs_descriptor_attr_configurable data_descriptor_attr_configurable.
+    forwards (Hfu5&Hni1) : is_full_data_descriptor_not_index_lemma_2 Hpdesc1 Hfdd 
+        ljs_descriptor_attr_get data_descriptor_attr_get.
+    forwards (Hfu6&Hni2) : is_full_data_descriptor_not_index_lemma_2 Hpdesc1 Hfdd
+        ljs_descriptor_attr_set data_descriptor_attr_set.
+    repeat ljs_autoforward.
+    forwards_th Hx : descriptor_field_get_ljs_lemma; 
+        [eapply ljs_descriptor_attr_value | eapply Hpdesc2 | eapply Hbinds2 | idtac].
+    simpl in Hx. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th Hx : descriptor_field_get_ljs_lemma; 
+        [eapply ljs_descriptor_attr_writable | eapply Hpdesc2 | eapply Hbinds2 | idtac].
+    simpl in Hx. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th Hx : descriptor_field_get_ljs_lemma; 
+        [eapply ljs_descriptor_attr_enumerable | eapply Hpdesc2 | eapply Hbinds2 | idtac].
+    simpl in Hx. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th Hx : descriptor_field_get_ljs_lemma; 
+        [eapply ljs_descriptor_attr_configurable | eapply Hpdesc2 | eapply Hbinds2 | idtac].
+    simpl in Hx. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    unfolds ljs_descriptor_configurable_v.
+    sets_eq b1 : (ljs_descriptor_configurable desc1). destruct b1; tryfalse. injects.
+    unfolds ljs_descriptor_enumerable_v.
+    sets_eq b2 : (ljs_descriptor_enumerable desc1). destruct b2; tryfalse. injects.
+    unfolds ljs_descriptor_writable_v.
+    sets_eq b3 : (ljs_descriptor_writable desc1). destruct b3; tryfalse. injects.
+    repeat rewrite unsome_default_map_lemma in *.
+    forwards_th Hz : make_data_descriptor_ljs_lemma.
+    unfolds data_descriptor.
+    repeat rewrite descriptor_attr_update_lemma in Hz.
+    rewrite EQb1 in Hz. rewrite EQb2 in Hz. rewrite EQb3 in Hz. rewrite <- Hfu1 in Hz.
+    unfolds descriptor_update.
+    rewrite Hfu5. rewrite Hfu6. assumption.
+Qed.
+
+Lemma update_accessor_descriptor_ljs_lemma : forall k c st st' r ptr1 obj1 desc1 ptr2 obj2 desc2,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privupdateAccessorDescriptor [L.value_object ptr1; L.value_object ptr2]) 
+        (L.out_ter st' r) ->
+    binds st ptr1 obj1 ->
+    binds st ptr2 obj2 ->
+    property_descriptor desc1 obj1 ->
+    property_descriptor desc2 obj2 ->
+    is_full_accessor_descriptor desc1 ->
+    concl_ljs_new_descriptor st st' r (descriptor_update desc1 desc2).
+Proof.
+    introv Hlred Hbinds1 Hbinds2 Hpdesc1 Hpdesc2 Hfdd.
+    ljs_invert_apply.
+    forwards (v1&Hfu1&Hpb1) : is_full_accessor_descriptor_binds_lemma_2 Hpdesc1 Hfdd 
+        ljs_descriptor_attr_get accessor_descriptor_attr_get.
+    forwards (v2&Hfu2&Hpb2) : is_full_accessor_descriptor_binds_lemma_2 Hpdesc1 Hfdd 
+        ljs_descriptor_attr_set accessor_descriptor_attr_set.
+    forwards (v3&Hfu3&Hpb3) : is_full_accessor_descriptor_binds_lemma_2 Hpdesc1 Hfdd 
+        ljs_descriptor_attr_enumerable accessor_descriptor_attr_enumerable.
+    forwards (v4&Hfu4&Hpb4) : is_full_accessor_descriptor_binds_lemma_2 Hpdesc1 Hfdd 
+        ljs_descriptor_attr_configurable accessor_descriptor_attr_configurable.
+    forwards (Hfu5&Hni1) : is_full_accessor_descriptor_not_index_lemma_2 Hpdesc1 Hfdd 
+        ljs_descriptor_attr_value accessor_descriptor_attr_value.
+    forwards (Hfu6&Hni2) : is_full_accessor_descriptor_not_index_lemma_2 Hpdesc1 Hfdd
+        ljs_descriptor_attr_writable accessor_descriptor_attr_writable.
+    repeat ljs_autoforward.
+    forwards_th Hx : descriptor_field_get_ljs_lemma; 
+        [eapply ljs_descriptor_attr_get | eapply Hpdesc2 | eapply Hbinds2 | idtac].
+    simpl in Hx. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th Hx : descriptor_field_get_ljs_lemma; 
+        [eapply ljs_descriptor_attr_set | eapply Hpdesc2 | eapply Hbinds2 | idtac].
+    simpl in Hx. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th Hx : descriptor_field_get_ljs_lemma; 
+        [eapply ljs_descriptor_attr_enumerable | eapply Hpdesc2 | eapply Hbinds2 | idtac].
+    simpl in Hx. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th Hx : descriptor_field_get_ljs_lemma; 
+        [eapply ljs_descriptor_attr_configurable | eapply Hpdesc2 | eapply Hbinds2 | idtac].
+    simpl in Hx. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    unfolds ljs_descriptor_configurable_v.
+    sets_eq b1 : (ljs_descriptor_configurable desc1). destruct b1; tryfalse. injects.
+    unfolds ljs_descriptor_enumerable_v.
+    sets_eq b2 : (ljs_descriptor_enumerable desc1). destruct b2; tryfalse. injects.
+    repeat rewrite unsome_default_map_lemma in *.
+    unfolds ljs_descriptor_writable_v.
+    sets_eq b3 : (ljs_descriptor_writable desc1). destruct b3; tryfalse.
+    repeat rewrite unsome_default_map_lemma in *.
+    forwards_th Hz : make_accessor_descriptor_ljs_lemma.
+    unfolds accessor_descriptor.
+    repeat rewrite descriptor_attr_update_lemma in Hz.
+    rewrite EQb1 in Hz. rewrite EQb2 in Hz. rewrite <- Hfu1 in Hz. rewrite <- Hfu2 in Hz.
+    unfolds descriptor_update.
+    rewrite Hfu5. rewrite <- EQb3. assumption.
+Qed.
+
+(* TODO move *)
+Lemma is_full_data_descriptor_implies_is_data_descriptor : forall desc,
+    is_full_data_descriptor desc -> is_data_descriptor desc.
+Proof.
+    introv Hfdd. unfolds in Hfdd. destruct_hyp Hfdd.
+    unfolds. eauto.
+Qed.
+
+(* TODO move *)
+Lemma is_full_accessor_descriptor_implies_is_accessor_descriptor : forall desc,
+    is_full_accessor_descriptor desc -> is_accessor_descriptor desc.
+Proof.
+    introv Hfdd. unfolds in Hfdd. destruct_hyp Hfdd.
+    unfolds. eauto.
+Qed.
+
+(* TODO move *)
+Lemma data_descriptor_is_not_accessor_descriptor : forall v1 b1 b2 b3,
+    ~is_accessor_descriptor (data_descriptor v1 b1 b2 b3).
+Proof.
+    introv Had. destruct Had as [Had|Had]; simpl in Had; tryfalse.
+Qed.
+
+(* TODO move *)
+Lemma accessor_descriptor_is_not_data_descriptor : forall v1 v2 b1 b2,
+    ~is_data_descriptor (accessor_descriptor v1 v2 b1 b2).
+Proof.
+    introv Had. destruct Had as [Had|Had]; simpl in Had; tryfalse.
+Qed.
+
+(* TODO move *)
+Lemma data_descriptor_is_data_descriptor : forall v1 b1 b2 b3,
+    is_data_descriptor (data_descriptor v1 b1 b2 b3).
+Proof.
+    introv. left. auto.
+Qed.
+
+(* TODO move *)
+Lemma accessor_descriptor_is_accessor_descriptor : forall v1 v2 b1 b2,
+    is_accessor_descriptor (accessor_descriptor v1 v2 b1 b2).
+Proof.
+    introv. left. auto.
+Qed.
+
+(* TODO move *)
+Lemma is_full_descriptor_data_lemma : forall desc,
+    is_full_descriptor desc -> is_data_descriptor desc -> is_full_data_descriptor desc.
+Proof.
+    introv Hfd Hdd.
+    destruct Hfd as [Hfdd|Hfad]; try assumption.
+    unfolds is_full_accessor_descriptor.
+    destruct_hyp Hfad.
+    lets : accessor_descriptor_is_not_data_descriptor Hdd. tryfalse.
+Qed.
+
+(* TODO move *)
+Lemma is_not_full_descriptor_lemma : forall desc,
+    ~is_data_descriptor desc -> ~is_accessor_descriptor desc -> ~is_full_descriptor desc.
+Proof.
+    introv Hndd Hnad Hfd.
+    destruct Hfd as [Hfdd|Hfad].
+    + applys Hndd. applys is_full_data_descriptor_implies_is_data_descriptor. assumption.
+    + applys Hnad. applys is_full_accessor_descriptor_implies_is_accessor_descriptor. assumption.
+Qed.
+
+(* TODO move *)
+Lemma is_full_descriptor_accessor_lemma : forall desc,
+    is_full_descriptor desc -> is_accessor_descriptor desc -> is_full_accessor_descriptor desc.
+Proof.
+    introv Hfd Hdd.
+    destruct Hfd as [Hfdd|Hfad]; try assumption.
+    unfolds is_full_data_descriptor.
+    destruct_hyp Hfdd.
+    lets : data_descriptor_is_not_accessor_descriptor Hdd. tryfalse.
+Qed.
+
+Lemma update_descriptor_ljs_lemma : forall k c st st' r ptr1 obj1 desc1 ptr2 obj2 desc2,
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privupdateDescriptor [L.value_object ptr1; L.value_object ptr2]) 
+        (L.out_ter st' r) ->
+    binds st ptr1 obj1 ->
+    binds st ptr2 obj2 ->
+    property_descriptor desc1 obj1 ->
+    property_descriptor desc2 obj2 ->
+    is_full_descriptor desc1 ->
+    concl_ljs_new_descriptor st st' r (descriptor_update desc1 desc2).
+Proof.
+    introv Hlred Hbinds1 Hbinds2 Hpdesc1 Hpdesc2 Hfd.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : is_data_descriptor_ljs_lemma; try eassumption.
+    destruct_hyp Hx.
+    cases_isTrue as Hdd. { (* data descriptor *)
+        repeat ljs_autoforward.
+        lets Hfdd : is_full_descriptor_data_lemma Hfd Hdd.
+        forwards_th : update_data_descriptor_ljs_lemma; try eassumption.
+    }
+    repeat ljs_autoforward.
+    forwards_th Hx : is_accessor_descriptor_ljs_lemma; try eassumption.
+    destruct_hyp Hx.
+    cases_isTrue as Had. { (* accessor descriptor *)
+        repeat ljs_autoforward.
+        lets Hfad : is_full_descriptor_accessor_lemma Hfd Had.
+        forwards_th : update_accessor_descriptor_ljs_lemma; try eassumption.
+    }
+    repeat ljs_autoforward.
+    lets Hnfd : is_not_full_descriptor_lemma Hdd Had. false.
+Qed.
+
+(* TODO move *)
+Lemma is_full_data_descriptor_default_data_descriptor :
+    is_full_data_descriptor default_data_descriptor.
+Proof.
+    unfolds. jauto.
+Qed.
+
+(* TODO move *)
+Lemma is_full_accessor_descriptor_default_accessor_descriptor :
+    is_full_accessor_descriptor default_accessor_descriptor.
+Proof.
+    unfolds. jauto.
+Qed.
+
+(* TODO to LibBagExt *)
+Class Incl_not_index `{BagIncl T} `{BagIndex T A} :=
+    { incl_not_index : forall M1 M2 k, M1 \c M2 -> ~index M2 k -> ~index M1 k }.
+
+Section InclBinds.
+Context `{BagIncl T} `{BagBinds A B T}.
+
+Global Instance incl_not_index_from_incl_index :
+    forall `{BagIndex T A},
+    Incl_index -> Incl_not_index.
+Proof.
+    constructor. introv Hsub. 
+    apply contrapose_intro. intro Hidx.
+    applys incl_index Hsub Hidx.
+Qed.
+
+End InclBinds.
+
+Hint Resolve @incl_not_index : bag.
+
+Lemma to_data_descriptor_ljs_lemma : forall k c st st' r ptr obj desc,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privtoDataDescriptor [L.value_object ptr]) (L.out_ter st' r) ->
+    binds st ptr obj ->
+    property_descriptor desc obj ->
+    concl_ljs_new_descriptor st st' r (to_data_descriptor desc).
+Proof.
+    introv Hlred Hbinds Hpd.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : default_data_descriptor_ljs_lemma.
+    unfold concl_ljs_new_descriptor in Hx. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th Hx : update_data_descriptor_ljs_lemma; try prove_bag.
+        apply is_full_data_descriptor_default_data_descriptor.
+    unfold concl_ljs_new_descriptor in Hx. destruct_hyp Hx.
+    unfolds. jauto_js.
+Qed.
+
+Lemma to_accessor_descriptor_ljs_lemma : forall k c st st' r ptr obj desc,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privtoAccessorDescriptor [L.value_object ptr]) (L.out_ter st' r) ->
+    binds st ptr obj ->
+    property_descriptor desc obj ->
+    concl_ljs_new_descriptor st st' r (to_accessor_descriptor desc).
+Proof.
+    introv Hlred Hbinds Hpd.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : default_accessor_descriptor_ljs_lemma.
+    unfold concl_ljs_new_descriptor in Hx. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th Hx : update_accessor_descriptor_ljs_lemma; try prove_bag.
+        apply is_full_accessor_descriptor_default_accessor_descriptor.
+    unfold concl_ljs_new_descriptor in Hx. destruct_hyp Hx.
+    unfolds. jauto_js.
+Qed.
+
+Lemma descriptor_field_contains_ljs_lemma : forall k c st st' r ptr1 obj1 desc1 ptr2 obj2 desc2 s fu,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdescriptorFieldContains 
+        [L.value_object ptr1; L.value_object ptr2; L.value_string s]) 
+        (L.out_ter st' r) ->
+    binds st ptr1 obj1 ->
+    binds st ptr2 obj2 ->
+    property_descriptor desc1 obj1 ->
+    property_descriptor desc2 obj2 ->
+    ljs_descriptor_attr s fu ->
+    st = st' /\ r = L.res_value (L.value_bool (isTrue (if_some_value_then_same (fu desc1) (fu desc2)))).
+Proof.
+    introv Hlred Hbinds1 Hbinds2 Hpd1 Hpd2 Hattr.
+    ljs_invert_apply.
+Admitted. (* TODO *)
+
+Local Ltac descriptor_contains_ljs_lemma_helper := 
+    let Hdc := fresh in cases_isTrue as Hdc; [idtac | eauto]; destruct Hdc; solve [false].
+
+Lemma descriptor_contains_ljs_lemma : forall k c st st' r ptr1 obj1 desc1 ptr2 obj2 desc2,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdescriptorContains [L.value_object ptr1; L.value_object ptr2]) 
+        (L.out_ter st' r) ->
+    binds st ptr1 obj1 ->
+    binds st ptr2 obj2 ->
+    property_descriptor desc1 obj1 ->
+    property_descriptor desc2 obj2 ->
+    st = st' /\ r = L.res_value (L.value_bool (isTrue (descriptor_contains desc1 desc2))).
+Proof.
+    introv Hlred Hbinds1 Hbinds2 Hpd1 Hpd2.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : descriptor_field_contains_ljs_lemma; try eassumption. eapply ljs_descriptor_attr_value.
+    destruct_hyp Hx.
+    cases_isTrue in * as Hiv1; repeat ljs_autoforward; try descriptor_contains_ljs_lemma_helper.
+    forwards_th Hx : descriptor_field_contains_ljs_lemma; try eassumption. eapply ljs_descriptor_attr_writable.
+    destruct_hyp Hx.
+    cases_isTrue in * as Hiv2; repeat ljs_autoforward; try descriptor_contains_ljs_lemma_helper.
+    forwards_th Hx : descriptor_field_contains_ljs_lemma; try eassumption. eapply ljs_descriptor_attr_get.
+    destruct_hyp Hx.
+    cases_isTrue in * as Hiv3; repeat ljs_autoforward; try descriptor_contains_ljs_lemma_helper.
+    forwards_th Hx : descriptor_field_contains_ljs_lemma; try eassumption. eapply ljs_descriptor_attr_set.
+    destruct_hyp Hx.
+    cases_isTrue in * as Hiv4; repeat ljs_autoforward; try descriptor_contains_ljs_lemma_helper.
+    forwards_th Hx : descriptor_field_contains_ljs_lemma; try eassumption. eapply ljs_descriptor_attr_enumerable.
+    destruct_hyp Hx.
+    cases_isTrue in * as Hiv5; repeat ljs_autoforward; try descriptor_contains_ljs_lemma_helper.
+    forwards_th Hx : descriptor_field_contains_ljs_lemma; try eassumption. eapply ljs_descriptor_attr_configurable.
+    destruct_hyp Hx.
+    cases_isTrue in * as Hiv6; repeat ljs_autoforward; try descriptor_contains_ljs_lemma_helper.
+    cases_isTrue as Hdc; [eauto | idtac]. false; apply Hdc; constructor; assumption.
+Qed.
+
+(* *** errors *)
+
 Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
     L.red_exprh k c st 
        (L.expr_app_2 LjsInitEnv.privMakeNativeError [v1; v2]) 

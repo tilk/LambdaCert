@@ -595,6 +595,7 @@ Record object_related BR jobj obj : Prop := {
 
 (** *** Relating descriptors *)
 
+(*
 Inductive descriptor_attr_related BR : J.value -> L.attributes -> Prop :=
 | descriptor_attr_related_intro : forall jv v,
     value_related BR jv v ->
@@ -608,63 +609,135 @@ Inductive descriptor_bool_attr_related BR : bool -> L.attributes -> Prop :=
 Definition option_descriptor_attr_related BR := Option2 (descriptor_attr_related BR).
 
 Definition option_descriptor_bool_attr_related BR := Option2 (descriptor_bool_attr_related BR).
+*)
 
-Record descriptor_related BR jdesc obj : Prop := {
-    descriptor_related_class : L.object_class obj = "PropDesc";
-    descriptor_related_extensible : L.object_extensible obj = false;
-    descriptor_related_value : option_descriptor_attr_related BR 
-        (J.descriptor_value jdesc) (L.object_properties obj\("value"?));
-    descriptor_related_writable : option_descriptor_bool_attr_related BR 
-        (J.descriptor_writable jdesc) (L.object_properties obj\("writable"?));
-    descriptor_related_get : option_descriptor_attr_related BR 
-        (J.descriptor_get jdesc) (L.object_properties obj\("get"?));
-    descriptor_related_set : option_descriptor_attr_related BR 
-        (J.descriptor_set jdesc) (L.object_properties obj\("set"?));
-    descriptor_related_enumerable : option_descriptor_bool_attr_related BR 
-        (J.descriptor_enumerable jdesc) (L.object_properties obj\("enumerable"?));
-    descriptor_related_configurable : option_descriptor_bool_attr_related BR 
-        (J.descriptor_configurable jdesc) (L.object_properties obj\("configurable"?))
+Definition frozen_data_attr v := L.attributes_data_of (L.attributes_data_intro v false false false).
+
+Record ljs_descriptor := ljs_descriptor_intro {
+    ljs_descriptor_value : option L.value;
+    ljs_descriptor_writable : option bool;
+    ljs_descriptor_get : option L.value;
+    ljs_descriptor_set : option L.value;
+    ljs_descriptor_enumerable : option bool;
+    ljs_descriptor_configurable : option bool
 }.
 
-Record data_descriptor_related BR jdata obj : Prop := {
-    data_descriptor_related_class : L.object_class obj = "PropDesc";
-    data_descriptor_related_extensible : L.object_extensible obj = false;
-    data_descriptor_related_has_value : index (L.object_properties obj) "value";
-    data_descriptor_related_has_writable : index (L.object_properties obj) "writable";
-    data_descriptor_related_has_enumerable : index (L.object_properties obj) "enumerable";
-    data_descriptor_related_has_configurable : index (L.object_properties obj) "configurable";
-    data_descriptor_related_value : descriptor_attr_related BR 
-        (J.attributes_data_value jdata) (L.object_properties obj\("value"));
-    data_descriptor_related_writable : descriptor_bool_attr_related BR 
-        (J.attributes_data_writable jdata) (L.object_properties obj\("writable"));
-    data_descriptor_related_enumerable : descriptor_bool_attr_related BR 
-        (J.attributes_data_enumerable jdata) (L.object_properties obj\("enumerable"));
-    data_descriptor_related_configurable : descriptor_bool_attr_related BR 
-        (J.attributes_data_configurable jdata) (L.object_properties obj\("configurable"))
+Definition ljs_descriptor_writable_v prop := LibOption.map L.value_bool (ljs_descriptor_writable prop).
+Definition ljs_descriptor_enumerable_v prop := LibOption.map L.value_bool (ljs_descriptor_enumerable prop).
+Definition ljs_descriptor_configurable_v prop := LibOption.map L.value_bool (ljs_descriptor_configurable prop).
+
+Definition data_descriptor v bw be bc := ljs_descriptor_intro (Some v) (Some bw) None None (Some be) (Some bc).
+Definition accessor_descriptor vg vs be bc := ljs_descriptor_intro None None (Some vg) (Some vs) (Some be) (Some bc).
+
+Definition is_data_descriptor desc := ljs_descriptor_value desc <> None \/ ljs_descriptor_writable desc <> None.
+Definition is_accessor_descriptor desc := ljs_descriptor_get desc <> None \/ ljs_descriptor_set desc <> None.
+Definition is_generic_descriptor desc := ~is_data_descriptor desc /\ ~is_accessor_descriptor desc.
+
+Definition is_full_data_descriptor desc := exists v bw be bc, desc = data_descriptor v bw be bc.
+Definition is_full_accessor_descriptor desc := exists vg vs be bc, desc = accessor_descriptor vg vs be bc.
+Definition is_full_descriptor desc := is_full_data_descriptor desc \/ is_full_accessor_descriptor desc.
+
+Definition descriptor_attr_update A (oa1 oa2 : option A) := 
+    LibOption.apply_on oa1 (fun x => Some (unsome_default x oa2)). 
+
+Definition descriptor_update desc1 desc2 := ljs_descriptor_intro
+    (descriptor_attr_update (ljs_descriptor_value desc1) (ljs_descriptor_value desc2))
+    (descriptor_attr_update (ljs_descriptor_writable desc1) (ljs_descriptor_writable desc2))
+    (descriptor_attr_update (ljs_descriptor_get desc1) (ljs_descriptor_get desc2))
+    (descriptor_attr_update (ljs_descriptor_set desc1) (ljs_descriptor_set desc2))
+    (descriptor_attr_update (ljs_descriptor_enumerable desc1) (ljs_descriptor_enumerable desc2))
+    (descriptor_attr_update (ljs_descriptor_configurable desc1) (ljs_descriptor_configurable desc2)).
+
+Definition default_data_descriptor := data_descriptor L.value_undefined false false false.
+Definition default_accessor_descriptor := accessor_descriptor L.value_undefined L.value_undefined false false.
+
+Definition to_data_descriptor desc := descriptor_update default_data_descriptor desc.
+Definition to_accessor_descriptor desc := descriptor_update default_accessor_descriptor desc.
+
+Definition if_some_value_then_same := J.if_some_then_same L.same_value.
+
+Record descriptor_contains desc1 desc2 : Prop := {
+    descriptor_contains_value : if_some_value_then_same 
+        (ljs_descriptor_value desc1) (ljs_descriptor_value desc2);
+    descriptor_contains_writable : if_some_value_then_same 
+        (ljs_descriptor_writable_v desc1) (ljs_descriptor_writable_v desc2);
+    descriptor_contains_get : if_some_value_then_same 
+        (ljs_descriptor_get desc1) (ljs_descriptor_get desc2);
+    descriptor_contains_set : if_some_value_then_same 
+        (ljs_descriptor_set desc1) (ljs_descriptor_set desc2);
+    descriptor_contains_enumerable : if_some_value_then_same 
+        (ljs_descriptor_enumerable_v desc1) (ljs_descriptor_enumerable_v desc2);
+    descriptor_contains_configurable : if_some_value_then_same 
+        (ljs_descriptor_configurable_v desc1) (ljs_descriptor_configurable_v desc2)
 }.
 
-Record accessor_descriptor_related BR jacc obj : Prop := {
-    accessor_descriptor_related_class : L.object_class obj = "PropDesc";
-    accessor_descriptor_related_extensible : L.object_extensible obj = false;
-    accessor_descriptor_related_has_get : index (L.object_properties obj) "get";
-    accessor_descriptor_related_has_set : index (L.object_properties obj) "set";
-    accessor_descriptor_related_has_enumerable : index (L.object_properties obj) "enumerable";
-    accessor_descriptor_related_has_configurable : index (L.object_properties obj) "configurable";
-    accessor_descriptor_related_get : descriptor_attr_related BR 
-        (J.attributes_accessor_get jacc) (L.object_properties obj\("get"));
-    accessor_descriptor_related_set : descriptor_attr_related BR 
-        (J.attributes_accessor_set jacc) (L.object_properties obj\("set"));
-    accessor_descriptor_related_enumerable : descriptor_bool_attr_related BR 
-        (J.attributes_accessor_enumerable jacc) (L.object_properties obj\("enumerable"));
-    accessor_descriptor_related_configurable : descriptor_bool_attr_related BR 
-        (J.attributes_accessor_configurable jacc) (L.object_properties obj\("configurable"))
+Inductive ljs_descriptor_attr : string -> (ljs_descriptor -> option L.value) -> Prop :=
+| ljs_descriptor_attr_value : ljs_descriptor_attr "value" ljs_descriptor_value
+| ljs_descriptor_attr_writable : ljs_descriptor_attr "writable" ljs_descriptor_writable_v
+| ljs_descriptor_attr_get : ljs_descriptor_attr "get" ljs_descriptor_get
+| ljs_descriptor_attr_set : ljs_descriptor_attr "set" ljs_descriptor_set
+| ljs_descriptor_attr_enumerable : ljs_descriptor_attr "enumerable" ljs_descriptor_enumerable_v
+| ljs_descriptor_attr_configurable : ljs_descriptor_attr "configurable" ljs_descriptor_configurable_v
+.
+
+Record property_descriptor desc obj := {
+    property_descriptor_class : L.object_class obj = "PropDesc";
+    property_descriptor_extensible : L.object_extensible obj = false;
+    property_descriptor_value : 
+        L.object_properties obj\("value"?) = LibOption.map frozen_data_attr (ljs_descriptor_value desc);
+    property_descriptor_writable : 
+        L.object_properties obj\("writable"?) = LibOption.map frozen_data_attr (ljs_descriptor_writable_v desc);
+    property_descriptor_get : 
+        L.object_properties obj\("get"?) = LibOption.map frozen_data_attr (ljs_descriptor_get desc);
+    property_descriptor_set : 
+        L.object_properties obj\("set"?) = LibOption.map frozen_data_attr (ljs_descriptor_set desc); 
+    property_descriptor_enumerable : 
+        L.object_properties obj\("enumerable"?) = 
+            LibOption.map frozen_data_attr (ljs_descriptor_enumerable_v desc);
+    property_descriptor_configurable : 
+        L.object_properties obj\("configurable"?) = 
+            LibOption.map frozen_data_attr (ljs_descriptor_configurable_v desc)
 }.
 
-Inductive attributes_descriptor_related BR : J.attributes -> L.object -> Prop := 
-| attributes_descriptor_related_data : forall jdata obj,
-    attributes_descriptor_related BR (J.attributes_data_of jdata) obj
-| attributes_descriptor_related_accessor : forall jacc obj,
-    attributes_descriptor_related BR (J.attributes_accessor_of jacc) obj.
+Record descriptor_related BR jdesc desc : Prop := {
+    descriptor_related_value : option_value_related BR (J.descriptor_value jdesc) (ljs_descriptor_value desc);
+    descriptor_related_writable : J.descriptor_writable jdesc = ljs_descriptor_writable desc;
+    descriptor_related_get : option_value_related BR (J.descriptor_get jdesc) (ljs_descriptor_get desc);
+    descriptor_related_set : option_value_related BR (J.descriptor_set jdesc) (ljs_descriptor_set desc);
+    descriptor_related_enumerable : J.descriptor_enumerable jdesc = ljs_descriptor_enumerable desc;
+    descriptor_related_configurable : J.descriptor_configurable jdesc = ljs_descriptor_configurable desc
+}.
+
+Record data_descriptor_related BR jdata desc : Prop := {
+    data_descriptor_related_value : 
+        option_value_related BR (Some (J.attributes_data_value jdata)) (ljs_descriptor_value desc);
+    data_descriptor_related_writable : Some (J.attributes_data_writable jdata) = ljs_descriptor_writable desc;
+    data_descriptor_related_get : None = ljs_descriptor_get desc;
+    data_descriptor_related_set : None = ljs_descriptor_set desc;
+    data_descriptor_related_enumerable : 
+        Some (J.attributes_data_enumerable jdata) = ljs_descriptor_enumerable desc;
+    data_descriptor_related_configurable : 
+        Some (J.attributes_data_configurable jdata) = ljs_descriptor_configurable desc
+}.
+
+Record accessor_descriptor_related BR jacc desc : Prop := {
+    accessor_descriptor_related_value : None = ljs_descriptor_value desc;
+    accessor_descriptor_related_writable : None = ljs_descriptor_writable desc;
+    accessor_descriptor_related_get : 
+        option_value_related BR (Some (J.attributes_accessor_get jacc)) (ljs_descriptor_get desc);
+    accessor_descriptor_related_set : 
+        option_value_related BR (Some (J.attributes_accessor_set jacc)) (ljs_descriptor_set desc);
+    accessor_descriptor_related_enumerable : 
+        Some (J.attributes_accessor_enumerable jacc) = ljs_descriptor_enumerable desc;
+    accessor_descriptor_related_configurable : 
+        Some (J.attributes_accessor_configurable jacc) = ljs_descriptor_configurable desc
+}.
+
+Inductive attributes_descriptor_related BR : J.attributes -> ljs_descriptor -> Prop := 
+| attributes_descriptor_related_data : forall jdata desc,
+    attributes_descriptor_related BR (J.attributes_data_of jdata) desc
+| attributes_descriptor_related_accessor : forall jacc desc,
+    attributes_descriptor_related BR (J.attributes_accessor_of jacc) desc.
 
 (** *** Relating environment records *)
 
