@@ -2029,17 +2029,6 @@ Inductive inequality_result_related : J.prim -> L.value -> Prop :=
 
 Hint Constructors inequality_result_related : js_ljs.
 
-Hint Constructors L.same_value : js_ljs. (* TODO move *)
-
-Lemma same_value_eq_lemma : forall v1 v2, L.value_type v1 <> L.type_closure -> L.same_value v1 v2 = (v1 = v2).
-Proof.
-    introv Htype.
-    rew_logic.
-    split.
-    introv Hsv. inverts Hsv; reflexivity.
-    introv Heq. subst. destruct v2; simpls; tryfalse; eauto_js.
-Qed.
-
 Lemma value_number_eq_lemma : forall n1 n2, (L.value_number n1 = L.value_number n2) = (n1 = n2).
 Proof.
     introv.

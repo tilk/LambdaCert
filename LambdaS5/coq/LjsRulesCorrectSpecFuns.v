@@ -942,6 +942,406 @@ Proof.
     cases_isTrue as Hdc; [eauto | idtac]. false; apply Hdc; constructor; assumption.
 Qed.
 
+(* TODO move *)
+Lemma OptionSome2_Some_eq : forall T1 T2 (P : T1 -> T2 -> Prop) a1 a2,
+    OptionSome2 P (Some a1) (Some a2) = P a1 a2.
+Proof.
+    introv. rew_logic. split; intro H.
+    + inverts H. assumption.
+    + constructor. assumption.
+Qed.
+
+Lemma OptionSome2_None1_eq : forall T1 T2 (P : T1 -> T2 -> Prop) oa2,
+    OptionSome2 P None oa2 = False.
+Proof.
+    introv. rew_logic. split; intro H; tryfalse. inverts H.
+Qed.
+
+Lemma if_some_then_not_same_some_eq_lemma : forall v1 v2,
+    if_some_then_not_same (Some v1) (Some v2) = ~L.same_value v1 v2.
+Proof.
+    introv. unfolds if_some_then_not_same. rewrite OptionSome2_Some_eq. reflexivity.
+Qed.
+
+Lemma if_some_then_not_same_none1_eq_lemma : forall v2,
+    if_some_then_not_same None (Some v2) = False.
+Proof.
+    introv. unfolds if_some_then_not_same. rewrite OptionSome2_None1_eq. reflexivity.
+Qed.
+
+Lemma descriptor_field_not_same_lemma : forall k c st st' r ptr1 obj1 desc1 ptr2 obj2 desc2 s fu v,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdescriptorFieldNotSame
+        [L.value_object ptr1; L.value_object ptr2; L.value_string s]) (L.out_ter st' r) ->
+    binds st ptr1 obj1 ->
+    binds st ptr2 obj2 ->
+    property_descriptor desc1 obj1 ->
+    property_descriptor desc2 obj2 ->
+    ljs_descriptor_attr s fu ->
+    fu desc1 = Some v ->
+    st = st' /\ r = L.res_value (L.value_bool (isTrue (if_some_then_not_same (fu desc2) (fu desc1)))).
+Proof.
+    introv Hlred Hbinds1 Hbinds2 Hpd1 Hpd2 Hattr EQy.
+    rewrite EQy.
+    lets Habinds' : ljs_descriptor_attr_read_option_lemma Hpd1 Hattr.
+    rewrite EQy in Habinds'. simpl in Habinds'. erewrite read_option_binds_eq in Habinds'.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Hidx. {
+        rewrite index_binds_eq in Hidx. destruct Hidx as (attrs&Habinds).
+        forwards (x&EQx&EQattrs) : ljs_descriptor_attr_binds_lemma Habinds; try eassumption.
+        rewrite EQx. subst_hyp EQattrs.
+Opaque decide.
+        repeat ljs_autoforward.
+        simpl.
+        rewrite if_some_then_not_same_some_eq_lemma.
+        rewrite decide_spec. rew_refl. auto.
+    } {
+        forwards EQx : ljs_descriptor_attr_not_index_lemma Hidx; try eassumption.
+        rewrite EQx.
+        repeat ljs_autoforward.
+        rewrite if_some_then_not_same_none1_eq_lemma. rew_refl. auto.
+    }
+Qed.
+
+Lemma data_descriptor_related_lemma : forall BR jv v b1 b2 b3,
+    value_related BR jv v ->
+    descriptor_related BR (J.descriptor_intro_data jv b1 b2 b3) (data_descriptor v b1 b2 b3).
+Proof.
+    introv Hvrel. unfolds J.descriptor_intro_data. unfolds data_descriptor.
+    constructor; eauto_js.
+Qed.
+
+Lemma accessor_descriptor_related_lemma : forall BR jv1 v1 jv2 v2 b1 b2,
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    descriptor_related BR (J.descriptor_intro_accessor jv1 jv2 b1 b2) (accessor_descriptor v1 v2 b1 b2).
+Proof.
+    introv Hvrel. unfolds J.descriptor_intro_accessor. unfolds accessor_descriptor.
+    constructor; eauto_js.
+Qed.
+
+Lemma default_data_descriptor_related_lemma : forall BR,
+    data_descriptor_related BR J.attributes_data_default default_data_descriptor.
+Proof.
+    introv. unfolds J.attributes_data_default. unfolds default_data_descriptor.
+    constructor; simpl; eauto_js.
+Qed.
+
+Lemma default_accessor_descriptor_related_lemma : forall BR,
+    accessor_descriptor_related BR J.attributes_accessor_default default_accessor_descriptor.
+Proof.
+    introv. unfolds J.attributes_accessor_default. unfolds default_accessor_descriptor.
+    constructor; simpl; eauto_js.
+Qed.
+
+Lemma accessor_to_data_descriptor_lemma : forall BR jacc desc,
+    accessor_descriptor_related BR jacc desc ->
+    data_descriptor_related BR (J.attributes_data_of_attributes_accessor jacc) (to_data_descriptor desc).
+Proof.
+    introv Hrel. destruct Hrel.
+    unfolds J.attributes_data_of_attributes_accessor. unfolds to_data_descriptor. unfolds descriptor_update.
+    rewrite <- accessor_descriptor_related_value.
+    rewrite <- accessor_descriptor_related_writable.
+    rewrite <- accessor_descriptor_related_enumerable.
+    rewrite <- accessor_descriptor_related_configurable.
+    constructor; simpl; eauto_js.
+Qed.
+
+Lemma data_to_accessor_descriptor_lemma : forall BR jdata desc,
+    data_descriptor_related BR jdata desc ->
+    accessor_descriptor_related BR (J.attributes_accessor_of_attributes_data jdata) (to_accessor_descriptor desc).
+Proof.
+    introv Hrel. destruct Hrel.
+    unfolds J.attributes_accessor_of_attributes_data. unfolds to_accessor_descriptor. unfolds descriptor_update.
+    rewrite <- data_descriptor_related_get.
+    rewrite <- data_descriptor_related_set.
+    rewrite <- data_descriptor_related_enumerable.
+    rewrite <- data_descriptor_related_configurable.
+    constructor; simpl; eauto_js.
+Qed.
+
+Lemma value_related_unsome_default_lemma : forall BR jv v ojv ov,
+    value_related BR jv v ->
+    option_value_related BR ojv ov ->
+    value_related BR (unsome_default jv ojv) (unsome_default v ov).
+Proof.
+    introv Hvrel Hovrel.
+    inverts Hovrel; eauto.
+Qed.
+
+Hint Resolve value_related_unsome_default_lemma : js_ljs.
+
+Lemma attributes_data_update_lemma : forall BR jdata jdesc desc1 desc2,
+    data_descriptor_related BR jdata desc1 ->
+    descriptor_related BR jdesc desc2 ->
+    data_descriptor_related BR (J.attributes_data_update jdata jdesc) (descriptor_update desc1 desc2).
+Proof.
+    introv Hrel1 Hrel2. destruct Hrel1. destruct Hrel2.
+    destruct jdata. destruct jdesc. destruct desc1. destruct desc2.
+    simpls. substs.
+    inverts data_descriptor_related_value.
+    constructor; simpl; eauto_js.
+Qed.
+
+Lemma attributes_accessor_update_lemma : forall BR jacc jdesc desc1 desc2,
+    accessor_descriptor_related BR jacc desc1 ->
+    descriptor_related BR jdesc desc2 ->
+    accessor_descriptor_related BR (J.attributes_accessor_update jacc jdesc) (descriptor_update desc1 desc2).
+Proof.
+    introv Hrel1 Hrel2. destruct Hrel1. destruct Hrel2.
+    destruct jacc. destruct jdesc. destruct desc1. destruct desc2.
+    simpls. substs.
+    inverts accessor_descriptor_related_get.
+    inverts accessor_descriptor_related_set.
+    constructor; simpl; eauto_js.
+Qed.
+
+Lemma attributes_update_lemma : forall BR jattrs jdesc desc1 desc2,
+    attributes_descriptor_related BR jattrs desc1 ->
+    descriptor_related BR jdesc desc2 ->
+    attributes_descriptor_related BR (J.attributes_update jattrs jdesc) (descriptor_update desc1 desc2).
+Proof.
+    introv Hrel1 Hrel2.
+    destruct Hrel1 as [Hrel1|Hrel1].
+    + constructor. apply attributes_data_update_lemma; assumption.
+    + constructor. apply attributes_accessor_update_lemma; assumption.
+Qed.
+
+Lemma attributes_data_of_descriptor_lemma : forall BR jdesc desc,
+    descriptor_related BR jdesc desc ->
+    data_descriptor_related BR (J.attributes_data_of_descriptor jdesc) (to_data_descriptor desc).
+Proof.
+    introv Hrel.
+    apply attributes_data_update_lemma.
+    apply default_data_descriptor_related_lemma. assumption.
+Qed.
+
+Lemma attributes_accessor_of_descriptor_lemma : forall BR jdesc desc,
+    descriptor_related BR jdesc desc ->
+    accessor_descriptor_related BR (J.attributes_accessor_of_descriptor jdesc) (to_accessor_descriptor desc).
+Proof.
+    introv Hrel.
+    apply attributes_accessor_update_lemma.
+    apply default_accessor_descriptor_related_lemma. assumption.
+Qed.
+
+Lemma descriptor_of_attributes_lemma : forall BR jattrs desc,
+    attributes_descriptor_related BR jattrs desc ->
+    descriptor_related BR (J.descriptor_of_attributes jattrs) desc.
+Proof.
+    introv Hrel.
+    destruct desc.
+    inverts Hrel as Hrel. {
+        destruct Hrel.
+        simpls. substs.
+        constructor; eauto_js.
+    } {
+        destruct Hrel.
+        simpls. substs.
+        constructor; eauto_js.
+    }
+Qed.
+
+Lemma descriptor_is_data_eq_lemma : forall BR jdesc desc,
+    descriptor_related BR jdesc desc ->
+    J.descriptor_is_data jdesc = is_data_descriptor desc.
+Proof.
+    introv Hrel.
+    destruct jdesc. destruct desc. destruct Hrel.
+    unfolds J.descriptor_is_data. unfolds is_data_descriptor.
+    simpls. substs.
+    rew_logic.
+    asserts Eq : (forall A (a : A), (Some a <> None) = True). { 
+        introv. rew_logic. split. auto. introv Ht H. tryfalse.
+    }
+    inverts descriptor_related_value; repeat rewrite Eq; iauto.
+Qed.
+
+Lemma descriptor_is_accessor_eq_lemma : forall BR jdesc desc,
+    descriptor_related BR jdesc desc ->
+    J.descriptor_is_accessor jdesc = is_accessor_descriptor desc.
+Proof.
+    introv Hrel.
+    destruct jdesc. destruct desc. destruct Hrel.
+    unfolds J.descriptor_is_accessor. unfolds is_accessor_descriptor.
+    simpls. substs.
+    rew_logic.
+    asserts Eq : (forall A (a : A), (Some a <> None) = True). { 
+        introv. rew_logic. split. auto. introv Ht H. tryfalse.
+    }
+    inverts descriptor_related_get; 
+    inverts descriptor_related_set; repeat rewrite Eq; iauto.
+Qed.
+
+Lemma descriptor_is_generic_eq_lemma : forall BR jdesc desc,
+    descriptor_related BR jdesc desc ->
+    J.descriptor_is_generic jdesc = is_generic_descriptor desc.
+Proof.
+    introv Hrel. unfolds J.descriptor_is_generic. unfolds is_generic_descriptor.
+    erewrite descriptor_is_data_eq_lemma by eassumption.
+    erewrite descriptor_is_accessor_eq_lemma by eassumption.
+    reflexivity.
+Qed.
+
+Hint Constructors L.same_value : js_ljs. (* TODO move *)
+
+(* TODO move *)
+Lemma same_value_eq_lemma : forall v1 v2, L.value_type v1 <> L.type_closure -> L.same_value v1 v2 = (v1 = v2).
+Proof.
+    introv Htype.
+    rew_logic.
+    split.
+    introv Hsv. inverts Hsv; reflexivity.
+    introv Heq. subst. destruct v2; simpls; tryfalse; eauto_js.
+Qed.
+
+(* TODO move *)
+Definition heaps_bisim_bijective BR := 
+    heaps_bisim_lfun_obj BR /\ heaps_bisim_lfun_env BR /\ heaps_bisim_rfun BR.
+
+Lemma same_value_related_eq_lemma : forall BR jv1 jv2 v1 v2,
+    heaps_bisim_bijective BR ->
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    J.same_value jv1 jv2 = L.same_value v1 v2.
+Proof.
+    introv Hbij Hv1 Hv2.
+    destruct Hbij as (Hlfun1&Hlfun2&Hrfun).
+    unfolds J.same_value.
+    erewrite same_value_eq_lemma by (inverts Hv1; eauto_js).
+    rew_logic. split; introv Heq; subst_hyp Heq; inverts Hv1 as Hf1; inverts Hv2 as Hf2; try reflexivity.
+    + lets : Hlfun1 Hf1 Hf2. substs. reflexivity.
+    + lets : Hrfun Hf1 Hf2 fact_ptr_js_obj fact_ptr_js_obj. injects. reflexivity.
+Qed.
+
+Lemma if_some_value_then_same_lemma : forall BR ojv1 ojv2 ov1 ov2,
+    heaps_bisim_bijective BR ->
+    option_value_related BR ojv1 ov1 ->
+    option_value_related BR ojv2 ov2 ->
+    J.if_some_value_then_same ojv1 ojv2 = if_some_value_then_same ov1 ov2.
+Proof.
+    introv Hbij Hov1 Hov2.
+    inverts Hov1 as Hv; inverts Hov2 as Hv2; simpls; try reflexivity.
+    eapply same_value_related_eq_lemma; eassumption.
+Qed.
+
+Lemma if_some_bool_then_same_lemma : forall ob1 ob2,
+    J.if_some_bool_then_same ob1 ob2 = 
+        if_some_value_then_same (LibOption.map L.value_bool ob1) (LibOption.map L.value_bool ob2).
+Proof.
+    introv.
+    destruct ob1; destruct ob2; simpls; try reflexivity.
+    erewrite same_value_eq_lemma by eauto_js.
+    rew_logic. split; introv Heq. subst_hyp Heq; reflexivity. injects; reflexivity.
+Qed.
+
+Lemma descriptor_contains_eq_lemma : forall BR jdesc1 jdesc2 desc1 desc2,
+    heaps_bisim_bijective BR ->
+    descriptor_related BR jdesc1 desc1 ->
+    descriptor_related BR jdesc2 desc2 ->
+    J.descriptor_contains jdesc1 jdesc2 = descriptor_contains desc1 desc2.
+Proof.
+    introv Hbij Hrel1 Hrel2.
+    destruct jdesc1. destruct jdesc2. destruct desc1. destruct desc2.
+    inverts Hrel1. inverts Hrel2.
+    simpls. substs.
+    repeat erewrite if_some_value_then_same_lemma by eassumption.
+    repeat rewrite if_some_bool_then_same_lemma.
+    rew_logic; split; introv Hx. {
+        destruct_hyp Hx. constructor; simpl; eauto_js.
+    } { 
+        inverts Hx. splits; eauto_js.
+    }
+Qed.
+
+(* TODO move *)
+Lemma OptionSome2_None2_eq : forall T1 T2 (P : T1 -> T2 -> Prop) oa1,
+    OptionSome2 P oa1 None = False.
+Proof.
+    introv. rew_logic. split; intro H; tryfalse. inverts H.
+Qed.
+
+Lemma descriptor_enumerable_not_same_eq_lemma : forall BR jattrs jdesc desc1 desc2,
+    attributes_descriptor_related BR jattrs desc1 ->
+    descriptor_related BR jdesc desc2 -> 
+    J.descriptor_enumerable_not_same jattrs jdesc = 
+        if_some_then_not_same (ljs_descriptor_enumerable_v desc2) (ljs_descriptor_enumerable_v desc1).
+Proof.
+    introv Hrel1 Hrel2.
+    destruct jdesc. destruct desc2.
+    lets Henum : descriptor_related_enumerable Hrel2. clear Hrel2. simpl in Henum. subst ljs_descriptor_enumerable.
+    unfolds ljs_descriptor_enumerable_v.
+    asserts_rewrite (ljs_descriptor_enumerable desc1 = Some (J.attributes_enumerable jattrs)). {
+        inverts Hrel1 as Hrel1; inverts Hrel1; symmetry; eassumption.
+    }
+    destruct descriptor_enumerable; unfolds J.descriptor_enumerable_not_same; simpl. {
+        unfolds if_some_then_not_same. rewrites OptionSome2_Some_eq.
+        erewrite same_value_eq_lemma by eauto_js.
+        rew_logic. split; introv H.
+        + intro He. injects. tryfalse.
+        + intro He. substs. tryfalse.
+    } {
+        unfolds if_some_then_not_same. rewrite OptionSome2_None1_eq. reflexivity.
+    }
+Qed.
+
+Lemma descriptor_value_not_same_eq_lemma : forall BR jdata jdesc desc1 desc2,
+    heaps_bisim_bijective BR ->
+    data_descriptor_related BR jdata desc1 ->
+    descriptor_related BR jdesc desc2 -> 
+    J.descriptor_value_not_same jdata jdesc = 
+        if_some_then_not_same (ljs_descriptor_value desc2) (ljs_descriptor_value desc1).
+Proof.
+    introv Hbij Hrel1 Hrel2.
+    destruct jdesc. destruct desc2.
+    lets Hvalue : descriptor_related_value Hrel2. clear Hrel2. simpl in Hvalue.
+    lets Hvalue2 : data_descriptor_related_value Hrel1. inverts Hvalue2 as Hvalue2.
+    inverts Hvalue as Hvalue; unfolds J.descriptor_value_not_same; simpl. {
+        unfolds if_some_then_not_same. rewrites OptionSome2_Some_eq.
+        erewrite same_value_related_eq_lemma by eassumption. reflexivity.
+    } {
+        unfolds if_some_then_not_same. rewrite OptionSome2_None1_eq. reflexivity.
+    }
+Qed.
+
+Lemma descriptor_get_not_same_eq_lemma : forall BR jacc jdesc desc1 desc2,
+    heaps_bisim_bijective BR ->
+    accessor_descriptor_related BR jacc desc1 ->
+    descriptor_related BR jdesc desc2 -> 
+    J.descriptor_get_not_same jacc jdesc = 
+        if_some_then_not_same (ljs_descriptor_get desc2) (ljs_descriptor_get desc1).
+Proof.
+    introv Hbij Hrel1 Hrel2.
+    destruct jdesc. destruct desc2.
+    lets Hvalue : descriptor_related_get Hrel2. clear Hrel2. simpl in Hvalue.
+    lets Hvalue2 : accessor_descriptor_related_get Hrel1. inverts Hvalue2 as Hvalue2.
+    inverts Hvalue as Hvalue; unfolds J.descriptor_get_not_same; simpl. {
+        unfolds if_some_then_not_same. rewrites OptionSome2_Some_eq.
+        erewrite same_value_related_eq_lemma by eassumption. reflexivity.
+    } {
+        unfolds if_some_then_not_same. rewrite OptionSome2_None1_eq. reflexivity.
+    }
+Qed.
+
+Lemma descriptor_set_not_same_eq_lemma : forall BR jacc jdesc desc1 desc2,
+    heaps_bisim_bijective BR ->
+    accessor_descriptor_related BR jacc desc1 ->
+    descriptor_related BR jdesc desc2 -> 
+    J.descriptor_set_not_same jacc jdesc = 
+        if_some_then_not_same (ljs_descriptor_set desc2) (ljs_descriptor_set desc1).
+Proof.
+    introv Hbij Hrel1 Hrel2.
+    destruct jdesc. destruct desc2.
+    lets Hvalue : descriptor_related_set Hrel2. clear Hrel2. simpl in Hvalue.
+    lets Hvalue2 : accessor_descriptor_related_set Hrel1. inverts Hvalue2 as Hvalue2.
+    inverts Hvalue as Hvalue; unfolds J.descriptor_set_not_same; simpl. {
+        unfolds if_some_then_not_same. rewrites OptionSome2_Some_eq.
+        erewrite same_value_related_eq_lemma by eassumption. reflexivity.
+    } {
+        unfolds if_some_then_not_same. rewrite OptionSome2_None1_eq. reflexivity.
+    }
+Qed.
+
 (* *** errors *)
 
 Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,

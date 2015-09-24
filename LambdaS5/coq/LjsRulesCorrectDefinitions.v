@@ -249,6 +249,22 @@ Inductive Option4 (P : A -> B -> C -> D -> Prop) : option A -> option B -> optio
 | Option4_none : Option4 P None None None None
 .
 
+Inductive OptionSome (P : A -> Prop) : option A -> Prop :=
+| OptionSome_some : forall a, P a -> OptionSome P (Some a) 
+.
+
+Inductive OptionSome2 (P : A -> B -> Prop) : option A -> option B -> Prop :=
+| OptionSome2_some : forall a a', P a a' -> OptionSome2 P (Some a) (Some a')
+.
+
+Inductive OptionSome3 (P : A -> B -> C -> Prop) : option A -> option B -> option C -> Prop :=
+| OptionSome3_some : forall a a' a'', P a a' a'' -> OptionSome3 P (Some a) (Some a') (Some a'')
+.
+
+Inductive OptionSome4 (P : A -> B -> C -> D -> Prop) : option A -> option B -> option C -> option D -> Prop :=
+| OptionSome4_some : forall a a' a'' a''', P a a' a'' a''' -> OptionSome4 P (Some a) (Some a') (Some a'') (Some a''')
+.
+
 End OptionPred.
 
 Definition option_value_related BR := Option2 (value_related BR).
@@ -671,6 +687,8 @@ Record descriptor_contains desc1 desc2 : Prop := {
         (ljs_descriptor_configurable_v desc1) (ljs_descriptor_configurable_v desc2)
 }.
 
+Definition if_some_then_not_same := OptionSome2 (fun x y => ~L.same_value x y).
+
 Inductive ljs_descriptor_attr : string -> (ljs_descriptor -> option L.value) -> Prop :=
 | ljs_descriptor_attr_value : ljs_descriptor_attr "value" ljs_descriptor_value
 | ljs_descriptor_attr_writable : ljs_descriptor_attr "writable" ljs_descriptor_writable_v
@@ -735,8 +753,10 @@ Record accessor_descriptor_related BR jacc desc : Prop := {
 
 Inductive attributes_descriptor_related BR : J.attributes -> ljs_descriptor -> Prop := 
 | attributes_descriptor_related_data : forall jdata desc,
+    data_descriptor_related BR jdata desc ->
     attributes_descriptor_related BR (J.attributes_data_of jdata) desc
 | attributes_descriptor_related_accessor : forall jacc desc,
+    accessor_descriptor_related BR jacc desc ->
     attributes_descriptor_related BR (J.attributes_accessor_of jacc) desc.
 
 (** *** Relating environment records *)
