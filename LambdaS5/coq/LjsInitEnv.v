@@ -1138,6 +1138,10 @@ expr_object
  ("%makeGlobalEnv", property_data
                     (data_intro (expr_id "%makeGlobalEnv") expr_true
                      expr_false expr_false));
+ ("%makeValueOnlyDescriptor", property_data
+                              (data_intro
+                               (expr_id "%makeValueOnlyDescriptor") expr_true
+                               expr_false expr_false));
  ("%map", property_data
           (data_intro (expr_id "%map") expr_true expr_false expr_false));
  ("%mapCall", property_data
@@ -2596,13 +2600,13 @@ expr_if
  (expr_op2 binary_op_stx_eq
   (expr_get_obj_attr oattr_class (expr_id "context"))
   (expr_string "ObjEnvRec"))
- (expr_app (expr_id "%AddDataField")
-  [expr_get_internal "bindings" (expr_id "context");
-   expr_id "id";
-   expr_undefined;
-   expr_true;
-   expr_true;
-   expr_id "configurable"])
+ (expr_seq
+  (expr_app (expr_id "%defineOwnProperty")
+   [expr_get_internal "bindings" (expr_id "context");
+    expr_id "id";
+    expr_app (expr_id "%makeDataDescriptor")
+    [expr_undefined; expr_true; expr_true; expr_id "configurable"];
+    expr_true]) expr_empty)
  (expr_throw
   (expr_string "[env] Context not well formed! In %EnvCreateMutableBinding")))
 .
@@ -2676,13 +2680,12 @@ expr_seq
  (expr_if
   (expr_op2 binary_op_stx_eq (expr_id "context") (expr_id "%globalContext"))
   (expr_if (expr_get_attr pattr_config (expr_id "%global") (expr_id "id"))
-   (expr_app (expr_id "%AddDataField")
+   (expr_app (expr_id "%defineOwnProperty")
     [expr_id "%global";
      expr_id "id";
-     expr_undefined;
-     expr_true;
-     expr_true;
-     expr_id "configurableBindings"])
+     expr_app (expr_id "%makeDataDescriptor")
+     [expr_undefined; expr_true; expr_true; expr_id "configurableBindings"];
+     expr_true])
    (expr_if
     (expr_if
      (expr_if
@@ -3723,8 +3726,11 @@ expr_let "optTypeError"
   expr_lambda ["v"; "w"; "e"; "c"]
   (expr_if (expr_id "w")
    (expr_seq
-    (expr_set_attr pattr_value (expr_id "obj") (expr_id "fld")
-     (expr_id "val")) expr_empty)
+    (expr_app (expr_id "%defineOwnProperty")
+     [expr_id "obj";
+      expr_id "fld";
+      expr_app (expr_id "%makeValueOnlyDescriptor") [expr_id "val"];
+      expr_id "strict"]) expr_empty)
    (expr_app (expr_id "optTypeError")
     [expr_string "setting unwritable field"]));
   expr_lambda ["g"; "s"; "e"; "c"]
@@ -3742,13 +3748,12 @@ expr_let "optTypeError"
     expr_null)
    (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
     (expr_seq
-     (expr_app (expr_id "%AddDataField")
+     (expr_app (expr_id "%defineOwnProperty")
       [expr_id "obj";
        expr_id "fld";
-       expr_id "val";
-       expr_true;
-       expr_true;
-       expr_true]) expr_empty)
+       expr_app (expr_id "%makeDataDescriptor")
+       [expr_id "val"; expr_true; expr_true; expr_true];
+       expr_id "strict"]) expr_empty)
     (expr_app (expr_id "optTypeError")
      [expr_string "adding a field to a non-extensible object"]))
    (expr_app (expr_id "%GetProperty")
@@ -3758,13 +3763,12 @@ expr_let "optTypeError"
      (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
       (expr_if (expr_id "w")
        (expr_seq
-        (expr_app (expr_id "%AddDataField")
+        (expr_app (expr_id "%defineOwnProperty")
          [expr_id "obj";
           expr_id "fld";
-          expr_id "val";
-          expr_true;
-          expr_true;
-          expr_true]) expr_empty)
+          expr_app (expr_id "%makeDataDescriptor")
+          [expr_id "val"; expr_true; expr_true; expr_true];
+          expr_id "strict"]) expr_empty)
        (expr_app (expr_id "optTypeError")
         [expr_string "shadowing unwritable field"]))
       (expr_app (expr_id "optTypeError")
@@ -3781,13 +3785,12 @@ expr_let "optTypeError"
      expr_lambda []
      (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
       (expr_seq
-       (expr_app (expr_id "%AddDataField")
+       (expr_app (expr_id "%defineOwnProperty")
         [expr_id "obj";
          expr_id "fld";
-         expr_id "val";
-         expr_true;
-         expr_true;
-         expr_true]) expr_empty)
+         expr_app (expr_id "%makeDataDescriptor")
+         [expr_id "val"; expr_true; expr_true; expr_true];
+         expr_id "strict"]) expr_empty)
       (expr_app (expr_id "optTypeError")
        [expr_string "adding a field to a non-extensible object"]))]))])
 .
@@ -4258,18 +4261,23 @@ expr_let "sign" (expr_op1 unary_op_sign (expr_id "t"))
 .
 Definition ex_privaccessorDescriptorWrite := 
 expr_seq
-(expr_set_attr pattr_getter (expr_id "obj") (expr_id "field")
- (expr_get_attr pattr_value (expr_id "fd") (expr_string "get")))
-(expr_seq
- (expr_set_attr pattr_setter (expr_id "obj") (expr_id "field")
-  (expr_get_attr pattr_value (expr_id "fd") (expr_string "set")))
+(expr_if
+ (expr_if
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "field")))
+  expr_true (expr_get_attr pattr_config (expr_id "obj") (expr_id "field")))
  (expr_seq
-  (expr_set_attr pattr_enum (expr_id "obj") (expr_id "field")
-   (expr_get_attr pattr_value (expr_id "fd") (expr_string "enumerable")))
+  (expr_set_attr pattr_getter (expr_id "obj") (expr_id "field")
+   (expr_get_attr pattr_value (expr_id "fd") (expr_string "get")))
   (expr_seq
-   (expr_set_attr pattr_config (expr_id "obj") (expr_id "field")
-    (expr_get_attr pattr_value (expr_id "fd") (expr_string "configurable")))
-   expr_empty)))
+   (expr_set_attr pattr_setter (expr_id "obj") (expr_id "field")
+    (expr_get_attr pattr_value (expr_id "fd") (expr_string "set")))
+   (expr_seq
+    (expr_set_attr pattr_enum (expr_id "obj") (expr_id "field")
+     (expr_get_attr pattr_value (expr_id "fd") (expr_string "enumerable")))
+    (expr_set_attr pattr_config (expr_id "obj") (expr_id "field")
+     (expr_get_attr pattr_value (expr_id "fd") (expr_string "configurable"))))))
+ expr_undefined) expr_empty
 .
 Definition ex_privacosCall :=  expr_string "acos NYI" .
 Definition ex_privapplyCall := 
@@ -4763,20 +4771,36 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
 .
 Definition ex_privdataDescriptorWrite := 
 expr_seq
-(expr_set_attr pattr_writable (expr_id "obj") (expr_id "field") expr_true)
-(expr_seq
- (expr_set_attr pattr_value (expr_id "obj") (expr_id "field")
-  (expr_get_attr pattr_value (expr_id "fd") (expr_string "value")))
+(expr_if
+ (expr_if
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "field")))
+  expr_true (expr_get_attr pattr_config (expr_id "obj") (expr_id "field")))
  (expr_seq
-  (expr_set_attr pattr_writable (expr_id "obj") (expr_id "field")
-   (expr_get_attr pattr_value (expr_id "fd") (expr_string "writable")))
+  (expr_set_attr pattr_writable (expr_id "obj") (expr_id "field") expr_true)
   (expr_seq
-   (expr_set_attr pattr_enum (expr_id "obj") (expr_id "field")
-    (expr_get_attr pattr_value (expr_id "fd") (expr_string "enumerable")))
+   (expr_set_attr pattr_value (expr_id "obj") (expr_id "field")
+    (expr_get_attr pattr_value (expr_id "fd") (expr_string "value")))
    (expr_seq
-    (expr_set_attr pattr_config (expr_id "obj") (expr_id "field")
-     (expr_get_attr pattr_value (expr_id "fd") (expr_string "configurable")))
-    expr_empty))))
+    (expr_set_attr pattr_writable (expr_id "obj") (expr_id "field")
+     (expr_get_attr pattr_value (expr_id "fd") (expr_string "writable")))
+    (expr_seq
+     (expr_set_attr pattr_enum (expr_id "obj") (expr_id "field")
+      (expr_get_attr pattr_value (expr_id "fd") (expr_string "enumerable")))
+     (expr_set_attr pattr_config (expr_id "obj") (expr_id "field")
+      (expr_get_attr pattr_value (expr_id "fd") (expr_string "configurable")))))))
+ (expr_if
+  (expr_if
+   (expr_op1 unary_op_not
+    (expr_op2 binary_op_is_accessor (expr_id "obj") (expr_id "field")))
+   (expr_get_attr pattr_writable (expr_id "obj") (expr_id "field"))
+   expr_false)
+  (expr_seq
+   (expr_set_attr pattr_value (expr_id "obj") (expr_id "field")
+    (expr_get_attr pattr_value (expr_id "fd") (expr_string "value")))
+   (expr_set_attr pattr_writable (expr_id "obj") (expr_id "field")
+    (expr_get_attr pattr_value (expr_id "fd") (expr_string "writable"))))
+  expr_undefined)) expr_empty
 .
 Definition ex_privdateGetTimezoneOffsetCall := 
 expr_let "t" (expr_get_internal "primval" (expr_id "this"))
@@ -4848,14 +4872,11 @@ expr_let "current"
  (expr_let "accept"
   (expr_lambda ["ncurrent"]
    (expr_seq
-    (expr_if
-     (expr_get_attr pattr_value (expr_id "current")
-      (expr_string "configurable"))
-     (expr_app (expr_id "%descriptorWrite")
-      [expr_id "obj";
-       expr_id "field";
-       expr_app (expr_id "%updateDescriptor")
-       [expr_id "ncurrent"; expr_id "attr-obj"]]) expr_undefined) expr_true))
+    (expr_app (expr_id "%descriptorWrite")
+     [expr_id "obj";
+      expr_id "field";
+      expr_app (expr_id "%updateDescriptor")
+      [expr_id "ncurrent"; expr_id "attr-obj"]]) expr_true))
   (expr_if (expr_op2 binary_op_stx_eq (expr_id "current") expr_undefined)
    (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
     (expr_if
@@ -5899,6 +5920,13 @@ expr_object
                 (data_intro (expr_id "e") expr_false expr_false expr_false));
  ("configurable", property_data
                   (data_intro (expr_id "c") expr_false expr_false expr_false))]
+.
+Definition ex_privmakeValueOnlyDescriptor := 
+expr_object
+(objattrs_intro (expr_string "PropDesc") expr_false expr_null expr_undefined)
+[]
+[("value", property_data
+           (data_intro (expr_id "v") expr_false expr_false expr_false))]
 .
 Definition ex_privmapCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -8958,6 +8986,10 @@ value_closure
  ex_privEnvAppExpr)
 .
 Definition name_privEnvAppExpr : id :=  "%EnvAppExpr" .
+Definition privmakeValueOnlyDescriptor := 
+value_closure (closure_intro [] None ["v"] ex_privmakeValueOnlyDescriptor)
+.
+Definition name_privmakeValueOnlyDescriptor : id :=  "%makeValueOnlyDescriptor" .
 Definition privoneArgObj := 
 value_closure (closure_intro [] None ["arg"] ex_privoneArgObj)
 .
@@ -8965,11 +8997,13 @@ Definition name_privoneArgObj : id :=  "%oneArgObj" .
 Definition privPut := 
 value_closure
 (closure_intro
- [("%AddDataField", privAddDataField);
-  ("%AppExpr", privAppExpr);
+ [("%AppExpr", privAppExpr);
   ("%GetOwnProperty", privGetOwnProperty);
   ("%GetProperty", privGetProperty);
   ("%TypeErrorOr", privTypeErrorOr);
+  ("%defineOwnProperty", privdefineOwnProperty);
+  ("%makeDataDescriptor", privmakeDataDescriptor);
+  ("%makeValueOnlyDescriptor", privmakeValueOnlyDescriptor);
   ("%oneArgObj", privoneArgObj)] None ["obj"; "this"; "fld"; "val"; "strict"]
  ex_privPut)
 .
@@ -9011,8 +9045,9 @@ Definition name_privEnvCreateImmutableBinding : id :=  "%EnvCreateImmutableBindi
 Definition privEnvCreateMutableBinding := 
 value_closure
 (closure_intro
- [("%AddDataField", privAddDataField);
-  ("%DeclEnvAddBinding", privDeclEnvAddBinding)] None
+ [("%DeclEnvAddBinding", privDeclEnvAddBinding);
+  ("%defineOwnProperty", privdefineOwnProperty);
+  ("%makeDataDescriptor", privmakeDataDescriptor)] None
  ["context"; "id"; "configurable"] ex_privEnvCreateMutableBinding)
 .
 Definition name_privEnvCreateMutableBinding : id :=  "%EnvCreateMutableBinding" .
@@ -9081,13 +9116,14 @@ Definition name_privglobalContext : id :=  "%globalContext" .
 Definition privEnvDefineFunc := 
 value_closure
 (closure_intro
- [("%AddDataField", privAddDataField);
-  ("%EnvCreateMutableBinding", privEnvCreateMutableBinding);
+ [("%EnvCreateMutableBinding", privEnvCreateMutableBinding);
   ("%EnvHasBinding", privEnvHasBinding);
   ("%EnvSetMutableBinding", privEnvSetMutableBinding);
   ("%TypeError", privTypeError);
+  ("%defineOwnProperty", privdefineOwnProperty);
   ("%global", privglobal);
-  ("%globalContext", privglobalContext)] None
+  ("%globalContext", privglobalContext);
+  ("%makeDataDescriptor", privmakeDataDescriptor)] None
  ["context"; "id"; "fo"; "configurableBindings"; "strict"]
  ex_privEnvDefineFunc)
 .
@@ -11388,6 +11424,7 @@ Definition ctx_items :=
  (name_privmakeAccessorDescriptor, privmakeAccessorDescriptor);
  (name_privmakeDataDescriptor, privmakeDataDescriptor);
  (name_privmakeGlobalEnv, privmakeGlobalEnv);
+ (name_privmakeValueOnlyDescriptor, privmakeValueOnlyDescriptor);
  (name_privmap, privmap);
  (name_privmapCall, privmapCall);
  (name_privmathAbs, privmathAbs);
@@ -11862,6 +11899,7 @@ privlogCall
 privmakeAccessorDescriptor
 privmakeDataDescriptor
 privmakeGlobalEnv
+privmakeValueOnlyDescriptor
 privmap
 privmapCall
 privmathAbs
@@ -12346,6 +12384,7 @@ Definition store_items := [
                                          ("%makeAccessorDescriptor", privmakeAccessorDescriptor);
                                          ("%makeDataDescriptor", privmakeDataDescriptor);
                                          ("%makeGlobalEnv", privmakeGlobalEnv);
+                                         ("%makeValueOnlyDescriptor", privmakeValueOnlyDescriptor);
                                          ("%map", privmap);
                                          ("%mapCall", privmapCall);
                                          ("%mathAbs", privmathAbs);
