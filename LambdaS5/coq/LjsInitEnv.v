@@ -3716,83 +3716,111 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "o"])
   expr_id "strict"])
 .
 Definition ex_privPut := 
-expr_let "optTypeError"
-(expr_lambda ["msg"]
- (expr_app (expr_id "%TypeErrorOr")
-  [expr_id "msg"; expr_empty; expr_id "strict"]))
-(expr_app (expr_id "%GetOwnProperty")
- [expr_id "obj";
-  expr_id "fld";
-  expr_lambda ["v"; "w"; "e"; "c"]
-  (expr_if (expr_id "w")
+expr_app (expr_id "%GetOwnProperty")
+[expr_id "obj";
+ expr_id "fld";
+ expr_lambda ["v"; "w"; "e"; "c"]
+ (expr_if (expr_id "w")
+  (expr_if (expr_op1 unary_op_is_primitive (expr_id "this"))
+   (expr_app (expr_id "%TypeErrorOr")
+    [expr_string "setting a field on a transient object";
+     expr_empty;
+     expr_id "strict"])
    (expr_seq
     (expr_app (expr_id "%defineOwnProperty")
      [expr_id "obj";
       expr_id "fld";
       expr_app (expr_id "%makeValueOnlyDescriptor") [expr_id "val"];
-      expr_id "strict"]) expr_empty)
-   (expr_app (expr_id "optTypeError")
-    [expr_string "setting unwritable field"]));
-  expr_lambda ["g"; "s"; "e"; "c"]
-  (expr_if (expr_op2 binary_op_stx_eq (expr_id "s") expr_undefined)
-   (expr_app (expr_id "optTypeError")
-    [expr_string "setting accessor field with no setter"])
-   (expr_seq
-    (expr_app (expr_id "%AppExpr")
-     [expr_id "s";
-      expr_id "this";
-      expr_app (expr_id "%oneArgObj") [expr_id "val"]]) expr_empty));
-  expr_lambda []
-  (expr_if
-   (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_proto (expr_id "obj"))
-    expr_null)
-   (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
+      expr_id "strict"]) expr_empty))
+  (expr_app (expr_id "%TypeErrorOr")
+   [expr_string "setting unwritable field"; expr_empty; expr_id "strict"]));
+ expr_lambda ["g"; "s"; "e"; "c"]
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "s") expr_undefined)
+  (expr_app (expr_id "%TypeErrorOr")
+   [expr_string "setting accessor field with no setter";
+    expr_empty;
+    expr_id "strict"])
+  (expr_seq
+   (expr_app (expr_id "%AppExpr")
+    [expr_id "s";
+     expr_id "this";
+     expr_app (expr_id "%oneArgObj") [expr_id "val"]]) expr_empty));
+ expr_lambda []
+ (expr_if
+  (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_proto (expr_id "obj"))
+   expr_null)
+  (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
+   (expr_if (expr_op1 unary_op_is_primitive (expr_id "this"))
+    (expr_app (expr_id "%TypeErrorOr")
+     [expr_string "setting a field on a transient object";
+      expr_empty;
+      expr_id "strict"])
     (expr_seq
      (expr_app (expr_id "%defineOwnProperty")
       [expr_id "obj";
        expr_id "fld";
        expr_app (expr_id "%makeDataDescriptor")
        [expr_id "val"; expr_true; expr_true; expr_true];
-       expr_id "strict"]) expr_empty)
-    (expr_app (expr_id "optTypeError")
-     [expr_string "adding a field to a non-extensible object"]))
-   (expr_app (expr_id "%GetProperty")
-    [expr_get_obj_attr oattr_proto (expr_id "obj");
-     expr_id "fld";
-     expr_lambda ["v"; "w"; "e"; "c"]
-     (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
-      (expr_if (expr_id "w")
+       expr_id "strict"]) expr_empty))
+   (expr_app (expr_id "%TypeErrorOr")
+    [expr_string "adding a field to a non-extensible object";
+     expr_empty;
+     expr_id "strict"]))
+  (expr_app (expr_id "%GetProperty")
+   [expr_get_obj_attr oattr_proto (expr_id "obj");
+    expr_id "fld";
+    expr_lambda ["v"; "w"; "e"; "c"]
+    (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
+     (expr_if (expr_id "w")
+      (expr_if (expr_op1 unary_op_is_primitive (expr_id "this"))
+       (expr_app (expr_id "%TypeErrorOr")
+        [expr_string "setting a field on a transient object";
+         expr_empty;
+         expr_id "strict"])
        (expr_seq
         (expr_app (expr_id "%defineOwnProperty")
          [expr_id "obj";
           expr_id "fld";
           expr_app (expr_id "%makeDataDescriptor")
           [expr_id "val"; expr_true; expr_true; expr_true];
-          expr_id "strict"]) expr_empty)
-       (expr_app (expr_id "optTypeError")
-        [expr_string "shadowing unwritable field"]))
-      (expr_app (expr_id "optTypeError")
-       [expr_string "adding a field to a non-extensible object"]));
-     expr_lambda ["g"; "s"; "e"; "c"]
-     (expr_if (expr_op2 binary_op_stx_eq (expr_id "s") expr_undefined)
-      (expr_app (expr_id "optTypeError")
-       [expr_string "setting accessor field with no setter"])
-      (expr_seq
-       (expr_app (expr_id "%AppExpr")
-        [expr_id "s";
-         expr_id "this";
-         expr_app (expr_id "%oneArgObj") [expr_id "val"]]) expr_empty));
-     expr_lambda []
-     (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
+          expr_id "strict"]) expr_empty))
+      (expr_app (expr_id "%TypeErrorOr")
+       [expr_string "shadowing unwritable field";
+        expr_empty;
+        expr_id "strict"]))
+     (expr_app (expr_id "%TypeErrorOr")
+      [expr_string "adding a field to a non-extensible object";
+       expr_empty;
+       expr_id "strict"]));
+    expr_lambda ["g"; "s"; "e"; "c"]
+    (expr_if (expr_op2 binary_op_stx_eq (expr_id "s") expr_undefined)
+     (expr_app (expr_id "%TypeErrorOr")
+      [expr_string "setting accessor field with no setter";
+       expr_empty;
+       expr_id "strict"])
+     (expr_seq
+      (expr_app (expr_id "%AppExpr")
+       [expr_id "s";
+        expr_id "this";
+        expr_app (expr_id "%oneArgObj") [expr_id "val"]]) expr_empty));
+    expr_lambda []
+    (expr_if (expr_get_obj_attr oattr_extensible (expr_id "obj"))
+     (expr_if (expr_op1 unary_op_is_primitive (expr_id "this"))
+      (expr_app (expr_id "%TypeErrorOr")
+       [expr_string "setting a field on a transient object";
+        expr_empty;
+        expr_id "strict"])
       (expr_seq
        (expr_app (expr_id "%defineOwnProperty")
         [expr_id "obj";
          expr_id "fld";
          expr_app (expr_id "%makeDataDescriptor")
          [expr_id "val"; expr_true; expr_true; expr_true];
-         expr_id "strict"]) expr_empty)
-      (expr_app (expr_id "optTypeError")
-       [expr_string "adding a field to a non-extensible object"]))]))])
+         expr_id "strict"]) expr_empty))
+     (expr_app (expr_id "%TypeErrorOr")
+      [expr_string "adding a field to a non-extensible object";
+       expr_empty;
+       expr_id "strict"]))]))]
 .
 Definition ex_privPut1 := 
 expr_app (expr_id "%Put")

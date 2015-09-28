@@ -514,6 +514,20 @@ Proof.
     auto 10.
 Qed.
 
+Lemma make_value_only_descriptor_ljs_lemma : forall k c st st' r v,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privmakeValueOnlyDescriptor [v]) (L.out_ter st' r) ->
+    concl_ljs_new_descriptor st st' r (ljs_descriptor_intro (Some v) None None None None None).
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    unfolds.
+    jauto_js.
+    constructor; try reflexivity; simpl; 
+    (eapply read_option_binds_inv; rew_binds_eq) || (eapply read_option_not_index_inv; rew_index_eq);
+    auto 10.
+Qed.
+
 Lemma default_data_descriptor_ljs_lemma : forall k c st st' r,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefaultDataDescriptor []) (L.out_ter st' r) ->
     concl_ljs_new_descriptor st st' r default_data_descriptor.
@@ -826,7 +840,7 @@ Qed.
 
 End InclBinds.
 
-Hint Resolve @incl_not_index : bag.
+(* Hint Resolve @incl_not_index : bag. *)
 
 Lemma to_data_descriptor_ljs_lemma : forall k c st st' r ptr obj desc,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privtoDataDescriptor [L.value_object ptr]) (L.out_ter st' r) ->
@@ -844,6 +858,7 @@ Proof.
         apply is_full_data_descriptor_default_data_descriptor.
     unfold concl_ljs_new_descriptor in Hx. destruct_hyp Hx.
     unfolds. jauto_js.
+    applys @incl_not_index; eauto.
 Qed.
 
 Lemma to_accessor_descriptor_ljs_lemma : forall k c st st' r ptr obj desc,
@@ -862,6 +877,7 @@ Proof.
         apply is_full_accessor_descriptor_default_accessor_descriptor.
     unfold concl_ljs_new_descriptor in Hx. destruct_hyp Hx.
     unfolds. jauto_js.
+    applys @incl_not_index; eauto.
 Qed.
 
 Lemma descriptor_field_contains_ljs_lemma : forall k c st st' r ptr1 obj1 desc1 ptr2 obj2 desc2 s fu,
@@ -1001,6 +1017,18 @@ Opaque decide.
         repeat ljs_autoforward.
         rewrite if_some_then_not_same_none1_eq_lemma. rew_refl. auto.
     }
+Qed.
+
+Lemma descriptor_related_lemma : forall BR ojv1 ov1 ojv2 ov2 ojv3 ov3 ob1 ob2 ob3,
+    option_value_related BR ojv1 ov1 ->
+    option_value_related BR ojv2 ov2 ->
+    option_value_related BR ojv3 ov3 ->
+    descriptor_related BR 
+        (J.descriptor_intro ojv1 ob1 ojv2 ojv3 ob2 ob3) 
+        (ljs_descriptor_intro ov1 ob1 ov2 ov3 ob2 ob3).
+Proof.
+    introv Hov1 Hov2 Hov3.
+    constructor; eauto_js.
 Qed.
 
 Lemma data_descriptor_related_lemma : forall BR jv v b1 b2 b3,
@@ -1364,7 +1392,13 @@ Proof.
     destruct_hyp Hv;
     repeat ljs_autoforward. {
         inverts Hvrel2.
-        jauto_js 25.
+        jauto_js 25. (*
+        unfold_concl. jauto_set_slim. (* TODO automation *)
+        + eauto_js 15.
+        + eauto_js.
+        + eapply state_invariant_new_object_preserved; eauto_js 17.
+        + eauto_js.
+        + eauto_js 8.*)
     }
     (* has message *)
     inv_ljs;
@@ -1541,6 +1575,52 @@ Proof.
     forwards_th Hx : native_error_or_void_lemma; try eassumption.
     jauto_js.
 Qed.
+
+(** *** defineOwnProperty *)
+
+Lemma define_own_property_default_lemma : forall BR k jst jc c st st' r ptr s ptr' b jptr jdesc desc obj,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefineOwnProperty 
+        [L.value_object ptr; L.value_string s; L.value_object ptr'; L.value_bool b]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr' obj ->
+    property_descriptor desc obj ->
+    descriptor_related BR jdesc desc ->
+    concl_ext_expr_value BR jst jc c st st' r
+        (J.spec_object_define_own_prop_1 J.builtin_define_own_prop_default jptr s jdesc b) (fun _ => True).
+Proof.
+Admitted.
+
+Lemma define_own_property_1_lemma : forall BR k jst jc c st st' r ptr s ptr' b jptr jdesc desc obj x,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefineOwnProperty 
+        [L.value_object ptr; L.value_string s; L.value_object ptr'; L.value_bool b]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr' obj ->
+    property_descriptor desc obj ->
+    descriptor_related BR jdesc desc ->
+    concl_ext_expr_value BR jst jc c st st' r
+        (J.spec_object_define_own_prop_1 x jptr s jdesc b) (fun _ => True).
+Proof.
+Admitted.
+
+Lemma define_own_property_lemma : forall BR k jst jc c st st' r ptr s ptr' b jptr jdesc desc obj,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefineOwnProperty 
+        [L.value_object ptr; L.value_string s; L.value_object ptr'; L.value_bool b]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr' obj ->
+    property_descriptor desc obj ->
+    descriptor_related BR jdesc desc ->
+    concl_ext_expr_value BR jst jc c st st' r
+        (J.spec_object_define_own_prop jptr s jdesc b) (fun _ => True).
+Proof.
+Admitted.
+
+(** *** ToObject *)
 
 Ltac invert_stx_eq :=
     match goal with
@@ -2786,6 +2866,27 @@ Proof.
       exists 0 v. rewrite string_of_nat_0_lemma. split. reflexivity. eapply Nth_here.
 Qed.
 
+(* TODO move *)
+Lemma value_related_primitive_lemma : forall BR jv v,
+    L.is_primitive v ->
+    value_related BR jv v ->
+    exists jpv, jv = J.value_prim jpv.
+Proof.
+    introv Hprim Hvrel.
+    inverts Hprim; inverts Hvrel; jauto.
+Qed.
+
+(* TODO move *)
+Lemma value_related_not_primitive_lemma : forall BR jv v,
+    ~L.is_primitive v ->
+    value_related BR jv v ->
+    exists jptr, jv = J.value_object jptr.
+Proof.
+    introv Hprim Hvrel.
+    inverts Hvrel; try solve [false; apply Hprim; eauto_js].
+    jauto.
+Qed.
+
 Lemma put_default_lemma : forall BR k jst jc c st st' r ptr jptr v jv v1 jv1 s b,
     ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privPut 
@@ -2813,12 +2914,32 @@ Proof.
             forwards Hjext : object_extensible_lemma; try prove_bag.
             unfold L.object_extensible in Hjext. 
             inv_ljs. { (* extensible *)
-                repeat ljs_autoforward.
-                skip. (* TODO DefineOwnProperty *)
-            } { (* not extensible *)
                 rewrite <- H11 in Hjext. (* TODO *)
                 repeat ljs_autoforward.
-                ljs_invert_apply.
+                cases_decide as Hprim. { (* is primitive *)
+                    lets (jpv&EQjpv) : value_related_primitive_lemma Hprim Hvrel1.
+                    subst_hyp EQjpv.
+                    repeat ljs_autoforward.
+                    forwards_th : type_error_or_void_lemma. eauto_js.
+                    destr_concl; try ljs_handle_abort.
+                    res_related_invert.
+                    resvalue_related_only_invert.
+                    jauto_js 15.
+                } { (* not primitive *)
+                    lets (jptr_this&EQjptr) : value_related_not_primitive_lemma Hprim Hvrel1.
+                    subst_hyp EQjptr.
+                    repeat ljs_autoforward.
+                    forwards_th Hx : make_data_descriptor_ljs_lemma.
+                    unfolds in Hx. destruct_hyp Hx.
+                    repeat ljs_autoforward.
+                    forwards_th : define_own_property_lemma; try prove_bag. skip. skip. (* TODO *)
+                    destr_concl; try ljs_handle_abort.
+                    res_related_invert.
+                    repeat ljs_autoforward.
+                    jauto_js 15.
+                }
+            } { (* not extensible *)
+                rewrite <- H11 in Hjext. (* TODO *)
                 repeat ljs_autoforward.
                 forwards_th : type_error_or_void_lemma. eauto_js.
                 destr_concl; try ljs_handle_abort.
@@ -2839,11 +2960,32 @@ Proof.
                 forwards Hjext : object_extensible_lemma; try eapply H10; try prove_bag. (* TODO *)
                 unfold L.object_extensible in Hjext. 
                 inv_ljs. { (* extensible *)
-                    skip. (* TODO DefineOwnProperty *)
-                } { (* not extensible *)
                     rewrite <- H21 in Hjext. (* TODO *)
                     repeat ljs_autoforward.
-                    ljs_invert_apply.
+                    cases_decide as Hprim. { (* is primitive *)
+                        lets (jpv&EQjpv) : value_related_primitive_lemma Hprim Hvrel1.
+                        subst_hyp EQjpv.
+                        repeat ljs_autoforward.
+                        forwards_th : type_error_or_void_lemma. eauto_js.
+                        destr_concl; try ljs_handle_abort.
+                        res_related_invert.
+                        resvalue_related_only_invert.
+                        jauto_js 20.
+                    } { (* not primitive *)
+                        lets (jptr_this&EQjptr) : value_related_not_primitive_lemma Hprim Hvrel1.
+                        subst_hyp EQjptr.
+                        repeat ljs_autoforward.
+                        forwards_th Hx : make_data_descriptor_ljs_lemma.
+                        unfolds in Hx. destruct_hyp Hx.
+                        repeat ljs_autoforward.
+                        forwards_th : define_own_property_lemma; try prove_bag. skip. skip. (* TODO *)
+                        destr_concl; try ljs_handle_abort.
+                        res_related_invert.
+                        repeat ljs_autoforward.
+                        jauto_js 20.
+                    }
+                } { (* not extensible *)
+                    rewrite <- H21 in Hjext. (* TODO *)
                     repeat ljs_autoforward.
                     forwards_th : type_error_or_void_lemma. eauto_js.
                     destr_concl; try ljs_handle_abort.
@@ -2857,11 +2999,42 @@ Proof.
                 forwards Hjext : object_extensible_lemma; try eapply H10; try prove_bag. (* TODO *)
                 unfold L.object_extensible in Hjext. 
                 inv_ljs. { (* extensible *)
-                    skip. (* TODO defineownproperty *)
-                } { (* not extensible *)
                     rewrite <- H21 in Hjext. (* TODO *)
                     repeat ljs_autoforward.
-                    ljs_invert_apply.
+                    inv_ljs. { (* writable *)
+                        repeat ljs_autoforward.
+                        cases_decide as Hprim. { (* is primitive *)
+                            lets (jpv&EQjpv) : value_related_primitive_lemma Hprim Hvrel1.
+                            subst_hyp EQjpv.
+                            repeat ljs_autoforward.
+                            forwards_th : type_error_or_void_lemma. eauto_js.
+                            destr_concl; try ljs_handle_abort.
+                            res_related_invert.
+                            resvalue_related_only_invert.
+                            jauto_js 20.
+                        } { (* not primitive *)
+                            lets (jptr_this&EQjptr) : value_related_not_primitive_lemma Hprim Hvrel1.
+                            subst_hyp EQjptr.
+                            repeat ljs_autoforward.
+                            forwards_th Hx : make_data_descriptor_ljs_lemma.
+                            unfolds in Hx. destruct_hyp Hx.
+                            repeat ljs_autoforward.
+                            forwards_th : define_own_property_lemma; try prove_bag. skip. skip. (* TODO *)
+                            destr_concl; try ljs_handle_abort.
+                            res_related_invert.
+                            repeat ljs_autoforward.
+                            jauto_js 20.
+                        }
+                    } { (* not writable *)
+                        repeat ljs_autoforward.
+                        forwards_th : type_error_or_void_lemma. eauto_js.
+                        destr_concl; try ljs_handle_abort.
+                        res_related_invert.
+                        resvalue_related_only_invert.
+                        jauto_js 20.
+                    }
+                } { (* not extensible *)
+                    rewrite <- H21 in Hjext. (* TODO *)
                     repeat ljs_autoforward.
                     forwards_th : type_error_or_void_lemma. eauto_js.
                     destr_concl; try ljs_handle_abort.
@@ -2875,8 +3048,6 @@ Proof.
                 cases_decide as Heq; rewrite stx_eq_undefined_eq_lemma in Heq. { (* setter undefined *)
                     subst_hyp Heq.
                     inverts Hy6. (* TODO *) (* inverting value_related *)
-                    repeat ljs_autoforward.
-                    ljs_invert_apply.
                     repeat ljs_autoforward.
                     forwards_th : type_error_or_void_lemma. eauto_js.
                     destr_concl; try ljs_handle_abort.
@@ -2904,8 +3075,28 @@ Proof.
         repeat ljs_autoforward.
         inv_ljs. { (* writable *)
             repeat ljs_autoforward.
-            inv_ljs. skip.
-            skip. (* TODO DefineOwnproperty *)
+            cases_decide as Hprim. { (* is primitive *)
+                lets (jpv&EQjpv) : value_related_primitive_lemma Hprim Hvrel1.
+                subst_hyp EQjpv.
+                repeat ljs_autoforward.
+                forwards_th : type_error_or_void_lemma. eauto_js.
+                destr_concl; try ljs_handle_abort.
+                res_related_invert.
+                resvalue_related_only_invert.
+                jauto_js 20.
+            } { (* not primitive *)
+                lets (jptr_this&EQjptr) : value_related_not_primitive_lemma Hprim Hvrel1.
+                subst_hyp EQjptr.
+                repeat ljs_autoforward.
+                forwards_th Hx : make_value_only_descriptor_ljs_lemma.
+                unfolds in Hx. destruct_hyp Hx.
+                repeat ljs_autoforward.
+                forwards_th : define_own_property_lemma; try prove_bag. skip. skip. (* TODO *)
+                destr_concl; try ljs_handle_abort.
+                res_related_invert.
+                repeat ljs_autoforward.
+                jauto_js 20.
+            }
         } { (* not writable *)
             repeat ljs_autoforward.
             ljs_invert_apply.
@@ -4071,15 +4262,6 @@ Proof.
     }
     repeat ljs_autoforward.
     eauto.
-Qed.
-
-Lemma value_related_primitive_lemma : forall BR jv v,
-    L.is_primitive v ->
-    value_related BR jv v ->
-    exists jpv, jv = J.value_prim jpv.
-Proof.
-    introv Hprim Hvrel.
-    inverts Hprim; inverts Hvrel; jauto.
 Qed.
 
 Lemma convert_prim_to_number_lemma : forall BR jpv v,
