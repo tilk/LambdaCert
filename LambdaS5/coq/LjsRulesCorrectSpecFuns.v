@@ -2898,6 +2898,7 @@ Lemma put_default_lemma : forall BR k jst jc c st st' r ptr jptr v jv v1 jv1 s b
     value_related BR jv1 v1 ->
     concl_ext_expr_resvalue BR jst jc c st st' r (J.spec_object_put_1 J.builtin_put_default jv jptr s jv1 b) 
         (fun jrv => jrv = J.resvalue_empty).
+Admitted. (* this thing eats lots of memory
 Proof.
     introv IHc Hlred Hcinv Hinv Hf Hvrel1 Hvrel2.
     ljs_invert_apply.
@@ -3137,6 +3138,7 @@ Proof.
         }
     }
 Qed.
+*)
 
 Lemma object_method_put_lemma : forall BR jst st jptr ptr,
     state_invariant BR jst st ->
@@ -3559,6 +3561,35 @@ Proof.
     }
 Qed.
 
+(*
+Definition concl_ljs_new_descriptor st st' r desc :=
+    exists ptr obj,
+    property_descriptor desc obj /\
+    r = L.res_value (L.value_object ptr) /\
+    st \c st' /\
+    binds st' ptr obj /\
+    ~index st ptr.*)
+
+(* TODO move to top *)
+Lemma make_data_descriptor_lemma : forall BR k jst jc c st st' r v jv b1 b2 b3,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privmakeDataDescriptor 
+        [v; L.value_bool b1; L.value_bool b2; L.value_bool b3]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    state_invariant BR jst st' /\
+    descriptor_related BR (J.descriptor_intro_data jv b1 b2 b3) (data_descriptor v b1 b2 b3) /\
+    concl_ljs_new_descriptor st st' r (data_descriptor v b1 b2 b3).
+Proof.
+    introv Hlred Hcinv Hinv Hvrel.
+    forwards Hx : make_data_descriptor_ljs_lemma Hlred.
+    lets Hy : Hx.
+    unfolds in Hx. destruct_hyp Hx.
+    forwards : data_descriptor_related_lemma; try eassumption.
+    lets Hinv' : state_invariant_store_incl_preserved Hinv. eassumption.
+    jauto_js.
+Qed.
+
 Lemma create_mutable_binding_lemma : forall BR k jst jc c st st' r ptr s jeptr b ob,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvCreateMutableBinding
         [L.value_object ptr; L.value_string s; L.value_bool b]) (L.out_ter st' r) ->
@@ -3585,7 +3616,24 @@ Proof.
         repeat ljs_autoforward.
         jauto_js 15.
     } { (* object records *)
-        skip. (* TODO *)
+        inverts keep Herel.
+        unfolds L.object_class.
+        cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq; tryfalse.
+        repeat ljs_autoforward.
+        cases_decide as Heq1; rewrite stx_eq_string_eq_lemma in Heq1; tryfalse.
+        repeat ljs_autoforward.
+        forwards_th Hx : make_data_descriptor_lemma.
+        unfold concl_ljs_new_descriptor in Hx. destruct_hyp Hx.
+        repeat ljs_autoforward.
+        forwards_th : define_own_property_lemma; try prove_bag.
+        skip.
+(* WTF assert in the rules?!?
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        jauto_js 20.
+*)
     }
 Qed.
 
