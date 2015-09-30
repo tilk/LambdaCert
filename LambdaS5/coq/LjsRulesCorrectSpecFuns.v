@@ -4814,7 +4814,13 @@ Proof.
             ljs_handle_abort.
         } { (* nonstrict *)
             repeat ljs_autoforward.
-            skip. (* TODO involves the global object *)
+            forwards : context_invariant_prealloc_lemma Hcinv prealloc_related_global.
+            forwards_th : put_lemma. prove_bag.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            resvalue_related_only_invert.
+            repeat ljs_autoforward.
+            jauto_js.
         }
     }
     repeat ljs_autoforward.

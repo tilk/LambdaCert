@@ -2889,8 +2889,8 @@ expr_let "f"
 Definition ex_privEnvPutValue := 
 expr_if (expr_op2 binary_op_stx_eq (expr_id "context") expr_null)
 (expr_if (expr_id "strict") (expr_app (expr_id "%UnboundId") [expr_id "id"])
- (expr_set_attr pattr_value (expr_id "%global") (expr_id "id")
-  (expr_id "val")))
+ (expr_app (expr_id "%Put1")
+  [expr_id "%global"; expr_id "id"; expr_id "val"; expr_false]))
 (expr_app (expr_id "%EnvSetMutableBinding")
  [expr_id "context"; expr_id "id"; expr_id "val"; expr_id "strict"])
 .
@@ -9052,6 +9052,7 @@ Definition privEnvPutValue :=
 value_closure
 (closure_intro
  [("%EnvSetMutableBinding", privEnvSetMutableBinding);
+  ("%Put1", privPut1);
   ("%UnboundId", privUnboundId);
   ("%global", privglobal)] None ["context"; "id"; "val"; "strict"]
  ex_privEnvPutValue)

@@ -1180,7 +1180,7 @@ Lemma values_related_bisim_incl_preserved : forall BR1 BR2 jvs vs,
 Proof.
     introv Hs Hrel.
     unfolds values_related.
-    inductions jvs gen Hrel; inverts Hrel.
+    inductions jvs; inverts Hrel.
     eapply Forall2_nil.
     eapply Forall2_cons.
     eauto_js.
