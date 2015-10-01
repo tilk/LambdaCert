@@ -381,18 +381,30 @@ expr_object
           (data_intro (expr_id "%Get") expr_true expr_false expr_false));
  ("%Get1", property_data
            (data_intro (expr_id "%Get1") expr_true expr_false expr_false));
+ ("%GetDefault", property_data
+                 (data_intro (expr_id "%GetDefault") expr_true expr_false
+                  expr_false));
  ("%GetField", property_data
                (data_intro (expr_id "%GetField") expr_true expr_false
                 expr_false));
+ ("%GetFunction", property_data
+                  (data_intro (expr_id "%GetFunction") expr_true expr_false
+                   expr_false));
  ("%GetOp", property_data
             (data_intro (expr_id "%GetOp") expr_true expr_false expr_false));
  ("%GetOwnProperty", property_data
                      (data_intro (expr_id "%GetOwnProperty") expr_true
                       expr_false expr_false));
+ ("%GetOwnPropertyDefault", property_data
+                            (data_intro (expr_id "%GetOwnPropertyDefault")
+                             expr_true expr_false expr_false));
  ("%GetOwnPropertyDescriptor", property_data
                                (data_intro
                                 (expr_id "%GetOwnPropertyDescriptor")
                                 expr_true expr_false expr_false));
+ ("%GetOwnPropertyString", property_data
+                           (data_intro (expr_id "%GetOwnPropertyString")
+                            expr_true expr_false expr_false));
  ("%GetPrim", property_data
               (data_intro (expr_id "%GetPrim") expr_true expr_false
                expr_false));
@@ -416,6 +428,9 @@ expr_object
  ("%IsJSError", property_data
                 (data_intro (expr_id "%IsJSError") expr_true expr_false
                  expr_false));
+ ("%IsStrictFunction", property_data
+                       (data_intro (expr_id "%IsStrictFunction") expr_true
+                        expr_false expr_false));
  ("%JSError", property_data
               (data_intro (expr_id "%JSError") expr_true expr_false
                expr_false));
@@ -500,6 +515,9 @@ expr_object
  ("%NumberProto", property_data
                   (data_intro (expr_id "%NumberProto") expr_true expr_false
                    expr_false));
+ ("%NumberToInteger", property_data
+                      (data_intro (expr_id "%NumberToInteger") expr_true
+                       expr_false expr_false));
  ("%ObjectCall", property_data
                  (data_intro (expr_id "%ObjectCall") expr_true expr_false
                   expr_false));
@@ -552,6 +570,9 @@ expr_object
           (data_intro (expr_id "%Put") expr_true expr_false expr_false));
  ("%Put1", property_data
            (data_intro (expr_id "%Put1") expr_true expr_false expr_false));
+ ("%PutDefault", property_data
+                 (data_intro (expr_id "%PutDefault") expr_true expr_false
+                  expr_false));
  ("%PutPrim", property_data
               (data_intro (expr_id "%PutPrim") expr_true expr_false
                expr_false));
@@ -910,6 +931,13 @@ expr_object
  ("%defineOwnProperty", property_data
                         (data_intro (expr_id "%defineOwnProperty") expr_true
                          expr_false expr_false));
+ ("%defineOwnPropertyArray", property_data
+                             (data_intro (expr_id "%defineOwnPropertyArray")
+                              expr_true expr_false expr_false));
+ ("%defineOwnPropertyDefault", property_data
+                               (data_intro
+                                (expr_id "%defineOwnPropertyDefault")
+                                expr_true expr_false expr_false));
  ("%defineProperties", property_data
                        (data_intro (expr_id "%defineProperties") expr_true
                         expr_false expr_false));
@@ -1065,6 +1093,9 @@ expr_object
  ("%isAccessorDescriptor", property_data
                            (data_intro (expr_id "%isAccessorDescriptor")
                             expr_true expr_false expr_false));
+ ("%isArrayIndex", property_data
+                   (data_intro (expr_id "%isArrayIndex") expr_true expr_false
+                    expr_false));
  ("%isDataDescriptor", property_data
                        (data_intro (expr_id "%isDataDescriptor") expr_true
                         expr_false expr_false));
@@ -1352,9 +1383,6 @@ expr_object
  ("%sealCall", property_data
                (data_intro (expr_id "%sealCall") expr_true expr_false
                 expr_false));
- ("%set-property", property_data
-                   (data_intro (expr_id "%set-property") expr_true expr_false
-                    expr_false));
  ("%shift", property_data
             (data_intro (expr_id "%shift") expr_true expr_false expr_false));
  ("%shiftCall", property_data
@@ -2138,19 +2166,26 @@ expr_if (expr_op2 binary_op_has_own_property (expr_id "arr") (expr_id "idx"))
 (expr_get_attr pattr_value (expr_id "arr") (expr_id "idx")) expr_undefined
 .
 Definition ex_privArrayLengthChange := 
-expr_let "oldlen"
-(expr_app (expr_id "%ToUint32")
- [expr_app (expr_id "%Get1") [expr_id "arr"; expr_string "length"]])
-(expr_recc "fix"
- (expr_lambda ["i"]
-  (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "oldlen"))
-   (expr_seq
-    (expr_app (expr_id "%Delete")
-     [expr_id "arr"; expr_op1 unary_op_prim_to_str (expr_id "i"); expr_false])
-    (expr_app (expr_id "fix")
-     [expr_op2 binary_op_add (expr_id "i")
-      (expr_number (JsNumber.of_int (1)))])) expr_undefined))
- (expr_app (expr_id "fix") [expr_id "newlen"]))
+expr_if (expr_op2 binary_op_lt (expr_id "newlen") (expr_id "oldlen"))
+(expr_if
+ (expr_app (expr_id "%Delete")
+  [expr_id "arr";
+   expr_op1 unary_op_prim_to_str
+   (expr_app (expr_id "%ToString")
+    [expr_op2 binary_op_sub (expr_id "oldlen")
+     (expr_number (JsNumber.of_int (1)))]);
+   expr_false])
+ (expr_app (expr_id "%ArrayLengthChange")
+  [expr_id "arr";
+   expr_op2 binary_op_sub (expr_id "oldlen")
+   (expr_number (JsNumber.of_int (1)));
+   expr_id "newlen"])
+ (expr_seq
+  (expr_set_attr pattr_value (expr_id "arr") (expr_string "length")
+   (expr_id "oldlen")) expr_false))
+(expr_seq
+ (expr_set_attr pattr_value (expr_id "arr") (expr_string "length")
+  (expr_id "newlen")) expr_true)
 .
 Definition ex_privBindConstructor := 
 expr_let "concatted"
@@ -3078,6 +3113,16 @@ expr_app (expr_id "%CompareOp")
 [expr_id "l"; expr_id "r"; expr_false; expr_true]
 .
 Definition ex_privGet := 
+expr_if (expr_op2 binary_op_has_internal (expr_id "obj") (expr_string "get"))
+(expr_app (expr_get_internal "get" (expr_id "obj"))
+ [expr_id "obj"; expr_id "this"; expr_id "fld"])
+(expr_app (expr_id "%GetDefault")
+ [expr_id "obj"; expr_id "this"; expr_id "fld"])
+.
+Definition ex_privGet1 := 
+expr_app (expr_id "%Get") [expr_id "obj"; expr_id "obj"; expr_id "fld"]
+.
+Definition ex_privGetDefault := 
 expr_app (expr_id "%GetProperty")
 [expr_id "obj";
  expr_id "fld";
@@ -3089,9 +3134,6 @@ expr_app (expr_id "%GetProperty")
    [expr_id "g"; expr_id "this"; expr_app (expr_id "%zeroArgObj") []]));
  expr_lambda [] expr_undefined]
 .
-Definition ex_privGet1 := 
-expr_app (expr_id "%Get") [expr_id "obj"; expr_id "obj"; expr_id "fld"]
-.
 Definition ex_privGetField := 
 expr_if
 (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "v"))
@@ -3099,10 +3141,36 @@ expr_if
 (expr_app (expr_id "%Get1") [expr_id "v"; expr_id "fld"])
 (expr_app (expr_id "%GetPrim") [expr_id "v"; expr_id "fld"])
 .
+Definition ex_privGetFunction := 
+expr_let "v"
+(expr_app (expr_id "%GetDefault")
+ [expr_id "obj"; expr_id "this"; expr_id "fld"])
+(expr_if
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "fld") (expr_string "caller"))
+  (expr_app (expr_id "%IsStrictFunction") [expr_id "v"]) expr_false)
+ (expr_app (expr_id "%TypeError") [expr_string "trying to get caller!"])
+ (expr_id "v"))
+.
 Definition ex_privGetOp := 
 expr_app (expr_id "%GetField") [expr_id "v"; expr_id "fld"]
 .
 Definition ex_privGetOwnProperty := 
+expr_if
+(expr_op2 binary_op_has_internal (expr_id "obj") (expr_string "getprop"))
+(expr_app (expr_get_internal "getprop" (expr_id "obj"))
+ [expr_id "obj";
+  expr_id "id";
+  expr_id "f_data";
+  expr_id "f_acc";
+  expr_id "f_undef"])
+(expr_app (expr_id "%GetOwnPropertyDefault")
+ [expr_id "obj";
+  expr_id "id";
+  expr_id "f_data";
+  expr_id "f_acc";
+  expr_id "f_undef"])
+.
+Definition ex_privGetOwnPropertyDefault := 
 expr_if (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "id"))
 (expr_if (expr_op2 binary_op_is_accessor (expr_id "obj") (expr_id "id"))
  (expr_app (expr_id "f_acc")
@@ -3124,6 +3192,31 @@ expr_app (expr_id "%GetOwnProperty")
  expr_id "%makeDataDescriptor";
  expr_id "%makeAccessorDescriptor";
  expr_lambda [] expr_undefined]
+.
+Definition ex_privGetOwnPropertyString := 
+expr_app (expr_id "%GetOwnPropertyDefault")
+[expr_id "obj";
+ expr_id "id";
+ expr_id "f_data";
+ expr_id "f_acc";
+ expr_lambda []
+ (expr_let "idx"
+  (expr_app (expr_id "%NumberToInteger")
+   [expr_op1 unary_op_prim_to_num (expr_id "id")])
+  (expr_let "str" (expr_get_internal "primval" (expr_id "obj"))
+   (expr_let "len" (expr_op1 unary_op_strlen (expr_id "str"))
+    (expr_if
+     (expr_op1 unary_op_not
+      (expr_op2 binary_op_stx_eq
+       (expr_op1 unary_op_prim_to_str (expr_id "idx")) (expr_id "id")))
+     (expr_app (expr_id "f_undef") [])
+     (expr_if (expr_op2 binary_op_le (expr_id "len") (expr_id "idx"))
+      (expr_app (expr_id "f_undef") [])
+      (expr_app (expr_id "f_data")
+       [expr_op2 binary_op_char_at (expr_id "str") (expr_id "idx");
+        expr_true;
+        expr_false;
+        expr_false]))))))]
 .
 Definition ex_privGetPrim := 
 expr_app (expr_id "%Get")
@@ -3186,6 +3279,15 @@ expr_if (expr_op1 unary_op_is_object (expr_id "thing"))
 (expr_op2 binary_op_has_own_property (expr_id "thing")
  (expr_string "%js-exn")) expr_false
 .
+Definition ex_privIsStrictFunction := 
+expr_if
+(expr_if
+ (expr_if (expr_op1 unary_op_is_object (expr_id "v"))
+  (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_class (expr_id "v"))
+   (expr_string "Function")) expr_false)
+ (expr_op2 binary_op_has_internal (expr_id "v") (expr_string "strict"))
+ expr_false) (expr_get_internal "strict" (expr_id "v")) expr_false
+.
 Definition ex_privJSError := 
 expr_object
 (objattrs_intro (expr_string "JSError") expr_false expr_null expr_undefined)
@@ -3209,7 +3311,7 @@ expr_app (expr_id "%CompareOp")
 Definition ex_privMakeArray := 
 expr_object
 (objattrs_intro (expr_string "Array") expr_true (expr_id "%ArrayProto")
- expr_undefined) []
+ expr_undefined) [("defineprop", expr_id "%defineOwnPropertyArray")]
 [("length", property_data
             (data_intro (expr_id "len") expr_true expr_false expr_false))]
 .
@@ -3321,7 +3423,8 @@ expr_let "fobj"
  [("construct", expr_id "%DefaultConstruct");
   ("usercode", expr_id "body");
   ("codetxt", expr_id "codetxt");
-  ("strict", expr_id "strict")]
+  ("strict", expr_id "strict");
+  ("get", expr_id "%GetFunction")]
  [("length", property_data
              (data_intro (expr_id "len") expr_false expr_false expr_false))])
 (expr_let "proto"
@@ -3392,15 +3495,13 @@ expr_object
  expr_undefined) [] []
 .
 Definition ex_privMakeString := 
-expr_let "obj"
-(expr_object
- (objattrs_intro (expr_string "String") expr_true (expr_id "%StringProto")
-  expr_undefined) [("primval", expr_id "v")]
- [("length", property_data
-             (data_intro (expr_op1 unary_op_strlen (expr_id "v")) expr_true
-              expr_false expr_false))])
-(expr_seq (expr_app (expr_id "%StringIndices") [expr_id "obj"; expr_id "v"])
- (expr_id "obj"))
+expr_object
+(objattrs_intro (expr_string "String") expr_true (expr_id "%StringProto")
+ expr_undefined)
+[("primval", expr_id "v"); ("getprop", expr_id "%GetOwnPropertyString")]
+[("length", property_data
+            (data_intro (expr_op1 unary_op_strlen (expr_id "v")) expr_true
+             expr_false expr_false))]
 .
 Definition ex_privMakeTime := 
 expr_if
@@ -3593,6 +3694,22 @@ expr_app (expr_id "%MakeNumber")
  (expr_app (expr_id "%ToNumber")
   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])]
 .
+Definition ex_privNumberToInteger := 
+expr_if
+(expr_op2 binary_op_same_value (expr_id "num") (expr_number JsNumber.nan))
+(expr_number (JsNumber.of_int (0)))
+(expr_if
+ (expr_if
+  (expr_if
+   (expr_op2 binary_op_stx_eq (expr_id "num")
+    (expr_number (JsNumber.of_int (0)))) expr_true
+   (expr_op2 binary_op_stx_eq (expr_id "num") (expr_number JsNumber.infinity)))
+  expr_true
+  (expr_op2 binary_op_stx_eq (expr_id "num")
+   (expr_number JsNumber.neg_infinity))) (expr_id "num")
+ (expr_op2 binary_op_mul (expr_op1 unary_op_sign (expr_id "num"))
+  (expr_op1 unary_op_floor (expr_op1 unary_op_abs (expr_id "num")))))
+.
 Definition ex_privObjectCall := 
 expr_if
 (expr_if
@@ -3716,6 +3833,25 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "o"])
   expr_id "strict"])
 .
 Definition ex_privPut := 
+expr_if (expr_op2 binary_op_has_internal (expr_id "obj") (expr_string "put"))
+(expr_app (expr_get_internal "put" (expr_id "obj"))
+ [expr_id "obj";
+  expr_id "this";
+  expr_id "fld";
+  expr_id "val";
+  expr_id "strict"])
+(expr_app (expr_id "%PutDefault")
+ [expr_id "obj";
+  expr_id "this";
+  expr_id "fld";
+  expr_id "val";
+  expr_id "strict"])
+.
+Definition ex_privPut1 := 
+expr_app (expr_id "%Put")
+[expr_id "obj"; expr_id "obj"; expr_id "fld"; expr_id "val"; expr_id "strict"]
+.
+Definition ex_privPutDefault := 
 expr_app (expr_id "%GetOwnProperty")
 [expr_id "obj";
  expr_id "fld";
@@ -3821,10 +3957,6 @@ expr_app (expr_id "%GetOwnProperty")
       [expr_string "adding a field to a non-extensible object";
        expr_empty;
        expr_id "strict"]))]))]
-.
-Definition ex_privPut1 := 
-expr_app (expr_id "%Put")
-[expr_id "obj"; expr_id "obj"; expr_id "fld"; expr_id "val"; expr_id "strict"]
 .
 Definition ex_privPutPrim := 
 expr_app (expr_id "%Put")
@@ -3978,21 +4110,8 @@ expr_let "int32bit" (expr_app (expr_id "%ToUint32") [expr_id "n"])
   (expr_number (JsNumber.of_int (4294967296)))) (expr_id "int32bit"))
 .
 Definition ex_privToInteger := 
-expr_let "num" (expr_app (expr_id "%ToNumber") [expr_id "i"])
-(expr_if
- (expr_op2 binary_op_same_value (expr_id "num") (expr_number JsNumber.nan))
- (expr_number (JsNumber.of_int (0)))
- (expr_if
-  (expr_if
-   (expr_if
-    (expr_op2 binary_op_stx_eq (expr_id "num")
-     (expr_number (JsNumber.of_int (0)))) expr_true
-    (expr_op2 binary_op_stx_eq (expr_id "num")
-     (expr_number JsNumber.infinity))) expr_true
-   (expr_op2 binary_op_stx_eq (expr_id "num")
-    (expr_number JsNumber.neg_infinity))) (expr_id "num")
-  (expr_op2 binary_op_mul (expr_op1 unary_op_sign (expr_id "num"))
-   (expr_op1 unary_op_floor (expr_op1 unary_op_abs (expr_id "num"))))))
+expr_app (expr_id "%NumberToInteger")
+[expr_app (expr_id "%ToNumber") [expr_id "i"]]
 .
 Definition ex_privToNumber := 
 expr_op1 unary_op_prim_to_num
@@ -4890,6 +5009,105 @@ expr_let "unimplFunc"
   [expr_id "base"; expr_id "name"; expr_id "unimplObj"]))
 .
 Definition ex_privdefineOwnProperty := 
+expr_if
+(expr_op2 binary_op_has_internal (expr_id "obj") (expr_string "defineprop"))
+(expr_app (expr_get_internal "defineprop" (expr_id "obj"))
+ [expr_id "obj"; expr_id "field"; expr_id "attr-obj"; expr_id "strict"])
+(expr_app (expr_id "%defineOwnPropertyDefault")
+ [expr_id "obj"; expr_id "field"; expr_id "attr-obj"; expr_id "strict"])
+.
+Definition ex_privdefineOwnPropertyArray := 
+expr_let "reject"
+(expr_lambda ["msg"]
+ (expr_app (expr_id "%TypeErrorOr")
+  [expr_id "msg"; expr_false; expr_id "strict"]))
+(expr_let "oldLen"
+ (expr_get_attr pattr_value (expr_id "obj") (expr_string "length"))
+ (expr_let "oldLenWritable"
+  (expr_get_attr pattr_writable (expr_id "obj") (expr_string "length"))
+  (expr_if
+   (expr_op2 binary_op_stx_eq (expr_id "field") (expr_string "length"))
+   (expr_if
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_has_own_property (expr_id "attr-obj")
+      (expr_string "value")))
+    (expr_app (expr_id "%defineOwnPropertyDefault")
+     [expr_id "obj"; expr_id "field"; expr_id "attr-obj"; expr_id "strict"])
+    (expr_let "newLen"
+     (expr_app (expr_id "%ToUint32")
+      [expr_get_attr pattr_value (expr_id "attr-obj") (expr_string "value")])
+     (expr_let "newLenWritable"
+      (expr_app (expr_id "%descriptorFieldGet")
+       [expr_id "attr-obj"; expr_string "writable"; expr_true])
+      (expr_seq
+       (expr_if
+        (expr_op1 unary_op_not
+         (expr_op2 binary_op_stx_eq (expr_id "newLen")
+          (expr_app (expr_id "%ToNumber")
+           [expr_get_attr pattr_value (expr_id "attr-obj")
+            (expr_string "value")])))
+        (expr_app (expr_id "%RangeError")
+         [expr_string "invalid new array length"]) expr_undefined)
+       (expr_if
+        (expr_app (expr_id "%descriptorFieldGet")
+         [expr_id "attr-obj"; expr_string "enumerable"; expr_false])
+        (expr_app (expr_id "reject")
+         [expr_string "change enumerable on length"])
+        (expr_if
+         (expr_app (expr_id "%descriptorFieldGet")
+          [expr_id "attr-obj"; expr_string "configurable"; expr_false])
+         (expr_app (expr_id "reject")
+          [expr_string "change configurable on length"])
+         (expr_if
+          (expr_op2 binary_op_stx_eq (expr_id "newLen") (expr_id "oldLen"))
+          (expr_if
+           (expr_if (expr_op1 unary_op_not (expr_id "oldLenWritable"))
+            (expr_app (expr_id "%descriptorFieldGet")
+             [expr_id "attr-obj"; expr_string "writable"; expr_false])
+            expr_false)
+           (expr_app (expr_id "reject")
+            [expr_string "change writable on unwritable length"])
+           (expr_seq
+            (expr_if
+             (expr_if (expr_id "oldLenWritable")
+              (expr_op1 unary_op_not (expr_id "newLenWritable")) expr_false)
+             (expr_set_attr pattr_writable (expr_id "obj")
+              (expr_string "length") expr_false) expr_undefined) expr_true))
+          (expr_if (expr_op1 unary_op_not (expr_id "oldLenWritable"))
+           (expr_app (expr_id "reject")
+            [expr_string "change on unwritable length"])
+           (expr_let "resizeSucceeded"
+            (expr_app (expr_id "%ArrayLengthChange")
+             [expr_id "obj"; expr_id "oldLen"; expr_id "newLen"])
+            (expr_seq
+             (expr_if
+              (expr_if (expr_id "oldLenWritable")
+               (expr_op1 unary_op_not (expr_id "newLenWritable")) expr_false)
+              (expr_set_attr pattr_writable (expr_id "obj")
+               (expr_string "length") expr_false) expr_undefined)
+             (expr_if (expr_id "resizeSucceeded") expr_true
+              (expr_app (expr_id "reject")
+               [expr_string "resized array with undeletable fields"]))))))))))))
+   (expr_if (expr_app (expr_id "%isArrayIndex") [expr_id "field"])
+    (expr_let "idx" (expr_app (expr_id "%ToUint32") [expr_id "field"])
+     (expr_if
+      (expr_if (expr_op2 binary_op_ge (expr_id "idx") (expr_id "oldLen"))
+       (expr_op1 unary_op_not (expr_id "oldLenWritable")) expr_false)
+      (expr_app (expr_id "reject") [])
+      (expr_let "succeeded"
+       (expr_app (expr_id "%defineOwnPropertyDefault")
+        [expr_id "obj"; expr_id "field"; expr_id "attr-obj"; expr_false])
+       (expr_if (expr_op1 unary_op_not (expr_id "succeeded"))
+        (expr_app (expr_id "reject") [])
+        (expr_seq
+         (expr_if (expr_op2 binary_op_ge (expr_id "idx") (expr_id "oldLen"))
+          (expr_set_attr pattr_value (expr_id "obj") (expr_string "length")
+           (expr_op2 binary_op_add (expr_id "idx")
+            (expr_number (JsNumber.of_int (1))))) expr_undefined) expr_true)))))
+    (expr_app (expr_id "%defineOwnPropertyDefault")
+     [expr_id "obj"; expr_id "field"; expr_id "attr-obj"; expr_id "strict"])))))
+.
+Definition ex_privdefineOwnPropertyDefault := 
 expr_let "current"
 (expr_app (expr_id "%GetOwnPropertyDescriptor")
  [expr_id "obj"; expr_id "field"])
@@ -5672,6 +5890,15 @@ expr_if
 (expr_op2 binary_op_has_own_property (expr_id "attr-obj") (expr_string "get"))
 expr_true
 (expr_op2 binary_op_has_own_property (expr_id "attr-obj") (expr_string "set"))
+.
+Definition ex_privisArrayIndex := 
+expr_let "newlen" (expr_app (expr_id "%ToUint32") [expr_id "v"])
+(expr_if
+ (expr_op2 binary_op_stx_eq (expr_id "v")
+  (expr_app (expr_id "%ToString") [expr_id "newlen"]))
+ (expr_op1 unary_op_not
+  (expr_op2 binary_op_stx_eq (expr_id "newlen")
+   (expr_number (JsNumber.of_int (4294967295))))) expr_false)
 .
 Definition ex_privisDataDescriptor := 
 expr_if
@@ -7050,83 +7277,6 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
   (expr_seq (expr_set_obj_attr oattr_extensible (expr_id "O") expr_false)
    (expr_id "O"))))
 .
-Definition ex_privset_property := 
-expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "obj"])
-(expr_let "fld" (expr_app (expr_id "%ToString") [expr_id "fld"])
- (expr_let "check"
-  (expr_lambda ["flag"]
-   (expr_if (expr_id "flag")
-    (expr_app (expr_id "%TypeError") [expr_string "set-property failed"])
-    expr_null))
-  (expr_let "e"
-   (expr_op1 unary_op_not
-    (expr_get_obj_attr oattr_extensible (expr_id "obj")))
-   (expr_seq (expr_app (expr_id "check") [expr_id "e"])
-    (expr_let "isArrayIndex"
-     (expr_lambda []
-      (expr_let "uint" (expr_app (expr_id "%ToUint32") [expr_id "fld"])
-       (expr_if
-        (expr_op2 binary_op_stx_eq
-         (expr_app (expr_id "%ToString") [expr_id "uint"]) (expr_id "fld"))
-        (expr_op1 unary_op_not
-         (expr_op2 binary_op_stx_eq (expr_id "uint")
-          (expr_number (JsNumber.of_int (4294967295))))) expr_false)))
-     (expr_let "setArrayField"
-      (expr_lambda []
-       (expr_let "lenCheck"
-        (expr_lambda []
-         (expr_if
-          (expr_op2 binary_op_stx_eq (expr_id "fld") (expr_string "length"))
-          (expr_let "newLen" (expr_app (expr_id "%ToUint32") [expr_id "val"])
-           (expr_let "toCompare"
-            (expr_app (expr_id "%ToNumber") [expr_id "val"])
-            (expr_if
-             (expr_op1 unary_op_not
-              (expr_op2 binary_op_stx_eq (expr_id "newLen")
-               (expr_id "toCompare")))
-             (expr_throw
-              (expr_app (expr_id "%JSError")
-               [expr_object
-                (objattrs_intro (expr_string "Object") expr_true
-                 (expr_id "%RangeErrorProto") expr_undefined) [] []]))
-             (expr_if
-              (expr_op2 binary_op_lt (expr_id "newLen")
-               (expr_app (expr_id "%Get1")
-                [expr_id "obj"; expr_string "length"]))
-              (expr_app (expr_id "%ArrayLengthChange")
-               [expr_id "obj"; expr_id "newLen"]) expr_undefined))))
-          expr_undefined))
-        (expr_seq (expr_app (expr_id "lenCheck") [])
-         (expr_seq
-          (expr_app (expr_id "%Put1")
-           [expr_id "obj";
-            expr_id "fld";
-            expr_if
-            (expr_op2 binary_op_stx_eq (expr_id "fld") (expr_string "length"))
-            (expr_app (expr_id "%ToUint32") [expr_id "val"]) (expr_id "val");
-            expr_true])
-          (expr_if (expr_app (expr_id "isArrayIndex") [])
-           (expr_let "uint" (expr_app (expr_id "%ToUint32") [expr_id "fld"])
-            (expr_let "len"
-             (expr_app (expr_id "%Get1")
-              [expr_id "obj"; expr_string "length"])
-             (expr_if
-              (expr_op2 binary_op_lt (expr_id "len")
-               (expr_op2 binary_op_add (expr_id "uint")
-                (expr_number (JsNumber.of_int (1)))))
-              (expr_app (expr_id "%Put1")
-               [expr_id "obj";
-                expr_string "length";
-                expr_op2 binary_op_add (expr_id "uint")
-                (expr_number (JsNumber.of_int (1)));
-                expr_true]) expr_undefined))) expr_undefined)))))
-      (expr_if
-       (expr_op2 binary_op_stx_eq
-        (expr_get_obj_attr oattr_class (expr_id "obj")) (expr_string "Array"))
-       (expr_app (expr_id "setArrayField") [])
-       (expr_app (expr_id "%Put1")
-        [expr_id "obj"; expr_id "fld"; expr_id "val"; expr_true]))))))))
-.
 Definition ex_privshiftCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenVal"
@@ -8277,10 +8427,16 @@ value_closure
  ex_privAppExprCheck)
 .
 Definition name_privAppExprCheck : id :=  "%AppExprCheck" .
-Definition privGetOwnProperty := 
+Definition privGetOwnPropertyDefault := 
 value_closure
 (closure_intro [] None ["obj"; "id"; "f_data"; "f_acc"; "f_undef"]
- ex_privGetOwnProperty)
+ ex_privGetOwnPropertyDefault)
+.
+Definition name_privGetOwnPropertyDefault : id :=  "%GetOwnPropertyDefault" .
+Definition privGetOwnProperty := 
+value_closure
+(closure_intro [("%GetOwnPropertyDefault", privGetOwnPropertyDefault)] 
+ None ["obj"; "id"; "f_data"; "f_acc"; "f_undef"] ex_privGetOwnProperty)
 .
 Definition name_privGetOwnProperty : id :=  "%GetOwnProperty" .
 Definition privGetProperty := 
@@ -8294,12 +8450,19 @@ Definition privzeroArgObj :=
 value_closure (closure_intro [] None [] ex_privzeroArgObj)
 .
 Definition name_privzeroArgObj : id :=  "%zeroArgObj" .
-Definition privGet := 
+Definition privGetDefault := 
 value_closure
 (closure_intro
  [("%AppExpr", privAppExpr);
   ("%GetProperty", privGetProperty);
-  ("%zeroArgObj", privzeroArgObj)] None ["obj"; "this"; "fld"] ex_privGet)
+  ("%zeroArgObj", privzeroArgObj)] None ["obj"; "this"; "fld"]
+ ex_privGetDefault)
+.
+Definition name_privGetDefault : id :=  "%GetDefault" .
+Definition privGet := 
+value_closure
+(closure_intro [("%GetDefault", privGetDefault)] None ["obj"; "this"; "fld"]
+ ex_privGet)
 .
 Definition name_privGet : id :=  "%Get" .
 Definition privGet1 := 
@@ -8323,17 +8486,25 @@ value_closure
  ex_privMakeNumber)
 .
 Definition name_privMakeNumber : id :=  "%MakeNumber" .
-Definition privStringIndices := 
-value_closure (closure_intro [] None ["obj"; "s"] ex_privStringIndices)
+Definition privNumberToInteger := 
+value_closure (closure_intro [] None ["num"] ex_privNumberToInteger)
 .
-Definition name_privStringIndices : id :=  "%StringIndices" .
+Definition name_privNumberToInteger : id :=  "%NumberToInteger" .
+Definition privGetOwnPropertyString := 
+value_closure
+(closure_intro
+ [("%GetOwnPropertyDefault", privGetOwnPropertyDefault);
+  ("%NumberToInteger", privNumberToInteger)] None
+ ["obj"; "id"; "f_data"; "f_acc"; "f_undef"] ex_privGetOwnPropertyString)
+.
+Definition name_privGetOwnPropertyString : id :=  "%GetOwnPropertyString" .
 Definition privStringProto :=  value_object 11 .
 Definition name_privStringProto : id :=  "%StringProto" .
 Definition privMakeString := 
 value_closure
 (closure_intro
- [("%StringIndices", privStringIndices); ("%StringProto", privStringProto)]
- None ["v"] ex_privMakeString)
+ [("%GetOwnPropertyString", privGetOwnPropertyString);
+  ("%StringProto", privStringProto)] None ["v"] ex_privMakeString)
 .
 Definition name_privMakeString : id :=  "%MakeString" .
 Definition privToObject := 
@@ -8370,14 +8541,12 @@ value_closure (closure_intro [] None ["args"] ex_privComputeLength)
 Definition name_privComputeLength : id :=  "%ComputeLength" .
 Definition privArrayProto :=  value_object 43 .
 Definition name_privArrayProto : id :=  "%ArrayProto" .
-Definition privMakeArray := 
+Definition privDelete := 
 value_closure
-(closure_intro [("%ArrayProto", privArrayProto)] None ["len"]
- ex_privMakeArray)
+(closure_intro [("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"]
+ ex_privDelete)
 .
-Definition name_privMakeArray : id :=  "%MakeArray" .
-Definition privRangeErrorProto :=  value_object 8 .
-Definition name_privRangeErrorProto : id :=  "%RangeErrorProto" .
+Definition name_privDelete : id :=  "%Delete" .
 Definition privToPrimitiveHint := 
 value_closure
 (closure_intro
@@ -8389,6 +8558,28 @@ value_closure
  ex_privToPrimitiveHint)
 .
 Definition name_privToPrimitiveHint : id :=  "%ToPrimitiveHint" .
+Definition privToString := 
+value_closure
+(closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["val"]
+ ex_privToString)
+.
+Definition name_privToString : id :=  "%ToString" .
+Definition privArrayLengthChange := 
+value_closure
+(closure_intro [("%Delete", privDelete); ("%ToString", privToString)]
+ (Some "%ArrayLengthChange") ["arr"; "oldlen"; "newlen"]
+ ex_privArrayLengthChange)
+.
+Definition name_privArrayLengthChange : id :=  "%ArrayLengthChange" .
+Definition privRangeErrorProto :=  value_object 8 .
+Definition name_privRangeErrorProto : id :=  "%RangeErrorProto" .
+Definition privRangeError := 
+value_closure
+(closure_intro
+ [("%NativeError", privNativeError);
+  ("%RangeErrorProto", privRangeErrorProto)] None ["msg"] ex_privRangeError)
+.
+Definition name_privRangeError : id :=  "%RangeError" .
 Definition privToNumber := 
 value_closure
 (closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["x"]
@@ -8406,6 +8597,20 @@ value_closure
 (closure_intro [("%ToUint", privToUint)] None ["n"] ex_privToUint32)
 .
 Definition name_privToUint32 : id :=  "%ToUint32" .
+Definition privNativeErrorOr := 
+value_closure
+(closure_intro [("%NativeError", privNativeError)] None
+ ["proto"; "msg"; "v"; "strict"] ex_privNativeErrorOr)
+.
+Definition name_privNativeErrorOr : id :=  "%NativeErrorOr" .
+Definition privTypeErrorOr := 
+value_closure
+(closure_intro
+ [("%NativeErrorOr", privNativeErrorOr);
+  ("%TypeErrorProto", privTypeErrorProto)] None ["msg"; "v"; "strict"]
+ ex_privTypeErrorOr)
+.
+Definition name_privTypeErrorOr : id :=  "%TypeErrorOr" .
 Definition privmakeAccessorDescriptor := 
 value_closure
 (closure_intro [] None ["g"; "s"; "e"; "c"] ex_privmakeAccessorDescriptor)
@@ -8425,20 +8630,6 @@ value_closure
  ex_privGetOwnPropertyDescriptor)
 .
 Definition name_privGetOwnPropertyDescriptor : id :=  "%GetOwnPropertyDescriptor" .
-Definition privNativeErrorOr := 
-value_closure
-(closure_intro [("%NativeError", privNativeError)] None
- ["proto"; "msg"; "v"; "strict"] ex_privNativeErrorOr)
-.
-Definition name_privNativeErrorOr : id :=  "%NativeErrorOr" .
-Definition privTypeErrorOr := 
-value_closure
-(closure_intro
- [("%NativeErrorOr", privNativeErrorOr);
-  ("%TypeErrorProto", privTypeErrorProto)] None ["msg"; "v"; "strict"]
- ex_privTypeErrorOr)
-.
-Definition name_privTypeErrorOr : id :=  "%TypeErrorOr" .
 Definition privdescriptorFieldNotSame := 
 value_closure
 (closure_intro [] None ["fd"; "d"; "f"] ex_privdescriptorFieldNotSame)
@@ -8568,7 +8759,7 @@ value_closure
  ex_privupdateDescriptor)
 .
 Definition name_privupdateDescriptor : id :=  "%updateDescriptor" .
-Definition privdefineOwnProperty := 
+Definition privdefineOwnPropertyDefault := 
 value_closure
 (closure_intro
  [("%AddAccessorField", privAddAccessorField);
@@ -8586,7 +8777,41 @@ value_closure
   ("%toAccessorDescriptor", privtoAccessorDescriptor);
   ("%toDataDescriptor", privtoDataDescriptor);
   ("%updateDescriptor", privupdateDescriptor)] None
- ["obj"; "field"; "attr-obj"; "strict"] ex_privdefineOwnProperty)
+ ["obj"; "field"; "attr-obj"; "strict"] ex_privdefineOwnPropertyDefault)
+.
+Definition name_privdefineOwnPropertyDefault : id :=  "%defineOwnPropertyDefault" .
+Definition privisArrayIndex := 
+value_closure
+(closure_intro [("%ToString", privToString); ("%ToUint32", privToUint32)]
+ None ["v"] ex_privisArrayIndex)
+.
+Definition name_privisArrayIndex : id :=  "%isArrayIndex" .
+Definition privdefineOwnPropertyArray := 
+value_closure
+(closure_intro
+ [("%ArrayLengthChange", privArrayLengthChange);
+  ("%RangeError", privRangeError);
+  ("%ToNumber", privToNumber);
+  ("%ToUint32", privToUint32);
+  ("%TypeErrorOr", privTypeErrorOr);
+  ("%defineOwnPropertyDefault", privdefineOwnPropertyDefault);
+  ("%descriptorFieldGet", privdescriptorFieldGet);
+  ("%isArrayIndex", privisArrayIndex)] None
+ ["obj"; "field"; "attr-obj"; "strict"] ex_privdefineOwnPropertyArray)
+.
+Definition name_privdefineOwnPropertyArray : id :=  "%defineOwnPropertyArray" .
+Definition privMakeArray := 
+value_closure
+(closure_intro
+ [("%ArrayProto", privArrayProto);
+  ("%defineOwnPropertyArray", privdefineOwnPropertyArray)] None ["len"]
+ ex_privMakeArray)
+.
+Definition name_privMakeArray : id :=  "%MakeArray" .
+Definition privdefineOwnProperty := 
+value_closure
+(closure_intro [("%defineOwnPropertyDefault", privdefineOwnPropertyDefault)]
+ None ["obj"; "field"; "attr-obj"; "strict"] ex_privdefineOwnProperty)
 .
 Definition name_privdefineOwnProperty : id :=  "%defineOwnProperty" .
 Definition privArrayConstructor := 
@@ -8613,19 +8838,6 @@ Definition privArrayIdx :=
 value_closure (closure_intro [] None ["arr"; "idx"] ex_privArrayIdx)
 .
 Definition name_privArrayIdx : id :=  "%ArrayIdx" .
-Definition privDelete := 
-value_closure
-(closure_intro [("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"]
- ex_privDelete)
-.
-Definition name_privDelete : id :=  "%Delete" .
-Definition privArrayLengthChange := 
-value_closure
-(closure_intro
- [("%Delete", privDelete); ("%Get1", privGet1); ("%ToUint32", privToUint32)]
- None ["arr"; "newlen"] ex_privArrayLengthChange)
-.
-Definition name_privArrayLengthChange : id :=  "%ArrayLengthChange" .
 Definition privrunConstruct := 
 value_closure (closure_intro [] None ["constr"; "args"] ex_privrunConstruct)
 .
@@ -8835,7 +9047,9 @@ value_closure (closure_intro [] None ["n"] ex_privIsFinite)
 Definition name_privIsFinite : id :=  "%IsFinite" .
 Definition privToInteger := 
 value_closure
-(closure_intro [("%ToNumber", privToNumber)] None ["i"] ex_privToInteger)
+(closure_intro
+ [("%NumberToInteger", privNumberToInteger); ("%ToNumber", privToNumber)]
+ None ["i"] ex_privToInteger)
 .
 Definition name_privToInteger : id :=  "%ToInteger" .
 Definition privMakeDay := 
@@ -9022,7 +9236,7 @@ Definition privoneArgObj :=
 value_closure (closure_intro [] None ["arg"] ex_privoneArgObj)
 .
 Definition name_privoneArgObj : id :=  "%oneArgObj" .
-Definition privPut := 
+Definition privPutDefault := 
 value_closure
 (closure_intro
  [("%AppExpr", privAppExpr);
@@ -9033,7 +9247,13 @@ value_closure
   ("%makeDataDescriptor", privmakeDataDescriptor);
   ("%makeValueOnlyDescriptor", privmakeValueOnlyDescriptor);
   ("%oneArgObj", privoneArgObj)] None ["obj"; "this"; "fld"; "val"; "strict"]
- ex_privPut)
+ ex_privPutDefault)
+.
+Definition name_privPutDefault : id :=  "%PutDefault" .
+Definition privPut := 
+value_closure
+(closure_intro [("%PutDefault", privPutDefault)] None
+ ["obj"; "this"; "fld"; "val"; "strict"] ex_privPut)
 .
 Definition name_privPut : id :=  "%Put" .
 Definition privPut1 := 
@@ -9225,12 +9445,6 @@ value_closure
  ["x1"; "x2"] ex_privEqEq)
 .
 Definition name_privEqEq : id :=  "%EqEq" .
-Definition privToString := 
-value_closure
-(closure_intro [("%ToPrimitiveHint", privToPrimitiveHint)] None ["val"]
- ex_privToString)
-.
-Definition name_privToString : id :=  "%ToString" .
 Definition privErrorProto :=  value_object 3 .
 Definition name_privErrorProto : id :=  "proto" .
 Definition privErrorConstructor := 
@@ -9288,6 +9502,19 @@ value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privGeOp)
 .
 Definition name_privGeOp : id :=  "%GeOp" .
+Definition privIsStrictFunction := 
+value_closure (closure_intro [] None ["v"] ex_privIsStrictFunction)
+.
+Definition name_privIsStrictFunction : id :=  "%IsStrictFunction" .
+Definition privGetFunction := 
+value_closure
+(closure_intro
+ [("%GetDefault", privGetDefault);
+  ("%IsStrictFunction", privIsStrictFunction);
+  ("%TypeError", privTypeError)] None ["obj"; "this"; "fld"]
+ ex_privGetFunction)
+.
+Definition name_privGetFunction : id :=  "%GetFunction" .
 Definition privGetOp := 
 value_closure
 (closure_intro [("%GetField", privGetField)] None ["v"; "fld"; "strict"]
@@ -9345,6 +9572,7 @@ value_closure
   ("%DefaultCall", privDefaultCall);
   ("%DefaultConstruct", privDefaultConstruct);
   ("%FunctionProto", privFunctionProto);
+  ("%GetFunction", privGetFunction);
   ("%ObjectProto", privObjectProto);
   ("%ThrowTypeError", privThrowTypeError)] None
  ["body"; "len"; "codetxt"; "strict"] ex_privMakeFunctionObject)
@@ -9484,13 +9712,6 @@ value_closure
  ex_privPropertyAccess)
 .
 Definition name_privPropertyAccess : id :=  "%PropertyAccess" .
-Definition privRangeError := 
-value_closure
-(closure_intro
- [("%NativeError", privNativeError);
-  ("%RangeErrorProto", privRangeErrorProto)] None ["msg"] ex_privRangeError)
-.
-Definition name_privRangeError : id :=  "%RangeError" .
 Definition privRangeErrorConstructor := 
 value_closure
 (closure_intro
@@ -9577,6 +9798,10 @@ value_closure
 Definition name_privStringConstructor : id :=  "%StringConstructor" .
 Definition privStringGlobalFuncObj :=  value_object 23 .
 Definition name_privStringGlobalFuncObj : id :=  "%StringGlobalFuncObj" .
+Definition privStringIndices := 
+value_closure (closure_intro [] None ["obj"; "s"] ex_privStringIndices)
+.
+Definition name_privStringIndices : id :=  "%StringIndices" .
 Definition privStxEq := 
 value_closure (closure_intro [] None ["x1"; "x2"] ex_privStxEq)
 .
@@ -10543,22 +10768,6 @@ value_closure
  ["obj"; "this"; "args"] ex_privsealCall)
 .
 Definition name_privsealCall : id :=  "%sealCall" .
-Definition privset_property := 
-value_closure
-(closure_intro
- [("%ArrayLengthChange", privArrayLengthChange);
-  ("%Get1", privGet1);
-  ("%JSError", privJSError);
-  ("%Put1", privPut1);
-  ("%RangeErrorProto", privRangeErrorProto);
-  ("%ToNumber", privToNumber);
-  ("%ToObject", privToObject);
-  ("%ToString", privToString);
-  ("%ToUint32", privToUint32);
-  ("%TypeError", privTypeError)] None ["obj"; "fld"; "val"]
- ex_privset_property)
-.
-Definition name_privset_property : id :=  "%set-property" .
 Definition privshift :=  value_object 59 .
 Definition name_privshift : id :=  "%shift" .
 Definition privshiftCall := 
@@ -11191,10 +11400,14 @@ Definition ctx_items :=
  (name_privGeOp, privGeOp);
  (name_privGet, privGet);
  (name_privGet1, privGet1);
+ (name_privGetDefault, privGetDefault);
  (name_privGetField, privGetField);
+ (name_privGetFunction, privGetFunction);
  (name_privGetOp, privGetOp);
  (name_privGetOwnProperty, privGetOwnProperty);
+ (name_privGetOwnPropertyDefault, privGetOwnPropertyDefault);
  (name_privGetOwnPropertyDescriptor, privGetOwnPropertyDescriptor);
+ (name_privGetOwnPropertyString, privGetOwnPropertyString);
  (name_privGetPrim, privGetPrim);
  (name_privGetProperty, privGetProperty);
  (name_privGtOp, privGtOp);
@@ -11203,6 +11416,7 @@ Definition ctx_items :=
  (name_privIsCallable, privIsCallable);
  (name_privIsFinite, privIsFinite);
  (name_privIsJSError, privIsJSError);
+ (name_privIsStrictFunction, privIsStrictFunction);
  (name_privJSError, privJSError);
  (name_privLeOp, privLeOp);
  (name_privLeftShift, privLeftShift);
@@ -11232,6 +11446,7 @@ Definition ctx_items :=
  (name_privNumberConstructor, privNumberConstructor);
  (name_privNumberGlobalFuncObj, privNumberGlobalFuncObj);
  (name_privNumberProto, privNumberProto);
+ (name_privNumberToInteger, privNumberToInteger);
  (name_privObjectCall, privObjectCall);
  (name_privObjectConstructor, privObjectConstructor);
  (name_privObjectGlobalFuncObj, privObjectGlobalFuncObj);
@@ -11250,6 +11465,7 @@ Definition ctx_items :=
  (name_privPropertyAccess, privPropertyAccess);
  (name_privPut, privPut);
  (name_privPut1, privPut1);
+ (name_privPutDefault, privPutDefault);
  (name_privPutPrim, privPutPrim);
  (name_privRangeError, privRangeError);
  (name_privRangeErrorConstructor, privRangeErrorConstructor);
@@ -11373,6 +11589,8 @@ Definition ctx_items :=
  (name_privdefine15Property, privdefine15Property);
  (name_privdefineNYIProperty, privdefineNYIProperty);
  (name_privdefineOwnProperty, privdefineOwnProperty);
+ (name_privdefineOwnPropertyArray, privdefineOwnPropertyArray);
+ (name_privdefineOwnPropertyDefault, privdefineOwnPropertyDefault);
  (name_privdefineProperties, privdefineProperties);
  (name_privdefinePropertiesCall, privdefinePropertiesCall);
  (name_privdefineProperty, privdefineProperty);
@@ -11427,6 +11645,7 @@ Definition ctx_items :=
  (name_privin, privin);
  (name_privinstanceof, privinstanceof);
  (name_privisAccessorDescriptor, privisAccessorDescriptor);
+ (name_privisArrayIndex, privisArrayIndex);
  (name_privisDataDescriptor, privisDataDescriptor);
  (name_privisExtensible, privisExtensible);
  (name_privisExtensibleCall, privisExtensibleCall);
@@ -11528,7 +11747,6 @@ Definition ctx_items :=
  (name_privrunConstruct, privrunConstruct);
  (name_privseal, privseal);
  (name_privsealCall, privsealCall);
- (name_privset_property, privset_property);
  (name_privshift, privshift);
  (name_privshiftCall, privshiftCall);
  (name_privsin, privsin);
@@ -11666,10 +11884,14 @@ privFunctionProtoCall
 privGeOp
 privGet
 privGet1
+privGetDefault
 privGetField
+privGetFunction
 privGetOp
 privGetOwnProperty
+privGetOwnPropertyDefault
 privGetOwnPropertyDescriptor
+privGetOwnPropertyString
 privGetPrim
 privGetProperty
 privGtOp
@@ -11678,6 +11900,7 @@ privInLeapYear
 privIsCallable
 privIsFinite
 privIsJSError
+privIsStrictFunction
 privJSError
 privLeOp
 privLeftShift
@@ -11707,6 +11930,7 @@ privNumberCompareOp
 privNumberConstructor
 privNumberGlobalFuncObj
 privNumberProto
+privNumberToInteger
 privObjectCall
 privObjectConstructor
 privObjectGlobalFuncObj
@@ -11725,6 +11949,7 @@ privPrimitiveCompareOp
 privPropertyAccess
 privPut
 privPut1
+privPutDefault
 privPutPrim
 privRangeError
 privRangeErrorConstructor
@@ -11848,6 +12073,8 @@ privdefaultDataDescriptor
 privdefine15Property
 privdefineNYIProperty
 privdefineOwnProperty
+privdefineOwnPropertyArray
+privdefineOwnPropertyDefault
 privdefineProperties
 privdefinePropertiesCall
 privdefineProperty
@@ -11902,6 +12129,7 @@ privhasOwnPropertyCall
 privin
 privinstanceof
 privisAccessorDescriptor
+privisArrayIndex
 privisDataDescriptor
 privisExtensible
 privisExtensibleCall
@@ -12003,7 +12231,6 @@ privroundCall
 privrunConstruct
 privseal
 privsealCall
-privset_property
 privshift
 privshiftCall
 privsin
@@ -12151,10 +12378,14 @@ Definition store_items := [
                                          ("%GeOp", privGeOp);
                                          ("%Get", privGet);
                                          ("%Get1", privGet1);
+                                         ("%GetDefault", privGetDefault);
                                          ("%GetField", privGetField);
+                                         ("%GetFunction", privGetFunction);
                                          ("%GetOp", privGetOp);
                                          ("%GetOwnProperty", privGetOwnProperty);
+                                         ("%GetOwnPropertyDefault", privGetOwnPropertyDefault);
                                          ("%GetOwnPropertyDescriptor", privGetOwnPropertyDescriptor);
+                                         ("%GetOwnPropertyString", privGetOwnPropertyString);
                                          ("%GetPrim", privGetPrim);
                                          ("%GetProperty", privGetProperty);
                                          ("%GtOp", privGtOp);
@@ -12163,6 +12394,7 @@ Definition store_items := [
                                          ("%IsCallable", privIsCallable);
                                          ("%IsFinite", privIsFinite);
                                          ("%IsJSError", privIsJSError);
+                                         ("%IsStrictFunction", privIsStrictFunction);
                                          ("%JSError", privJSError);
                                          ("%LeOp", privLeOp);
                                          ("%LeftShift", privLeftShift);
@@ -12192,6 +12424,7 @@ Definition store_items := [
                                          ("%NumberConstructor", privNumberConstructor);
                                          ("%NumberGlobalFuncObj", privNumberGlobalFuncObj);
                                          ("%NumberProto", privNumberProto);
+                                         ("%NumberToInteger", privNumberToInteger);
                                          ("%ObjectCall", privObjectCall);
                                          ("%ObjectConstructor", privObjectConstructor);
                                          ("%ObjectGlobalFuncObj", privObjectGlobalFuncObj);
@@ -12210,6 +12443,7 @@ Definition store_items := [
                                          ("%PropertyAccess", privPropertyAccess);
                                          ("%Put", privPut);
                                          ("%Put1", privPut1);
+                                         ("%PutDefault", privPutDefault);
                                          ("%PutPrim", privPutPrim);
                                          ("%RangeError", privRangeError);
                                          ("%RangeErrorConstructor", privRangeErrorConstructor);
@@ -12333,6 +12567,8 @@ Definition store_items := [
                                          ("%define15Property", privdefine15Property);
                                          ("%defineNYIProperty", privdefineNYIProperty);
                                          ("%defineOwnProperty", privdefineOwnProperty);
+                                         ("%defineOwnPropertyArray", privdefineOwnPropertyArray);
+                                         ("%defineOwnPropertyDefault", privdefineOwnPropertyDefault);
                                          ("%defineProperties", privdefineProperties);
                                          ("%definePropertiesCall", privdefinePropertiesCall);
                                          ("%defineProperty", privdefineProperty);
@@ -12387,6 +12623,7 @@ Definition store_items := [
                                          ("%in", privin);
                                          ("%instanceof", privinstanceof);
                                          ("%isAccessorDescriptor", privisAccessorDescriptor);
+                                         ("%isArrayIndex", privisArrayIndex);
                                          ("%isDataDescriptor", privisDataDescriptor);
                                          ("%isExtensible", privisExtensible);
                                          ("%isExtensibleCall", privisExtensibleCall);
@@ -12488,7 +12725,6 @@ Definition store_items := [
                                          ("%runConstruct", privrunConstruct);
                                          ("%seal", privseal);
                                          ("%sealCall", privsealCall);
-                                         ("%set-property", privset_property);
                                          ("%shift", privshift);
                                          ("%shiftCall", privshiftCall);
                                          ("%sin", privsin);
