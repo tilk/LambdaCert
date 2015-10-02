@@ -545,6 +545,29 @@ Inductive construct_related : J.construct -> L.value -> Prop :=
 
 Definition option_construct_related := Option2 construct_related.
 
+Inductive builtin_method_related (T:Type) (V:T) (P:T->L.value->Prop) : T -> option L.value -> Prop :=
+| builtin_method_related_default : builtin_method_related V P V None
+| builtin_method_related_exotic : forall jx v,
+    P jx v -> builtin_method_related V P jx (Some v).
+
+Inductive exotic_get_related : J.builtin_get -> L.value -> Prop :=
+| exotic_get_related_function : exotic_get_related J.builtin_get_function LjsInitEnv.privGetFunction.
+
+Definition builtin_get_related := builtin_method_related J.builtin_get_default exotic_get_related.
+
+Inductive exotic_get_own_prop_related : J.builtin_get_own_prop -> L.value -> Prop :=
+| exotic_get_own_prop_related_function : 
+    exotic_get_own_prop_related J.builtin_get_own_prop_string LjsInitEnv.privGetOwnPropertyString.
+
+Definition builtin_get_own_prop_related := 
+    builtin_method_related J.builtin_get_own_prop_default exotic_get_own_prop_related.
+
+Inductive exotic_define_own_prop_related : J.builtin_define_own_prop -> L.value -> Prop :=
+. (* TODO array *)
+
+Definition builtin_define_own_prop_related :=
+    builtin_method_related J.builtin_define_own_prop_default exotic_define_own_prop_related.
+
 Definition funcbody_expr is jp := E.make_lambda_expr E.ejs_to_ljs E.make_fobj is (E.js_prog_to_ejs jp).
 
 Definition funcbody_closure ctxl is jp := L.closure_intro ctxl None ["obj"; "$this"; "args"] (funcbody_expr is jp).
@@ -601,7 +624,13 @@ Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_codetxt :
         option_codetxt_related (J.object_code_ jobj) (L.object_internal obj\("codetxt"?));
     object_prim_related_func_strict :
-        option_func_strict_related (J.object_code_ jobj) (L.object_internal obj\("strict"?))
+        option_func_strict_related (J.object_code_ jobj) (L.object_internal obj\("strict"?));
+    object_prim_related_builtin_get :
+        builtin_get_related (J.object_get_ jobj) (L.object_internal obj\("get"?));
+    object_prim_related_builtin_get_own_prop :
+        builtin_get_own_prop_related (J.object_get_own_prop_ jobj) (L.object_internal obj\("getprop"?));
+    object_prim_related_builtin_define_own_prop :
+        builtin_define_own_prop_related (J.object_define_own_prop_ jobj) (L.object_internal obj\("defineprop"?))
 }.
 
 Record object_related BR jobj obj : Prop := {

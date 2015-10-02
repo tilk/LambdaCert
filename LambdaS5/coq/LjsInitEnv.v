@@ -570,9 +570,6 @@ expr_object
           (data_intro (expr_id "%Put") expr_true expr_false expr_false));
  ("%Put1", property_data
            (data_intro (expr_id "%Put1") expr_true expr_false expr_false));
- ("%PutDefault", property_data
-                 (data_intro (expr_id "%PutDefault") expr_true expr_false
-                  expr_false));
  ("%PutPrim", property_data
               (data_intro (expr_id "%PutPrim") expr_true expr_false
                expr_false));
@@ -3244,13 +3241,12 @@ expr_app (expr_id "%CompareOp")
 [expr_id "l"; expr_id "r"; expr_true; expr_false]
 .
 Definition ex_privHasProperty := 
-expr_if (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "id"))
-expr_true
-(expr_if
- (expr_op2 binary_op_stx_eq (expr_get_obj_attr oattr_proto (expr_id "obj"))
-  expr_null) expr_false
- (expr_app (expr_id "%HasProperty")
-  [expr_get_obj_attr oattr_proto (expr_id "obj"); expr_id "id"]))
+expr_app (expr_id "%GetProperty")
+[expr_id "obj";
+ expr_id "id";
+ expr_lambda ["v"; "w"; "e"; "c"] expr_true;
+ expr_lambda ["g"; "s"; "e"; "c"] expr_true;
+ expr_lambda [] expr_false]
 .
 Definition ex_privInLeapYear := 
 expr_if
@@ -3833,25 +3829,6 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "o"])
   expr_id "strict"])
 .
 Definition ex_privPut := 
-expr_if (expr_op2 binary_op_has_internal (expr_id "obj") (expr_string "put"))
-(expr_app (expr_get_internal "put" (expr_id "obj"))
- [expr_id "obj";
-  expr_id "this";
-  expr_id "fld";
-  expr_id "val";
-  expr_id "strict"])
-(expr_app (expr_id "%PutDefault")
- [expr_id "obj";
-  expr_id "this";
-  expr_id "fld";
-  expr_id "val";
-  expr_id "strict"])
-.
-Definition ex_privPut1 := 
-expr_app (expr_id "%Put")
-[expr_id "obj"; expr_id "obj"; expr_id "fld"; expr_id "val"; expr_id "strict"]
-.
-Definition ex_privPutDefault := 
 expr_app (expr_id "%GetOwnProperty")
 [expr_id "obj";
  expr_id "fld";
@@ -3957,6 +3934,10 @@ expr_app (expr_id "%GetOwnProperty")
       [expr_string "adding a field to a non-extensible object";
        expr_empty;
        expr_id "strict"]))]))]
+.
+Definition ex_privPut1 := 
+expr_app (expr_id "%Put")
+[expr_id "obj"; expr_id "obj"; expr_id "fld"; expr_id "val"; expr_id "strict"]
 .
 Definition ex_privPutPrim := 
 expr_app (expr_id "%Put")
@@ -9157,7 +9138,8 @@ value_closure
 Definition name_privDeleteOp : id :=  "%DeleteOp" .
 Definition privHasProperty := 
 value_closure
-(closure_intro [] (Some "%HasProperty") ["obj"; "id"] ex_privHasProperty)
+(closure_intro [("%GetProperty", privGetProperty)] None ["obj"; "id"]
+ ex_privHasProperty)
 .
 Definition name_privHasProperty : id :=  "%HasProperty" .
 Definition privEnvGetId := 
@@ -9236,7 +9218,7 @@ Definition privoneArgObj :=
 value_closure (closure_intro [] None ["arg"] ex_privoneArgObj)
 .
 Definition name_privoneArgObj : id :=  "%oneArgObj" .
-Definition privPutDefault := 
+Definition privPut := 
 value_closure
 (closure_intro
  [("%AppExpr", privAppExpr);
@@ -9247,13 +9229,7 @@ value_closure
   ("%makeDataDescriptor", privmakeDataDescriptor);
   ("%makeValueOnlyDescriptor", privmakeValueOnlyDescriptor);
   ("%oneArgObj", privoneArgObj)] None ["obj"; "this"; "fld"; "val"; "strict"]
- ex_privPutDefault)
-.
-Definition name_privPutDefault : id :=  "%PutDefault" .
-Definition privPut := 
-value_closure
-(closure_intro [("%PutDefault", privPutDefault)] None
- ["obj"; "this"; "fld"; "val"; "strict"] ex_privPut)
+ ex_privPut)
 .
 Definition name_privPut : id :=  "%Put" .
 Definition privPut1 := 
@@ -11465,7 +11441,6 @@ Definition ctx_items :=
  (name_privPropertyAccess, privPropertyAccess);
  (name_privPut, privPut);
  (name_privPut1, privPut1);
- (name_privPutDefault, privPutDefault);
  (name_privPutPrim, privPutPrim);
  (name_privRangeError, privRangeError);
  (name_privRangeErrorConstructor, privRangeErrorConstructor);
@@ -11949,7 +11924,6 @@ privPrimitiveCompareOp
 privPropertyAccess
 privPut
 privPut1
-privPutDefault
 privPutPrim
 privRangeError
 privRangeErrorConstructor
@@ -12443,7 +12417,6 @@ Definition store_items := [
                                          ("%PropertyAccess", privPropertyAccess);
                                          ("%Put", privPut);
                                          ("%Put1", privPut1);
-                                         ("%PutDefault", privPutDefault);
                                          ("%PutPrim", privPutPrim);
                                          ("%RangeError", privRangeError);
                                          ("%RangeErrorConstructor", privRangeErrorConstructor);

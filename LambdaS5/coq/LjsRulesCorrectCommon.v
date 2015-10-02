@@ -70,6 +70,10 @@ Hint Extern 60 (~_) => solve [let H := fresh in intro H; inversion H] : xcore.
 Hint Constructors prealloc_related : js_ljs.
 Hint Constructors construct_prealloc_related : js_ljs.
 Hint Constructors construct_related : js_ljs.
+Hint Constructors builtin_method_related : js_ljs.
+Hint Constructors exotic_get_related : js_ljs.
+Hint Constructors exotic_get_own_prop_related : js_ljs.
+Hint Constructors exotic_define_own_prop_related : js_ljs.
 Hint Constructors codetxt_related : js_ljs.
 Hint Constructors usercode_related : js_ljs.
 Hint Constructors func_strict_related : js_ljs.
