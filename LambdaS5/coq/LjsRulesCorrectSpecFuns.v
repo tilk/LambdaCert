@@ -1395,6 +1395,68 @@ Proof.
     }
 Qed.
 
+Lemma make_data_descriptor_lemma : forall BR k jst jc c st st' r v jv b1 b2 b3,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privmakeDataDescriptor 
+        [v; L.value_bool b1; L.value_bool b2; L.value_bool b3]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    state_invariant BR jst st' /\
+    descriptor_related BR (J.descriptor_intro_data jv b1 b2 b3) (data_descriptor v b1 b2 b3) /\
+    concl_ljs_new_descriptor st st' r (data_descriptor v b1 b2 b3).
+Proof.
+    introv Hlred Hcinv Hinv Hvrel.
+    forwards Hx : make_data_descriptor_ljs_lemma Hlred.
+    lets Hy : Hx.
+    unfolds in Hx. destruct_hyp Hx.
+    splits.
+    + eapply state_invariant_store_incl_preserved; eassumption.
+    + eapply data_descriptor_related_lemma; eassumption.
+    + assumption.
+Qed.
+
+Lemma make_accessor_descriptor_lemma : forall BR k jst jc c st st' r v1 v2 jv1 jv2 b2 b3,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privmakeAccessorDescriptor 
+        [v1; v2; L.value_bool b2; L.value_bool b3]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    state_invariant BR jst st' /\
+    descriptor_related BR (J.descriptor_intro_accessor jv1 jv2 b2 b3) (accessor_descriptor v1 v2 b2 b3) /\
+    concl_ljs_new_descriptor st st' r (accessor_descriptor v1 v2 b2 b3).
+Proof.
+    introv Hlred Hcinv Hinv Hvrel1 Hvrel2.
+    forwards Hx : make_accessor_descriptor_ljs_lemma Hlred.
+    lets Hy : Hx.
+    unfolds in Hx. destruct_hyp Hx.
+    splits.
+    + eapply state_invariant_store_incl_preserved; eassumption.
+    + eapply accessor_descriptor_related_lemma; eassumption.
+    + assumption.
+Qed.
+
+Lemma make_value_only_descriptor_lemma : forall BR k jst jc c st st' r v jv,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privmakeValueOnlyDescriptor 
+        [v]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    state_invariant BR jst st' /\
+    descriptor_related BR (J.descriptor_intro (Some jv) None None None None None) 
+        (ljs_descriptor_intro (Some v) None None None None None) /\
+    concl_ljs_new_descriptor st st' r (ljs_descriptor_intro (Some v) None None None None None).
+Proof.
+    introv Hlred Hcinv Hinv Hvrel.
+    forwards Hx : make_value_only_descriptor_ljs_lemma Hlred.
+    lets Hy : Hx.
+    unfolds in Hx. destruct_hyp Hx.
+    splits.
+    + eapply state_invariant_store_incl_preserved; eassumption.
+    + constructor; eauto_js.
+    + assumption.
+Qed.
+
 (* *** errors *)
 
 Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
@@ -1595,49 +1657,170 @@ Proof.
     jauto_js.
 Qed.
 
-(** *** defineOwnProperty *)
+(* ** Accessing properties *)
 
-Lemma define_own_property_default_lemma : forall BR k jst jc c st st' r ptr s ptr' b jptr jdesc desc obj,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefineOwnProperty 
-        [L.value_object ptr; L.value_string s; L.value_object ptr'; L.value_bool b]) (L.out_ter st' r) ->
-    context_invariant BR jc c ->
+Lemma object_method_builtin_default_lemma : forall T jst jptr jobj M (D : T) R,
+    binds jst jptr jobj ->
+    builtin_method_related D R (M jobj) None ->
+    J.object_method M jst jptr D.
+Proof.
+    introv Hjbinds Hmeth.
+    inverts Hmeth.
+    unfolds. jauto_js.
+Qed.
+
+Lemma object_method_builtin_exotic_lemma : forall T jst jptr jobj M (D : T) R v,
+    binds jst jptr jobj ->
+    builtin_method_related D R (M jobj) (Some v) ->
+    J.object_method M jst jptr (M jobj) /\
+    R (M jobj) v.
+Proof.
+    introv Hjbinds Hmeth.
+    inverts Hmeth.
+    unfolds J.object_method.
+    jauto_js.
+Qed.
+
+Lemma object_method_has_property_lemma : forall BR jst st jptr ptr,
     state_invariant BR jst st ->
     fact_js_obj jptr ptr \in BR ->
-    binds st ptr' obj ->
-    property_descriptor desc obj ->
-    descriptor_related BR jdesc desc ->
-    concl_ext_expr_value BR jst jc c st st' r
-        (J.spec_object_define_own_prop_1 J.builtin_define_own_prop_default jptr s jdesc b) (fun _ => True).
+    J.object_method J.object_has_prop_ jst jptr J.builtin_has_prop_default.
 Proof.
-Admitted.
+    introv Hinv Hf.
+    lets Hjbinds : heaps_bisim_consistent_lnoghost_obj (state_invariant_heaps_bisim_consistent Hinv) Hf.
+    rewrite index_binds_eq in Hjbinds.
+    destruct Hjbinds as (jobj&Hjbinds).
+    unfolds. exists jobj.
+    destruct (J.object_has_prop_ jobj).
+    jauto.
+Qed.
 
-Lemma define_own_property_1_lemma : forall BR k jst jc c st st' r ptr s ptr' b jptr jdesc desc obj x,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefineOwnProperty 
-        [L.value_object ptr; L.value_string s; L.value_object ptr'; L.value_bool b]) (L.out_ter st' r) ->
-    context_invariant BR jc c ->
+Lemma object_method_get_property_lemma : forall BR jst st jptr ptr,
     state_invariant BR jst st ->
     fact_js_obj jptr ptr \in BR ->
-    binds st ptr' obj ->
-    property_descriptor desc obj ->
-    descriptor_related BR jdesc desc ->
-    concl_ext_expr_value BR jst jc c st st' r
-        (J.spec_object_define_own_prop_1 x jptr s jdesc b) (fun _ => True).
+    J.object_method J.object_get_prop_ jst jptr J.builtin_get_prop_default.
 Proof.
-Admitted.
+    introv Hinv Hf.
+    lets Hjbinds : heaps_bisim_consistent_lnoghost_obj (state_invariant_heaps_bisim_consistent Hinv) Hf.
+    rewrite index_binds_eq in Hjbinds.
+    destruct Hjbinds as (jobj&Hjbinds).
+    unfolds. exists jobj.
+    destruct (J.object_get_prop_ jobj).
+    jauto.
+Qed.
 
-Lemma define_own_property_lemma : forall BR k jst jc c st st' r ptr s ptr' b jptr jdesc desc obj,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefineOwnProperty 
-        [L.value_object ptr; L.value_string s; L.value_object ptr'; L.value_bool b]) (L.out_ter st' r) ->
-    context_invariant BR jc c ->
+Lemma object_method_put_lemma : forall BR jst st jptr ptr,
     state_invariant BR jst st ->
     fact_js_obj jptr ptr \in BR ->
-    binds st ptr' obj ->
-    property_descriptor desc obj ->
-    descriptor_related BR jdesc desc ->
-    concl_ext_expr_value BR jst jc c st st' r
-        (J.spec_object_define_own_prop jptr s jdesc b) (fun _ => True).
+    J.object_method J.object_put_ jst jptr J.builtin_put_default.
 Proof.
-Admitted.
+    introv Hinv Hf.
+    lets Hjbinds : heaps_bisim_consistent_lnoghost_obj (state_invariant_heaps_bisim_consistent Hinv) Hf.
+    rewrite index_binds_eq in Hjbinds.
+    destruct Hjbinds as (jobj&Hjbinds).
+    unfolds. exists jobj.
+    destruct (J.object_put_ jobj).
+    jauto.
+Qed.
+
+Lemma object_method_get_own_property_default_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    ~index (L.object_internal obj) "getprop" ->
+    J.object_method J.object_get_own_prop_ jst jptr J.builtin_get_own_prop_default.
+Proof.
+    introv Hinv Hf Hbinds Hidx.
+    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hbrel : object_prim_related_builtin_get_own_prop (object_related_prim Horel).
+    erewrite read_option_not_index_inv in Hbrel by eassumption.
+    applys object_method_builtin_default_lemma; eassumption.
+Qed.
+
+Lemma object_method_get_own_property_exotic_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    index (L.object_internal obj) "getprop" ->
+    exists jx x,
+    exotic_get_own_prop_related jx x /\
+    binds (L.object_internal obj) "getprop" x /\
+    J.object_method J.object_get_own_prop_ jst jptr jx.
+Proof.
+    introv Hinv Hf Hbinds Hidx.
+    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hbrel : object_prim_related_builtin_get_own_prop (object_related_prim Horel).
+    rewrite index_binds_eq in Hidx. destruct_hyp Hidx.
+    erewrite read_option_binds_inv in Hbrel by eassumption.
+    forwards Hex : object_method_builtin_exotic_lemma; try eassumption.
+    destruct_hyp Hex. jauto_js.
+Qed.
+
+Lemma object_method_get_default_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    ~index (L.object_internal obj) "get" ->
+    J.object_method J.object_get_ jst jptr J.builtin_get_default.
+Proof.
+    introv Hinv Hf Hbinds Hidx.
+    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hbrel : object_prim_related_builtin_get (object_related_prim Horel).
+    erewrite read_option_not_index_inv in Hbrel by eassumption.
+    applys object_method_builtin_default_lemma; eassumption.
+Qed.
+
+Lemma object_method_get_exotic_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    index (L.object_internal obj) "get" ->
+    exists jx x,
+    exotic_get_related jx x /\
+    binds (L.object_internal obj) "get" x /\
+    J.object_method J.object_get_ jst jptr jx.
+Proof.
+    introv Hinv Hf Hbinds Hidx.
+    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hbrel : object_prim_related_builtin_get (object_related_prim Horel).
+    rewrite index_binds_eq in Hidx. destruct_hyp Hidx.
+    erewrite read_option_binds_inv in Hbrel by eassumption.
+    forwards Hex : object_method_builtin_exotic_lemma; try eassumption.
+    destruct_hyp Hex. jauto_js.
+Qed.
+
+Lemma object_method_define_own_prop_default_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    ~index (L.object_internal obj) "defineprop" ->
+    J.object_method J.object_define_own_prop_ jst jptr J.builtin_define_own_prop_default.
+Proof.
+    introv Hinv Hf Hbinds Hidx.
+    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hbrel : object_prim_related_builtin_define_own_prop (object_related_prim Horel).
+    erewrite read_option_not_index_inv in Hbrel by eassumption.
+    applys object_method_builtin_default_lemma; eassumption.
+Qed.
+
+Lemma object_method_define_own_prop_exotic_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    index (L.object_internal obj) "defineprop" ->
+    exists jx x,
+    exotic_define_own_prop_related jx x /\
+    binds (L.object_internal obj) "defineprop" x /\
+    J.object_method J.object_define_own_prop_ jst jptr jx.
+Proof.
+    introv Hinv Hf Hbinds Hidx.
+    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hbrel : object_prim_related_builtin_define_own_prop (object_related_prim Horel).
+    rewrite index_binds_eq in Hidx. destruct_hyp Hidx.
+    erewrite read_option_binds_inv in Hbrel by eassumption.
+    forwards Hex : object_method_builtin_exotic_lemma; try eassumption.
+    destruct_hyp Hex. jauto_js.
+Qed.
 
 (** *** ToObject *)
 
@@ -1901,171 +2084,6 @@ Qed.
 Lemma stx_eq_undefined_eq_lemma : forall v, L.stx_eq v L.value_undefined = (v = L.value_undefined).
 Proof.
     introv. rew_logic. split; introv H. { inverts H. reflexivity. } { substs. eauto_js. }
-Qed.
-
-(* ** Accessing properties *)
-
-Lemma object_method_builtin_default_lemma : forall T jst jptr jobj M (D : T) R,
-    binds jst jptr jobj ->
-    builtin_method_related D R (M jobj) None ->
-    J.object_method M jst jptr D.
-Proof.
-    introv Hjbinds Hmeth.
-    inverts Hmeth.
-    unfolds. jauto_js.
-Qed.
-
-Lemma object_method_builtin_exotic_lemma : forall T jst jptr jobj M (D : T) R v,
-    binds jst jptr jobj ->
-    builtin_method_related D R (M jobj) (Some v) ->
-    J.object_method M jst jptr (M jobj) /\
-    R (M jobj) v.
-Proof.
-    introv Hjbinds Hmeth.
-    inverts Hmeth.
-    unfolds J.object_method.
-    jauto_js.
-Qed.
-
-Lemma object_method_has_property_lemma : forall BR jst st jptr ptr,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    J.object_method J.object_has_prop_ jst jptr J.builtin_has_prop_default.
-Proof.
-    introv Hinv Hf.
-    lets Hjbinds : heaps_bisim_consistent_lnoghost_obj (state_invariant_heaps_bisim_consistent Hinv) Hf.
-    rewrite index_binds_eq in Hjbinds.
-    destruct Hjbinds as (jobj&Hjbinds).
-    unfolds. exists jobj.
-    destruct (J.object_has_prop_ jobj).
-    jauto.
-Qed.
-
-Lemma object_method_get_property_lemma : forall BR jst st jptr ptr,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    J.object_method J.object_get_prop_ jst jptr J.builtin_get_prop_default.
-Proof.
-    introv Hinv Hf.
-    lets Hjbinds : heaps_bisim_consistent_lnoghost_obj (state_invariant_heaps_bisim_consistent Hinv) Hf.
-    rewrite index_binds_eq in Hjbinds.
-    destruct Hjbinds as (jobj&Hjbinds).
-    unfolds. exists jobj.
-    destruct (J.object_get_prop_ jobj).
-    jauto.
-Qed.
-
-Lemma object_method_put_lemma : forall BR jst st jptr ptr,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    J.object_method J.object_put_ jst jptr J.builtin_put_default.
-Proof.
-    introv Hinv Hf.
-    lets Hjbinds : heaps_bisim_consistent_lnoghost_obj (state_invariant_heaps_bisim_consistent Hinv) Hf.
-    rewrite index_binds_eq in Hjbinds.
-    destruct Hjbinds as (jobj&Hjbinds).
-    unfolds. exists jobj.
-    destruct (J.object_put_ jobj).
-    jauto.
-Qed.
-
-Lemma object_method_get_own_property_default_lemma : forall BR jst st jptr ptr obj,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    binds st ptr obj ->
-    ~index (L.object_internal obj) "getprop" ->
-    J.object_method J.object_get_own_prop_ jst jptr J.builtin_get_own_prop_default.
-Proof.
-    introv Hinv Hf Hbinds Hidx.
-    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
-    lets Hbrel : object_prim_related_builtin_get_own_prop (object_related_prim Horel).
-    erewrite read_option_not_index_inv in Hbrel by eassumption.
-    applys object_method_builtin_default_lemma; eassumption.
-Qed.
-
-Lemma object_method_get_own_property_exotic_lemma : forall BR jst st jptr ptr obj,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    binds st ptr obj ->
-    index (L.object_internal obj) "getprop" ->
-    exists jx x,
-    exotic_get_own_prop_related jx x /\
-    binds (L.object_internal obj) "getprop" x /\
-    J.object_method J.object_get_own_prop_ jst jptr jx.
-Proof.
-    introv Hinv Hf Hbinds Hidx.
-    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
-    lets Hbrel : object_prim_related_builtin_get_own_prop (object_related_prim Horel).
-    rewrite index_binds_eq in Hidx. destruct_hyp Hidx.
-    erewrite read_option_binds_inv in Hbrel by eassumption.
-    forwards Hex : object_method_builtin_exotic_lemma; try eassumption.
-    destruct_hyp Hex. jauto_js.
-Qed.
-
-Lemma object_method_get_default_lemma : forall BR jst st jptr ptr obj,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    binds st ptr obj ->
-    ~index (L.object_internal obj) "get" ->
-    J.object_method J.object_get_ jst jptr J.builtin_get_default.
-Proof.
-    introv Hinv Hf Hbinds Hidx.
-    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
-    lets Hbrel : object_prim_related_builtin_get (object_related_prim Horel).
-    erewrite read_option_not_index_inv in Hbrel by eassumption.
-    applys object_method_builtin_default_lemma; eassumption.
-Qed.
-
-Lemma object_method_get_exotic_lemma : forall BR jst st jptr ptr obj,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    binds st ptr obj ->
-    index (L.object_internal obj) "get" ->
-    exists jx x,
-    exotic_get_related jx x /\
-    binds (L.object_internal obj) "get" x /\
-    J.object_method J.object_get_ jst jptr jx.
-Proof.
-    introv Hinv Hf Hbinds Hidx.
-    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
-    lets Hbrel : object_prim_related_builtin_get (object_related_prim Horel).
-    rewrite index_binds_eq in Hidx. destruct_hyp Hidx.
-    erewrite read_option_binds_inv in Hbrel by eassumption.
-    forwards Hex : object_method_builtin_exotic_lemma; try eassumption.
-    destruct_hyp Hex. jauto_js.
-Qed.
-
-Lemma object_method_define_own_prop_default_lemma : forall BR jst st jptr ptr obj,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    binds st ptr obj ->
-    ~index (L.object_internal obj) "defineprop" ->
-    J.object_method J.object_define_own_prop_ jst jptr J.builtin_define_own_prop_default.
-Proof.
-    introv Hinv Hf Hbinds Hidx.
-    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
-    lets Hbrel : object_prim_related_builtin_define_own_prop (object_related_prim Horel).
-    erewrite read_option_not_index_inv in Hbrel by eassumption.
-    applys object_method_builtin_default_lemma; eassumption.
-Qed.
-
-Lemma object_method_define_own_prop_exotic_lemma : forall BR jst st jptr ptr obj,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    binds st ptr obj ->
-    index (L.object_internal obj) "defineprop" ->
-    exists jx x,
-    exotic_define_own_prop_related jx x /\
-    binds (L.object_internal obj) "defineprop" x /\
-    J.object_method J.object_define_own_prop_ jst jptr jx.
-Proof.
-    introv Hinv Hf Hbinds Hidx.
-    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
-    lets Hbrel : object_prim_related_builtin_define_own_prop (object_related_prim Horel).
-    rewrite index_binds_eq in Hidx. destruct_hyp Hidx.
-    erewrite read_option_binds_inv in Hbrel by eassumption.
-    forwards Hex : object_method_builtin_exotic_lemma; try eassumption.
-    destruct_hyp Hex. jauto_js.
 Qed.
 
 (* TODO move *)
@@ -2392,6 +2410,70 @@ Proof.
     }
 Qed.
 
+(* TODO move *)
+Lemma js_attributes_acccessor_of_descriptor_lemma : forall jv1 jv2 b1 b2,
+    J.attributes_accessor_of_descriptor (J.descriptor_intro_accessor jv1 jv2 b1 b2) =
+    J.attributes_accessor_intro jv1 jv2 b1 b2.
+Proof.
+    introv. reflexivity.
+Qed.
+
+(* TODO move *)
+Lemma js_attributes_data_of_descriptor_lemma : forall jv1 b1 b2 b3,
+    J.attributes_data_of_descriptor (J.descriptor_intro_data jv1 b1 b2 b3) =
+    J.attributes_data_intro jv1 b1 b2 b3.
+Proof.
+    introv. reflexivity.
+Qed.
+
+Lemma get_own_property_descriptor_lemma : forall BR k jst jc c st st' r jptr ptr s,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privGetOwnPropertyDescriptor
+        [L.value_object ptr; L.value_string s]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    exists BR' jst'' jsr,
+    J.red_spec jst jc (J.spec_object_get_own_prop jptr s) jsr /\
+    js_specret_state jsr jst'' /\
+    ((exists jattrs desc ptr1 obj,
+      jsr = J.specret_val jst'' (J.full_descriptor_some jattrs) /\
+      r = L.res_value (L.value_object ptr1) /\
+      binds st' ptr1 obj /\
+      property_descriptor desc obj /\
+      attributes_descriptor_related BR' jattrs desc) \/
+     (jsr = J.specret_val jst'' J.full_descriptor_undef /\
+      r = L.res_value L.value_undefined)) /\
+    jst'' = jst /\
+    BR \c BR'.
+Proof.
+    introv Hlred Hcinv Hinv Hf.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : get_own_property_lemma; try eassumption.
+    destruct_hyp Hx. { (* no field *)
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        jauto_js.
+    } { (* data *)
+        forwards_th Hy : make_data_descriptor_lemma.
+        destruct Hy as (?&?&Hy).
+        unfolds in Hy. destruct_hyp Hy. (* TODO *)
+        forwards Hattr : attributes_data_of_descriptor_lemma. eassumption.
+        rewrite js_attributes_data_of_descriptor_lemma in Hattr.
+        apply attributes_descriptor_related_data in Hattr.
+        jauto_js.
+    } { (* accessor *)
+        repeat ljs_autoforward.
+        forwards_th Hy : make_accessor_descriptor_lemma.
+        destruct Hy as (?&?&Hy).
+        unfolds in Hy. destruct_hyp Hy. (* TODO *)
+        forwards Hattr : attributes_accessor_of_descriptor_lemma. eassumption.
+        rewrite js_attributes_acccessor_of_descriptor_lemma in Hattr.
+        apply attributes_descriptor_related_accessor in Hattr.
+        jauto_js.
+    }
+Qed.
+
 Lemma has_property_lemma : forall k BR jst jc c st st' r jptr ptr s,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privHasProperty [L.value_object ptr; L.value_string s]) 
         (L.out_ter st' r) ->
@@ -2417,6 +2499,60 @@ Proof.
     } { (* found accessor *)
         ljs_invert_apply.
         repeat ljs_autoforward.
+        jauto_js.
+    }
+Qed.
+
+(** *** defineOwnProperty *)
+
+Lemma define_own_property_default_lemma : forall BR k jst jc c st st' r ptr s ptr' b jptr jdesc desc obj,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefineOwnPropertyDefault 
+        [L.value_object ptr; L.value_string s; L.value_object ptr'; L.value_bool b]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr' obj ->
+    property_descriptor desc obj ->
+    descriptor_related BR jdesc desc ->
+    concl_ext_expr_value BR jst jc c st st' r
+        (J.spec_object_define_own_prop_1 J.builtin_define_own_prop_default jptr s jdesc b) (fun _ => True).
+Proof.
+    introv Hlred Hcinv Hinv Hf Hbinds Hpdesc Hdrel.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : get_own_property_descriptor_lemma. eassumption.
+    destruct_hyp Hx. { (* field exists *)
+        repeat ljs_autoforward.
+        skip.
+    } { (* field not found *)
+        repeat ljs_autoforward.
+        skip.
+    }
+Qed.
+
+Lemma define_own_property_lemma : forall BR k jst jc c st st' r ptr s ptr' b jptr jdesc desc obj,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefineOwnProperty 
+        [L.value_object ptr; L.value_string s; L.value_object ptr'; L.value_bool b]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr' obj ->
+    property_descriptor desc obj ->
+    descriptor_related BR jdesc desc ->
+    concl_ext_expr_value BR jst jc c st st' r
+        (J.spec_object_define_own_prop jptr s jdesc b) (fun _ => True).
+Proof.
+    introv Hlred Hcinv Hinv Hf Hbinds Hpdesc Hdrel.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Hidx. { (* exotic *)
+        skip. (* TODO *)
+    } { (* default *)
+        repeat ljs_autoforward.
+        forwards : object_method_define_own_prop_default_lemma; try eassumption.
+        forwards_th : define_own_property_default_lemma; try eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
         jauto_js.
     }
 Qed.
@@ -3743,26 +3879,6 @@ Definition concl_ljs_new_descriptor st st' r desc :=
     st \c st' /\
     binds st' ptr obj /\
     ~index st ptr.*)
-
-(* TODO move to top *)
-Lemma make_data_descriptor_lemma : forall BR k jst jc c st st' r v jv b1 b2 b3,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privmakeDataDescriptor 
-        [v; L.value_bool b1; L.value_bool b2; L.value_bool b3]) (L.out_ter st' r) ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    value_related BR jv v ->
-    state_invariant BR jst st' /\
-    descriptor_related BR (J.descriptor_intro_data jv b1 b2 b3) (data_descriptor v b1 b2 b3) /\
-    concl_ljs_new_descriptor st st' r (data_descriptor v b1 b2 b3).
-Proof.
-    introv Hlred Hcinv Hinv Hvrel.
-    forwards Hx : make_data_descriptor_ljs_lemma Hlred.
-    lets Hy : Hx.
-    unfolds in Hx. destruct_hyp Hx.
-    forwards : data_descriptor_related_lemma; try eassumption.
-    lets Hinv' : state_invariant_store_incl_preserved Hinv. eassumption.
-    jauto_js.
-Qed.
 
 Lemma create_mutable_binding_lemma : forall BR k jst jc c st st' r ptr s jeptr b ob,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvCreateMutableBinding
