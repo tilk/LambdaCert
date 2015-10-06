@@ -4550,6 +4550,8 @@ Lemma red_spec_to_primitive_ok : forall BR k jst jc c st st' jv v jprefo r s,
     option_preftype_name jprefo s ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_to_primitive jv jprefo) (post_to_primitive jv).
 Proof.
+    introv Hlred Hcinv Hinv Hvrel Hopn.
+    ljs_invert_apply.
     (* TODO *)
 Admitted.
 

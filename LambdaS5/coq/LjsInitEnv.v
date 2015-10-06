@@ -265,6 +265,15 @@ expr_object
  ("%DefaultConstruct", property_data
                        (data_intro (expr_id "%DefaultConstruct") expr_true
                         expr_false expr_false));
+ ("%DefaultValue", property_data
+                   (data_intro (expr_id "%DefaultValue") expr_true expr_false
+                    expr_false));
+ ("%DefaultValueDefault", property_data
+                          (data_intro (expr_id "%DefaultValueDefault")
+                           expr_true expr_false expr_false));
+ ("%DefaultValueDefaultSub", property_data
+                             (data_intro (expr_id "%DefaultValueDefaultSub")
+                              expr_true expr_false expr_false));
  ("%Delete", property_data
              (data_intro (expr_id "%Delete") expr_true expr_false expr_false));
  ("%DeleteOp", property_data
@@ -2550,6 +2559,44 @@ expr_let "cproto1"
    (expr_if (expr_op1 unary_op_is_object (expr_id "constr_ret"))
     (expr_id "constr_ret") (expr_id "newobj")))))
 .
+Definition ex_privDefaultValue := 
+expr_if
+(expr_op2 binary_op_has_internal (expr_id "obj") (expr_string "defval"))
+(expr_app (expr_get_internal "defval" (expr_id "obj"))
+ [expr_id "obj"; expr_id "hint"])
+(expr_app (expr_id "%DefaultValueDefault") [expr_id "obj"; expr_id "hint"])
+.
+Definition ex_privDefaultValueDefault := 
+expr_let "met1"
+(expr_if (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string"))
+ (expr_string "toString") (expr_string "valueOf"))
+(expr_let "met2"
+ (expr_if
+  (expr_op1 unary_op_not
+   (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string")))
+  (expr_string "toString") (expr_string "valueOf"))
+ (expr_app
+  (expr_app (expr_id "%DefaultValueDefaultSub")
+   [expr_id "obj";
+    expr_id "met1";
+    expr_app (expr_id "%DefaultValueDefaultSub")
+    [expr_id "obj";
+     expr_id "met2";
+     expr_lambda []
+     (expr_app (expr_id "%TypeError")
+      [expr_string "valueOf and toString both absent in DefaultValue"])]]) 
+  []))
+.
+Definition ex_privDefaultValueDefaultSub := 
+expr_lambda []
+(expr_let "f" (expr_app (expr_id "%Get1") [expr_id "obj"; expr_id "str"])
+ (expr_if (expr_app (expr_id "%IsCallable") [expr_id "f"])
+  (expr_let "res"
+   (expr_app (expr_id "%AppExpr")
+    [expr_id "f"; expr_id "obj"; expr_app (expr_id "%zeroArgObj") []])
+   (expr_if (expr_op1 unary_op_is_primitive (expr_id "res")) (expr_id "res")
+    (expr_app (expr_id "next") []))) (expr_app (expr_id "next") [])))
+.
 Definition ex_privDelete := 
 expr_if
 (expr_op1 unary_op_not
@@ -4121,35 +4168,8 @@ expr_app (expr_id "%ToPrimitiveHint") [expr_id "val"; expr_string "number"]
 .
 Definition ex_privToPrimitiveHint := 
 expr_if (expr_op1 unary_op_is_object (expr_id "val"))
-(expr_let "check"
- (expr_lambda ["str"; "next"]
-  (expr_lambda []
-   (expr_let "f" (expr_app (expr_id "%Get1") [expr_id "val"; expr_id "str"])
-    (expr_if (expr_app (expr_id "%IsCallable") [expr_id "f"])
-     (expr_let "res"
-      (expr_app (expr_id "%AppExpr")
-       [expr_id "f"; expr_id "val"; expr_app (expr_id "%zeroArgObj") []])
-      (expr_if (expr_op1 unary_op_is_primitive (expr_id "res"))
-       (expr_id "res") (expr_app (expr_id "next") [])))
-     (expr_app (expr_id "next") [])))))
- (expr_let "met1"
-  (expr_if
-   (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string"))
-   (expr_string "toString") (expr_string "valueOf"))
-  (expr_let "met2"
-   (expr_if
-    (expr_op1 unary_op_not
-     (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string")))
-    (expr_string "toString") (expr_string "valueOf"))
-   (expr_app
-    (expr_app (expr_id "check")
-     [expr_id "met1";
-      expr_app (expr_id "check")
-      [expr_id "met2";
-       expr_lambda []
-       (expr_app (expr_id "%TypeError")
-        [expr_string "valueOf and toString both absent in toPrimitive"])]])
-    [])))) (expr_id "val")
+(expr_app (expr_id "%DefaultValue") [expr_id "val"; expr_id "hint"])
+(expr_id "val")
 .
 Definition ex_privToPropertyDescriptor := 
 expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
@@ -8528,14 +8548,33 @@ value_closure
  ex_privDelete)
 .
 Definition name_privDelete : id :=  "%Delete" .
-Definition privToPrimitiveHint := 
+Definition privDefaultValueDefaultSub := 
 value_closure
 (closure_intro
  [("%AppExpr", privAppExpr);
   ("%Get1", privGet1);
   ("%IsCallable", privIsCallable);
-  ("%TypeError", privTypeError);
-  ("%zeroArgObj", privzeroArgObj)] None ["val"; "hint"]
+  ("%zeroArgObj", privzeroArgObj)] None ["obj"; "str"; "next"]
+ ex_privDefaultValueDefaultSub)
+.
+Definition name_privDefaultValueDefaultSub : id :=  "%DefaultValueDefaultSub" .
+Definition privDefaultValueDefault := 
+value_closure
+(closure_intro
+ [("%DefaultValueDefaultSub", privDefaultValueDefaultSub);
+  ("%TypeError", privTypeError)] None ["obj"; "hint"]
+ ex_privDefaultValueDefault)
+.
+Definition name_privDefaultValueDefault : id :=  "%DefaultValueDefault" .
+Definition privDefaultValue := 
+value_closure
+(closure_intro [("%DefaultValueDefault", privDefaultValueDefault)] None
+ ["obj"; "hint"] ex_privDefaultValue)
+.
+Definition name_privDefaultValue : id :=  "%DefaultValue" .
+Definition privToPrimitiveHint := 
+value_closure
+(closure_intro [("%DefaultValue", privDefaultValue)] None ["val"; "hint"]
  ex_privToPrimitiveHint)
 .
 Definition name_privToPrimitiveHint : id :=  "%ToPrimitiveHint" .
@@ -11337,6 +11376,9 @@ Definition ctx_items :=
  (name_privDeclEnvAddBinding, privDeclEnvAddBinding);
  (name_privDefaultCall, privDefaultCall);
  (name_privDefaultConstruct, privDefaultConstruct);
+ (name_privDefaultValue, privDefaultValue);
+ (name_privDefaultValueDefault, privDefaultValueDefault);
+ (name_privDefaultValueDefaultSub, privDefaultValueDefaultSub);
  (name_privDelete, privDelete);
  (name_privDeleteOp, privDeleteOp);
  (name_privEnvAppExpr, privEnvAppExpr);
@@ -11820,6 +11862,9 @@ privDaysInYear
 privDeclEnvAddBinding
 privDefaultCall
 privDefaultConstruct
+privDefaultValue
+privDefaultValueDefault
+privDefaultValueDefaultSub
 privDelete
 privDeleteOp
 privEnvAppExpr
@@ -12313,6 +12358,9 @@ Definition store_items := [
                                          ("%DeclEnvAddBinding", privDeclEnvAddBinding);
                                          ("%DefaultCall", privDefaultCall);
                                          ("%DefaultConstruct", privDefaultConstruct);
+                                         ("%DefaultValue", privDefaultValue);
+                                         ("%DefaultValueDefault", privDefaultValueDefault);
+                                         ("%DefaultValueDefaultSub", privDefaultValueDefaultSub);
                                          ("%Delete", privDelete);
                                          ("%DeleteOp", privDeleteOp);
                                          ("%EnvAppExpr", privEnvAppExpr);
