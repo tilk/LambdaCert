@@ -3233,7 +3233,7 @@ Proof.
             forwards Hjext : object_extensible_lemma; try prove_bag.
             unfold L.object_extensible in Hjext. 
             inv_ljs. { (* extensible *)
-                rewrite <- H11 in Hjext. (* TODO *)
+                rewrite <- H3 in Hjext. (* TODO *)
                 repeat ljs_autoforward.
                 cases_decide as Hprim. { (* is primitive *)
                     lets (jpv&EQjpv) : value_related_primitive_lemma Hprim Hvrel1.
@@ -3248,17 +3248,18 @@ Proof.
                     lets (jptr_this&EQjptr) : value_related_not_primitive_lemma Hprim Hvrel1.
                     subst_hyp EQjptr.
                     repeat ljs_autoforward.
-                    forwards_th Hx : make_data_descriptor_ljs_lemma.
+                    forwards_th Hx : make_data_descriptor_lemma.
+                    destruct Hx as (?&?&Hx). (* TODO *) 
                     unfolds in Hx. destruct_hyp Hx.
                     repeat ljs_autoforward.
-                    forwards_th : define_own_property_lemma; try prove_bag. skip. skip. (* TODO *)
+                    forwards_th : define_own_property_lemma; try prove_bag.
                     destr_concl; try ljs_handle_abort.
                     res_related_invert.
                     repeat ljs_autoforward.
                     jauto_js 15.
                 }
             } { (* not extensible *)
-                rewrite <- H11 in Hjext. (* TODO *)
+                rewrite <- H3 in Hjext. (* TODO *)
                 repeat ljs_autoforward.
                 forwards_th : type_error_or_void_lemma. eauto_js.
                 destr_concl; try ljs_handle_abort.
@@ -3276,10 +3277,10 @@ Proof.
                 repeat ljs_autoforward.
                 ljs_invert_apply.
                 repeat ljs_autoforward.
-                forwards Hjext : object_extensible_lemma; try eapply H10; try prove_bag. (* TODO *)
+                forwards Hjext : object_extensible_lemma; try eapply H4; try prove_bag. (* TODO *)
                 unfold L.object_extensible in Hjext. 
                 inv_ljs. { (* extensible *)
-                    rewrite <- H21 in Hjext. (* TODO *)
+                    rewrite <- H18 in Hjext. (* TODO *)
                     repeat ljs_autoforward.
                     cases_decide as Hprim. { (* is primitive *)
                         lets (jpv&EQjpv) : value_related_primitive_lemma Hprim Hvrel1.
@@ -3294,17 +3295,18 @@ Proof.
                         lets (jptr_this&EQjptr) : value_related_not_primitive_lemma Hprim Hvrel1.
                         subst_hyp EQjptr.
                         repeat ljs_autoforward.
-                        forwards_th Hx : make_data_descriptor_ljs_lemma.
+                        forwards_th Hx : make_data_descriptor_lemma.
+                        destruct Hx as (?&?&Hx). (* TODO *) 
                         unfolds in Hx. destruct_hyp Hx.
                         repeat ljs_autoforward.
-                        forwards_th : define_own_property_lemma; try prove_bag. skip. skip. (* TODO *)
+                        forwards_th : define_own_property_lemma; try prove_bag.
                         destr_concl; try ljs_handle_abort.
                         res_related_invert.
                         repeat ljs_autoforward.
                         jauto_js 20.
                     }
                 } { (* not extensible *)
-                    rewrite <- H21 in Hjext. (* TODO *)
+                    rewrite <- H18 in Hjext. (* TODO *)
                     repeat ljs_autoforward.
                     forwards_th : type_error_or_void_lemma. eauto_js.
                     destr_concl; try ljs_handle_abort.
@@ -3318,7 +3320,7 @@ Proof.
                 forwards Hjext : object_extensible_lemma; try eapply H10; try prove_bag. (* TODO *)
                 unfold L.object_extensible in Hjext. 
                 inv_ljs. { (* extensible *)
-                    rewrite <- H21 in Hjext. (* TODO *)
+                    rewrite <- H18 in Hjext. (* TODO *)
                     repeat ljs_autoforward.
                     inv_ljs. { (* writable *)
                         repeat ljs_autoforward.
@@ -3335,10 +3337,11 @@ Proof.
                             lets (jptr_this&EQjptr) : value_related_not_primitive_lemma Hprim Hvrel1.
                             subst_hyp EQjptr.
                             repeat ljs_autoforward.
-                            forwards_th Hx : make_data_descriptor_ljs_lemma.
+                            forwards_th Hx : make_data_descriptor_lemma.
+                            destruct Hx as (?&?&Hx). (* TODO *) 
                             unfolds in Hx. destruct_hyp Hx.
                             repeat ljs_autoforward.
-                            forwards_th : define_own_property_lemma; try prove_bag. skip. skip. (* TODO *)
+                            forwards_th : define_own_property_lemma; try prove_bag.
                             destr_concl; try ljs_handle_abort.
                             res_related_invert.
                             repeat ljs_autoforward.
@@ -3353,7 +3356,7 @@ Proof.
                         jauto_js 20.
                     }
                 } { (* not extensible *)
-                    rewrite <- H21 in Hjext. (* TODO *)
+                    rewrite <- H18 in Hjext. (* TODO *)
                     repeat ljs_autoforward.
                     forwards_th : type_error_or_void_lemma. eauto_js.
                     destr_concl; try ljs_handle_abort.
@@ -3407,10 +3410,11 @@ Proof.
                 lets (jptr_this&EQjptr) : value_related_not_primitive_lemma Hprim Hvrel1.
                 subst_hyp EQjptr.
                 repeat ljs_autoforward.
-                forwards_th Hx : make_value_only_descriptor_ljs_lemma.
+                forwards_th Hx : make_value_only_descriptor_lemma.
+                destruct Hx as (?&?&Hx). (* TODO *) 
                 unfolds in Hx. destruct_hyp Hx.
                 repeat ljs_autoforward.
-                forwards_th : define_own_property_lemma; try prove_bag. skip. skip. (* TODO *)
+                forwards_th : define_own_property_lemma; try prove_bag.
                 destr_concl; try ljs_handle_abort.
                 res_related_invert.
                 repeat ljs_autoforward.
