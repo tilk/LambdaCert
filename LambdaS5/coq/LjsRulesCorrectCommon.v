@@ -2713,6 +2713,8 @@ Ltac ljs_inv_closure_hyps :=
                 let Hb := fresh "Hb" in
                 assert (Hb : binds cdef0 s v) by prove_bag 100;
                 rewrite EQc in Hb;
+                let Hd := fresh "Hd" in
+                lets Hd : binds_inv_done_intro c s;
                 to_binds cdef'
             | ?c1 => is_var c1; idtac
             | \{} => idtac
@@ -2960,8 +2962,17 @@ Ltac ljs_op_inv :=
 
 Ltac ljs_fwd_op_inv := ljs_op_inv; [idtac].
 
+Ltac ljs_out_redh_ter_fast :=
+    match goal with
+    | H : L.red_exprh _ _ _ ?ee (L.out_ter _ _) |- _ =>
+        match ee with
+        | context[L.out_ter _ _] => fail 1
+        | _ => ljs_out_redh_ter in H
+        end
+    end.
+
 Ltac ljs_autoforward := first [
-    inv_top_fwd_ljs | ljs_fwd_op_inv | ljs_out_redh_ter | 
+    inv_top_fwd_ljs | ljs_fwd_op_inv | ljs_out_redh_ter_fast | 
     apply_ih_stat | apply_ih_expr | ljs_autoinject | 
     binds_inv | binds_determine | ljs_get_builtin ].
 

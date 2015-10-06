@@ -1483,7 +1483,7 @@ Proof.
     }
     (* has message *)
     inv_ljs;
-    binds_inv. (* TODO *) simpls. false. rewrite binds_empty_eq in H8. eauto.
+    binds_inv. (* TODO *) { simpls. false. rew_binds_eq in *. assumption. }
     repeat ljs_autoforward.
     inv_ljs; binds_inv. 
     repeat ljs_autoforward.
@@ -2517,6 +2517,7 @@ Lemma define_own_property_default_lemma : forall BR k jst jc c st st' r ptr s pt
     concl_ext_expr_value BR jst jc c st st' r
         (J.spec_object_define_own_prop_1 J.builtin_define_own_prop_default jptr s jdesc b) (fun _ => True).
 Proof.
+Admitted. (* TODO this is slow... 
     introv Hlred Hcinv Hinv Hf Hbinds Hpdesc Hdrel.
     ljs_invert_apply.
     repeat ljs_autoforward.
@@ -2528,7 +2529,7 @@ Proof.
         repeat ljs_autoforward.
         skip.
     }
-Qed.
+Qed. *)
 
 Lemma define_own_property_lemma : forall BR k jst jc c st st' r ptr s ptr' b jptr jdesc desc obj,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privdefineOwnProperty 
@@ -3547,8 +3548,8 @@ Proof.
         repeat ljs_autoforward.
         lets Hx : decl_env_record_vars_related_binds_lemma ___; try eassumption.
         destruct_hyp Hx.
-        cases_decide as Hd; rewrite stx_eq_empty_eq_lemma in Hd. { (* uninitialized immutable *)
-            simpl in Hd. subst_hyp Hd.
+        cases_decide as Hdec; rewrite stx_eq_empty_eq_lemma in Hdec. { (* uninitialized immutable *)
+            simpl in Hdec. subst_hyp Hdec.
             forwards (Heq1&Heq2) : decl_env_record_var_related_empty_lemma; try eassumption.
             subst_hyp Heq1. subst_hyp Heq2.
             destruct b. { (* strict *)
@@ -3775,9 +3776,9 @@ Proof.
         repeat ljs_autoforward.
         lets Hx : decl_env_record_vars_related_binds_lemma ___; try eassumption.
         destruct_hyp Hx.
-        cases_decide as Hd; rewrite stx_eq_empty_eq_lemma in Hd. { (* uninitialized immutable *)
+        cases_decide as Hdec; rewrite stx_eq_empty_eq_lemma in Hdec. { (* uninitialized immutable *)
             lets Hmutmut : mutability_is_mutable_uninitialized_immutable.
-            simpl in Hd. subst_hyp Hd.
+            simpl in Hdec. subst_hyp Hdec.
             forwards (Heq1&Heq2) : decl_env_record_var_related_empty_lemma; try eassumption.
             subst_hyp Heq1. subst_hyp Heq2.
             destruct b. { (* strict *)
@@ -3790,7 +3791,7 @@ Proof.
                 jauto_js 10.
             }
         }
-        simpl in Hd.
+        simpl in Hdec.
         forwards (Hvrel'&Hjmut) : decl_env_record_var_related_not_empty_lemma; try eassumption.
         destruct (classic (jmut = J.mutability_immutable)) as [Heqmut|Heqmut]. { (* immutable binding *)
             lets Hmutmut : mutability_is_mutable_immutable.

@@ -515,8 +515,13 @@ Tactic Notation "eval_binary_op_determine" :=
 
 Ltac ljs_out_red_ter Hred :=
     let H := fresh in
-    forwards (?st&?r&H) : out_red_ter Hred; [reflexivity | ]; 
-    match type of H with ?x = _ => is_var x end; 
+    let o' := fresh in
+    evar (o' : out);
+    assert (H := out_red_ter (o:=o') Hred); 
+    subst o';
+    specializes H ___; [reflexivity | ];
+    destruct H as (?st&?r&H);
+    match type of H with ?x = _ => is_var x end;
     rewrite H in *; clear H.
 
 Tactic Notation "ljs_out_red_ter" "in" constr(Hred) := ljs_out_red_ter Hred.
