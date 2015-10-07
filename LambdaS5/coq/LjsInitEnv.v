@@ -276,6 +276,9 @@ expr_object
                               expr_true expr_false expr_false));
  ("%Delete", property_data
              (data_intro (expr_id "%Delete") expr_true expr_false expr_false));
+ ("%DeleteDefault", property_data
+                    (data_intro (expr_id "%DeleteDefault") expr_true
+                     expr_false expr_false));
  ("%DeleteOp", property_data
                (data_intro (expr_id "%DeleteOp") expr_true expr_false
                 expr_false));
@@ -2598,17 +2601,29 @@ expr_lambda []
     (expr_app (expr_id "next") []))) (expr_app (expr_id "next") [])))
 .
 Definition ex_privDelete := 
-expr_if
-(expr_op1 unary_op_not
- (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "fld")))
-expr_true
-(expr_if
- (expr_op1 unary_op_not
-  (expr_get_attr pattr_config (expr_id "obj") (expr_id "fld")))
- (expr_if (expr_id "strict")
-  (expr_app (expr_id "%TypeError")
-   [expr_string "unconfigurable delete in strict mode"]) expr_false)
- (expr_seq (expr_delete_field (expr_id "obj") (expr_id "fld")) expr_true))
+expr_if (expr_op2 binary_op_has_internal (expr_id "obj") (expr_string "del"))
+(expr_app (expr_get_internal "del" (expr_id "obj"))
+ [expr_id "obj"; expr_id "fld"; expr_id "strict"])
+(expr_app (expr_id "%DeleteDefault")
+ [expr_id "obj"; expr_id "fld"; expr_id "strict"])
+.
+Definition ex_privDeleteDefault := 
+expr_let "desc"
+(expr_app (expr_id "%GetOwnPropertyDescriptor")
+ [expr_id "obj"; expr_id "fld"])
+(expr_if (expr_op2 binary_op_stx_eq (expr_id "desc") expr_undefined)
+ expr_true
+ (expr_if
+  (expr_op1 unary_op_not
+   (expr_get_attr pattr_value (expr_id "desc") (expr_string "configurable")))
+  (expr_if (expr_id "strict")
+   (expr_app (expr_id "%TypeError")
+    [expr_string "unconfigurable delete in strict mode"]) expr_false)
+  (expr_seq
+   (expr_if
+    (expr_op2 binary_op_has_own_property (expr_id "obj") (expr_id "fld"))
+    (expr_delete_field (expr_id "obj") (expr_id "fld")) expr_undefined)
+   expr_true)))
 .
 Definition ex_privDeleteOp := 
 expr_app (expr_id "%Delete")
@@ -8542,10 +8557,37 @@ value_closure (closure_intro [] None ["args"] ex_privComputeLength)
 Definition name_privComputeLength : id :=  "%ComputeLength" .
 Definition privArrayProto :=  value_object 43 .
 Definition name_privArrayProto : id :=  "%ArrayProto" .
+Definition privmakeAccessorDescriptor := 
+value_closure
+(closure_intro [] None ["g"; "s"; "e"; "c"] ex_privmakeAccessorDescriptor)
+.
+Definition name_privmakeAccessorDescriptor : id :=  "%makeAccessorDescriptor" .
+Definition privmakeDataDescriptor := 
+value_closure
+(closure_intro [] None ["v"; "w"; "e"; "c"] ex_privmakeDataDescriptor)
+.
+Definition name_privmakeDataDescriptor : id :=  "%makeDataDescriptor" .
+Definition privGetOwnPropertyDescriptor := 
+value_closure
+(closure_intro
+ [("%GetOwnProperty", privGetOwnProperty);
+  ("%makeAccessorDescriptor", privmakeAccessorDescriptor);
+  ("%makeDataDescriptor", privmakeDataDescriptor)] None ["obj"; "field"]
+ ex_privGetOwnPropertyDescriptor)
+.
+Definition name_privGetOwnPropertyDescriptor : id :=  "%GetOwnPropertyDescriptor" .
+Definition privDeleteDefault := 
+value_closure
+(closure_intro
+ [("%GetOwnPropertyDescriptor", privGetOwnPropertyDescriptor);
+  ("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"]
+ ex_privDeleteDefault)
+.
+Definition name_privDeleteDefault : id :=  "%DeleteDefault" .
 Definition privDelete := 
 value_closure
-(closure_intro [("%TypeError", privTypeError)] None ["obj"; "fld"; "strict"]
- ex_privDelete)
+(closure_intro [("%DeleteDefault", privDeleteDefault)] None
+ ["obj"; "fld"; "strict"] ex_privDelete)
 .
 Definition name_privDelete : id :=  "%Delete" .
 Definition privDefaultValueDefaultSub := 
@@ -8631,25 +8673,6 @@ value_closure
  ex_privTypeErrorOr)
 .
 Definition name_privTypeErrorOr : id :=  "%TypeErrorOr" .
-Definition privmakeAccessorDescriptor := 
-value_closure
-(closure_intro [] None ["g"; "s"; "e"; "c"] ex_privmakeAccessorDescriptor)
-.
-Definition name_privmakeAccessorDescriptor : id :=  "%makeAccessorDescriptor" .
-Definition privmakeDataDescriptor := 
-value_closure
-(closure_intro [] None ["v"; "w"; "e"; "c"] ex_privmakeDataDescriptor)
-.
-Definition name_privmakeDataDescriptor : id :=  "%makeDataDescriptor" .
-Definition privGetOwnPropertyDescriptor := 
-value_closure
-(closure_intro
- [("%GetOwnProperty", privGetOwnProperty);
-  ("%makeAccessorDescriptor", privmakeAccessorDescriptor);
-  ("%makeDataDescriptor", privmakeDataDescriptor)] None ["obj"; "field"]
- ex_privGetOwnPropertyDescriptor)
-.
-Definition name_privGetOwnPropertyDescriptor : id :=  "%GetOwnPropertyDescriptor" .
 Definition privdescriptorFieldNotSame := 
 value_closure
 (closure_intro [] None ["fd"; "d"; "f"] ex_privdescriptorFieldNotSame)
@@ -11380,6 +11403,7 @@ Definition ctx_items :=
  (name_privDefaultValueDefault, privDefaultValueDefault);
  (name_privDefaultValueDefaultSub, privDefaultValueDefaultSub);
  (name_privDelete, privDelete);
+ (name_privDeleteDefault, privDeleteDefault);
  (name_privDeleteOp, privDeleteOp);
  (name_privEnvAppExpr, privEnvAppExpr);
  (name_privEnvAssign, privEnvAssign);
@@ -11866,6 +11890,7 @@ privDefaultValue
 privDefaultValueDefault
 privDefaultValueDefaultSub
 privDelete
+privDeleteDefault
 privDeleteOp
 privEnvAppExpr
 privEnvAssign
@@ -12362,6 +12387,7 @@ Definition store_items := [
                                          ("%DefaultValueDefault", privDefaultValueDefault);
                                          ("%DefaultValueDefaultSub", privDefaultValueDefaultSub);
                                          ("%Delete", privDelete);
+                                         ("%DeleteDefault", privDeleteDefault);
                                          ("%DeleteOp", privDeleteOp);
                                          ("%EnvAppExpr", privEnvAppExpr);
                                          ("%EnvAssign", privEnvAssign);

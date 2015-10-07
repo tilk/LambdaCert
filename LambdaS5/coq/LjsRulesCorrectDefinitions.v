@@ -574,6 +574,12 @@ Inductive exotic_default_value_related : J.builtin_default_value -> L.value -> P
 Definition builtin_default_value_related :=
     builtin_method_related J.builtin_default_value_default exotic_default_value_related.
 
+Inductive exotic_delete_related : J.builtin_delete -> L.value -> Prop :=
+. (* TODO args object *)
+
+Definition builtin_delete_related :=
+    builtin_method_related J.builtin_delete_default exotic_delete_related.
+
 Definition funcbody_expr is jp := E.make_lambda_expr E.ejs_to_ljs E.make_fobj is (E.js_prog_to_ejs jp).
 
 Definition funcbody_closure ctxl is jp := L.closure_intro ctxl None ["obj"; "$this"; "args"] (funcbody_expr is jp).
@@ -638,7 +644,9 @@ Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_builtin_define_own_prop :
         builtin_define_own_prop_related (J.object_define_own_prop_ jobj) (L.object_internal obj\("defineprop"?));
     object_prim_related_builtin_default_value :
-        builtin_default_value_related (J.object_default_value_ jobj) (L.object_internal obj\("defval"?))
+        builtin_default_value_related (J.object_default_value_ jobj) (L.object_internal obj\("defval"?));
+    object_prim_related_builtin_delete :
+        builtin_delete_related (J.object_delete_ jobj) (L.object_internal obj\("del"?))
 }.
 
 Record object_related BR jobj obj : Prop := {
