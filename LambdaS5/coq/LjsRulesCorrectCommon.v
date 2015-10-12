@@ -2713,7 +2713,7 @@ Ltac ljs_inv_closure_hyps :=
                 let Hb := fresh "Hb" in
                 assert (Hb : binds cdef0 s v) by prove_bag 100;
                 rewrite EQc in Hb;
-                let Hd := fresh "Hd" in
+                let Hd := fresh "Hdone" in
                 lets Hd : binds_inv_done_intro c s;
                 to_binds cdef'
             | ?c1 => is_var c1; idtac

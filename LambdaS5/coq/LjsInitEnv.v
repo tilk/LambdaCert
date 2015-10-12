@@ -428,6 +428,9 @@ expr_object
  ("%HasProperty", property_data
                   (data_intro (expr_id "%HasProperty") expr_true expr_false
                    expr_false));
+ ("%HintMethod", property_data
+                 (data_intro (expr_id "%HintMethod") expr_true expr_false
+                  expr_false));
  ("%InLeapYear", property_data
                  (data_intro (expr_id "%InLeapYear") expr_true expr_false
                   expr_false));
@@ -544,6 +547,9 @@ expr_object
                    expr_false));
  ("%ObjectTypeCheck", property_data
                       (data_intro (expr_id "%ObjectTypeCheck") expr_true
+                       expr_false expr_false));
+ ("%OtherHintMethod", property_data
+                      (data_intro (expr_id "%OtherHintMethod") expr_true
                        expr_false expr_false));
  ("%PrepostOp", property_data
                 (data_intro (expr_id "%PrepostOp") expr_true expr_false
@@ -2570,35 +2576,25 @@ expr_if
 (expr_app (expr_id "%DefaultValueDefault") [expr_id "obj"; expr_id "hint"])
 .
 Definition ex_privDefaultValueDefault := 
-expr_let "met1"
-(expr_if (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string"))
- (expr_string "toString") (expr_string "valueOf"))
-(expr_let "met2"
- (expr_if
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string")))
-  (expr_string "toString") (expr_string "valueOf"))
- (expr_app
-  (expr_app (expr_id "%DefaultValueDefaultSub")
-   [expr_id "obj";
-    expr_id "met1";
-    expr_app (expr_id "%DefaultValueDefaultSub")
-    [expr_id "obj";
-     expr_id "met2";
-     expr_lambda []
-     (expr_app (expr_id "%TypeError")
-      [expr_string "valueOf and toString both absent in DefaultValue"])]]) 
-  []))
+expr_app (expr_id "%DefaultValueDefaultSub")
+[expr_id "obj";
+ expr_app (expr_id "%HintMethod") [expr_id "hint"];
+ expr_lambda []
+ (expr_app (expr_id "%DefaultValueDefaultSub")
+  [expr_id "obj";
+   expr_app (expr_id "%OtherHintMethod") [expr_id "hint"];
+   expr_lambda []
+   (expr_app (expr_id "%TypeError")
+    [expr_string "valueOf and toString both absent in DefaultValue"])])]
 .
 Definition ex_privDefaultValueDefaultSub := 
-expr_lambda []
-(expr_let "f" (expr_app (expr_id "%Get1") [expr_id "obj"; expr_id "str"])
- (expr_if (expr_app (expr_id "%IsCallable") [expr_id "f"])
-  (expr_let "res"
-   (expr_app (expr_id "%AppExpr")
-    [expr_id "f"; expr_id "obj"; expr_app (expr_id "%zeroArgObj") []])
-   (expr_if (expr_op1 unary_op_is_primitive (expr_id "res")) (expr_id "res")
-    (expr_app (expr_id "next") []))) (expr_app (expr_id "next") [])))
+expr_let "f" (expr_app (expr_id "%Get1") [expr_id "obj"; expr_id "str"])
+(expr_if (expr_app (expr_id "%IsCallable") [expr_id "f"])
+ (expr_let "res"
+  (expr_app (expr_id "%AppExpr")
+   [expr_id "f"; expr_id "obj"; expr_app (expr_id "%zeroArgObj") []])
+  (expr_if (expr_op1 unary_op_is_primitive (expr_id "res")) (expr_id "res")
+   (expr_app (expr_id "next") []))) (expr_app (expr_id "next") []))
 .
 Definition ex_privDelete := 
 expr_if (expr_op2 binary_op_has_internal (expr_id "obj") (expr_string "del"))
@@ -3310,6 +3306,10 @@ expr_app (expr_id "%GetProperty")
  expr_lambda ["g"; "s"; "e"; "c"] expr_true;
  expr_lambda [] expr_false]
 .
+Definition ex_privHintMethod := 
+expr_if (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string"))
+(expr_string "toString") (expr_string "valueOf")
+.
 Definition ex_privInLeapYear := 
 expr_if
 (expr_op2 binary_op_stx_eq
@@ -3794,6 +3794,10 @@ expr_if (expr_op1 unary_op_is_object (expr_id "o")) expr_empty
  [expr_op2 binary_op_string_plus
   (expr_op1 unary_op_prim_to_str (expr_id "o"))
   (expr_string " is not an object")])
+.
+Definition ex_privOtherHintMethod := 
+expr_if (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string"))
+(expr_string "valueOf") (expr_string "toString")
 .
 Definition ex_privPrepostOp := 
 expr_lambda ["v"; "fld"; "strict"]
@@ -8600,10 +8604,20 @@ value_closure
  ex_privDefaultValueDefaultSub)
 .
 Definition name_privDefaultValueDefaultSub : id :=  "%DefaultValueDefaultSub" .
+Definition privHintMethod := 
+value_closure (closure_intro [] None ["hint"] ex_privHintMethod)
+.
+Definition name_privHintMethod : id :=  "%HintMethod" .
+Definition privOtherHintMethod := 
+value_closure (closure_intro [] None ["hint"] ex_privOtherHintMethod)
+.
+Definition name_privOtherHintMethod : id :=  "%OtherHintMethod" .
 Definition privDefaultValueDefault := 
 value_closure
 (closure_intro
  [("%DefaultValueDefaultSub", privDefaultValueDefaultSub);
+  ("%HintMethod", privHintMethod);
+  ("%OtherHintMethod", privOtherHintMethod);
   ("%TypeError", privTypeError)] None ["obj"; "hint"]
  ex_privDefaultValueDefault)
 .
@@ -11454,6 +11468,7 @@ Definition ctx_items :=
  (name_privGetProperty, privGetProperty);
  (name_privGtOp, privGtOp);
  (name_privHasProperty, privHasProperty);
+ (name_privHintMethod, privHintMethod);
  (name_privInLeapYear, privInLeapYear);
  (name_privIsCallable, privIsCallable);
  (name_privIsFinite, privIsFinite);
@@ -11494,6 +11509,7 @@ Definition ctx_items :=
  (name_privObjectGlobalFuncObj, privObjectGlobalFuncObj);
  (name_privObjectProto, privObjectProto);
  (name_privObjectTypeCheck, privObjectTypeCheck);
+ (name_privOtherHintMethod, privOtherHintMethod);
  (name_privPrepostOp, privPrepostOp);
  (name_privPrimAdd, privPrimAdd);
  (name_privPrimComma, privPrimComma);
@@ -11941,6 +11957,7 @@ privGetPrim
 privGetProperty
 privGtOp
 privHasProperty
+privHintMethod
 privInLeapYear
 privIsCallable
 privIsFinite
@@ -11981,6 +11998,7 @@ privObjectConstructor
 privObjectGlobalFuncObj
 privObjectProto
 privObjectTypeCheck
+privOtherHintMethod
 privPrepostOp
 privPrimAdd
 privPrimComma
@@ -12438,6 +12456,7 @@ Definition store_items := [
                                          ("%GetProperty", privGetProperty);
                                          ("%GtOp", privGtOp);
                                          ("%HasProperty", privHasProperty);
+                                         ("%HintMethod", privHintMethod);
                                          ("%InLeapYear", privInLeapYear);
                                          ("%IsCallable", privIsCallable);
                                          ("%IsFinite", privIsFinite);
@@ -12478,6 +12497,7 @@ Definition store_items := [
                                          ("%ObjectGlobalFuncObj", privObjectGlobalFuncObj);
                                          ("%ObjectProto", privObjectProto);
                                          ("%ObjectTypeCheck", privObjectTypeCheck);
+                                         ("%OtherHintMethod", privOtherHintMethod);
                                          ("%PrepostOp", privPrepostOp);
                                          ("%PrimAdd", privPrimAdd);
                                          ("%PrimComma", privPrimComma);

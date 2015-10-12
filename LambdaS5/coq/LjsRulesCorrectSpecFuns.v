@@ -4681,7 +4681,282 @@ Ltac js_post_to_primitive :=
 
 Definition js_value_is_prim jv := exists jp, jv = J.value_prim jp.
 
+Hint Extern 2 (js_value_is_prim _) => unfolds : js_ljs.
+
+Lemma code_not_is_callable_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    binds st ptr obj ->
+    fact_js_obj jptr ptr \in BR ->
+    L.object_code obj = L.value_undefined ->
+    ~J.is_callable jst (J.value_object jptr).
+Proof.
+    introv Hinv Hbinds Hbs Heq.
+    introv (?x&Hj).
+    destruct Hj as (jobj&Hjbinds&Hj).
+    rew_heap_to_libbag in Hjbinds.
+    lets Horel : heaps_bisim_consistent_bisim_obj (state_invariant_heaps_bisim_consistent Hinv) Hbs Hjbinds Hbinds.
+    clear Hinv. clear Hbs. clear Hbinds. clear Hjbinds.
+    lets Hcrel : object_prim_related_call (object_related_prim Horel).
+    destruct obj. destruct object_attrs. unfolds L.object_code. simpl in Heq. subst_hyp Heq.
+    inverts Hcrel as Hc. inverts Hc as Hc. inverts Hc. (* TODO *)
+    rewrite Hj in Hc. solve [tryfalse].
+Qed.
+
+Lemma code_is_callable_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    binds st ptr obj ->
+    fact_js_obj jptr ptr \in BR ->
+    L.object_code obj <> L.value_undefined ->
+    J.is_callable jst (J.value_object jptr).
+Proof.
+    introv Hinv Hbinds Hbs Heq.
+    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hbs Hbinds.
+    clear Hinv. clear Hbs. clear Hbinds.
+    lets Hcrel : object_prim_related_call (object_related_prim Horel).
+    inverts Hcrel as Hc Hx; tryfalse.
+    symmetry in Hx.
+    eexists. eexists. jauto_js.
+Qed.
+
+Lemma typeof_lemma : forall BR k c jst st st' jv v r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privTypeof [v]) (L.out_ter st' r) ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    state_invariant BR jst st' /\
+    st' = st /\
+    r = L.res_value (L.value_string (J.typeof_value jst jv)).
+Proof.
+    introv Hlred Hinv Hvrel.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    cases_decide as Hc1; repeat ljs_autoforward. {
+        inverts Hvrel; inverts Hc1.
+        cases_decide as Hcode; repeat ljs_autoforward.
+        inverts Hcode. {
+            lets Hnc : code_not_is_callable_lemma Hinv ___. eassumption. eassumption. auto.
+            unfolds J.typeof_value. cases_if.
+            jauto_js.
+        } {
+            lets Hc : code_is_callable_lemma Hinv ___. eassumption. eassumption. {
+                intro Heq. apply Hcode. unfold L.object_code in Heq. rewrite Heq. eauto_js.
+            }
+            unfolds J.typeof_value. cases_if.
+            jauto_js.
+        }
+    }
+    cases_decide as Hc2; repeat ljs_autoforward. {
+        inverts Hvrel; inverts Hc2.
+        jauto_js.
+    }
+    cases_decide as Hc3; repeat ljs_autoforward. {
+        inverts Hvrel; inverts Hc3.
+        jauto_js.
+    }
+    cases_decide as Hc4; repeat ljs_autoforward. {
+        inverts Hvrel; inverts Hc4.
+        jauto_js.
+    }
+    cases_decide as Hc5; repeat ljs_autoforward. {
+        inverts Hvrel; inverts Hc5.
+        jauto_js.
+    }
+    cases_decide as Hc6; repeat ljs_autoforward. {
+        inverts Hvrel; inverts Hc6.
+        jauto_js.
+    }
+    inverts Hvrel; false; eauto_js.
+Qed.
+
+Lemma is_callable_lemma : forall BR k c st st' r jst jv v,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privIsCallable [v]) (L.out_ter st' r) ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    state_invariant BR jst st' /\
+    st = st' /\
+    r = L.res_value (L.value_bool (isTrue (J.is_callable jst jv))).
+Proof.
+    introv Hlred Hinv Hvrel.
+    inverts red_exprh Hlred.
+    ljs_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : typeof_lemma.
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    splits; auto.
+    cases_decide as Hdec; do 2 apply func_eq_1; fold_bool; rew_reflect. {
+        inverts Hdec as Hdec.
+        inverts Hvrel; tryfalse. simpl in Hdec.
+        cases_if. assumption.
+    } {
+        introv Hic.
+        lets (?&Hc) : Hic.
+        inverts Hvrel; tryfalse. apply Hdec.
+        simpl. cases_if. eauto_js.
+    }
+Qed.
+
+Lemma is_callable_obj : forall jst jv,
+    J.is_callable jst jv ->
+    exists jptr, jv = J.value_object jptr.
+Proof.
+    introv (?&Hic).
+    destruct jv; tryfalse. eauto.
+Qed.
+
+Lemma is_callable_obj_lemma : forall BR jst jv v,
+    J.is_callable jst jv ->
+    value_related BR jv v ->
+    exists jptr ptr,
+    jv = J.value_object jptr /\ v = L.value_object ptr /\ fact_js_obj jptr ptr \in BR.
+Proof.
+    introv Hcallable Hvrel.
+    lets Ha : is_callable_obj Hcallable. destruct_hyp Ha. inverts Hvrel.
+    jauto_js.
+Qed.
+
+Lemma js_callable_fun : forall BR jst st jv v,
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    exists x, J.callable jst jv x.
+Proof.
+    introv Hinv Hvrel.
+    inverts Hvrel as Hf; try solve [jauto_js].
+    lets Hjbinds : heaps_bisim_consistent_lnoghost_obj (state_invariant_heaps_bisim_consistent Hinv) Hf.
+    rewrite index_binds_eq in Hjbinds. destruct Hjbinds as (?&Hjbinds).
+    eexists.
+    unfolds. unfolds.
+    jauto_js.
+Qed.
+
+Lemma js_not_is_callable_callable : forall BR jst st jv v,
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    ~J.is_callable jst jv ->
+    J.callable jst jv None.
+Proof.
+    introv Hinv Hvrel Hic.
+    lets (x&Hcall) : js_callable_fun Hinv Hvrel.
+    unfolds J.is_callable.
+    rew_logic in Hic.
+    destruct x as [c|].
+    + specializes Hic c. tryfalse.
+    + assumption.
+Qed.
+
+Lemma default_value_default_sub_lemma : forall jee BR k jst jc c st st' r ptr s jptr v,
+    ih_call k ->
+    (forall BR' k jst c st st' r, 
+     ih_call k ->
+     BR \c BR' ->
+     L.red_exprh k c st (L.expr_app_2 v []) (L.out_ter st' r) ->
+     context_invariant BR' jc c ->
+     state_invariant BR' jst st ->
+     concl_ext_expr_value BR' jst jc c st st' r jee js_value_is_prim) ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDefaultValueDefaultSub 
+        [L.value_object ptr; L.value_string s; v]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r
+        (J.spec_object_default_value_sub_1 jptr s jee) js_value_is_prim.
+Proof.
+    introv IHc IHcont Hlred Hcinv Hinv Hf.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th : get_lemma. eassumption.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_only_invert.
+    repeat ljs_autoforward.
+    forwards_th Hx : is_callable_lemma.
+    destruct_hyp Hx.
+    cases_isTrue as Hcallable. { (* is callable *)
+        forwards Ha : is_callable_obj_lemma Hcallable. eassumption. destruct_hyp Ha.
+        destruct Hcallable as (?&Hcallable). (* TODO fix jscert and remove *)
+        repeat ljs_autoforward.
+        forwards_th Ha : zero_arg_obj_lemma.
+        destruct_hyp Ha.
+        repeat ljs_autoforward.
+        apply_ih_call.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        cases_decide as Hprim. { (* is primitive *)
+            forwards Hx : value_related_primitive_lemma Hprim. eassumption. destruct_hyp Hx.
+            repeat ljs_autoforward.
+            jauto_js 20.
+        } { (* not primitive *)
+            forwards Hx : value_related_not_primitive_lemma Hprim. eassumption. destruct_hyp Hx.
+            repeat ljs_autoforward.
+            forwards_th : IHcont. prove_bag.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            jauto_js.
+        }
+    } { (* not callable *)
+        forwards Hx : js_not_is_callable_callable; try eassumption.
+        repeat ljs_autoforward.
+        forwards_th : IHcont. prove_bag.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        jauto_js.
+    } 
+Qed.
+ 
+Lemma hint_method_lemma : forall k c st st' s r jpref,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privHintMethod [L.value_string s]) (L.out_ter st' r) ->
+    preftype_name jpref s ->
+    st' = st /\
+    r = L.res_value (L.value_string (J.method_of_preftype jpref)).
+Proof.
+    introv Hlred Hpn.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Hstx; rewrite stx_eq_string_eq_lemma in Hstx. {
+        subst_hyp Hstx.
+        inverts Hpn.
+        repeat ljs_autoforward.
+        jauto_js.
+    } {
+        inverts Hpn; tryfalse.
+        repeat ljs_autoforward.        
+        jauto_js.
+    }
+Qed.
+
+Lemma other_hint_method_lemma : forall k c st st' s r jpref,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privOtherHintMethod [L.value_string s]) (L.out_ter st' r) ->
+    preftype_name jpref s ->
+    st' = st /\
+    r = L.res_value (L.value_string (J.method_of_preftype (J.other_preftypes jpref))).
+Proof.
+    introv Hlred Hpn.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Hstx; rewrite stx_eq_string_eq_lemma in Hstx. {
+        subst_hyp Hstx.
+        inverts Hpn.
+        repeat ljs_autoforward.
+        jauto_js.
+    } {
+        inverts Hpn; tryfalse.
+        repeat ljs_autoforward.        
+        jauto_js.
+    }
+Qed.
+
+Lemma option_preftype_name_to_preftype_name_lemma : forall jprefo s,
+    option_preftype_name jprefo s ->
+    preftype_name (unsome_default J.preftype_number jprefo) s.
+Proof.
+    introv Hopn.
+    inverts Hopn; simpl; first [constructor | assumption].
+Qed.
+
 Lemma default_value_default_lemma : forall BR k jst jc c st st' r ptr s jptr jprefo,
+    ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDefaultValueDefault 
         [L.value_object ptr; L.value_string s]) (L.out_ter st' r) ->
     context_invariant BR jc c ->
@@ -4691,7 +4966,38 @@ Lemma default_value_default_lemma : forall BR k jst jc c st st' r ptr s jptr jpr
     concl_ext_expr_value BR jst jc c st st' r
         (J.spec_object_default_value_1 J.builtin_default_value_default jptr jprefo) js_value_is_prim.
 Proof.
-Admitted. 
+    introv IHc Hlred Hcinv Hinv Hf Hopn.
+    lets Hpn : option_preftype_name_to_preftype_name_lemma Hopn.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : hint_method_lemma. eassumption.
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th : (default_value_default_sub_lemma (jee:=J.spec_object_default_value_3 jptr 
+            (J.other_preftypes (unsome_default J.preftype_number jprefo)))); try eassumption. {
+        clear Hinv Hcinv H7. (* TODO *)
+        introv IHc' Hbsub Hlred' Hcinv' Hinv'.
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        forwards_th Hx : other_hint_method_lemma. eassumption.
+        destruct_hyp Hx.
+        repeat ljs_autoforward.
+        forwards_th : (default_value_default_sub_lemma (jee:=J.spec_object_default_value_4)); try prove_bag. {
+            clear Hinv' Hcinv' H10. (* TODO *)
+            introv IHc'' Hbsub' Hlred'' Hcinv'' Hinv''.
+            ljs_invert_apply.
+            repeat ljs_autoforward.
+            forwards_th : type_error_lemma. eauto_js.
+            destr_concl; try ljs_handle_abort. tryfalse.
+        }
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        jauto_js.
+    }
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    jauto_js.
+Qed.
 
 (* TODO move *)
 Lemma object_method_default_value_default_lemma : forall BR jst st jptr ptr obj,
@@ -4728,6 +5034,7 @@ Proof.
 Qed.
 
 Lemma default_value_lemma : forall BR k jst jc c st st' r ptr s jptr jprefo,
+    ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDefaultValue
         [L.value_object ptr; L.value_string s]) (L.out_ter st' r) ->
     context_invariant BR jc c ->
@@ -4737,7 +5044,7 @@ Lemma default_value_lemma : forall BR k jst jc c st st' r ptr s jptr jprefo,
     concl_ext_expr_value BR jst jc c st st' r
         (J.spec_object_default_value jptr jprefo) js_value_is_prim.
 Proof.
-    introv Hlred Hcinv Hinv Hf Hopn.
+    introv IHc Hlred Hcinv Hinv Hf Hopn.
     ljs_invert_apply.
     repeat ljs_autoforward.
     cases_decide as Hidx. { (* exotic *)
@@ -4753,6 +5060,7 @@ Proof.
 Qed.
 
 Lemma red_spec_to_primitive_ok : forall BR k jst jc c st st' jv v jprefo r s,
+    ih_call k ->
     L.red_exprh k c st
         (L.expr_app_2 LjsInitEnv.privToPrimitiveHint [v; L.value_string s])
         (L.out_ter st' r) ->
@@ -4762,7 +5070,7 @@ Lemma red_spec_to_primitive_ok : forall BR k jst jc c st st' jv v jprefo r s,
     option_preftype_name jprefo s ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_to_primitive jv jprefo) (post_to_primitive jv).
 Proof.
-    introv Hlred Hcinv Hinv Hvrel Hopn.
+    introv IHc Hlred Hcinv Hinv Hvrel Hopn.
     ljs_invert_apply.
     repeat ljs_autoforward.
     cases_decide as Hisobj. { (* is object *)
@@ -4787,6 +5095,7 @@ Proof.
 Qed.
 
 Lemma red_spec_to_primitive_ok_default : forall BR k jst jc c st st' jv v r,
+    ih_call k ->
     L.red_exprh k c st
         (L.expr_app_2 LjsInitEnv.privToPrimitive [v])
         (L.out_ter st' r) ->
@@ -4795,7 +5104,7 @@ Lemma red_spec_to_primitive_ok_default : forall BR k jst jc c st st' jv v r,
     value_related BR jv v ->
     concl_ext_expr_value BR jst jc c st st' r (J.spec_to_primitive jv None) (post_to_primitive jv).
 Proof.
-    introv Hlred Hcinv Hinv Hvrel.
+    introv IHc Hlred Hcinv Hinv Hvrel.
     inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply.
@@ -4849,10 +5158,11 @@ Proof.
 Qed.
 
 Lemma red_spec_to_number_unary_ok : forall k,
+    ih_call k ->
     th_ext_expr_unary k LjsInitEnv.privToNumber J.spec_to_number
         (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
 Proof.
-    introv Hcinv Hinv Hvrel Hlred.
+    introv IHc Hcinv Hinv Hvrel Hlred.
     inverts red_exprh Hlred; tryfalse.
     ljs_apply.
     ljs_context_invariant_after_apply.
@@ -4888,10 +5198,11 @@ Proof.
 Qed.
 
 Lemma red_spec_to_string_unary_ok : forall k,
+    ih_call k ->
     th_ext_expr_unary k LjsInitEnv.privToString J.spec_to_string
         (fun jv => exists n, jv = J.value_prim (J.prim_string n)).
 Proof.
-    introv Hcinv Hinv Hvrel Hlred.
+    introv IHc Hcinv Hinv Hvrel Hlred.
     inverts red_exprh Hlred; tryfalse.
     ljs_apply.
     ljs_context_invariant_after_apply.
