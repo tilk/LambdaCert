@@ -443,6 +443,9 @@ Class Fresh_index_eq `{BagIndex T A} `{BagFresh A T} :=
 Class Fresh_index `{BagIndex T A} `{BagFresh A T} :=
     { fresh_index : forall M, ~index M (fresh M) }.
 
+Class Fresh_update `{BagUpdate A B T} `{BagFresh A T} :=
+    { fresh_update : forall (M:T) (k:A) (v:B), k <> fresh (M \(k := v)) }.
+
 (* incl *)
 Class Incl_binds_eq `{BagIncl T} `{BagBinds A B T} :=
     { incl_binds_eq : forall M1 M2, M1 \c M2 = (forall k x, binds M1 k x -> binds M2 k x) }.
@@ -458,6 +461,9 @@ Class Incl_index `{BagIncl T} `{BagIndex T A} :=
 
 Class Update_nindex_incl `{BagIncl T} `{BagUpdate A B T} `{BagIndex T A} :=
     { update_nindex_incl : forall M k x, ~index M k -> M \c M\(k := x) }.
+
+Class Update_commute `{BagUpdate A B T} :=
+    { update_commute : forall M k k' x x', k <> k' -> M \(k' := x') \(k := x) = M \(k := x) \(k' := x') }.
 
 Class Remove_incl `{BagIncl T} `{BagRemove T T1} :=
     { remove_incl : forall M S, M \- S \c M }.
@@ -1166,6 +1172,15 @@ Global Instance fresh_index_from_fresh_index_eq :
     Fresh_index_eq -> Fresh_index.
 Proof. constructor. introv. rewrite fresh_index_eq. auto. Qed.
 
+Global Instance fresh_update_from_fresh_index :
+    forall `{BagUpdate A B T} `{BagFresh A T} `{BagIndex T A},
+    Index_update_same -> Fresh_index -> Fresh_update.
+Proof.
+    constructor. intros. introv Hdiff.
+    apply (fresh_index (M \(k:=v))).
+    rewrite <- Hdiff. apply index_update_same.
+Qed.
+
 Section InclBinds.
 Context `{BagIncl T} `{BagBinds A B T}.
 
@@ -1467,6 +1482,14 @@ Proof.
     right. split.
     intro. substs. jauto.
     auto. 
+Qed.
+
+Global Instance update_commute_inst :
+    forall `{BagBinds A B T} `{BagUpdate A B T},
+    Binds_double -> Binds_update_eq -> Update_commute.
+Proof.
+    constructor. intros. apply binds_double. intros.
+    rew_binds_eq. split; intro Ha; destruct_hyp Ha; iauto.
 Qed.
 
 Global Instance remove_incl_inst :

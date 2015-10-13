@@ -1828,6 +1828,72 @@ Proof.
     destruct_hyp Hex. jauto_js.
 Qed.
 
+Lemma object_method_default_value_default_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    ~index (L.object_internal obj) "defval" ->
+    J.object_method J.object_default_value_ jst jptr J.builtin_default_value_default.
+Proof.
+    introv Hinv Hf Hbinds Hidx.
+    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hbrel : object_prim_related_builtin_default_value (object_related_prim Horel).
+    erewrite read_option_not_index_inv in Hbrel by eassumption.
+    applys object_method_builtin_default_lemma; eassumption.
+Qed.
+
+Lemma object_method_default_value_exotic_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    index (L.object_internal obj) "defval" ->
+    exists jx x,
+    exotic_default_value_related jx x /\
+    binds (L.object_internal obj) "defval" x /\
+    J.object_method J.object_default_value_ jst jptr jx.
+Proof.
+    introv Hinv Hf Hbinds Hidx.
+    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hbrel : object_prim_related_builtin_default_value (object_related_prim Horel).
+    rewrite index_binds_eq in Hidx. destruct_hyp Hidx.
+    erewrite read_option_binds_inv in Hbrel by eassumption.
+    forwards Hex : object_method_builtin_exotic_lemma; try eassumption.
+    destruct_hyp Hex. jauto_js.
+Qed.
+
+Lemma object_method_delete_default_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    ~index (L.object_internal obj) "del" ->
+    J.object_method J.object_delete_ jst jptr J.builtin_delete_default.
+Proof.
+    introv Hinv Hf Hbinds Hidx.
+    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hbrel : object_prim_related_builtin_delete (object_related_prim Horel).
+    erewrite read_option_not_index_inv in Hbrel by eassumption.
+    applys object_method_builtin_default_lemma; eassumption.
+Qed.
+
+Lemma object_method_delete_exotic_lemma : forall BR jst st jptr ptr obj,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    index (L.object_internal obj) "del" ->
+    exists jx x,
+    exotic_delete_related jx x /\
+    binds (L.object_internal obj) "del" x /\
+    J.object_method J.object_delete_ jst jptr jx.
+Proof.
+    introv Hinv Hf Hbinds Hidx.
+    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
+    lets Hbrel : object_prim_related_builtin_delete (object_related_prim Horel).
+    rewrite index_binds_eq in Hidx. destruct_hyp Hidx.
+    erewrite read_option_binds_inv in Hbrel by eassumption.
+    forwards Hex : object_method_builtin_exotic_lemma; try eassumption.
+    destruct_hyp Hex. jauto_js.
+Qed.
+
 (** *** ToObject *)
 
 Ltac invert_stx_eq :=
@@ -2733,7 +2799,7 @@ Proof.
     apply read_option_binds in Ha. assumption.
 Qed.
 
-Lemma delete_lemma : forall BR k jst jc c st st' r jptr ptr s b,
+Lemma delete_default_lemma : forall BR k jst jc c st st' r jptr ptr s b,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDeleteDefault 
         [L.value_object ptr; L.value_string s; L.value_bool b]) (L.out_ter st' r) ->
     context_invariant BR jc c ->
@@ -2786,6 +2852,30 @@ Proof.
         }
     } { (* field not found *)
         repeat ljs_autoforward.
+        jauto_js.
+    }
+Qed.
+
+Lemma delete_lemma : forall BR k jst jc c st st' r jptr ptr s b,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privDelete
+        [L.value_object ptr; L.value_string s; L.value_bool b]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_delete jptr s b)
+        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
+Proof.
+    introv Hlred Hcinv Hinv Hf.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Hidx. { (* exotic *)
+        skip. (* TODO *)
+    } { (* default *)
+        repeat ljs_autoforward.
+        forwards : object_method_delete_default_lemma; try eassumption.
+        forwards_th : delete_default_lemma; try eassumption.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
         jauto_js.
     }
 Qed.
@@ -4483,6 +4573,97 @@ Proof.
     }
 Qed.
 
+Definition thrower_attributes := L.attributes_accessor_of (L.attributes_accessor_intro 
+    LjsInitEnv.privThrowTypeError LjsInitEnv.privThrowTypeError false false).
+
+Definition ljs_function_object body len codetxt strict proto : L.object := {|
+    L.object_attrs := {|
+        L.oattrs_proto := LjsInitEnv.privFunctionProto;
+        L.oattrs_class := "Function";
+        L.oattrs_extensible := true;
+        L.oattrs_code := LjsInitEnv.privDefaultCall
+    |};
+    L.object_properties := let baseprop := \{}
+        \("length" := L.attributes_data_of (L.attributes_data_intro (L.value_number len) false false false))
+        \("prototype" := L.attributes_data_of (L.attributes_data_intro (L.value_object proto) true false false))
+        in if strict then baseprop
+        \("caller" := thrower_attributes)
+        \("arguments" := thrower_attributes) else baseprop;
+    L.object_internal := \{} 
+        \("construct" := LjsInitEnv.privDefaultConstruct)
+        \("usercode" := L.value_closure body)
+        \("codetxt" := L.value_string codetxt)
+        \("strict" := L.value_bool strict)
+        \("get" := LjsInitEnv.privGetFunction)
+|}.
+
+Definition ljs_function_proto fobj : L.object := {|
+    L.object_attrs := {|
+        L.oattrs_proto := LjsInitEnv.privObjectProto;
+        L.oattrs_class := "Object";
+        L.oattrs_extensible := true;
+        L.oattrs_code := L.value_undefined
+    |};
+    L.object_properties := \{}
+        \("constructor" := L.attributes_data_of (L.attributes_data_intro (L.value_object fobj) true false true));
+    L.object_internal := \{}
+|}.
+
+Lemma red_spec_creating_function_object_abstract_ok : forall k c st st' r cl n s b,
+    L.red_exprh k c st
+        (L.expr_app_2 LjsInitEnv.privMakeFunctionObject 
+            [L.value_closure cl; L.value_number n; L.value_string s; 
+             L.value_bool b])
+        (L.out_ter st' r) ->
+    exists ptr1 ptr2,
+    r = L.res_value (L.value_object ptr1) /\
+    ~index st ptr1 /\ ~index st ptr2 /\ ptr1 <> ptr2 /\
+    st' = st \(ptr1 := ljs_function_object cl n s b ptr2) \(ptr2 := ljs_function_proto ptr1).
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    sets_eq ptr1 : (fresh st).
+    match goal with Hc : context [fresh (st\(ptr1:=?obj))] |- _ => 
+        sets_eq obj1 : obj;
+        sets_eq ptr2 : (fresh (st \(ptr1:=obj1))) end.
+    asserts Hnidx1 : (~index st ptr1). {
+        subst ptr1. prove_bag.
+    }
+    asserts Hdiffptr : (ptr1 <> ptr2). {
+        subst ptr2.
+        eapply fresh_update.
+    }
+    asserts Hnidx2 : (~index st ptr2). {
+        eapply contrapose_intro; [idtac | eapply fresh_index].
+        subst ptr2.
+        eapply incl_index.
+        prove_bag. (* TODO: generalized fresh_index with inclusion *)
+    }
+    clear EQptr1. clear EQptr2. subst obj1.
+    forwards_th Hx : add_data_field_lemma. prove_bag.
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    destruct b. { (* strict *)
+        repeat ljs_autoforward.
+        forwards_th Hx : add_accessor_field_lemma. prove_bag.
+        destruct_hyp Hx.
+        repeat ljs_autoforward.
+        forwards_th Hx : add_accessor_field_lemma. prove_bag.
+        destruct_hyp Hx.
+        repeat ljs_autoforward.
+        do 2 eexists; splits; try reflexivity; try eassumption.
+        rew_bag_simpl.
+        rewrite update_commute by eassumption. rew_bag_simpl.
+        reflexivity. 
+    } { (* not strict *)
+        repeat ljs_autoforward.
+        do 2 eexists; splits; try reflexivity; try eassumption.
+        rewrite update_commute by eassumption. rew_bag_simpl.
+        reflexivity.
+    }
+Qed.
+
 (* TODO move *)
 Lemma red_spec_creating_function_object_ok : forall BR k jst jc c' c st st' r is s jp jle,
     L.red_exprh k c st
@@ -4997,40 +5178,6 @@ Proof.
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     jauto_js.
-Qed.
-
-(* TODO move *)
-Lemma object_method_default_value_default_lemma : forall BR jst st jptr ptr obj,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    binds st ptr obj ->
-    ~index (L.object_internal obj) "defval" ->
-    J.object_method J.object_default_value_ jst jptr J.builtin_default_value_default.
-Proof.
-    introv Hinv Hf Hbinds Hidx.
-    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
-    lets Hbrel : object_prim_related_builtin_default_value (object_related_prim Horel).
-    erewrite read_option_not_index_inv in Hbrel by eassumption.
-    applys object_method_builtin_default_lemma; eassumption.
-Qed.
-
-Lemma object_method_default_value_exotic_lemma : forall BR jst st jptr ptr obj,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    binds st ptr obj ->
-    index (L.object_internal obj) "defval" ->
-    exists jx x,
-    exotic_default_value_related jx x /\
-    binds (L.object_internal obj) "defval" x /\
-    J.object_method J.object_default_value_ jst jptr jx.
-Proof.
-    introv Hinv Hf Hbinds Hidx.
-    lets (jobj&Hjbinds&Horel) : state_invariant_bisim_obj_lemma Hinv Hf Hbinds.
-    lets Hbrel : object_prim_related_builtin_default_value (object_related_prim Horel).
-    rewrite index_binds_eq in Hidx. destruct_hyp Hidx.
-    erewrite read_option_binds_inv in Hbrel by eassumption.
-    forwards Hex : object_method_builtin_exotic_lemma; try eassumption.
-    destruct_hyp Hex. jauto_js.
 Qed.
 
 Lemma default_value_lemma : forall BR k jst jc c st st' r ptr s jptr jprefo,

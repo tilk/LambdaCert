@@ -366,6 +366,7 @@ Qed.
 Hint Resolve ref_is_property_object_coercible_hint : js_ljs.
 
 Lemma field_access_lemma : forall BR k jst jc c st st' r je ee1 ee2 s0,
+    ih_call k ->
     ih_expr k ->
     L.red_exprh k c st (L.expr_basic (E.make_app_builtin "%PropertyAccess" 
         [L.expr_id s0; E.ejs_to_ljs ee1; E.ejs_to_ljs ee2; L.expr_id "$strict"])) (L.out_ter st' r) ->
@@ -389,7 +390,7 @@ Lemma field_access_lemma : forall BR k jst jc c st st' r je ee1 ee2 s0,
       state_invariant BR' jst'' st' /\
       res_related BR' jst'' st' jr r /\ BR \c BR').
 Proof.
-    introv IHe Hlred Hcinv Hinv Hfa.
+    introv IHc IHe Hlred Hcinv Hinv Hfa.
         inverts Hfa. { (* access *)
             repeat ljs_autoforward.
             destr_concl; try ljs_handle_abort.
@@ -619,7 +620,7 @@ Proof.
         cases_isTrue as Hic. { (* is callable *)
             repeat ljs_autoforward.
             lets (jptr&Heqc) : is_callable_obj Hic. subst_hyp Heqc.
-            inverts H14. (* TODO *) (* inverting value_related *)
+            inverts H12. (* TODO *) (* inverting value_related *)
             asserts Hseval : (!J.is_syntactic_eval je). {
                 rew_refl. inverts Heq; eauto_js.
             }
@@ -658,7 +659,7 @@ Proof.
         ljs_bool_red_exprh; repeat determine_epsilon.
         cases_isTrue as Hevcond. { (* eval *)
             destruct Hevcond as (Hevcond1&Hevcond2).
-            specializes H33 Hevcond1. destruct_hyp H33. repeat determine_epsilon. (* TODO better! *)
+            specializes H32 Hevcond1. destruct_hyp H32. repeat determine_epsilon. (* TODO better! *)
             repeat ljs_autoforward.
             skip. (* TODO prove eval *)
         } 
@@ -688,7 +689,7 @@ Proof.
                     left.
                     rew_logic in Hevcond.
                     destruct Hevcond as (Hevcond1&Hevcond2).
-                    specializes H33 Hevcond1. destruct_hyp H33. repeat determine_epsilon. (* TODO *)
+                    specializes H32 Hevcond1. destruct_hyp H32. repeat determine_epsilon. (* TODO *)
                     repeat binds_inv.
                     introv Heqeval. subst_hyp Heqeval.
                     apply Hevcond2.
@@ -987,11 +988,12 @@ Proof.
 Qed.
 
 Lemma red_expr_unary_op_2_add_ok : forall k,
+    ih_call k ->
     ih_expr k ->
     th_ext_expr_unary k LjsInitEnv.privUnaryPlus (J.expr_unary_op_2 J.unary_op_add)
         (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
 Proof.
-    introv IHe Hcinv Hinv Hvrel Hlred.
+    introv IHc IHe Hcinv Hinv Hvrel Hlred.
     inverts Hlred. 
     ljs_apply.
     ljs_context_invariant_after_apply. 
@@ -1005,10 +1007,11 @@ Proof.
 Qed.
 
 Lemma red_expr_unary_op_add_ok : forall k je,
+    ih_call k ->
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_add je).
 Proof.
-    introv IHe Hcinv Hinv Hlred.
+    introv IHk IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
@@ -1020,11 +1023,12 @@ Proof.
 Qed.
 
 Lemma red_expr_unary_op_2_neg_ok : forall k,
+    ih_call k ->
     ih_expr k ->
     th_ext_expr_unary k LjsInitEnv.privUnaryNeg (J.expr_unary_op_2 J.unary_op_neg)
         (fun jv => exists n, jv = J.value_prim (J.prim_number n)).
 Proof.
-    introv IHe Hcinv Hinv Hvrel Hlred.
+    introv IHk IHe Hcinv Hinv Hvrel Hlred.
     inverts Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply. 
@@ -1038,10 +1042,11 @@ Proof.
 Qed.
 
 Lemma red_expr_unary_op_neg_ok : forall k je,
+    ih_call k ->
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_neg je).
 Proof.
-    introv IHe Hcinv Hinv Hlred.
+    introv IHk IHe Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat inv_fwd_ljs.
@@ -1188,19 +1193,12 @@ Proof.
     destruct jmut; tryfalse; try reflexivity.
 Qed.
 
-(* TODO move *)
-Lemma object_method_delete_lemma : forall BR jst st jptr ptr,
-    state_invariant BR jst st ->
-    fact_js_obj jptr ptr \in BR ->
-    J.object_method J.object_delete_ jst jptr J.builtin_delete_default.
-Proof.
-Admitted. (* TODO: ignoring exotic objects for now *)
-
 Lemma red_expr_unary_op_delete_ok : forall k je,
+    ih_call k ->
     ih_expr k ->
     th_expr k (J.expr_unary_op J.unary_op_delete je).
 Proof.
-    introv IHe Hcinv Hinv Hlred.
+    introv IHk IHe Hcinv Hinv Hlred.
     unfolds js_expr_to_ljs. simpl in Hlred. unfolds E.make_delete.
     reference_match_cases Hlred Hx Heq Hrp. {
         forwards_th Hx : field_access_lemma. eassumption.
@@ -1213,7 +1211,6 @@ Proof.
         res_related_invert.
         resvalue_related_invert.
         repeat ljs_autoforward.
-        forwards Hdel : object_method_delete_lemma; try eassumption.
         forwards_th : delete_lemma. prove_bag.
         destr_concl; try ljs_handle_abort.
         res_related_invert.
@@ -1271,7 +1268,6 @@ Proof.
             repeat ljs_autoforward.
             cases_decide as Heq1; rewrite stx_eq_string_eq_lemma in Heq1; tryfalse.
             repeat ljs_autoforward.
-            forwards Hdel : object_method_delete_lemma; try eassumption.
             forwards_th : delete_lemma. eassumption.
             destr_concl; try ljs_handle_abort.
             res_related_invert.
@@ -1760,6 +1756,7 @@ Proof.
 Qed.
 
 Lemma red_expr_mult_op_lemma : forall BR k jst jc c st st' r jv1 jv2 v1 v2 s1 s2 op jop F,
+    ih_call k ->
     J.puremath_op jop F ->
     L.num_binary_op op F ->
     binds c s1 v1 ->
@@ -1773,11 +1770,9 @@ Lemma red_expr_mult_op_lemma : forall BR k jst jc c st st' r jv1 jv2 v1 v2 s1 s2
         (L.out_ter st' r) ->
     concl_ext_expr_value BR jst jc c st st' r (J.expr_binary_op_3 jop jv1 jv2) (fun _ => True).
 Proof.
-    introv Hpure Hbop Hbinds1 Hbinds2 Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    introv IHc Hpure Hbop Hbinds1 Hbinds2 Hcinv Hinv Hvrel1 Hvrel2 Hlred.
     repeat ljs_autoforward.
-    inverts red_exprh H7. (* TODO *)
-    ljs_apply.
-    ljs_context_invariant_after_apply. 
+    ljs_invert_apply.
     repeat ljs_autoforward.
     forwards_th : red_spec_to_number_unary_ok.
     destr_concl; try ljs_handle_abort. 
@@ -1789,8 +1784,7 @@ Proof.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    inverts red_exprh H14. (* TODO *)
-    ljs_apply.
+    ljs_invert_apply.
     repeat ljs_autoforward.
     forwards_th Hx : eval_binary_op_num_lemma. eassumption. eassumption. 
     destruct_hyp Hx.
@@ -1803,9 +1797,10 @@ Lemma red_expr_binary_op_3_puremath_ok : forall jop v F,
     J.puremath_op jop F ->
     regular_binary_op_impl jop v ->
     forall k,
+    ih_call k ->
     th_ext_expr_binary k v (J.expr_binary_op_3 jop) (fun jv => True).
 Proof.
-    introv Hpure Hreg Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    introv Hpure Hreg IHc Hcinv Hinv Hvrel1 Hvrel2 Hlred.
     inverts keep Hpure; inverts keep Hreg; inverts red_exprh Hlred;
     ljs_apply; ljs_context_invariant_after_apply;
     lets Hx : red_expr_mult_op_lemma Hvrel1 Hvrel2 __;
@@ -1854,10 +1849,11 @@ Qed.
 Hint Resolve value_related_to_str_append_lemma : js_ljs.
 
 Lemma red_expr_binary_op_3_add_ok : forall k,
+    ih_call k ->
     ih_expr k ->
     th_ext_expr_binary k LjsInitEnv.privPrimAdd (J.expr_binary_op_3 J.binary_op_add) (fun jv => True).
 Proof.
-    introv IHe Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    introv IHc IHe Hcinv Hinv Hvrel1 Hvrel2 Hlred.
     repeat ljs_autoforward.
     inverts red_exprh Hlred.
     ljs_apply.
@@ -1975,6 +1971,7 @@ Proof.
 Admitted. (* TODO *)
 
 Lemma red_expr_inequality_op_lemma : forall BR k jst jc c st st' r jv1 jv2 v1 v2 s1 s2 jop b1 b2,
+    ih_call k ->
     J.inequality_op jop b1 b2 ->
     binds c s1 v1 ->
     binds c s2 v2 ->
@@ -1987,7 +1984,7 @@ Lemma red_expr_inequality_op_lemma : forall BR k jst jc c st st' r jv1 jv2 v1 v2
         (L.out_ter st' r) ->
     concl_ext_expr_value BR jst jc c st st' r (J.expr_binary_op_3 jop jv1 jv2) (fun _ => True).
 Proof.
-    introv Hop Hbinds1 Hbinds2 Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    introv IHc Hop Hbinds1 Hbinds2 Hcinv Hinv Hvrel1 Hvrel2 Hlred.
     repeat ljs_autoforward.
     ljs_invert_apply.
     repeat ljs_autoforward.
@@ -2050,9 +2047,10 @@ Lemma red_expr_binary_op_3_inequality_ok : forall jop v b1 b2,
     J.inequality_op jop b1 b2 ->
     regular_binary_op_impl jop v ->
     forall k,
+    ih_call k ->
     th_ext_expr_binary k v (J.expr_binary_op_3 jop) (fun jv => True).
 Proof.
-    introv Hpure Hreg Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    introv Hpure Hreg IHc Hcinv Hinv Hvrel1 Hvrel2 Hlred.
     inverts keep Hpure; inverts keep Hreg; inverts red_exprh Hlred;
     ljs_apply; ljs_context_invariant_after_apply;
     lets Hx : red_expr_inequality_op_lemma Hvrel1 Hvrel2 __;
@@ -2072,10 +2070,11 @@ Proof.
 Qed.
 
 Lemma red_expr_binary_op_3_in_ok : forall k,
+    ih_call k ->
     th_ext_expr_binary k LjsInitEnv.privin (J.expr_binary_op_3 J.binary_op_in)
         (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
-    introv Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    introv IHc Hcinv Hinv Hvrel1 Hvrel2 Hlred.
     inverts red_exprh Hlred.
     ljs_apply.
     ljs_context_invariant_after_apply.
@@ -2122,29 +2121,30 @@ Qed.
 
 Lemma red_expr_binary_op_3_regular_ok : forall k op v,
     ih_expr k ->
+    ih_call k ->
     regular_binary_op_impl op v ->
     th_ext_expr_binary k v (J.expr_binary_op_3 op) (fun jv => True).
 Proof.
-    introv IHe Hrop.
+    introv IHe IHc Hrop.
     inverts keep Hrop.
     applys red_expr_binary_op_3_coma_ok.
-    applys red_expr_binary_op_3_add_ok. eassumption.
-    applys red_expr_binary_op_3_puremath_ok J.puremath_op_sub Hrop.
-    applys red_expr_binary_op_3_puremath_ok J.puremath_op_mult Hrop.
-    applys red_expr_binary_op_3_puremath_ok J.puremath_op_div Hrop.
-    applys red_expr_binary_op_3_puremath_ok J.puremath_op_mod Hrop.
+    applys red_expr_binary_op_3_add_ok; eassumption.
+    applys red_expr_binary_op_3_puremath_ok J.puremath_op_sub Hrop; eassumption.
+    applys red_expr_binary_op_3_puremath_ok J.puremath_op_mult Hrop; eassumption.
+    applys red_expr_binary_op_3_puremath_ok J.puremath_op_div Hrop; eassumption.
+    applys red_expr_binary_op_3_puremath_ok J.puremath_op_mod Hrop; eassumption.
     skip. (* TODO bitwise *)
     skip.
     skip.
     skip. (* TODO shifts *)
     skip.
     skip.
-    applys red_expr_binary_op_3_inequality_ok J.inequality_op_lt Hrop.
-    applys red_expr_binary_op_3_inequality_ok J.inequality_op_le Hrop.
-    applys red_expr_binary_op_3_inequality_ok J.inequality_op_gt Hrop.
-    applys red_expr_binary_op_3_inequality_ok J.inequality_op_ge Hrop.
+    applys red_expr_binary_op_3_inequality_ok J.inequality_op_lt Hrop; eassumption.
+    applys red_expr_binary_op_3_inequality_ok J.inequality_op_le Hrop; eassumption.
+    applys red_expr_binary_op_3_inequality_ok J.inequality_op_gt Hrop; eassumption.
+    applys red_expr_binary_op_3_inequality_ok J.inequality_op_ge Hrop; eassumption.
     skip. (* TODO instanceof *)
-    applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_in_ok.
+    applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_in_ok; eassumption.
     applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_equal_ok.
     applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_strict_equal_ok.
     applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_disequal_ok.
@@ -2161,9 +2161,10 @@ Qed.
 
 Lemma red_expr_binary_op_ok : forall op k je1 je2,
     ih_expr k ->
+    ih_call k ->
     th_expr k (J.expr_binary_op je1 op je2).
 Proof.
-    introv IHe.
+    introv IHe IHc.
     destruct (classic (J.regular_binary_op op)) as [Hreg|Hreg]. { (* regular ops *)
         lets (v&Himpl) : regular_binary_op_get_impl_lemma Hreg.
         applys red_expr_regular_binary_op_ok; try eassumption. 
