@@ -232,6 +232,11 @@ Opaque E.init_bindings_prog.
 
 Hint Constructors J.red_javascript : js_ljs.
 
+Lemma call_lemma : forall k, th_call k.
+Proof.
+    introv. lets Hmain : main_lemma k. iauto.
+Qed.
+
 Lemma javascript_correct_lemma : forall BR k c st st' r jp jp',
     jp' = JsSyntaxInfos.add_infos_prog false jp ->
     L.red_exprh k c st (L.expr_basic (EjsToLjs.add_init (js_prog_to_ljs false jp')))
@@ -245,7 +250,7 @@ Proof.
     simpls.
     repeat ljs_autoforward.
     asserts_rewrite (jels = J.prog_elements (J.prog_intro b jels)) in *. reflexivity.
-    forwards_th : binding_inst_global_lemma. eauto_js 7. prove_bag. prove_bag.
+    forwards_th : binding_inst_global_lemma. intro. intro. applys call_lemma. eauto_js 7. prove_bag. prove_bag.
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     repeat ljs_autoforward.

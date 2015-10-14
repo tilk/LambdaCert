@@ -48,6 +48,7 @@ Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
 
 Lemma binding_inst_formal_params_lemma_lemma : forall BR k jst jc c st st' r is vs jvs1 jvs2 ptr ptr1 jeptr b k',
+    ih_call k ->
     L.red_exprh k c st (L.expr_basic (L.expr_seqs_then L.expr_empty
             (map E.init_arg (zipl_stream (LibStream.map string_of_nat (nat_stream_from k')) is)))) 
         (L.out_ter st' r) ->
@@ -65,7 +66,8 @@ Lemma binding_inst_formal_params_lemma_lemma : forall BR k jst jc c st st' r is 
 Proof.
     introv.
     unfolds E.init_args.
-    inductions is gen BR k jst st jvs1 jvs2;
+    inductions is gen BR k jst st;
+    introv IHc;
     introv Hlred Hcinv Hinv Hvrels Hk' Hbinds1 Hbinds2 Hbinds3 Hf1 Hf2. {
         repeat ljs_autoforward.
         jauto_js 10.
@@ -130,9 +132,7 @@ Proof.
         }
     }
     repeat ljs_autoforward.
-    inverts red_exprh H3. (* TODO *)
-    ljs_apply.
-    ljs_context_invariant_after_apply.
+    ljs_invert_apply.
     repeat ljs_autoforward.
     forwards_th: has_binding_lemma. prove_bag.
     destr_concl; [idtac | destruct_hyp Hjvs2; try ljs_handle_abort].
@@ -170,6 +170,7 @@ Proof.
 Qed.
 
 Lemma binding_inst_formal_params_lemma : forall BR k jst jc c st st' r is vs jvs ptr ptr1 jeptr b,
+    ih_call k ->
     L.red_exprh k c st (L.expr_basic (E.init_args is)) (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
@@ -182,13 +183,14 @@ Lemma binding_inst_formal_params_lemma : forall BR k jst jc c st st' r is vs jvs
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst_formal_params jvs jeptr is b) (fun jrv => jrv = J.resvalue_empty).    
 Proof.
-    introv Hlred Hcinv Hinv Hvrels Hbinds1 Hbinds2 Hbinds3 Hf1 Hf2.
+    introv IHc Hlred Hcinv Hinv Hvrels Hbinds1 Hbinds2 Hbinds3 Hf1 Hf2.
     asserts Hvrels' : (values_related BR ([]++jvs) vs). { rew_app. assumption. }
     forwards_th : binding_inst_formal_params_lemma_lemma; try prove_bag.
     destruct jvs; rew_length; intuition math.
 Qed.
 
 Lemma binding_inst_arg_obj_lemma : forall BR k jst jc c st st' r jptr ptr ptr1 ptr2(*ptr3*)is jvs vs jeptr jlenv v b,
+    ih_call k ->
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privEnvDefineArgsObjOk
         [L.value_object ptr2; L.value_null(*object ptr3*); L.value_object ptr1; L.value_object ptr; L.value_bool b]) 
         (L.out_ter st' r) ->
@@ -205,10 +207,9 @@ Lemma binding_inst_arg_obj_lemma : forall BR k jst jc c st st' r jptr ptr ptr1 p
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst_arg_obj jptr is jvs jeptr b) (fun jrv => jrv = J.resvalue_empty).
 Proof.
+    introv IHc.
     introv Hlred Hcinv Hinv Hvrel Hlrel Hf1 Hf2 Hf3 Hf4 Hvenv.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    ljs_context_invariant_after_apply.
+    ljs_invert_apply.
     repeat ljs_autoforward.
     forwards_th Hx : create_arguments_object_ok; try prove_bag.
     rewrite <- Hvenv in Hx.
@@ -238,6 +239,7 @@ Proof.
 Qed.
 
 Lemma binding_inst_function_decls_lemma : forall BR k jst jc c st st' r jfds jeptr ptr b1 b2,
+    ih_call k ->
     L.red_exprh k c st (L.expr_basic 
         (E.init_funcs b1 E.make_fobj (map E.js_funcdecl_to_func jfds))) (L.out_ter st' r) ->
     context_invariant BR jc c ->
@@ -251,7 +253,7 @@ Proof.
     introv.
     unfolds E.init_funcs.
     inductions jfds gen BR k jst st;
-    introv Hlred Hcinv Hinv Hbinds1 Hbinds2 Hf. {
+    introv IHc Hlred Hcinv Hinv Hbinds1 Hbinds2 Hf. {
         repeat ljs_autoforward.
         jauto_js.
     }
@@ -319,6 +321,7 @@ Proof.
 Qed.
 
 Lemma binding_inst_var_decls_lemma : forall BR k jst jc c st st' r is jeptr ptr b1 b2,
+    ih_call k ->
     L.red_exprh k c st (L.expr_basic (E.init_vars b1 is)) (L.out_ter st' r) ->
     context_invariant BR jc c ->
     state_invariant BR jst st ->
@@ -331,7 +334,7 @@ Proof.
     introv.
     unfolds E.init_vars.
     inductions is gen BR k jst st;
-    introv Hlred Hcinv Hinv Hbinds1 Hbinds2 Hf. {
+    introv IHc Hlred Hcinv Hinv Hbinds1 Hbinds2 Hf. {
         repeat ljs_autoforward.
         jauto_js.
     }
@@ -368,6 +371,7 @@ Qed.
 Opaque E.init_args E.init_vars E.init_funcs.
 
 Lemma binding_inst_global_lemma : forall BR k jst jc c st st' r ptr jp,
+    ih_call k ->
     L.red_exprh k c st (L.expr_basic
           (E.init_bindings_prog false E.make_fobj (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
               (J.prog_vardecl jp))) (L.out_ter st' r) ->
@@ -378,7 +382,7 @@ Lemma binding_inst_global_lemma : forall BR k jst jc c st st' r ptr jp,
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst J.codetype_global None jp []) (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv Hlred Hcinv Hinv Hbinds1 Hbinds2.
+    introv IHc Hlred Hcinv Hinv Hbinds1 Hbinds2.
     asserts_rewrite 
         (concat (List.map E.js_element_to_func (J.prog_elements jp)) = E.prog_funcs (E.js_prog_to_ejs jp)) in Hlred.
     { destruct jp. reflexivity. }
@@ -404,6 +408,7 @@ Proof.
 Qed.
 
 Lemma binding_inst_eval_lemma : forall BR k jst jc c st st' r ptr jp,
+    ih_call k ->
     L.red_exprh k c st (L.expr_basic
           (E.init_bindings_prog true E.make_fobj (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
               (J.prog_vardecl jp))) (L.out_ter st' r) ->
@@ -414,7 +419,7 @@ Lemma binding_inst_eval_lemma : forall BR k jst jc c st st' r ptr jp,
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst J.codetype_eval None jp []) (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv Hlred Hcinv Hinv Hbinds1 Hbinds2.
+    introv IHc Hlred Hcinv Hinv Hbinds1 Hbinds2.
     asserts_rewrite 
         (concat (List.map E.js_element_to_func (J.prog_elements jp)) = E.prog_funcs (E.js_prog_to_ejs jp)) in Hlred.
     { destruct jp. reflexivity. }
@@ -440,6 +445,7 @@ Proof.
 Qed.
 
 Lemma binding_inst_func_lemma : forall BR k jst jc c st st' r ptr ptr1 ptr2 jptr jp jvs vs is,
+    ih_call k ->
     L.red_exprh k c st (L.expr_basic
           (E.init_bindings_func E.make_fobj is (concat (List.map E.js_element_to_func (J.prog_elements jp))) 
               (J.prog_vardecl jp))) (L.out_ter st' r) ->
@@ -456,8 +462,8 @@ Lemma binding_inst_func_lemma : forall BR k jst jc c st st' r ptr ptr1 ptr2 jptr
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst J.codetype_func (Some jptr) jp jvs) (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv Hlred Hcinv Hinv Hvrels Hbinds1 Hbinds2 Hbinds3 Hbinds4.
-    introv Hf1 Hf2 Hom.
+    introv IHc Hlred Hcinv Hinv Hvrels.
+    introv Hbinds1 Hbinds2 Hbinds3 Hbinds4 Hf1 Hf2 Hom.
     asserts_rewrite 
         (concat (List.map E.js_element_to_func (J.prog_elements jp)) = E.prog_funcs (E.js_prog_to_ejs jp)) in Hlred.
     { destruct jp. reflexivity. }
@@ -474,9 +480,7 @@ Proof.
     res_related_invert.
     repeat ljs_autoforward.
     unfolds E.init_args_obj.
-    inverts red_exprh H16. (* TODO *)
-    ljs_apply.
-    ljs_context_invariant_after_apply.
+    ljs_invert_apply.
     repeat ljs_autoforward.
     cases_decide; [idtac | repeat inv_ljs].
     repeat ljs_autoforward.
