@@ -8,8 +8,8 @@ Require Import LjsRulesCorrectCommon.
 Require Import LjsRulesCorrectSpecFuns.
 Require Import LjsRulesCorrectStatements.
 Require Import LjsRulesCorrectExpressions.
-Require Import LjsRulesCorrectCallPrealloc.
 Require Import LjsRulesCorrectCall.
+Require Import LjsRulesCorrectInit.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.

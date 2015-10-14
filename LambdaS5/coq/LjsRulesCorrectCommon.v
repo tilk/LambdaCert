@@ -1012,19 +1012,6 @@ Qed.
 
 Hint Resolve execution_ctx_related_init_ctx : js_ljs.
 
-Lemma init_heaps_bisim_obj_ok : heaps_bisim_obj initBR JsInit.state_initial LjsInitEnv.init_store.
-Proof.
-    introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse. injects.
-    introv Hb1 Hb2.
-    destruct Hx1.
-Admitted. (* TODO *)
-
-Lemma init_heaps_bisim_env_ok : heaps_bisim_env initBR JsInit.state_initial LjsInitEnv.init_store.
-Proof.
-    introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse. injects.
-    introv Hb1 Hb2.
-Admitted. (* TODO *)
-
 Instance prealloc_related_deterministic : forall jpre, Deterministic (prealloc_related jpre).
 Proof.
     constructor. introv Hp1 Hp2. skip. (* inverts Hp1; inverts Hp2; reflexivity. *)
@@ -1038,108 +1025,6 @@ Qed.
 (* TODO to LibRel *)
 Lemma flip_eq : forall A B (P : rel A B) a b, flip P a b = P b a.
 Proof. reflexivity. Qed.
-
-Lemma init_heaps_bisim_lfun_obj_ok : heaps_bisim_lfun_obj initBR.
-Proof.
-    introv Hf1 Hf2. lets H1x : initBR_members Hf1. lets H2x : initBR_members Hf2. 
-    destruct_hyp H1x; destruct_hyp H2x; tryfalse; repeat injects.
-    determine. reflexivity.
-Qed.
-
-Lemma init_heaps_bisim_lfun_env_ok : heaps_bisim_lfun_env initBR.
-Proof.
-    introv Hf1 Hf2. lets H1x : initBR_members Hf1. lets H2x : initBR_members Hf2. 
-    destruct_hyp H1x; destruct_hyp H2x; tryfalse; repeat injects.
-    reflexivity.
-Qed.
-
-Lemma init_heaps_bisim_rfun_ok : heaps_bisim_rfun initBR.
-Proof.
-    introv Hf1 Hf2 Hfp1 Hfp2. lets H1x : initBR_members Hf1. lets H2x : initBR_members Hf2. 
-    destruct_hyp H1x; destruct_hyp H2x; inverts Hfp1; inverts Hfp2; try false_invert.
-    + reflexivity.
-    + rewrite <- flip_eq in H1x1, H2x1. determine. reflexivity.
-Qed.
-
-Lemma init_heaps_bisim_ltotal_obj_ok : heaps_bisim_ltotal_obj initBR JsInit.state_initial.
-Proof.
-    introv Hidx.
-Admitted. (* TODO *)
-
-Lemma init_heaps_bisim_ltotal_env_ok : heaps_bisim_ltotal_env initBR JsInit.state_initial.
-Proof.
-    introv Hidx.
-    (* TODO simpler? *)
-    unfolds JsInit.state_initial. simpls.
-    unfolds JsCertExt.env_record_indom. simpls.
-    unfolds JsInit.env_record_heap_initial.
-    rewrite heap_indom_to_libbag_eq in Hidx. rew_heap_to_libbag in Hidx.
-    rew_index_eq in Hidx. rew_logic in Hidx. substs.
-    eexists. unfold initBR. rew_in_eq. eapply Mem_next. eapply Mem_here.
-Qed.
-
-Lemma init_heaps_bisim_lnoghost_obj_ok : heaps_bisim_lnoghost_obj initBR JsInit.state_initial.
-Proof.
-Admitted. (* TODO *)
-
-Lemma init_heaps_bisim_lnoghost_env_ok : heaps_bisim_lnoghost_env initBR JsInit.state_initial.
-Proof.
-    introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse. injects.
-    (* TODO simpler? *)
-    unfolds JsInit.state_initial. simpl.
-    unfolds JsCertExt.env_record_indom. simpl.
-    unfolds JsInit.env_record_heap_initial. 
-    rewrite heap_indom_to_libbag_eq. rew_heap_to_libbag. prove_bag.
-Qed.
-
-Lemma init_heaps_bisim_rnoghost_ok : heaps_bisim_rnoghost initBR LjsInitEnv.init_store.
-Proof.
-    introv Hf Hfp. lets Hx : initBR_members Hf.
-    unfolds LjsInitEnv.init_store. rewrite index_binds_eq.
-    destruct_hyp Hx; inverts Hfp.
-Admitted. (* TODO *)
-
-Lemma init_heaps_bisim_consistent_ok :
-    heaps_bisim_consistent initBR JsInit.state_initial LjsInitEnv.init_store.
-Proof.
-    constructor.
-    + apply init_heaps_bisim_obj_ok.
-    + apply init_heaps_bisim_env_ok.
-    + introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse.
-    + apply init_heaps_bisim_lfun_obj_ok.
-    + apply init_heaps_bisim_lfun_env_ok.
-    + apply init_heaps_bisim_rfun_ok.
-    + apply init_heaps_bisim_ltotal_obj_ok.
-    + apply init_heaps_bisim_ltotal_env_ok.
-    + apply init_heaps_bisim_lnoghost_obj_ok.
-    + apply init_heaps_bisim_lnoghost_env_ok.
-    + apply init_heaps_bisim_rnoghost_ok.
-Qed.
-
-Lemma init_state_invariant_ok :
-    state_invariant initBR JsInit.state_initial LjsInitEnv.init_store.
-Proof.
-    constructor. 
-    + apply init_heaps_bisim_consistent_ok.
-    + skip.
-    + skip. (* TODO *)
-Qed.
-
-Lemma env_records_exist_initial : env_records_exist_env initBR J.lexical_env_initial.
-Proof.
-    unfolds J.lexical_env_initial.
-    introv Hm. inverts Hm; try false_invert. jauto_js.
-Qed.
-
-Lemma init_context_invariant_ok : forall b,
-    context_invariant initBR (J.execution_ctx_initial b) LjsInitEnv.init_ctx.
-Proof.
-    constructor.
-    + prove_bag.
-    + apply execution_ctx_related_init_ctx.
-    + apply includes_init_ctx_init_ctx.
-    + constructor; apply env_records_exist_initial.
-Qed.
 
 Lemma context_invariant_replace_ctx_sub_init : forall BR jc c c',
     c' \c LjsInitEnv.init_ctx -> 
