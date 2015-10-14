@@ -192,6 +192,9 @@ Proof.
     introv Hb1 Hb2.
     destruct Hx1.
     apply from_list_binds in Hb2.
+    apply assoc_fast_nat_assoc in Hb2.
+    cbv in Hb2.
+    injects.
 Admitted. (* TODO *)
 
 Lemma init_heaps_bisim_env_ok : heaps_bisim_env initBR JsInit.state_initial LjsInitEnv.init_store.

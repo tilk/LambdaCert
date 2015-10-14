@@ -336,11 +336,15 @@ Proof. intro. apply* prop_ext. Qed.
 
 Hint Rewrite impl_True_l impl_False_l impl_True_r impl_False_r : rew_logic.
 
-Fixpoint fast_string_assoc {A} (k : string) (l : list (string * A)) : option A :=
+Fixpoint fast_assoc {A B} (f : forall a1 a2, {a1 = a2} + {a1 <> a2}) (x : A) (l : list (A * B)) : option B :=
     match l with
     | nil => None
-    | (k', v') :: l' => match string_dec k' k with left _ => Some v' | right _ => fast_string_assoc k l' end
+    | (x', v') :: l' => match f x' x with left _ => Some v' | right _ => fast_assoc f x l' end
     end.
+
+Definition fast_string_assoc {A} : string -> list (string * A) -> option A := fast_assoc string_dec.
+
+Definition fast_nat_assoc {A} : nat -> list (nat * A) -> option A := fast_assoc eq_nat_dec.
 
 Lemma Assoc_Mem : forall T A l (k : T) (v : A), Assoc k v l -> Mem (k, v) l.
 Proof.
@@ -352,7 +356,7 @@ Qed.
 
 Import LibList.
 
-Lemma fast_string_assoc_assoc_eq : forall A k l (v : A), Assoc k v l = (fast_string_assoc k l = Some v).
+Lemma fast_assoc_assoc_eq : forall A B d (k : A) l (v : B), Assoc k v l = (fast_assoc d k l = Some v).
 Proof.
     introv. rew_logic. split; introv Hf. {
         induction Hf; simpl; cases_if; auto.
@@ -365,26 +369,45 @@ Proof.
     }
 Qed.
 
-Lemma fast_string_assoc_assoc : forall A k l (v : A), fast_string_assoc k l = Some v -> Assoc k v l.
+Lemma fast_assoc_assoc : forall A B (k : A) l (v : B) d, fast_assoc d k l = Some v -> Assoc k v l.
 Proof.
-    introv. rewrite fast_string_assoc_assoc_eq. auto.
+    introv. erewrite fast_assoc_assoc_eq. eauto.
 Qed.
 
-Lemma assoc_fast_string_assoc : forall A k l (v : A), Assoc k v l -> fast_string_assoc k l = Some v.
+Lemma assoc_fast_assoc : forall A B (k : A) l (v : B) d, Assoc k v l -> fast_assoc d k l = Some v.
 Proof.
-    introv. rewrite fast_string_assoc_assoc_eq. auto.
+    introv. erewrite fast_assoc_assoc_eq. eauto.
 Qed.
 
-Lemma fast_string_assoc_not_assoc : forall A k l, fast_string_assoc k l = None -> forall (v : A), ~Assoc k v l.
+Lemma fast_assoc_not_assoc : forall A B k (l : list (A * B)) d, 
+    fast_assoc d k l = None -> forall v, ~Assoc k v l.
 Proof.
     introv Hf Ha.
     induction Ha; simpls; cases_if.
 Qed.
 
-Lemma fast_string_assoc_mem : forall A k l (v : A), fast_string_assoc k l = Some v -> Mem (k, v) l.
+Lemma fast_assoc_mem : forall A B (k : A) l (v : B) d, fast_assoc d k l = Some v -> Mem (k, v) l.
 Proof.
-    introv Hf. applys Assoc_Mem. applys fast_string_assoc_assoc. assumption.
+    introv Hf. applys Assoc_Mem. applys fast_assoc_assoc. eassumption.
 Qed.
+
+Lemma fast_string_assoc_assoc : forall A k l (v : A), fast_string_assoc k l = Some v -> Assoc k v l.
+Proof. introv. eapply fast_assoc_assoc. Qed.
+
+Lemma assoc_fast_string_assoc : forall A k l (v : A), Assoc k v l -> fast_string_assoc k l = Some v.
+Proof. introv. eapply assoc_fast_assoc. Qed.
+
+Lemma fast_string_assoc_mem : forall A k l (v : A), fast_string_assoc k l = Some v -> Mem (k, v) l.
+Proof. introv. eapply fast_assoc_mem. Qed.
+
+Lemma fast_nat_assoc_assoc : forall A k l (v : A), fast_nat_assoc k l = Some v -> Assoc k v l.
+Proof. introv. eapply fast_assoc_assoc. Qed.
+
+Lemma assoc_fast_nat_assoc : forall A k l (v : A), Assoc k v l -> fast_nat_assoc k l = Some v.
+Proof. introv. eapply assoc_fast_assoc. Qed.
+
+Lemma fast_nat_assoc_mem : forall A k l (v : A), fast_nat_assoc k l = Some v -> Mem (k, v) l.
+Proof. introv. eapply fast_assoc_mem. Qed.
 
 (* instances *)
 
