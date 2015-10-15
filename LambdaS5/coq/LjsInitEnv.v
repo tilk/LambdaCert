@@ -459,6 +459,9 @@ expr_object
                  expr_false));
  ("%LtOp", property_data
            (data_intro (expr_id "%LtOp") expr_true expr_false expr_false));
+ ("%Make15FunctionObject", property_data
+                           (data_intro (expr_id "%Make15FunctionObject")
+                            expr_true expr_false expr_false));
  ("%MakeArray", property_data
                 (data_intro (expr_id "%MakeArray") expr_true expr_false
                  expr_false));
@@ -3365,6 +3368,13 @@ Definition ex_privLocalTime :=  expr_id "t" .
 Definition ex_privLtOp := 
 expr_app (expr_id "%CompareOp")
 [expr_id "l"; expr_id "r"; expr_false; expr_false]
+.
+Definition ex_privMake15FunctionObject := 
+expr_object
+(objattrs_intro (expr_string "Function") expr_true (expr_id "%FunctionProto")
+ (expr_id "call")) []
+[("length", property_data
+            (data_intro (expr_id "len") expr_false expr_false expr_false))]
 .
 Definition ex_privMakeArray := 
 expr_object
@@ -9602,6 +9612,12 @@ value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privLtOp)
 .
 Definition name_privLtOp : id :=  "%LtOp" .
+Definition privMake15FunctionObject := 
+value_closure
+(closure_intro [("%FunctionProto", privFunctionProto)] None ["call"; "len"]
+ ex_privMake15FunctionObject)
+.
+Definition name_privMake15FunctionObject : id :=  "%Make15FunctionObject" .
 Definition privmax := 
 value_closure (closure_intro [] None ["a"; "b"] ex_privmax)
 .
@@ -11479,6 +11495,7 @@ Definition ctx_items :=
  (name_privLeftShift, privLeftShift);
  (name_privLocalTime, privLocalTime);
  (name_privLtOp, privLtOp);
+ (name_privMake15FunctionObject, privMake15FunctionObject);
  (name_privMakeArray, privMakeArray);
  (name_privMakeBind, privMakeBind);
  (name_privMakeBoolean, privMakeBoolean);
@@ -11968,6 +11985,7 @@ privLeOp
 privLeftShift
 privLocalTime
 privLtOp
+privMake15FunctionObject
 privMakeArray
 privMakeBind
 privMakeBoolean
@@ -12352,6 +12370,496 @@ privupdateDescriptor
 privvalueOfCall
 privzeroArgObj
 ].
+Ltac ctx_compute_in H := cbv beta iota zeta delta -[from_list 
+privAddAccessorField
+privAddDataField
+privAppExpr
+privAppExprCheck
+privAppMethodOp
+privArrayCall
+privArrayConstructor
+privArrayGlobalFuncObj
+privArrayIdx
+privArrayLengthChange
+privArrayProto
+privBindConstructor
+privBindObjCall
+privBitwiseAnd
+privBitwiseInfix
+privBitwiseNot
+privBitwiseOr
+privBitwiseXor
+privBooleanCall
+privBooleanConstructor
+privBooleanGlobalFuncObj
+privBooleanProto
+privCheckObjectCoercible
+privCompareOp
+privComputeLength
+privDateCall
+privDateConstructor
+privDateFromTime
+privDateGlobalFuncObj
+privDateProto
+privDay
+privDayFromYear
+privDayWithinYear
+privDaysInMonth
+privDaysInYear
+privDeclEnvAddBinding
+privDefaultCall
+privDefaultConstruct
+privDefaultValue
+privDefaultValueDefault
+privDefaultValueDefaultSub
+privDelete
+privDeleteDefault
+privDeleteOp
+privEnvAppExpr
+privEnvAssign
+privEnvCreateImmutableBinding
+privEnvCreateMutableBinding
+privEnvCreateSetMutableBinding
+privEnvDefineArg
+privEnvDefineArgsObj
+privEnvDefineArgsObjOk
+privEnvDefineFunc
+privEnvDefineVar
+privEnvDelete
+privEnvGet
+privEnvGetBindingValue
+privEnvGetId
+privEnvGetValue
+privEnvHasBinding
+privEnvImplicitThis
+privEnvInitializeImmutableBinding
+privEnvModify
+privEnvPrepostOp
+privEnvPutValue
+privEnvSetMutableBinding
+privEnvTypeof
+privEqEq
+privErrorConstructor
+privErrorGlobalFuncObj
+privErrorProto
+privEvalErrorConstructor
+privEvalErrorGlobalFuncObj
+privEvalErrorProto
+privFunctionConstructor
+privFunctionGlobalFuncObj
+privFunctionProto
+privFunctionProtoCall
+privGeOp
+privGet
+privGet1
+privGetDefault
+privGetField
+privGetFunction
+privGetOp
+privGetOwnProperty
+privGetOwnPropertyDefault
+privGetOwnPropertyDescriptor
+privGetOwnPropertyString
+privGetPrim
+privGetProperty
+privGtOp
+privHasProperty
+privHintMethod
+privInLeapYear
+privIsCallable
+privIsFinite
+privIsJSError
+privIsStrictFunction
+privJSError
+privLeOp
+privLeftShift
+privLocalTime
+privLtOp
+privMake15FunctionObject
+privMakeArray
+privMakeBind
+privMakeBoolean
+privMakeDate
+privMakeDateDayTime
+privMakeDay
+privMakeFunctionObject
+privMakeNativeError
+privMakeNativeErrorProto
+privMakeNumber
+privMakeObject
+privMakeString
+privMakeTime
+privMath
+privModifyOp
+privMonthFromTime
+privNativeError
+privNativeErrorConstructor
+privNativeErrorOr
+privNumberCall
+privNumberCompareOp
+privNumberConstructor
+privNumberGlobalFuncObj
+privNumberProto
+privNumberToInteger
+privObjectCall
+privObjectConstructor
+privObjectGlobalFuncObj
+privObjectProto
+privObjectTypeCheck
+privOtherHintMethod
+privPrepostOp
+privPrimAdd
+privPrimComma
+privPrimDiv
+privPrimMod
+privPrimMult
+privPrimMultOp
+privPrimNew
+privPrimSub
+privPrimitiveCompareOp
+privPropertyAccess
+privPut
+privPut1
+privPutPrim
+privRangeError
+privRangeErrorConstructor
+privRangeErrorGlobalFuncObj
+privRangeErrorOr
+privRangeErrorProto
+privReferenceError
+privReferenceErrorConstructor
+privReferenceErrorGlobalFuncObj
+privReferenceErrorOr
+privReferenceErrorProto
+privRegExpCode
+privRegExpConstructor
+privRegExpGlobalFuncObj
+privRegExpProto
+privRunSelfConstructorCall
+privSetField
+privSetOp
+privSignedRightShift
+privStringCall
+privStringConstructor
+privStringGlobalFuncObj
+privStringIndices
+privStringProto
+privStxEq
+privSyntaxError
+privSyntaxErrorConstructor
+privSyntaxErrorGlobalFuncObj
+privSyntaxErrorOr
+privSyntaxErrorProto
+privThrowTypeError
+privThrowTypeErrorFun
+privTimeClip
+privTimeFromYear
+privTimeWithinDay
+privToBoolean
+privToInt32
+privToInteger
+privToNumber
+privToObject
+privToPrimitive
+privToPrimitiveHint
+privToPropertyDescriptor
+privToString
+privToUint
+privToUint16
+privToUint32
+privTypeError
+privTypeErrorConstructor
+privTypeErrorGlobalFuncObj
+privTypeErrorOr
+privTypeErrorProto
+privTypeof
+privURIErrorConstructor
+privURIErrorGlobalFuncObj
+privURIErrorProto
+privUTC
+privUnaryNeg
+privUnaryNot
+privUnaryPlus
+privUnboundId
+privUnsignedRightShift
+privVoid
+privYearFromTime
+privaccessorDescriptorWrite
+privacos
+privacosCall
+privapply
+privapplyCall
+privarrayIndexOf
+privarrayIndexOfCall
+privarrayLastIndexOf
+privarrayLastIndexOfCall
+privarrayTLSCall
+privarrayToLocaleString
+privarrayToString
+privarrayToStringCall
+privasin
+privasinCall
+privassert
+privatan
+privatan2
+privatan2Call
+privatanCall
+privbind
+privbindCall
+privbooleanToString
+privbooleanToStringCall
+privbooleanValueOf
+privcall
+privcallCall
+privcharAt
+privcharAtCall
+privcharCodeAt
+privcharCodeAtCall
+privconcat
+privconcatCall
+privconfigurableEval
+privconsole
+privcos
+privcosCall
+privcreate
+privcreateCall
+privdataDescriptorWrite
+privdateGetTimezoneOffset
+privdateGetTimezoneOffsetCall
+privdateToString
+privdateToStringCall
+privdateValueOf
+privdateValueOfCall
+privdategetDate
+privdategetDateCall
+privdategetDay
+privdategetDayCall
+privdecodeURI
+privdecodeURICall
+privdecodeURIComponent
+privdecodeURIComponentCall
+privdefaultAccessorDescriptor
+privdefaultDataDescriptor
+privdefine15Property
+privdefineNYIProperty
+privdefineOwnProperty
+privdefineOwnPropertyArray
+privdefineOwnPropertyDefault
+privdefineProperties
+privdefinePropertiesCall
+privdefineProperty
+privdefinePropertyCall
+privdescriptorCantChangeAccessor
+privdescriptorCantChangeData
+privdescriptorCantChangeEnumerable
+privdescriptorContains
+privdescriptorFieldContains
+privdescriptorFieldGet
+privdescriptorFieldNotSame
+privdescriptorWrite
+privencodeURI
+privencodeURICall
+privencodeURIComponent
+privencodeURIComponentCall
+privescape
+privescapeCall
+privets
+privetsCall
+priveval
+privevalCall
+privevery
+priveveryCall
+privexp
+privexpCall
+privfilter
+privfilterCall
+privforeach
+privforeachCall
+privfreeze
+privfreezeCall
+privfromCharCode
+privfromccCall
+privfunctionToString
+privfunctionToStringCall
+privgetCurrentUTC
+privgetMonth
+privgetMonthCall
+privgetYear
+privgetYearCall
+privglobal
+privglobalContext
+privgopd
+privgopdCall
+privgopn
+privgopnCall
+privgpo
+privgpoCall
+privhasOwnProperty
+privhasOwnPropertyCall
+privin
+privinstanceof
+privisAccessorDescriptor
+privisArrayIndex
+privisDataDescriptor
+privisExtensible
+privisExtensibleCall
+privisFinite
+privisFiniteCall
+privisFrozen
+privisFrozenCall
+privisGenericDescriptor
+privisNaN
+privisNaNCall
+privisPrototypeOf
+privisPrototypeOfCall
+privisSealed
+privisSealedCall
+privjoin
+privjoinCall
+privkeys
+privkeysCall
+privlen
+privlocaleCompare
+privlocaleCompareCall
+privlog
+privlogCall
+privmakeAccessorDescriptor
+privmakeDataDescriptor
+privmakeGlobalEnv
+privmakeValueOnlyDescriptor
+privmap
+privmapCall
+privmathAbs
+privmathAbsCall
+privmathCeil
+privmathCeilCall
+privmathFloor
+privmathFloorCall
+privmathLog
+privmathLogCall
+privmathMax
+privmathMaxCall
+privmathMin
+privmathMinCall
+privmathPow
+privmathPowCall
+privmax
+privmin
+privminMaxCall
+privmkArgsObj
+privmsPerDay
+privmsPerHour
+privmsPerMin
+privmsPerSecond
+privnewDeclEnvRec
+privnewObjEnvRec
+privnotEqEq
+privnotStxEq
+privnumTLS
+privnumTLSCall
+privnumToStringAbstract
+privnumberPrimval
+privnumberToString
+privnumberToStringCall
+privnumberValueOf
+privobjectToString
+privobjectToStringCall
+privobjectValueOf
+privobjectValueOfCall
+privoneArgObj
+privparse
+privparseFloat
+privparseFloatCall
+privparseInt
+privparseIntCall
+privpop
+privpopCall
+privpreventExtensions
+privpreventExtensionsCall
+privprimEach
+privprint
+privprintCall
+privpropEnum
+privpropEnumCall
+privpropertyNames
+privprotoOfField
+privpush
+privpushCall
+privrandom
+privrandomCall
+privreduce
+privreduceCall
+privreduceRight
+privreduceRightCall
+privreplace
+privreplaceCall
+privresolveThis
+privreverse
+privreverseCall
+privround
+privroundCall
+privrunConstruct
+privseal
+privsealCall
+privshift
+privshiftCall
+privsin
+privsinCall
+privslice
+privsliceCall
+privslice_internal
+privsome
+privsomeCall
+privsort
+privsortCall
+privsplice
+privspliceCall
+privsplit
+privsplitCall
+privsqrt
+privsqrtCall
+privstringConcat
+privstringConcatCall
+privstringIndexOf
+privstringIndexOfCall
+privstringLastIndexOf
+privstringLastIndexOfCall
+privstringSlice
+privstringSliceCall
+privstringToString
+privstringToStringCall
+privstringValueOf
+privsubstring
+privsubstringCall
+privtan
+privtanCall
+privtest
+privtestCall
+privtoAccessorDescriptor
+privtoDataDescriptor
+privtoExponential
+privtoExponentialCall
+privtoFixed
+privtoFixedCall
+privtoLocaleString
+privtoLocaleStringCall
+privtoLowerCase
+privtoLowerCaseCall
+privtoPrecision
+privtoPrecisionCall
+privtoUpperCase
+privtoUpperCaseCall
+privtwoArgObj
+privunescape
+privunescapeCall
+privunshift
+privunshiftCall
+privupdateAccessorDescriptor
+privupdateDataDescriptor
+privupdateDescriptor
+privvalueOfCall
+privzeroArgObj
+] in H.
 Definition store_items := [
 (0, {|object_attrs :=
       {|oattrs_proto := proto;
@@ -12467,6 +12975,7 @@ Definition store_items := [
                                          ("%LeftShift", privLeftShift);
                                          ("%LocalTime", privLocalTime);
                                          ("%LtOp", privLtOp);
+                                         ("%Make15FunctionObject", privMake15FunctionObject);
                                          ("%MakeArray", privMakeArray);
                                          ("%MakeBind", privMakeBind);
                                          ("%MakeBoolean", privMakeBoolean);
@@ -13536,42 +14045,78 @@ Definition store_items := [
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privprintCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (16, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privdefinePropertyCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (3));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (17, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privcallCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (18, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privapplyCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (2));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (19, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privisNaNCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (20, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privetsCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (0));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (21, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
@@ -13817,14 +14362,26 @@ Definition store_items := [
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privgpoCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (28, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privgopdCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (2));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (29, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
@@ -14213,70 +14770,130 @@ Definition store_items := [
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privgopnCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (45, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privdefinePropertiesCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (2));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (46, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privcreateCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (47, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privsealCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (48, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privfreezeCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (49, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privpreventExtensionsCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (50, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privisFrozenCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (51, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privisSealedCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (52, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privisExtensibleCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (53, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privkeysCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (54, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
@@ -14741,14 +15358,26 @@ Definition store_items := [
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privtoLowerCaseCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (0));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (89, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privtoUpperCaseCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (0));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (90, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
@@ -15023,14 +15652,26 @@ Definition store_items := [
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privdateToStringCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (0));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (95, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privdateValueOfCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (0));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (96, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
@@ -15092,14 +15733,26 @@ Definition store_items := [
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privdategetDayCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (0));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (99, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privdategetDateCall|};
-       object_properties := from_list [];
+       object_properties :=
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (0));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|})];
        object_internal := from_list []|});
 (100, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
@@ -15396,35 +16049,70 @@ Definition store_items := [
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privparseIntCall|};
-        object_properties := from_list [];
+        object_properties :=
+        from_list [("length", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|})];
         object_internal := from_list []|});
 (138, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privdecodeURICall|};
-        object_properties := from_list [];
+        object_properties :=
+        from_list [("length", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|})];
         object_internal := from_list []|});
 (139, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privdecodeURIComponentCall|};
-        object_properties := from_list [];
+        object_properties :=
+        from_list [("length", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|})];
         object_internal := from_list []|});
 (140, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privencodeURICall|};
-        object_properties := from_list [];
+        object_properties :=
+        from_list [("length", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|})];
         object_internal := from_list []|});
 (141, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privencodeURIComponentCall|};
-        object_properties := from_list [];
+        object_properties :=
+        from_list [("length", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|})];
         object_internal := from_list []|});
 (142, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -15956,7 +16644,14 @@ Definition store_items := [
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privlogCall|};
-        object_properties := from_list [];
+        object_properties :=
+        from_list [("length", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|})];
         object_internal := from_list []|});
 (170, {|object_attrs :=
         {|oattrs_proto := proto;
@@ -15998,7 +16693,14 @@ Definition store_items := [
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privevalCall|};
-        object_properties := from_list [];
+        object_properties :=
+        from_list [("length", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|})];
         object_internal := from_list []|});
 (172, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
@@ -16033,14 +16735,28 @@ Definition store_items := [
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privisFiniteCall|};
-        object_properties := from_list [];
+        object_properties :=
+        from_list [("length", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|})];
         object_internal := from_list []|});
 (174, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
           oattrs_code := privparseFloatCall|};
-        object_properties := from_list [];
+        object_properties :=
+        from_list [("length", 
+                    attributes_data_of {|attributes_data_value :=
+                                         value_number (JsNumber.of_int (1));
+                                         attributes_data_writable := false;
+                                         attributes_data_enumerable := false;
+                                         attributes_data_configurable :=
+                                         false|})];
         object_internal := from_list []|});
 (175, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;

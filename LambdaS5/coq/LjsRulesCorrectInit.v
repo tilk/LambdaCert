@@ -186,24 +186,71 @@ Proof.
     applys~ all_different_mem_assoc. apply all_different_store_items.
 Qed.
 
+
+Definition ljs_prealloc_call_object code n := {|
+    L.object_attrs := {|
+        L.oattrs_proto := LjsInitEnv.privFunctionProto;
+        L.oattrs_class := "Function";
+        L.oattrs_extensible := true;
+        L.oattrs_code := code |};
+    L.object_properties := from_list [("length", L.attributes_data_of (L.attributes_data_intro (L.value_number n) false false false))];
+    L.object_internal := from_list []
+|}.
+
+(* TODO *)
+Lemma object_create_prealloc_call_lemma : forall jpre code n,
+    call_related (JsSyntax.call_prealloc jpre) code ->
+    object_related initBR 
+        (JsInit.object_create_prealloc_call jpre (J.value_prim (J.prim_number n)) J.Heap.empty) 
+        (ljs_prealloc_call_object code n).
+Proof.
+    introv Hcode.
+    constructor.
+    + constructor.
+      - reflexivity.
+      - reflexivity.
+      - constructor. eapply prealloc_initBR_lemma. eauto_js.
+      - constructor.
+      - skip.
+      - constructor. assumption.
+      - skip.
+      - skip.
+      - skip.
+      - skip.
+      - skip.
+      - skip.
+      - skip.
+      - skip.
+      - skip. 
+    + unfolds. intro.
+      destruct (classic (s = "length")) as [Heq|Heq].
+Opaque index. 
+      - substs. right. simpl. do 2 eexists. rewrite from_list_update. rewrite from_list_empty. 
+        rew_heap_to_libbag. rew_binds_eq. eauto_js 10.
+      - left. simpl. rewrite from_list_update. rewrite from_list_empty.
+        rew_heap_to_libbag. rew_index_eq.  eauto_js 10.
+Qed.
+
 Lemma init_heaps_bisim_obj_ok : heaps_bisim_obj initBR JsInit.state_initial LjsInitEnv.init_store.
 Proof.
     introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse. injects.
     introv Hb1 Hb2.
-    destruct Hx1.
+    unfolds JsInit.state_initial. simpls.
+    unfolds J.object_binds. simpls.
+    unfolds JsInit.object_heap_initial.
+    unfolds JsInit.object_heap_initial_function_objects.
+    unfolds JsInit.object_heap_initial_function_objects_3.
+    unfolds JsInit.object_heap_initial_function_objects_2.
+    unfolds JsInit.object_heap_initial_function_objects_1.
+    rewrite heap_binds_to_libbag_eq in Hb1. 
+    rew_heap_to_libbag in Hb1. rew_binds_eq in Hb1.
+    destruct_hyp Hb1; tryfalse; repeat injects; 
+    inverts Hx1; 
     apply from_list_binds in Hb2;
     apply assoc_fast_nat_assoc in Hb2;
-    cbv -[from_list] in Hb2;
-    injects Hb2.
-(*
-    unfolds JsInit.state_initial. simpl in Hb1.
-
-Lemma binds_state_initial_object_heap : forall jptr jobj,
-    binds JsInit.state_initial jptr jobj = binds JsInit.object_heap_initial jptr jobj.
-Proof. reflexivity. Qed.
-
-    rewrite binds_state_initial_object_heap in Hb1. unfolds JsInit.object_heap_initial.
-*)
+    LjsInitEnv.ctx_compute_in Hb2;
+    injects Hb2;
+    first [apply object_create_prealloc_call_lemma; solve [eauto_js] | idtac].
 Admitted. (* TODO *)
 
 Lemma init_heaps_bisim_env_ok : heaps_bisim_env initBR JsInit.state_initial LjsInitEnv.init_store.
@@ -251,6 +298,7 @@ Lemma init_heaps_bisim_ltotal_obj_ok : heaps_bisim_ltotal_obj initBR JsInit.stat
 Proof.
     introv Hidx.
     (* TODO simpler? *)
+Transparent index.
     unfolds JsInit.state_initial. simpls.
     unfolds J.object_indom. simpls.
     unfolds JsInit.object_heap_initial.
@@ -259,7 +307,7 @@ Proof.
     unfolds JsInit.object_heap_initial_function_objects_3.
     unfolds JsInit.object_heap_initial_function_objects_2.
     unfolds JsInit.object_heap_initial_function_objects_1.
-    rew_heap_to_libbag in Hidx. rew_index_eq in Hidx. 
+    rew_heap_to_libbag in Hidx. rew_index_eq in Hidx.
     unfolds initBR.
     destruct_hyp Hidx; tryfalse;
     eexists;
@@ -293,19 +341,7 @@ Proof.
     rew_heap_to_libbag. rew_index_eq.
     destruct Hx1; eauto_js 150.
     (* TODO: missing in JScert! *)
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-Qed. (* TODO *)
+Admitted. (* TODO *)
 
 Lemma init_heaps_bisim_lnoghost_env_ok : heaps_bisim_lnoghost_env initBR JsInit.state_initial.
 Proof.

@@ -324,7 +324,9 @@ let format_ctx_mems c =
 let format_ctx_red c = 
     let format_ctx_item (k, v) =
         let ii = Map.find v !vals_store in text ii in
-    horzOrVert ([text ("Ltac ctx_compute := cbv beta iota zeta delta -[")] @ List.map format_ctx_item (LibFinmap.FinmapImpl.to_list_impl c) @ [text "]."])
+    let stuff = List.map format_ctx_item (LibFinmap.FinmapImpl.to_list_impl c) in
+    horzOrVert ([text ("Ltac ctx_compute := cbv beta iota zeta delta -[")] @ List.map format_ctx_item (LibFinmap.FinmapImpl.to_list_impl c) @ [text "].";
+                 text ("Ltac ctx_compute_in H := cbv beta iota zeta delta -[from_list ")] @ List.map format_ctx_item (LibFinmap.FinmapImpl.to_list_impl c) @ [text "] in H."])
 
 let header () = vert (List.map text [
     "Require Import Utils.";

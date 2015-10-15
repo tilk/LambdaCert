@@ -449,8 +449,8 @@ Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
     call_prealloc_related J.prealloc_object_keys LjsInitEnv.privkeysCall
 | call_prealloc_related_object_proto_to_string : 
     call_prealloc_related J.prealloc_object_proto_to_string LjsInitEnv.privobjectToStringCall
-(* | call_prealloc_related_object_proto_value_of : 
-    call_prealloc_related J.prealloc_object_proto_value_of LjsInitEnv.privvalueOfCall *)
+| call_prealloc_related_object_proto_value_of : 
+    call_prealloc_related J.prealloc_object_proto_value_of LjsInitEnv.privobjectValueOfCall 
 | call_prealloc_related_object_proto_has_own_prop : 
     call_prealloc_related J.prealloc_object_proto_has_own_prop LjsInitEnv.privhasOwnPropertyCall
 | call_prealloc_related_object_proto_is_prototype_of : 
@@ -491,6 +491,10 @@ Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
     call_prealloc_related J.prealloc_array_is_array LjsInitEnv.privCall
 | call_prealloc_related_array_proto_to_string : 
     call_prealloc_related J.prealloc_array_proto_to_string LjsInitEnv.privCall *)
+| call_prealloc_related_array_push :
+    call_prealloc_related J.prealloc_array_proto_push LjsInitEnv.privpushCall
+| call_prealloc_related_array_pop :
+    call_prealloc_related J.prealloc_array_proto_pop LjsInitEnv.privpopCall
 | call_prealloc_related_string : 
     call_prealloc_related J.prealloc_string LjsInitEnv.privStringCall
 | call_prealloc_related_string_proto_to_string : 
