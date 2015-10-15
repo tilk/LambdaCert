@@ -354,12 +354,18 @@ Inductive prealloc_related : J.prealloc -> L.object_ptr -> Prop :=
     prealloc_related J.prealloc_number_proto_to_exponential LjsInitEnv.ptr_privtoExponential
 | prealloc_related_number_proto_to_precision : 
     prealloc_related J.prealloc_number_proto_to_precision LjsInitEnv.ptr_privtoPrecision
-(* | prealloc_related_array : 
-    prealloc_related J.prealloc_array LjsInitEnv.ptr_priv
-| prealloc_related_array_is_array : 
-    prealloc_related J.prealloc_array_is_array LjsInitEnv.ptr_priv
+| prealloc_related_array : 
+    prealloc_related J.prealloc_array LjsInitEnv.ptr_privArrayGlobalFuncObj
+| prealloc_related_array_proto : 
+    prealloc_related J.prealloc_array_proto LjsInitEnv.ptr_privArrayProto
+(*| prealloc_related_array_is_array : 
+    prealloc_related J.prealloc_array_is_array LjsInitEnv.ptr_priv *)
 | prealloc_related_array_proto_to_string : 
-    prealloc_related J.prealloc_array_proto_to_string LjsInitEnv.ptr_priv *)
+    prealloc_related J.prealloc_array_proto_to_string LjsInitEnv.ptr_privarrayToString
+| prealloc_related_array_proto_push : 
+    prealloc_related J.prealloc_array_proto_push LjsInitEnv.ptr_privpush
+| prealloc_related_array_proto_pop : 
+    prealloc_related J.prealloc_array_proto_pop LjsInitEnv.ptr_privpop
 | prealloc_related_string : 
     prealloc_related J.prealloc_string LjsInitEnv.ptr_privStringGlobalFuncObj
 | prealloc_related_string_proto : 
@@ -376,6 +382,8 @@ Inductive prealloc_related : J.prealloc -> L.object_ptr -> Prop :=
     prealloc_related J.prealloc_error LjsInitEnv.ptr_privErrorGlobalFuncObj
 | prealloc_related_error_proto : 
     prealloc_related J.prealloc_error_proto LjsInitEnv.ptr_privErrorProto
+| prealloc_related_error_proto_to_string : 
+    prealloc_related J.prealloc_error_proto_to_string LjsInitEnv.ptr_privets
 | prealloc_related_native_error_eval : 
     prealloc_related (J.prealloc_native_error J.native_error_eval) LjsInitEnv.ptr_privEvalErrorGlobalFuncObj
 | prealloc_related_native_error_eval_proto : 
@@ -396,6 +404,8 @@ Inductive prealloc_related : J.prealloc -> L.object_ptr -> Prop :=
     prealloc_related (J.prealloc_native_error J.native_error_type) LjsInitEnv.ptr_privTypeErrorGlobalFuncObj
 | prealloc_related_native_error_type_proto : 
     prealloc_related (J.prealloc_native_error_proto J.native_error_type) LjsInitEnv.ptr_privTypeErrorProto
+| prealloc_related_throw_type_error :
+    prealloc_related J.prealloc_throw_type_error LjsInitEnv.ptr_privThrowTypeError
 .
 
 Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
@@ -1118,8 +1128,15 @@ Definition initBR : fact_set := from_list [
     fact_js_obj (J.object_loc_prealloc J.prealloc_string_proto_value_of) LjsInitEnv.ptr_privstringValueOf;
     fact_js_obj (J.object_loc_prealloc J.prealloc_string_proto_char_at) LjsInitEnv.ptr_privcharAt;
     fact_js_obj (J.object_loc_prealloc J.prealloc_string_proto_char_code_at) LjsInitEnv.ptr_privcharCodeAt;
+    fact_js_obj (J.object_loc_prealloc J.prealloc_array) LjsInitEnv.ptr_privArrayGlobalFuncObj;
+    fact_js_obj (J.object_loc_prealloc J.prealloc_array_proto) LjsInitEnv.ptr_privArrayProto;
+    fact_js_obj (J.object_loc_prealloc J.prealloc_array_proto_pop) LjsInitEnv.ptr_privpop;
+    fact_js_obj (J.object_loc_prealloc J.prealloc_array_proto_push) LjsInitEnv.ptr_privpush;
+    fact_js_obj (J.object_loc_prealloc J.prealloc_array_proto_to_string) LjsInitEnv.ptr_privarrayToString;
+    fact_js_obj (J.object_loc_prealloc J.prealloc_throw_type_error) LjsInitEnv.ptr_privThrowTypeError;
     fact_js_obj (J.object_loc_prealloc J.prealloc_error) LjsInitEnv.ptr_privErrorGlobalFuncObj;
     fact_js_obj (J.object_loc_prealloc J.prealloc_error_proto) LjsInitEnv.ptr_privErrorProto;
+    fact_js_obj (J.object_loc_prealloc J.prealloc_error_proto_to_string) LjsInitEnv.ptr_privets;
     fact_js_obj (J.object_loc_prealloc (J.prealloc_native_error J.native_error_eval)) LjsInitEnv.ptr_privEvalErrorGlobalFuncObj;
     fact_js_obj (J.object_loc_prealloc (J.prealloc_native_error_proto J.native_error_eval)) LjsInitEnv.ptr_privEvalErrorProto;
     fact_js_obj (J.object_loc_prealloc (J.prealloc_native_error J.native_error_range)) LjsInitEnv.ptr_privRangeErrorGlobalFuncObj;

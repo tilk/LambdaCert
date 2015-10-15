@@ -191,17 +191,39 @@ Proof.
     introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse. injects.
     introv Hb1 Hb2.
     destruct Hx1.
-    apply from_list_binds in Hb2.
-    apply assoc_fast_nat_assoc in Hb2.
-    cbv in Hb2.
-    injects.
+    apply from_list_binds in Hb2;
+    apply assoc_fast_nat_assoc in Hb2;
+    cbv -[from_list] in Hb2;
+    injects Hb2.
+(*
+    unfolds JsInit.state_initial. simpl in Hb1.
+
+Lemma binds_state_initial_object_heap : forall jptr jobj,
+    binds JsInit.state_initial jptr jobj = binds JsInit.object_heap_initial jptr jobj.
+Proof. reflexivity. Qed.
+
+    rewrite binds_state_initial_object_heap in Hb1. unfolds JsInit.object_heap_initial.
+*)
 Admitted. (* TODO *)
 
 Lemma init_heaps_bisim_env_ok : heaps_bisim_env initBR JsInit.state_initial LjsInitEnv.init_store.
 Proof.
     introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse. injects.
     introv Hb1 Hb2.
-Admitted. (* TODO *)
+    (* TODO simpler? *)
+    apply from_list_binds in Hb2.
+    apply assoc_fast_nat_assoc in Hb2.
+    cbv -[from_list] in Hb2.
+    injects Hb2.
+    unfolds JsInit.state_initial. simpls.
+    unfolds J.env_record_binds. simpls.
+    unfolds JsInit.env_record_heap_initial.
+    rew_heap_to_libbag in Hb1. binds_inv.
+    (* actual lemma *)
+    applys env_record_related_object LjsInitEnv.ptr_privglobal.
+    repeat rewrite from_list_update. repeat rewrite from_list_empty.
+    constructor; eauto_js.
+Qed.
 
 Lemma init_heaps_bisim_lfun_obj_ok : heaps_bisim_lfun_obj initBR.
 Proof.
@@ -228,7 +250,22 @@ Qed.
 Lemma init_heaps_bisim_ltotal_obj_ok : heaps_bisim_ltotal_obj initBR JsInit.state_initial.
 Proof.
     introv Hidx.
-Admitted. (* TODO *)
+    (* TODO simpler? *)
+    unfolds JsInit.state_initial. simpls.
+    unfolds J.object_indom. simpls.
+    unfolds JsInit.object_heap_initial.
+    rewrite heap_indom_to_libbag_eq in Hidx.
+    unfolds JsInit.object_heap_initial_function_objects.
+    unfolds JsInit.object_heap_initial_function_objects_3.
+    unfolds JsInit.object_heap_initial_function_objects_2.
+    unfolds JsInit.object_heap_initial_function_objects_1.
+    rew_heap_to_libbag in Hidx. rew_index_eq in Hidx. 
+    unfolds initBR.
+    destruct_hyp Hidx; tryfalse;
+    eexists;
+    rewrite from_list_in_eq;
+    eauto 100 using Mem_here, Mem_next.
+Qed.
 
 Lemma init_heaps_bisim_ltotal_env_ok : heaps_bisim_ltotal_env initBR JsInit.state_initial.
 Proof.
@@ -244,7 +281,31 @@ Qed.
 
 Lemma init_heaps_bisim_lnoghost_obj_ok : heaps_bisim_lnoghost_obj initBR JsInit.state_initial.
 Proof.
-Admitted. (* TODO *)
+    introv Hf. lets Hx : initBR_members Hf. destruct_hyp Hx; tryfalse. injects.
+    unfolds JsInit.state_initial. simpls.
+    unfolds J.object_indom. simpls.
+    unfolds JsInit.object_heap_initial.
+    rewrite heap_indom_to_libbag_eq.
+    unfolds JsInit.object_heap_initial_function_objects.
+    unfolds JsInit.object_heap_initial_function_objects_3.
+    unfolds JsInit.object_heap_initial_function_objects_2.
+    unfolds JsInit.object_heap_initial_function_objects_1.
+    rew_heap_to_libbag. rew_index_eq.
+    destruct Hx1; eauto_js 150.
+    (* TODO: missing in JScert! *)
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+Qed. (* TODO *)
 
 Lemma init_heaps_bisim_lnoghost_env_ok : heaps_bisim_lnoghost_env initBR JsInit.state_initial.
 Proof.
@@ -261,7 +322,11 @@ Proof.
     introv Hf Hfp. lets Hx : initBR_members Hf.
     unfolds LjsInitEnv.init_store. rewrite index_binds_eq.
     destruct_hyp Hx; inverts Hfp.
-Admitted. (* TODO *)
+    + eexists. eapply from_list_binds_inv. eapply fast_nat_assoc_assoc.
+      cbv -[from_list]. reflexivity.
+    + inverts Hx1; eexists; eapply from_list_binds_inv; eapply fast_nat_assoc_assoc;
+      cbv -[from_list]; reflexivity.
+Qed.
 
 Lemma init_heaps_bisim_consistent_ok :
     heaps_bisim_consistent initBR JsInit.state_initial LjsInitEnv.init_store.
