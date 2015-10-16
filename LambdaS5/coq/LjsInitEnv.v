@@ -850,6 +850,9 @@ expr_object
  ("%booleanValueOf", property_data
                      (data_intro (expr_id "%booleanValueOf") expr_true
                       expr_false expr_false));
+ ("%booleanValueOfCall", property_data
+                         (data_intro (expr_id "%booleanValueOfCall")
+                          expr_true expr_false expr_false));
  ("%call", property_data
            (data_intro (expr_id "%call") expr_true expr_false expr_false));
  ("%callCall", property_data
@@ -1292,6 +1295,9 @@ expr_object
  ("%numberValueOf", property_data
                     (data_intro (expr_id "%numberValueOf") expr_true
                      expr_false expr_false));
+ ("%numberValueOfCall", property_data
+                        (data_intro (expr_id "%numberValueOfCall") expr_true
+                         expr_false expr_false));
  ("%objectToString", property_data
                      (data_intro (expr_id "%objectToString") expr_true
                       expr_false expr_false));
@@ -1477,6 +1483,9 @@ expr_object
  ("%stringValueOf", property_data
                     (data_intro (expr_id "%stringValueOf") expr_true
                      expr_false expr_false));
+ ("%stringValueOfCall", property_data
+                        (data_intro (expr_id "%stringValueOfCall") expr_true
+                         expr_false expr_false));
  ("%substring", property_data
                 (data_intro (expr_id "%substring") expr_true expr_false
                  expr_false));
@@ -2016,21 +2025,6 @@ expr_app (expr_id "%TypeError")
 Definition ex_objCode34 := 
 expr_app (expr_id "%TypeError")
 [expr_op2 binary_op_string_plus (expr_id "name") (expr_string " NYI")]
-.
-Definition ex_objCode35 := 
-expr_app (expr_id "%valueOfCall")
-[expr_id "this"; expr_id "args"; expr_id "%StringProto"; expr_string "string"]
-.
-Definition ex_objCode36 := 
-expr_app (expr_id "%valueOfCall")
-[expr_id "this"; expr_id "args"; expr_id "%NumberProto"; expr_string "number"]
-.
-Definition ex_objCode37 := 
-expr_app (expr_id "%valueOfCall")
-[expr_id "this";
- expr_id "args";
- expr_id "%BooleanProto";
- expr_string "boolean"]
 .
 Definition ex_objCode4 := 
 expr_app (expr_id "%TypeError")
@@ -4741,6 +4735,13 @@ expr_let "t" (expr_op1 unary_op_typeof (expr_id "this"))
      (expr_string "Boolean.prototype.toString got ") (expr_id "t")])))
  (expr_if (expr_id "b") (expr_string "true") (expr_string "false")))
 .
+Definition ex_privbooleanValueOfCall := 
+expr_app (expr_id "%valueOfCall")
+[expr_id "this";
+ expr_id "args";
+ expr_id "%BooleanProto";
+ expr_string "boolean"]
+.
 Definition ex_privcallCall := 
 expr_let "callArgs"
 (expr_app (expr_id "%slice_internal")
@@ -6773,6 +6774,10 @@ expr_let "val" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
    [expr_string "Number.toString received invalid radix"])
   (expr_app (expr_id "%numToStringAbstract") [expr_id "val"; expr_id "rint"])))
 .
+Definition ex_privnumberValueOfCall := 
+expr_app (expr_id "%valueOfCall")
+[expr_id "this"; expr_id "args"; expr_id "%NumberProto"; expr_string "number"]
+.
 Definition ex_privobjectToStringCall := 
 expr_label "ret"
 (expr_seq
@@ -8150,6 +8155,10 @@ expr_let "t" (expr_op1 unary_op_typeof (expr_id "this"))
     [expr_string "String.prototype.toString got a non-string object"]))
   (expr_app (expr_id "%TypeError")
    [expr_string "String.prototype.toString got a non-string value"])))
+.
+Definition ex_privstringValueOfCall := 
+expr_app (expr_id "%valueOfCall")
+[expr_id "this"; expr_id "args"; expr_id "%StringProto"; expr_string "string"]
 .
 Definition ex_privsubstringCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
@@ -10096,6 +10105,19 @@ value_closure
 Definition name_privbooleanToStringCall : id :=  "%booleanToStringCall" .
 Definition privbooleanValueOf :=  value_object 163 .
 Definition name_privbooleanValueOf : id :=  "%booleanValueOf" .
+Definition privvalueOfCall := 
+value_closure
+(closure_intro [("%TypeError", privTypeError); ("%Typeof", privTypeof)] 
+ None ["this"; "args"; "proto"; "typestr"] ex_privvalueOfCall)
+.
+Definition name_privvalueOfCall : id :=  "%valueOfCall" .
+Definition privbooleanValueOfCall := 
+value_closure
+(closure_intro
+ [("%BooleanProto", privBooleanProto); ("%valueOfCall", privvalueOfCall)]
+ None ["obj"; "this"; "args"] ex_privbooleanValueOfCall)
+.
+Definition name_privbooleanValueOfCall : id :=  "%booleanValueOfCall" .
 Definition privcall :=  value_object 17 .
 Definition name_privcall : id :=  "%call" .
 Definition privlen := 
@@ -10652,6 +10674,13 @@ value_closure
 Definition name_privnumberToStringCall : id :=  "%numberToStringCall" .
 Definition privnumberValueOf :=  value_object 162 .
 Definition name_privnumberValueOf : id :=  "%numberValueOf" .
+Definition privnumberValueOfCall := 
+value_closure
+(closure_intro
+ [("%NumberProto", privNumberProto); ("%valueOfCall", privvalueOfCall)] 
+ None ["obj"; "this"; "args"] ex_privnumberValueOfCall)
+.
+Definition name_privnumberValueOfCall : id :=  "%numberValueOfCall" .
 Definition privobjectToString :=  value_object 29 .
 Definition name_privobjectToString : id :=  "%objectToString" .
 Definition privobjectValueOf :=  value_object 32 .
@@ -10991,6 +11020,13 @@ value_closure
 Definition name_privstringToStringCall : id :=  "%stringToStringCall" .
 Definition privstringValueOf :=  value_object 161 .
 Definition name_privstringValueOf : id :=  "%stringValueOf" .
+Definition privstringValueOfCall := 
+value_closure
+(closure_intro
+ [("%StringProto", privStringProto); ("%valueOfCall", privvalueOfCall)] 
+ None ["obj"; "this"; "args"] ex_privstringValueOfCall)
+.
+Definition name_privstringValueOfCall : id :=  "%stringValueOfCall" .
 Definition privsubstringCall := 
 value_closure
 (closure_intro
@@ -11091,12 +11127,6 @@ value_closure
  ex_privunshiftCall)
 .
 Definition name_privunshiftCall : id :=  "%unshiftCall" .
-Definition privvalueOfCall := 
-value_closure
-(closure_intro [("%TypeError", privTypeError); ("%Typeof", privTypeof)] 
- None ["this"; "args"; "proto"; "typestr"] ex_privvalueOfCall)
-.
-Definition name_privvalueOfCall : id :=  "%valueOfCall" .
 Definition name :=  value_string "parse" .
 Definition name_name : id :=  "name" .
 Definition objCode1 := 
@@ -11369,27 +11399,6 @@ value_closure
  ["obj"; "this"; "args"] ex_objCode34)
 .
 Definition name_objCode34 : id :=  "objCode" .
-Definition objCode35 := 
-value_closure
-(closure_intro
- [("%StringProto", privStringProto); ("%valueOfCall", privvalueOfCall)] 
- None ["obj"; "this"; "args"] ex_objCode35)
-.
-Definition name_objCode35 : id :=  "objCode" .
-Definition objCode36 := 
-value_closure
-(closure_intro
- [("%NumberProto", privNumberProto); ("%valueOfCall", privvalueOfCall)] 
- None ["obj"; "this"; "args"] ex_objCode36)
-.
-Definition name_objCode36 : id :=  "objCode" .
-Definition objCode37 := 
-value_closure
-(closure_intro
- [("%BooleanProto", privBooleanProto); ("%valueOfCall", privvalueOfCall)]
- None ["obj"; "this"; "args"] ex_objCode37)
-.
-Definition name_objCode37 : id :=  "objCode" .
 Definition ctx_items := 
 [(name_privAddAccessorField, privAddAccessorField);
  (name_privAddDataField, privAddDataField);
@@ -11629,6 +11638,7 @@ Definition ctx_items :=
  (name_privbooleanToString, privbooleanToString);
  (name_privbooleanToStringCall, privbooleanToStringCall);
  (name_privbooleanValueOf, privbooleanValueOf);
+ (name_privbooleanValueOfCall, privbooleanValueOfCall);
  (name_privcall, privcall);
  (name_privcallCall, privcallCall);
  (name_privcharAt, privcharAt);
@@ -11782,6 +11792,7 @@ Definition ctx_items :=
  (name_privnumberToString, privnumberToString);
  (name_privnumberToStringCall, privnumberToStringCall);
  (name_privnumberValueOf, privnumberValueOf);
+ (name_privnumberValueOfCall, privnumberValueOfCall);
  (name_privobjectToString, privobjectToString);
  (name_privobjectToStringCall, privobjectToStringCall);
  (name_privobjectValueOf, privobjectValueOf);
@@ -11849,6 +11860,7 @@ Definition ctx_items :=
  (name_privstringToString, privstringToString);
  (name_privstringToStringCall, privstringToStringCall);
  (name_privstringValueOf, privstringValueOf);
+ (name_privstringValueOfCall, privstringValueOfCall);
  (name_privsubstring, privsubstring);
  (name_privsubstringCall, privsubstringCall);
  (name_privtan, privtan);
@@ -12119,6 +12131,7 @@ privbindCall
 privbooleanToString
 privbooleanToStringCall
 privbooleanValueOf
+privbooleanValueOfCall
 privcall
 privcallCall
 privcharAt
@@ -12272,6 +12285,7 @@ privnumberPrimval
 privnumberToString
 privnumberToStringCall
 privnumberValueOf
+privnumberValueOfCall
 privobjectToString
 privobjectToStringCall
 privobjectValueOf
@@ -12339,6 +12353,7 @@ privstringSliceCall
 privstringToString
 privstringToStringCall
 privstringValueOf
+privstringValueOfCall
 privsubstring
 privsubstringCall
 privtan
@@ -12609,6 +12624,7 @@ privbindCall
 privbooleanToString
 privbooleanToStringCall
 privbooleanValueOf
+privbooleanValueOfCall
 privcall
 privcallCall
 privcharAt
@@ -12762,6 +12778,7 @@ privnumberPrimval
 privnumberToString
 privnumberToStringCall
 privnumberValueOf
+privnumberValueOfCall
 privobjectToString
 privobjectToStringCall
 privobjectValueOf
@@ -12829,6 +12846,7 @@ privstringSliceCall
 privstringToString
 privstringToStringCall
 privstringValueOf
+privstringValueOfCall
 privsubstring
 privsubstringCall
 privtan
@@ -13109,6 +13127,7 @@ Definition store_items := [
                                          ("%booleanToString", privbooleanToString);
                                          ("%booleanToStringCall", privbooleanToStringCall);
                                          ("%booleanValueOf", privbooleanValueOf);
+                                         ("%booleanValueOfCall", privbooleanValueOfCall);
                                          ("%call", privcall);
                                          ("%callCall", privcallCall);
                                          ("%charAt", privcharAt);
@@ -13262,6 +13281,7 @@ Definition store_items := [
                                          ("%numberToString", privnumberToString);
                                          ("%numberToStringCall", privnumberToStringCall);
                                          ("%numberValueOf", privnumberValueOf);
+                                         ("%numberValueOfCall", privnumberValueOfCall);
                                          ("%objectToString", privobjectToString);
                                          ("%objectToStringCall", privobjectToStringCall);
                                          ("%objectValueOf", privobjectValueOf);
@@ -13329,6 +13349,7 @@ Definition store_items := [
                                          ("%stringToString", privstringToString);
                                          ("%stringToStringCall", privstringToStringCall);
                                          ("%stringValueOf", privstringValueOf);
+                                         ("%stringValueOfCall", privstringValueOfCall);
                                          ("%substring", privsubstring);
                                          ("%substringCall", privsubstringCall);
                                          ("%tan", privtan);
@@ -13628,7 +13649,7 @@ Definition store_items := [
                   attributes_data_of {|attributes_data_value :=
                                        value_object 35;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("message", 
                   attributes_data_of {|attributes_data_value :=
@@ -13659,7 +13680,7 @@ Definition store_items := [
                   attributes_data_of {|attributes_data_value :=
                                        value_object 40;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("message", 
                   attributes_data_of {|attributes_data_value :=
@@ -13684,7 +13705,7 @@ Definition store_items := [
                   attributes_data_of {|attributes_data_value :=
                                        value_object 39;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("message", 
                   attributes_data_of {|attributes_data_value :=
@@ -13709,7 +13730,7 @@ Definition store_items := [
                   attributes_data_of {|attributes_data_value :=
                                        value_object 36;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("message", 
                   attributes_data_of {|attributes_data_value :=
@@ -13734,7 +13755,7 @@ Definition store_items := [
                   attributes_data_of {|attributes_data_value :=
                                        value_object 37;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("message", 
                   attributes_data_of {|attributes_data_value :=
@@ -13759,7 +13780,7 @@ Definition store_items := [
                   attributes_data_of {|attributes_data_value :=
                                        value_object 38;
                                        attributes_data_writable := true;
-                                       attributes_data_enumerable := true;
+                                       attributes_data_enumerable := false;
                                        attributes_data_configurable := true|});
                  ("message", 
                   attributes_data_of {|attributes_data_value :=
@@ -14467,7 +14488,13 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_code := privRunSelfConstructorCall|};
        object_properties :=
-       from_list [("prototype", 
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("prototype", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 3;
                                         attributes_data_writable := false;
@@ -14482,12 +14509,18 @@ Definition store_items := [
                      ("proto", privErrorProto)] None ["this"; "args"]
                     ex_internal5))]|});
 (36, {|object_attrs :=
-       {|oattrs_proto := privSyntaxErrorProto;
+       {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privRunSelfConstructorCall|};
        object_properties :=
-       from_list [("prototype", 
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("prototype", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 6;
                                         attributes_data_writable := false;
@@ -14507,7 +14540,13 @@ Definition store_items := [
          oattrs_extensible := true;
          oattrs_code := privRunSelfConstructorCall|};
        object_properties :=
-       from_list [("prototype", 
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("prototype", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 7;
                                         attributes_data_writable := false;
@@ -14522,12 +14561,18 @@ Definition store_items := [
                      ("proto", privEvalErrorProto)] None ["this"; "args"]
                     ex_internal7))]|});
 (38, {|object_attrs :=
-       {|oattrs_proto := privRangeErrorProto;
+       {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privRunSelfConstructorCall|};
        object_properties :=
-       from_list [("prototype", 
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("prototype", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 8;
                                         attributes_data_writable := false;
@@ -14542,12 +14587,18 @@ Definition store_items := [
                      ("proto", privRangeErrorProto)] None ["this"; "args"]
                     ex_internal8))]|});
 (39, {|object_attrs :=
-       {|oattrs_proto := privReferenceErrorProto;
+       {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privRunSelfConstructorCall|};
        object_properties :=
-       from_list [("prototype", 
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("prototype", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 5;
                                         attributes_data_writable := false;
@@ -14562,12 +14613,18 @@ Definition store_items := [
                      ("proto", privReferenceErrorProto)] None
                     ["this"; "args"] ex_internal9))]|});
 (40, {|object_attrs :=
-       {|oattrs_proto := privTypeErrorProto;
+       {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := true;
          oattrs_code := privRunSelfConstructorCall|};
        object_properties :=
-       from_list [("prototype", 
+       from_list [("length", 
+                   attributes_data_of {|attributes_data_value :=
+                                        value_number (JsNumber.of_int (1));
+                                        attributes_data_writable := false;
+                                        attributes_data_enumerable := false;
+                                        attributes_data_configurable := false|});
+                  ("prototype", 
                    attributes_data_of {|attributes_data_value :=
                                         value_object 4;
                                         attributes_data_writable := false;
@@ -15283,7 +15340,7 @@ Definition store_items := [
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
-                                        value_number (JsNumber.of_int (1));
+                                        value_number (JsNumber.of_int (0));
                                         attributes_data_writable := false;
                                         attributes_data_enumerable := false;
                                         attributes_data_configurable := false|})];
@@ -16535,7 +16592,7 @@ Definition store_items := [
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := objCode35|};
+          oattrs_code := privstringValueOfCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -16549,7 +16606,7 @@ Definition store_items := [
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := objCode36|};
+          oattrs_code := privnumberValueOfCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=
@@ -16563,7 +16620,7 @@ Definition store_items := [
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
           oattrs_extensible := true;
-          oattrs_code := objCode37|};
+          oattrs_code := privbooleanValueOfCall|};
         object_properties :=
         from_list [("length", 
                     attributes_data_of {|attributes_data_value :=

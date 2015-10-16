@@ -459,8 +459,8 @@ Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
     call_prealloc_related J.prealloc_object_proto_prop_is_enumerable LjsInitEnv.privpropEnumCall
 | call_prealloc_related_function : 
     call_prealloc_related J.prealloc_function LjsInitEnv.privRunSelfConstructorCall
-(* | call_prealloc_related_function_proto : 
-    call_prealloc_related J.prealloc_function_proto LjsInitEnv.privCall *)
+| call_prealloc_related_function_proto : 
+    call_prealloc_related J.prealloc_function_proto LjsInitEnv.privFunctionProtoCall
 | call_prealloc_related_function_to_string : 
     call_prealloc_related J.prealloc_function_proto_to_string LjsInitEnv.privfunctionToStringCall
 | call_prealloc_related_function_apply : 
@@ -471,26 +471,26 @@ Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
     call_prealloc_related J.prealloc_bool LjsInitEnv.privBooleanCall
 | call_prealloc_related_bool_proto_to_string : 
     call_prealloc_related J.prealloc_bool_proto_to_string LjsInitEnv.privbooleanToStringCall
-(* | call_prealloc_related_bool_proto_value_of : 
-    call_prealloc_related J.prealloc_bool_proto_value_of LjsInitEnv.privCall *)
+| call_prealloc_related_bool_proto_value_of : 
+    call_prealloc_related J.prealloc_bool_proto_value_of LjsInitEnv.privbooleanValueOfCall
 | call_prealloc_related_number : 
     call_prealloc_related J.prealloc_number LjsInitEnv.privNumberCall
 | call_prealloc_related_number_proto_to_string : 
     call_prealloc_related J.prealloc_number_proto_to_string LjsInitEnv.privnumberToStringCall
-(* | call_prealloc_related_number_proto_value_of : 
-    call_prealloc_related J.prealloc_number_proto_value_of LjsInitEnv.privCall *)
+| call_prealloc_related_number_proto_value_of : 
+    call_prealloc_related J.prealloc_number_proto_value_of LjsInitEnv.privnumberValueOfCall
 | call_prealloc_related_number_proto_to_fixed : 
     call_prealloc_related J.prealloc_number_proto_to_fixed LjsInitEnv.privtoFixedCall
 | call_prealloc_related_number_proto_to_exponential : 
     call_prealloc_related J.prealloc_number_proto_to_exponential LjsInitEnv.privtoExponentialCall
 | call_prealloc_related_number_proto_to_precision : 
     call_prealloc_related J.prealloc_number_proto_to_precision LjsInitEnv.privtoPrecisionCall
-(* | call_prealloc_related_array : 
-    call_prealloc_related J.prealloc_array LjsInitEnv.privCall
-| call_prealloc_related_array_is_array : 
-    call_prealloc_related J.prealloc_array_is_array LjsInitEnv.privCall
+| call_prealloc_related_array : 
+    call_prealloc_related J.prealloc_array LjsInitEnv.privArrayCall
+(* | call_prealloc_related_array_is_array : 
+    call_prealloc_related J.prealloc_array_is_array LjsInitEnv.privCall *)
 | call_prealloc_related_array_proto_to_string : 
-    call_prealloc_related J.prealloc_array_proto_to_string LjsInitEnv.privCall *)
+    call_prealloc_related J.prealloc_array_proto_to_string LjsInitEnv.privarrayToStringCall 
 | call_prealloc_related_array_push :
     call_prealloc_related J.prealloc_array_proto_push LjsInitEnv.privpushCall
 | call_prealloc_related_array_pop :
@@ -499,14 +499,16 @@ Inductive call_prealloc_related : J.prealloc ->  L.value -> Prop :=
     call_prealloc_related J.prealloc_string LjsInitEnv.privStringCall
 | call_prealloc_related_string_proto_to_string : 
     call_prealloc_related J.prealloc_string_proto_to_string LjsInitEnv.privstringToStringCall
-(* | call_prealloc_related_string_proto_value_of : 
-    call_prealloc_related J.prealloc_string_proto_value_of LjsInitEnv.privCall *)
+| call_prealloc_related_string_proto_value_of : 
+    call_prealloc_related J.prealloc_string_proto_value_of LjsInitEnv.privstringValueOfCall
 | call_prealloc_related_string_proto_char_at : 
     call_prealloc_related J.prealloc_string_proto_char_at LjsInitEnv.privcharAtCall
 | call_prealloc_related_string_proto_char_code_at : 
     call_prealloc_related J.prealloc_string_proto_char_code_at LjsInitEnv.privcharCodeAtCall
 | call_prealloc_related_error : 
     call_prealloc_related J.prealloc_error LjsInitEnv.privRunSelfConstructorCall
+| call_prealloc_related_error_proto_to_string : 
+    call_prealloc_related J.prealloc_error_proto_to_string LjsInitEnv.privetsCall
 | call_prealloc_related_native_error_eval : 
     call_prealloc_related (J.prealloc_native_error J.native_error_eval) LjsInitEnv.privRunSelfConstructorCall
 | call_prealloc_related_native_error_range : 

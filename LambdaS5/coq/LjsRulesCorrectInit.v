@@ -206,22 +206,10 @@ Lemma object_create_prealloc_call_lemma : forall jpre code n,
 Proof.
     introv Hcode.
     constructor.
-    + constructor.
-      - reflexivity.
-      - reflexivity.
+    + constructor; try solve [constructor || reflexivity || 
+         (simpl; rewrite from_list_empty; erewrite read_option_not_index_inv by prove_bag; constructor)].
       - constructor. eapply prealloc_initBR_lemma. eauto_js.
-      - constructor.
-      - skip.
       - constructor. assumption.
-      - skip.
-      - skip.
-      - skip.
-      - skip.
-      - skip.
-      - skip.
-      - skip.
-      - skip.
-      - skip. 
     + unfolds. intro.
       destruct (classic (s = "length")) as [Heq|Heq].
 Opaque index. 
@@ -229,6 +217,147 @@ Opaque index.
         rew_heap_to_libbag. rew_binds_eq. eauto_js 10.
       - left. simpl. rewrite from_list_update. rewrite from_list_empty.
         rew_heap_to_libbag. rew_index_eq.  eauto_js 10.
+Qed.
+
+Definition ljs_prealloc_constructor_object code1 code2 attrs := {|
+    L.object_attrs := {|
+        L.oattrs_proto := LjsInitEnv.privFunctionProto;
+        L.oattrs_class := "Function";
+        L.oattrs_extensible := true;
+        L.oattrs_code := code2 |};
+    L.object_properties := attrs;
+    L.object_internal := from_list [("construct", code1)]
+|}.
+
+Lemma object_create_prealloc_constructor_lemma : forall jattrs attrs jpre code1 code2 n,
+    object_properties_related initBR 
+        (jattrs \("length" := J.attributes_data_of (JsInit.attrib_constant (J.value_prim (J.prim_number n))))) 
+        attrs ->
+    call_related (JsSyntax.call_prealloc jpre) code2 ->
+    construct_related (JsSyntax.construct_prealloc jpre) code1 ->
+    object_related initBR
+        (JsInit.object_create_prealloc_constructor jpre (J.value_prim (J.prim_number n)) jattrs)
+        (ljs_prealloc_constructor_object code1 code2 attrs).
+Proof.
+    introv Hprel Hcrel Hcorel.
+    constructor.
+    + constructor; try solve [constructor || reflexivity || (simpl; rewrite from_list_update, from_list_empty; 
+          erewrite read_option_not_index_inv by (rew_index_eq; rew_logic; eauto); constructor)].
+      - constructor. eapply prealloc_initBR_lemma. eauto_js.
+      - constructor. assumption.
+      - simpl. rewrite from_list_update, from_list_empty.
+        erewrite read_option_binds_inv by prove_bag. constructor. eassumption.
+    + simpl. assumption.
+Qed.
+
+Definition native_error_proto_obj jne :=
+    match jne with
+    | J.native_error_syntax => LjsInitEnv.ptr_privSyntaxErrorProto
+    | J.native_error_eval => LjsInitEnv.ptr_privEvalErrorProto
+    | J.native_error_range => LjsInitEnv.ptr_privRangeErrorProto
+    | J.native_error_ref => LjsInitEnv.ptr_privReferenceErrorProto
+    | J.native_error_type => LjsInitEnv.ptr_privTypeErrorProto
+    end.
+
+Definition native_error_proto_val jne := L.value_object (native_error_proto_obj jne).
+
+Definition native_error_obj jne :=
+    match jne with
+    | J.native_error_syntax => LjsInitEnv.ptr_privSyntaxErrorGlobalFuncObj
+    | J.native_error_eval => LjsInitEnv.ptr_privEvalErrorGlobalFuncObj
+    | J.native_error_range => LjsInitEnv.ptr_privRangeErrorGlobalFuncObj
+    | J.native_error_ref => LjsInitEnv.ptr_privReferenceErrorGlobalFuncObj
+    | J.native_error_type => LjsInitEnv.ptr_privTypeErrorGlobalFuncObj
+    end.
+
+Definition native_error_val jne := L.value_object (native_error_obj jne).
+
+Definition attr_constant v := L.attributes_data_of (L.attributes_data_intro v false false false).
+
+Definition attr_native v := L.attributes_data_of (L.attributes_data_intro v true false true).
+
+Definition ljs_prealloc_native_error_proto jne := {|
+    L.object_attrs := {|
+        L.oattrs_proto := LjsInitEnv.privErrorProto;
+        L.oattrs_class := "Error";
+        L.oattrs_extensible := true;
+        L.oattrs_code := L.value_undefined |};
+    L.object_properties := from_list [
+        ("constructor", attr_native (native_error_val jne));
+        ("message", attr_native (L.value_string ""));
+        ("name", attr_native (L.value_string (J.string_of_native_error jne)))];
+    L.object_internal := from_list []
+|}.
+
+Lemma value_related_native_error_lemma : forall jne,
+    value_related initBR 
+        (J.value_object (J.object_loc_prealloc (J.prealloc_native_error jne)))
+        (native_error_val jne).
+Proof.
+    introv.
+    constructor. eapply prealloc_initBR_lemma. destruct jne; constructor.
+Qed.
+
+Hint Resolve value_related_native_error_lemma : js_ljs.
+
+Lemma value_related_native_error_proto_lemma : forall jne,
+    value_related initBR 
+        (J.value_object (J.object_loc_prealloc (J.prealloc_native_error_proto jne)))
+        (native_error_proto_val jne).
+Proof.
+    introv.
+    constructor. eapply prealloc_initBR_lemma. destruct jne; constructor.
+Qed.
+
+Hint Resolve value_related_native_error_proto_lemma : js_ljs.
+
+Lemma object_create_prealloc_native_error_proto_lemma : forall jne,
+    object_related initBR
+        (JsInit.object_prealloc_native_error_proto jne)
+        (ljs_prealloc_native_error_proto jne).
+Proof.
+    introv.
+    constructor.
+    + constructor; try solve [constructor || reflexivity || 
+         (simpl; rewrite from_list_empty; erewrite read_option_not_index_inv by prove_bag; constructor)].
+      - constructor. eapply prealloc_initBR_lemma. eauto_js.
+    + unfolds. intro.
+      destruct (classic (s = "constructor" \/ s = "message" \/ s = "name")) as [Heq|Heq].
+      - right. simpl. destruct_hyp Heq; do 2 eexists; repeat rewrite from_list_update; rewrite from_list_empty;
+        unfolds JsInit.write_native; rew_heap_to_libbag; rew_binds_eq; splits; eauto_js 20.
+      - rew_logic in Heq. destruct_hyp Heq.
+        left. simpl. repeat rewrite from_list_update. rewrite from_list_empty.
+        unfolds JsInit.write_native. rew_heap_to_libbag. rew_index_eq. eauto_js 10.
+Qed.
+
+Definition native_error_constructor jne :=
+    match jne with
+    | J.native_error_syntax => LjsInitEnv.privSyntaxErrorConstructor
+    | J.native_error_eval => LjsInitEnv.privEvalErrorConstructor
+    | J.native_error_range => LjsInitEnv.privRangeErrorConstructor
+    | J.native_error_ref => LjsInitEnv.privReferenceErrorConstructor
+    | J.native_error_type => LjsInitEnv.privTypeErrorConstructor
+    end.
+
+Definition ljs_prealloc_native_error jne := 
+    ljs_prealloc_constructor_object (native_error_constructor jne) LjsInitEnv.privRunSelfConstructorCall 
+        (from_list [("length", attr_constant (L.value_number 1));  
+                    ("prototype", attr_constant (native_error_proto_val jne))]).
+
+Lemma object_create_prealloc_native_error_lemma : forall jne,
+    object_related initBR
+        (JsInit.object_prealloc_native_error jne)
+        (ljs_prealloc_native_error jne).
+Proof.
+    introv.
+    apply object_create_prealloc_constructor_lemma; try solve [destruct jne; eauto_js].
+    unfolds. intro.
+      destruct (classic (s = "length" \/ s = "prototype")) as [Heq|Heq].
+      - right. simpl. destruct_hyp Heq; do 2 eexists; repeat rewrite from_list_update; rewrite from_list_empty;
+        unfolds JsInit.write_constant; rew_heap_to_libbag; rew_binds_eq; splits; eauto_js 20.
+      - rew_logic in Heq. destruct_hyp Heq.
+        left. simpl. repeat rewrite from_list_update. rewrite from_list_empty.
+        unfolds JsInit.write_constant. rew_heap_to_libbag. rew_index_eq. eauto_js 10.
 Qed.
 
 Lemma init_heaps_bisim_obj_ok : heaps_bisim_obj initBR JsInit.state_initial LjsInitEnv.init_store.
@@ -250,8 +379,27 @@ Proof.
     apply assoc_fast_nat_assoc in Hb2;
     LjsInitEnv.ctx_compute_in Hb2;
     injects Hb2;
-    first [apply object_create_prealloc_call_lemma; solve [eauto_js] | idtac].
-Admitted. (* TODO *)
+    first [apply object_create_prealloc_call_lemma; solve [eauto_js] | 
+           apply object_create_prealloc_native_error_lemma |
+           apply object_create_prealloc_native_error_proto_lemma | idtac].
+    - skip. (* object_create *)
+    - skip. (* throw_type_error *)
+    - skip. (* error *)
+    - skip. (* error_proto *)
+    - skip. (* string_proto *)
+    - apply object_create_prealloc_constructor_lemma; try solve [eauto_js]. skip. (* string *)
+    - skip. (* array_proto *)
+    - apply object_create_prealloc_constructor_lemma; try solve [eauto_js]. skip. (* array *)
+    - skip. (* function_proto *)
+    - apply object_create_prealloc_constructor_lemma; try solve [eauto_js]. skip. (* function *)
+    - skip. (* number_proto *)
+    - apply object_create_prealloc_constructor_lemma; try solve [eauto_js]. skip. (* number *)
+    - skip. (* bool_proto *)
+    - apply object_create_prealloc_constructor_lemma; try solve [eauto_js]. skip. (* bool *)
+    - skip. (* object_proto *)
+    - apply object_create_prealloc_constructor_lemma; try solve [eauto_js]. skip. (* object *)
+    - skip. (* global *)
+Qed.
 
 Lemma init_heaps_bisim_env_ok : heaps_bisim_env initBR JsInit.state_initial LjsInitEnv.init_store.
 Proof.
