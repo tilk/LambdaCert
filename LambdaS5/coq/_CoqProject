@@ -28,6 +28,7 @@ LjsRulesCorrectCallPrealloc.v
 LjsRulesCorrectCall.v
 LjsRulesCorrectCommon.v
 LjsRulesCorrectDefinitions.v
+LjsRulesCorrectDescriptors.v
 LjsRulesCorrectExpressions.v
 LjsRulesCorrectInit.v
 LjsRulesCorrectSpecFuns.v
