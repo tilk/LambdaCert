@@ -170,10 +170,12 @@ Hint Resolve js_state_next_fresh_index_object_preserved : js_ljs.
 Hint Resolve js_state_next_fresh_index_env_record_preserved : js_ljs.
 Hint Resolve js_state_next_fresh_binds_object_preserved : js_ljs.
 Hint Resolve js_state_next_fresh_binds_env_record_preserved : js_ljs.
+(*
 Hint Resolve js_state_next_fresh_index_object_preserved_inv : js_ljs.
 Hint Resolve js_state_next_fresh_index_env_record_preserved_inv : js_ljs.
 Hint Resolve js_state_next_fresh_binds_object_preserved_inv : js_ljs.
 Hint Resolve js_state_next_fresh_binds_env_record_preserved_inv : js_ljs.
+*)
 
 (** Pre-substitution hints *)
 (* TODO are they necessary? *)
@@ -2033,7 +2035,12 @@ Lemma heaps_bisim_consistent_next_fresh_preserved : forall BR jst st,
 Proof.
     introv Hbisim. 
     inverts Hbisim.
-    constructor; unfolds; eauto_js.
+    constructor; unfolds; introv;
+    repeat rewrite js_state_next_fresh_binds_object_preserved_eq;
+    repeat rewrite js_state_next_fresh_index_object_preserved_eq; 
+    repeat rewrite js_state_next_fresh_binds_env_record_preserved_eq;
+    repeat rewrite js_state_next_fresh_index_env_record_preserved_eq; 
+    eauto_js.
 Qed.
 
 Hint Resolve heaps_bisim_consistent_next_fresh_preserved : js_ljs.
@@ -2530,6 +2537,21 @@ Proof.
 Qed.
 
 Hint Resolve object_prim_related_primval_some : js_ljs.
+
+Lemma usercode_context_invariant_lexical_env_lemma : forall BR p jc c,
+    context_invariant BR jc c ->
+    usercode_context_invariant BR (J.execution_ctx_lexical_env jc) (J.prog_intro_strictness p) 
+        (c\("$strict":=LjsSyntax.value_bool (J.prog_intro_strictness p))).
+Proof.
+    introv Hcinv.
+    constructor.
+    + destruct Hcinv. eauto_js.
+    + introv Hbinds. binds_inv.
+      applys~ (execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv)).
+    + introv Hbinds. binds_inv. reflexivity.
+    + lets Hee : context_invariant_env_records_exist Hcinv. destruct Hee. assumption.
+    + eauto_js.
+Qed.
 
 (* Prerequisites *)
 

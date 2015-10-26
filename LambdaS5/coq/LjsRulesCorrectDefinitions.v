@@ -45,6 +45,7 @@ Include JsSyntaxAux.
 Include JsPreliminary.
 Include JsPrettyInterm.
 Include JsPrettyRules.
+Include JsInit.
 Include JsBagAdapter.JsCertExt.
 End J.
 

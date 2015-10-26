@@ -247,13 +247,16 @@ Lemma binding_inst_function_decls_lemma : forall BR k jst jc c st st' r jfds jep
     binds c "$strict" (L.value_bool b2) ->
     binds c "$vcontext" (L.value_object ptr) ->
     fact_js_env jeptr ptr \in BR ->
+    (* in ES6, lexical environment is used; in ES5 variable environment is used, which complicates things
+       fortunately, the difference can be seen only in non-strict mode *)
+    J.execution_ctx_lexical_env jc = J.execution_ctx_variable_env jc -> (* valid in strict mode *)
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst_function_decls jeptr jfds b2 b1) (fun jrv => jrv = J.resvalue_empty).    
 Proof.
     introv.
     unfolds E.init_funcs.
     inductions jfds gen BR k jst st;
-    introv IHc Hlred Hcinv Hinv Hbinds1 Hbinds2 Hf. {
+    introv IHc Hlred Hcinv Hinv Hbinds1 Hbinds2 Hf HstrAss. {
         repeat ljs_autoforward.
         jauto_js.
     }
@@ -261,19 +264,14 @@ Proof.
     rew_map in Hlred.
     repeat ljs_autoforward.
     rewrite exprjs_prog_strictness_eq in *.
-    forwards_th : red_spec_creating_function_object_ok. skip. (* { TODO in ES5 variable env required, fixed in ES6
-        introv Hbinds.
-        binds_inv.
-        applys (execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv)).
-        assumption.
-    } *)
+    forwards_th Hcfo : red_spec_creating_function_object_ok. 
+        applys* usercode_context_invariant_lexical_env_lemma.
+    rewrite HstrAss in Hcfo.
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_invert.
     repeat ljs_autoforward.
-    inverts red_exprh H12. (* TODO *)
-    ljs_apply.
-    ljs_context_invariant_after_apply.
+    ljs_invert_apply.
     repeat ljs_autoforward.
     forwards_th: has_binding_lemma. prove_bag.
     destr_concl; try ljs_handle_abort.
@@ -379,10 +377,12 @@ Lemma binding_inst_global_lemma : forall BR k jst jc c st st' r ptr jp,
     state_invariant BR jst st ->
     binds c "$strict" (L.value_bool (J.prog_intro_strictness jp)) ->
     binds c "$vcontext" (L.value_object ptr) ->
+    (* see binding_inst_function_decls_lemma *)
+    J.execution_ctx_lexical_env jc = J.execution_ctx_variable_env jc -> (* valid in strict mode *)
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst J.codetype_global None jp []) (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv IHc Hlred Hcinv Hinv Hbinds1 Hbinds2.
+    introv IHc Hlred Hcinv Hinv Hbinds1 Hbinds2 HstrAss.
     asserts_rewrite 
         (concat (List.map E.js_element_to_func (J.prog_elements jp)) = E.prog_funcs (E.js_prog_to_ejs jp)) in Hlred.
     { destruct jp. reflexivity. }
@@ -416,10 +416,12 @@ Lemma binding_inst_eval_lemma : forall BR k jst jc c st st' r ptr jp,
     state_invariant BR jst st ->
     binds c "$strict" (L.value_bool (J.prog_intro_strictness jp)) ->
     binds c "$vcontext" (L.value_object ptr) ->
+    (* see binding_inst_function_decls_lemma *)
+    J.execution_ctx_lexical_env jc = J.execution_ctx_variable_env jc -> (* valid in strict mode *)
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst J.codetype_eval None jp []) (fun jrv => jrv = J.resvalue_empty).
 Proof.
-    introv IHc Hlred Hcinv Hinv Hbinds1 Hbinds2.
+    introv IHc Hlred Hcinv Hinv Hbinds1 Hbinds2 HstrAss.
     asserts_rewrite 
         (concat (List.map E.js_element_to_func (J.prog_elements jp)) = E.prog_funcs (E.js_prog_to_ejs jp)) in Hlred.
     { destruct jp. reflexivity. }
@@ -459,11 +461,13 @@ Lemma binding_inst_func_lemma : forall BR k jst jc c st st' r ptr ptr1 ptr2 jptr
     fact_iarray ptr1 vs \in BR ->
     fact_js_obj jptr ptr \in BR ->
     J.object_method J.object_formal_parameters_ jst jptr (Some is) ->
+    (* see binding_inst_function_decls_lemma *)
+    J.execution_ctx_lexical_env jc = J.execution_ctx_variable_env jc -> (* valid in strict mode *)
     concl_ext_expr_resvalue BR jst jc c st st' r 
         (J.spec_binding_inst J.codetype_func (Some jptr) jp jvs) (fun jrv => jrv = J.resvalue_empty).
 Proof.
     introv IHc Hlred Hcinv Hinv Hvrels.
-    introv Hbinds1 Hbinds2 Hbinds3 Hbinds4 Hf1 Hf2 Hom.
+    introv Hbinds1 Hbinds2 Hbinds3 Hbinds4 Hf1 Hf2 Hom HstrAss.
     asserts_rewrite 
         (concat (List.map E.js_element_to_func (J.prog_elements jp)) = E.prog_funcs (E.js_prog_to_ejs jp)) in Hlred.
     { destruct jp. reflexivity. }
@@ -535,8 +539,7 @@ Proof.
     inverts Hucrel as Huci.
     unfolds funcbody_closure. unfolds funcbody_expr. unfolds E.make_lambda_expr.
     cases_let as Hprog.
-    inverts red_exprh Hlred.
-    ljs_apply.
+    ljs_invert_apply.
     subst c'.
     repeat ljs_autoforward.
     lets Hlerel : usercode_context_invariant_lexical_env_related Huci ___; try eassumption.

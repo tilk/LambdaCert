@@ -58,11 +58,8 @@ Proof.
     destruct fb.
     repeat ljs_autoforward.
     rewrite exprjs_prog_strictness_eq in *.
-    forwards_th Hx : red_spec_creating_function_object_ok. {
-        introv Hbinds. binds_inv.
-        applys (execution_ctx_related_lexical_env (context_invariant_execution_ctx_related Hcinv)).
-        assumption.
-    }
+    forwards_th Hx : red_spec_creating_function_object_ok.
+        { applys* usercode_context_invariant_lexical_env_lemma. }
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     resvalue_related_only_invert.
@@ -70,6 +67,8 @@ Proof.
 Qed.
 
 Hint Extern 1 (J.red_expr _ _ (J.expr_function_1 _ _ _ _ _ _) _) => eapply J.red_expr_function_named_1 : js_ljs.
+
+Opaque fresh. 
 
 Lemma red_expr_rec_function_ok : forall k s is fb,
     th_expr k (J.expr_function (Some s) is fb).
@@ -88,10 +87,18 @@ Proof.
     res_related_invert.
     repeat ljs_autoforward.
     forwards_th Hx : red_spec_creating_function_object_ok. {
-        introv Hbinds. binds_inv.
-        eapply lexical_env_related_cons. eauto_js. eauto_js.
-        eapply execution_ctx_related_lexical_env; try eassumption. eapply context_invariant_execution_ctx_related.
-        eauto_js.
+        constructor.
+        + destruct Hcinv. eauto_js.
+        + introv Hbinds. binds_inv.
+          eapply lexical_env_related_cons. eauto_js. eauto_js.
+          eapply execution_ctx_related_lexical_env; try eassumption. eapply context_invariant_execution_ctx_related.
+          eauto_js.
+        + introv Hbinds. binds_inv. reflexivity.
+        + lets Hee : context_invariant_env_records_exist Hcinv. destruct Hee.
+          introv Hmem. inverts Hmem as Hmem. eauto_js 8. 
+          unfolds env_records_exist_env. apply env_record_exist_lexical_env in Hmem.
+          destruct Hmem. eauto_js.
+        + eauto_js.
     }
     destr_concl; try solve [progress repeat (ljs_propagate_abort || ljs_abort_from_js); jauto_js 10]. (* TODO *)
     res_related_invert.

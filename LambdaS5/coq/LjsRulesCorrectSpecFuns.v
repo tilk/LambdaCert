@@ -4573,6 +4573,29 @@ Proof.
     }
 Qed.
 
+Definition js_thrower_attributes := J.attributes_accessor_of (J.attributes_accessor_intro
+    (J.value_object (J.object_loc_prealloc (J.prealloc_throw_type_error)))
+    (J.value_object (J.object_loc_prealloc (J.prealloc_throw_type_error))) false false).
+
+Definition js_function_object body names jle strict proto : J.object := 
+    let O := J.object_new (J.value_object (J.object_loc_prealloc J.prealloc_function_proto)) "Function" 
+    in let O := J.object_with_get O J.builtin_get_function 
+    in let O := J.object_with_invokation O (Some J.construct_default) (Some J.call_default) 
+        (Some J.builtin_has_instance_function) 
+    in let O := J.object_with_details O (Some jle) (Some names) (Some body) None None None None 
+    in let P := \{}
+        \("length" := J.attributes_data_of (J.attributes_data_intro 
+            (J.value_prim (J.prim_number (length names))) false false false))
+        \("prototype" := J.attributes_data_of (J.attributes_data_intro (J.value_object proto) true false false))
+    in let P := if strict then P 
+        \("caller" := js_thrower_attributes) \("arguments" := js_thrower_attributes) else P
+    in J.object_with_properties O P.
+
+Definition js_function_proto fobj : J.object :=
+    let O := J.object_new (J.value_object (J.object_loc_prealloc J.prealloc_object_proto)) "Object"
+    in J.object_with_properties O (\{}
+      \("constructor" := J.attributes_data_of (J.attributes_data_intro (J.value_object fobj) true false true))).
+
 Definition thrower_attributes := L.attributes_accessor_of (L.attributes_accessor_intro 
     LjsInitEnv.privThrowTypeError LjsInitEnv.privThrowTypeError false false).
 
@@ -4609,6 +4632,46 @@ Definition ljs_function_proto fobj : L.object := {|
     L.object_internal := \{}
 |}.
 
+Opaque binds index update LibBag.empty. (* TODO move to LibBagExt? *)
+
+Lemma function_proto_related_lemma : forall BR jptr ptr,
+    initBR \c BR ->
+    fact_js_obj jptr ptr \in BR ->
+    object_related BR (js_function_proto jptr) (ljs_function_proto ptr).
+Proof.
+    introv Hinit Hf.
+    forwards Hz : prealloc_initBR_lemma prealloc_related_object_proto. 
+    constructor.
+    + constructor; try solve [constructor || reflexivity || 
+        (simpl; erewrite read_option_not_index_inv by prove_bag; constructor)].
+      - constructor. eauto_js.
+    + unfolds. intro.
+      destruct (classic (s = "constructor")) as [Heq|Heq].
+      - substs. right. simpl. do 2 eexists. rew_binds_eq. eauto_js 10.
+      - left. simpl. rew_index_eq.  eauto_js 10.
+Qed.
+
+Lemma function_object_related_lemma : forall BR jptr ptr jp jle codetxt is c,
+    initBR \c BR ->
+    fact_js_obj jptr ptr \in BR ->
+    usercode_context_invariant BR jle (J.prog_intro_strictness jp) c ->
+    object_related BR 
+        (js_function_object (J.funcbody_intro jp codetxt) is jle (J.prog_intro_strictness jp) jptr) 
+        (ljs_function_object (funcbody_closure (to_list c) is jp) (length is) 
+            codetxt (J.prog_intro_strictness jp) ptr).
+Proof.
+    introv Hinit Hf Huci.
+    forwards Hz : prealloc_initBR_lemma prealloc_related_function_proto.
+    constructor.
+    + constructor; try solve [constructor || reflexivity || 
+        (simpl; erewrite read_option_not_index_inv by (eauto_js 10); constructor)];
+        try (simpl; erewrite read_option_binds_inv by (eauto_js 10); constructor); try solve [constructor].
+      - constructor. eauto_js.
+      - constructor. constructor.
+      - constructor. assumption.
+    + skip. (* TODO compare properties *)
+Qed.
+
 Lemma red_spec_creating_function_object_abstract_ok : forall k c st st' r cl n s b,
     L.red_exprh k c st
         (L.expr_app_2 LjsInitEnv.privMakeFunctionObject 
@@ -4619,7 +4682,7 @@ Lemma red_spec_creating_function_object_abstract_ok : forall k c st st' r cl n s
     r = L.res_value (L.value_object ptr1) /\
     ~index st ptr1 /\ ~index st ptr2 /\ ptr1 <> ptr2 /\
     st' = st \(ptr1 := ljs_function_object cl n s b ptr2) \(ptr2 := ljs_function_proto ptr1).
-Proof.
+Proof. 
     introv Hlred.
     ljs_invert_apply.
     repeat ljs_autoforward.
@@ -4662,6 +4725,140 @@ Proof.
         rewrite update_commute by eassumption. rew_bag_simpl.
         reflexivity.
     }
+Qed. 
+
+Lemma js_object_property_express_lemma : forall jst jptr jobj s, 
+    binds jst jptr jobj ->
+    ~index (J.object_properties_ jobj) s ->
+    J.object_property jst jptr s None.
+Proof.
+    introv Hbinds Hnindex.
+    eapply read_option_not_index_inv in Hnindex.
+    unfolds. eexists. rew_heap_to_libbag. erewrite <- Hnindex. split. unfolds. eauto_js. reflexivity.
+Qed.
+
+Definition js_attributes_of_descriptor jdesc :=
+    If JsPreliminary.descriptor_is_generic jdesc \/ JsPreliminary.descriptor_is_data jdesc
+    then JsSyntax.attributes_data_of
+        (JsPreliminary.attributes_data_of_descriptor jdesc)
+    else JsSyntax.attributes_accessor_of
+        (JsPreliminary.attributes_accessor_of_descriptor jdesc).
+
+Hint Extern 10 (J.object_extensible _ _ _) => unfolds : js_ljs.
+Hint Extern 10 (J.object_method _ _ _ _) => unfolds : js_ljs.
+
+Lemma define_own_prop_express_lemma : forall jst jc jptr jobj s jdesc,
+    binds jst jptr jobj ->
+    ~index (J.object_properties_ jobj) s ->
+    J.object_define_own_prop_ jobj = J.builtin_define_own_prop_default ->
+    J.object_get_own_prop_ jobj = J.builtin_get_own_prop_default ->
+    J.object_extensible_ jobj = true ->
+    J.red_expr jst jc 
+        (J.spec_object_define_own_prop jptr s jdesc false) 
+        (J.out_ter (jst \(jptr := J.object_map_properties jobj 
+                                      (fun P => P \(s := js_attributes_of_descriptor jdesc)))) 
+            (J.res_val (J.value_prim (J.prim_bool true)))).
+Proof.
+    introv Hbinds Hnindex Hdef1 Hdef2 Hext.
+    forwards Hx : js_object_property_express_lemma ___; try eassumption.
+    eauto_js 20.
+Qed.
+
+(* TODO move to adapter *)
+Lemma js_fresh_obj_update_obj : forall jst jptr jobj,
+    @fresh J.object_loc _ _ (jst \(jptr := jobj)) = fresh jst.
+Proof.
+    introv. destruct jst. reflexivity.
+Qed.
+
+Lemma js_fresh_obj_update_env : forall jst jeptr jer,
+    @fresh J.object_loc _ _ (jst \(jeptr := jer)) = fresh jst.
+Proof.
+    introv. destruct jst. reflexivity.
+Qed.
+
+Definition js_fresh2_obj jst : J.object_loc := fresh (J.state_next_fresh jst).
+
+Lemma red_spec_creating_function_object_js_ok : forall jst jc is jp s jle,
+    exists jst' jst'' jptr1 jptr2,
+    J.red_expr jst jc (J.spec_creating_function_object is (J.funcbody_intro jp s) jle
+        (J.prog_intro_strictness jp)) (J.out_ter jst'' (J.res_val (J.value_object jptr1))) /\
+    jst' = J.state_next_fresh (jst 
+        \(jptr1 := js_function_object (J.funcbody_intro jp s) is jle (J.prog_intro_strictness jp) jptr2)) /\
+    jst'' = J.state_next_fresh (jst'
+        \(jptr2 := js_function_proto jptr1)) /\
+    jptr1 = fresh jst /\ jptr2 = fresh jst'.
+Proof.
+    introv.
+    sets_eq strict : (J.prog_intro_strictness jp).
+    destruct strict. {
+        do 4 eexists. splits.
+        eapply J.red_spec_creating_function_object; try reflexivity. eauto_js.
+        eapply define_own_prop_express_lemma.
+            { eauto_js. } { simpl. rew_heap_to_libbag. eauto_js. }
+            reflexivity. reflexivity. reflexivity.
+        eapply J.red_spec_creating_function_object_1.
+        eapply J.red_spec_creating_function_object_proto.
+        eapply J.red_spec_call_object_new. constructor. constructor.
+        eapply J.red_spec_call_object_new_1_null_or_undef. eauto_js. reflexivity. eauto_js.
+        eapply J.red_spec_creating_function_object_proto_1. 
+        eapply define_own_prop_express_lemma. { eauto_js. } { simpl. rew_heap_to_libbag. eauto_js. }
+            reflexivity. reflexivity. reflexivity.
+        eapply J.red_spec_creating_function_object_proto_2.
+        eapply define_own_prop_express_lemma. {
+
+repeat rewrite js_state_write_object_next_fresh_commute.
+repeat eapply js_state_next_fresh_binds_object_preserved.
+rew_binds_eq. right. split. skip. (* TODO *)
+right. split. skip. (* TODO *)
+left. eauto_js. } { simpl. rew_heap_to_libbag. eauto_js. }
+            reflexivity. reflexivity. reflexivity.
+        eapply J.red_spec_creating_function_object_2_strict. reflexivity. reflexivity.
+        eapply define_own_prop_express_lemma. {
+repeat rewrite js_state_write_object_next_fresh_commute.
+repeat eapply js_state_next_fresh_binds_object_preserved.
+rew_binds_eq. left. eauto_js. } { simpl. rew_heap_to_libbag. eauto_js. }
+            reflexivity. reflexivity. reflexivity.
+        eapply J.red_spec_creating_function_object_3. reflexivity. reflexivity.
+        eapply define_own_prop_express_lemma. {
+repeat rewrite js_state_write_object_next_fresh_commute.
+repeat eapply js_state_next_fresh_binds_object_preserved.
+rew_binds_eq. left. eauto_js. } { simpl. rew_heap_to_libbag. eauto_js. }
+            reflexivity. reflexivity. reflexivity.
+        eapply J.red_spec_creating_function_object_4.
+
+        repeat rewrite <- js_state_write_object_next_fresh_commute.
+        repeat rewrite js_fresh_obj_update_obj.
+        rew_bag_simpl.
+(*        do 2 apply func_eq_1.
+        skip. skip.*) skip. skip. skip. skip.
+    } {
+        skip.
+    }
+Admitted.
+
+Lemma state_invariant_new_2_objects_preserved : 
+    forall BR BR' jst jst' jst'' st jptr1 jptr2 jobj1 jobj2 ptr1 ptr2 obj1 obj2,
+    state_invariant BR jst st ->
+    ~index st ptr1 ->
+    ~index st ptr2 ->
+    jptr1 = fresh jst ->
+    jptr2 = fresh jst' ->
+    jst' = J.state_next_fresh (jst \(fresh jst := jobj1)) ->
+    jst'' = J.state_next_fresh (jst' \(fresh jst' := jobj2)) ->
+    BR' = \{fact_js_obj jptr2 ptr2} \u \{fact_js_obj jptr1 ptr1} \u BR ->
+    object_related BR' jobj1 obj1 ->
+    object_related BR' jobj2 obj2 ->
+    state_invariant BR' jst'' (st \(ptr1 := obj1) \(ptr2 := obj2)).
+Proof.
+    introv Hinv Hnindex1 Hnindex2 EQjptr1 EQjptr2 EQjst' EQjst''.
+    introv EQbr' Horel1 Horel2.
+    inverts Hinv.
+    substs.
+    constructor.
+    + skip.
+    + skip.
+    + eauto_js.
 Qed.
 
 (* TODO move *)
@@ -4673,30 +4870,36 @@ Lemma red_spec_creating_function_object_ok : forall BR k jst jc c' c st st' r is
         (L.out_ter st' r) ->
     context_invariant BR jc c' ->
     state_invariant BR jst st ->
-    (forall v, binds c "$context" v -> lexical_env_related BR jle v) ->
+    usercode_context_invariant BR jle (J.prog_intro_strictness jp) c ->
     concl_ext_expr_value BR jst jc c st st' r 
         (J.spec_creating_function_object is (J.funcbody_intro jp s) jle (J.prog_intro_strictness jp)) 
         (fun jv => exists jptr, jv = J.value_object jptr).
 Proof.
     introv Hlred Hcinv Hinv Himpl.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    ljs_context_invariant_after_apply.
-    repeat ljs_autoforward.
-    forwards_th Hx : add_data_field_lemma. prove_bag.
+    forwards_th Hx : red_spec_creating_function_object_abstract_ok.
     destruct_hyp Hx.
-    repeat ljs_autoforward.
-    sets_eq b : (J.prog_intro_strictness jp).
-(*
-    destruct b. { (* strict *)
-        repeat ljs_autoforward.
-        skip. (* TODO *)
-    } { (* not strict *)
-        repeat ljs_autoforward.
-        skip. (* TODO *)
-    }
-*)
-Admitted. (* TODO *)
+    forwards Hy : red_spec_creating_function_object_js_ok.
+    destruct Hy as (?&?&?&?&Hjred&EQjst1&EQjst2&EQjptr1&EQjptr2).
+
+    rewrite EQjptr1 in Hjred.
+    rewrite EQjst2 in Hjred.
+
+    lets Hbrsub : context_invariant_bisim_includes_init Hcinv.
+
+    unfold_concl. do 3 eexists. splits.
+    + eauto_js.
+    + eauto_js. 
+    + eapply state_invariant_new_2_objects_preserved.
+      eassumption. assumption. assumption. reflexivity. reflexivity. reflexivity.
+      eapply func_eq_1. rewrite EQjst1. rewrite EQjptr1. eapply func_eq_2.
+      rewrite <- EQjptr1. rewrite <- EQjst1. assumption. reflexivity. 
+      rewrite <- EQjptr1. rewrite <- EQjst1. rewrite <- EQjptr2. reflexivity.
+      eapply function_object_related_lemma. eauto_js. eauto_js. eauto_js.
+      rewrite <- EQjptr1.
+      eapply function_proto_related_lemma. eauto_js. eauto_js.
+    + eauto_js.
+    + rewrite <- EQjptr1. eauto_js 10.
+Qed.
 
 (* TODO move to ejs *)
 Lemma exprjs_prog_strictness_eq : forall jp, E.prog_strictness (E.js_prog_to_ejs jp) = J.prog_intro_strictness jp.

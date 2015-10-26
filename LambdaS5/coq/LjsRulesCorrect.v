@@ -250,7 +250,8 @@ Proof.
     simpls.
     repeat ljs_autoforward.
     asserts_rewrite (jels = J.prog_elements (J.prog_intro b jels)) in *. reflexivity.
-    forwards_th : binding_inst_global_lemma. intro. intro. applys call_lemma. eauto_js 7. prove_bag. prove_bag.
+    forwards_th : binding_inst_global_lemma. { intro. intro. applys call_lemma. } eauto_js 7. prove_bag. prove_bag.
+       reflexivity.
     destr_concl; try ljs_handle_abort.
     res_related_invert.
     repeat ljs_autoforward.
