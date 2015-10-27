@@ -6,6 +6,7 @@ Require Import LjsSyntax.
 Require Import LjsPrettyInterm.
 Require Import LjsPrettyRules.
 Require Import LjsPrettyRulesIndexed.
+Require Import LjsPrettyRulesIndexedAux.
 Require Import LjsPrettyRulesIndexedInvert.
 Require Import LjsStore.
 Require Import LjsCommon.
@@ -141,6 +142,146 @@ Local Ltac ljs_inv :=
         end
     end.
 
+Local Ltac apply_hyp H1 :=
+    match goal with
+    | H : red_exprh _ _ _ _ _ |- _ => apply H1 in H
+    end.
+
+Local Ltac state_security_ok_trans :=
+    match goal with
+    | H : state_security_ok ?st _ |- state_security_ok ?st _ => applys state_security_ok_trans H; clear H
+    end.
+
+Local Hint Resolve attributes_security_ok_refl.
+Local Hint Resolve object_security_ok_refl.
+
+Lemma state_security_ok_set_attributes : forall st ptr obj s attrs pa v,
+    binds st ptr obj ->
+    binds (object_properties obj) s attrs ->
+    attributes_pattr_writable attrs pa ->
+    attributes_pattr_valid pa v ->
+    state_security_ok st (st \(ptr := set_object_property obj s (set_attributes_pattr attrs pa v))).
+Proof.
+    introv Hbinds Habinds Hwritable Hvalid Hbinds'.
+    destruct (classic (ptr = ptr0)).
+    + subst. binds_determine. eexists. split. prove_bag. destruct obj. constructor; eauto.
+      - introv Hnext Hidx. destruct (classic (s = s0)).
+        * subst. prove_bag.
+        * unfolds set_object_property. eapply index_update_diff_inv; eauto.
+      - introv Hbinds Hattrs. rew_refl in Hattrs. destruct (classic (s = s0)).
+        * subst. binds_determine. inverts Hwritable as HHH; tryfalse;
+          destruct data; unfolds set_object_property.
+          { eexists. rew_refl. splits. prove_bag. prove_bag. applys~ attributes_security_ok_data_writable. }
+          { eexists. rew_refl. splits. prove_bag. prove_bag. applys~ attributes_security_ok_data_writable. }
+        * unfolds set_object_property. eexists. rew_refl. prove_bag.
+    + prove_bag.
+Qed.
+
+Lemma state_security_ok_new_attributes : forall st ptr obj s p v,
+    binds st ptr obj ->
+    ~index (object_properties obj) s ->
+    object_extensible obj ->
+    attributes_pattr_valid p v ->
+    state_security_ok st (st \(ptr := set_object_property obj s (new_attributes_pattr p v))).
+Proof.
+    introv Hbinds Habinds Hextensible Hvalid Hbinds'.
+    destruct (classic (ptr = ptr0)).
+    + subst. binds_determine. eexists. split. prove_bag. destruct obj. constructor; eauto.
+      - introv Hnext Hidx. rew_refl in Hnext. tryfalse.
+      - introv Hbinds Hattrs. destruct (classic (s = s0)).
+        * subst. false. eapply Habinds. prove_bag.
+        * unfolds set_object_property. prove_bag.
+    + prove_bag.
+Qed.
+
+Lemma state_security_ok_set_object_oattr : forall st ptr obj oa v,
+    binds st ptr obj ->
+    object_oattr_modifiable obj oa ->
+    object_oattr_valid oa v ->
+    state_security_ok st (st \(ptr := set_object_oattr obj oa v)).
+Proof.
+    introv Hbinds Hmodifiable Hvalid Hbinds'.
+    destruct (classic (ptr = ptr0)).
+    + subst. binds_determine. eexists. split. prove_bag. destruct obj. constructor; eauto.
+      - destruct object_attrs. destruct oa; inverts Hmodifiable; reflexivity.
+      - destruct object_attrs. destruct oa; inverts Hmodifiable; reflexivity.
+      - rew_refl. unfolds object_extensible. introv Hnext. destruct object_attrs. destruct oa; try reflexivity.
+        inverts Hmodifiable. simpls. tryfalse.
+      - rew_refl. unfolds object_extensible. introv Hnext. destruct object_attrs. destruct oa; try assumption.
+        inverts Hmodifiable. simpls. tryfalse.
+    + prove_bag.
+Qed.
+
+Lemma state_security_ok_new_object : forall st obj,
+    state_security_ok st (st \(fresh st := obj)).
+Proof.
+    introv Hbinds.
+    destruct (classic (ptr = fresh st)).
+    + subst. eexists. split. prove_bag. false. eapply fresh_index. eapply index_binds_inv. eassumption.
+    + lets Hnindex : (fresh_index st). eexists. split. prove_bag. eapply object_security_ok_refl.
+Qed.
+
+Lemma state_security_ok_delete_object_property : forall st ptr obj s attrs,
+    binds st ptr obj ->
+    binds (object_properties obj) s attrs ->
+    attributes_configurable attrs ->
+    state_security_ok st (st \(ptr := delete_object_property obj s)).
+Proof.
+    introv Hbinds Habinds Hconfig Hbinds'.
+    destruct (classic (ptr = ptr0)).
+    + subst. binds_determine. eexists. split. prove_bag. destruct obj. constructor; eauto.
+      - introv Hnext Hidx. destruct (classic (s = s0)).
+        * subst. prove_bag.
+        * eapply index_remove_notin_inv; try apply Hidx. unfolds LibBag.notin. rew_in_eq. eauto. (* TODO *)
+      - introv Hbinds Hattrs. destruct (classic (s = s0)).
+        * subst. binds_determine. rew_refl in Hattrs. tryfalse.
+        * eexists. splits. eapply binds_remove_notin. { unfolds LibBag.notin. rew_in_eq. eauto. }
+          eassumption. assumption. eauto.
+    + prove_bag.
+Qed.
+
+Local Ltac many_step IHk := 
+    ljs_inv; ljs_out_redh_ter; apply_hyp IHk; ljs_inv; try assumption; state_security_ok_trans.
+
+Lemma red_exprh_eval_many_state_security_ok : forall k K,
+    (forall c st st' r l,
+        red_exprh k c st (K l) (out_ter st' r) -> state_security_ok st st') ->
+    (forall c st st' r e,
+        red_exprh k c st e (out_ter st' r) -> state_security_ok st st') ->
+    forall l1 l2 c st st' r,
+    red_exprh k c st (expr_eval_many_1 l1 l2 K) (out_ter st' r) ->
+    state_security_ok st st'.
+Proof.
+    introv Hcont IHk. induction l1; introv Hred.
+    + ljs_inv. eauto.
+    + many_step IHk.
+      specializes~ IHl1 ___.
+Qed.
+
+Local Ltac eval_many_magic IHk := 
+    match goal with
+    | H : red_exprh _ _ _ (expr_eval_many_1 _ _ _) _ |- _ =>
+        let H' := fresh in
+        (lets H' : red_exprh_eval_many_state_security_ok IHk H; clear H); [introv H | idtac]
+    end.
+
+Local Ltac state_security_magic IHk := repeat (ljs_out_redh_ter || eval_many_magic IHk || 
+                   ljs_inv || apply_hyp IHk || 
+                   state_security_ok_trans || apply state_security_ok_refl).
+
+Lemma state_security_ok_object : forall k,
+    (forall c st st' r e,
+        red_exprh k c st e (out_ter st' r) -> state_security_ok st st') ->
+    forall l1 l2 obj c st st' r,
+    red_exprh k c st (expr_object_2 l1 l2 obj) (out_ter st' r) ->
+    state_security_ok st st'.
+Proof.
+    introv IHk. induction l1; [induction l2 | idtac]; introv Hred.
+    + ljs_inv. applys* state_security_ok_new_object.
+    + ljs_inv; do 4 (many_step IHk); do 2 ljs_inv; eauto.
+    + ljs_inv. many_step IHk. do 2 ljs_inv. eauto.
+Qed.
+
 Lemma red_exprh_state_security_ok : forall k c st st' r e,
     red_exprh k c st e (out_ter st' r) ->
     state_security_ok st st'.
@@ -151,8 +292,17 @@ Proof.
     inverts Hred.
     destruct e;
     inverts red_exprh Hred;
-    try apply state_security_ok_refl.
-    skip.
-    repeat ljs_inv. 
-(* TODO *)
-Admitted.
+    try solve [apply state_security_ok_refl];
+    try match goal with
+    | H : context [ expr_object_1 _ _ ] |- _ => fail 1
+    | _ => state_security_magic IHk
+    end.
+    + do 4 (many_step IHk). do 2 ljs_inv.
+      applys* state_security_ok_object.
+    + applys* state_security_ok_set_attributes.
+    + applys* state_security_ok_new_attributes.
+    + applys* state_security_ok_set_object_oattr.
+    + applys* state_security_ok_delete_object_property.
+    + skip.
+    + applys* state_security_ok_new_object.
+Qed.
