@@ -168,47 +168,6 @@ Proof.
     jauto.
 Qed.
 
-(* TODO move to LibList *)
-Section LogicList.
-Variables A A1 A2 B C : Type.
-
-Inductive NthDef : A -> nat -> list A -> A -> Prop :=
-  | NthDef_nil : forall d k,
-      NthDef d k nil d
-  | NthDef_here : forall d l x,
-      NthDef d 0 (x::l) x
-  | NthDef_next : forall d y k l x,
-      NthDef d k l x ->
-      NthDef d (S k) (y::l) x.
-
-Hint Constructors NthDef.
-Hint Constructors Nth.
-
-Lemma Nth_to_NthDef : forall k l x d, Nth k l x -> NthDef d k l x.
-Proof.
-    introv Hnth. induction~ Hnth.
-Qed.
-
-Lemma NthDef_to_Nth : forall k l x d, NthDef d k l x -> Nth k l x \/ k >= length l /\ x = d.
-Proof.
-    introv Hnthd. induction Hnthd; rew_length.
-    + intuition math.
-    + eauto.
-    + destruct_hyp IHHnthd. eauto. intuition math.
-Qed.
-
-Lemma NthDef_to_nth_def : forall k l x d, NthDef d k l x -> nth_def d k l = x.
-Proof.
-    introv Hnthd. induction Hnthd; try destruct k; simpl; eauto.
-Qed.
-
-Lemma nth_def_to_NthDef : forall k l x d, nth_def d k l = x -> NthDef d k l x.
-Proof.
-    induction k; introv Heq; destruct l; simpls; substs; eauto.
-Qed.
-
-End LogicList.
-
 (* TODO move *)
 Lemma array_idx_lemma : forall BR k jst jc c st st' ptr jvs vs s k' r,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privArrayIdx [L.value_object ptr; L.value_string s])
