@@ -151,16 +151,48 @@ Proof.
     jauto_js.
 Qed.
 
-Lemma red_expr_call_number_ok : forall k, th_call_prealloc k J.prealloc_number.
+(* TODO move *)
+Lemma of_int_zero_lemma : of_int 0 = JsNumber.zero.
+Admitted.
+
+Lemma red_expr_call_number_ok : forall k, ih_call k -> th_call_prealloc k J.prealloc_number.
 Proof.
-    introv Hcinv Hinv Hvrel Halo Hcrel Hvrels Hlred.
+    introv IHc Hcinv Hinv Hvrel Halo Hcrel Hvrels Hlred.
     inverts Hcrel.
     ljs_invert_apply.
-Admitted.
+    repeat ljs_autoforward.
+    forwards_th Hx : array_empty_lemma; try eassumption.
+    destruct_hyp Hx.
+    cases_isTrue as Heq. {
+        subst_hyp Heq.
+        inverts Hvrels.
+        repeat ljs_autoforward.
+        rewrite of_int_zero_lemma.
+        jauto_js.
+    }
+    repeat ljs_autoforward.
+    forwards_th Hx : array_idx_eq_lemma; try eassumption. { rewrite <- string_of_nat_0_lemma. reflexivity. }
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_number_unary_ok.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js.
+Qed.
 
 Lemma red_expr_call_boolean_ok : forall k, th_call_prealloc k J.prealloc_bool.
 Proof.
     introv Hcinv Hinv Hvrel Halo Hcrel Hvrels Hlred.
     inverts Hcrel.
     ljs_invert_apply.
-Admitted.
+    repeat ljs_autoforward.
+    forwards_th Hx : array_idx_eq_lemma; try eassumption. { rewrite <- string_of_nat_0_lemma. reflexivity. }
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_boolean_unary_ok.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js.
+Qed.

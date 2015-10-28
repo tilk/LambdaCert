@@ -599,12 +599,14 @@ Proof.
     }
 Qed.
 
-Lemma red_spec_call_prealloc_ok : forall k jpre, th_call_prealloc k jpre.
+Lemma red_spec_call_prealloc_ok : forall k jpre, ih_call k -> th_call_prealloc k jpre.
 Proof.
-    introv Hcinv Hinv Hvrel Hf Hrel Hvrels Hlred.
+    introv IHk.
     destruct jpre.
     + skip.
     + skip.
+    + applys~ red_expr_call_global_is_finite_ok.
+    + applys~ red_expr_call_global_is_nan_ok.
     + skip.
     + skip.
     + skip.
@@ -633,13 +635,11 @@ Proof.
     + skip.
     + skip.
     + skip.
+    + applys~ red_expr_call_boolean_ok.
     + skip.
     + skip.
     + skip.
-    + skip.
-    + skip.
-    + skip.
-    + skip.
+    + applys~ red_expr_call_number_ok.
     + skip.
     + skip.
     + skip.

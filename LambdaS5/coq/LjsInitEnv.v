@@ -1597,10 +1597,8 @@ expr_let "cproto1"
 .
 Definition ex_internal1 := 
 expr_app (expr_id "%MakeNumber")
-[expr_if
- (expr_op2 binary_op_stx_eq
-  (expr_app (expr_id "%ArrayEmpty") [expr_id "args"])
-  (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
+[expr_if (expr_app (expr_id "%ArrayEmpty") [expr_id "args"])
+ (expr_number (JsNumber.of_int (0)))
  (expr_app (expr_id "%ToNumber")
   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])]
 .
@@ -3757,10 +3755,8 @@ expr_undefined
 .
 Definition ex_privNumberConstructor := 
 expr_app (expr_id "%MakeNumber")
-[expr_if
- (expr_op2 binary_op_stx_eq
-  (expr_app (expr_id "%ArrayEmpty") [expr_id "args"])
-  (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
+[expr_if (expr_app (expr_id "%ArrayEmpty") [expr_id "args"])
+ (expr_number (JsNumber.of_int (0)))
  (expr_app (expr_id "%ToNumber")
   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])]
 .
