@@ -168,6 +168,89 @@ Proof.
     jauto.
 Qed.
 
+(* TODO move to LibList *)
+Section LogicList.
+Variables A A1 A2 B C : Type.
+
+Inductive NthDef : A -> nat -> list A -> A -> Prop :=
+  | NthDef_nil : forall d k,
+      NthDef d k nil d
+  | NthDef_here : forall d l x,
+      NthDef d 0 (x::l) x
+  | NthDef_next : forall d y k l x,
+      NthDef d k l x ->
+      NthDef d (S k) (y::l) x.
+
+Hint Constructors NthDef.
+Hint Constructors Nth.
+
+Lemma Nth_to_NthDef : forall k l x d, Nth k l x -> NthDef d k l x.
+Proof.
+    introv Hnth. induction~ Hnth.
+Qed.
+
+Lemma NthDef_to_Nth : forall k l x d, NthDef d k l x -> Nth k l x \/ k >= length l /\ x = d.
+Proof.
+    introv Hnthd. induction Hnthd; rew_length.
+    + intuition math.
+    + eauto.
+    + destruct_hyp IHHnthd. eauto. intuition math.
+Qed.
+
+Lemma NthDef_to_nth_def : forall k l x d, NthDef d k l x -> nth_def d k l = x.
+Proof.
+    introv Hnthd. induction Hnthd; try destruct k; simpl; eauto.
+Qed.
+
+Lemma nth_def_to_NthDef : forall k l x d, nth_def d k l = x -> NthDef d k l x.
+Proof.
+    induction k; introv Heq; destruct l; simpls; substs; eauto.
+Qed.
+
+End LogicList.
+
+(* TODO move *)
+Lemma array_idx_lemma : forall BR k jst jc c st st' ptr jvs vs s k' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privArrayIdx [L.value_object ptr; L.value_string s])
+        (L.out_ter st' r) ->
+    s = string_of_nat k' ->
+    fact_iarray ptr vs \in BR ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR jvs vs ->
+    state_invariant BR jst st' /\
+    st = st' /\ 
+    exists jv v,
+    r = L.res_value v /\
+    value_related BR jv v /\
+    NthDef (J.value_prim J.prim_undef) k' jvs jv /\
+    NthDef L.value_undefined k' vs v.
+Proof.
+Admitted. (* TODO *)
+
+(* TODO move *)
+Lemma array_idx_eq_lemma : forall BR k jst jc c st st' ptr jvs vs s k' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privArrayIdx [L.value_object ptr; L.value_string s])
+        (L.out_ter st' r) ->
+    s = string_of_nat k' ->
+    fact_iarray ptr vs \in BR ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR jvs vs ->
+    state_invariant BR jst st' /\
+    st = st' /\ 
+    r = L.res_value (nth_def L.value_undefined k' vs) /\
+    value_related BR (nth_def (J.value_prim J.prim_undef) k' jvs) (nth_def L.value_undefined k' vs).
+Proof.
+    introv Hlred Heq Hf Hcinv Hinv Hvrel.
+    lets H : (array_idx_lemma Hlred Heq Hf Hcinv Hinv Hvrel).
+    destruct H as (?&?&?&?&?&?&Hn1&Hn2).
+    eapply NthDef_to_nth_def in Hn1.
+    eapply NthDef_to_nth_def in Hn2.
+    substs.
+    eauto.
+Qed.
+
 (* *** errors *)
 
 (* TODO move *)
@@ -827,46 +910,6 @@ Proof.
     lets Herel : heaps_bisim_consistent_bisim_env (state_invariant_heaps_bisim_consistent Hinv) Hbs Hbinds.
         eassumption.
     jauto.
-Qed.
-
-(* TODO move *)
-Lemma stx_eq_string_eq_lemma : forall s1 s2,
-    L.stx_eq (L.value_string s1) (L.value_string s2) = (s1 = s2).
-Proof.
-    introv. rew_logic. splits; introv Hx. {
-       inverts Hx. reflexivity.
-    } {
-       substs. eauto_js.
-    }
-Qed.
-
-(* TODO move *)
-Lemma stx_eq_object_eq_lemma : forall ptr1 ptr2,
-    L.stx_eq (L.value_object ptr1) (L.value_object ptr2) = (ptr1 = ptr2).
-Proof.
-    introv. rew_logic. splits; introv Hx. {
-       inverts Hx. reflexivity.
-    } {
-       substs. eauto_js.
-    }
-Qed.
-
-(* TODO move *)
-Lemma stx_eq_empty_eq_lemma : forall v, L.stx_eq v L.value_empty = (v = L.value_empty).
-Proof.
-    introv. rew_logic. split; introv H. { inverts H. reflexivity. } { substs. eauto_js. }
-Qed.
-
-(* TODO move *)
-Lemma stx_eq_null_eq_lemma : forall v, L.stx_eq v L.value_null = (v = L.value_null).
-Proof.
-    introv. rew_logic. split; introv H. { inverts H. reflexivity. } { substs. eauto_js. }
-Qed.
-
-(* TODO move *)
-Lemma stx_eq_undefined_eq_lemma : forall v, L.stx_eq v L.value_undefined = (v = L.value_undefined).
-Proof.
-    introv. rew_logic. split; introv H. { inverts H. reflexivity. } { substs. eauto_js. }
 Qed.
 
 (* TODO move *)
@@ -3255,24 +3298,6 @@ Lemma js_prog_intro_eta : forall p, J.prog_intro (J.prog_intro_strictness p) (J.
 Proof.
     introv. destruct p. reflexivity.
 Qed.
-
-(* TODO move *)
-Lemma array_idx_lemma : forall BR k jst jc c st st' ptr jvs vs s k' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privArrayIdx [L.value_object ptr; L.value_string s])
-        (L.out_ter st' r) ->
-    s = string_of_nat k' ->
-    fact_iarray ptr vs \in BR ->
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    values_related BR jvs vs ->
-    state_invariant BR jst st' /\
-    st = st' /\ 
-    exists jv v,
-    r = L.res_value v /\
-    value_related BR jv v /\
-    (k' >= length vs /\ jv = J.value_prim J.prim_undef /\ v = L.value_undefined \/ Nth k' jvs jv /\ Nth k' vs v).
-Proof.
-Admitted. (* TODO *)
 
 Lemma values_related_length_lemma : forall BR jvs vs,
     values_related BR jvs vs ->

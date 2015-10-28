@@ -2898,3 +2898,56 @@ Proof.
 Qed.
 
 Hint Resolve js_red_expr_getvalue_lemma : js_ljs.
+
+(* TODO various things to move *)
+
+Lemma same_value_string_eq_lemma : forall s1 s2,
+    L.same_value (L.value_string s1) (L.value_string s2) = (s1 = s2).
+Proof.
+    introv. rew_logic. splits; introv Hx.
+    + inverts Hx. reflexivity.
+    + substs. eauto_js.
+Qed.
+
+Lemma same_value_number_eq_lemma : forall n1 n2,
+    L.same_value (L.value_number n1) (L.value_number n2) = (n1 = n2).
+Proof.
+    introv. rew_logic. splits; introv Hx.
+    + inverts Hx. reflexivity.
+    + substs. eauto_js.
+Qed.
+
+Lemma stx_eq_string_eq_lemma : forall s1 s2,
+    L.stx_eq (L.value_string s1) (L.value_string s2) = (s1 = s2).
+Proof.
+    introv. rew_logic. splits; introv Hx. {
+       inverts Hx. reflexivity.
+    } {
+       substs. eauto_js.
+    }
+Qed.
+
+Lemma stx_eq_object_eq_lemma : forall ptr1 ptr2,
+    L.stx_eq (L.value_object ptr1) (L.value_object ptr2) = (ptr1 = ptr2).
+Proof.
+    introv. rew_logic. splits; introv Hx. {
+       inverts Hx. reflexivity.
+    } {
+       substs. eauto_js.
+    }
+Qed.
+
+Lemma stx_eq_empty_eq_lemma : forall v, L.stx_eq v L.value_empty = (v = L.value_empty).
+Proof.
+    introv. rew_logic. split; introv H. { inverts H. reflexivity. } { substs. eauto_js. }
+Qed.
+
+Lemma stx_eq_null_eq_lemma : forall v, L.stx_eq v L.value_null = (v = L.value_null).
+Proof.
+    introv. rew_logic. split; introv H. { inverts H. reflexivity. } { substs. eauto_js. }
+Qed.
+
+Lemma stx_eq_undefined_eq_lemma : forall v, L.stx_eq v L.value_undefined = (v = L.value_undefined).
+Proof.
+    introv. rew_logic. split; introv H. { inverts H. reflexivity. } { substs. eauto_js. }
+Qed.

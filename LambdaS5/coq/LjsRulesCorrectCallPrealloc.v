@@ -46,16 +46,110 @@ Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
 
-Lemma red_expr_call_global_is_finite_ok : forall k, th_call_prealloc k J.prealloc_global_is_finite.
+Definition afh k' k jvl := 
+    map (fun k => nth_def (J.value_prim J.prim_undef) k jvl) (LibStream.take k (nat_stream_from k')).
+
+Lemma afh_lemma_1 : forall jv jvl k k',
+    afh (S k') k (jv :: jvl) = afh k' k jvl.
 Proof.
-    introv Hcinv Hinv Hvrel Halo Hcrel Hvrels Hlred.
+    unfolds afh.
+    induction k; introv; simpls; rew_map. reflexivity.
+    rewrite IHk. reflexivity.
+Qed.
+
+Lemma afh_lemma_2 : forall k k',
+    afh k' (S k) [] = J.value_prim J.prim_undef :: afh (S k') k [].
+Proof.
+    destruct k'; reflexivity.
+Qed.
+
+Lemma afh_lemma_3 : forall k jv jvl,
+    afh 0 (S k) (jv :: jvl) = jv :: afh 1 k (jv :: jvl).
+Proof.
+    unfolds afh. introv. simpl. rew_map. reflexivity. 
+Qed.
+
+Lemma arguments_from_nil_lemma : forall k k',
+    J.arguments_from [] (afh k' k []).
+Proof.
+    induction k; introv.
+    + constructor.
+    + rewrite afh_lemma_2. constructor. eauto. 
+Qed.
+
+Lemma arguments_from_lemma : forall jvl k,
+    J.arguments_from jvl (afh 0 k jvl).
+Proof.
+    induction jvl; introv.
+    + eapply arguments_from_nil_lemma.
+    + destruct k.
+      - constructor.
+      - rewrite afh_lemma_3. rewrite afh_lemma_1. constructor. eauto.
+Qed.
+
+Ltac js_arguments_from := 
+    match goal with
+    | |- J.arguments_from ?jvl ?l =>
+        let H := fresh in
+        lets H : (arguments_from_lemma jvl (length l));
+        cbv -[nth_def] in H; eapply H; clear H
+    end.
+
+Hint Extern 10 (J.arguments_from _ _) => js_arguments_from : js_ljs.
+
+Opaque decide.
+
+Lemma is_finite_lemma : forall k c st st' r n,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privIsFinite [L.value_number n]) (L.out_ter st' r) ->
+    st = st' /\ r = L.res_value (L.value_bool 
+        (!isTrue (n = JsNumber.nan \/ n = JsNumber.infinity \/ n = JsNumber.neg_infinity))).
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    do 3 let Heq := fresh in
+    cases_decide as Heq; rewrite same_value_number_eq_lemma in Heq; try subst_hyp Heq; repeat ljs_autoforward;
+    [cases_isTrue as Hz; rew_logic in Hz; destruct_hyp Hz; rew_bool; eauto; tryfalse | idtac].
+    cases_isTrue as Hz; rew_logic in Hz; destruct_hyp Hz; tryfalse.
+    eauto.
+Qed.
+
+Lemma red_expr_call_global_is_finite_ok : forall k, ih_call k -> th_call_prealloc k J.prealloc_global_is_finite.
+Proof.
+    introv IHc Hcinv Hinv Hvrel Halo Hcrel Hvrels Hlred.
     inverts Hcrel.
     ljs_invert_apply.
-Admitted.
+    repeat ljs_autoforward.
+    forwards_th Hx : array_idx_eq_lemma; try eassumption. { rewrite <- string_of_nat_0_lemma. reflexivity. }
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_number_unary_ok.
+    destr_concl; try ljs_handle_abort. 
+    res_related_invert.
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    forwards_th Hx : is_finite_lemma. destruct_hyp Hx.
+    cases_isTrue;
+    jauto_js.
+Qed.
 
-Lemma red_expr_call_global_is_nan_ok : forall k, th_call_prealloc k J.prealloc_global_is_nan.
+Lemma red_expr_call_global_is_nan_ok : forall k, ih_call k -> th_call_prealloc k J.prealloc_global_is_nan.
 Proof.
-Admitted.
+    introv IHc Hcinv Hinv Hvrel Halo Hcrel Hvrels Hlred.
+    inverts Hcrel.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : array_idx_eq_lemma; try eassumption. { rewrite <- string_of_nat_0_lemma. reflexivity. }
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_number_unary_ok.
+    destr_concl; try ljs_handle_abort. 
+    res_related_invert.
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    cases_decide as Heq; rewrite same_value_number_eq_lemma in Heq; try subst_hyp Heq;
+    jauto_js.
+Qed.
 
 Lemma red_expr_call_number_ok : forall k, th_call_prealloc k J.prealloc_number.
 Proof.

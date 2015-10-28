@@ -47,6 +47,20 @@ Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
 
+Lemma arridx_lemma : forall k jvs jv vs v,
+    length jvs = length vs ->
+    NthDef (J.value_prim J.prim_undef) k jvs jv /\
+    NthDef L.value_undefined k vs v ->
+    k >= length vs /\ jv = J.value_prim J.prim_undef /\ v = L.value_undefined \/ Nth k jvs jv /\ Nth k vs v.
+Proof.
+    introv Heq (HnA&HnB).
+    apply NthDef_to_Nth in HnA. rewrite Heq in HnA.
+    apply NthDef_to_Nth in HnB.
+    destruct_hyp HnA; destruct_hyp HnB; eauto.
+    apply Nth_lt_length in HnA. false. math.
+    apply Nth_lt_length in HnB. false. math.    
+Qed.
+
 Lemma binding_inst_formal_params_lemma_lemma : forall BR k jst jc c st st' r is vs jvs1 jvs2 ptr ptr1 jeptr b k',
     ih_call k ->
     L.red_exprh k c st (L.expr_basic (L.expr_seqs_then L.expr_empty
@@ -77,6 +91,7 @@ Proof.
     repeat ljs_autoforward.
     forwards_th Harridx : array_idx_lemma. reflexivity. eassumption. eassumption.
     destruct Harridx as (?&Heq1&jv&v&Heq2&Hvrel&Harridx). subst_hyp Heq1. subst_hyp Heq2.
+    apply arridx_lemma in Harridx; try solve [erewrite <- values_related_length_lemma by eassumption; reflexivity].
     asserts Hjvs2 : (k' >= length jvs1 /\ jvs2 = [] /\ v = L.value_undefined /\ jv = J.value_prim J.prim_undef \/ 
             k' = length jvs1 /\ exists jvs2', jvs2 = jv::jvs2'). {
         destruct Hk' as [(Hk1&Hk2)|(Hk1&Hk2)]. {

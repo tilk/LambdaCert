@@ -1599,14 +1599,14 @@ expr_app (expr_id "%MakeNumber")
   (expr_app (expr_id "%ComputeLength") [expr_id "args"])
   (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
  (expr_app (expr_id "%ToNumber")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])]
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])]
 .
 Definition ex_internal10 := 
 expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -1615,7 +1615,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -1649,15 +1649,15 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
   (expr_let "c1"
    (expr_op2 binary_op_stx_eq
     (expr_op1 unary_op_typeof
-     (expr_get_attr pattr_value (expr_id "args") (expr_string "0")))
+     (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]))
     (expr_string "number"))
    (expr_let "c2"
     (expr_if (expr_id "c1")
      (expr_op1 unary_op_not
       (expr_op2 binary_op_stx_eq
        (expr_app (expr_id "%ToUint32")
-        [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
-       (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))))
+        [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
+       (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])))
      expr_false)
     (expr_if (expr_id "c2")
      (expr_throw
@@ -1669,7 +1669,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
       (expr_break "ret"
        (expr_app (expr_id "%MakeArray")
         [expr_app (expr_id "%ToUint32")
-         [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]]))
+         [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]]))
       (expr_let "rtn" (expr_app (expr_id "%MakeArray") [expr_id "argCount"])
        (expr_seq
         (expr_app (expr_id "%defineOwnProperty")
@@ -1680,8 +1680,9 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
            expr_undefined) []
           [("value", property_data
                      (data_intro
-                      (expr_get_attr pattr_value (expr_id "args")
-                       (expr_string "0")) expr_true expr_false expr_false));
+                      (expr_app (expr_id "%ArrayIdx")
+                       [expr_id "args"; expr_string "0"]) expr_true
+                      expr_false expr_false));
            ("writable", property_data
                         (data_intro expr_true expr_true expr_false expr_false));
            ("enumerable", property_data
@@ -1703,7 +1704,7 @@ expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
    (expr_number (JsNumber.of_int (1))))
   (expr_let "v"
    (expr_app (expr_id "%ToPrimitive")
-    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+    [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
    (expr_let "V"
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "v"))
@@ -1715,45 +1716,45 @@ expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
        expr_undefined) [("primval", expr_id "clipped")] []))))
   (expr_let "y"
    (expr_app (expr_id "%ToNumber")
-    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+    [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
    (expr_let "m"
     (expr_app (expr_id "%ToNumber")
-     [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
+     [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]])
     (expr_let "dt"
      (expr_if
       (expr_op2 binary_op_stx_eq
-       (expr_get_attr pattr_value (expr_id "args") (expr_string "2"))
+       (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "2"])
        expr_undefined) (expr_number (JsNumber.of_int (1)))
       (expr_app (expr_id "%ToNumber")
-       [expr_get_attr pattr_value (expr_id "args") (expr_string "2")]))
+       [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "2"]]))
      (expr_let "h"
       (expr_if
        (expr_op2 binary_op_stx_eq
-        (expr_get_attr pattr_value (expr_id "args") (expr_string "3"))
+        (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "3"])
         expr_undefined) (expr_number (JsNumber.of_int (0)))
        (expr_app (expr_id "%ToNumber")
-        [expr_get_attr pattr_value (expr_id "args") (expr_string "3")]))
+        [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "3"]]))
       (expr_let "min"
        (expr_if
         (expr_op2 binary_op_stx_eq
-         (expr_get_attr pattr_value (expr_id "args") (expr_string "4"))
+         (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "4"])
          expr_undefined) (expr_number (JsNumber.of_int (0)))
         (expr_app (expr_id "%ToNumber")
-         [expr_get_attr pattr_value (expr_id "args") (expr_string "4")]))
+         [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "4"]]))
        (expr_let "s"
         (expr_if
          (expr_op2 binary_op_stx_eq
-          (expr_get_attr pattr_value (expr_id "args") (expr_string "5"))
+          (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "5"])
           expr_undefined) (expr_number (JsNumber.of_int (0)))
          (expr_app (expr_id "%ToNumber")
-          [expr_get_attr pattr_value (expr_id "args") (expr_string "5")]))
+          [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "5"]]))
         (expr_let "milli"
          (expr_if
           (expr_op2 binary_op_stx_eq
-           (expr_get_attr pattr_value (expr_id "args") (expr_string "6"))
+           (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "6"])
            expr_undefined) (expr_number (JsNumber.of_int (0)))
           (expr_app (expr_id "%ToNumber")
-           [expr_get_attr pattr_value (expr_id "args") (expr_string "6")]))
+           [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "6"]]))
          (expr_let "yr"
           (expr_let "tiy" (expr_app (expr_id "%ToInteger") [expr_id "y"])
            (expr_let "rangecond1"
@@ -1863,7 +1864,7 @@ expr_app (expr_id "%MakeString")
 Definition ex_internal3 := 
 expr_app (expr_id "%MakeBoolean")
 [expr_app (expr_id "%ToBoolean")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]]
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]]
 .
 Definition ex_internal4 := 
 expr_app (expr_id "%ObjectCall")
@@ -1874,7 +1875,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -1883,7 +1884,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -1892,7 +1893,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -1901,7 +1902,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -1910,7 +1911,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -2130,15 +2131,15 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
   (expr_let "c1"
    (expr_op2 binary_op_stx_eq
     (expr_op1 unary_op_typeof
-     (expr_get_attr pattr_value (expr_id "args") (expr_string "0")))
+     (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]))
     (expr_string "number"))
    (expr_let "c2"
     (expr_if (expr_id "c1")
      (expr_op1 unary_op_not
       (expr_op2 binary_op_stx_eq
        (expr_app (expr_id "%ToUint32")
-        [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
-       (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))))
+        [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
+       (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])))
      expr_false)
     (expr_if (expr_id "c2")
      (expr_throw
@@ -2150,7 +2151,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
       (expr_break "ret"
        (expr_app (expr_id "%MakeArray")
         [expr_app (expr_id "%ToUint32")
-         [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]]))
+         [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]]))
       (expr_let "rtn" (expr_app (expr_id "%MakeArray") [expr_id "argCount"])
        (expr_seq
         (expr_app (expr_id "%defineOwnProperty")
@@ -2161,8 +2162,9 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
            expr_undefined) []
           [("value", property_data
                      (data_intro
-                      (expr_get_attr pattr_value (expr_id "args")
-                       (expr_string "0")) expr_true expr_false expr_false));
+                      (expr_app (expr_id "%ArrayIdx")
+                       [expr_id "args"; expr_string "0"]) expr_true
+                      expr_false expr_false));
            ("writable", property_data
                         (data_intro expr_true expr_true expr_false expr_false));
            ("enumerable", property_data
@@ -2246,12 +2248,12 @@ expr_app (expr_id "%BitwiseInfix")
 .
 Definition ex_privBooleanCall := 
 expr_app (expr_id "%ToBoolean")
-[expr_get_attr pattr_value (expr_id "args") (expr_string "0")]
+[expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_privBooleanConstructor := 
 expr_app (expr_id "%MakeBoolean")
 [expr_app (expr_id "%ToBoolean")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]]
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]]
 .
 Definition ex_privCheckObjectCoercible := 
 expr_if
@@ -2303,7 +2305,7 @@ expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
    (expr_number (JsNumber.of_int (1))))
   (expr_let "v"
    (expr_app (expr_id "%ToPrimitive")
-    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+    [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
    (expr_let "V"
     (expr_if
      (expr_op2 binary_op_stx_eq (expr_op1 unary_op_typeof (expr_id "v"))
@@ -2315,45 +2317,45 @@ expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
        expr_undefined) [("primval", expr_id "clipped")] []))))
   (expr_let "y"
    (expr_app (expr_id "%ToNumber")
-    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+    [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
    (expr_let "m"
     (expr_app (expr_id "%ToNumber")
-     [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
+     [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]])
     (expr_let "dt"
      (expr_if
       (expr_op2 binary_op_stx_eq
-       (expr_get_attr pattr_value (expr_id "args") (expr_string "2"))
+       (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "2"])
        expr_undefined) (expr_number (JsNumber.of_int (1)))
       (expr_app (expr_id "%ToNumber")
-       [expr_get_attr pattr_value (expr_id "args") (expr_string "2")]))
+       [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "2"]]))
      (expr_let "h"
       (expr_if
        (expr_op2 binary_op_stx_eq
-        (expr_get_attr pattr_value (expr_id "args") (expr_string "3"))
+        (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "3"])
         expr_undefined) (expr_number (JsNumber.of_int (0)))
        (expr_app (expr_id "%ToNumber")
-        [expr_get_attr pattr_value (expr_id "args") (expr_string "3")]))
+        [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "3"]]))
       (expr_let "min"
        (expr_if
         (expr_op2 binary_op_stx_eq
-         (expr_get_attr pattr_value (expr_id "args") (expr_string "4"))
+         (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "4"])
          expr_undefined) (expr_number (JsNumber.of_int (0)))
         (expr_app (expr_id "%ToNumber")
-         [expr_get_attr pattr_value (expr_id "args") (expr_string "4")]))
+         [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "4"]]))
        (expr_let "s"
         (expr_if
          (expr_op2 binary_op_stx_eq
-          (expr_get_attr pattr_value (expr_id "args") (expr_string "5"))
+          (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "5"])
           expr_undefined) (expr_number (JsNumber.of_int (0)))
          (expr_app (expr_id "%ToNumber")
-          [expr_get_attr pattr_value (expr_id "args") (expr_string "5")]))
+          [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "5"]]))
         (expr_let "milli"
          (expr_if
           (expr_op2 binary_op_stx_eq
-           (expr_get_attr pattr_value (expr_id "args") (expr_string "6"))
+           (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "6"])
            expr_undefined) (expr_number (JsNumber.of_int (0)))
           (expr_app (expr_id "%ToNumber")
-           [expr_get_attr pattr_value (expr_id "args") (expr_string "6")]))
+           [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "6"]]))
          (expr_let "yr"
           (expr_let "tiy" (expr_app (expr_id "%ToInteger") [expr_id "y"])
            (expr_let "rangecond1"
@@ -3087,7 +3089,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -3096,7 +3098,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -3323,11 +3325,12 @@ Definition ex_privIsFinite :=
 expr_op1 unary_op_not
 (expr_if
  (expr_if
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_id "n") (expr_id "n"))) expr_true
-  (expr_op2 binary_op_stx_eq (expr_id "n") (expr_number JsNumber.infinity)))
- expr_true
- (expr_op2 binary_op_stx_eq (expr_id "n") (expr_number JsNumber.neg_infinity)))
+  (expr_op2 binary_op_same_value (expr_id "n") (expr_number JsNumber.nan))
+  expr_true
+  (expr_op2 binary_op_same_value (expr_id "n")
+   (expr_number JsNumber.infinity))) expr_true
+ (expr_op2 binary_op_same_value (expr_id "n")
+  (expr_number JsNumber.neg_infinity)))
 .
 Definition ex_privIsJSError := 
 expr_if (expr_op1 unary_op_is_object (expr_id "thing"))
@@ -3694,7 +3697,7 @@ expr_lambda ["this"; "args"]
  (expr_if
   (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
   (expr_app (expr_id "%ToString")
-   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
   expr_undefined)
  (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"]))
 .
@@ -3709,7 +3712,7 @@ expr_if
  (expr_app (expr_id "%ComputeLength") [expr_id "args"])
  (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
 (expr_app (expr_id "%ToNumber")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 .
 Definition ex_privNumberCompareOp := 
 expr_if
@@ -3754,7 +3757,7 @@ expr_app (expr_id "%MakeNumber")
   (expr_app (expr_id "%ComputeLength") [expr_id "args"])
   (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
  (expr_app (expr_id "%ToNumber")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])]
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])]
 .
 Definition ex_privNumberToInteger := 
 expr_if
@@ -3780,13 +3783,13 @@ expr_if
    (expr_app (expr_id "%ComputeLength") [expr_id "args"])
    (expr_number (JsNumber.of_int (0)))) expr_true
   (expr_op2 binary_op_stx_eq
-   (expr_get_attr pattr_value (expr_id "args") (expr_string "0")) expr_null))
- expr_true
+   (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
+   expr_null)) expr_true
  (expr_op2 binary_op_stx_eq
-  (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+  (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
   expr_undefined)) (expr_app (expr_id "%MakeObject") [])
 (expr_app (expr_id "%ToObject")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 .
 Definition ex_privObjectConstructor := 
 expr_app (expr_id "%ObjectCall")
@@ -4025,7 +4028,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -4042,7 +4045,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -4089,7 +4092,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
  (expr_op2 binary_op_stx_eq (expr_id "argCount")
   (expr_number (JsNumber.of_int (0)))) (expr_string "")
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]))
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]))
 .
 Definition ex_privStringConstructor := 
 expr_app (expr_id "%MakeString")
@@ -4122,7 +4125,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -4131,7 +4134,8 @@ expr_app (expr_id "%NativeErrorOr")
 [expr_id "%SyntaxErrorProto"; expr_id "msg"; expr_id "v"; expr_id "strict"]
 .
 Definition ex_privThrowTypeErrorFun := 
-expr_let "msg" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "msg"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_app (expr_id "%TypeError") [expr_id "msg"])
 .
 Definition ex_privTimeClip := 
@@ -4349,7 +4353,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -4384,7 +4388,7 @@ expr_let "msg"
 (expr_if
  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  expr_undefined)
 (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
 .
@@ -4453,7 +4457,7 @@ expr_seq
 Definition ex_privacosCall :=  expr_string "acos NYI" .
 Definition ex_privapplyCall := 
 expr_let "applyArgs1"
-(expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
 (expr_let "applyArgs"
  (expr_if
   (expr_if
@@ -4466,7 +4470,7 @@ expr_let "applyArgs1"
    [] []) (expr_id "applyArgs1"))
  (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "applyArgs"])
   (expr_app (expr_id "this")
-   [expr_get_attr pattr_value (expr_id "args") (expr_string "0");
+   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"];
     expr_id "applyArgs"])))
 .
 Definition ex_privarrayIndexOfCall := 
@@ -4485,10 +4489,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
     (expr_let "n"
      (expr_if
       (expr_op2 binary_op_stx_eq
-       (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+       (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
        expr_undefined) (expr_number (JsNumber.of_int (0)))
       (expr_app (expr_id "%ToInteger")
-       [expr_get_attr pattr_value (expr_id "args") (expr_string "1")]))
+       [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]]))
      (expr_seq
       (expr_if (expr_op2 binary_op_ge (expr_id "n") (expr_id "len"))
        (expr_break "ret"
@@ -4505,9 +4509,9 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
              (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "kStr"])
              (expr_if
               (expr_op2 binary_op_stx_eq
-               (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
-               (expr_id "elementK")) (expr_break "ret" (expr_id "k"))
-              expr_undefined))
+               (expr_app (expr_id "%ArrayIdx")
+                [expr_id "args"; expr_string "0"]) (expr_id "elementK"))
+              (expr_break "ret" (expr_id "k")) expr_undefined))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_add (expr_id "k")
               (expr_number (JsNumber.of_int (1)))]))
@@ -4543,12 +4547,12 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_let "n"
       (expr_if
        (expr_op2 binary_op_stx_eq
-        (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+        (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
         expr_undefined)
        (expr_op2 binary_op_sub (expr_id "len")
         (expr_number (JsNumber.of_int (1))))
        (expr_app (expr_id "%ToInteger")
-        [expr_get_attr pattr_value (expr_id "args") (expr_string "1")]))
+        [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]]))
       (expr_recc "loop"
        (expr_lambda ["k"]
         (expr_if
@@ -4560,7 +4564,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
            (expr_if
             (expr_op2 binary_op_stx_eq
              (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "kstr"])
-             (expr_get_attr pattr_value (expr_id "args") (expr_string "0")))
+             (expr_app (expr_id "%ArrayIdx")
+              [expr_id "args"; expr_string "0"]))
             (expr_break "ret" (expr_id "k"))
             (expr_app (expr_id "loop")
              [expr_op2 binary_op_sub (expr_id "k")
@@ -4710,7 +4715,7 @@ expr_seq
  (expr_app (expr_id "%TypeError") [expr_string "this not function in bind"])
  expr_undefined)
 (expr_let "thisArg"
- (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+ (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
  (expr_let "A"
   (expr_app (expr_id "%slice")
    [expr_id "args";
@@ -4749,7 +4754,7 @@ expr_let "callArgs"
   expr_number (JsNumber.of_int (1));
   expr_app (expr_id "%len") [expr_id "args"]])
 (expr_app (expr_id "this")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0");
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"];
   expr_id "callArgs"])
 .
 Definition ex_privcharAtCall := 
@@ -4757,7 +4762,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "position"
   (expr_app (expr_id "%ToInteger")
-   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
   (expr_let "size" (expr_op1 unary_op_strlen (expr_id "S"))
    (expr_if
     (expr_if
@@ -4772,7 +4777,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "position"
   (expr_app (expr_id "%ToInteger")
-   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
   (expr_let "size" (expr_op1 unary_op_strlen (expr_id "S"))
    (expr_if
     (expr_if
@@ -4873,7 +4878,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 .
 Definition ex_privconfigurableEval := 
 expr_let "evalStr"
-(expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_let "evalStr"
  (expr_if (expr_id "useStrict")
   (expr_op2 binary_op_string_plus (expr_string "'use strict';")
@@ -4903,7 +4908,8 @@ expr_let "evalStr"
 .
 Definition ex_privcosCall :=  expr_string "cos NYI" .
 Definition ex_privcreateCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_let "t" (expr_op1 unary_op_typeof (expr_id "O"))
  (expr_if
   (expr_if
@@ -4924,11 +4930,11 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
       (expr_number (JsNumber.of_int (2))))
      (expr_op1 unary_op_not
       (expr_op2 binary_op_stx_eq
-       (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+       (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
        expr_undefined)) expr_false)
     (expr_let "Properties"
      (expr_app (expr_id "%ToObject")
-      [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
+      [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]])
      (expr_let "argsObj"
       (expr_object
        (objattrs_intro (expr_string "Object") expr_true expr_null
@@ -5235,12 +5241,13 @@ expr_let "current"
          (expr_app (expr_id "accept") [expr_id "current"]))))))))))
 .
 Definition ex_privdefinePropertiesCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_seq
   (expr_let "props"
    (expr_app (expr_id "%ToObject")
-    [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
+    [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]])
    (expr_let "names" (expr_own_field_names (expr_id "props"))
     (expr_let "len"
      (expr_get_attr pattr_value (expr_id "names") (expr_string "length"))
@@ -5287,11 +5294,12 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
   (expr_id "O")))
 .
 Definition ex_privdefinePropertyCall := 
-expr_let "obj" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "obj"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_let "field"
- (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+ (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
  (expr_let "propobj"
-  (expr_get_attr pattr_value (expr_id "args") (expr_string "2"))
+  (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "2"])
   (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "obj"])
    (expr_app (expr_id "%defineOwnProperty")
     [expr_id "obj";
@@ -5437,7 +5445,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
   (expr_let "callbackfn"
-   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+   (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -5446,7 +5454,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not function in every"]) expr_null)
      (expr_let "T"
-      (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+      (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
       (expr_recc "loop"
        (expr_lambda ["k"]
         (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
@@ -5495,7 +5503,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
   (expr_let "callbackfn"
-   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+   (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -5504,7 +5512,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not a function in filter"]) expr_null)
      (expr_let "T"
-      (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+      (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
       (expr_let "A"
        (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
        (expr_recc "loop"
@@ -5583,7 +5591,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
   (expr_let "callbackfn"
-   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+   (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -5593,7 +5601,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
        [expr_string "Callback not a function in forEach"]) expr_undefined)
      (expr_seq
       (expr_let "T"
-       (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+       (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
        (expr_recc "loop"
         (expr_lambda ["k"]
          (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
@@ -5628,7 +5636,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       expr_undefined))))))
 .
 Definition ex_privfreezeCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
   (expr_let "len"
@@ -5702,11 +5711,12 @@ expr_op1 unary_op_current_utc_millis expr_undefined
 Definition ex_privgetMonthCall :=  expr_number (JsNumber.of_int (3)) .
 Definition ex_privgetYearCall :=  expr_number (JsNumber.of_int (78)) .
 Definition ex_privgopdCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "name"
   (expr_app (expr_id "%ToString")
-   [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
+   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]])
   (expr_label "ret"
    (expr_seq
     (expr_if
@@ -5846,7 +5856,8 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
             expr_true]) (expr_break "ret" (expr_id "obj"))))))))))))
 .
 Definition ex_privgopnCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "props" (expr_own_field_names (expr_id "O"))
   (expr_let "len"
@@ -5872,7 +5883,8 @@ expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
       (expr_id "A")))))))
 .
 Definition ex_privgpoCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_get_obj_attr oattr_proto (expr_id "O")))
 .
@@ -5880,7 +5892,7 @@ Definition ex_privhasOwnPropertyCall :=
 expr_op2 binary_op_has_own_property
 (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_app (expr_id "%ToString")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 .
 Definition ex_privin := 
 expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "r")))
@@ -5939,17 +5951,19 @@ expr_if
  (expr_string "writable"))
 .
 Definition ex_privisExtensibleCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_get_obj_attr oattr_extensible (expr_id "O")))
 .
 Definition ex_privisFiniteCall := 
 expr_app (expr_id "%IsFinite")
 [expr_app (expr_id "%ToNumber")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]]
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]]
 .
 Definition ex_privisFrozenCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
   (expr_let "len"
@@ -5993,7 +6007,7 @@ expr_false
 Definition ex_privisNaNCall := 
 expr_op2 binary_op_same_value
 (expr_app (expr_id "%ToNumber")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 (expr_number JsNumber.nan)
 .
 Definition ex_privisPrototypeOfCall := 
@@ -6008,14 +6022,16 @@ expr_recc "searchChain"
 (expr_if
  (expr_op1 unary_op_not
   (expr_op1 unary_op_is_object
-   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))))
+   (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])))
  expr_false
  (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_app (expr_id "searchChain")
-   [expr_id "O"; expr_get_attr pattr_value (expr_id "args") (expr_string "0")])))
+   [expr_id "O";
+    expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])))
 .
 Definition ex_privisSealedCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
   (expr_let "len"
@@ -6047,10 +6063,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_let "sep"
    (expr_if
     (expr_op2 binary_op_stx_eq
-     (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+     (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
      expr_undefined) (expr_string ",")
     (expr_app (expr_id "%ToString")
-     [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]))
+     [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]))
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -6094,7 +6110,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          [expr_number (JsNumber.of_int (1)); expr_id "start"])))))))))
 .
 Definition ex_privkeysCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_let "names" (expr_own_field_names (expr_id "O"))
   (expr_let "len"
@@ -6163,7 +6180,7 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "That"
   (expr_app (expr_id "%ToString")
-   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
   (expr_op2 binary_op_locale_compare (expr_id "S") (expr_id "That"))))
 .
 Definition ex_privlogCall := 
@@ -6220,7 +6237,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
   (expr_let "callbackfn"
-   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+   (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -6229,7 +6246,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not a function in map"]) expr_null)
      (expr_let "T"
-      (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+      (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
       (expr_let "A"
        (expr_app (expr_id "%MakeArray") [expr_number (JsNumber.of_int (0))])
        (expr_recc "loop"
@@ -6294,7 +6311,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 Definition ex_privmathAbsCall := 
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 (expr_label "ret"
  (expr_seq
   (expr_if
@@ -6311,7 +6328,7 @@ expr_let "n"
 Definition ex_privmathCeilCall := 
 expr_let "x"
 (expr_app (expr_id "%ToNumber")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 (expr_label "ret"
  (expr_seq
   (expr_if
@@ -6331,7 +6348,7 @@ expr_let "x"
 Definition ex_privmathFloorCall := 
 expr_let "x"
 (expr_app (expr_id "%ToNumber")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 (expr_label "ret"
  (expr_seq
   (expr_if
@@ -6351,7 +6368,7 @@ expr_let "x"
 Definition ex_privmathLogCall := 
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 (expr_label "ret"
  (expr_seq
   (expr_if
@@ -6395,10 +6412,10 @@ expr_app (expr_id "%minMaxCall")
 Definition ex_privmathPowCall := 
 expr_let "x"
 (expr_app (expr_id "%ToNumber")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 (expr_let "y"
  (expr_app (expr_id "%ToNumber")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]])
  (expr_label "ret"
   (expr_seq
    (expr_if
@@ -6760,10 +6777,10 @@ expr_let "val" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
 (expr_let "rint"
  (expr_if
   (expr_op2 binary_op_stx_eq
-   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+   (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
    expr_undefined) (expr_number (JsNumber.of_int (10)))
   (expr_app (expr_id "%ToInteger")
-   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")]))
+   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]))
  (expr_if
   (expr_if
    (expr_op2 binary_op_lt (expr_id "rint")
@@ -6807,7 +6824,7 @@ Definition ex_privparseFloatCall :=  expr_string "parseFloat NYI" .
 Definition ex_privparseIntCall := 
 expr_let "numstr"
 (expr_app (expr_id "%ToString")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 (expr_op1 unary_op_prim_to_num (expr_id "numstr"))
 .
 Definition ex_privpopCall := 
@@ -6840,7 +6857,8 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
          expr_true]) (expr_id "element"))))))))
 .
 Definition ex_privpreventExtensionsCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_seq (expr_set_obj_attr oattr_extensible (expr_id "O") expr_false)
   (expr_id "O")))
@@ -6871,11 +6889,11 @@ expr_let "getOwnProperty"
   (expr_app (expr_id "%Get1") [expr_id "o"; expr_id "f"]) expr_undefined))
 (expr_if
  (expr_op2 binary_op_stx_eq
-  (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+  (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
   expr_undefined) expr_false
  (expr_let "P"
   (expr_app (expr_id "%ToString")
-   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
   (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
    (expr_let "desc"
     (expr_app (expr_id "getOwnProperty") [expr_id "O"; expr_id "P"])
@@ -6957,7 +6975,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
   (expr_let "callbackfn"
-   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+   (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
    (expr_let "has_initial"
     (expr_op2 binary_op_ge
      (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
@@ -6995,7 +7013,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
           (expr_app (expr_id "accumLoop") [expr_number (JsNumber.of_int (0))])))
         (expr_let "accumulator"
          (expr_if (expr_id "has_initial")
-          (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+          (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
           (expr_app (expr_id "%Get1")
            [expr_id "O"; expr_app (expr_id "%ToString") [expr_id "origK"]]))
          (expr_recc "outerLoop"
@@ -7050,7 +7068,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
   (expr_let "callbackfn"
-   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+   (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
    (expr_let "has_initial"
     (expr_op2 binary_op_ge
      (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
@@ -7090,7 +7108,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
             (expr_number (JsNumber.of_int (1)))])))
         (expr_let "accumulator"
          (expr_if (expr_id "has_initial")
-          (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+          (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
           (expr_app (expr_id "%Get1")
            [expr_id "O"; expr_app (expr_id "%ToString") [expr_id "origK"]]))
          (expr_recc "outerLoop"
@@ -7145,9 +7163,9 @@ Definition ex_privreplaceCall :=
 expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
 (expr_let "search"
  (expr_app (expr_id "%ToString")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  (expr_let "replace"
-  (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+  (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
   (expr_if
    (expr_op1 unary_op_not
     (expr_app (expr_id "%IsCallable") [expr_id "replace"]))
@@ -7290,7 +7308,8 @@ expr_app (expr_get_internal "construct" (expr_id "constr"))
 [expr_id "constr"; expr_id "args"]
 .
 Definition ex_privsealCall := 
-expr_let "O" (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+expr_let "O"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "O"])
  (expr_seq
   (expr_let "names" (expr_own_field_names (expr_id "O"))
@@ -7376,7 +7395,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 Definition ex_privsinCall := 
 expr_let "n"
 (expr_app (expr_id "%ToNumber")
- [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+ [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 (expr_label "ret"
  (expr_seq
   (expr_if
@@ -7408,7 +7427,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenVal"])
    (expr_let "relativeStart"
     (expr_app (expr_id "%ToInteger")
-     [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+     [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
     (expr_let "initk"
      (expr_if
       (expr_op2 binary_op_lt (expr_id "relativeStart")
@@ -7425,10 +7444,10 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
      (expr_let "relativeEnd"
       (expr_if
        (expr_op2 binary_op_stx_eq
-        (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+        (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
         expr_undefined) (expr_id "len")
        (expr_app (expr_id "%ToInteger")
-        [expr_get_attr pattr_value (expr_id "args") (expr_string "1")]))
+        [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]]))
       (expr_let "final"
        (expr_if
         (expr_op2 binary_op_lt (expr_id "relativeEnd")
@@ -7531,7 +7550,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32") [expr_id "lenValue"])
   (expr_let "callbackfn"
-   (expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+   (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
    (expr_label "ret"
     (expr_seq
      (expr_if
@@ -7540,7 +7559,7 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
       (expr_app (expr_id "%TypeError")
        [expr_string "Callback not function in some"]) expr_null)
      (expr_let "T"
-      (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+      (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
       (expr_recc "loop"
        (expr_lambda ["k"]
         (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
@@ -7633,14 +7652,14 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                 (expr_if
                  (expr_op1 unary_op_not
                   (expr_op2 binary_op_stx_eq
-                   (expr_get_attr pattr_value (expr_id "args")
-                    (expr_string "0")) expr_undefined))
+                   (expr_app (expr_id "%ArrayIdx")
+                    [expr_id "args"; expr_string "0"]) expr_undefined))
                  (expr_seq
                   (expr_if
                    (expr_op1 unary_op_not
                     (expr_app (expr_id "%IsCallable")
-                     [expr_get_attr pattr_value (expr_id "args")
-                      (expr_string "0")]))
+                     [expr_app (expr_id "%ArrayIdx")
+                      [expr_id "args"; expr_string "0"]]))
                    (expr_throw
                     (expr_app (expr_id "%JSError")
                      [expr_object
@@ -7649,8 +7668,8 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
                       []])) expr_null)
                   (expr_break "ret"
                    (expr_app
-                    (expr_get_attr pattr_value (expr_id "args")
-                     (expr_string "0"))
+                    (expr_app (expr_id "%ArrayIdx")
+                     [expr_id "args"; expr_string "0"])
                     [expr_undefined;
                      expr_object
                      (objattrs_intro (expr_string "Object") expr_true
@@ -7736,9 +7755,9 @@ expr_let "obj" (expr_app (expr_id "%ToObject") [expr_id "this"])
 .
 Definition ex_privspliceCall := 
 expr_let "start"
-(expr_get_attr pattr_value (expr_id "args") (expr_string "0"))
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_let "deleteCount"
- (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+ (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
  (expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
   (expr_let "emptyobj"
    (expr_object
@@ -7984,10 +8003,10 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "searchStr"
   (expr_app (expr_id "%ToString")
-   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
   (expr_let "pos"
    (expr_app (expr_id "%ToInteger")
-    [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
+    [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]])
    (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
     (expr_let "start"
      (expr_app (expr_id "%min")
@@ -8040,10 +8059,10 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
  (expr_let "searchStr"
   (expr_app (expr_id "%ToString")
-   [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
   (expr_let "numPos"
    (expr_app (expr_id "%ToNumber")
-    [expr_get_attr pattr_value (expr_id "args") (expr_string "1")])
+    [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]])
    (expr_let "pos"
     (expr_if
      (expr_op1 unary_op_not
@@ -8102,9 +8121,9 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
  (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
   (expr_let "intStart"
    (expr_app (expr_id "%ToInteger")
-    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+    [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
    (expr_let "end"
-    (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+    (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
     (expr_let "intEnd"
      (expr_if (expr_op2 binary_op_stx_eq (expr_id "end") expr_undefined)
       (expr_id "len") (expr_app (expr_id "%ToInteger") [expr_id "end"]))
@@ -8166,10 +8185,10 @@ expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
  (expr_let "len" (expr_op1 unary_op_strlen (expr_id "S"))
   (expr_let "intStart"
    (expr_app (expr_id "%ToInteger")
-    [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+    [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
    (expr_let "intEnd"
     (expr_let "end"
-     (expr_get_attr pattr_value (expr_id "args") (expr_string "1"))
+     (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
      (expr_if (expr_op2 binary_op_stx_eq (expr_id "end") expr_undefined)
       (expr_id "len") (expr_app (expr_id "%ToInteger") [expr_id "end"])))
     (expr_let "finalStart"
@@ -8216,7 +8235,7 @@ Definition ex_privtoFixedCall :=
 expr_let "x" (expr_app (expr_id "%numberPrimval") [expr_id "this"])
 (expr_let "f"
  (expr_app (expr_id "%ToInteger")
-  [expr_get_attr pattr_value (expr_id "args") (expr_string "0")])
+  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
  (expr_seq
   (expr_if
    (expr_if
@@ -8574,6 +8593,10 @@ value_closure
  ["fargs"] ex_privAppMethodOp)
 .
 Definition name_privAppMethodOp : id :=  "%AppMethodOp" .
+Definition privArrayIdx := 
+value_closure (closure_intro [] None ["arr"; "idx"] ex_privArrayIdx)
+.
+Definition name_privArrayIdx : id :=  "%ArrayIdx" .
 Definition privComputeLength := 
 value_closure (closure_intro [] None ["args"] ex_privComputeLength)
 .
@@ -8893,7 +8916,8 @@ Definition name_privdefineOwnProperty : id :=  "%defineOwnProperty" .
 Definition privArrayConstructor := 
 value_closure
 (closure_intro
- [("%ComputeLength", privComputeLength);
+ [("%ArrayIdx", privArrayIdx);
+  ("%ComputeLength", privComputeLength);
   ("%JSError", privJSError);
   ("%MakeArray", privMakeArray);
   ("%RangeErrorProto", privRangeErrorProto);
@@ -8910,10 +8934,6 @@ value_closure
 Definition name_privArrayCall : id :=  "%ArrayCall" .
 Definition privArrayGlobalFuncObj :=  value_object 64 .
 Definition name_privArrayGlobalFuncObj : id :=  "%ArrayGlobalFuncObj" .
-Definition privArrayIdx := 
-value_closure (closure_intro [] None ["arr"; "idx"] ex_privArrayIdx)
-.
-Definition name_privArrayIdx : id :=  "%ArrayIdx" .
 Definition privrunConstruct := 
 value_closure (closure_intro [] None ["constr"; "args"] ex_privrunConstruct)
 .
@@ -8979,15 +8999,17 @@ value_closure (closure_intro [] None ["x"] ex_privToBoolean)
 Definition name_privToBoolean : id :=  "%ToBoolean" .
 Definition privBooleanCall := 
 value_closure
-(closure_intro [("%ToBoolean", privToBoolean)] None ["obj"; "this"; "args"]
- ex_privBooleanCall)
+(closure_intro [("%ArrayIdx", privArrayIdx); ("%ToBoolean", privToBoolean)]
+ None ["obj"; "this"; "args"] ex_privBooleanCall)
 .
 Definition name_privBooleanCall : id :=  "%BooleanCall" .
 Definition privBooleanConstructor := 
 value_closure
 (closure_intro
- [("%MakeBoolean", privMakeBoolean); ("%ToBoolean", privToBoolean)] None
- ["constr"; "args"] ex_privBooleanConstructor)
+ [("%ArrayIdx", privArrayIdx);
+  ("%MakeBoolean", privMakeBoolean);
+  ("%ToBoolean", privToBoolean)] None ["constr"; "args"]
+ ex_privBooleanConstructor)
 .
 Definition name_privBooleanConstructor : id :=  "%BooleanConstructor" .
 Definition privBooleanGlobalFuncObj :=  value_object 25 .
@@ -9177,7 +9199,8 @@ Definition name_privparse : id :=  "%parse" .
 Definition privDateConstructor := 
 value_closure
 (closure_intro
- [("%ComputeLength", privComputeLength);
+ [("%ArrayIdx", privArrayIdx);
+  ("%ComputeLength", privComputeLength);
   ("%DateProto", privDateProto);
   ("%MakeDate", privMakeDate);
   ("%MakeDateDayTime", privMakeDateDayTime);
@@ -9284,8 +9307,10 @@ Definition privmakeGlobalEnv :=  value_object 0 .
 Definition name_privmakeGlobalEnv : id :=  "%makeGlobalEnv" .
 Definition privconfigurableEval := 
 value_closure
-(closure_intro [("%makeGlobalEnv", privmakeGlobalEnv)] None
- ["this"; "context"; "vcontext"; "useStrict"; "args"] ex_privconfigurableEval)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx); ("%makeGlobalEnv", privmakeGlobalEnv)] 
+ None ["this"; "context"; "vcontext"; "useStrict"; "args"]
+ ex_privconfigurableEval)
 .
 Definition name_privconfigurableEval : id :=  "%configurableEval" .
 Definition priveval :=  value_object 171 .
@@ -9521,7 +9546,8 @@ Definition name_privErrorProto : id :=  "proto" .
 Definition privErrorConstructor := 
 value_closure
 (closure_intro
- [("%MakeNativeError", privMakeNativeError);
+ [("%ArrayIdx", privArrayIdx);
+  ("%MakeNativeError", privMakeNativeError);
   ("%ToString", privToString);
   ("proto", privErrorProto)] None ["this"; "args"] ex_privErrorConstructor)
 .
@@ -9533,7 +9559,8 @@ Definition name_privEvalErrorProto : id :=  "proto" .
 Definition privEvalErrorConstructor := 
 value_closure
 (closure_intro
- [("%MakeNativeError", privMakeNativeError);
+ [("%ArrayIdx", privArrayIdx);
+  ("%MakeNativeError", privMakeNativeError);
   ("%ToString", privToString);
   ("proto", privEvalErrorProto)] None ["this"; "args"]
  ex_privEvalErrorConstructor)
@@ -9689,21 +9716,24 @@ Definition name_privModifyOp : id :=  "%ModifyOp" .
 Definition privNativeErrorConstructor := 
 value_closure
 (closure_intro
- [("%MakeNativeError", privMakeNativeError); ("%ToString", privToString)]
- None ["proto"] ex_privNativeErrorConstructor)
+ [("%ArrayIdx", privArrayIdx);
+  ("%MakeNativeError", privMakeNativeError);
+  ("%ToString", privToString)] None ["proto"] ex_privNativeErrorConstructor)
 .
 Definition name_privNativeErrorConstructor : id :=  "%NativeErrorConstructor" .
 Definition privNumberCall := 
 value_closure
 (closure_intro
- [("%ComputeLength", privComputeLength); ("%ToNumber", privToNumber)] 
- None ["obj"; "this"; "args"] ex_privNumberCall)
+ [("%ArrayIdx", privArrayIdx);
+  ("%ComputeLength", privComputeLength);
+  ("%ToNumber", privToNumber)] None ["obj"; "this"; "args"] ex_privNumberCall)
 .
 Definition name_privNumberCall : id :=  "%NumberCall" .
 Definition privNumberConstructor := 
 value_closure
 (closure_intro
- [("%ComputeLength", privComputeLength);
+ [("%ArrayIdx", privArrayIdx);
+  ("%ComputeLength", privComputeLength);
   ("%MakeNumber", privMakeNumber);
   ("%ToNumber", privToNumber)] None ["constr"; "args"]
  ex_privNumberConstructor)
@@ -9714,7 +9744,8 @@ Definition name_privNumberGlobalFuncObj : id :=  "%NumberGlobalFuncObj" .
 Definition privObjectCall := 
 value_closure
 (closure_intro
- [("%ComputeLength", privComputeLength);
+ [("%ArrayIdx", privArrayIdx);
+  ("%ComputeLength", privComputeLength);
   ("%MakeObject", privMakeObject);
   ("%ToObject", privToObject)] None ["obj"; "this"; "args"] ex_privObjectCall)
 .
@@ -9792,7 +9823,8 @@ Definition name_privPropertyAccess : id :=  "%PropertyAccess" .
 Definition privRangeErrorConstructor := 
 value_closure
 (closure_intro
- [("%MakeNativeError", privMakeNativeError);
+ [("%ArrayIdx", privArrayIdx);
+  ("%MakeNativeError", privMakeNativeError);
   ("%ToString", privToString);
   ("proto", privRangeErrorProto)] None ["this"; "args"]
  ex_privRangeErrorConstructor)
@@ -9811,7 +9843,8 @@ Definition name_privRangeErrorOr : id :=  "%RangeErrorOr" .
 Definition privReferenceErrorConstructor := 
 value_closure
 (closure_intro
- [("%MakeNativeError", privMakeNativeError);
+ [("%ArrayIdx", privArrayIdx);
+  ("%MakeNativeError", privMakeNativeError);
   ("%ToString", privToString);
   ("proto", privReferenceErrorProto)] None ["this"; "args"]
  ex_privReferenceErrorConstructor)
@@ -9862,8 +9895,9 @@ Definition name_privSignedRightShift : id :=  "%SignedRightShift" .
 Definition privStringCall := 
 value_closure
 (closure_intro
- [("%ComputeLength", privComputeLength); ("%ToString", privToString)] 
- None ["obj"; "this"; "args"] ex_privStringCall)
+ [("%ArrayIdx", privArrayIdx);
+  ("%ComputeLength", privComputeLength);
+  ("%ToString", privToString)] None ["obj"; "this"; "args"] ex_privStringCall)
 .
 Definition name_privStringCall : id :=  "%StringCall" .
 Definition privStringConstructor := 
@@ -9886,7 +9920,8 @@ Definition name_privStxEq : id :=  "%StxEq" .
 Definition privSyntaxErrorConstructor := 
 value_closure
 (closure_intro
- [("%MakeNativeError", privMakeNativeError);
+ [("%ArrayIdx", privArrayIdx);
+  ("%MakeNativeError", privMakeNativeError);
   ("%ToString", privToString);
   ("proto", privSyntaxErrorProto)] None ["this"; "args"]
  ex_privSyntaxErrorConstructor)
@@ -9904,8 +9939,8 @@ value_closure
 Definition name_privSyntaxErrorOr : id :=  "%SyntaxErrorOr" .
 Definition privThrowTypeErrorFun := 
 value_closure
-(closure_intro [("%TypeError", privTypeError)] None ["obj"; "this"; "args"]
- ex_privThrowTypeErrorFun)
+(closure_intro [("%ArrayIdx", privArrayIdx); ("%TypeError", privTypeError)]
+ None ["obj"; "this"; "args"] ex_privThrowTypeErrorFun)
 .
 Definition name_privThrowTypeErrorFun : id :=  "%ThrowTypeErrorFun" .
 Definition privTimeWithinDay := 
@@ -9936,7 +9971,8 @@ Definition name_privToUint16 : id :=  "%ToUint16" .
 Definition privTypeErrorConstructor := 
 value_closure
 (closure_intro
- [("%MakeNativeError", privMakeNativeError);
+ [("%ArrayIdx", privArrayIdx);
+  ("%MakeNativeError", privMakeNativeError);
   ("%ToString", privToString);
   ("proto", privTypeErrorProto)] None ["this"; "args"]
  ex_privTypeErrorConstructor)
@@ -9949,7 +9985,8 @@ Definition name_privURIErrorProto : id :=  "proto" .
 Definition privURIErrorConstructor := 
 value_closure
 (closure_intro
- [("%MakeNativeError", privMakeNativeError);
+ [("%ArrayIdx", privArrayIdx);
+  ("%MakeNativeError", privMakeNativeError);
   ("%ToString", privToString);
   ("proto", privURIErrorProto)] None ["this"; "args"]
  ex_privURIErrorConstructor)
@@ -9992,8 +10029,9 @@ Definition privapply :=  value_object 18 .
 Definition name_privapply : id :=  "%apply" .
 Definition privapplyCall := 
 value_closure
-(closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["this"; "args"] ex_privapplyCall)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx); ("%ObjectTypeCheck", privObjectTypeCheck)]
+ None ["this"; "args"] ex_privapplyCall)
 .
 Definition name_privapplyCall : id :=  "%applyCall" .
 Definition privarrayIndexOf :=  value_object 71 .
@@ -10001,7 +10039,8 @@ Definition name_privarrayIndexOf : id :=  "%arrayIndexOf" .
 Definition privarrayIndexOfCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%ToInteger", privToInteger);
   ("%ToObject", privToObject);
@@ -10019,7 +10058,8 @@ Definition name_privmin : id :=  "%min" .
 Definition privarrayLastIndexOfCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%ToInteger", privToInteger);
   ("%ToObject", privToObject);
@@ -10088,7 +10128,8 @@ Definition name_privslice : id :=  "%slice" .
 Definition privbindCall := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable);
+ [("%ArrayIdx", privArrayIdx);
+  ("%IsCallable", privIsCallable);
   ("%MakeBind", privMakeBind);
   ("%TypeError", privTypeError);
   ("%oneArgObj", privoneArgObj);
@@ -10131,8 +10172,11 @@ value_closure
 Definition name_privslice_internal : id :=  "%slice_internal" .
 Definition privcallCall := 
 value_closure
-(closure_intro [("%len", privlen); ("%slice_internal", privslice_internal)]
- None ["this"; "args"] ex_privcallCall)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx);
+  ("%len", privlen);
+  ("%slice_internal", privslice_internal)] None ["this"; "args"]
+ ex_privcallCall)
 .
 Definition name_privcallCall : id :=  "%callCall" .
 Definition privcharAt :=  value_object 65 .
@@ -10140,7 +10184,8 @@ Definition name_privcharAt : id :=  "%charAt" .
 Definition privcharAtCall := 
 value_closure
 (closure_intro
- [("%CheckObjectCoercible", privCheckObjectCoercible);
+ [("%ArrayIdx", privArrayIdx);
+  ("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToInteger", privToInteger);
   ("%ToString", privToString)] None ["obj"; "this"; "args"] ex_privcharAtCall)
 .
@@ -10150,7 +10195,8 @@ Definition name_privcharCodeAt : id :=  "%charCodeAt" .
 Definition privcharCodeAtCall := 
 value_closure
 (closure_intro
- [("%CheckObjectCoercible", privCheckObjectCoercible);
+ [("%ArrayIdx", privArrayIdx);
+  ("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToInteger", privToInteger);
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
  ex_privcharCodeAtCall)
@@ -10180,7 +10226,8 @@ Definition name_privdefineProperties : id :=  "%defineProperties" .
 Definition privcreateCall := 
 value_closure
 (closure_intro
- [("%ToObject", privToObject);
+ [("%ArrayIdx", privArrayIdx);
+  ("%ToObject", privToObject);
   ("%TypeError", privTypeError);
   ("%defineProperties", privdefineProperties)] None ["obj"; "this"; "args"]
  ex_privcreateCall)
@@ -10257,7 +10304,8 @@ Definition name_privdefineProperty : id :=  "%defineProperty" .
 Definition privdefinePropertiesCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%ObjectTypeCheck", privObjectTypeCheck);
   ("%ToObject", privToObject);
   ("%defineProperty", privdefineProperty)] None ["obj"; "this"; "args"]
@@ -10267,7 +10315,8 @@ Definition name_privdefinePropertiesCall : id :=  "%definePropertiesCall" .
 Definition privdefinePropertyCall := 
 value_closure
 (closure_intro
- [("%ObjectTypeCheck", privObjectTypeCheck);
+ [("%ArrayIdx", privArrayIdx);
+  ("%ObjectTypeCheck", privObjectTypeCheck);
   ("%ToPropertyDescriptor", privToPropertyDescriptor);
   ("%ToString", privToString);
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
@@ -10310,7 +10359,8 @@ Definition name_privevery : id :=  "%every" .
 Definition priveveryCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
   ("%ToBoolean", privToBoolean);
@@ -10332,7 +10382,8 @@ Definition name_privfilter : id :=  "%filter" .
 Definition privfilterCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
   ("%MakeArray", privMakeArray);
@@ -10350,7 +10401,8 @@ Definition name_privforeach : id :=  "%foreach" .
 Definition privforeachCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
   ("%ToObject", privToObject);
@@ -10364,8 +10416,9 @@ Definition privfreeze :=  value_object 48 .
 Definition name_privfreeze : id :=  "%freeze" .
 Definition privfreezeCall := 
 value_closure
-(closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privfreezeCall)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx); ("%ObjectTypeCheck", privObjectTypeCheck)]
+ None ["obj"; "this"; "args"] ex_privfreezeCall)
 .
 Definition name_privfreezeCall : id :=  "%freezeCall" .
 Definition privfromCharCode :=  value_object 54 .
@@ -10403,7 +10456,8 @@ Definition name_privgopd : id :=  "%gopd" .
 Definition privgopdCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%ObjectProto", privObjectProto);
   ("%ObjectTypeCheck", privObjectTypeCheck);
   ("%ToString", privToString);
@@ -10416,7 +10470,8 @@ Definition name_privgopn : id :=  "%gopn" .
 Definition privgopnCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%MakeArray", privMakeArray);
   ("%ObjectTypeCheck", privObjectTypeCheck)] None ["obj"; "this"; "args"]
  ex_privgopnCall)
@@ -10426,16 +10481,20 @@ Definition privgpo :=  value_object 27 .
 Definition name_privgpo : id :=  "%gpo" .
 Definition privgpoCall := 
 value_closure
-(closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privgpoCall)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx); ("%ObjectTypeCheck", privObjectTypeCheck)]
+ None ["obj"; "this"; "args"] ex_privgpoCall)
 .
 Definition name_privgpoCall : id :=  "%gpoCall" .
 Definition privhasOwnProperty :=  value_object 33 .
 Definition name_privhasOwnProperty : id :=  "%hasOwnProperty" .
 Definition privhasOwnPropertyCall := 
 value_closure
-(closure_intro [("%ToObject", privToObject); ("%ToString", privToString)]
- None ["obj"; "this"; "args"] ex_privhasOwnPropertyCall)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx);
+  ("%ToObject", privToObject);
+  ("%ToString", privToString)] None ["obj"; "this"; "args"]
+ ex_privhasOwnPropertyCall)
 .
 Definition name_privhasOwnPropertyCall : id :=  "%hasOwnPropertyCall" .
 Definition privin := 
@@ -10457,48 +10516,54 @@ Definition privisExtensible :=  value_object 52 .
 Definition name_privisExtensible : id :=  "%isExtensible" .
 Definition privisExtensibleCall := 
 value_closure
-(closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privisExtensibleCall)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx); ("%ObjectTypeCheck", privObjectTypeCheck)]
+ None ["obj"; "this"; "args"] ex_privisExtensibleCall)
 .
 Definition name_privisExtensibleCall : id :=  "%isExtensibleCall" .
 Definition privisFinite :=  value_object 173 .
 Definition name_privisFinite : id :=  "%isFinite" .
 Definition privisFiniteCall := 
 value_closure
-(closure_intro [("%IsFinite", privIsFinite); ("%ToNumber", privToNumber)]
- None ["obj"; "this"; "args"] ex_privisFiniteCall)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx);
+  ("%IsFinite", privIsFinite);
+  ("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
+ ex_privisFiniteCall)
 .
 Definition name_privisFiniteCall : id :=  "%isFiniteCall" .
 Definition privisFrozen :=  value_object 50 .
 Definition name_privisFrozen : id :=  "%isFrozen" .
 Definition privisFrozenCall := 
 value_closure
-(closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privisFrozenCall)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx); ("%ObjectTypeCheck", privObjectTypeCheck)]
+ None ["obj"; "this"; "args"] ex_privisFrozenCall)
 .
 Definition name_privisFrozenCall : id :=  "%isFrozenCall" .
 Definition privisNaN :=  value_object 19 .
 Definition name_privisNaN : id :=  "%isNaN" .
 Definition privisNaNCall := 
 value_closure
-(closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privisNaNCall)
+(closure_intro [("%ArrayIdx", privArrayIdx); ("%ToNumber", privToNumber)]
+ None ["obj"; "this"; "args"] ex_privisNaNCall)
 .
 Definition name_privisNaNCall : id :=  "%isNaNCall" .
 Definition privisPrototypeOf :=  value_object 34 .
 Definition name_privisPrototypeOf : id :=  "%isPrototypeOf" .
 Definition privisPrototypeOfCall := 
 value_closure
-(closure_intro [("%ToObject", privToObject)] None ["obj"; "this"; "args"]
- ex_privisPrototypeOfCall)
+(closure_intro [("%ArrayIdx", privArrayIdx); ("%ToObject", privToObject)]
+ None ["obj"; "this"; "args"] ex_privisPrototypeOfCall)
 .
 Definition name_privisPrototypeOfCall : id :=  "%isPrototypeOfCall" .
 Definition privisSealed :=  value_object 51 .
 Definition name_privisSealed : id :=  "%isSealed" .
 Definition privisSealedCall := 
 value_closure
-(closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privisSealedCall)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx); ("%ObjectTypeCheck", privObjectTypeCheck)]
+ None ["obj"; "this"; "args"] ex_privisSealedCall)
 .
 Definition name_privisSealedCall : id :=  "%isSealedCall" .
 Definition privjoin :=  value_object 55 .
@@ -10506,7 +10571,8 @@ Definition name_privjoin : id :=  "%join" .
 Definition privjoinCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
   ("%ToUint32", privToUint32)] None ["obj"; "this"; "args"] ex_privjoinCall)
@@ -10517,7 +10583,8 @@ Definition name_privkeys : id :=  "%keys" .
 Definition privkeysCall := 
 value_closure
 (closure_intro
- [("%MakeArray", privMakeArray);
+ [("%ArrayIdx", privArrayIdx);
+  ("%MakeArray", privMakeArray);
   ("%ObjectTypeCheck", privObjectTypeCheck);
   ("%defineOwnProperty", privdefineOwnProperty)] None ["obj"; "this"; "args"]
  ex_privkeysCall)
@@ -10528,7 +10595,8 @@ Definition name_privlocaleCompare : id :=  "%localeCompare" .
 Definition privlocaleCompareCall := 
 value_closure
 (closure_intro
- [("%CheckObjectCoercible", privCheckObjectCoercible);
+ [("%ArrayIdx", privArrayIdx);
+  ("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
  ex_privlocaleCompareCall)
 .
@@ -10546,7 +10614,8 @@ Definition name_privmap : id :=  "%map" .
 Definition privmapCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
   ("%MakeArray", privMakeArray);
@@ -10562,32 +10631,32 @@ Definition privmathAbs :=  value_object 146 .
 Definition name_privmathAbs : id :=  "%mathAbs" .
 Definition privmathAbsCall := 
 value_closure
-(closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privmathAbsCall)
+(closure_intro [("%ArrayIdx", privArrayIdx); ("%ToNumber", privToNumber)]
+ None ["obj"; "this"; "args"] ex_privmathAbsCall)
 .
 Definition name_privmathAbsCall : id :=  "%mathAbsCall" .
 Definition privmathCeil :=  value_object 158 .
 Definition name_privmathCeil : id :=  "%mathCeil" .
 Definition privmathCeilCall := 
 value_closure
-(closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privmathCeilCall)
+(closure_intro [("%ArrayIdx", privArrayIdx); ("%ToNumber", privToNumber)]
+ None ["obj"; "this"; "args"] ex_privmathCeilCall)
 .
 Definition name_privmathCeilCall : id :=  "%mathCeilCall" .
 Definition privmathFloor :=  value_object 159 .
 Definition name_privmathFloor : id :=  "%mathFloor" .
 Definition privmathFloorCall := 
 value_closure
-(closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privmathFloorCall)
+(closure_intro [("%ArrayIdx", privArrayIdx); ("%ToNumber", privToNumber)]
+ None ["obj"; "this"; "args"] ex_privmathFloorCall)
 .
 Definition name_privmathFloorCall : id :=  "%mathFloorCall" .
 Definition privmathLog :=  value_object 157 .
 Definition name_privmathLog : id :=  "%mathLog" .
 Definition privmathLogCall := 
 value_closure
-(closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privmathLogCall)
+(closure_intro [("%ArrayIdx", privArrayIdx); ("%ToNumber", privToNumber)]
+ None ["obj"; "this"; "args"] ex_privmathLogCall)
 .
 Definition name_privmathLogCall : id :=  "%mathLogCall" .
 Definition privmathMax :=  value_object 145 .
@@ -10616,8 +10685,8 @@ Definition privmathPow :=  value_object 160 .
 Definition name_privmathPow : id :=  "%mathPow" .
 Definition privmathPowCall := 
 value_closure
-(closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privmathPowCall)
+(closure_intro [("%ArrayIdx", privArrayIdx); ("%ToNumber", privToNumber)]
+ None ["obj"; "this"; "args"] ex_privmathPowCall)
 .
 Definition name_privmathPowCall : id :=  "%mathPowCall" .
 Definition privnewDeclEnvRec := 
@@ -10665,7 +10734,8 @@ Definition name_privnumberToString : id :=  "%numberToString" .
 Definition privnumberToStringCall := 
 value_closure
 (closure_intro
- [("%RangeError", privRangeError);
+ [("%ArrayIdx", privArrayIdx);
+  ("%RangeError", privRangeError);
   ("%ToInteger", privToInteger);
   ("%numToStringAbstract", privnumToStringAbstract);
   ("%numberPrimval", privnumberPrimval)] None ["obj"; "this"; "args"]
@@ -10702,8 +10772,8 @@ Definition privparseInt :=  value_object 137 .
 Definition name_privparseInt : id :=  "%parseInt" .
 Definition privparseIntCall := 
 value_closure
-(closure_intro [("%ToString", privToString)] None ["obj"; "this"; "args"]
- ex_privparseIntCall)
+(closure_intro [("%ArrayIdx", privArrayIdx); ("%ToString", privToString)]
+ None ["obj"; "this"; "args"] ex_privparseIntCall)
 .
 Definition name_privparseIntCall : id :=  "%parseIntCall" .
 Definition privpop :=  value_object 56 .
@@ -10724,8 +10794,9 @@ Definition privpreventExtensions :=  value_object 49 .
 Definition name_privpreventExtensions : id :=  "%preventExtensions" .
 Definition privpreventExtensionsCall := 
 value_closure
-(closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privpreventExtensionsCall)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx); ("%ObjectTypeCheck", privObjectTypeCheck)]
+ None ["obj"; "this"; "args"] ex_privpreventExtensionsCall)
 .
 Definition name_privpreventExtensionsCall : id :=  "%preventExtensionsCall" .
 Definition privprimEach := 
@@ -10747,7 +10818,8 @@ Definition name_privpropEnum : id :=  "%propEnum" .
 Definition privpropEnumCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%ToObject", privToObject);
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
  ex_privpropEnumCall)
@@ -10788,7 +10860,8 @@ Definition name_privreduce : id :=  "%reduce" .
 Definition privreduceCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
   ("%ToObject", privToObject);
@@ -10803,7 +10876,8 @@ Definition name_privreduceRight : id :=  "%reduceRight" .
 Definition privreduceRightCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
   ("%ToObject", privToObject);
@@ -10826,7 +10900,8 @@ Definition name_privtwoArgObj : id :=  "%twoArgObj" .
 Definition privreplaceCall := 
 value_closure
 (closure_intro
- [("%IsCallable", privIsCallable);
+ [("%ArrayIdx", privArrayIdx);
+  ("%IsCallable", privIsCallable);
   ("%ToString", privToString);
   ("%oneArgObj", privoneArgObj);
   ("%stringIndexOf", privstringIndexOf);
@@ -10861,8 +10936,9 @@ Definition privseal :=  value_object 47 .
 Definition name_privseal : id :=  "%seal" .
 Definition privsealCall := 
 value_closure
-(closure_intro [("%ObjectTypeCheck", privObjectTypeCheck)] None
- ["obj"; "this"; "args"] ex_privsealCall)
+(closure_intro
+ [("%ArrayIdx", privArrayIdx); ("%ObjectTypeCheck", privObjectTypeCheck)]
+ None ["obj"; "this"; "args"] ex_privsealCall)
 .
 Definition name_privsealCall : id :=  "%sealCall" .
 Definition privshift :=  value_object 59 .
@@ -10883,14 +10959,15 @@ Definition privsin :=  value_object 154 .
 Definition name_privsin : id :=  "%sin" .
 Definition privsinCall := 
 value_closure
-(closure_intro [("%ToNumber", privToNumber)] None ["obj"; "this"; "args"]
- ex_privsinCall)
+(closure_intro [("%ArrayIdx", privArrayIdx); ("%ToNumber", privToNumber)]
+ None ["obj"; "this"; "args"] ex_privsinCall)
 .
 Definition name_privsinCall : id :=  "%sinCall" .
 Definition privsliceCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%MakeArray", privMakeArray);
   ("%ToInteger", privToInteger);
@@ -10906,7 +10983,8 @@ Definition name_privsome : id :=  "%some" .
 Definition privsomeCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
   ("%ToBoolean", privToBoolean);
@@ -10921,7 +10999,8 @@ Definition name_privsort : id :=  "%sort" .
 Definition privsortCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
   ("%JSError", privJSError);
@@ -10937,7 +11016,8 @@ Definition name_privsplice : id :=  "%splice" .
 Definition privspliceCall := 
 value_closure
 (closure_intro
- [("%Delete", privDelete);
+ [("%ArrayIdx", privArrayIdx);
+  ("%Delete", privDelete);
   ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%MakeArray", privMakeArray);
@@ -10977,7 +11057,8 @@ Definition name_privstringConcatCall : id :=  "%stringConcatCall" .
 Definition privstringIndexOfCall := 
 value_closure
 (closure_intro
- [("%CheckObjectCoercible", privCheckObjectCoercible);
+ [("%ArrayIdx", privArrayIdx);
+  ("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToInteger", privToInteger);
   ("%ToString", privToString);
   ("%max", privmax);
@@ -10989,7 +11070,8 @@ Definition name_privstringLastIndexOf : id :=  "%stringLastIndexOf" .
 Definition privstringLastIndexOfCall := 
 value_closure
 (closure_intro
- [("%CheckObjectCoercible", privCheckObjectCoercible);
+ [("%ArrayIdx", privArrayIdx);
+  ("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToInteger", privToInteger);
   ("%ToNumber", privToNumber);
   ("%ToString", privToString);
@@ -11003,7 +11085,8 @@ Definition name_privstringSlice : id :=  "%stringSlice" .
 Definition privstringSliceCall := 
 value_closure
 (closure_intro
- [("%CheckObjectCoercible", privCheckObjectCoercible);
+ [("%ArrayIdx", privArrayIdx);
+  ("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToInteger", privToInteger);
   ("%ToString", privToString);
   ("%max", privmax);
@@ -11030,7 +11113,8 @@ Definition name_privstringValueOfCall : id :=  "%stringValueOfCall" .
 Definition privsubstringCall := 
 value_closure
 (closure_intro
- [("%CheckObjectCoercible", privCheckObjectCoercible);
+ [("%ArrayIdx", privArrayIdx);
+  ("%CheckObjectCoercible", privCheckObjectCoercible);
   ("%ToInteger", privToInteger);
   ("%ToString", privToString);
   ("%max", privmax);
@@ -11061,7 +11145,8 @@ Definition name_privtoFixed : id :=  "%toFixed" .
 Definition privtoFixedCall := 
 value_closure
 (closure_intro
- [("%RangeError", privRangeError);
+ [("%ArrayIdx", privArrayIdx);
+  ("%RangeError", privRangeError);
   ("%ToInteger", privToInteger);
   ("%ToString", privToString);
   ("%numberPrimval", privnumberPrimval)] None ["obj"; "this"; "args"]
@@ -14191,7 +14276,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%ComputeLength", privComputeLength);
+                    [("%ArrayIdx", privArrayIdx);
+                     ("%ComputeLength", privComputeLength);
                      ("%MakeNumber", privMakeNumber);
                      ("%ToNumber", privToNumber)] None ["constr"; "args"]
                     ex_internal1))]|});
@@ -14274,7 +14360,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%MakeBoolean", privMakeBoolean);
+                    [("%ArrayIdx", privArrayIdx);
+                     ("%MakeBoolean", privMakeBoolean);
                      ("%ToBoolean", privToBoolean)] None ["constr"; "args"]
                     ex_internal3))]|});
 (26, {|object_attrs :=
@@ -14504,7 +14591,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%MakeNativeError", privMakeNativeError);
+                    [("%ArrayIdx", privArrayIdx);
+                     ("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
                      ("proto", privErrorProto)] None ["this"; "args"]
                     ex_internal5))]|});
@@ -14530,7 +14618,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%MakeNativeError", privMakeNativeError);
+                    [("%ArrayIdx", privArrayIdx);
+                     ("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
                      ("proto", privSyntaxErrorProto)] None ["this"; "args"]
                     ex_internal6))]|});
@@ -14556,7 +14645,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%MakeNativeError", privMakeNativeError);
+                    [("%ArrayIdx", privArrayIdx);
+                     ("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
                      ("proto", privEvalErrorProto)] None ["this"; "args"]
                     ex_internal7))]|});
@@ -14582,7 +14672,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%MakeNativeError", privMakeNativeError);
+                    [("%ArrayIdx", privArrayIdx);
+                     ("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
                      ("proto", privRangeErrorProto)] None ["this"; "args"]
                     ex_internal8))]|});
@@ -14608,7 +14699,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%MakeNativeError", privMakeNativeError);
+                    [("%ArrayIdx", privArrayIdx);
+                     ("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
                      ("proto", privReferenceErrorProto)] None
                     ["this"; "args"] ex_internal9))]|});
@@ -14634,7 +14726,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%MakeNativeError", privMakeNativeError);
+                    [("%ArrayIdx", privArrayIdx);
+                     ("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
                      ("proto", privTypeErrorProto)] None ["this"; "args"]
                     ex_internal10))]|});
@@ -14673,7 +14766,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%MakeNativeError", privMakeNativeError);
+                    [("%ArrayIdx", privArrayIdx);
+                     ("%MakeNativeError", privMakeNativeError);
                      ("%ToString", privToString);
                      ("proto", privURIErrorProto)] None ["this"; "args"]
                     ex_internal11))]|});
@@ -15104,7 +15198,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%ComputeLength", privComputeLength);
+                    [("%ArrayIdx", privArrayIdx);
+                     ("%ComputeLength", privComputeLength);
                      ("%JSError", privJSError);
                      ("%MakeArray", privMakeArray);
                      ("%RangeErrorProto", privRangeErrorProto);
@@ -15764,7 +15859,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%ComputeLength", privComputeLength);
+                    [("%ArrayIdx", privArrayIdx);
+                     ("%ComputeLength", privComputeLength);
                      ("%DateProto", privDateProto);
                      ("%MakeDate", privMakeDate);
                      ("%MakeDateDayTime", privMakeDateDayTime);
