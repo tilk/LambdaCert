@@ -1114,8 +1114,6 @@ Proof.
     reflexivity.
 Qed.
 
-Hint Constructors L.same_value : js_ljs. (* TODO move *)
-
 (* TODO move *)
 Lemma same_value_eq_lemma : forall v1 v2, L.value_type v1 <> L.type_closure -> L.same_value v1 v2 = (v1 = v2).
 Proof.

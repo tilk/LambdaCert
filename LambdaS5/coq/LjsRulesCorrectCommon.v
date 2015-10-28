@@ -115,6 +115,7 @@ Hint Extern 99 (value_related _ (J.object_proto_ _) (L.object_proto _)) => (* wh
 (** The constructors for S5 *)
 
 Hint Constructors L.stx_eq : js_ljs.
+Hint Constructors L.same_value : js_ljs.
 Hint Constructors L.abort L.res_is_control L.res_is_value : js_ljs.
 Hint Constructors L.is_primitive : js_ljs. 
 

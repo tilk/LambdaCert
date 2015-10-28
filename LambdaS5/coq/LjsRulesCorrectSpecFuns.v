@@ -210,6 +210,18 @@ Proof.
     eauto.
 Qed.
 
+Lemma array_empty_lemma : forall BR k jst jc c st st' ptr jvs vs r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privArrayEmpty [L.value_object ptr]) (L.out_ter st' r) ->
+    fact_iarray ptr vs \in BR ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR jvs vs ->
+    state_invariant BR jst st' /\
+    st = st' /\ 
+    r = L.res_value (L.value_bool (isTrue (jvs = nil))).
+Proof.
+Admitted.
+
 (* *** errors *)
 
 (* TODO move *)

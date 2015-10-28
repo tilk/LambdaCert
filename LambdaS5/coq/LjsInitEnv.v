@@ -173,6 +173,9 @@ expr_object
  ("%ArrayConstructor", property_data
                        (data_intro (expr_id "%ArrayConstructor") expr_true
                         expr_false expr_false));
+ ("%ArrayEmpty", property_data
+                 (data_intro (expr_id "%ArrayEmpty") expr_true expr_false
+                  expr_false));
  ("%ArrayGlobalFuncObj", property_data
                          (data_intro (expr_id "%ArrayGlobalFuncObj")
                           expr_true expr_false expr_false));
@@ -1596,7 +1599,7 @@ Definition ex_internal1 :=
 expr_app (expr_id "%MakeNumber")
 [expr_if
  (expr_op2 binary_op_stx_eq
-  (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+  (expr_app (expr_id "%ArrayEmpty") [expr_id "args"])
   (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
  (expr_app (expr_id "%ToNumber")
   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])]
@@ -2174,6 +2177,10 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
                             (data_intro expr_true expr_true expr_false
                              expr_false))];
           expr_true]) (expr_break "ret" (expr_id "rtn"))))))))))
+.
+Definition ex_privArrayEmpty := 
+expr_op1 unary_op_not
+(expr_op2 binary_op_has_own_property (expr_id "arr") (expr_string "0"))
 .
 Definition ex_privArrayIdx := 
 expr_if (expr_op2 binary_op_has_own_property (expr_id "arr") (expr_id "idx"))
@@ -3707,10 +3714,8 @@ expr_if (expr_id "strict")
 (expr_id "v")
 .
 Definition ex_privNumberCall := 
-expr_if
-(expr_op2 binary_op_stx_eq
- (expr_app (expr_id "%ComputeLength") [expr_id "args"])
- (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
+expr_if (expr_app (expr_id "%ArrayEmpty") [expr_id "args"])
+(expr_number (JsNumber.of_int (0)))
 (expr_app (expr_id "%ToNumber")
  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 .
@@ -3754,7 +3759,7 @@ Definition ex_privNumberConstructor :=
 expr_app (expr_id "%MakeNumber")
 [expr_if
  (expr_op2 binary_op_stx_eq
-  (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+  (expr_app (expr_id "%ArrayEmpty") [expr_id "args"])
   (expr_number (JsNumber.of_int (0)))) (expr_number (JsNumber.of_int (0)))
  (expr_app (expr_id "%ToNumber")
   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])]
@@ -3778,10 +3783,7 @@ expr_if
 Definition ex_privObjectCall := 
 expr_if
 (expr_if
- (expr_if
-  (expr_op2 binary_op_stx_eq
-   (expr_app (expr_id "%ComputeLength") [expr_id "args"])
-   (expr_number (JsNumber.of_int (0)))) expr_true
+ (expr_if (expr_app (expr_id "%ArrayEmpty") [expr_id "args"]) expr_true
   (expr_op2 binary_op_stx_eq
    (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
    expr_null)) expr_true
@@ -8932,6 +8934,10 @@ value_closure
  ["obj"; "this"; "args"] ex_privArrayCall)
 .
 Definition name_privArrayCall : id :=  "%ArrayCall" .
+Definition privArrayEmpty := 
+value_closure (closure_intro [] None ["arr"] ex_privArrayEmpty)
+.
+Definition name_privArrayEmpty : id :=  "%ArrayEmpty" .
 Definition privArrayGlobalFuncObj :=  value_object 64 .
 Definition name_privArrayGlobalFuncObj : id :=  "%ArrayGlobalFuncObj" .
 Definition privrunConstruct := 
@@ -9724,16 +9730,16 @@ Definition name_privNativeErrorConstructor : id :=  "%NativeErrorConstructor" .
 Definition privNumberCall := 
 value_closure
 (closure_intro
- [("%ArrayIdx", privArrayIdx);
-  ("%ComputeLength", privComputeLength);
+ [("%ArrayEmpty", privArrayEmpty);
+  ("%ArrayIdx", privArrayIdx);
   ("%ToNumber", privToNumber)] None ["obj"; "this"; "args"] ex_privNumberCall)
 .
 Definition name_privNumberCall : id :=  "%NumberCall" .
 Definition privNumberConstructor := 
 value_closure
 (closure_intro
- [("%ArrayIdx", privArrayIdx);
-  ("%ComputeLength", privComputeLength);
+ [("%ArrayEmpty", privArrayEmpty);
+  ("%ArrayIdx", privArrayIdx);
   ("%MakeNumber", privMakeNumber);
   ("%ToNumber", privToNumber)] None ["constr"; "args"]
  ex_privNumberConstructor)
@@ -9744,8 +9750,8 @@ Definition name_privNumberGlobalFuncObj : id :=  "%NumberGlobalFuncObj" .
 Definition privObjectCall := 
 value_closure
 (closure_intro
- [("%ArrayIdx", privArrayIdx);
-  ("%ComputeLength", privComputeLength);
+ [("%ArrayEmpty", privArrayEmpty);
+  ("%ArrayIdx", privArrayIdx);
   ("%MakeObject", privMakeObject);
   ("%ToObject", privToObject)] None ["obj"; "this"; "args"] ex_privObjectCall)
 .
@@ -11492,6 +11498,7 @@ Definition ctx_items :=
  (name_privAppMethodOp, privAppMethodOp);
  (name_privArrayCall, privArrayCall);
  (name_privArrayConstructor, privArrayConstructor);
+ (name_privArrayEmpty, privArrayEmpty);
  (name_privArrayGlobalFuncObj, privArrayGlobalFuncObj);
  (name_privArrayIdx, privArrayIdx);
  (name_privArrayLengthChange, privArrayLengthChange);
@@ -11985,6 +11992,7 @@ privAppExprCheck
 privAppMethodOp
 privArrayCall
 privArrayConstructor
+privArrayEmpty
 privArrayGlobalFuncObj
 privArrayIdx
 privArrayLengthChange
@@ -12478,6 +12486,7 @@ privAppExprCheck
 privAppMethodOp
 privArrayCall
 privArrayConstructor
+privArrayEmpty
 privArrayGlobalFuncObj
 privArrayIdx
 privArrayLengthChange
@@ -12981,6 +12990,7 @@ Definition store_items := [
                                          ("%AppMethodOp", privAppMethodOp);
                                          ("%ArrayCall", privArrayCall);
                                          ("%ArrayConstructor", privArrayConstructor);
+                                         ("%ArrayEmpty", privArrayEmpty);
                                          ("%ArrayGlobalFuncObj", privArrayGlobalFuncObj);
                                          ("%ArrayIdx", privArrayIdx);
                                          ("%ArrayLengthChange", privArrayLengthChange);
@@ -14276,8 +14286,8 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro
-                    [("%ArrayIdx", privArrayIdx);
-                     ("%ComputeLength", privComputeLength);
+                    [("%ArrayEmpty", privArrayEmpty);
+                     ("%ArrayIdx", privArrayIdx);
                      ("%MakeNumber", privMakeNumber);
                      ("%ToNumber", privToNumber)] None ["constr"; "args"]
                     ex_internal1))]|});
