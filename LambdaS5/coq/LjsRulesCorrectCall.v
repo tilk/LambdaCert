@@ -609,7 +609,7 @@ Proof.
     + applys~ red_expr_call_global_is_nan_ok.
     + skip.
     + skip.
-    + skip.
+    + applys~ red_expr_call_object_ok.
     + skip.
     + skip.
     + skip.

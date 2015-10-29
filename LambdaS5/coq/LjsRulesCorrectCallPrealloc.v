@@ -196,3 +196,102 @@ Proof.
     resvalue_related_invert.
     jauto_js.
 Qed.
+
+(* TODO move *)
+Ltac value_related_invert :=
+    match goal with
+    | H : value_related _ _ _ |- _ => inverts H
+    end.
+
+Require Import LjsRulesCorrectDescriptors. (* TODO move heaps_bisim_bijective and stuff *)
+
+Lemma heaps_bisim_bijective_from_state_invariant : forall BR jst st,
+    state_invariant BR jst st ->
+    heaps_bisim_bijective BR.
+Proof.
+    introv Hinv. destruct (state_invariant_heaps_bisim_consistent Hinv). constructor; eauto.
+Qed.
+
+Hint Resolve heaps_bisim_bijective_from_state_invariant : js_ljs.
+
+(* TODO move *)
+Lemma value_related_not_eq_lemma : forall BR jv jv' v v',
+    heaps_bisim_bijective BR ->
+    value_related BR jv' v' ->
+    value_related BR jv v ->
+    v <> v' -> jv <> jv'.
+Proof.
+    introv Hbij Hvrel1 Hvrel2 Hdiff Heq. subst.
+    inverts Hvrel1 as Hf1; inverts Hvrel2 as Hf2; tryfalse.
+    lets Heq : heaps_bisim_bijective_lfun_obj Hbij Hf1 Hf2.
+    subst. tryfalse.
+Qed.
+
+Local Opaque nth_def.
+
+Definition object_new proto class := {|
+    L.object_attrs := {| 
+        L.oattrs_proto := proto;
+        L.oattrs_class := class;
+        L.oattrs_extensible := true;
+        L.oattrs_code := L.value_undefined
+    |};
+    L.object_properties := \{};
+    L.object_internal := \{}
+|}.
+
+Lemma ljs_make_object_lemma : forall k c st st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeObject []) (L.out_ter st' r) ->
+    st' = st \(fresh st := object_new LjsInitEnv.privObjectProto "Object") /\
+    r = L.res_value (L.value_object (fresh st)).
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    eauto_js.
+Qed.
+
+Lemma object_related_new_lemma : forall BR jv v s,
+    value_related BR jv v ->
+    object_or_null v ->
+    object_related BR (J.object_new jv s) (object_new v s).
+Proof.
+    introv Hvrel Hnull. unfolds object_new.
+    constructor.
+    constructor; eauto_js.
+    eauto_js.
+Qed.
+
+Hint Resolve object_related_new_lemma : js_ljs.
+
+Lemma red_expr_call_object_ok : forall k, th_call_prealloc k J.prealloc_object.
+Proof.
+    introv Hcinv Hinv Hvrel Halo Hcrel Hvrels Hlred.
+    inverts Hcrel.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : array_idx_eq_lemma; try eassumption. { rewrite <- string_of_nat_0_lemma. reflexivity. }
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    cases_decide as Heq; rewrite stx_eq_null_eq_lemma in Heq. {
+        rewrite Heq in *. value_related_invert.
+        repeat ljs_autoforward.
+        forwards_th Hx : ljs_make_object_lemma. destruct_hyp Hx.
+        jauto_js 8.
+    }
+    lets Hjneq1 : value_related_not_eq_lemma Heq; eauto_js.
+    repeat ljs_autoforward.
+    cases_decide as Heq2; rewrite stx_eq_undefined_eq_lemma in Heq2. {
+        rewrite Heq2 in *. value_related_invert.
+        repeat ljs_autoforward.
+        forwards_th Hx : ljs_make_object_lemma. destruct_hyp Hx.
+        jauto_js 8.
+    }
+    lets Hjneq2 : value_related_not_eq_lemma Heq2; eauto_js.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_object_ok.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js.
+Qed.

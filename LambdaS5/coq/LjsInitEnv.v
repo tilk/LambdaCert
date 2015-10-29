@@ -3777,17 +3777,13 @@ expr_if
   (expr_op1 unary_op_floor (expr_op1 unary_op_abs (expr_id "num")))))
 .
 Definition ex_privObjectCall := 
-expr_if
+expr_let "arg"
+(expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_if
- (expr_if (expr_app (expr_id "%ArrayEmpty") [expr_id "args"]) expr_true
-  (expr_op2 binary_op_stx_eq
-   (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
-   expr_null)) expr_true
- (expr_op2 binary_op_stx_eq
-  (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
-  expr_undefined)) (expr_app (expr_id "%MakeObject") [])
-(expr_app (expr_id "%ToObject")
- [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "arg") expr_null) expr_true
+  (expr_op2 binary_op_stx_eq (expr_id "arg") expr_undefined))
+ (expr_app (expr_id "%MakeObject") [])
+ (expr_app (expr_id "%ToObject") [expr_id "arg"]))
 .
 Definition ex_privObjectConstructor := 
 expr_app (expr_id "%ObjectCall")
@@ -9746,8 +9742,7 @@ Definition name_privNumberGlobalFuncObj : id :=  "%NumberGlobalFuncObj" .
 Definition privObjectCall := 
 value_closure
 (closure_intro
- [("%ArrayEmpty", privArrayEmpty);
-  ("%ArrayIdx", privArrayIdx);
+ [("%ArrayIdx", privArrayIdx);
   ("%MakeObject", privMakeObject);
   ("%ToObject", privToObject)] None ["obj"; "this"; "args"] ex_privObjectCall)
 .

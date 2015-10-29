@@ -60,6 +60,7 @@ Hint Resolve or_introl or_intror : xcore.
 Hint Extern 0 => reflexivity : xcore.
 Hint Extern 50 (~_) => progress rew_logic : xcore.
 Hint Extern 60 (~_) => solve [let H := fresh in intro H; inversion H] : xcore.
+Hint Extern 10 (_ = _) => symmetry; solve [trivial] : xcore.
 
 (* Hint Extern 1 => solve [eauto 10 with nocore typeclass_instances] : js_ljs. *)
 
@@ -2902,20 +2903,25 @@ Hint Resolve js_red_expr_getvalue_lemma : js_ljs.
 
 (* TODO various things to move *)
 
+Lemma same_value_eq_lemma : forall v1 v2, L.value_type v1 <> L.type_closure -> L.same_value v1 v2 = (v1 = v2).
+Proof.
+    introv Htype. rew_logic. splits; introv Hx.
+    + inverts Hx; reflexivity.
+    + substs. destruct v2; simpls; tryfalse; eauto_js.
+Qed.
+
 Lemma same_value_string_eq_lemma : forall s1 s2,
     L.same_value (L.value_string s1) (L.value_string s2) = (s1 = s2).
 Proof.
-    introv. rew_logic. splits; introv Hx.
-    + inverts Hx. reflexivity.
-    + substs. eauto_js.
+    introv. rewrite same_value_eq_lemma by auto.
+    rew_logic. splits; introv Hx; try injects; substs; reflexivity.
 Qed.
 
 Lemma same_value_number_eq_lemma : forall n1 n2,
     L.same_value (L.value_number n1) (L.value_number n2) = (n1 = n2).
 Proof.
-    introv. rew_logic. splits; introv Hx.
-    + inverts Hx. reflexivity.
-    + substs. eauto_js.
+    introv. rewrite same_value_eq_lemma by auto.
+    rew_logic. splits; introv Hx; try injects; substs; reflexivity.
 Qed.
 
 Lemma stx_eq_string_eq_lemma : forall s1 s2,

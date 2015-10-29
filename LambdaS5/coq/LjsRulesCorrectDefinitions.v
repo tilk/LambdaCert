@@ -991,6 +991,12 @@ Record heaps_bisim_consistent BR jst st : Prop := {
     heaps_bisim_consistent_rnoghost : heaps_bisim_rnoghost BR st
 }.
 
+Record heaps_bisim_bijective BR : Prop := {
+    heaps_bisim_bijective_lfun_obj : heaps_bisim_lfun_obj BR;
+    heaps_bisim_bijective_lfun_env : heaps_bisim_lfun_env BR;
+    heaps_bisim_bijective_rfun : heaps_bisim_rfun BR
+}.
+
 (** *** Relating result values
     Result values are the JavaScript's "maybe values",
     they are the results of evaluating statements. *)

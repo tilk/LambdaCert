@@ -1114,20 +1114,6 @@ Proof.
     reflexivity.
 Qed.
 
-(* TODO move *)
-Lemma same_value_eq_lemma : forall v1 v2, L.value_type v1 <> L.type_closure -> L.same_value v1 v2 = (v1 = v2).
-Proof.
-    introv Htype.
-    rew_logic.
-    split.
-    introv Hsv. inverts Hsv; reflexivity.
-    introv Heq. subst. destruct v2; simpls; tryfalse; eauto_js.
-Qed.
-
-(* TODO move *)
-Definition heaps_bisim_bijective BR := 
-    heaps_bisim_lfun_obj BR /\ heaps_bisim_lfun_env BR /\ heaps_bisim_rfun BR.
-
 Lemma same_value_related_eq_lemma : forall BR jv1 jv2 v1 v2,
     heaps_bisim_bijective BR ->
     value_related BR jv1 v1 ->
@@ -1135,12 +1121,11 @@ Lemma same_value_related_eq_lemma : forall BR jv1 jv2 v1 v2,
     J.same_value jv1 jv2 = L.same_value v1 v2.
 Proof.
     introv Hbij Hv1 Hv2.
-    destruct Hbij as (Hlfun1&Hlfun2&Hrfun).
     unfolds J.same_value.
     erewrite same_value_eq_lemma by (inverts Hv1; eauto_js).
     rew_logic. split; introv Heq; subst_hyp Heq; inverts Hv1 as Hf1; inverts Hv2 as Hf2; try reflexivity.
-    + lets : Hlfun1 Hf1 Hf2. substs. reflexivity.
-    + lets : Hrfun Hf1 Hf2 fact_ptr_js_obj fact_ptr_js_obj. injects. reflexivity.
+    + lets : heaps_bisim_bijective_lfun_obj Hbij Hf1 Hf2. substs. reflexivity.
+    + lets : heaps_bisim_bijective_rfun Hbij Hf1 Hf2 fact_ptr_js_obj fact_ptr_js_obj. injects. reflexivity.
 Qed.
 
 Lemma if_some_value_then_same_lemma : forall BR ojv1 ojv2 ov1 ov2,
