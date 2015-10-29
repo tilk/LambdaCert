@@ -6,6 +6,7 @@ Require Import Utils.
 Require Import LjsRulesCorrectDefinitions.
 Require Import LjsRulesCorrectCommon.
 Require Import LjsRulesCorrectSpecFuns.
+Require Import LjsRulesCorrectConstruct.
 Import ListNotations.
 Open Scope list_scope.
 Open Scope string_scope.
@@ -48,6 +49,15 @@ Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
 
 (* Expressions *)
+
+(** *** Objects *)
+
+Lemma red_expr_object_ok : forall k l,
+    th_expr k (J.expr_object l).
+Proof.
+    introv Hcinv Hinv Hlred.
+    repeat ljs_autoforward.
+Admitted.
 
 (** *** Functions *)
 
