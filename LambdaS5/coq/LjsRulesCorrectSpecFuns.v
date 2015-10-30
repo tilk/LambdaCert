@@ -272,6 +272,20 @@ Proof.
     + simpls. false. prove_bag 8.
 Qed.
 
+Lemma make_native_error_msg_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
+    L.red_exprh k c st 
+       (L.expr_app_2 LjsInitEnv.privMakeNativeErrorMsg [v1; v2]) 
+       (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    object_or_null v1 ->
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_build_error jv1 jv2) 
+        (fun jv => exists jptr, jv = J.value_object jptr).
+Proof.
+Admitted. (* TODO better *)
+
 Lemma priv_js_error_lemma : forall k c st v st' r,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privJSError [v]) (L.out_ter st' r) ->
     exists obj,

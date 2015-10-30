@@ -489,6 +489,9 @@ expr_object
  ("%MakeNativeError", property_data
                       (data_intro (expr_id "%MakeNativeError") expr_true
                        expr_false expr_false));
+ ("%MakeNativeErrorMsg", property_data
+                         (data_intro (expr_id "%MakeNativeErrorMsg")
+                          expr_true expr_false expr_false));
  ("%MakeNativeErrorProto", property_data
                            (data_intro (expr_id "%MakeNativeErrorProto")
                             expr_true expr_false expr_false));
@@ -689,9 +692,9 @@ expr_object
  ("%ThrowTypeError", property_data
                      (data_intro (expr_id "%ThrowTypeError") expr_true
                       expr_false expr_false));
- ("%ThrowTypeErrorFun", property_data
-                        (data_intro (expr_id "%ThrowTypeErrorFun") expr_true
-                         expr_false expr_false));
+ ("%ThrowTypeErrorCode", property_data
+                         (data_intro (expr_id "%ThrowTypeErrorCode")
+                          expr_true expr_false expr_false));
  ("%TimeClip", property_data
                (data_intro (expr_id "%TimeClip") expr_true expr_false
                 expr_false));
@@ -1603,22 +1606,14 @@ expr_app (expr_id "%MakeNumber")
   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])]
 .
 Definition ex_internal10 := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_internal11 := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_internal12 := 
 expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
@@ -1872,49 +1867,29 @@ expr_app (expr_id "%ObjectCall")
 [expr_id "constr"; expr_undefined; expr_id "args"]
 .
 Definition ex_internal5 := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_internal6 := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_internal7 := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_internal8 := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_internal9 := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_objCode1 := 
 expr_app (expr_id "%TypeError")
@@ -3090,22 +3065,14 @@ expr_let "t1" (expr_op1 unary_op_typeof (expr_id "x1"))
          expr_false)))))))))
 .
 Definition ex_privErrorConstructor := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_privEvalErrorConstructor := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_privFunctionConstructor := 
 expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
@@ -3545,6 +3512,12 @@ expr_let "exc"
    (expr_set_attr pattr_enum (expr_id "exc") (expr_string "message")
     expr_false)) expr_undefined) (expr_id "exc"))
 .
+Definition ex_privMakeNativeErrorMsg := 
+expr_if (expr_op2 binary_op_stx_eq (expr_id "msg") expr_undefined)
+(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+(expr_app (expr_id "%MakeNativeError")
+ [expr_id "proto"; expr_app (expr_id "%ToString") [expr_id "msg"]])
+.
 Definition ex_privMakeNativeErrorProto := 
 expr_object
 (objattrs_intro (expr_string "Error") expr_true (expr_id "%ErrorProto")
@@ -3698,13 +3671,9 @@ expr_throw
 .
 Definition ex_privNativeErrorConstructor := 
 expr_lambda ["this"; "args"]
-(expr_let "msg"
- (expr_if
-  (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
-  (expr_app (expr_id "%ToString")
-   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
-  expr_undefined)
- (expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"]))
+(expr_app (expr_id "%MakeNativeErrorMsg")
+ [expr_id "proto";
+  expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
 .
 Definition ex_privNativeErrorOr := 
 expr_if (expr_id "strict")
@@ -4018,13 +3987,9 @@ Definition ex_privRangeError :=
 expr_app (expr_id "%NativeError") [expr_id "%RangeErrorProto"; expr_id "msg"]
 .
 Definition ex_privRangeErrorConstructor := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_privRangeErrorOr := 
 expr_app (expr_id "%NativeErrorOr")
@@ -4035,13 +4000,9 @@ expr_app (expr_id "%NativeError")
 [expr_id "%ReferenceErrorProto"; expr_id "msg"]
 .
 Definition ex_privReferenceErrorConstructor := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_privReferenceErrorOr := 
 expr_app (expr_id "%NativeErrorOr")
@@ -4115,19 +4076,15 @@ expr_app (expr_id "%NativeError")
 [expr_id "%SyntaxErrorProto"; expr_id "msg"]
 .
 Definition ex_privSyntaxErrorConstructor := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_privSyntaxErrorOr := 
 expr_app (expr_id "%NativeErrorOr")
 [expr_id "%SyntaxErrorProto"; expr_id "msg"; expr_id "v"; expr_id "strict"]
 .
-Definition ex_privThrowTypeErrorFun := 
+Definition ex_privThrowTypeErrorCode := 
 expr_let "msg"
 (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
 (expr_app (expr_id "%TypeError") [expr_id "msg"])
@@ -4343,13 +4300,9 @@ Definition ex_privTypeError :=
 expr_app (expr_id "%NativeError") [expr_id "%TypeErrorProto"; expr_id "msg"]
 .
 Definition ex_privTypeErrorConstructor := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_privTypeErrorOr := 
 expr_app (expr_id "%NativeErrorOr")
@@ -4378,13 +4331,9 @@ expr_let "tp" (expr_op1 unary_op_typeof (expr_id "val"))
       (expr_throw (expr_string "[env] invalid value in %Typeof"))))))))
 .
 Definition ex_privURIErrorConstructor := 
-expr_let "msg"
-(expr_if
- (expr_op2 binary_op_has_own_property (expr_id "args") (expr_string "0"))
- (expr_app (expr_id "%ToString")
-  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])
- expr_undefined)
-(expr_app (expr_id "%MakeNativeError") [expr_id "proto"; expr_id "msg"])
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_privUTC :=  expr_id "t" .
 Definition ex_privUnaryNeg := 
@@ -9539,14 +9488,20 @@ value_closure
  ["x1"; "x2"] ex_privEqEq)
 .
 Definition name_privEqEq : id :=  "%EqEq" .
+Definition privMakeNativeErrorMsg := 
+value_closure
+(closure_intro
+ [("%MakeNativeError", privMakeNativeError); ("%ToString", privToString)]
+ None ["proto"; "msg"] ex_privMakeNativeErrorMsg)
+.
+Definition name_privMakeNativeErrorMsg : id :=  "%MakeNativeErrorMsg" .
 Definition privErrorProto :=  value_object 3 .
 Definition name_privErrorProto : id :=  "proto" .
 Definition privErrorConstructor := 
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
-  ("%MakeNativeError", privMakeNativeError);
-  ("%ToString", privToString);
+  ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
   ("proto", privErrorProto)] None ["this"; "args"] ex_privErrorConstructor)
 .
 Definition name_privErrorConstructor : id :=  "%ErrorConstructor" .
@@ -9558,8 +9513,7 @@ Definition privEvalErrorConstructor :=
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
-  ("%MakeNativeError", privMakeNativeError);
-  ("%ToString", privToString);
+  ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
   ("proto", privEvalErrorProto)] None ["this"; "args"]
  ex_privEvalErrorConstructor)
 .
@@ -9715,8 +9669,8 @@ Definition privNativeErrorConstructor :=
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
-  ("%MakeNativeError", privMakeNativeError);
-  ("%ToString", privToString)] None ["proto"] ex_privNativeErrorConstructor)
+  ("%MakeNativeErrorMsg", privMakeNativeErrorMsg)] None ["proto"]
+ ex_privNativeErrorConstructor)
 .
 Definition name_privNativeErrorConstructor : id :=  "%NativeErrorConstructor" .
 Definition privNumberCall := 
@@ -9821,8 +9775,7 @@ Definition privRangeErrorConstructor :=
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
-  ("%MakeNativeError", privMakeNativeError);
-  ("%ToString", privToString);
+  ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
   ("proto", privRangeErrorProto)] None ["this"; "args"]
  ex_privRangeErrorConstructor)
 .
@@ -9841,8 +9794,7 @@ Definition privReferenceErrorConstructor :=
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
-  ("%MakeNativeError", privMakeNativeError);
-  ("%ToString", privToString);
+  ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
   ("proto", privReferenceErrorProto)] None ["this"; "args"]
  ex_privReferenceErrorConstructor)
 .
@@ -9918,8 +9870,7 @@ Definition privSyntaxErrorConstructor :=
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
-  ("%MakeNativeError", privMakeNativeError);
-  ("%ToString", privToString);
+  ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
   ("proto", privSyntaxErrorProto)] None ["this"; "args"]
  ex_privSyntaxErrorConstructor)
 .
@@ -9934,12 +9885,12 @@ value_closure
  ex_privSyntaxErrorOr)
 .
 Definition name_privSyntaxErrorOr : id :=  "%SyntaxErrorOr" .
-Definition privThrowTypeErrorFun := 
+Definition privThrowTypeErrorCode := 
 value_closure
 (closure_intro [("%ArrayIdx", privArrayIdx); ("%TypeError", privTypeError)]
- None ["obj"; "this"; "args"] ex_privThrowTypeErrorFun)
+ None ["obj"; "this"; "args"] ex_privThrowTypeErrorCode)
 .
-Definition name_privThrowTypeErrorFun : id :=  "%ThrowTypeErrorFun" .
+Definition name_privThrowTypeErrorCode : id :=  "%ThrowTypeErrorCode" .
 Definition privTimeWithinDay := 
 value_closure
 (closure_intro [("%msPerDay", privmsPerDay)] None ["t"] ex_privTimeWithinDay)
@@ -9969,8 +9920,7 @@ Definition privTypeErrorConstructor :=
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
-  ("%MakeNativeError", privMakeNativeError);
-  ("%ToString", privToString);
+  ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
   ("proto", privTypeErrorProto)] None ["this"; "args"]
  ex_privTypeErrorConstructor)
 .
@@ -9983,8 +9933,7 @@ Definition privURIErrorConstructor :=
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
-  ("%MakeNativeError", privMakeNativeError);
-  ("%ToString", privToString);
+  ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
   ("proto", privURIErrorProto)] None ["this"; "args"]
  ex_privURIErrorConstructor)
 .
@@ -11596,6 +11545,7 @@ Definition ctx_items :=
  (name_privMakeDay, privMakeDay);
  (name_privMakeFunctionObject, privMakeFunctionObject);
  (name_privMakeNativeError, privMakeNativeError);
+ (name_privMakeNativeErrorMsg, privMakeNativeErrorMsg);
  (name_privMakeNativeErrorProto, privMakeNativeErrorProto);
  (name_privMakeNumber, privMakeNumber);
  (name_privMakeObject, privMakeObject);
@@ -11663,7 +11613,7 @@ Definition ctx_items :=
  (name_privSyntaxErrorOr, privSyntaxErrorOr);
  (name_privSyntaxErrorProto, privSyntaxErrorProto);
  (name_privThrowTypeError, privThrowTypeError);
- (name_privThrowTypeErrorFun, privThrowTypeErrorFun);
+ (name_privThrowTypeErrorCode, privThrowTypeErrorCode);
  (name_privTimeClip, privTimeClip);
  (name_privTimeFromYear, privTimeFromYear);
  (name_privTimeWithinDay, privTimeWithinDay);
@@ -12090,6 +12040,7 @@ privMakeDateDayTime
 privMakeDay
 privMakeFunctionObject
 privMakeNativeError
+privMakeNativeErrorMsg
 privMakeNativeErrorProto
 privMakeNumber
 privMakeObject
@@ -12157,7 +12108,7 @@ privSyntaxErrorGlobalFuncObj
 privSyntaxErrorOr
 privSyntaxErrorProto
 privThrowTypeError
-privThrowTypeErrorFun
+privThrowTypeErrorCode
 privTimeClip
 privTimeFromYear
 privTimeWithinDay
@@ -12584,6 +12535,7 @@ privMakeDateDayTime
 privMakeDay
 privMakeFunctionObject
 privMakeNativeError
+privMakeNativeErrorMsg
 privMakeNativeErrorProto
 privMakeNumber
 privMakeObject
@@ -12651,7 +12603,7 @@ privSyntaxErrorGlobalFuncObj
 privSyntaxErrorOr
 privSyntaxErrorProto
 privThrowTypeError
-privThrowTypeErrorFun
+privThrowTypeErrorCode
 privTimeClip
 privTimeFromYear
 privTimeWithinDay
@@ -13088,6 +13040,7 @@ Definition store_items := [
                                          ("%MakeDay", privMakeDay);
                                          ("%MakeFunctionObject", privMakeFunctionObject);
                                          ("%MakeNativeError", privMakeNativeError);
+                                         ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                                          ("%MakeNativeErrorProto", privMakeNativeErrorProto);
                                          ("%MakeNumber", privMakeNumber);
                                          ("%MakeObject", privMakeObject);
@@ -13155,7 +13108,7 @@ Definition store_items := [
                                          ("%SyntaxErrorOr", privSyntaxErrorOr);
                                          ("%SyntaxErrorProto", privSyntaxErrorProto);
                                          ("%ThrowTypeError", privThrowTypeError);
-                                         ("%ThrowTypeErrorFun", privThrowTypeErrorFun);
+                                         ("%ThrowTypeErrorCode", privThrowTypeErrorCode);
                                          ("%TimeClip", privTimeClip);
                                          ("%TimeFromYear", privTimeFromYear);
                                          ("%TimeWithinDay", privTimeWithinDay);
@@ -14138,7 +14091,7 @@ Definition store_items := [
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
          oattrs_extensible := false;
-         oattrs_code := privThrowTypeErrorFun|};
+         oattrs_code := privThrowTypeErrorCode|};
        object_properties :=
        from_list [("length", 
                    attributes_data_of {|attributes_data_value :=
@@ -14593,8 +14546,7 @@ Definition store_items := [
                    value_closure
                    (closure_intro
                     [("%ArrayIdx", privArrayIdx);
-                     ("%MakeNativeError", privMakeNativeError);
-                     ("%ToString", privToString);
+                     ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privErrorProto)] None ["this"; "args"]
                     ex_internal5))]|});
 (36, {|object_attrs :=
@@ -14620,8 +14572,7 @@ Definition store_items := [
                    value_closure
                    (closure_intro
                     [("%ArrayIdx", privArrayIdx);
-                     ("%MakeNativeError", privMakeNativeError);
-                     ("%ToString", privToString);
+                     ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privSyntaxErrorProto)] None ["this"; "args"]
                     ex_internal6))]|});
 (37, {|object_attrs :=
@@ -14647,8 +14598,7 @@ Definition store_items := [
                    value_closure
                    (closure_intro
                     [("%ArrayIdx", privArrayIdx);
-                     ("%MakeNativeError", privMakeNativeError);
-                     ("%ToString", privToString);
+                     ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privEvalErrorProto)] None ["this"; "args"]
                     ex_internal7))]|});
 (38, {|object_attrs :=
@@ -14674,8 +14624,7 @@ Definition store_items := [
                    value_closure
                    (closure_intro
                     [("%ArrayIdx", privArrayIdx);
-                     ("%MakeNativeError", privMakeNativeError);
-                     ("%ToString", privToString);
+                     ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privRangeErrorProto)] None ["this"; "args"]
                     ex_internal8))]|});
 (39, {|object_attrs :=
@@ -14701,8 +14650,7 @@ Definition store_items := [
                    value_closure
                    (closure_intro
                     [("%ArrayIdx", privArrayIdx);
-                     ("%MakeNativeError", privMakeNativeError);
-                     ("%ToString", privToString);
+                     ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privReferenceErrorProto)] None
                     ["this"; "args"] ex_internal9))]|});
 (40, {|object_attrs :=
@@ -14728,8 +14676,7 @@ Definition store_items := [
                    value_closure
                    (closure_intro
                     [("%ArrayIdx", privArrayIdx);
-                     ("%MakeNativeError", privMakeNativeError);
-                     ("%ToString", privToString);
+                     ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privTypeErrorProto)] None ["this"; "args"]
                     ex_internal10))]|});
 (41, {|object_attrs :=
@@ -14768,8 +14715,7 @@ Definition store_items := [
                    value_closure
                    (closure_intro
                     [("%ArrayIdx", privArrayIdx);
-                     ("%MakeNativeError", privMakeNativeError);
-                     ("%ToString", privToString);
+                     ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privURIErrorProto)] None ["this"; "args"]
                     ex_internal11))]|});
 (43, {|object_attrs :=

@@ -47,7 +47,7 @@ Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
 
-Lemma red_spec_construct_prealloc_bool : forall k, ih_call k -> th_construct_prealloc k J.prealloc_bool.
+Lemma red_spec_construct_prealloc_bool_ok : forall k, ih_call k -> th_construct_prealloc k J.prealloc_bool.
 Proof.
     introv IHc Hcinv Hinv Hvrels Halo Hcpre Hlred.
     inverts Hcpre.
@@ -65,7 +65,7 @@ Proof.
     jauto_js 15.
 Qed.
 
-Lemma red_spec_construct_prealloc_number : forall k, ih_call k -> th_construct_prealloc k J.prealloc_number.
+Lemma red_spec_construct_prealloc_number_ok : forall k, ih_call k -> th_construct_prealloc k J.prealloc_number.
 Proof.
     introv IHc Hcinv Hinv Halo Hvrels Hcpre Hlred.
     inverts Hcpre.
@@ -94,24 +94,70 @@ Proof.
     jauto_js 15.
 Qed.
 
+Lemma red_spec_construct_error_ok : forall k, ih_call k -> th_construct_prealloc k J.prealloc_error.
+Proof.
+    introv IHc Hcinv Hinv Halo Hvrels Hcpre Hlred.
+    inverts Hcpre.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : array_idx_eq_lemma; try eassumption. { rewrite <- string_of_nat_0_lemma. reflexivity. }
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th : make_native_error_msg_lemma. eauto_js.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js 8.
+Qed.
+
+Require Import LjsRulesCorrectInit. (* TODO move native_error_proto_val somewhere else *)
+
+Lemma construct_prealloc_native_error_lemma : forall jne v,
+    construct_prealloc_related (J.prealloc_native_error jne) v -> 
+    v = L.value_closure (LjsSyntax.closure_intro
+                  [("%ArrayIdx", LjsInitEnv.privArrayIdx);
+                   ("%MakeNativeErrorMsg", LjsInitEnv.privMakeNativeErrorMsg);
+                   ("proto", native_error_proto_val jne)] None
+                   ["this"; "args"] LjsInitEnv.ex_privEvalErrorConstructor).
+Proof.
+    introv Hcpre. inverts Hcpre; reflexivity.
+Qed.
+
+Lemma red_spec_construct_native_error_ok : forall k jne, ih_call k -> 
+    th_construct_prealloc k (J.prealloc_native_error jne).
+Proof.
+    introv IHc Hcinv Hinv Halo Hvrels Hcpre Hlred.
+    lets Hcpre' : construct_prealloc_native_error_lemma Hcpre. subst_hyp Hcpre'.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : array_idx_eq_lemma; try eassumption. { rewrite <- string_of_nat_0_lemma. reflexivity. }
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th : make_native_error_msg_lemma. { eauto_js. } { constructor. destruct jne; eauto_js. }
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    jauto_js 8.
+Qed.
+
 Lemma red_spec_construct_prealloc_ok : forall k jpre, ih_call k -> th_construct_prealloc k jpre.
 Proof.
     introv IHc Hcinv Hinv Halo Hvrels Hcpre Hlred.
     inverts keep Hcpre;
     generalize Hcinv Hinv Halo Hvrels Hcpre Hlred;
     clear Hcinv Hinv Halo Hvrels Hcpre Hlred.
-    skip.
-    skip.
-    applys~ red_spec_construct_prealloc_bool.
-    applys~ red_spec_construct_prealloc_number.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
-    skip.
+    skip. (* object *)
+    skip. (* function *)
+    applys~ red_spec_construct_prealloc_bool_ok.
+    applys~ red_spec_construct_prealloc_number_ok.
+    skip. (* array *)
+    skip. (* string *)
+    applys~ red_spec_construct_error_ok.
+    applys~ red_spec_construct_native_error_ok.
+    applys~ red_spec_construct_native_error_ok.
+    applys~ red_spec_construct_native_error_ok.
+    applys~ red_spec_construct_native_error_ok.
+    applys~ red_spec_construct_native_error_ok.
 Qed.
 
 Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 vs r jptr jvs,
