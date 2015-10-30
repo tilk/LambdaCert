@@ -679,6 +679,88 @@ Ltac decide_stx_eq :=
 (* TODO move *)
 Hint Extern 3 (object_or_null _) => eapply object_or_null_object : js_ljs.
 
+Definition object_new proto class := {|
+    L.object_attrs := {| 
+        L.oattrs_proto := proto;
+        L.oattrs_class := class;
+        L.oattrs_extensible := true;
+        L.oattrs_code := L.value_undefined
+    |};
+    L.object_properties := \{};
+    L.object_internal := \{}
+|}.
+
+Definition object_with_primitive_value obj v := {|
+    L.object_attrs := L.object_attrs obj;
+    L.object_properties := L.object_properties obj;
+    L.object_internal := L.object_internal obj \("primval" := v)
+|}.
+
+Lemma ljs_make_object_lemma : forall k c st st' r,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeObject []) (L.out_ter st' r) ->
+    st' = st \(fresh st := object_new LjsInitEnv.privObjectProto "Object") /\
+    r = L.res_value (L.value_object (fresh st)).
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    eauto_js.
+Qed.
+
+Lemma make_number_lemma : forall k c st st' r n,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeNumber [L.value_number n]) (L.out_ter st' r) ->
+    st' = st \(fresh st := object_with_primitive_value 
+        (object_new LjsInitEnv.privNumberProto "Number") (L.value_number n)) /\ 
+    r = L.res_value (L.value_object (fresh st)).
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    eauto_js.
+Qed.
+
+Lemma make_boolean_lemma : forall k c st st' r b,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeBoolean [L.value_bool b]) (L.out_ter st' r) ->
+    st' = st \(fresh st := object_with_primitive_value 
+        (object_new LjsInitEnv.privBooleanProto "Boolean") (L.value_bool b)) /\ 
+    r = L.res_value (L.value_object (fresh st)).
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    eauto_js.
+Qed.
+
+Lemma object_related_new_lemma : forall BR jv v s,
+    value_related BR jv v ->
+    object_or_null v ->
+    object_related BR (J.object_new jv s) (object_new v s).
+Proof.
+    introv Hvrel Hnull. unfolds object_new.
+    constructor.
+    constructor; eauto_js.
+    eauto_js.
+Qed.
+
+Hint Resolve object_related_new_lemma : js_ljs.
+
+Lemma object_related_with_primitive_value_lemma : forall BR jv v jobj obj,
+    value_related BR jv v ->
+    object_related BR jobj obj ->
+    object_related BR (J.object_with_primitive_value jobj jv) (object_with_primitive_value obj v).
+Proof.
+    introv Hvrel Horel. unfolds object_with_primitive_value. 
+    destruct jobj. destruct obj. simpls.
+    destruct Horel as (Horprim,Horprop).
+    constructor. {
+        destruct Horprim.
+        constructor; simpls; solve [rew_read_option; eauto_js].
+    }
+    eauto_js.
+Qed.
+
+Hint Resolve object_related_with_primitive_value_lemma : js_ljs.
+
 Lemma red_spec_to_object_ok : forall k,
     th_ext_expr_unary k LjsInitEnv.privToObject J.spec_to_object
         (fun jv => exists jptr, jv = J.value_object jptr).
@@ -707,13 +789,13 @@ Proof.
         skip. (* TODO better handling of objects *)
     } { (* number *)
         destruct Hvrel; invert_stx_eq.
-        ljs_invert_apply.
-        repeat ljs_autoforward.
+        forwards_th Hx : make_number_lemma.
+        destruct_hyp Hx.
         jauto_js 40.
     } { (* boolean *)
         destruct Hvrel; invert_stx_eq.
-        ljs_invert_apply.
-        repeat ljs_autoforward.
+        forwards_th Hx : make_boolean_lemma.
+        destruct_hyp Hx.
         jauto_js 40.
     } { (* impossible *)
         destruct Hvrel; false; eauto_js.

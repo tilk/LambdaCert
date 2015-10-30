@@ -47,11 +47,72 @@ Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
 
-Lemma red_spec_construct_prealloc_ok : forall k jpre, th_construct_prealloc k jpre.
+Lemma red_spec_construct_prealloc_bool : forall k, ih_call k -> th_construct_prealloc k J.prealloc_bool.
 Proof.
-    introv Hcinv Hinv Hvrels Halo Hcpre Hlred.
+    introv IHc Hcinv Hinv Hvrels Halo Hcpre Hlred.
     inverts Hcpre.
-Admitted.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : array_idx_eq_lemma; try eassumption. { rewrite <- string_of_nat_0_lemma. reflexivity. }
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_boolean_unary_ok.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert. 
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    forwards_th Hx : make_boolean_lemma. destruct_hyp Hx.
+    jauto_js 15.
+Qed.
+
+Lemma red_spec_construct_prealloc_number : forall k, ih_call k -> th_construct_prealloc k J.prealloc_number.
+Proof.
+    introv IHc Hcinv Hinv Halo Hvrels Hcpre Hlred.
+    inverts Hcpre.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : array_empty_lemma; try eassumption.
+    destruct_hyp Hx.
+    cases_isTrue as Heq. {
+        subst_hyp Heq.
+        inverts Hvrels.
+        repeat ljs_autoforward.
+        rewrite of_int_zero_lemma in *.
+        forwards_th Hx : make_number_lemma. destruct_hyp Hx.
+        jauto_js 15.
+    }
+    repeat ljs_autoforward.
+    forwards_th Hx : array_idx_eq_lemma; try eassumption. { rewrite <- string_of_nat_0_lemma. reflexivity. }
+    destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_number_unary_ok.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert. 
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    forwards_th Hx : make_number_lemma. destruct_hyp Hx.
+    jauto_js 15.
+Qed.
+
+Lemma red_spec_construct_prealloc_ok : forall k jpre, ih_call k -> th_construct_prealloc k jpre.
+Proof.
+    introv IHc Hcinv Hinv Halo Hvrels Hcpre Hlred.
+    inverts keep Hcpre;
+    generalize Hcinv Hinv Halo Hvrels Hcpre Hlred;
+    clear Hcinv Hinv Halo Hvrels Hcpre Hlred.
+    skip.
+    skip.
+    applys~ red_spec_construct_prealloc_bool.
+    applys~ red_spec_construct_prealloc_number.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+    skip.
+Qed.
 
 Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 vs r jptr jvs,
     ih_call k ->

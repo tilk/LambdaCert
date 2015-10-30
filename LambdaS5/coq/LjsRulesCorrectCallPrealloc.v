@@ -46,57 +46,6 @@ Implicit Type jder : J.decl_env_record.
 Implicit Type jprops : J.object_properties_type.
 Implicit Type jlenv : J.lexical_env.
 
-Definition afh k' k jvl := 
-    map (fun k => nth_def (J.value_prim J.prim_undef) k jvl) (LibStream.take k (nat_stream_from k')).
-
-Lemma afh_lemma_1 : forall jv jvl k k',
-    afh (S k') k (jv :: jvl) = afh k' k jvl.
-Proof.
-    unfolds afh.
-    induction k; introv; simpls; rew_map. reflexivity.
-    rewrite IHk. reflexivity.
-Qed.
-
-Lemma afh_lemma_2 : forall k k',
-    afh k' (S k) [] = J.value_prim J.prim_undef :: afh (S k') k [].
-Proof.
-    destruct k'; reflexivity.
-Qed.
-
-Lemma afh_lemma_3 : forall k jv jvl,
-    afh 0 (S k) (jv :: jvl) = jv :: afh 1 k (jv :: jvl).
-Proof.
-    unfolds afh. introv. simpl. rew_map. reflexivity. 
-Qed.
-
-Lemma arguments_from_nil_lemma : forall k k',
-    J.arguments_from [] (afh k' k []).
-Proof.
-    induction k; introv.
-    + constructor.
-    + rewrite afh_lemma_2. constructor. eauto. 
-Qed.
-
-Lemma arguments_from_lemma : forall jvl k,
-    J.arguments_from jvl (afh 0 k jvl).
-Proof.
-    induction jvl; introv.
-    + eapply arguments_from_nil_lemma.
-    + destruct k.
-      - constructor.
-      - rewrite afh_lemma_3. rewrite afh_lemma_1. constructor. eauto.
-Qed.
-
-Ltac js_arguments_from := 
-    match goal with
-    | |- J.arguments_from ?jvl ?l =>
-        let H := fresh in
-        lets H : (arguments_from_lemma jvl (length l));
-        cbv -[nth_def] in H; eapply H; clear H
-    end.
-
-Hint Extern 10 (J.arguments_from _ _) => js_arguments_from : js_ljs.
-
 Opaque decide.
 
 Lemma is_finite_lemma : forall k c st st' r n,
@@ -150,10 +99,6 @@ Proof.
     cases_decide as Heq; rewrite same_value_number_eq_lemma in Heq; try subst_hyp Heq;
     jauto_js.
 Qed.
-
-(* TODO move *)
-Lemma of_int_zero_lemma : of_int 0 = JsNumber.zero.
-Admitted.
 
 Lemma red_expr_call_number_ok : forall k, ih_call k -> th_call_prealloc k J.prealloc_number.
 Proof.
@@ -228,41 +173,6 @@ Proof.
 Qed.
 
 Local Opaque nth_def.
-
-Definition object_new proto class := {|
-    L.object_attrs := {| 
-        L.oattrs_proto := proto;
-        L.oattrs_class := class;
-        L.oattrs_extensible := true;
-        L.oattrs_code := L.value_undefined
-    |};
-    L.object_properties := \{};
-    L.object_internal := \{}
-|}.
-
-Lemma ljs_make_object_lemma : forall k c st st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeObject []) (L.out_ter st' r) ->
-    st' = st \(fresh st := object_new LjsInitEnv.privObjectProto "Object") /\
-    r = L.res_value (L.value_object (fresh st)).
-Proof.
-    introv Hlred.
-    ljs_invert_apply.
-    repeat ljs_autoforward.
-    eauto_js.
-Qed.
-
-Lemma object_related_new_lemma : forall BR jv v s,
-    value_related BR jv v ->
-    object_or_null v ->
-    object_related BR (J.object_new jv s) (object_new v s).
-Proof.
-    introv Hvrel Hnull. unfolds object_new.
-    constructor.
-    constructor; eauto_js.
-    eauto_js.
-Qed.
-
-Hint Resolve object_related_new_lemma : js_ljs.
 
 Lemma red_expr_call_object_ok : forall k, th_call_prealloc k J.prealloc_object.
 Proof.

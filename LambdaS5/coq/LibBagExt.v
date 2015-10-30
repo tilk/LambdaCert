@@ -120,6 +120,23 @@ Class Binds_double_eq `{BagBinds A B T} :=
 Class Binds_double `{BagBinds A B T} :=
     { binds_double : forall E F, (forall k x, binds E k x <-> binds F k x) -> E = F }.
 
+(***** PROPERTIES RELATED TO READ OPTION *****)
+
+Class Read_option_empty `{BagReadOption A B T} `{BagEmpty T} :=
+    { read_option_empty : forall k, \{} \(k?) = None }.
+
+Class Read_option_single_bind_same `{BagReadOption A B T} `{BagSingleBind A B T} :=
+    { read_option_single_bind_same : forall k x, (k \:= x) \(k?) = Some x }.
+
+Class Read_option_single_bind_diff `{BagReadOption A B T} `{BagSingleBind A B T} :=
+    { read_option_single_bind_diff : forall k k' x, k <> k' -> (k' \:= x) \(k?) = None }.
+
+Class Read_option_update_same `{BagReadOption A B T} `{BagUpdate A B T} :=
+    { read_option_update_same : forall M k x, (M \(k := x)) \(k?) = Some x }.
+
+Class Read_option_update_diff `{BagReadOption A B T} `{BagUpdate A B T} :=
+    { read_option_update_diff : forall M k k' x, k <> k' -> (M \(k' := x)) \(k?) = M \(k?) }.
+
 (***** PROPERTIES RELATED TO BINDS *****)
 
 (* from_list *)
@@ -396,6 +413,10 @@ Class Index_update_diff `{BagIndex T A} `{BagUpdate A B T} :=
 Class Index_update_diff_inv `{BagIndex T A} `{BagUpdate A B T} :=
     { index_update_diff_inv : forall M k k' x', k <> k' -> index (M \(k' := x')) k -> index M k }.
 
+Lemma index_update_diff_inv_contrapose : forall `{BagIndex T A} `{BagUpdate A B T} `{Index_update_diff_inv},
+    forall M k k' x', k <> k' -> ~index M k -> ~index (M \(k' := x')) k.
+Proof. intros. eapply contrapose_intro. apply index_update_diff_inv. assumption. assumption. Qed.
+
 (* dom *)
 
 Class Dom_index_eq `{BagIndex T A} `{BagDom T T1} `{BagIn A T1} :=
@@ -543,6 +564,28 @@ Tactic Notation "rew_bag_simpl" "~" "in" hyp(H) :=
     rew_bag_simpl in H; auto_tilde.
 Tactic Notation "rew_bag_simpl" "*" "in" hyp(H) :=
     rew_bag_simpl in H; auto_star.
+
+Hint Rewrite
+    @read_option_empty
+    @read_option_single_bind_same @read_option_single_bind_diff
+    @read_option_update_same @read_option_update_diff
+    using (solve [eauto with typeclass_instances]) : rew_read_option.
+
+Tactic Notation "rew_read_option" :=
+    autorewrite with rew_read_option.
+Tactic Notation "rew_read_option" "in" hyp(H) :=
+    autorewrite with rew_read_option in H.
+Tactic Notation "rew_read_option" "in" "*" :=
+    autorewrite with rew_read_option in *.
+
+Tactic Notation "rew_read_option" "~" :=
+    rew_read_option; auto_tilde.
+Tactic Notation "rew_read_option" "*" :=
+    rew_read_option; auto_star.
+Tactic Notation "rew_read_option" "~" "in" hyp(H) :=
+    rew_read_option in H; auto_tilde.
+Tactic Notation "rew_read_option" "*" "in" hyp(H) :=
+    rew_read_option in H; auto_star.
 
 Global Instance from_list_empty_from_from_list_in_eq :
     forall `{BagFromList A T} `{BagEmpty T} `{BagIn A T},
@@ -1345,7 +1388,7 @@ Hint Resolve
     @index_union_l @index_union_r
     @index_remove_in @index_remove_notin
     @index_restrict_in @index_restrict_notin
-    @index_update_same @index_update_index @index_update_diff
+    @index_update_same @index_update_index @index_update_diff @index_update_diff_inv_contrapose
     @index_binds_inv @fresh_index 
     @incl_in @incl_index @incl_binds 
     @incl_empty
@@ -1595,3 +1638,46 @@ Proof.
     rewrite index_binds_eq. rew_logic. intros. 
     rewrite <- read_option_binds_eq. intro. tryfalse.
 Defined.
+
+Section ReadOption.
+Context `{BagReadOption A B T} `{BagBinds A B T} `{BagIndex T A}.
+
+Global Instance read_option_empty_inst : 
+    forall `{BagEmpty T},
+    Read_option_binds_eq -> Index_binds_eq -> Binds_empty_eq -> Read_option_empty.
+Proof.
+    constructor. intros. erewrite read_option_not_index_inv by prove_bag. reflexivity.
+Qed.
+
+Global Instance read_option_single_bind_same_inst : 
+    forall `{BagSingleBind A B T},
+    Read_option_binds_eq -> Index_binds_eq -> Binds_single_bind_eq -> Read_option_single_bind_same.
+Proof.
+    constructor. intros. erewrite read_option_binds_inv by prove_bag. reflexivity.
+Qed.
+
+Global Instance read_option_single_bind_diff_inst : 
+    forall `{BagSingleBind A B T},
+    Read_option_binds_eq -> Index_binds_eq -> Binds_single_bind_eq -> Read_option_single_bind_diff.
+Proof.
+    constructor. intros. erewrite read_option_not_index_inv by prove_bag. reflexivity.
+Qed.
+
+Global Instance read_option_update_same_inst : 
+    forall `{BagUpdate A B T},
+    Read_option_binds_eq -> Index_binds_eq -> Binds_update_eq -> Read_option_update_same.
+Proof.
+    constructor. intros. erewrite read_option_binds_inv by prove_bag. reflexivity.
+Qed.
+
+Global Instance read_option_update_diff_inst : 
+    forall `{BagUpdate A B T},
+    Read_option_binds_eq -> Index_binds_eq -> Binds_update_eq -> Read_option_update_diff.
+Proof.
+    constructor. intros.
+    destruct (classic (index M k)) as [Hb | Hb].
+    + rewrite index_binds_eq in Hb. destruct Hb. repeat erewrite read_option_binds_inv by prove_bag. reflexivity.
+    + repeat erewrite read_option_not_index_inv by prove_bag. reflexivity.
+Qed.
+
+End ReadOption.

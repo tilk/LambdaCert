@@ -1633,7 +1633,6 @@ Proof.
     right. jauto_js.
     specializes Hrel2 s'.
     destruct_hyp Hrel2; eauto_js. 
-    repeat rewrite index_update_diff_eq; eauto.
 Qed.
 
 Hint Resolve object_properties_related_update : js_ljs.
@@ -2958,3 +2957,58 @@ Lemma stx_eq_undefined_eq_lemma : forall v, L.stx_eq v L.value_undefined = (v = 
 Proof.
     introv. rew_logic. split; introv H. { inverts H. reflexivity. } { substs. eauto_js. }
 Qed.
+
+Definition afh k' k jvl := 
+    map (fun k => nth_def (J.value_prim J.prim_undef) k jvl) (LibStream.take k (nat_stream_from k')).
+
+Lemma afh_lemma_1 : forall jv jvl k k',
+    afh (S k') k (jv :: jvl) = afh k' k jvl.
+Proof.
+    unfolds afh.
+    induction k; introv; simpls; rew_map. reflexivity.
+    rewrite IHk. reflexivity.
+Qed.
+
+Lemma afh_lemma_2 : forall k k',
+    afh k' (S k) [] = J.value_prim J.prim_undef :: afh (S k') k [].
+Proof.
+    destruct k'; reflexivity.
+Qed.
+
+Lemma afh_lemma_3 : forall k jv jvl,
+    afh 0 (S k) (jv :: jvl) = jv :: afh 1 k (jv :: jvl).
+Proof.
+    unfolds afh. introv. simpl. rew_map. reflexivity. 
+Qed.
+
+Lemma arguments_from_nil_lemma : forall k k',
+    J.arguments_from [] (afh k' k []).
+Proof.
+    induction k; introv.
+    + constructor.
+    + rewrite afh_lemma_2. constructor. eauto. 
+Qed.
+
+Lemma arguments_from_lemma : forall jvl k,
+    J.arguments_from jvl (afh 0 k jvl).
+Proof.
+    induction jvl; introv.
+    + eapply arguments_from_nil_lemma.
+    + destruct k.
+      - constructor.
+      - rewrite afh_lemma_3. rewrite afh_lemma_1. constructor. eauto.
+Qed.
+
+Ltac js_arguments_from := 
+    match goal with
+    | |- J.arguments_from ?jvl ?l =>
+        let H := fresh in
+        lets H : (arguments_from_lemma jvl (length l));
+        cbv -[nth_def] in H; eapply H; clear H
+    end.
+
+Hint Extern 10 (J.arguments_from _ _) => js_arguments_from : js_ljs.
+
+(* TODO move *)
+Lemma of_int_zero_lemma : of_int 0 = JsNumber.zero.
+Admitted.
