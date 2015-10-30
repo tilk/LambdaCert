@@ -160,6 +160,97 @@ Proof.
     applys~ red_spec_construct_native_error_ok.
 Qed.
 
+Definition if_object_else v1 v2 := If L.is_object v1 then v1 else v2.
+
+Lemma if_object_else_lemma : forall k c st st' r v1 v2,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privIfObjectElse [v1; v2]) (L.out_ter st' r) ->
+    st' = st /\ r = L.res_value (if_object_else v1 v2).
+Proof.
+    introv Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    unfolds if_object_else.
+    cases_decide as Hobj; repeat ljs_autoforward; eauto.
+Qed.
+
+Lemma value_related_if_object_else_lemma : forall BR jv1 jv2 v1 v2,
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    value_related BR (If (J.type_of jv1 = J.type_object) then jv1 else jv2) (if_object_else v1 v2).
+Proof.
+    introv Hvrel1 Hvrel2.
+    unfolds if_object_else. 
+    inverts Hvrel1; 
+    cases_if as Hc1; simpl in Hc1; tryfalse;
+    cases_if as Hc2; try inverts Hc2; try eauto_js.
+    false. apply Hc2. constructor.
+Qed.
+
+Hint Resolve value_related_if_object_else_lemma : js_ljs.
+
+Lemma object_or_null_if_object_lemma : forall v1 v2,
+    object_or_null v2 ->
+    object_or_null (if_object_else v1 v2).
+Proof.
+    introv Hnull.
+    unfolds if_object_else.
+    cases_if as Hio.
+    + inverts Hio. constructor.
+    + assumption.
+Qed.
+
+Hint Resolve object_or_null_if_object_lemma : js_ljs.
+
+Lemma make_object_lemma : forall BR jst jv k c st st' r v,
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    object_or_null v ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeObject [v]) (L.out_ter st' r) ->
+    exists jst' BR',
+    jst' = J.state_next_fresh (jst \(fresh jst := J.object_new jv "Object")) /\
+    st' = st \(fresh st := object_new v "Object") /\
+    BR' = \{fact_js_obj (fresh jst) (fresh st)} \u BR /\
+    state_invariant BR' jst' st' /\
+    r = L.res_value (L.value_object (fresh st)).
+Proof.
+    introv Hinv Hvrel Hnull Hlred.
+    forwards_th Hx : ljs_make_object_lemma. destruct_hyp Hx.
+    jauto_js 10.
+Qed.
+
+Lemma red_spec_default_construct_ok : forall BR k jst jc c st st' ptr ptr1 vs r jptr jvs,
+    ih_call k ->
+    L.red_exprh k c st 
+        (L.expr_app_2 LjsInitEnv.privDefaultConstruct [L.value_object ptr; L.value_object ptr1]) 
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    values_related BR jvs vs ->
+    fact_iarray ptr1 vs \in BR ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_construct_default jptr jvs) (fun jv => True).
+Proof.
+    introv IHc Hlred Hcinv Hinv Hvrels Halo Hbs.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th : get_lemma. eassumption.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_only_invert.
+    repeat ljs_autoforward.
+    forwards_th Hx : if_object_else_lemma. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    forwards_th Hx : make_object_lemma. eauto_js. destruct_hyp Hx.
+    repeat ljs_autoforward.
+    apply_ih_call.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_only_invert.
+    repeat ljs_autoforward.
+    forwards_th Hx : if_object_else_lemma. destruct_hyp Hx.
+    jauto_js 10.
+Qed.
+
 Lemma red_spec_construct_ok : forall BR k jst jc c st st' ptr ptr1 vs r jptr jvs,
     ih_call k ->
     L.red_exprh k c st 
@@ -179,18 +270,13 @@ Proof.
     destruct Hx as (jcon&Hcrel).
     forwards Hmeth : object_method_construct_lemma; try eassumption. eauto_js 7.
     inverts Hcrel. { (* prealloc *)
-        lets Hx : red_spec_construct_prealloc_ok ___.
-        specializes_th Hx; try eassumption.
+        forwards_th Hx : red_spec_construct_prealloc_ok; try eassumption.
         destr_concl; try ljs_handle_abort.
         jauto_js.
     } { (* default *)
-        ljs_invert_apply.
-        repeat ljs_autoforward.
-        forwards_th : get_lemma. eassumption.
+        forwards_th : red_spec_default_construct_ok; try eassumption.
         destr_concl; try ljs_handle_abort.
-        res_related_invert.
-        repeat ljs_autoforward.
-        skip. (* TODO *)
+        jauto_js.
     } { (* bind *)
         skip. (* TODO *) (* NOT YET IN JSCERT *)
     }

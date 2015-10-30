@@ -434,6 +434,9 @@ expr_object
  ("%HintMethod", property_data
                  (data_intro (expr_id "%HintMethod") expr_true expr_false
                   expr_false));
+ ("%IfObjectElse", property_data
+                   (data_intro (expr_id "%IfObjectElse") expr_true expr_false
+                    expr_false));
  ("%InLeapYear", property_data
                  (data_intro (expr_id "%InLeapYear") expr_true expr_false
                   expr_false));
@@ -1586,17 +1589,14 @@ Definition ex_internal :=
 expr_let "cproto1"
 (expr_app (expr_id "%Get1") [expr_id "constr"; expr_string "prototype"])
 (expr_let "cproto"
- (expr_if (expr_op1 unary_op_is_object (expr_id "cproto1"))
-  (expr_id "cproto1") (expr_id "%ObjectProto"))
- (expr_let "newobj"
-  (expr_object
-   (objattrs_intro (expr_string "Object") expr_true (expr_id "cproto")
-    expr_undefined) [] [])
+ (expr_app (expr_id "%IfObjectElse")
+  [expr_id "cproto1"; expr_id "%ObjectProto"])
+ (expr_let "newobj" (expr_app (expr_id "%MakeObject") [expr_id "cproto"])
   (expr_let "constr_ret"
    (expr_app (expr_id "%AppExpr")
     [expr_id "constr"; expr_id "newobj"; expr_id "args"])
-   (expr_if (expr_op1 unary_op_is_object (expr_id "constr_ret"))
-    (expr_id "constr_ret") (expr_id "newobj")))))
+   (expr_app (expr_id "%IfObjectElse")
+    [expr_id "constr_ret"; expr_id "newobj"]))))
 .
 Definition ex_internal1 := 
 expr_app (expr_id "%MakeNumber")
@@ -2535,17 +2535,14 @@ Definition ex_privDefaultConstruct :=
 expr_let "cproto1"
 (expr_app (expr_id "%Get1") [expr_id "constr"; expr_string "prototype"])
 (expr_let "cproto"
- (expr_if (expr_op1 unary_op_is_object (expr_id "cproto1"))
-  (expr_id "cproto1") (expr_id "%ObjectProto"))
- (expr_let "newobj"
-  (expr_object
-   (objattrs_intro (expr_string "Object") expr_true (expr_id "cproto")
-    expr_undefined) [] [])
+ (expr_app (expr_id "%IfObjectElse")
+  [expr_id "cproto1"; expr_id "%ObjectProto"])
+ (expr_let "newobj" (expr_app (expr_id "%MakeObject") [expr_id "cproto"])
   (expr_let "constr_ret"
    (expr_app (expr_id "%AppExpr")
     [expr_id "constr"; expr_id "newobj"; expr_id "args"])
-   (expr_if (expr_op1 unary_op_is_object (expr_id "constr_ret"))
-    (expr_id "constr_ret") (expr_id "newobj")))))
+   (expr_app (expr_id "%IfObjectElse")
+    [expr_id "constr_ret"; expr_id "newobj"]))))
 .
 Definition ex_privDefaultValue := 
 expr_if
@@ -3281,6 +3278,10 @@ Definition ex_privHintMethod :=
 expr_if (expr_op2 binary_op_stx_eq (expr_id "hint") (expr_string "string"))
 (expr_string "toString") (expr_string "valueOf")
 .
+Definition ex_privIfObjectElse := 
+expr_if (expr_op1 unary_op_is_object (expr_id "v")) (expr_id "v")
+(expr_id "else_v")
+.
 Definition ex_privInLeapYear := 
 expr_if
 (expr_op2 binary_op_stx_eq
@@ -3534,7 +3535,7 @@ expr_object
 .
 Definition ex_privMakeObject := 
 expr_object
-(objattrs_intro (expr_string "Object") expr_true (expr_id "%ObjectProto")
+(objattrs_intro (expr_string "Object") expr_true (expr_id "proto")
  expr_undefined) [] []
 .
 Definition ex_privMakeString := 
@@ -3751,7 +3752,7 @@ expr_let "arg"
 (expr_if
  (expr_if (expr_op2 binary_op_stx_eq (expr_id "arg") expr_null) expr_true
   (expr_op2 binary_op_stx_eq (expr_id "arg") expr_undefined))
- (expr_app (expr_id "%MakeObject") [])
+ (expr_app (expr_id "%MakeObject") [expr_id "%ObjectProto"])
  (expr_app (expr_id "%ToObject") [expr_id "arg"]))
 .
 Definition ex_privObjectConstructor := 
@@ -9184,6 +9185,14 @@ value_closure
  ["obj"; "this"; "args"] ex_privDefaultCall)
 .
 Definition name_privDefaultCall : id :=  "%DefaultCall" .
+Definition privIfObjectElse := 
+value_closure (closure_intro [] None ["v"; "else_v"] ex_privIfObjectElse)
+.
+Definition name_privIfObjectElse : id :=  "%IfObjectElse" .
+Definition privMakeObject := 
+value_closure (closure_intro [] None ["proto"] ex_privMakeObject)
+.
+Definition name_privMakeObject : id :=  "%MakeObject" .
 Definition privObjectProto :=  value_object 1 .
 Definition name_privObjectProto : id :=  "%ObjectProto" .
 Definition privDefaultConstruct := 
@@ -9191,6 +9200,8 @@ value_closure
 (closure_intro
  [("%AppExpr", privAppExpr);
   ("%Get1", privGet1);
+  ("%IfObjectElse", privIfObjectElse);
+  ("%MakeObject", privMakeObject);
   ("%ObjectProto", privObjectProto)] None ["constr"; "args"]
  ex_privDefaultConstruct)
 .
@@ -9640,11 +9651,6 @@ value_closure
  ex_privMakeNativeErrorProto)
 .
 Definition name_privMakeNativeErrorProto : id :=  "%MakeNativeErrorProto" .
-Definition privMakeObject := 
-value_closure
-(closure_intro [("%ObjectProto", privObjectProto)] None [] ex_privMakeObject)
-.
-Definition name_privMakeObject : id :=  "%MakeObject" .
 Definition privMath :=  value_object 143 .
 Definition name_privMath : id :=  "%Math" .
 Definition privPutPrim := 
@@ -9698,6 +9704,7 @@ value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
   ("%MakeObject", privMakeObject);
+  ("%ObjectProto", privObjectProto);
   ("%ToObject", privToObject)] None ["obj"; "this"; "args"] ex_privObjectCall)
 .
 Definition name_privObjectCall : id :=  "%ObjectCall" .
@@ -11526,6 +11533,7 @@ Definition ctx_items :=
  (name_privGtOp, privGtOp);
  (name_privHasProperty, privHasProperty);
  (name_privHintMethod, privHintMethod);
+ (name_privIfObjectElse, privIfObjectElse);
  (name_privInLeapYear, privInLeapYear);
  (name_privIsCallable, privIsCallable);
  (name_privIsFinite, privIsFinite);
@@ -12021,6 +12029,7 @@ privGetProperty
 privGtOp
 privHasProperty
 privHintMethod
+privIfObjectElse
 privInLeapYear
 privIsCallable
 privIsFinite
@@ -12516,6 +12525,7 @@ privGetProperty
 privGtOp
 privHasProperty
 privHintMethod
+privIfObjectElse
 privInLeapYear
 privIsCallable
 privIsFinite
@@ -13021,6 +13031,7 @@ Definition store_items := [
                                          ("%GtOp", privGtOp);
                                          ("%HasProperty", privHasProperty);
                                          ("%HintMethod", privHintMethod);
+                                         ("%IfObjectElse", privIfObjectElse);
                                          ("%InLeapYear", privInLeapYear);
                                          ("%IsCallable", privIsCallable);
                                          ("%IsFinite", privIsFinite);
@@ -14072,6 +14083,8 @@ Definition store_items := [
                    (closure_intro
                     [("%AppExpr", privAppExpr);
                      ("%Get1", privGet1);
+                     ("%IfObjectElse", privIfObjectElse);
+                     ("%MakeObject", privMakeObject);
                      ("%ObjectProto", privObjectProto)] None
                     ["constr"; "args"] ex_internal))]|});
 (13, {|object_attrs :=

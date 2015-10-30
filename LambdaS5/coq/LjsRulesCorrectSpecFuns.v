@@ -710,9 +710,9 @@ Definition object_with_primitive_value obj v := {|
     L.object_internal := L.object_internal obj \("primval" := v)
 |}.
 
-Lemma ljs_make_object_lemma : forall k c st st' r,
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeObject []) (L.out_ter st' r) ->
-    st' = st \(fresh st := object_new LjsInitEnv.privObjectProto "Object") /\
+Lemma ljs_make_object_lemma : forall k c st st' r v,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privMakeObject [v]) (L.out_ter st' r) ->
+    st' = st \(fresh st := object_new v "Object") /\
     r = L.res_value (L.value_object (fresh st)).
 Proof.
     introv Hlred.
@@ -2045,9 +2045,9 @@ Ltac apply_ih_call := match goal with
         asserts HC : (context_invariant BR jc c); 
             [applys context_invariant_bisim_incl_preserved Hsub; ljs_context_invariant | idtac]; 
         lets Hih : H Hle HC HS HR; 
-        [eauto_js
+        [(constructor; prove_bag) || eauto_js (* TODO workaround for poor automation *)
         |prove_bag|prove_bag
-        |try repeat first [eapply Forall2_nil | eapply Forall2_cons; [eauto_js | idtac]]
+        |try repeat first [eapply Forall2_nil | eapply Forall2_cons; [eauto_js | idtac]] || eauto_js
         |clear Hle; clear Hsub; clear HS; clear HR; clear HC]
    (*     lets Hsec : L.red_exprh_state_security_ok HR;  *)
     end.
