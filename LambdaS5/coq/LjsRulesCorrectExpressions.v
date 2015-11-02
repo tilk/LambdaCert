@@ -716,7 +716,7 @@ Proof.
                     reflexivity.
                 }
             }
-            apply_ih_call. eassumption.
+            apply_ih_call.
             destr_concl; try ljs_handle_abort. 
             res_related_invert.
             resvalue_related_only_invert.
@@ -742,7 +742,7 @@ Proof.
             repeat ljs_autoforward.
             lets (jptr&Heq) : is_callable_obj Hic. subst_hyp Heq.
             inverts IH5. (* TODO *)
-            apply_ih_call. eassumption.
+            apply_ih_call.
             asserts Hseval : (!J.is_syntactic_eval je). {
                 rew_refl.
                 eauto using is_syntactic_eval_reference_producing_lemma.
