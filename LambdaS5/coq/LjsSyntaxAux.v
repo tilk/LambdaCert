@@ -21,6 +21,7 @@ Inductive type :=
 | type_null
 | type_bool
 | type_number
+| type_int
 | type_string
 | type_object
 | type_closure
@@ -33,6 +34,7 @@ Definition value_type v :=
     | value_null => type_null
     | value_bool _ => type_bool
     | value_number _ => type_number
+    | value_int _ => type_int
     | value_string _ => type_string
     | value_object _ => type_object
     | value_closure _ => type_closure
@@ -44,8 +46,8 @@ Inductive unary_op_type : unary_op -> type -> type -> Prop :=
 | unary_op_type_pretty : forall t, unary_op_type unary_op_pretty t type_undefined
 (* string operators *)
 | unary_op_type_strlen : unary_op_type unary_op_strlen type_string type_number
-| unary_op_type_ascii_ntoc : unary_op_type unary_op_ascii_ntoc type_number type_string
-| unary_op_type_ascii_cton : unary_op_type unary_op_ascii_cton type_string type_number
+| unary_op_type_ascii_ntoc : unary_op_type unary_op_ascii_ntoc type_int type_string
+| unary_op_type_ascii_cton : unary_op_type unary_op_ascii_cton type_string type_int
 (* type testing operators *)
 | unary_op_type_typeof : forall t, unary_op_type unary_op_typeof t type_string
 | unary_op_type_is_primitive : forall t, unary_op_type unary_op_is_primitive t type_bool
@@ -61,11 +63,11 @@ Inductive unary_op_type : unary_op -> type -> type -> Prop :=
 | unary_op_type_prim_to_str : forall t, unary_op_type unary_op_prim_to_bool t type_string
 | unary_op_type_prim_to_num : forall t, unary_op_type unary_op_prim_to_bool t type_number
 | unary_op_type_prim_to_bool : forall t, unary_op_type unary_op_prim_to_bool t type_bool
+| unary_op_type_prim_to_int : forall t, unary_op_type unary_op_prim_to_bool t type_int
 (* logic operators *)
 | unary_op_type_not : unary_op_type unary_op_not type_bool type_bool
 (* int operators *)
 | unary_op_type_bnot : unary_op_type unary_op_bnot type_number type_number
-| unary_op_type_to_int32 : unary_op_type unary_op_to_int32 type_number type_number
 (* time operators *)
 | unary_op_type_current_utc_millis : unary_op_type unary_op_current_utc_millis type_undefined type_number
 .
@@ -78,7 +80,7 @@ Definition unary_op_ret_type op :=
     (* string operators *)
     | unary_op_strlen => type_number
     | unary_op_ascii_ntoc => type_string
-    | unary_op_ascii_cton => type_number
+    | unary_op_ascii_cton => type_int
     (* type testing operators *)
     | unary_op_typeof => type_string
     | unary_op_is_primitive 
@@ -94,11 +96,11 @@ Definition unary_op_ret_type op :=
     | unary_op_prim_to_str => type_string
     | unary_op_prim_to_num => type_number
     | unary_op_prim_to_bool => type_bool
+    | unary_op_prim_to_int => type_int
     (* logic operators *)
     | unary_op_not => type_bool
     (* int operators *)
-    | unary_op_bnot => type_number
-    | unary_op_to_int32 => type_number
+    | unary_op_bnot => type_int
     (* time operators *)
     | unary_op_current_utc_millis => type_number
     (* undefined operators *)
@@ -131,12 +133,12 @@ Inductive binary_op_type : binary_op -> type -> type -> type -> Prop :=
 | binary_op_type_string_plus : binary_op_type binary_op_string_plus type_string type_string type_string
 | binary_op_type_char_at : binary_op_type binary_op_char_at type_string type_number type_string
 (* int operators (bitwise and shifts) *)
-| binary_op_type_band : binary_op_type binary_op_band type_number type_number type_number
-| binary_op_type_bor : binary_op_type binary_op_bor type_number type_number type_number
-| binary_op_type_bxor : binary_op_type binary_op_bxor type_number type_number type_number
-| binary_op_type_shiftl : binary_op_type binary_op_shiftl type_number type_number type_number
-| binary_op_type_shiftr : binary_op_type binary_op_shiftr type_number type_number type_number
-| binary_op_type_zfshiftr : binary_op_type binary_op_zfshiftr type_number type_number type_number
+| binary_op_type_band : binary_op_type binary_op_band type_int type_int type_int
+| binary_op_type_bor : binary_op_type binary_op_bor type_int type_int type_int
+| binary_op_type_bxor : binary_op_type binary_op_bxor type_int type_int type_int
+| binary_op_type_shiftl : binary_op_type binary_op_shiftl type_int type_int type_int
+| binary_op_type_shiftr : binary_op_type binary_op_shiftr type_int type_int type_int
+| binary_op_type_zfshiftr : binary_op_type binary_op_zfshiftr type_int type_int type_int
 .
 
 Definition binary_op_ret_type op := 
@@ -171,7 +173,7 @@ Definition binary_op_ret_type op :=
     | binary_op_bxor 
     | binary_op_shiftl 
     | binary_op_shiftr 
-    | binary_op_zfshiftr => type_number
+    | binary_op_zfshiftr => type_int
     (* undefined operators *)
     | _ => type_undefined
     end.
@@ -182,6 +184,7 @@ Inductive pure_expr : expr -> Prop :=
 | pure_expr_undefined : pure_expr expr_undefined
 | pure_expr_string : forall s, pure_expr (expr_string s)
 | pure_expr_number : forall n, pure_expr (expr_number n)
+| pure_expr_int : forall n, pure_expr (expr_int n)
 | pure_expr_bool : forall b, pure_expr (expr_bool b)
 | pure_expr_lambda : forall is e, pure_expr (expr_lambda is e)
 | pure_expr_id : forall i, pure_expr (expr_id i)

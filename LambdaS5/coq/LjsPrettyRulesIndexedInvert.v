@@ -20,6 +20,8 @@ Derive Inversion inv_red_exprh_undefined with (forall k c st oo,
     red_exprh k c st (expr_undefined) oo) Sort Prop.
 Derive Inversion inv_red_exprh_string with (forall k c st s oo,
     red_exprh k c st (expr_string s) oo) Sort Prop.
+Derive Inversion inv_red_exprh_int with (forall k c st k1 oo,
+    red_exprh k c st (expr_int k1) oo) Sort Prop.
 Derive Inversion inv_red_exprh_bool with (forall k c st b oo,
     red_exprh k c st (expr_bool b) oo) Sort Prop.
 Derive Inversion inv_red_exprh_number with (forall k c st n oo,
@@ -160,6 +162,8 @@ Tactic Notation "invert" "keep" "red_exprh" hyp(H) :=
         inversion H using inv_red_exprh_undefined
     | expr_basic (expr_string ?s) =>
         inversion H using inv_red_exprh_string
+    | expr_basic (expr_int ?k1) =>
+        inversion H using inv_red_exprh_int
     | expr_basic (expr_bool ?b) =>
         inversion H using inv_red_exprh_bool
     | expr_basic (expr_number ?n) =>

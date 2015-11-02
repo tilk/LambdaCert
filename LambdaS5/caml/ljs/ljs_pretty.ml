@@ -26,11 +26,11 @@ let string_of_unary_op s = match s with
     | Coq_unary_op_prim_to_str -> "prim->str"
     | Coq_unary_op_prim_to_num -> "prim->num"
     | Coq_unary_op_prim_to_bool -> "prim->bool"
+    | Coq_unary_op_prim_to_int -> "prim->int"
     | Coq_unary_op_print -> "print"
     | Coq_unary_op_pretty -> "pretty"
     | Coq_unary_op_object_to_string -> "object-to-string"
     | Coq_unary_op_strlen -> "strlen"
-    | Coq_unary_op_to_int32 -> "to-int32"
     | Coq_unary_op_not -> "!"
     | Coq_unary_op_neg -> "-"
     | Coq_unary_op_floor -> "floor"
@@ -91,6 +91,7 @@ let rec exp_helper exprec e = match e with
   | Coq_expr_null -> text "null"
   | Coq_expr_undefined -> text "undefined"
   | Coq_expr_number n -> text (string_of_float n)
+  | Coq_expr_int n -> text (string_of_float n)
   | Coq_expr_string s -> text ("\"" ^ (String.escaped (String.of_list s)) ^ "\"")
   | Coq_expr_bool true -> text "true"
   | Coq_expr_bool false -> text "false"

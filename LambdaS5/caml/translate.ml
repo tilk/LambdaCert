@@ -26,11 +26,11 @@ let translate_unary_op s = match s with
     | "prim->str" -> Cs.Coq_unary_op_prim_to_str
     | "prim->num" -> Cs.Coq_unary_op_prim_to_num
     | "prim->bool" -> Cs.Coq_unary_op_prim_to_bool
+    | "prim->int" -> Cs.Coq_unary_op_prim_to_int
     | "print" -> Cs.Coq_unary_op_print
     | "pretty" -> Cs.Coq_unary_op_pretty
     | "object-to-string" -> Cs.Coq_unary_op_object_to_string
     | "strlen" -> Cs.Coq_unary_op_strlen
-    | "to-int32" -> Cs.Coq_unary_op_to_int32
     | "!" -> Cs.Coq_unary_op_not
     | "floor" -> Cs.Coq_unary_op_floor
     | "-" -> Cs.Coq_unary_op_neg
@@ -85,6 +85,7 @@ let rec translate_expr e = match e with
     | Ljs.Undefined _ -> Cs.Coq_expr_undefined
     | Ljs.String (_, s) -> Cs.Coq_expr_string (String.to_list s)
     | Ljs.Num (_, n) -> Cs.Coq_expr_number n
+    | Ljs.Int (_, n) -> Cs.Coq_expr_int (float_of_int n)
     | Ljs.True _ -> Cs.Coq_expr_bool true
     | Ljs.False _ -> Cs.Coq_expr_bool false
     | Ljs.Id (_, i) -> Cs.Coq_expr_id (String.to_list i)

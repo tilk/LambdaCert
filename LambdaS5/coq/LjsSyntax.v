@@ -32,10 +32,10 @@ Inductive unary_op : Type :=
 | unary_op_prim_to_str
 | unary_op_prim_to_num
 | unary_op_prim_to_bool
+| unary_op_prim_to_int
 | unary_op_not
 | unary_op_bnot
 | unary_op_neg
-| unary_op_to_int32
 | unary_op_ascii_ntoc
 | unary_op_ascii_cton
 | unary_op_current_utc_millis
@@ -100,6 +100,7 @@ Inductive expr : Type :=
 | expr_undefined
 | expr_string : string -> expr
 | expr_number : number -> expr
+| expr_int : int -> expr
 | expr_bool : bool -> expr
 | expr_id : id -> expr
 | expr_object : objattrs -> list (string * expr) -> list (string * property) -> expr
@@ -146,6 +147,7 @@ Fixpoint expr_fv e : finset id := match e with
 | expr_undefined
 | expr_string _  
 | expr_number _ 
+| expr_int _ 
 | expr_bool _ 
 | expr_fail _
 | expr_dump => \{}
@@ -213,6 +215,7 @@ Inductive value : Type :=
 | value_null
 | value_undefined
 | value_number : number -> value
+| value_int : int -> value
 | value_string : string -> value
 | value_bool : bool -> value
 | value_object : object_ptr -> value

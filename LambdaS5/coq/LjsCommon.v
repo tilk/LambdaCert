@@ -43,6 +43,7 @@ Definition type_name t :=
   | type_undefined => "undefined"
   | type_string => "string"
   | type_number => "number"
+  | type_int => "int"
   | type_closure => "closure"
   | type_bool => "boolean"
   | type_object => "object"
@@ -57,6 +58,7 @@ Definition value_to_bool_cast v :=
   | value_null => false
   | value_number n => 
       !decide (n = JsNumber.zero \/ n = JsNumber.neg_zero \/ n = JsNumber.nan)
+  | value_int k => !decide (k = 0)
   | value_string s => !decide (s = "")
   | value_empty => false
   | _ => true
@@ -69,6 +71,7 @@ Definition value_to_str_cast v :=
   | value_null => "null"
   | value_string s => s
   | value_number n => JsNumber.to_string n
+  | value_int k => JsNumber.to_string (of_int k)
   | value_bool b => if b then "true" else "false"
   | value_empty => "empty"
   | value_object ptr => "object"
@@ -82,10 +85,25 @@ Definition value_to_num_cast v :=
   | value_null => JsNumber.zero
   | value_bool b => if b then JsNumber.one else JsNumber.zero
   | value_number n => n
+  | value_int k => of_int k
   | value_string s => JsNumber.from_string s
   | value_empty => JsNumber.nan
   | value_object ptr => JsNumber.nan
   | value_closure clo => JsNumber.nan
+  end
+.
+
+Definition value_to_int_cast v : int :=
+  match v with
+  | value_undefined => 0
+  | value_null => 0
+  | value_bool b => if b then 1 else 0
+  | value_number n => to_int32 n
+  | value_int k => k
+  | value_string s => to_int32 (JsNumber.from_string s)
+  | value_empty => 0
+  | value_object ptr => 0
+  | value_closure clo => 0
   end
 .
 
@@ -136,6 +154,7 @@ Inductive stx_eq : value -> value -> Prop :=
 | stx_eq_undefined : stx_eq value_undefined value_undefined
 | stx_eq_bool : forall b, stx_eq (value_bool b) (value_bool b)
 | stx_eq_number : forall n1 n2, eq_number n1 n2 -> stx_eq (value_number n1) (value_number n2)
+| stx_eq_int : forall k, stx_eq (value_int k) (value_int k)
 | stx_eq_object : forall ptr, stx_eq (value_object ptr) (value_object ptr)
 .
 
@@ -146,6 +165,7 @@ Inductive same_value : value -> value -> Prop :=
 | same_value_undefined : same_value value_undefined value_undefined
 | same_value_bool : forall b, same_value (value_bool b) (value_bool b)
 | same_value_number : forall n, same_value (value_number n) (value_number n)
+| same_value_int : forall k, same_value (value_int k) (value_int k)
 | same_value_object : forall ptr, same_value (value_object ptr) (value_object ptr)
 .
 
@@ -186,6 +206,7 @@ Definition stx_eq_decide v1 v2 :=
   | value_bool true, value_bool true => true
   | value_bool false, value_bool false => true
   | value_number n1, value_number n2 => eq_number_decidable n1 n2
+  | value_int k1, value_int k2 => decide (k1 = k2)
   | value_object ptr1, value_object ptr2 => decide (ptr1 = ptr2)
   | _, _ => false
   end
@@ -200,6 +221,7 @@ Definition same_value_decide v1 v2 :=
   | value_bool true, value_bool true => true
   | value_bool false, value_bool false => true
   | value_number n1, value_number n2 => decide (n1 = n2)
+  | value_int k1, value_int k2 => decide (k1 = k2)
   | value_object ptr1, value_object ptr2 => decide (ptr1 = ptr2)
   | _, _ => false
   end

@@ -61,21 +61,21 @@ Definition unary_arith (op : number -> number) (v : value) : resultof value :=
 
 Definition unary_int_arith (op : int -> int) (v : value) : resultof value :=
   match v with
-  | value_number n => result_some (value_number (of_int (op (to_int32 n))))
+  | value_int k => result_some (value_int (op k))
   | _ => result_fail "Arithmetic with non-number."
   end
 .
 
 Definition ascii_ntoc (v : value) : resultof value :=
   match v with
-  | value_number n => result_some (value_string (String (_ascii_of_int (to_int32 n)) EmptyString))
+  | value_int k => result_some (value_string (String (_ascii_of_int k) EmptyString))
   | _ => result_fail "ascii_ntoc"
   end
 .
 
 Definition ascii_cton (v : value) : resultof value :=
   match v with
-  | value_string (String c _) => result_some (value_number (of_int (_int_of_ascii c)))
+  | value_string (String c _) => result_some (value_int (_int_of_ascii c))
   | _ => result_fail "ascii_cton"
   end
 .
@@ -96,9 +96,9 @@ Definition unary_operator (op : unary_op) store v : resultof value :=
     | unary_op_prim_to_str => result_some (value_string (value_to_str_cast v))
     | unary_op_prim_to_num => result_some (value_number (value_to_num_cast v))
     | unary_op_prim_to_bool => result_some (value_bool (value_to_bool_cast v))
+    | unary_op_prim_to_int => result_some (value_int (value_to_int_cast v))
     | unary_op_not => nnot store v
     | unary_op_bnot => unary_int_arith int32_bitwise_not v
-    | unary_op_to_int32 => unary_int_arith (fun x => x) v
     | unary_op_neg => unary_arith JsNumber.neg v
     | unary_op_ascii_ntoc => ascii_ntoc v
     | unary_op_ascii_cton => ascii_cton v
@@ -179,7 +179,7 @@ Definition arith (op : number -> number -> number) (v1 v2 : value) : resultof va
 
 Definition int_arith (op : int -> int -> int) (v1 v2 : value) : resultof value :=
   match v1, v2 with
-  | value_number n1, value_number n2 => result_some (value_number (of_int (op (to_int32 n1) (to_int32 n2))))
+  | value_int k1, value_int k2 => result_some (value_int (op k1 k2))
   | _, _ => result_fail "Arithmetic with non-numbers."
   end
 .

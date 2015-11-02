@@ -723,7 +723,7 @@ Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
     ljs_run_inv. 
-    destruct op; destruct v; tryfalse; repeat injects; repeat substs; simpls; tryfalse; eauto. 
+    destruct op; destruct v; tryfalse; repeat injects; repeat substs; simpls; tryfalse; eauto.
     destruct s; tryfalse; injects; eauto.
 Qed.
 
@@ -1080,6 +1080,8 @@ Proof.
     ljs_run_inv. apply red_expr_string.
     (* number *)
     ljs_run_inv. apply red_expr_number.
+    (* int *)
+    ljs_run_inv. apply red_expr_int.
     (* bool *)
     ljs_run_inv. apply red_expr_bool.
     (* id *)

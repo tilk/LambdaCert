@@ -558,6 +558,7 @@ Definition eval runs c st (e : expr) : result :=
   | expr_null => return_value value_null
   | expr_string s => return_value (value_string s)
   | expr_number n => return_value (value_number n)
+  | expr_int k => return_value (value_int k)
   | expr_bool b => return_value (value_bool b)
   | expr_id s => eval_id runs c st s
   | expr_if e_cond e_true e_false => eval_if runs c st e_cond e_true e_false

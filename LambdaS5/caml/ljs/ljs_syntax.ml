@@ -44,6 +44,7 @@ type exp =
   | Undefined of Pos.t
   | String of Pos.t * string
   | Num of Pos.t * float
+  | Int of Pos.t * int
   | True of Pos.t
   | False of Pos.t
   | Id of Pos.t * id

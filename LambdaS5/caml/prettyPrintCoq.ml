@@ -96,9 +96,9 @@ let format_unary_op o = match o with
     | Coq_unary_op_prim_to_str -> text "unary_op_prim_to_str"
     | Coq_unary_op_prim_to_num -> text "unary_op_prim_to_num"
     | Coq_unary_op_prim_to_bool -> text "unary_op_prim_to_bool"
+    | Coq_unary_op_prim_to_int -> text "unary_op_prim_to_int"
     | Coq_unary_op_not -> text "unary_op_not"
     | Coq_unary_op_bnot -> text "unary_op_bnot"
-    | Coq_unary_op_to_int32 -> text "unary_op_to_int32"
     | Coq_unary_op_ascii_ntoc -> text "unary_op_ascii_ntoc"
     | Coq_unary_op_ascii_cton -> text "unary_op_ascii_cton"
     | Coq_unary_op_object_to_string -> text "unary_op_object_to_string"
@@ -164,6 +164,7 @@ let rec format_expr b e = match e with
     | Coq_expr_null -> text "expr_null"
     | Coq_expr_undefined -> text "expr_undefined"
     | Coq_expr_number n -> coqconstr b "expr_number" [format_number n]
+    | Coq_expr_int n -> coqconstr b "expr_int" [int (Float.to_int n)]
     | Coq_expr_string s -> coqconstr b "expr_string" [format_id s]
     | Coq_expr_bool true -> text "expr_true"
     | Coq_expr_bool false -> text "expr_false"

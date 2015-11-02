@@ -415,6 +415,8 @@ Proof.
     reflexivity.
     (* number *)
     reflexivity.
+    (* int *)
+    reflexivity.
     (* bool *)
     reflexivity.
     (* id *) 

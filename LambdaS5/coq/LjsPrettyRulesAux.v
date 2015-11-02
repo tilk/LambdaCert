@@ -50,6 +50,7 @@ Fixpoint pure_expr_val c st e : value :=
     | expr_bool b => value_bool b
     | expr_string s => value_string s
     | expr_number n => value_number n
+    | expr_int k => value_int k
     | expr_lambda is e => add_closure c None is e
     | expr_id s => epsilon (binds c s) 
     | expr_if e1 e2 e3 => 

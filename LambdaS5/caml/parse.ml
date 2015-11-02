@@ -13,6 +13,7 @@ let rec check_var_scope vs e =
   | Undefined _
   | String _
   | Num _
+  | Int _
   | True _
   | False _ -> ()
   | Id ((p1, p2, _), i) -> if Set.mem i vs then () else failwith (Printf.sprintf "Parse error: undefined id %s at %s" i (sprintf_pos p1))

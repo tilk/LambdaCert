@@ -55,7 +55,7 @@ let with_pos exp pos = match exp with
   PLUS MINUS MULT DIV
   AMPAMP PIPEPIPE RETURN BANGEQEQUALS BANGEQUALS FUNCTION REC WRITABLE GETTER SETTER
   CONFIG VALUE ENUM LT GT PROTO CODE EXTENSIBLE CLASS EVAL GETFIELDS PRIMVAL
-
+  INTCAST
 
 %token EOF
 %left COLONEQ
@@ -82,6 +82,7 @@ let with_pos exp pos = match exp with
 const :
  | NUM { Num (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1), $1) }
  | INT {  Num (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1), (float_of_int $1)) }
+ | INTCAST INT {  Int (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1), $2) }
  | STRING {  String (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1), $1) }
  | UNDEFINED { Undefined (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1)) }
  | EMPTY { Empty (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1)) }

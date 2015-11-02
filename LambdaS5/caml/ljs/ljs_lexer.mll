@@ -84,6 +84,7 @@ rule token = parse
    | "let" { LET }
    | "rec" { REC }
    | "delete" { DELETE }
+   | "int" { INTCAST }
    | "[" { LBRACK }
    | "]" { RBRACK }
    | "+" { PLUS }

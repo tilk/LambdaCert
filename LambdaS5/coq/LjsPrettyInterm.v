@@ -141,7 +141,6 @@ Inductive closure_ctx : closure -> list value -> ctx -> Prop :=
 
 Inductive int_unary_op : unary_op -> (int -> int) -> Prop :=
 | int_unary_op_bnot : int_unary_op unary_op_bnot int32_bitwise_not
-| int_unary_op_to_int32 : int_unary_op unary_op_to_int32 (fun x => x)
 .
 
 Inductive num_unary_op : unary_op -> (number -> number) -> Prop :=
@@ -166,8 +165,8 @@ Inductive eval_unary_op : unary_op -> store -> value -> value -> Prop :=
     eval_unary_op unary_op_is_object st v (value_bool (decide (is_object v)))
 | eval_unary_op_num : forall n op F st, 
     num_unary_op op F -> eval_unary_op op st (value_number n) (value_number (F n))
-| eval_unary_op_int : forall n op F st, 
-    int_unary_op op F -> eval_unary_op op st (value_number n) (value_number (of_int (F (to_int32 n))))
+| eval_unary_op_int : forall k op F st, 
+    int_unary_op op F -> eval_unary_op op st (value_int k) (value_int (F k))
 | eval_unary_op_not : forall b st, eval_unary_op unary_op_not st (value_bool b) (value_bool (! b))
 | eval_unary_op_prim_to_bool : forall v st, 
     eval_unary_op unary_op_prim_to_bool st v (value_bool (value_to_bool_cast v))
@@ -175,11 +174,13 @@ Inductive eval_unary_op : unary_op -> store -> value -> value -> Prop :=
     eval_unary_op unary_op_prim_to_str st v (value_string (value_to_str_cast v))
 | eval_unary_op_prim_to_num : forall v st, 
     eval_unary_op unary_op_prim_to_num st v (value_number (value_to_num_cast v))
-| eval_unary_op_ascii_ntoc : forall n st,
-    eval_unary_op unary_op_ascii_ntoc st (value_number n)
-        (value_string (String (_ascii_of_int (to_int32 n)) EmptyString))
+| eval_unary_op_prim_to_int : forall v st, 
+    eval_unary_op unary_op_prim_to_int st v (value_int (value_to_int_cast v))
+| eval_unary_op_ascii_ntoc : forall k st,
+    eval_unary_op unary_op_ascii_ntoc st (value_int k)
+        (value_string (String (_ascii_of_int k) EmptyString))
 | eval_unary_op_ascii_cton : forall ch s st,
-    eval_unary_op unary_op_ascii_cton st (value_string (String ch s)) (value_number (of_int (_int_of_ascii ch)))
+    eval_unary_op unary_op_ascii_cton st (value_string (String ch s)) (value_int (_int_of_ascii ch))
 | eval_unary_op_current_utc_millis : forall st, 
     eval_unary_op unary_op_current_utc_millis st value_undefined (value_number (current_utc tt))
 .
@@ -212,9 +213,9 @@ Inductive eval_binary_op : binary_op -> store -> value -> value -> value -> Prop
 | eval_binary_op_num : forall op st F n1 n2, 
     num_binary_op op F -> 
     eval_binary_op op st (value_number n1) (value_number n2) (value_number (F n1 n2))
-| eval_binary_op_int : forall op st F n1 n2, 
+| eval_binary_op_int : forall op st F k1 k2, 
     int_binary_op op F -> 
-    eval_binary_op op st (value_number n1) (value_number n2) (value_number (of_int (F (to_int32 n1) (to_int32 n2))))
+    eval_binary_op op st (value_int k1) (value_int k2) (value_int (F k1 k2))
 | eval_binary_op_num_cmp : forall op st F n1 n2,
     num_cmp_binary_op op F ->
     eval_binary_op op st (value_number n1) (value_number n2) (value_bool (F n1 n2))

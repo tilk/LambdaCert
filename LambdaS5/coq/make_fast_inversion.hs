@@ -26,6 +26,7 @@ patterns = [
     ("null", "expr_null"),
     ("undefined", "expr_undefined"),
     ("string", "expr_string ?s"),
+    ("int", "expr_int ?k1"),
     ("bool", "expr_bool ?b"),
     ("number", "expr_number ?n"),
     ("id", "expr_id ?i"),
