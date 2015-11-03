@@ -1088,19 +1088,44 @@ Proof.
     jauto_js 8.
 Qed.
 
+(* TODO move to specfuns *)
+Lemma red_spec_to_int32_ok : forall k,
+    ih_call k ->
+    forall BR jst jc c st st' r jv v, 
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privToInt32 [v]) (L.out_ter st' r) ->
+    concl_spec BR jst jc c st st' r (J.spec_to_int32 jv) 
+        (fun BR' jst' a => r = L.res_value (L.value_int a)).
+Proof.
+    introv IHc Hcinv Hinv Hvrel Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_number_unary_ok.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    jauto_js.
+Qed.
+
 Lemma red_expr_unary_op_bitwise_not_ok : forall k je,
     ih_expr k ->
+    ih_call k ->
     th_expr k (J.expr_unary_op J.unary_op_bitwise_not je).
 Proof.
-    introv IHe Hcinv Hinv Hlred.
+    introv IHe IHc Hcinv Hinv Hlred.
     repeat ljs_autoforward.
     destr_concl; try ljs_handle_abort.
     repeat ljs_autoforward.
-    inverts red_exprh H7. (* TODO *)
-    ljs_apply.
+    ljs_invert_apply.
     repeat ljs_autoforward.
-    (* TODO ToInt32 spec_to_int32 *)
-Admitted. (* TODO *)
+    forwards_th : red_spec_to_int32_ok.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    jauto_js 10.
+Qed.
 
 Lemma red_expr_unary_op_typeof_ok : forall k je,
     ih_expr k ->
@@ -1305,17 +1330,17 @@ Lemma red_expr_unary_op_ok : forall op k je,
     th_expr k (J.expr_unary_op op je).
 Proof.
     destruct op; introv IHe IHc.
-    applys red_expr_unary_op_delete_ok; eauto_js.
-    applys red_expr_unary_op_void_ok; eauto_js.
-    applys red_expr_unary_op_typeof_ok; eauto_js.
-    applys red_expr_unary_op_prepost_ok; eauto_js.
-    applys red_expr_unary_op_prepost_ok; eauto_js.
-    applys red_expr_unary_op_prepost_ok; eauto_js.
-    applys red_expr_unary_op_prepost_ok; eauto_js.
-    applys red_expr_unary_op_add_ok; eauto_js.
-    applys red_expr_unary_op_neg_ok; eauto_js.
-    applys red_expr_unary_op_bitwise_not_ok; eauto_js.
-    applys red_expr_unary_op_not_ok; eauto_js.
+    applys~ red_expr_unary_op_delete_ok. 
+    applys~ red_expr_unary_op_void_ok.
+    applys~ red_expr_unary_op_typeof_ok.
+    applys~ red_expr_unary_op_prepost_ok J.prepost_op_post_incr.
+    applys~ red_expr_unary_op_prepost_ok J.prepost_op_post_decr.
+    applys~ red_expr_unary_op_prepost_ok J.prepost_op_pre_incr.
+    applys~ red_expr_unary_op_prepost_ok J.prepost_op_pre_decr.
+    applys~ red_expr_unary_op_add_ok.
+    applys~ red_expr_unary_op_neg_ok.
+    applys~ red_expr_unary_op_bitwise_not_ok.
+    applys~ red_expr_unary_op_not_ok.
 Qed.
 
 (** *** Binary operators *)
@@ -2230,28 +2255,6 @@ Proof.
     introv Hth Hcinv Hinv Hvrel1 Hvrel2 Hlred.
     forwards_th Hx : Hth.
     destr_concl; try ljs_handle_abort.
-    jauto_js.
-Qed.
-
-(* TODO move to specfuns *)
-Lemma red_spec_to_int32_ok : forall k,
-    ih_call k ->
-    forall BR jst jc c st st' r jv v, 
-    context_invariant BR jc c ->
-    state_invariant BR jst st ->
-    value_related BR jv v ->
-    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privToInt32 [v]) (L.out_ter st' r) ->
-    concl_spec BR jst jc c st st' r (J.spec_to_int32 jv) 
-        (fun BR' jst' a => r = L.res_value (L.value_int a)).
-Proof.
-    introv IHc Hcinv Hinv Hvrel Hlred.
-    ljs_invert_apply.
-    repeat ljs_autoforward.
-    forwards_th : red_spec_to_number_unary_ok.
-    destr_concl; try ljs_handle_abort.
-    res_related_invert.
-    resvalue_related_invert.
-    repeat ljs_autoforward.
     jauto_js.
 Qed.
 
