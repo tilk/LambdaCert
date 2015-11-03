@@ -2136,6 +2136,89 @@ Proof.
     jauto_js.
 Qed.
 
+(* TODO move to specfuns *)
+Lemma red_spec_to_int32_ok : forall k,
+    ih_call k ->
+    forall BR jst jc c st st' r jv v, 
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privToInt32 [v]) (L.out_ter st' r) ->
+    concl_spec BR jst jc c st st' r (J.spec_to_int32 jv) 
+        (fun BR' jst' a => r = L.res_value (L.value_int a)).
+Proof.
+    introv IHc Hcinv Hinv Hvrel Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_number_unary_ok.
+    destr_concl; try ljs_handle_abort.
+    res_related_invert.
+    resvalue_related_invert.
+    repeat ljs_autoforward.
+    jauto_js.
+Qed.
+
+(* TODO move, ljs only *)
+Lemma eval_binary_op_int_lemma : forall op F st k1 k2 v,
+    L.int_binary_op op F ->
+    L.eval_binary_op op st (L.value_int k1) (L.value_int k2) v ->
+    v = L.value_int (F k1 k2).
+Proof.
+    introv Hnumop Hevop.
+    inverts Hevop as Hxop;
+    inverts Hnumop; try inverts Hxop;
+    reflexivity.
+Qed.
+
+Lemma red_expr_bitwise_op_lemma : forall BR k jst jc c st st' r jv1 jv2 v1 v2 s1 s2 op jop F,
+    ih_call k ->
+    J.bitwise_op jop F ->
+    L.int_binary_op op F ->
+    binds c s1 v1 ->
+    binds c s2 v2 ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv1 v1 ->
+    value_related BR jv2 v2 ->
+    L.red_exprh k c st 
+        (L.expr_basic (E.make_app_builtin "%BitwiseInfix" [L.expr_id s1; L.expr_id s2; E.op2_func op]))
+        (L.out_ter st' r) ->
+    concl_ext_expr_value BR jst jc c st st' r (J.expr_binary_op_3 jop jv1 jv2) (fun _ => True).
+Proof.
+    introv IHc Hpure Hbop Hbinds1 Hbinds2 Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    repeat ljs_autoforward.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_int32_ok.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    forwards_th : red_spec_to_int32_ok.
+    destr_concl; try ljs_handle_abort.
+    repeat ljs_autoforward.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    forwards_th Hx : eval_binary_op_int_lemma. eassumption. eassumption. 
+    destruct_hyp Hx.
+    jauto_js 18.
+Qed.
+
+Hint Constructors L.int_binary_op : js_ljs.
+
+Lemma red_expr_binary_op_3_bitwise_ok : forall jop v F,
+    J.bitwise_op jop F ->
+    regular_binary_op_impl jop v ->
+    forall k,
+    ih_call k ->
+    th_ext_expr_binary k v (J.expr_binary_op_3 jop) (fun jv => True).
+Proof.
+    introv Hpure Hreg IHc Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    inverts keep Hpure; inverts keep Hreg; inverts red_exprh Hlred;
+    ljs_apply; ljs_context_invariant_after_apply;
+    lets Hx : red_expr_bitwise_op_lemma Hvrel1 Hvrel2 __;
+    try eassumption; eauto_js 1;
+    destr_concl; try ljs_handle_abort; jauto_js 10.
+Qed.
+
 Lemma red_expr_binary_op_3_regular_ok : forall k op v,
     ih_expr k ->
     ih_call k ->
@@ -2144,28 +2227,28 @@ Lemma red_expr_binary_op_3_regular_ok : forall k op v,
 Proof.
     introv IHe IHc Hrop.
     inverts keep Hrop.
-    applys red_expr_binary_op_3_coma_ok.
-    applys red_expr_binary_op_3_add_ok; eassumption.
-    applys red_expr_binary_op_3_puremath_ok J.puremath_op_sub Hrop; eassumption.
-    applys red_expr_binary_op_3_puremath_ok J.puremath_op_mult Hrop; eassumption.
-    applys red_expr_binary_op_3_puremath_ok J.puremath_op_div Hrop; eassumption.
-    applys red_expr_binary_op_3_puremath_ok J.puremath_op_mod Hrop; eassumption.
-    skip. (* TODO bitwise *)
-    skip.
-    skip.
+    applys~ red_expr_binary_op_3_coma_ok.
+    applys~ red_expr_binary_op_3_add_ok.
+    applys~ red_expr_binary_op_3_puremath_ok J.puremath_op_sub Hrop.
+    applys~ red_expr_binary_op_3_puremath_ok J.puremath_op_mult Hrop.
+    applys~ red_expr_binary_op_3_puremath_ok J.puremath_op_div Hrop.
+    applys~ red_expr_binary_op_3_puremath_ok J.puremath_op_mod Hrop.
+    applys~ red_expr_binary_op_3_bitwise_ok J.bitwise_op_and Hrop.
+    applys~ red_expr_binary_op_3_bitwise_ok J.bitwise_op_or Hrop.
+    applys~ red_expr_binary_op_3_bitwise_ok J.bitwise_op_xor Hrop.
     skip. (* TODO shifts *)
     skip.
     skip.
-    applys red_expr_binary_op_3_inequality_ok J.inequality_op_lt Hrop; eassumption.
-    applys red_expr_binary_op_3_inequality_ok J.inequality_op_le Hrop; eassumption.
-    applys red_expr_binary_op_3_inequality_ok J.inequality_op_gt Hrop; eassumption.
-    applys red_expr_binary_op_3_inequality_ok J.inequality_op_ge Hrop; eassumption.
+    applys~ red_expr_binary_op_3_inequality_ok J.inequality_op_lt Hrop.
+    applys~ red_expr_binary_op_3_inequality_ok J.inequality_op_le Hrop.
+    applys~ red_expr_binary_op_3_inequality_ok J.inequality_op_gt Hrop.
+    applys~ red_expr_binary_op_3_inequality_ok J.inequality_op_ge Hrop.
     skip. (* TODO instanceof *)
-    applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_in_ok; eassumption.
-    applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_equal_ok.
-    applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_strict_equal_ok.
-    applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_disequal_ok.
-    applys th_ext_expr_binary_clear_side_condition. applys red_expr_binary_op_3_strict_disequal_ok.
+    applys th_ext_expr_binary_clear_side_condition. applys~ red_expr_binary_op_3_in_ok.
+    applys th_ext_expr_binary_clear_side_condition. applys~ red_expr_binary_op_3_equal_ok.
+    applys th_ext_expr_binary_clear_side_condition. applys~ red_expr_binary_op_3_strict_equal_ok.
+    applys th_ext_expr_binary_clear_side_condition. applys~ red_expr_binary_op_3_disequal_ok.
+    applys th_ext_expr_binary_clear_side_condition. applys~ red_expr_binary_op_3_strict_disequal_ok.
 Qed.
 
 Lemma regular_binary_op_get_impl_lemma : forall op,
