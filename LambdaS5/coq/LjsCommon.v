@@ -119,7 +119,7 @@ Definition num_ge := num_comparison_op JsNumber.lt_bool false true.
 
 Fixpoint string_lt s1 s2 :=
     match s1, s2 with
-    | EmptyString, _ => true
+    | EmptyString, String _ _ => true
     | _, EmptyString => false
     | String ch1 s1', String ch2 s2' => 
         ifb ch1 = ch2 then string_lt s1' s2' else decide (int_of_char ch1 < int_of_char ch2)

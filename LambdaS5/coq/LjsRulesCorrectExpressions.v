@@ -1938,10 +1938,25 @@ Ltac munch_elseif Hx :=
     repeat determine_epsilon_binds;
     repeat determine_epsilon;
     repeat binds_determine;
+    repeat ljs_op_inv;
     cases_isTrue as Hx;
     repeat rewrite same_value_eq_lemma in Hx by solve [auto];
     repeat rewrite value_number_eq_lemma in Hx;
-    inv_ljs; [idtac | let Hx1 := fresh Hx in rename Hx into Hx1; try munch_elseif Hx].
+    inv_ljs.
+
+(* TODO move *)
+Lemma neg_zero_lemma : neg zero = neg_zero.
+Admitted.
+
+Lemma neg_zero_diff_zero : neg_zero <> zero.
+Admitted.
+
+(* TODO move *)
+Lemma num_lt_eq_lt_bool_lemma : forall n1 n2, L.num_lt n1 n2 = lt_bool n1 n2.
+Proof. 
+    unfolds L.num_lt. unfolds L.num_comparison_op. 
+    rew_refl. eauto.
+Qed.
 
 Lemma inequality_test_number_lemma : forall k c st st' r n1 n2,
     L.red_exprh k c st 
@@ -1954,22 +1969,81 @@ Proof.
     introv Hlred.
     inverts red_exprh Hlred.
     ljs_apply.
-
-    munch_elseif Hcond;
-    unfolds J.inequality_test_number. { (* one is NaN *)
+    unfolds J.inequality_test_number.
+    munch_elseif Hcond. { (* one is NaN *)
         repeat ljs_autoforward.
         destruct_hyp Hcond;
         cases_if; try solve [false; auto];
         jauto_js.
-    } { (* are equal *)
-        repeat ljs_autoforward.
-        subst_hyp Hcond.
-        cases_if; try solve [false; iauto].
-        cases_if.
-        jauto_js. 
-    } {
-        skip.
     }
+    rew_logic in Hcond.
+    cases_if. false; iauto.
+    munch_elseif Hcond1. { (* are equal *)
+        repeat ljs_autoforward.
+        subst_hyp Hcond1.
+        cases_if; try solve [false; iauto].
+        jauto_js. 
+    }
+    cases_if.
+    munch_elseif Hcond2. { (* zero-negzero *)
+        repeat ljs_autoforward.
+        destruct_hyp Hcond2.
+        specializes H6 __. eauto_js. destruct_hyp H6. repeat determine_epsilon.
+        repeat ljs_op_inv. injects.
+        rewrite of_int_zero_lemma. rewrite neg_zero_lemma.
+        cases_if; try solve [false; auto].
+        jauto_js.
+    }
+    rew_logic in Hcond2.
+    cases_if. destruct_hyp a. (* TODO *)
+    specializes H6 __. rewrite of_int_zero_lemma; eauto_js. destruct_hyp H6. repeat determine_epsilon. (* TODO *)
+    ljs_op_inv. rewrite of_int_zero_lemma in Hcond2.
+    rewrite neg_zero_lemma in Hcond2. solve [false; iauto].
+    munch_elseif Hcond3. { (* negzero-zero *)
+        repeat ljs_autoforward.
+        destruct_hyp Hcond3.
+        rewrite of_int_zero_lemma. rewrite neg_zero_lemma.
+        cases_if; try solve [false; auto].
+        jauto_js.
+    }
+    rew_logic in Hcond3.
+    cases_if. destruct_hyp a. (* TODO *)
+    specializes H7 __. rewrite of_int_zero_lemma; rewrite neg_zero_lemma; eauto_js. 
+        destruct_hyp H7. repeat determine_epsilon. (* TODO *)
+    ljs_op_inv. rewrite of_int_zero_lemma in Hcond3.
+    rewrite neg_zero_lemma in Hcond3. solve [false; iauto].
+    munch_elseif Hcond4. { (* left infinity *)
+        repeat ljs_autoforward.
+        subst_hyp Hcond4.
+        cases_if. jauto_js.
+    }
+    cases_if.
+    munch_elseif Hcond5. { (* right infinity *)
+        repeat ljs_autoforward.
+        subst_hyp Hcond5.
+        cases_if. jauto_js.
+    }
+    cases_if.
+    munch_elseif Hcond6. { (* right neg-infinity *)
+        repeat ljs_autoforward.
+        subst_hyp Hcond6.
+        cases_if. jauto_js.
+    }
+    cases_if.
+    munch_elseif Hcond7. { (* left neg-infinity *)
+        repeat ljs_autoforward.
+        subst_hyp Hcond7.
+        cases_if. jauto_js.
+    }
+    cases_if.
+    repeat ljs_autoforward.
+    rewrite num_lt_eq_lt_bool_lemma.
+    jauto_js.
+Qed.
+
+Lemma inequality_test_string_lemma : forall s1 s2,
+    J.inequality_test_string s1 s2 = L.string_lt s1 s2.
+Proof.
 Admitted. (* TODO *)
 
 Lemma inequality_test_primitive_lemma : forall k BR1 BR2 c st st' r v1 v2 jpr1 jpr2,
@@ -1983,9 +2057,32 @@ Lemma inequality_test_primitive_lemma : forall k BR1 BR2 c st st' r v1 v2 jpr1 j
     st' = st /\ r = L.res_value v.
 Proof.
     introv Hvrel1 Hvrel2 Hlred.
-    inverts red_exprh Hlred.
-    ljs_apply.
-Admitted. (* TODO *)
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq. {
+        inverts Hvrel1; tryfalse.
+        repeat ljs_autoforward.
+        cases_decide as Heq2; rewrite stx_eq_string_eq_lemma in Heq2. {
+            inverts Hvrel2; tryfalse.
+            repeat ljs_autoforward.
+            rewrite <- inequality_test_string_lemma.
+            jauto_js.
+        } {
+            repeat ljs_autoforward.
+            forwards_th Hx : inequality_test_number_lemma.
+            destruct_hyp Hx.
+            inverts Hvrel2; unfolds L.typeof; simpl in Heq2; tryfalse;
+            jauto_js.
+        }
+    } {
+        repeat ljs_autoforward.
+        forwards_th Hx : inequality_test_number_lemma.
+        destruct_hyp Hx.
+        inverts Hvrel1; unfolds L.typeof; simpl in Heq; tryfalse;
+        inverts Hvrel2;
+        jauto_js.
+    }
+Qed.
 
 Lemma red_expr_inequality_op_lemma : forall BR k jst jc c st st' r jv1 jv2 v1 v2 s1 s2 jop b1 b2,
     ih_call k ->
