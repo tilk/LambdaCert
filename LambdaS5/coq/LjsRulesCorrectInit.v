@@ -226,7 +226,7 @@ Definition ljs_prealloc_constructor_object code1 code2 attrs := {|
         L.oattrs_extensible := true;
         L.oattrs_code := code2 |};
     L.object_properties := attrs;
-    L.object_internal := from_list [("construct", code1)]
+    L.object_internal := from_list [("construct", code1); ("hasinstance", LjsInitEnv.privHasInstanceDefault)]
 |}.
 
 Lemma object_create_prealloc_constructor_lemma : forall jattrs attrs jpre code1 code2 n,
@@ -241,12 +241,15 @@ Lemma object_create_prealloc_constructor_lemma : forall jattrs attrs jpre code1 
 Proof.
     introv Hprel Hcrel Hcorel.
     constructor.
-    + constructor; try solve [constructor || reflexivity || (simpl; rewrite from_list_update, from_list_empty; 
+    + constructor; try solve [constructor || reflexivity || 
+         (simpl; repeat rewrite from_list_update; rewrite from_list_empty; 
           erewrite read_option_not_index_inv by (rew_index_eq; rew_logic; eauto); constructor)].
       - constructor. eapply prealloc_initBR_lemma. eauto_js.
       - constructor. assumption.
-      - simpl. rewrite from_list_update, from_list_empty.
+      - simpl. repeat rewrite from_list_update. rewrite from_list_empty.
         erewrite read_option_binds_inv by prove_bag. constructor. eassumption.
+      - simpl. repeat rewrite from_list_update. rewrite from_list_empty.
+        erewrite read_option_binds_inv by prove_bag. constructor. constructor.
     + simpl. assumption.
 Qed.
 

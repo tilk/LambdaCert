@@ -71,6 +71,7 @@ Hint Extern 10 (_ = _) => symmetry; solve [trivial] : xcore.
 Hint Constructors prealloc_related : js_ljs.
 Hint Constructors construct_prealloc_related : js_ljs.
 Hint Constructors construct_related : js_ljs.
+Hint Constructors has_instance_related : js_ljs.
 Hint Constructors builtin_method_related : js_ljs.
 Hint Constructors exotic_get_related : js_ljs.
 Hint Constructors exotic_get_own_prop_related : js_ljs.

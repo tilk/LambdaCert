@@ -562,6 +562,13 @@ Inductive construct_related : J.construct -> L.value -> Prop :=
 
 Definition option_construct_related := Option2 construct_related.
 
+Inductive has_instance_related : J.builtin_has_instance -> L.value -> Prop :=
+| has_instance_related_function : 
+    has_instance_related J.builtin_has_instance_function LjsInitEnv.privHasInstanceDefault
+| has_instance_related_after_bind : 
+    has_instance_related J.builtin_has_instance_after_bind LjsInitEnv.privBindHasInstance
+.
+
 Inductive builtin_method_related (T:Type) (V:T) (P:T->L.value->Prop) : T -> option L.value -> Prop :=
 | builtin_method_related_default : builtin_method_related V P V None
 | builtin_method_related_exotic : forall jx v,
@@ -596,6 +603,8 @@ Inductive exotic_delete_related : J.builtin_delete -> L.value -> Prop :=
 
 Definition builtin_delete_related :=
     builtin_method_related J.builtin_delete_default exotic_delete_related.
+
+Definition builtin_has_instance_related := Option2 has_instance_related.
 
 Definition funcbody_expr is jp := E.make_lambda_expr E.ejs_to_ljs E.make_fobj is (E.js_prog_to_ejs jp).
 
@@ -663,7 +672,9 @@ Record object_prim_related BR jobj obj : Prop := {
     object_prim_related_builtin_default_value :
         builtin_default_value_related (J.object_default_value_ jobj) (L.object_internal obj\("defval"?));
     object_prim_related_builtin_delete :
-        builtin_delete_related (J.object_delete_ jobj) (L.object_internal obj\("del"?))
+        builtin_delete_related (J.object_delete_ jobj) (L.object_internal obj\("del"?));
+    object_prim_related_builtin_has_instance :
+        builtin_has_instance_related (J.object_has_instance_ jobj) (L.object_internal obj\("hasinstance"?))
 }.
 
 Record object_related BR jobj obj : Prop := {

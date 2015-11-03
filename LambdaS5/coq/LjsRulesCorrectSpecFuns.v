@@ -4449,6 +4449,51 @@ Proof.
     unfolds. jauto.
 Qed.
 
+Lemma has_instance_related_lemma : forall BR jst st jptr ptr obj v,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    binds (LjsSyntax.object_internal obj) "hasinstance" v ->
+    exists jhi,
+    has_instance_related jhi v.
+Proof.
+    introv Hinv Hbs Hbinds Hcbinds.
+    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs Hbinds.
+    destruct Hx as (?jobj&Hjbinds&Horel).
+    destruct Horel.
+    destruct object_related_prim.
+    erewrite read_option_binds_inv in object_prim_related_builtin_has_instance by eassumption.
+    inverts object_prim_related_builtin_has_instance.
+    jauto.
+Qed.
+
+Lemma object_method_has_instance_lemma : forall BR jst st jptr ptr obj jhi,
+    state_invariant BR jst st ->
+    fact_js_obj jptr ptr \in BR ->
+    binds st ptr obj ->
+    builtin_has_instance_related jhi (L.object_internal obj\("hasinstance"?)) ->
+    J.object_method J.object_has_instance_ jst jptr jhi.
+Proof.
+    introv Hinv Hbs Hbinds Hocrel.
+    lets Hx : state_invariant_bisim_obj_lemma Hinv Hbs Hbinds.
+    destruct Hx as (?jobj&Hjbinds&Horel).
+    destruct Horel.
+    destruct object_related_prim.
+    inverts Hocrel as Ho1 Ho2. {
+        rewrite <- Ho2 in object_prim_related_builtin_has_instance.
+        inverts object_prim_related_builtin_has_instance as Hp1 Hp2.
+        asserts Heq : (a = a0). { (* TODO determinism lemma *)
+            inverts Ho1 as Ho3; inverts Hp1 as Hp3; try reflexivity;
+            try inverts Ho3; try inverts Hp3; reflexivity.
+        }
+        subst_hyp Heq.
+        unfolds. jauto.
+    }
+    rewrite <- Ho1 in object_prim_related_builtin_has_instance.
+    inverts object_prim_related_builtin_has_instance.
+    unfolds. jauto.
+Qed.
+
 (* TODO lots of cleaning up needed! *)
 
 Lemma ref_base_type_obj_not_unresolvable jref :

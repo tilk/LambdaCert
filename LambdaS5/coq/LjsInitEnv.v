@@ -191,6 +191,9 @@ expr_object
  ("%BindConstructor", property_data
                       (data_intro (expr_id "%BindConstructor") expr_true
                        expr_false expr_false));
+ ("%BindHasInstance", property_data
+                      (data_intro (expr_id "%BindHasInstance") expr_true
+                       expr_false expr_false));
  ("%BindObjCall", property_data
                   (data_intro (expr_id "%BindObjCall") expr_true expr_false
                    expr_false));
@@ -428,6 +431,12 @@ expr_object
                    expr_false));
  ("%GtOp", property_data
            (data_intro (expr_id "%GtOp") expr_true expr_false expr_false));
+ ("%HasInstanceDefault", property_data
+                         (data_intro (expr_id "%HasInstanceDefault")
+                          expr_true expr_false expr_false));
+ ("%HasInstanceSearch", property_data
+                        (data_intro (expr_id "%HasInstanceSearch") expr_true
+                         expr_false expr_false));
  ("%HasProperty", property_data
                   (data_intro (expr_id "%HasProperty") expr_true expr_false
                    expr_false));
@@ -1609,9 +1618,14 @@ expr_app (expr_id "%MakeNumber")
   [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]])]
 .
 Definition ex_internal10 := 
-expr_app (expr_id "%MakeNativeErrorMsg")
-[expr_id "proto";
- expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
 .
 Definition ex_internal11 := 
 expr_app (expr_id "%MakeNativeErrorMsg")
@@ -1619,6 +1633,101 @@ expr_app (expr_id "%MakeNativeErrorMsg")
  expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
 .
 Definition ex_internal12 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal13 := 
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
+.
+Definition ex_internal14 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal15 := 
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
+.
+Definition ex_internal16 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal17 := 
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
+.
+Definition ex_internal18 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal19 := 
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
+.
+Definition ex_internal2 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal20 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal21 := 
+expr_app (expr_id "%MakeNativeErrorMsg")
+[expr_id "proto";
+ expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
+.
+Definition ex_internal22 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal23 := 
 expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
 (expr_label "ret"
  (expr_seq
@@ -1692,7 +1801,17 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
                              expr_false))];
           expr_true]) (expr_break "ret" (expr_id "rtn"))))))))))
 .
-Definition ex_internal13 := 
+Definition ex_internal24 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal25 := 
 expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
 (expr_if
  (expr_op2 binary_op_stx_eq (expr_id "nargs")
@@ -1791,12 +1910,32 @@ expr_let "nargs" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
               (expr_id "%DateProto") expr_undefined)
              [("primval", expr_id "primval")] [])))))))))))))
 .
-Definition ex_internal14 := 
+Definition ex_internal26 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal27 := 
 expr_object
 (objattrs_intro (expr_string "Object") expr_true (expr_id "%RegExpProto")
  expr_undefined) [] []
 .
-Definition ex_internal15 := 
+Definition ex_internal28 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal29 := 
 expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
 (expr_recc "formArgString"
  (expr_lambda ["n"; "result"]
@@ -1855,39 +1994,59 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
        [("0", property_data
               (data_intro (expr_id "final") expr_false expr_false expr_false))]]))))))
 .
-Definition ex_internal2 := 
+Definition ex_internal3 := 
 expr_app (expr_id "%MakeString")
 [expr_app (expr_id "%StringCall")
  [expr_undefined; expr_undefined; expr_id "args"]]
 .
-Definition ex_internal3 := 
+Definition ex_internal30 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal4 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal5 := 
 expr_app (expr_id "%MakeBoolean")
 [expr_app (expr_id "%ToBoolean")
  [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]]
 .
-Definition ex_internal4 := 
+Definition ex_internal6 := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_internal7 := 
 expr_app (expr_id "%ObjectCall")
 [expr_id "constr"; expr_undefined; expr_id "args"]
 .
-Definition ex_internal5 := 
-expr_app (expr_id "%MakeNativeErrorMsg")
-[expr_id "proto";
- expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
-.
-Definition ex_internal6 := 
-expr_app (expr_id "%MakeNativeErrorMsg")
-[expr_id "proto";
- expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
-.
-Definition ex_internal7 := 
-expr_app (expr_id "%MakeNativeErrorMsg")
-[expr_id "proto";
- expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
-.
 Definition ex_internal8 := 
-expr_app (expr_id "%MakeNativeErrorMsg")
-[expr_id "proto";
- expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"]]
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
 .
 Definition ex_internal9 := 
 expr_app (expr_id "%MakeNativeErrorMsg")
@@ -2190,6 +2349,16 @@ expr_let "concatted"
  [expr_get_internal "boundArgs" (expr_id "constr"); expr_id "args"])
 (expr_app (expr_id "%PrimNew")
  [expr_get_internal "target" (expr_id "constr"); expr_id "concatted"])
+.
+Definition ex_privBindHasInstance := 
+expr_let "target" (expr_get_internal "target" (expr_id "obj"))
+(expr_if
+ (expr_op2 binary_op_has_internal (expr_id "target")
+  (expr_string "hasinstance"))
+ (expr_app (expr_get_internal "hasinstance" (expr_id "target"))
+  [expr_id "target"; expr_id "v"])
+ (expr_app (expr_id "%TypeError")
+  [expr_string "hasinstance on bind with non-function as target"]))
 .
 Definition ex_privBindObjCall := 
 expr_let "concatted"
@@ -3271,6 +3440,22 @@ Definition ex_privGtOp :=
 expr_app (expr_id "%CompareOp")
 [expr_id "l"; expr_id "r"; expr_true; expr_false]
 .
+Definition ex_privHasInstanceDefault := 
+expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "v")))
+expr_false
+(expr_let "O"
+ (expr_app (expr_id "%Get1") [expr_id "obj"; expr_string "prototype"])
+ (expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
+  (expr_app (expr_id "%TypeError")
+   [expr_string "Prototype was not an object"])
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "v"])))
+.
+Definition ex_privHasInstanceSearch := 
+expr_let "vp" (expr_get_obj_attr oattr_proto (expr_id "v"))
+(expr_if (expr_op2 binary_op_stx_eq (expr_id "vp") expr_null) expr_false
+ (expr_if (expr_op2 binary_op_stx_eq (expr_id "vp") (expr_id "O")) expr_true
+  (expr_app (expr_id "%HasInstanceSearch") [expr_id "O"; expr_id "vp"])))
+.
 Definition ex_privHasProperty := 
 expr_app (expr_id "%GetProperty")
 [expr_id "obj";
@@ -3376,7 +3561,8 @@ expr_let "len"
  [("construct", expr_id "%BindConstructor");
   ("target", expr_id "obj");
   ("boundThis", expr_id "this");
-  ("boundArgs", expr_id "args")]
+  ("boundArgs", expr_id "args");
+  ("hasinstance", expr_id "%BindHasInstance")]
  [("caller", property_accessor
              (accessor_intro (expr_id "%ThrowTypeError")
               (expr_id "%ThrowTypeError") expr_false expr_false));
@@ -3468,7 +3654,8 @@ expr_let "fobj"
   ("usercode", expr_id "body");
   ("codetxt", expr_id "codetxt");
   ("strict", expr_id "strict");
-  ("get", expr_id "%GetFunction")]
+  ("get", expr_id "%GetFunction");
+  ("hasinstance", expr_id "%HasInstanceDefault")]
  [("length", property_data
              (data_intro (expr_id "len") expr_false expr_false expr_false))])
 (expr_let "proto"
@@ -5855,32 +6042,16 @@ expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "r")))
  [expr_id "r"; expr_app (expr_id "%ToString") [expr_id "l"]])
 .
 Definition ex_privinstanceof := 
-expr_label "ret"
-(expr_seq
- (expr_if
-  (expr_op1 unary_op_not
-   (expr_op2 binary_op_stx_eq (expr_app (expr_id "%Typeof") [expr_id "r"])
-    (expr_string "function")))
-  (expr_app (expr_id "%TypeError")
-   [expr_string "Non-function given to instanceof"]) expr_null)
- (expr_seq
-  (expr_if
-   (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "l")))
-   (expr_break "ret" expr_false) expr_null)
-  (expr_let "O"
-   (expr_app (expr_id "%Get1") [expr_id "r"; expr_string "prototype"])
-   (expr_if
-    (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "O")))
-    (expr_app (expr_id "%TypeError")
-     [expr_string "Prototype was not function or object"])
-    (expr_recc "search"
-     (expr_lambda ["v"]
-      (expr_let "vp" (expr_get_obj_attr oattr_proto (expr_id "v"))
-       (expr_if (expr_op2 binary_op_stx_eq (expr_id "vp") expr_null)
-        expr_false
-        (expr_if (expr_op2 binary_op_stx_eq (expr_id "O") (expr_id "vp"))
-         expr_true (expr_app (expr_id "search") [expr_id "vp"])))))
-     (expr_break "ret" (expr_app (expr_id "search") [expr_id "l"])))))))
+expr_seq
+(expr_if (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "r")))
+ (expr_app (expr_id "%TypeError")
+  [expr_string "Non-function given to instanceof"]) expr_undefined)
+(expr_if
+ (expr_op2 binary_op_has_internal (expr_id "r") (expr_string "hasinstance"))
+ (expr_app (expr_get_internal "hasinstance" (expr_id "r"))
+  [expr_id "r"; expr_id "l"])
+ (expr_app (expr_id "%TypeError")
+  [expr_string "Non-function given to instanceof"]))
 .
 Definition ex_privisAccessorDescriptor := 
 expr_if
@@ -8910,6 +9081,12 @@ value_closure
  ["constr"; "args"] ex_privBindConstructor)
 .
 Definition name_privBindConstructor : id :=  "%BindConstructor" .
+Definition privBindHasInstance := 
+value_closure
+(closure_intro [("%TypeError", privTypeError)] None ["obj"; "v"]
+ ex_privBindHasInstance)
+.
+Definition name_privBindHasInstance : id :=  "%BindHasInstance" .
 Definition privBindObjCall := 
 value_closure
 (closure_intro [("%AppExprCheck", privAppExprCheck); ("%concat", privconcat)]
@@ -9596,6 +9773,20 @@ value_closure
 (closure_intro [("%CompareOp", privCompareOp)] None ["l"; "r"] ex_privGtOp)
 .
 Definition name_privGtOp : id :=  "%GtOp" .
+Definition privHasInstanceSearch := 
+value_closure
+(closure_intro [] (Some "%HasInstanceSearch") ["O"; "v"]
+ ex_privHasInstanceSearch)
+.
+Definition name_privHasInstanceSearch : id :=  "%HasInstanceSearch" .
+Definition privHasInstanceDefault := 
+value_closure
+(closure_intro
+ [("%Get1", privGet1);
+  ("%HasInstanceSearch", privHasInstanceSearch);
+  ("%TypeError", privTypeError)] None ["obj"; "v"] ex_privHasInstanceDefault)
+.
+Definition name_privHasInstanceDefault : id :=  "%HasInstanceDefault" .
 Definition privIsJSError := 
 value_closure (closure_intro [] None ["thing"] ex_privIsJSError)
 .
@@ -9634,6 +9825,7 @@ Definition privMakeBind :=
 value_closure
 (closure_intro
  [("%BindConstructor", privBindConstructor);
+  ("%BindHasInstance", privBindHasInstance);
   ("%BindObjCall", privBindObjCall);
   ("%FunctionProto", privFunctionProto);
   ("%ThrowTypeError", privThrowTypeError);
@@ -9649,6 +9841,7 @@ value_closure
   ("%DefaultConstruct", privDefaultConstruct);
   ("%FunctionProto", privFunctionProto);
   ("%GetFunction", privGetFunction);
+  ("%HasInstanceDefault", privHasInstanceDefault);
   ("%ObjectProto", privObjectProto);
   ("%ThrowTypeError", privThrowTypeError)] None
  ["body"; "len"; "codetxt"; "strict"] ex_privMakeFunctionObject)
@@ -10475,9 +10668,8 @@ value_closure
 Definition name_privin : id :=  "%in" .
 Definition privinstanceof := 
 value_closure
-(closure_intro
- [("%Get1", privGet1); ("%TypeError", privTypeError); ("%Typeof", privTypeof)]
- None ["l"; "r"] ex_privinstanceof)
+(closure_intro [("%TypeError", privTypeError)] None ["l"; "r"]
+ ex_privinstanceof)
 .
 Definition name_privinstanceof : id :=  "%instanceof" .
 Definition privisExtensible :=  value_object 52 .
@@ -11467,6 +11659,7 @@ Definition ctx_items :=
  (name_privArrayLengthChange, privArrayLengthChange);
  (name_privArrayProto, privArrayProto);
  (name_privBindConstructor, privBindConstructor);
+ (name_privBindHasInstance, privBindHasInstance);
  (name_privBindObjCall, privBindObjCall);
  (name_privBitwiseAnd, privBitwiseAnd);
  (name_privBitwiseInfix, privBitwiseInfix);
@@ -11547,6 +11740,8 @@ Definition ctx_items :=
  (name_privGetPrim, privGetPrim);
  (name_privGetProperty, privGetProperty);
  (name_privGtOp, privGtOp);
+ (name_privHasInstanceDefault, privHasInstanceDefault);
+ (name_privHasInstanceSearch, privHasInstanceSearch);
  (name_privHasProperty, privHasProperty);
  (name_privHintMethod, privHintMethod);
  (name_privIfObjectElse, privIfObjectElse);
@@ -11964,6 +12159,7 @@ privArrayIdx
 privArrayLengthChange
 privArrayProto
 privBindConstructor
+privBindHasInstance
 privBindObjCall
 privBitwiseAnd
 privBitwiseInfix
@@ -12044,6 +12240,8 @@ privGetOwnPropertyString
 privGetPrim
 privGetProperty
 privGtOp
+privHasInstanceDefault
+privHasInstanceSearch
 privHasProperty
 privHintMethod
 privIfObjectElse
@@ -12461,6 +12659,7 @@ privArrayIdx
 privArrayLengthChange
 privArrayProto
 privBindConstructor
+privBindHasInstance
 privBindObjCall
 privBitwiseAnd
 privBitwiseInfix
@@ -12541,6 +12740,8 @@ privGetOwnPropertyString
 privGetPrim
 privGetProperty
 privGtOp
+privHasInstanceDefault
+privHasInstanceSearch
 privHasProperty
 privHintMethod
 privIfObjectElse
@@ -12968,6 +13169,7 @@ Definition store_items := [
                                          ("%ArrayLengthChange", privArrayLengthChange);
                                          ("%ArrayProto", privArrayProto);
                                          ("%BindConstructor", privBindConstructor);
+                                         ("%BindHasInstance", privBindHasInstance);
                                          ("%BindObjCall", privBindObjCall);
                                          ("%BitwiseAnd", privBitwiseAnd);
                                          ("%BitwiseInfix", privBitwiseInfix);
@@ -13048,6 +13250,8 @@ Definition store_items := [
                                          ("%GetPrim", privGetPrim);
                                          ("%GetProperty", privGetProperty);
                                          ("%GtOp", privGtOp);
+                                         ("%HasInstanceDefault", privHasInstanceDefault);
+                                         ("%HasInstanceSearch", privHasInstanceSearch);
                                          ("%HasProperty", privHasProperty);
                                          ("%HintMethod", privHintMethod);
                                          ("%IfObjectElse", privIfObjectElse);
@@ -14267,7 +14471,14 @@ Definition store_items := [
                      ("%ArrayIdx", privArrayIdx);
                      ("%MakeNumber", privMakeNumber);
                      ("%ToNumber", privToNumber)] None ["constr"; "args"]
-                    ex_internal1))]|});
+                    ex_internal1));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal2))]|});
 (22, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
@@ -14311,7 +14522,14 @@ Definition store_items := [
                    (closure_intro
                     [("%MakeString", privMakeString);
                      ("%StringCall", privStringCall)] None ["constr"; "args"]
-                    ex_internal2))]|});
+                    ex_internal3));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal4))]|});
 (24, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
@@ -14350,7 +14568,14 @@ Definition store_items := [
                     [("%ArrayIdx", privArrayIdx);
                      ("%MakeBoolean", privMakeBoolean);
                      ("%ToBoolean", privToBoolean)] None ["constr"; "args"]
-                    ex_internal3))]|});
+                    ex_internal5));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal6))]|});
 (26, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
@@ -14451,7 +14676,14 @@ Definition store_items := [
        from_list [("construct", 
                    value_closure
                    (closure_intro [("%ObjectCall", privObjectCall)] None
-                    ["constr"; "args"] ex_internal4))]|});
+                    ["constr"; "args"] ex_internal7));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal8))]|});
 (27, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
@@ -14581,7 +14813,14 @@ Definition store_items := [
                     [("%ArrayIdx", privArrayIdx);
                      ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privErrorProto)] None ["this"; "args"]
-                    ex_internal5))]|});
+                    ex_internal9));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal10))]|});
 (36, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
@@ -14607,7 +14846,14 @@ Definition store_items := [
                     [("%ArrayIdx", privArrayIdx);
                      ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privSyntaxErrorProto)] None ["this"; "args"]
-                    ex_internal6))]|});
+                    ex_internal11));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal12))]|});
 (37, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
@@ -14633,7 +14879,14 @@ Definition store_items := [
                     [("%ArrayIdx", privArrayIdx);
                      ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privEvalErrorProto)] None ["this"; "args"]
-                    ex_internal7))]|});
+                    ex_internal13));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal14))]|});
 (38, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
@@ -14659,7 +14912,14 @@ Definition store_items := [
                     [("%ArrayIdx", privArrayIdx);
                      ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privRangeErrorProto)] None ["this"; "args"]
-                    ex_internal8))]|});
+                    ex_internal15));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal16))]|});
 (39, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
@@ -14685,7 +14945,14 @@ Definition store_items := [
                     [("%ArrayIdx", privArrayIdx);
                      ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privReferenceErrorProto)] None
-                    ["this"; "args"] ex_internal9))]|});
+                    ["this"; "args"] ex_internal17));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal18))]|});
 (40, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
@@ -14711,7 +14978,14 @@ Definition store_items := [
                     [("%ArrayIdx", privArrayIdx);
                      ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privTypeErrorProto)] None ["this"; "args"]
-                    ex_internal10))]|});
+                    ex_internal19));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal20))]|});
 (41, {|object_attrs :=
        {|oattrs_proto := privErrorProto;
          oattrs_class := "Object";
@@ -14750,7 +15024,14 @@ Definition store_items := [
                     [("%ArrayIdx", privArrayIdx);
                      ("%MakeNativeErrorMsg", privMakeNativeErrorMsg);
                      ("proto", privURIErrorProto)] None ["this"; "args"]
-                    ex_internal11))]|});
+                    ex_internal21));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal22))]|});
 (43, {|object_attrs :=
        {|oattrs_proto := privObjectProto;
          oattrs_class := "Array";
@@ -15185,7 +15466,14 @@ Definition store_items := [
                      ("%RangeErrorProto", privRangeErrorProto);
                      ("%ToUint32f", privToUint32f);
                      ("%defineOwnProperty", privdefineOwnProperty)] None
-                    ["this"; "args"] ex_internal12))]|});
+                    ["this"; "args"] ex_internal23));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal24))]|});
 (65, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Function";
@@ -15853,7 +16141,14 @@ Definition store_items := [
                      ("%UTC", privUTC);
                      ("%getCurrentUTC", privgetCurrentUTC);
                      ("%parse", privparse)] None ["constr"; "args"]
-                    ex_internal13))]|});
+                    ex_internal25));
+                  ("hasinstance", 
+                   value_closure
+                   (closure_intro
+                    [("%Get1", privGet1);
+                     ("%HasInstanceSearch", privHasInstanceSearch);
+                     ("%TypeError", privTypeError)] None ["obj"; "v"]
+                    ex_internal26))]|});
 (97, {|object_attrs :=
        {|oattrs_proto := privFunctionProto;
          oattrs_class := "Object";
@@ -16176,7 +16471,14 @@ Definition store_items := [
         from_list [("construct", 
                     value_closure
                     (closure_intro [("%RegExpProto", privRegExpProto)] 
-                     None ["obj"; "this"; "args"] ex_internal14))]|});
+                     None ["obj"; "this"; "args"] ex_internal27));
+                   ("hasinstance", 
+                    value_closure
+                    (closure_intro
+                     [("%Get1", privGet1);
+                      ("%HasInstanceSearch", privHasInstanceSearch);
+                      ("%TypeError", privTypeError)] None ["obj"; "v"]
+                     ex_internal28))]|});
 (137, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
@@ -16862,7 +17164,14 @@ Definition store_items := [
                      [("%ComputeLength", privComputeLength);
                       ("%ToString", privToString);
                       ("%evalCall", privevalCall)] None ["this"; "args"]
-                     ex_internal15))]|});
+                     ex_internal29));
+                   ("hasinstance", 
+                    value_closure
+                    (closure_intro
+                     [("%Get1", privGet1);
+                      ("%HasInstanceSearch", privHasInstanceSearch);
+                      ("%TypeError", privTypeError)] None ["obj"; "v"]
+                     ex_internal30))]|});
 (173, {|object_attrs :=
         {|oattrs_proto := privFunctionProto;
           oattrs_class := "Function";
