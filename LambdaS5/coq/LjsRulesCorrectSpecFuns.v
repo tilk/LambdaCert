@@ -3715,12 +3715,20 @@ Ltac determine_fact_js_obj :=
     match goal with
     | Hfact1 : fact_js_obj ?jptr ?ptr1 \in ?BR1, Hfact2 : fact_js_obj ?jptr ?ptr2 \in ?BR2,
       Hinv : state_invariant ?BR _ _ |- _ =>
-        let Hsub1 := fresh in let Hsub2 := fresh in let Heq := fresh "Heq" in 
+        let Hsub1 := fresh in let Hsub2 := fresh in let Heq := fresh "Heq" in
         asserts Hsub1 : (BR1 \c BR); [prove_bag | idtac];
         asserts Hsub2 : (BR2 \c BR); [prove_bag | idtac];
-        lets Heq : heaps_bisim_consistent_lfun_obj (state_invariant_heaps_bisim_consistent Hinv) 
+        lets Heq : heaps_bisim_consistent_lfun_obj (state_invariant_heaps_bisim_consistent Hinv)
             (incl_in Hsub1 Hfact1) (incl_in Hsub2 Hfact2);
         clear Hsub1; clear Hsub2; try (subst_hyp Heq; clear Hfact2)
+    | Hfact1 : fact_js_obj ?jptr1 ?ptr \in ?BR1, Hfact2 : fact_js_obj ?jptr2 ?ptr \in ?BR2,
+      Hinv : state_invariant ?BR _ _ |- _ =>
+        let Hsub1 := fresh in let Hsub2 := fresh in let Heq := fresh "Heq" in
+        asserts Hsub1 : (BR1 \c BR); [prove_bag | idtac];
+        asserts Hsub2 : (BR2 \c BR); [prove_bag | idtac];
+        lets Heq : heaps_bisim_consistent_rfun (state_invariant_heaps_bisim_consistent Hinv)
+            (incl_in Hsub1 Hfact1) (incl_in Hsub2 Hfact2) fact_ptr_js_obj fact_ptr_js_obj;
+        clear Hsub1; clear Hsub2; try (injects Heq; clear Hfact2)
     end.
 
 Ltac determine_fact_js_env :=
@@ -3734,6 +3742,16 @@ Ltac determine_fact_js_env :=
             (incl_in Hsub1 Hfact1) (incl_in Hsub2 Hfact2);
         clear Hsub1; clear Hsub2; try (subst_hyp Heq; clear Hfact2)
     end.
+
+Lemma fact_js_obj_eq_lemma : forall BR jst st jptr1 jptr2 ptr1 ptr2,
+    state_invariant BR jst st ->
+    fact_js_obj jptr1 ptr1 \in BR ->
+    fact_js_obj jptr2 ptr2 \in BR ->
+    (jptr1 = jptr2) = (ptr1 = ptr2).
+Proof.
+    introv Hinv Hf1 Hf2. rew_logic. 
+    split; intro Heq; subst_hyp Heq; determine_fact_js_obj; reflexivity.
+Qed.
 
 Lemma create_arguments_object_ok : forall BR k jst jc c st st' r jptr ptr ptr1 ptr2(*ptr3*)is jvs vs jeptr jlenv v b,
     L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privmkArgsObj

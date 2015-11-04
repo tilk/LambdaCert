@@ -2319,6 +2319,129 @@ Proof.
     destr_concl; try ljs_handle_abort; jauto_js 10.
 Qed.
 
+Opaque decide. (* TODO move *)
+
+Lemma has_instance_search_ok : forall k BR jst jc c st st' r jptr1 jptr2 ptr1 ptr2,
+    L.red_exprh k c st (L.expr_app_2 LjsInitEnv.privHasInstanceSearch [L.value_object ptr1; L.value_object ptr2])
+        (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    fact_js_obj jptr1 ptr1 \in BR ->
+    fact_js_obj jptr2 ptr2 \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_function_has_instance_2 jptr1 jptr2) (fun jv => True).
+Proof.
+    intro k.
+    induction_wf IH : lt_wf k.
+    introv Hlred Hcinv Hinv Hf1 Hf2.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Heq; rewrite stx_eq_null_eq_lemma in Heq. { (* is null *)
+        forwards* : object_proto_null_lemma.
+        repeat ljs_autoforward.
+        jauto_js.
+    } { (* not null *)
+        forwards* Hx : object_proto_not_null_lemma.
+        unfold L.object_proto in Hx.
+        destruct_hyp Hx.
+        repeat ljs_autoforward.
+        cases_decide as Heq1; rewrite Hx0 in *; rewrite stx_eq_object_eq_lemma in Heq1. { (* same *)
+            subst_hyp Heq1.
+            repeat ljs_autoforward.
+            determine_fact_js_obj.
+            jauto_js.
+        } { (* diff *)
+            erewrite <- fact_js_obj_eq_lemma in Heq1 by eassumption.
+            repeat ljs_autoforward.
+            forwards_th : IH. math. eassumption. eassumption.
+            destr_concl; try ljs_handle_abort.
+            jauto_js.
+        }
+    }
+Qed.
+
+Lemma has_instance_ok : forall BR k jst jc c st st' r jhi v' jv v jptr ptr,
+    ih_call k ->
+    has_instance_related jhi v' ->
+    J.object_method JsSyntax.object_has_instance_ jst jptr (Some jhi) ->
+    L.red_exprh k c st (L.expr_app_2 v' [L.value_object ptr; v]) (L.out_ter st' r) ->
+    context_invariant BR jc c ->
+    state_invariant BR jst st ->
+    value_related BR jv v ->
+    fact_js_obj jptr ptr \in BR ->
+    concl_ext_expr_value BR jst jc c st st' r (J.spec_object_has_instance jptr jv) (fun jv => True).
+Proof.
+    introv IHc Hhirel Hjom Hlred Hcinv Hinv Hvrel Hf.
+    inverts Hhirel. {
+        ljs_invert_apply.
+        repeat ljs_autoforward.
+        cases_decide as Hobj. { (* is object *)
+            inverts Hobj. inverts Hvrel.
+            repeat ljs_autoforward.
+            forwards_th : get_lemma. eassumption.
+            destr_concl; try ljs_handle_abort.
+            res_related_invert.
+            resvalue_related_only_invert.
+            repeat ljs_autoforward.
+            cases_decide as Hpobj. { (* prototype is object *)
+                inverts Hpobj.
+                inverts H. (* TODO value_related *)
+                repeat ljs_autoforward.
+                skip. (* TODO search *)
+            } { (* prototype not object *)
+                lets* Hnobj : not_is_object_js_type_lemma Hpobj.
+                repeat ljs_autoforward.
+                forwards_th : type_error_lemma. eauto_js.
+                destr_concl; try ljs_handle_abort. tryfalse.
+            }
+        } { (* not object *)
+            lets* Hnobj : not_is_object_js_prim_lemma Hobj.
+            destruct_hyp Hnobj.
+            repeat ljs_autoforward.
+            jauto_js.
+        }
+    } { (* bind *)
+        skip. (* not yet in jscert *)
+    }
+Qed.
+
+Lemma red_expr_binary_op_3_instanceof_ok : forall k,
+    ih_call k ->
+    th_ext_expr_binary k LjsInitEnv.privinstanceof (J.expr_binary_op_3 J.binary_op_instanceof) (fun jv => True).
+Proof.
+    introv IHc Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    ljs_invert_apply.
+    repeat ljs_autoforward.
+    cases_decide as Hobj. {
+        inverts Hobj.
+        inverts Hvrel2.
+        repeat ljs_autoforward.
+        cases_decide as Hidx. {
+            rewrite index_binds_eq in Hidx.
+            destruct Hidx as (?&Hbindsi).
+            forwards* (?&Hhir) : has_instance_related_lemma.
+            forwards* : object_method_has_instance_lemma. {
+                erewrite read_option_binds_inv by eassumption. econstructor. eassumption.
+            }
+            repeat ljs_autoforward.
+            forwards_th : has_instance_ok. eassumption. eassumption.
+            destr_concl; try ljs_handle_abort.
+            jauto_js.
+        } { (* no hasinstance method *)
+            repeat ljs_autoforward.
+            forwards* : object_method_has_instance_lemma. {
+                erewrite read_option_not_index_inv by eassumption. constructor.
+            }
+            forwards_th : type_error_lemma. eauto_js.
+            destr_concl; try ljs_handle_abort. tryfalse.
+        }
+    } {
+        repeat ljs_autoforward.
+        lets Hnobj : not_is_object_js_type_lemma Hvrel2 Hobj.
+        forwards_th : type_error_lemma. eauto_js.
+        destr_concl; try ljs_handle_abort. tryfalse.
+    }
+Qed.
+
 Lemma red_expr_binary_op_3_regular_ok : forall k op v,
     ih_expr k ->
     ih_call k ->
@@ -2343,7 +2466,7 @@ Proof.
     applys~ red_expr_binary_op_3_inequality_ok J.inequality_op_le Hrop.
     applys~ red_expr_binary_op_3_inequality_ok J.inequality_op_gt Hrop.
     applys~ red_expr_binary_op_3_inequality_ok J.inequality_op_ge Hrop.
-    skip. (* TODO instanceof *)
+    applys~ red_expr_binary_op_3_instanceof_ok.
     applys th_ext_expr_binary_clear_side_condition. applys~ red_expr_binary_op_3_in_ok.
     applys th_ext_expr_binary_clear_side_condition. applys~ red_expr_binary_op_3_equal_ok.
     applys th_ext_expr_binary_clear_side_condition. applys~ red_expr_binary_op_3_strict_equal_ok.

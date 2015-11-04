@@ -3013,3 +3013,22 @@ Hint Extern 10 (J.arguments_from _ _) => js_arguments_from : js_ljs.
 (* TODO move *)
 Lemma of_int_zero_lemma : of_int 0 = JsNumber.zero.
 Admitted.
+
+(* TODO move *)
+Lemma not_is_object_js_type_lemma : forall BR jv v,
+    value_related BR jv v ->
+    ~L.is_object v ->
+    J.type_of jv <> J.type_object.
+Proof.
+    introv Hvrel Hnobj.
+    inverts Hvrel; try solve [false; apply Hnobj; constructor]; eauto.
+Qed.
+
+Lemma not_is_object_js_prim_lemma : forall BR jv v,
+    value_related BR jv v->
+    ~L.is_object v ->
+    exists jp, jv = J.value_prim jp.
+Proof.
+    introv Hvrel Hnobj.
+    inverts Hvrel; try solve [false; apply Hnobj; constructor]; eauto.
+Qed.
