@@ -111,12 +111,18 @@ Hint Extern 2 (option_codetxt_related _ _) => eapply option2_none_lemma : js_ljs
 Hint Extern 2 (option_codetxt_related _ _) => eapply option2_some_lemma : js_ljs.
 Hint Extern 2 (option_func_strict_related _ _) => eapply option2_none_lemma : js_ljs.
 Hint Extern 2 (option_func_strict_related _ _) => eapply option2_some_lemma : js_ljs.
+Hint Extern 2 (builtin_has_instance_related _ _) => eapply option2_none_lemma : js_ljs.
+Hint Extern 2 (builtin_has_instance_related _ _) => eapply option2_some_lemma : js_ljs.
 Hint Extern 2 (builtin_get_related _ _) => eapply builtin_method_related_none_lemma : js_ljs.
 Hint Extern 2 (builtin_get_related _ _) => eapply builtin_method_related_some_lemma : js_ljs.
 Hint Extern 2 (builtin_get_own_prop_related _ _) => eapply builtin_method_related_none_lemma : js_ljs.
 Hint Extern 2 (builtin_get_own_prop_related _ _) => eapply builtin_method_related_some_lemma : js_ljs.
 Hint Extern 2 (builtin_define_own_prop_related _ _) => eapply builtin_method_related_none_lemma : js_ljs.
 Hint Extern 2 (builtin_define_own_prop_related _ _) => eapply builtin_method_related_some_lemma : js_ljs.
+Hint Extern 2 (builtin_default_value_related _ _) => eapply builtin_method_related_none_lemma : js_ljs.
+Hint Extern 2 (builtin_default_value_related _ _) => eapply builtin_method_related_some_lemma : js_ljs.
+Hint Extern 2 (builtin_delete_related _ _) => eapply builtin_method_related_none_lemma : js_ljs.
+Hint Extern 2 (builtin_delete_related _ _) => eapply builtin_method_related_some_lemma : js_ljs.
 
 Lemma nindex_update_diff : forall `{Index_update_diff_eq} M k k' x', 
     k <> k' -> ~index M k -> ~index (M \(k' := x')) k.
@@ -224,12 +230,6 @@ Admitted.
 
 (* *** errors *)
 
-(* TODO move *)
-Hint Extern 2 (builtin_default_value_related _ _) => eapply builtin_method_related_none_lemma : js_ljs.
-Hint Extern 2 (builtin_default_value_related _ _) => eapply builtin_method_related_some_lemma : js_ljs.
-Hint Extern 2 (builtin_delete_related _ _) => eapply builtin_method_related_none_lemma : js_ljs.
-Hint Extern 2 (builtin_delete_related _ _) => eapply builtin_method_related_some_lemma : js_ljs.
-
 Lemma make_native_error_lemma : forall BR k jst jc c st st' jv1 jv2 v1 v2 r,
     L.red_exprh k c st 
        (L.expr_app_2 LjsInitEnv.privMakeNativeError [v1; v2]) 
@@ -250,7 +250,7 @@ Proof.
     destruct_hyp Hv;
     repeat ljs_autoforward. {
         inverts Hvrel2.
-        jauto_js 30.
+        jauto_js 35.
     }
     (* has message *)
     inv_ljs;
