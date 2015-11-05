@@ -113,25 +113,25 @@ Proof.
     (* expr_array *)
     skip.
     (* expr_function *)
-    skip.
+    applys~ red_expr_function_ok.
     (* expr_access *)
-    applys red_expr_access_ok; eassumption.
+    applys~ red_expr_access_ok.
     (* expr_member *)
-    applys red_expr_member_ok; eassumption.
+    applys~ red_expr_member_ok.
     (* expr_new *)
-    applys red_expr_new_ok; eassumption.
+    applys~ red_expr_new_ok.
     (* expr_call *)
-    applys red_expr_call_ok; eassumption.
+    applys~ red_expr_call_ok.
     (* expr_unary_op *)
-    applys red_expr_unary_op_ok; eassumption.
+    applys~ red_expr_unary_op_ok.
     (* expr_binary_op *)
-    applys red_expr_binary_op_ok; eassumption.
+    applys~ red_expr_binary_op_ok.
     (* expr_conditional *)
-    applys red_expr_conditional_ok; eassumption.
+    applys~ red_expr_conditional_ok.
     (* expr_assign *)
-    applys red_expr_assign_ok; eassumption.
+    applys~ red_expr_assign_ok.
     }
-    applys red_spec_call_ok; eassumption.
+    applys~ red_spec_call_ok.
 Qed.
 
 Lemma stat_lemma : forall k jt, th_stat k jt.

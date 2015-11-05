@@ -1756,23 +1756,23 @@ Proof.
 Qed.
 
 Lemma red_expr_binary_op_3_equal_ok : forall k,
+    ih_call k ->
     th_ext_expr_binary k LjsInitEnv.privEqEq (J.expr_binary_op_3 J.binary_op_equal)
         (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
-    introv Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    introv IHc Hcinv Hinv Hvrel1 Hvrel2 Hlred.
     forwards_th : red_spec_equal_ok.
     destr_concl;
     jauto_js. 
 Qed.
 
 Lemma red_expr_binary_op_3_disequal_ok : forall k,
+    ih_call k ->
     th_ext_expr_binary k LjsInitEnv.privnotEqEq (J.expr_binary_op_3 J.binary_op_disequal)
         (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
 Proof.
-    introv Hcinv Hinv Hvrel1 Hvrel2 Hlred.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    ljs_context_invariant_after_apply.
+    introv IHc Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    ljs_invert_apply.
     repeat ljs_autoforward.
     forwards_th : red_spec_equal_ok.
     destr_concl; try ljs_handle_abort.
@@ -2073,7 +2073,8 @@ Qed.
 Lemma inequality_test_string_lemma : forall s1 s2,
     J.inequality_test_string s1 s2 = L.string_lt s1 s2.
 Proof.
-Admitted. (* TODO *)
+    eauto.
+Qed.
 
 Lemma inequality_test_primitive_lemma : forall k BR1 BR2 c st st' r v1 v2 jpr1 jpr2,
     value_related BR1 (J.value_prim jpr1) v1 ->
@@ -2427,7 +2428,7 @@ Proof.
                 erewrite read_option_binds_inv by eassumption. econstructor. eassumption.
             }
             repeat ljs_autoforward.
-            forwards_th : has_instance_ok. eassumption. eassumption.
+            forwards_th : has_instance_ok; try eassumption.
             destr_concl; try ljs_handle_abort.
             jauto_js.
         } { (* no hasinstance method *)
