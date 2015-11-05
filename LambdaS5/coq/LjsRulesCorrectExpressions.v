@@ -1606,30 +1606,16 @@ Proof.
     repeat cases_if; repeat cases_decide; substs; tryfalse; iauto.
 Qed.
 
-Lemma red_spec_equal_ok : forall k,
-    th_ext_expr_binary k LjsInitEnv.privEqEq J.spec_equal
-        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
+Lemma value_number_eq_lemma : forall n1 n2, (L.value_number n1 = L.value_number n2) = (n1 = n2).
 Proof.
-    intro k.
-    induction_wf IH : lt_wf k.
-    introv Hcinv Hinv Hvrel1 Hvrel2 Hlred.
-    inverts red_exprh Hlred.
-    ljs_apply.
-    ljs_context_invariant_after_apply.
-    repeat inv_top_fwd_ljs.
-    repeat binds_inv.
-    inv_ljs.
-    (* same type *)
-    repeat ljs_autoforward.
-    fold_bool.
-    rew_refl in H5. (* TODO *)
-Admitted.
-(*
-    asserts Htpeq : (J.type_of jv1 = J.type_of jv2);
-        [inverts Hvrel1; inverts Hvrel2; tryfalse; reflexivity | idtac].
-    jauto_js.
-    (* diff type *)
+    introv.
+    rew_logic.
+    split.
+    introv Hx. injects. reflexivity.
+    introv Hx. substs. reflexivity.
+Qed.
 
+(* TODO move *)
 Ltac munch_elseif Hx :=
     inv_fwd_ljs;
     ljs_out_redh_ter;
@@ -1637,95 +1623,137 @@ Ltac munch_elseif Hx :=
     repeat binds_inv;
     repeat determine_epsilon_binds;
     repeat determine_epsilon;
+    repeat binds_determine;
+    repeat ljs_op_inv;
     cases_isTrue as Hx;
-    inv_ljs; [idtac | let Hx1 := fresh Hx in rename Hx into Hx1; try munch_elseif Hx].
+    repeat rewrite same_value_eq_lemma in Hx by solve [auto];
+    repeat rewrite value_number_eq_lemma in Hx;
+    inv_ljs.
 
-    munch_elseif Hx.
-
-    (* undefined-null, null-undefined *)
-    repeat ljs_autoforward;
-    destruct Hx as [(Hx1&Hx2)|(Hx0&Hx1&Hx2)];
-    repeat ljs_autoforward;
-    inverts Hx1; inverts Hx2;
-    inverts Hvrel1; tryfalse;
-    inverts Hvrel2; tryfalse;
-    jauto_js.
-    (* number-string *)
-    destruct Hx as (Hx1&Hx2);
-    inverts Hx1; inverts Hx2;
-    repeat ljs_autoforward. 
-    inverts Hvrel1; tryfalse;
-    inverts Hvrel2; tryfalse.
-    
-    unfold_concl.
-    do 3 eexists. split.
-    eauto_js 12.
-    split. left. eauto_js.
-    eauto_js 12.
-    (* string-number *)
-    destruct Hx as (HxA&HxB);
-    inverts HxA; inverts HxB;
-    repeat ljs_autoforward. 
-    inverts Hvrel1; tryfalse;
-    inverts Hvrel2; tryfalse.
-    
-    unfold_concl.
-    do 3 eexists. split.
-    eauto_js 12.
-    split. left. eauto_js.
-
-    rewrite js_equality_test_for_same_type_sym_eq by reflexivity.
-    jauto_js. 
-    (* left boolean *)
-    inverts Hx; 
-    repeat ljs_autoforward. 
-    inverts Hvrel1; tryfalse.
-    specializes IH H18. 
-    omega.
-    ljs_state_invariant.
-    eauto_js. eauto_js.
-    destr_concl. (* TODO handle abort *)
-
-    unfold_concl.
-    do 3 eexists. split. 
-    eapply J.red_spec_equal. simpl. reflexivity. reflexivity.
-    eapply J.red_spec_equal_1_diff_type. 
-    do 5 cases_if_auto_js.
-    reflexivity.
-    eapply J.red_spec_equal_3_convert_and_recurse.
-    eauto_js.
-    eapply J.red_spec_equal_4_recurse.
-    skip. skip. skip. (* symmetry, jscert problem *)
-    (* right boolean *)
-    inverts Hx; 
-    repeat ljs_autoforward. 
-    inverts Hvrel2; tryfalse.
-    specializes IH H9. (* TODO *)
-    omega. ljs_state_invariant. eauto_js. eauto_js.
-    destr_concl. (* TODO ljs_handle_abort *)
-
-    unfold_concl.
-    do 3 eexists. split. 
-    eapply J.red_spec_equal. simpl. reflexivity. reflexivity.
-    eapply J.red_spec_equal_1_diff_type. 
-    do 4 cases_if_auto_js. cases_if_auto_js. skip. (* TODO *) cases_if_auto_js.
-    reflexivity.
-    eapply J.red_spec_equal_3_convert_and_recurse.
-    eauto_js.
-    eapply J.red_spec_equal_4_recurse.
-    eassumption.
-    split. left.
-    eauto_js 12.
-    skip.  skip.
-    (* (string|number)-object *)
-    skip.
-    (* object-(string|number) *)
-    skip. 
-    (* otherwise false *)
+Lemma red_spec_equal_ok : forall k,
+    ih_call k ->
+    th_ext_expr_binary k LjsInitEnv.privEqEq J.spec_equal
+        (fun jv => exists b, jv = J.value_prim (J.prim_bool b)).
+Proof.
+    intro k.
+    induction_wf IH : lt_wf k.
+    introv IHc Hcinv Hinv Hvrel1 Hvrel2 Hlred.
+    ljs_invert_apply.
+    repeat inv_top_fwd_ljs.
+    repeat ljs_op_inv.
+    repeat binds_inv.
+    cases_decide as Heq; rewrite stx_eq_string_eq_lemma in Heq. { (* same type *)
+        repeat ljs_autoforward.
+        asserts Htpeq : (J.type_of jv1 = J.type_of jv2);
+            [inverts Hvrel1; inverts Hvrel2; tryfalse; reflexivity | idtac].
+        jauto_js.
+    }
+    (* diff type *)
+    inv_fwd_ljs.
+    munch_elseif Hx1; repeat rewrite stx_eq_string_eq_lemma in Hx1. { (* undefined-null, null-undefined *)
+        destruct_hyp Hx1; repeat ljs_autoforward;
+        inverts Hvrel1; tryfalse;
+        inverts Hvrel2; tryfalse;
+        jauto_js.
+    }
+    asserts : (~(J.type_of jv1 = J.type_null /\ J.type_of jv2 = J.type_undef) /\
+               ~(J.type_of jv1 = J.type_undef /\ J.type_of jv2 = J.type_null)). {
+        rew_logic in Hx1. rew_logic. destruct_hyp Hx1; tryfalse;
+        inverts Hvrel1; auto; inverts Hvrel2; auto.
+    }
+    munch_elseif Hx2; repeat rewrite stx_eq_string_eq_lemma in Hx2. { (* number-string *)
+        destruct_hyp Hx2. repeat ljs_autoforward.
+        inverts Hvrel1; tryfalse.
+        inverts Hvrel2; tryfalse.
+        jauto_js 12.
+    }
+    asserts : (~(J.type_of jv1 = J.type_number /\ J.type_of jv2 = J.type_string)). {
+        rew_logic in Hx2. rew_logic. destruct_hyp Hx2.
+        + left. inverts Hvrel1; auto.
+        + right. inverts Hvrel2; auto.
+    }
+    munch_elseif Hx3; repeat rewrite stx_eq_string_eq_lemma in Hx3. { (* string-number *)
+        destruct_hyp Hx3. repeat ljs_autoforward.
+        inverts Hvrel1; tryfalse.
+        inverts Hvrel2; tryfalse.
+        jauto_js 15.
+    }
+    asserts : (~(J.type_of jv1 = J.type_string /\ J.type_of jv2 = J.type_number)). {
+        rew_logic in Hx3. rew_logic. destruct_hyp Hx3.
+        + left. inverts Hvrel1; auto.
+        + right. inverts Hvrel2; auto.
+    }
+    munch_elseif Hx4; repeat rewrite stx_eq_string_eq_lemma in Hx4. { (* left boolean *)
+        repeat ljs_autoforward.
+        inverts Hvrel1; tryfalse.
+        forwards_th : IH. math.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_invert.
+        jauto_js 15.
+    }
+    asserts : (J.type_of jv1 <> J.type_bool). { inverts Hvrel1; auto. }
+    munch_elseif Hx5; repeat rewrite stx_eq_string_eq_lemma in Hx5. { (* right boolean *)
+        repeat ljs_autoforward.
+        inverts Hvrel2; tryfalse.
+        forwards_th : IH. math.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_invert.
+        jauto_js 15.
+    }
+    asserts : (J.type_of jv2 <> J.type_bool). { inverts Hvrel2; auto. }
+    munch_elseif Hx6; repeat rewrite stx_eq_string_eq_lemma in Hx6. { (* right object *)
+        destruct Hx6 as (Hx6a&Hx6b).
+        inverts Hvrel2; tryfalse.
+        asserts : (J.type_of jv1 = J.type_string \/ J.type_of jv1 = J.type_number). {
+            destruct_hyp Hx6a; inverts Hvrel1; tryfalse; auto.
+        }
+        repeat ljs_autoforward.
+        forwards_th : red_spec_to_primitive_ok_default.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        forwards_th : IH. math.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_invert.
+        jauto_js 15.
+    }
+    asserts : (~((J.type_of jv1 = J.type_string \/ J.type_of jv1 = J.type_number) /\ 
+                 J.type_of jv2 = J.type_object)). {
+        rew_logic in Hx6. rew_logic. destruct_hyp Hx6; tryfalse.
+        + left; inverts Hvrel1; tryfalse; auto.
+        + right; inverts Hvrel2; tryfalse; auto.
+    }
+    munch_elseif Hx7; repeat rewrite stx_eq_string_eq_lemma in Hx7. { (* left object *)
+        destruct Hx7 as (Hx7a&Hx7b).
+        inverts Hvrel1; tryfalse.
+        asserts : (J.type_of jv2 = J.type_string \/ J.type_of jv2 = J.type_number). {
+            destruct_hyp Hx7a; inverts Hvrel2; tryfalse; auto.
+        }
+        repeat ljs_autoforward.
+        forwards_th : red_spec_to_primitive_ok_default.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_only_invert.
+        repeat ljs_autoforward.
+        forwards_th : IH. math.
+        destr_concl; try ljs_handle_abort.
+        res_related_invert.
+        resvalue_related_invert.
+        jauto_js 15.
+    }
+    asserts : (~(J.type_of jv1 = J.type_object /\ 
+                 (J.type_of jv2 = J.type_string \/ J.type_of jv2 = J.type_number))). {
+        rew_logic in Hx7. rew_logic. destruct_hyp Hx7; tryfalse.
+        + right; inverts Hvrel2; tryfalse; auto.
+        + left; inverts Hvrel1; tryfalse; auto.
+    }
     repeat ljs_autoforward.
-    skip.
-Admitted.
-*)
+    jauto_js 15.
+Qed.
 
 Lemma red_expr_binary_op_3_equal_ok : forall k,
     th_ext_expr_binary k LjsInitEnv.privEqEq (J.expr_binary_op_3 J.binary_op_equal)
@@ -1944,30 +1972,6 @@ Inductive inequality_result_related : J.prim -> L.value -> Prop :=
 .
 
 Hint Constructors inequality_result_related : js_ljs.
-
-Lemma value_number_eq_lemma : forall n1 n2, (L.value_number n1 = L.value_number n2) = (n1 = n2).
-Proof.
-    introv.
-    rew_logic.
-    split.
-    introv Hx. injects. reflexivity.
-    introv Hx. substs. reflexivity.
-Qed.
-
-(* TODO move *)
-Ltac munch_elseif Hx :=
-    inv_fwd_ljs;
-    ljs_out_redh_ter;
-    ljs_bool_red_exprh;
-    repeat binds_inv;
-    repeat determine_epsilon_binds;
-    repeat determine_epsilon;
-    repeat binds_determine;
-    repeat ljs_op_inv;
-    cases_isTrue as Hx;
-    repeat rewrite same_value_eq_lemma in Hx by solve [auto];
-    repeat rewrite value_number_eq_lemma in Hx;
-    inv_ljs.
 
 (* TODO move *)
 Lemma neg_zero_lemma : neg zero = neg_zero.
