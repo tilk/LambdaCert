@@ -1,0 +1,105 @@
+\documentclass[draft]{article}
+
+\usepackage{amsmath}
+\usepackage{amsopn}
+\usepackage{mathtools}
+\usepackage{nccmath}
+\usepackage{wasysym}
+\usepackage{color}
+\usepackage{stmaryrd}
+\usepackage{multicol}
+\usepackage{textcomp}
+\usepackage{mathpartir}
+
+\title{LambdaJS quick reference}
+\author{Marek Materzok}
+
+\newcommand{\expr}[0]{e}
+\newcommand{\var}[0]{x}
+\newcommand{\lit}[0]{l}
+\newcommand{\bool}[0]{b}
+\newcommand{\num}[0]{n}
+\newcommand{\str}[0]{s}
+\newcommand{\id}[0]{i}
+\newcommand{\undef}[0]{\textbf{undef}}
+\newcommand{\nul}[0]{\textbf{null}}
+\newcommand{\empt}[0]{\textbf{empty}}
+\newcommand{\true}[0]{\textbf{true}}
+\newcommand{\false}[0]{\textbf{false}}
+\newcommand{\unop}[0]{\textit{un}}
+\newcommand{\binop}[0]{\textit{bin}}
+\newcommand{\pattr}[0]{\textit{pa}}
+\newcommand{\oattr}[0]{\textit{oa}}
+\newcommand{\pavalue}[0]{\textbf{value}}
+\newcommand{\pawritable}[0]{\textbf{writable}}
+\newcommand{\paget}[0]{\textbf{getter}}
+\newcommand{\paset}[0]{\textbf{setter}}
+\newcommand{\paenum}[0]{\textbf{enumerable}}
+\newcommand{\paconfig}[0]{\textbf{configurable}}
+\newcommand{\oaproto}[0]{\textbf{proto}}
+\newcommand{\oaclass}[0]{\textbf{class}}
+\newcommand{\oaextens}[0]{\textbf{extensible}}
+\newcommand{\oacode}[0]{\textbf{code}}
+\newcommand{\unap}[1]{\unop \thinspace #1}
+\newcommand{\binap}[2]{#1 \thinspace \binop \thinspace #2}
+\newcommand{\ap}[2]{#1\thinspace(#2)}
+\newcommand{\func}[2]{\textbf{func}\thinspace(#1)\thinspace #2}
+\newcommand{\seq}[2]{#1 \thinspace ; \thinspace #2}
+\newcommand{\jseq}[2]{#1 \thinspace ;; \thinspace #2}
+\newcommand{\letdef}[3]{\textbf{let} \thinspace (#1 = #2) \thinspace #3}
+\newcommand{\recdef}[3]{\textbf{rec} \thinspace (#1 = #2) \thinspace #3}
+\newcommand{\ife}[3]{\textbf{if} \thinspace (#1) \thinspace #2 \thinspace \textbf{else} \thinspace #3}
+\newcommand{\lbl}[2]{\textbf{label} \thickspace #1: #2}
+\newcommand{\brk}[2]{\textbf{break} \thickspace #1 \thickspace #2}
+\newcommand{\throw}[1]{\textbf{throw} \thickspace #1}
+\newcommand{\trycatch}[2]{\textbf{try} \thickspace #1 \thickspace \textbf{catch} \thickspace #2}
+\newcommand{\tryfin}[2]{\textbf{try} \thickspace #1 \thickspace \textbf{finally} \thickspace #2}
+\newcommand{\getattr}[3]{#2 \thinspace [ #3 \langle #1 \rangle ] }
+\newcommand{\setattr}[4]{#2 \thinspace [ #3 \langle #1 \rangle = #4 ] }
+\newcommand{\delattr}[2]{#1 \thinspace [ \textbf{delete} \thickspace #2 ]}
+\newcommand{\getoattr}[2]{#2 \thinspace [ \langle #1 \rangle ]}
+\newcommand{\setoattr}[3]{#2 \thinspace [ \langle #1 \rangle = #3 ]}
+\newcommand{\bnfsep}[0]{\thinspace | \thinspace}
+\newcommand{\optypeof}[0]{\textbf{typeof}}
+\newcommand{\opstrlen}[0]{\textbf{strlen}}
+\newcommand{\opisprim}[0]{\textbf{is-primitive}}
+\newcommand{\opisclosure}[0]{\textbf{is-closure}}
+\newcommand{\ophasprop}[0]{\textbf{has-own-property}}
+\newcommand{\opstrplus}[0]{+_{\str}}
+\newcommand{\opstrlt}[0]{<_{\str}}
+
+\begin{document}
+
+\maketitle
+
+\section{Syntax}
+
+\[
+\begin{array}{rcl}
+\expr & ::= & \var \bnfsep \lit \bnfsep \ap{\expr}{\expr, \dots, \expr} \bnfsep
+              \func{\var, \dots, \var}{\expr} \bnfsep
+              \unap{\expr} \bnfsep \binap{\expr}{\expr} \bnfsep
+              \seq{\expr}{\expr} \bnfsep \jseq{\expr}{\expr} \bnfsep \\
+          & & \letdef{\var}{\expr}{\expr} \bnfsep \recdef{\var}{\expr}{\expr} \bnfsep
+              \ife{\expr}{\expr}{\expr} \bnfsep \\
+          & & \lbl{\id}{\expr} \bnfsep \brk{\id}{\expr} \bnfsep
+              \throw{\expr} \bnfsep \trycatch{\expr}{\expr} \bnfsep \tryfin{\expr}{\expr} \bnfsep \\
+          & & \getattr{\pattr}{\expr}{\expr} \bnfsep \setattr{\pattr}{\expr}{\expr}{\expr} \bnfsep
+              \delattr{\expr}{\expr} \bnfsep \getoattr{\oattr}{\expr} \bnfsep 
+              \setoattr{\oattr}{\expr}{\expr} \bnfsep \\
+          & & \{[\oattr: \expr, \dots] \thinspace \str : \{\pattr : \expr, \dots\}, \dots \} \\
+\lit & ::= & \bool \bnfsep \num \bnfsep \str \bnfsep \undef \bnfsep \nul \bnfsep \empt \\
+\bool & ::= & \true \bnfsep \false \\
+\num & ::= & \textit{IEEE floating-point numbers} \\
+\str & ::= & \textit{UTF-16 encoded strings} \\
+\unop & ::= & \optypeof \bnfsep \opstrlen \bnfsep \opisprim \bnfsep \opisclosure \bnfsep \dots \\
+\binop & ::= & + \bnfsep - \bnfsep * \bnfsep / \bnfsep \% \bnfsep < \bnfsep == \bnfsep === \bnfsep 
+               \ophasprop \bnfsep \\
+           & & \opstrplus \bnfsep \opstrlt \bnfsep \dots \\
+\pattr & ::= & \pavalue \bnfsep \pawritable \bnfsep \paget \bnfsep \paset \bnfsep
+               \paenum \bnfsep \paconfig \\
+\oattr & ::= & \oaproto \bnfsep \oaclass \bnfsep \oaextens \bnfsep \oacode \bnfsep \dots
+\end{array}
+\]
+
+\end{document}
