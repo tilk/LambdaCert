@@ -1,5 +1,7 @@
 \documentclass[draft]{article}
 
+\usepackage{a4wide}
+
 \usepackage{amsmath}
 \usepackage{amsopn}
 \usepackage{mathtools}
@@ -52,7 +54,7 @@
 \newcommand{\lbl}[2]{\textbf{label} \thickspace #1: #2}
 \newcommand{\brk}[2]{\textbf{break} \thickspace #1 \thickspace #2}
 \newcommand{\throw}[1]{\textbf{throw} \thickspace #1}
-\newcommand{\trycatch}[2]{\textbf{try} \thickspace #1 \thickspace \textbf{catch} \thickspace #2}
+\newcommand{\trycatch}[3]{\textbf{try} \thickspace #1 \thickspace \textbf{catch}\thinspace(#2) \thinspace #3}
 \newcommand{\tryfin}[2]{\textbf{try} \thickspace #1 \thickspace \textbf{finally} \thickspace #2}
 \newcommand{\getattr}[3]{#2 \thinspace [ #3 \langle #1 \rangle ] }
 \newcommand{\setattr}[4]{#2 \thinspace [ #3 \langle #1 \rangle = #4 ] }
@@ -67,6 +69,25 @@
 \newcommand{\ophasprop}[0]{\textbf{has-own-property}}
 \newcommand{\opstrplus}[0]{+_{\str}}
 \newcommand{\opstrlt}[0]{<_{\str}}
+
+\newcommand{\bigstep}[5]{#1;#2;#3 \Downarrow #4;#5}
+\newcommand{\varenv}[0]{\Delta}
+\newcommand{\heap}[0]{\Phi}
+\newcommand{\subst}[3]{#1[#3/#2]}
+\newcommand{\mapget}[2]{#1(#2)}
+\newcommand{\mapadd}[3]{#1(#2 = #3)}
+\newcommand{\closure}[3]{(#1; #2; #3)}
+\newcommand{\bigret}[0]{r}
+\newcommand{\bigval}[0]{v}
+\newcommand{\bigthrow}[1]{\throw{#1}}
+\newcommand{\bigbrk}[2]{\brk{#1}{#2}}
+\newcommand{\heapptr}{p}
+
+\newcommand{\rununop}[3]{#1(#2,#3)}
+\newcommand{\runbinop}[4]{#1(#2,#3,#4)}
+
+\newcommand{\ovempty}[2]{#1 + #2}
+\newcommand{\bigretabort}[1]{\textrm{abort}(#1)}
 
 \begin{document}
 
@@ -83,7 +104,7 @@
           & & \letdef{\var}{\expr}{\expr} \bnfsep \recdef{\var}{\expr}{\expr} \bnfsep
               \ife{\expr}{\expr}{\expr} \bnfsep \\
           & & \lbl{\id}{\expr} \bnfsep \brk{\id}{\expr} \bnfsep
-              \throw{\expr} \bnfsep \trycatch{\expr}{\expr} \bnfsep \tryfin{\expr}{\expr} \bnfsep \\
+              \throw{\expr} \bnfsep \trycatch{\expr}{\var}{\expr} \bnfsep \tryfin{\expr}{\expr} \bnfsep \\
           & & \getattr{\pattr}{\expr}{\expr} \bnfsep \setattr{\pattr}{\expr}{\expr}{\expr} \bnfsep
               \delattr{\expr}{\expr} \bnfsep \getoattr{\oattr}{\expr} \bnfsep 
               \setoattr{\oattr}{\expr}{\expr} \bnfsep \\
@@ -101,5 +122,51 @@
 \oattr & ::= & \oaproto \bnfsep \oaclass \bnfsep \oaextens \bnfsep \oacode \bnfsep \dots
 \end{array}
 \]
+
+\section{Semantics}
+
+\[
+\begin{array}{rcl}
+\bigval & ::= & \lit \bnfsep \closure{\varenv}{\var, \dots, \var}{\expr} \bnfsep \heapptr \\
+\bigret & ::= & \bigval \bnfsep \bigthrow{\bigval} \bnfsep \bigbrk{\id}{\bigval}
+\end{array}
+\]
+
+\[
+\begin{array}{rcll}
+\ovempty{\bigval}{\empt} &=& \bigval & \\
+\ovempty{\bigval}{\bigval'} &=& \bigval' & \bigval' \not= \empt \\
+\ovempty{\bigval}{\bigthrow{\bigval'}} &=& \bigthrow{\bigval} \\
+\ovempty{\bigval}{\bigbrk{\id}{\bigval'}} &=& \bigbrk{\id}{(\ovempty{\bigval}{\bigval'})}
+\end{array}
+\]
+
+\begin{mathpar}
+\inferrule{ }{\bigretabort{\bigthrow{\bigval}}} \and 
+\inferrule{ }{\bigretabort{\bigbrk{\id}{\bigval}}}
+\end{mathpar}
+
+\begin{mathpar}
+\inferrule{ }{\bigstep{\varenv}{\heap}{\lit}{\heap}{\lit}} \and
+\inferrule{ }{\bigstep{\varenv}{\heap}{\var}{\heap}{\mapget{\varenv}{\var}}} \and
+\inferrule{ }{\bigstep{\varenv}{\heap}{\func{\var_1, \dots, \var_n}{\expr}}{\heap}{\closure{\varenv}{\var_1, \dots, \var_n}{\expr}}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr}{\heap_0}{\closure{\varenv'}{\var_1,\dots,\var_n}{\expr'}} \\ \forall i, \bigstep{\varenv}{\heap_{i-1}}{\expr_i}{\heap_i}{\bigval_i} \\ \bigstep{\mapadd{\varenv'}{\var_1,\dots,\var_n}{\bigval_1,\dots,\bigval_n}}{\heap_n}{\expr'}{\heap'}{\bigret}}{\bigstep{\varenv}{\heap}{\ap{\expr}{\expr_1,\dots,\expr_n}}{\heap'}{\bigret}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr}{\heap'}{\bigval} \\ \rununop{\unop}{\heap'}{\bigval}=\bigval'}{\bigstep{\varenv}{\heap}{\unap{\expr}}{\heap'}{\bigval'}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap'}{\bigval_1} \\ \bigstep{\varenv}{\heap'}{\expr_1}{\heap''}{\bigval_2} \\ \runbinop{\binop}{\heap''}{\bigval_1}{\bigval_2}=\bigval}{\bigstep{\varenv}{\heap}{\binap{\expr_1}{\expr_2}}{\heap''}{\bigval}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap'}{\bigval} \\ \bigstep{\varenv}{\heap'}{\expr_2}{\heap''}{\bigret}}{\bigstep{\varenv}{\heap}{\seq{\expr_1}{\expr_2}}{\heap''}{\bigret}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap'}{\bigval} \\ \bigstep{\varenv}{\heap'}{\expr_2}{\heap''}{\bigret} \\ \bigret' = \ovempty{\bigval}{\bigret}}{\bigstep{\varenv}{\heap}{\jseq{\expr_1}{\expr_2}}{\heap''}{\bigret'}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap'}{\bigval} \\ \bigstep{\mapadd{\varenv}{\var}{\bigval}}{\heap'}{\expr_2}{\heap''}{\bigret}}{\bigstep{\varenv}{\heap}{\letdef{\var}{\expr_1}{\expr_2}}{\heap''}{\bigret}} \and
+\inferrule{\varenv' = \mapadd{\varenv}{\var}{\closure{\varenv'}{\var_1,\dots,\var_n}{\expr}} \\ \bigstep{\varenv'}{\heap}{\expr'}{\heap'}{\bigret}}{\bigstep{\varenv}{\heap}{\recdef{\var}{\func{\var_1,\dots,\var_n}{\expr}}{\expr'}}{\heap'}{\bigret}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr}{\heap'}{\true} \\ \bigstep{\varenv}{\heap'}{\expr_1}{\heap''}{\bigret}}{\bigstep{\varenv}{\heap}{\ife{\expr}{\expr_1}{\expr_2}}{\heap''}{\bigret}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr}{\heap'}{\false} \\ \bigstep{\varenv}{\heap'}{\expr_2}{\heap''}{\bigret}}{\bigstep{\varenv}{\heap}{\ife{\expr}{\expr_1}{\expr_2}}{\heap''}{\bigret}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr}{\heap'}{\bigbrk{\id}{\bigval}}}{\bigstep{\varenv}{\heap}{\lbl{\id}{\expr}}{\heap'}{\bigval}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr}{\heap'}{\bigret} \\ \forall \bigval, \bigret \not= \bigbrk{\id}{\bigval}}{\bigstep{\varenv}{\heap}{\lbl{\id}{\expr}}{\heap'}{\bigret}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr}{\heap'}{\bigval}}{\bigstep{\varenv}{\heap}{\brk{\id}{\expr}}{\heap'}{\bigbrk{\id}{\bigval}}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr}{\heap'}{\bigval}}{\bigstep{\varenv}{\heap}{\throw{\expr}}{\heap'}{\bigthrow{\bigval}}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap'}{\bigret} \\ \forall \bigval, \bigret \not= \bigthrow{\bigval}}{\bigstep{\varenv}{\heap}{\trycatch{\expr_1}{\var}{\expr_2}}{\heap'}{\bigret}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap'}{\bigret} \\ \bigstep{\varenv}{\heap'}{\expr_2}{\heap''}{\bigval}}{\bigstep{\varenv}{\heap}{\tryfin{\expr_1}{\expr_2}}{\heap''}{\bigret}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap'}{\bigret} \\ \bigstep{\varenv}{\heap'}{\expr_2}{\heap''}{\bigret'} \\ \bigretabort{\bigret'}}{\bigstep{\varenv}{\heap}{\tryfin{\expr_1}{\expr_2}}{\heap''}{\bigret'}} 
+
+\end{mathpar}
 
 \end{document}
