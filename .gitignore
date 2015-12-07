@@ -24,3 +24,7 @@ gmon.out
 # Builds
 _build
 /LambdaS5/build/**
+
+# Doc
+/LambdaS5/doc/*.aux
+/LambdaS5/doc/*.log
