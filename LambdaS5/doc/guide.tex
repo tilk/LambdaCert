@@ -90,7 +90,7 @@
 \newcommand{\oavalid}[2]{#2 \textrm{ is valid } #1}
 \newcommand{\pavalid}[2]{#2 \textrm{ is valid } #1}
 \newcommand{\objextens}[1]{#1 \textrm{ extensible}}
-\newcommand{\oawrit}[2]{#1 \textrm{ writable in } #2}
+\newcommand{\oawrit}[1]{#1 \textrm{ writable}}
 \newcommand{\pawrit}[2]{#1 \textrm{ writable in } #2}
 \newcommand{\papropset}[3]{#1(#2 = #3)}
 \newcommand{\defaultprop}[0]{\textrm{defaultprop}}
@@ -145,7 +145,7 @@ from it. Abort-handling rules (for throws and breaks) are not presented.
 
 \[
 \begin{array}{rcl}
-\bigval & ::= & \lit \bnfsep \closure{\varenv}{\var, \dots, \var}{\expr} \bnfsep \heapptr \\
+\bigval & ::= & \lit \bnfsep \closure{\varenv}{\var, \dots}{\expr} \bnfsep \heapptr \\
 \bigret & ::= & \bigval \bnfsep \bigthrow{\bigval} \bnfsep \bigbrk{\id}{\bigval} \\
 \heapptr & ::= & \textit{heap pointers} \\
 \obj & ::= & \objlit{\oaproto : \bigval, \oaclass : \str, \oaextens : \bool, \oacode : \bigval, \dots}{\str : \oprop, \dots} \\
@@ -165,7 +165,22 @@ from it. Abort-handling rules (for throws and breaks) are not presented.
 
 \begin{mathpar}
 \inferrule{ }{\bigretabort{\bigthrow{\bigval}}} \and 
-\inferrule{ }{\bigretabort{\bigbrk{\id}{\bigval}}}
+\inferrule{ }{\bigretabort{\bigbrk{\id}{\bigval}}} \and
+\inferrule{\oattr \in \{\oaproto, \oaextens\}}{\oawrit{\oattr}} \and
+\inferrule{ }{\pawrit{\pattr}{\{\paconfig: \true, \dots\}}} \and
+\inferrule{\pattr \in \{\pavalue, \pawritable\}}{\pawrit{\pattr}{\{\pawritable: \true, \dots\}}} \and
+\inferrule{ }{\oavalid{\oaproto}{\nul}} \and
+\inferrule{ }{\oavalid{\oaproto}{\heapptr}} \and
+\inferrule{ }{\oavalid{\oaextens}{\bool}} \and
+\inferrule{ }{\oavalid{\oaclass}{\str}} \and
+\inferrule{ }{\oavalid{\oacode}{\undef}} \and
+\inferrule{ }{\oavalid{\oacode}{\closure{\varenv}{\var, \dots}{\expr}}} \and
+\inferrule{ }{\pavalid{\pavalue}{\bigval}} \and
+\inferrule{ }{\pavalid{\paget}{\bigval}} \and
+\inferrule{ }{\pavalid{\paset}{\bigval}} \and
+\inferrule{ }{\pavalid{\pawritable}{\bool}} \and
+\inferrule{ }{\pavalid{\paenum}{\bool}} \and
+\inferrule{ }{\pavalid{\paconfig}{\bool}} 
 \end{mathpar}
 
 \begin{mathpar}
@@ -194,10 +209,10 @@ from it. Abort-handling rules (for throws and breaks) are not presented.
 \begin{mathpar}
 \inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap'}{\heapptr} \\ \bigstep{\varenv}{\heap'}{\expr_2}{\heap''}{\str} \\ \mapget{\heap''}{\heapptr} = \objlit{\dots}{\str : \{\pattr : \bigval\}, \dots}}{\bigstep{\varenv}{\heap}{\getattr{\pattr}{\expr_1}{\expr_2}}{\bigval}{\heap''}} \and
 \inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap_1}{\heapptr} \\ \bigstep{\varenv}{\heap_1}{\expr_2}{\heap_2}{\str} \\ \bigstep{\varenv}{\heap_2}{\expr_3}{\heap_3}{\bigval} \\ \mapget{\heap_3}{\heapptr} = \obj \\ \obj = \objlit{\dots}{\dots} \\ \str \textrm{ not a property in } \obj \\ \objextens{\obj} \\ \pavalid{\pattr}{\bigval} \\ \heap' = \mapadd{\heap_3}{\heapptr}{\objlit{\dots}{\str : \papropnew{\pattr}{\bigval}, \dots}}}{\bigstep{\varenv}{\heap}{\setattr{\pattr}{\expr_1}{\expr_2}{\expr_3}}{\heap'}{\bigval}} \and
-\inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap_1}{\heapptr} \\ \bigstep{\varenv}{\heap_1}{\expr_2}{\heap_2}{\str} \\ \bigstep{\varenv}{\heap_2}{\expr_3}{\heap_3}{\bigval} \\ \mapget{\heap_3}{\heapptr} = \obj \\ \obj = \objlit{\dots}{\str : \oprop, \dots} \\ \pavalid{\pattr}{\bigval} \\ \pawrit{\pattr}{\obj} \\ \heap' = \mapadd{\heap_3}{\heapptr}{\objlit{\dots}{\str : \papropset{\oprop}{\pattr}{\bigval}, \dots}}}{\bigstep{\varenv}{\heap}{\setattr{\pattr}{\expr_1}{\expr_2}{\expr_3}}{\heap'}{\bigval}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap_1}{\heapptr} \\ \bigstep{\varenv}{\heap_1}{\expr_2}{\heap_2}{\str} \\ \bigstep{\varenv}{\heap_2}{\expr_3}{\heap_3}{\bigval} \\ \mapget{\heap_3}{\heapptr} = \obj \\ \obj = \objlit{\dots}{\str : \oprop, \dots} \\ \pavalid{\pattr}{\bigval} \\ \pawrit{\pattr}{\oprop} \\ \heap' = \mapadd{\heap_3}{\heapptr}{\objlit{\dots}{\str : \papropset{\oprop}{\pattr}{\bigval}, \dots}}}{\bigstep{\varenv}{\heap}{\setattr{\pattr}{\expr_1}{\expr_2}{\expr_3}}{\heap'}{\bigval}} \and
 \inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap_1}{\heapptr} \\ \bigstep{\varenv}{\heap_1}{\expr_2}{\heap_2}{\str} \\ \mapget{\heap_2}{\heapptr} = \objlit{\dots}{\str : \{\paconfig: \true, \dots\}, \dots} \\ \heap' = \mapadd{\heap_2}{\heapptr}{\objlit{\dots}{\dots}}}{\bigstep{\varenv}{\heap}{\delattr{\expr_1}{\expr_2}}{\bigval}{\heap'}} \and
 \inferrule{\bigstep{\varenv}{\heap}{\expr}{\heapptr}{\heap'} \\ \mapget{\heap'}{\heapptr} = \objlit{\oattr : \bigval, \dots}{\dots}}{\bigstep{\varenv}{\heap}{\getoattr{\oattr}{\expr}}{\bigval}{\heap'}} \and
-\inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap_1}{\heapptr} \\ \bigstep{\varenv}{\heap_1}{\expr_2}{\heap_2}{\bigval} \\ \mapget{\heap_2}{\heapptr} = \obj \\ \obj = \objlit{\oattr : \bigval', \dots}{\dots} \\ \oavalid{\oattr}{\bigval} \\ \oawrit{\oattr}{\obj} \\ \heap' = \mapadd{\heap_2}{\heapptr}{\objlit{\oattr : \bigval, \dots}{\dots}}}{\bigstep{\varenv}{\heap}{\setoattr{\oattr}{\expr_1}{\expr_2}}{\heap'}{\bigval}} \and
+\inferrule{\bigstep{\varenv}{\heap}{\expr_1}{\heap_1}{\heapptr} \\ \bigstep{\varenv}{\heap_1}{\expr_2}{\heap_2}{\bigval} \\ \mapget{\heap_2}{\heapptr} = \obj \\ \obj = \objlit{\oattr : \bigval', \dots}{\dots} \\ \oavalid{\oattr}{\bigval} \\ \objextens{\obj} \\ \oawrit{\oattr} \\ \heap' = \mapadd{\heap_2}{\heapptr}{\objlit{\oattr : \bigval, \dots}{\dots}}}{\bigstep{\varenv}{\heap}{\setoattr{\oattr}{\expr_1}{\expr_2}}{\heap'}{\bigval}} \and
 \inferrule{\forall i, \bigstep{\varenv}{\heap_{i-1}}{\expr_i}{\heap_i}{\bigval_i} \\ \textrm{$\bigval_3$ and $\bigval_4$ are bools}}{\bigstep{\varenv}{\heap_0}{\{\paget : \expr_1, \paset : \expr_2, \paenum : \expr_3, \paconfig : \expr_4\}}{\\\\\heap_4}{\{\paget : \bigval_1, \paset : \bigval_2, \paenum : \bigval_3, \paconfig : \bigval_4\}}} \and
 \inferrule{\forall i, \bigstep{\varenv}{\heap_{i-1}}{\expr_i}{\heap_i}{\bigval_i} \\ \textrm{$\bigval_2$, $\bigval_3$ and $\bigval_4$ are bools}}{\bigstep{\varenv}{\heap_0}{\{\pavalue : \expr_1, \pawritable : \expr_2, \paenum : \expr_3, \paconfig : \expr_4\}}{\\\\\heap_4}{\{\pavalue : \bigval_1, \pawritable : \bigval_2, \paenum : \bigval_3, \paconfig : \bigval_4\}}} \and
 \inferrule{\forall i, \bigstep{\varenv}{\heap_{i-1}}{\expr_i}{\heap_i}{\bigval_1} \\ \forall i, \bigstep{\varenv}{\heap_{n+i-1}}{\eprop_i}{\heap_{n+i}}{\oprop_i}  \\ \textrm{$\oattr_1, \dots, \oattr_n$ distinct}  \\ \textrm{$\str1, \dots, \str_m$ distinct} \\ \{\oaproto, \oaclass, \oaextens, \oacode\} \subseteq \{\oattr_i : i \in \{1,\dots,n\}\} \\ \forall i, \oavalid{\oattr_i}{\bigval_i} \\ \mapfresh{\heapptr}{\heap_{n+m}}}{\bigstep{\varenv}{\heap}{\objlit{\oattr_1: \expr_1, \dots, \oattr_n: \expr_n}{\str_1 : \eprop_1, \dots, \str_m : \eprop_m}}{\\\\\mapadd{\heap_{n+m}}{\heapptr}{\objlit{\oattr_1 : \bigval_1, \dots, \oattr_n : \bigval_n}{\str_1 : \oprop_1, \dots, \str_m : \oprop_m}}}{\heapptr}}
