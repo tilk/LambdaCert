@@ -24,6 +24,7 @@
 \newcommand{\str}[0]{s}
 \newcommand{\id}[0]{i}
 \newcommand{\eprop}[0]{pe}
+\newcommand{\nan}[0]{\textrm{NaN}}
 \newcommand{\undef}[0]{\textbf{undef}}
 \newcommand{\nul}[0]{\textbf{null}}
 \newcommand{\empt}[0]{\textbf{empty}}
@@ -67,7 +68,37 @@
 \newcommand{\opstrlen}[0]{\textbf{strlen}}
 \newcommand{\opisprim}[0]{\textbf{is-primitive}}
 \newcommand{\opisclosure}[0]{\textbf{is-closure}}
+\newcommand{\opisobject}[0]{\textbf{is-object}}
+\newcommand{\optostr}[0]{\textbf{to-string}}
+\newcommand{\optonum}[0]{\textbf{to-number}}
+\newcommand{\optobool}[0]{\textbf{to-boolean}}
+\newcommand{\opabs}[0]{\textbf{abs}}
+\newcommand{\opfloor}[0]{\textbf{floor}}
+\newcommand{\opceil}[0]{\textbf{ceil}}
+\newcommand{\opsign}[0]{\textbf{sign}}
+\newcommand{\opntoc}[0]{\textbf{ntoc}}
+\newcommand{\opcton}[0]{\textbf{cton}}
+\newcommand{\opnot}[0]{!}
+\newcommand{\opbnot}[0]{\sim}
+\newcommand{\opneg}[0]{-}
 \newcommand{\ophasprop}[0]{\textbf{has-own-property}}
+\newcommand{\opisaccessor}[0]{\textbf{is-accessor}}
+\newcommand{\opcharat}[0]{\textbf{char-at}}
+\newcommand{\opband}[0]{\&}
+\newcommand{\opbor}[0]{\texttt{|}}
+\newcommand{\opbxor}[0]{\texttt{\^{}}}
+\newcommand{\opshiftl}[0]{<<}
+\newcommand{\opshiftr}[0]{>>}
+\newcommand{\opzfshiftr}[0]{>>>}
+\newcommand{\opadd}[0]{+}
+\newcommand{\opsub}[0]{-}
+\newcommand{\opmul}[0]{*}
+\newcommand{\opdiv}[0]{/}
+\newcommand{\opmod}[0]{\%}
+\newcommand{\oplt}[0]{<}
+\newcommand{\opstxeq}[0]{==}
+\newcommand{\opsamevalue}[0]{===}
+\newcommand{\ophasinternal}[0]{\textbf{has-internal}}
 \newcommand{\opstrplus}[0]{+_{\str}}
 \newcommand{\opstrlt}[0]{<_{\str}}
 
@@ -128,10 +159,11 @@
 \bool & ::= & \true \bnfsep \false \\
 \num & ::= & \textit{IEEE floating-point numbers} \\
 \str & ::= & \textit{UTF-16 encoded strings} \\
-\unop & ::= & \optypeof \bnfsep \opstrlen \bnfsep \opisprim \bnfsep \opisclosure \bnfsep \dots \\
-\binop & ::= & + \bnfsep - \bnfsep * \bnfsep / \bnfsep \% \bnfsep < \bnfsep == \bnfsep === \bnfsep 
-               \ophasprop \bnfsep \\
-           & & \opstrplus \bnfsep \opstrlt \bnfsep \dots \\
+\unop & ::= & \optypeof \bnfsep \opstrlen \bnfsep \opisprim \bnfsep \opisclosure \bnfsep \opisobject \bnfsep \\
+      && \optostr \bnfsep \optonum \bnfsep \optobool \bnfsep \opntoc \bnfsep \opcton \bnfsep \\
+      && \opnot \bnfsep \opbnot \bnfsep \opneg \bnfsep \opabs \bnfsep \opfloor \bnfsep \opceil \bnfsep  \dots \\
+\binop & ::= & \opadd \bnfsep \opsub \bnfsep \opmul \bnfsep \opdiv \bnfsep \opmod \bnfsep \oplt \bnfsep \opstxeq \bnfsep \opsamevalue \bnfsep \opstrplus \bnfsep \opstrlt \bnfsep \opband \bnfsep \opbor \bnfsep \opbxor \bnfsep \opshiftl \bnfsep \opshiftr \bnfsep \opzfshiftr \bnfsep \\
+&& \ophasprop \bnfsep \ophasinternal \bnfsep \opisaccessor \bnfsep \opcharat \bnfsep \dots \\
 \pattr & ::= & \pavalue \bnfsep \pawritable \bnfsep \paget \bnfsep \paset \bnfsep
                \paenum \bnfsep \paconfig \\
 \oattr & ::= & \oaproto \bnfsep \oaclass \bnfsep \oaextens \bnfsep \oacode \bnfsep \dots
@@ -143,6 +175,8 @@
 Presented in big-step style; the formalized pretty-big-step semantics in Coq can be obtained
 from it. Abort-handling rules (for throws and breaks) are not presented.
 
+\subsection{Additional syntax}
+
 \[
 \begin{array}{rcl}
 \bigval & ::= & \lit \bnfsep \closure{\varenv}{\var, \dots}{\expr} \bnfsep \heapptr \\
@@ -153,6 +187,8 @@ from it. Abort-handling rules (for throws and breaks) are not presented.
            & & \{\paget : \bigval, \paset : \bigval, \paenum : \bool, \paconfig : \bool \} \\
 \end{array}
 \]
+
+\subsection{Helper functions and predicates}
 
 \[
 \begin{array}{rcll}
@@ -182,6 +218,8 @@ from it. Abort-handling rules (for throws and breaks) are not presented.
 \inferrule{ }{\pavalid{\paenum}{\bool}} \and
 \inferrule{ }{\pavalid{\paconfig}{\bool}} 
 \end{mathpar}
+
+\subsection{Semantic rules}
 
 \begin{mathpar}
 \inferrule{ }{\bigstep{\varenv}{\heap}{\lit}{\heap}{\lit}} \and
@@ -217,5 +255,174 @@ from it. Abort-handling rules (for throws and breaks) are not presented.
 \inferrule{\forall i, \bigstep{\varenv}{\heap_{i-1}}{\expr_i}{\heap_i}{\bigval_i} \\ \textrm{$\bigval_2$, $\bigval_3$ and $\bigval_4$ are bools}}{\bigstep{\varenv}{\heap_0}{\{\pavalue : \expr_1, \pawritable : \expr_2, \paenum : \expr_3, \paconfig : \expr_4\}}{\\\\\heap_4}{\{\pavalue : \bigval_1, \pawritable : \bigval_2, \paenum : \bigval_3, \paconfig : \bigval_4\}}} \and
 \inferrule{\forall i, \bigstep{\varenv}{\heap_{i-1}}{\expr_i}{\heap_i}{\bigval_1} \\ \forall i, \bigstep{\varenv}{\heap_{n+i-1}}{\eprop_i}{\heap_{n+i}}{\oprop_i}  \\ \textrm{$\oattr_1, \dots, \oattr_n$ distinct}  \\ \textrm{$\str1, \dots, \str_m$ distinct} \\ \{\oaproto, \oaclass, \oaextens, \oacode\} \subseteq \{\oattr_i : i \in \{1,\dots,n\}\} \\ \forall i, \oavalid{\oattr_i}{\bigval_i} \\ \mapfresh{\heapptr}{\heap_{n+m}}}{\bigstep{\varenv}{\heap}{\objlit{\oattr_1: \expr_1, \dots, \oattr_n: \expr_n}{\str_1 : \eprop_1, \dots, \str_m : \eprop_m}}{\\\\\mapadd{\heap_{n+m}}{\heapptr}{\objlit{\oattr_1 : \bigval_1, \dots, \oattr_n : \bigval_n}{\str_1 : \oprop_1, \dots, \str_m : \oprop_m}}}{\heapptr}}
 \end{mathpar}
+
+\subsection{Operators}
+
+Please note that operators are partial functions: they can be
+undefined for some input types. Operators can access the heap
+(for object-related operators) but cannot modify it.
+
+\subsubsection{typeof}
+
+Consistent with JS typeof on JS primitives (ES5 11.4.3).
+
+\[
+\begin{array}{rcl}
+\rununop{\optypeof}{\heap}{\bool} &=& \texttt{"boolean"} \\
+\rununop{\optypeof}{\heap}{\num} &=& \texttt{"number"} \\
+\rununop{\optypeof}{\heap}{\str} &=& \texttt{"string"} \\
+\rununop{\optypeof}{\heap}{\undef} &=& \texttt{"undefined"} \\
+\rununop{\optypeof}{\heap}{\nul} &=& \texttt{"null"} \\
+\rununop{\optypeof}{\heap}{\empt} &=& \texttt{"empty"} \\
+\rununop{\optypeof}{\heap}{\closure{\varenv}{\var, \dots}{\expr}} &=& \texttt{"function"} \\
+\rununop{\optypeof}{\heap}{\heapptr} &=& \texttt{"object"} 
+\end{array}
+\]
+
+\subsubsection{type testing operators}
+
+These are redundant (they can be implemented with $\optypeof$), 
+but are used often and so it is useful to have them.
+
+\[
+\begin{array}{rcl}
+\rununop{\opisprim}{\heap}{\bigval} &=& \true \textrm{ if $\bigval$ is $\bool, \num, \str, \undef, \nul$} \\
+\rununop{\opisprim}{\heap}{\bigval} &=& \false \textrm{ otherwise} \\
+\rununop{\opisclosure}{\heap}{\closure{\varenv}{\var, \dots}{\expr}} &=& \true \\
+\rununop{\opisclosure}{\heap}{\bigval} &=& \false \textrm{ otherwise} \\
+\rununop{\opisobject}{\heap}{\heapptr} &=& \true \\
+\rununop{\opisobject}{\heap}{\bigval} &=& \false \textrm{ otherwise} 
+\end{array}
+\]
+
+\subsubsection{string operators}
+
+\[
+\begin{array}{rcl}
+\rununop{\opstrlen}{\heap}{\str} &=& \textit{length of $\str$} \\
+%TODO ntoc, cton, charat
+%\rununop{\opntoc}{\heap}{} &=& \\
+%\rununop{\opcton}{\heap}{} &=& \\
+%\runbinop{\opcharat}{\heap}{\str}{} &=& \\
+\runbinop{\opstrplus}{\heap}{\str_1}{\str_2} &=& \str_1 \textit{ appended to } \str_2 \\
+\runbinop{\opstrlt}{\heap}{\str_1}{\str_2} &=& \true \textrm{ if $\str_1$ precedes $\str_2$ lexicographically} \\
+\runbinop{\opstrlt}{\heap}{\str_1}{\str_2} &=& \false \textrm{ otherwise} 
+\end{array}
+\]
+
+\subsubsection{number operators}
+
+Number operators work as specified in IEEE 754.
+
+\[
+\begin{array}{rcl}
+\rununop{\opneg}{\heap}{\num} &=& -\num \\
+\rununop{\opabs}{\heap}{\num} &=& \textrm{abs } \num \\
+\rununop{\opfloor}{\heap}{\num} &=& \textrm{floor } \num \\
+\rununop{\opceil}{\heap}{\num} &=& \textrm{ceil } \num \\
+\runbinop{\opadd}{\heap}{\num_1}{\num_2} &=& \num_1 + \num_2 \\
+\runbinop{\opsub}{\heap}{\num_1}{\num_2} &=& \num_1 - \num_2 \\
+\runbinop{\opmul}{\heap}{\num_1}{\num_2} &=& \num_1 \num_2 \\
+\runbinop{\opdiv}{\heap}{\num_1}{\num_2} &=& \num_1 / \num_2 \\
+\runbinop{\opmod}{\heap}{\num_1}{\num_2} &=& \num_1 \textrm{ mod } \num_2 \\
+\runbinop{\oplt}{\heap}{\num_1}{\num_2} &=& \true \textrm{ if $\num_1 < \num_2$ (IEEE 754)} \\
+\runbinop{\oplt}{\heap}{\num_1}{\num_2} &=& \false \textrm{ otherwise}
+\end{array}
+\]
+
+\subsubsection{to-string}
+
+Consistent with ToString on JS primitives (ES5 9.8).
+
+\[
+\begin{array}{rcl}
+\rununop{\optostr}{\heap}{\true} &=& \texttt{"true"} \\
+\rununop{\optostr}{\heap}{\false} &=& \texttt{"false"} \\
+\rununop{\optostr}{\heap}{\num} &=& \textit{string representation of $\num$} \\
+\rununop{\optostr}{\heap}{\str} &=& \str \\
+\rununop{\optostr}{\heap}{\undef} &=& \texttt{"undefined"} \\
+\rununop{\optostr}{\heap}{\nul} &=& \texttt{"null"} \\
+\rununop{\optostr}{\heap}{\empt} &=& \texttt{"empty"} \\
+\rununop{\optostr}{\heap}{\closure{\varenv}{\var, \dots}{\expr}} &=& \texttt{"closure"} \\
+\rununop{\optostr}{\heap}{\heapptr} &=& \texttt{"object"} 
+\end{array}
+\]
+
+\subsubsection{to-number}
+
+Consistent with ToNumber on JS primitives (ES5 9.3).
+
+\[
+\begin{array}{rcl}
+\rununop{\optonum}{\heap}{\true} &=& 1 \\
+\rununop{\optonum}{\heap}{\false} &=& 0 \\
+\rununop{\optonum}{\heap}{\num} &=& \num \\
+\rununop{\optonum}{\heap}{\str} &=& \textit{$\str$ parsed as number} \\
+\rununop{\optonum}{\heap}{\undef} &=& \nan \\
+\rununop{\optonum}{\heap}{\nul} &=& 0 \\
+\rununop{\optonum}{\heap}{\empt} &=& \nan \\
+\rununop{\optonum}{\heap}{\closure{\varenv}{\var, \dots}{\expr}} &=& \nan \\
+\rununop{\optonum}{\heap}{\heapptr} &=& \nan 
+\end{array}
+\]
+
+\subsubsection{to-boolean}
+
+Consistent with ToBoolean on JS primitives (ES5 9.2).
+
+\[
+\begin{array}{rcl}
+\rununop{\optobool}{\heap}{\bool} &=& \bool \\
+\rununop{\optobool}{\heap}{\num} &=& \false \textrm{ if $\num$ is $0, -0, \nan$} \\
+\rununop{\optobool}{\heap}{\num} &=& \true \textrm{ otherwise} \\
+\rununop{\optobool}{\heap}{\texttt{""}} &=& \false \\
+\rununop{\optobool}{\heap}{\str} &=& \true \textrm{ otherwise} \\
+\rununop{\optobool}{\heap}{\undef} &=& \false \\
+\rununop{\optobool}{\heap}{\nul} &=& \false \\
+\rununop{\optobool}{\heap}{\empt} &=& \false \\
+\rununop{\optobool}{\heap}{\closure{\varenv}{\var, \dots}{\expr}} &=& \true \\
+\rununop{\optobool}{\heap}{\heapptr} &=& \true
+\end{array}
+\]
+
+\subsubsection{strict equality}
+
+Consistent with JS strict equality on JS primitives (ES5 11.9.6).
+
+\[
+\begin{array}{rcl}
+\runbinop{\opstxeq}{\heap}{\bool}{\bool} &=& \true \\
+\runbinop{\opstxeq}{\heap}{\num_1}{\num_2} &=& \true \textrm{ if $\num_1 = \num_2$ (IEEE 754)} \\
+\runbinop{\opstxeq}{\heap}{\str}{\str} &=& \true \\
+\runbinop{\opstxeq}{\heap}{\undef}{\undef} &=& \true \\
+\runbinop{\opstxeq}{\heap}{\nul}{\nul} &=& \true \\
+\runbinop{\opstxeq}{\heap}{\empt}{\empt} &=& \true \\
+\runbinop{\opstxeq}{\heap}{\heapptr}{\heapptr} &=& \true \\
+\runbinop{\opstxeq}{\heap}{\bigval_1}{\bigval_2} &=& \false \textrm{ otherwise} 
+\end{array}
+\]
+
+\subsubsection{same value}
+
+Consistent with JS SameValue algorithm on JS primitives (ES5 9.12).
+
+\[
+\begin{array}{rcl}
+\runbinop{\opsamevalue}{\heap}{\lit}{\lit} &=& \true \\
+\runbinop{\opsamevalue}{\heap}{\heapptr}{\heapptr} &=& \true \\
+\runbinop{\opsamevalue}{\heap}{\bigval_1}{\bigval_2} &=& \false \textrm{ otherwise} 
+\end{array}
+\]
+
+\subsubsection{has-own-property}
+
+\subsubsection{has-internal}
+
+\subsubsection{is-accessor}
+
+\[
+\begin{array}{rcl}
+\end{array}
+\]
 
 \end{document}
