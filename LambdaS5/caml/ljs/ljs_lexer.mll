@@ -94,7 +94,6 @@ rule token = parse
    | "!" { BANG }
    | "ref" { REF }
    | ":" { COLON }
-   | ":=" { COLONEQ }
    | "prim" { PRIM }
    | "if" { IF }
    | "else" { ELSE }
@@ -130,7 +129,6 @@ rule token = parse
    | "#proto" { PROTO }
    | "#code" { CODE }
    | "#extensible" { EXTENSIBLE }
-   | "#primval" { PRIMVAL }
    | "#class" { CLASS }
    | "get-own-field-names" { GETFIELDS }    
    | "fail" { FAIL }    

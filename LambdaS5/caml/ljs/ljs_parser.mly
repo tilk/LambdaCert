@@ -40,7 +40,7 @@ let with_pos exp pos = match exp with
   | Dump -> Dump
 
 %}
-
+ 
 %token <int> INT
 %token <float> NUM
 %token <string> STRING
@@ -48,7 +48,7 @@ let with_pos exp pos = match exp with
 %token <bool> BOOL
 %token <string> ID
 %token UNDEFINED EMPTY NULL FUNC LET DELETE LBRACE RBRACE LPAREN RPAREN LBRACK
-  RBRACK EQUALS COMMA BANG REF COLON COLONEQ PRIM IF ELSE SEMI JSEMI
+  RBRACK EQUALS COMMA BANG REF COLON PRIM IF ELSE SEMI JSEMI
   LABEL BREAK TRY CATCH FINALLY THROW EQEQEQUALS EQEQUALS TYPEOF FAIL
   ISCLOSURE ISPRIMITIVE ISOBJECT
   PLUS MINUS MULT DIV
@@ -57,7 +57,7 @@ let with_pos exp pos = match exp with
   INTCAST
 
 %token EOF
-%left COLONEQ
+%right SEMI
 %left PIPEPIPE
 %left AMPAMP
 %left EQEQEQUALS BANGEQEQUALS EQEQUALS BANGEQUALS
@@ -66,6 +66,7 @@ let with_pos exp pos = match exp with
 %left MULT DIV
 %left UMINUS
 %left LBRACK
+%nonassoc THEN
 %left ELSE
 %left LPAREN
 
@@ -96,7 +97,6 @@ more_oattrs :
  | { (d_attrs, []) }
 
 oattrsv :
- | PRIMVAL COLON exp more_oattrs { (fst $4, ("primval", $3) :: snd $4) }
  | EXTENSIBLE COLON BOOL more_oattrs { ({ (fst $4) with extensible = $3 }, snd $4) }
  | PROTO COLON exp more_oattrs { ({ (fst $4) with proto = Some $3 }, snd $4) }
  | CODE COLON exp more_oattrs { ({ (fst $4) with code = Some $3 }, snd $4) }
@@ -151,6 +151,13 @@ func :
  | FUNC LPAREN ids RPAREN atom
    { Lambda (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5), $3, $5) }
 
+ifexp :
+ | IF LPAREN unbraced_seq_exp RPAREN unbraced_seq_exp ELSE atom
+     { If (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 7), $3, $5, $7) }
+ | IF LPAREN unbraced_seq_exp RPAREN unbraced_seq_exp %prec THEN
+     { If (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5), $3, $5, 
+	    Undefined (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5))) }
+
 atom :
  | const { $1 }
  | ID { Id (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 1), $1) }
@@ -162,6 +169,7 @@ atom :
    { $1 }
  | LPAREN unbraced_seq_exp RPAREN { $2 }
  | func { $1 }
+ | ifexp { $1 }
  | TYPEOF atom
      { Op1 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), "typeof", $2) }
  | ISOBJECT atom
@@ -235,34 +243,24 @@ exp :
 
 cexp :
  | exp { $1 }
- | ifexp { $1 }
  | LPAREN HINT cexp RPAREN
      { Hint (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $2, $3) }
- | LABEL ID COLON braced_seq_exp
+ | LABEL ID COLON cexp
      { Label (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $2, $4) } 
  | BREAK ID cexp
    { Break (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $2, $3) }
  | THROW cexp
    { Throw (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), $2) }
- | TRY braced_seq_exp CATCH braced_seq_exp
+ | TRY unbraced_seq_exp CATCH cexp
    { TryCatch (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $2, $4) }
- | TRY braced_seq_exp FINALLY braced_seq_exp
+ | TRY unbraced_seq_exp FINALLY cexp
    { TryFinally (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $2, $4) }
-
-ifexp :
- | IF LPAREN unbraced_seq_exp RPAREN braced_seq_exp ELSE ifexp
-     { If (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 7), $3, $5, $7) }
- | IF LPAREN unbraced_seq_exp RPAREN braced_seq_exp ELSE braced_seq_exp
-     { If (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 7), $3, $5, $7) }
- | IF LPAREN unbraced_seq_exp RPAREN braced_seq_exp
-     { If (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5), $3, $5, 
-	    Undefined (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5))) }
 
 braced_seq_exp :
  | LBRACE unbraced_seq_exp RBRACE { with_pos $2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3)) }
 
 unbraced_seq_exp :
- | unbraced_seq_item SEMI unbraced_seq_exp { Seq (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $1, $3) }
+ | unbraced_seq_exp SEMI unbraced_seq_exp { Seq (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $1, $3) }
  | unbraced_seq_item { $1 }
 
 unbraced_seq_item :
