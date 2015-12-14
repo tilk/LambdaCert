@@ -58,6 +58,8 @@ let with_pos exp pos = match exp with
 
 %token EOF
 %right SEMI
+%left LET REC
+%left THROW CATCH FINALLY 
 %left PIPEPIPE
 %left AMPAMP
 %left EQEQEQUALS BANGEQEQUALS EQEQUALS BANGEQUALS
@@ -139,8 +141,8 @@ props :
 
 exps :
  | { [] }
- | unbraced_seq_exp { [$1] }
- | unbraced_seq_exp COMMA exps { $1 :: $3 }
+ | exp { [$1] }
+ | exp COMMA exps { $1 :: $3 }
 
 ids :
  | { [] }
@@ -152,9 +154,9 @@ func :
    { Lambda (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5), $3, $5) }
 
 ifexp :
- | IF LPAREN unbraced_seq_exp RPAREN unbraced_seq_exp ELSE atom
+ | IF LPAREN exp RPAREN exp ELSE atom
      { If (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 7), $3, $5, $7) }
- | IF LPAREN unbraced_seq_exp RPAREN unbraced_seq_exp %prec THEN
+ | IF LPAREN exp RPAREN exp %prec THEN
      { If (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5), $3, $5, 
 	    Undefined (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5))) }
 
@@ -167,7 +169,7 @@ atom :
    { Object (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5), d_attrs, [], $4 )}
  | braced_seq_exp
    { $1 }
- | LPAREN unbraced_seq_exp RPAREN { $2 }
+ | LPAREN exp RPAREN { $2 }
  | func { $1 }
  | ifexp { $1 }
  | TYPEOF atom
@@ -189,9 +191,9 @@ exp :
    { OwnFieldNames (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $3) }
  | EVAL LPAREN exp COMMA exp RPAREN
      { Eval (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $3, $5) }
- | PRIM LPAREN STRING COMMA unbraced_seq_exp COMMA unbraced_seq_exp RPAREN
+ | PRIM LPAREN STRING COMMA exp COMMA exp RPAREN
    { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8), $3, $5, $7) }
- | PRIM LPAREN STRING COMMA unbraced_seq_exp RPAREN
+ | PRIM LPAREN STRING COMMA exp RPAREN
    { Op1 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), $3, $5) }
  | BANG exp
    { Op1(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), "!", $2) }
@@ -215,22 +217,22 @@ exp :
  | exp BANGEQEQUALS exp
      { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3) in
          Op1(p, "!", Op2 (p, "sameValue", $1, $3)) }
- | exp LBRACK DELETE unbraced_seq_exp RBRACK
+ | exp LBRACK DELETE exp RBRACK
      { DeleteField (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5), $1, $4) }
- | exp LBRACK unbraced_seq_exp LT attr_name GT RBRACK
+ | exp LBRACK exp LT attr_name GT RBRACK
      { GetAttr (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 7), $5, $1, $3) }
- | exp LBRACK unbraced_seq_exp LT attr_name GT EQUALS unbraced_seq_exp RBRACK
+ | exp LBRACK exp LT attr_name GT EQUALS exp RBRACK
      { SetAttr (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 9), $5, $1, $3, $8) }
  | exp LBRACK LT oattr_name GT RBRACK
      { GetObjAttr(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6),
                   $4, $1) }
- | exp LBRACK LT oattr_name GT EQUALS unbraced_seq_exp RBRACK
+ | exp LBRACK LT oattr_name GT EQUALS exp RBRACK
      { SetObjAttr(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8),
                   $4, $1, $7) }
  | exp LBRACK LT ID GT RBRACK
      { GetInternal(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6),
                   $4, $1) }
- | exp LBRACK LT ID GT EQUALS unbraced_seq_exp RBRACK
+ | exp LBRACK LT ID GT EQUALS exp RBRACK
      { SetInternal(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8),
                   $4, $1, $7) } 
  | exp AMPAMP exp
@@ -239,45 +241,35 @@ exp :
  | exp PIPEPIPE exp
      { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3) in
          If (p, $1, True(p), $3) }
-
-
-cexp :
- | exp { $1 }
- | LPAREN HINT cexp RPAREN
+ | LPAREN HINT exp RPAREN
      { Hint (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $2, $3) }
- | LABEL ID COLON cexp
+ | LABEL ID COLON exp %prec THROW
      { Label (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $2, $4) } 
- | BREAK ID cexp
+ | BREAK ID exp %prec THROW
    { Break (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $2, $3) }
- | THROW cexp
+ | THROW exp
    { Throw (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), $2) }
- | TRY unbraced_seq_exp CATCH cexp
+ | TRY exp CATCH exp
    { TryCatch (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $2, $4) }
- | TRY unbraced_seq_exp FINALLY cexp
+ | TRY exp FINALLY exp
    { TryFinally (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 4), $2, $4) }
+ | LET LPAREN ID EQUALS exp RPAREN exp %prec LET
+   { Let (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 7), $3, $5, $7) }
+ | REC LPAREN ID EQUALS func RPAREN exp %prec LET
+   { Rec (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 7), $3, $5, $7) }
+ | exp SEMI exp { Seq (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $1, $3) }
 
 braced_seq_exp :
- | LBRACE unbraced_seq_exp RBRACE { with_pos $2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3)) }
-
-unbraced_seq_exp :
- | unbraced_seq_exp SEMI unbraced_seq_exp { Seq (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $1, $3) }
- | unbraced_seq_item { $1 }
-
-unbraced_seq_item :
- | cexp { $1 }
- | LET LPAREN ID EQUALS unbraced_seq_exp RPAREN unbraced_seq_item
-   { Let (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 7), $3, $5, $7) }
- | REC LPAREN ID EQUALS func RPAREN unbraced_seq_item
-   { Rec (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 7), $3, $5, $7) }
+ | LBRACE exp RBRACE { with_pos $2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3)) }
 
 env :
  | EOF
      { fun x -> x }
- | LET LBRACK ID RBRACK EQUALS unbraced_seq_exp env
+ | LET LBRACK ID RBRACK EQUALS exp env
      { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 7) in
          fun x -> 
            Let (p, $3, $6, $7 x) }
- | REC LBRACK ID RBRACK EQUALS unbraced_seq_exp env
+ | REC LBRACK ID RBRACK EQUALS exp env
      { let p = Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 7) in
          fun x -> 
            Rec (p, $3, $6, $7 x) }
@@ -286,5 +278,5 @@ env :
          fun x -> Seq (p, $1, $2 x) }
 
 prog :
- | unbraced_seq_exp EOF { $1 }
+ | exp EOF { $1 }
 %%
