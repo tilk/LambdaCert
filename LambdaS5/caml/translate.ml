@@ -99,7 +99,6 @@ let rec translate_expr e = match e with
     | Ljs.GetInternal (_, s, e) -> Cs.Coq_expr_get_internal (String.to_list s, translate_expr e)
     | Ljs.SetInternal (_, s, e1, e2) -> Cs.Coq_expr_set_internal (String.to_list s, translate_expr e1, translate_expr e2)
     | Ljs.OwnFieldNames (_, e) -> Cs.Coq_expr_own_field_names (translate_expr e)
-    | Ljs.SetBang (_, i, e) -> failwith "no setbang in lambdacert"
     | Ljs.Op1 (_, i, e) -> Cs.Coq_expr_op1 (translate_unary_op i, translate_expr e)
     | Ljs.Op2 (_, i, e1, e2) -> Cs.Coq_expr_op2 (translate_binary_op i, translate_expr e1, translate_expr e2)
     | Ljs.If (_, e, e1, e2) -> Cs.Coq_expr_if (translate_expr e, translate_expr e1, translate_expr e2)

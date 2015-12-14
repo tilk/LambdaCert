@@ -6,6 +6,7 @@ let with_pos exp pos = match exp with
   | Null _ -> Null pos
   | Undefined _ -> Undefined pos
   | String (_, str) -> String (pos, str)
+  | Int (_, str) -> Int (pos, str)
   | Num (_, num) -> Num (pos, num)
   | True _ -> True pos
   | False _ -> False pos
@@ -15,13 +16,10 @@ let with_pos exp pos = match exp with
   | SetAttr (_, prop, obj, field, value) -> SetAttr (pos, prop, obj, field, value)
   | GetObjAttr (_, oattr, obj) -> GetObjAttr (pos, oattr, obj)
   | SetObjAttr (_, oattr, obj, v) -> SetObjAttr (pos, oattr, obj, v)
-  | GetField (_, left, right) -> GetField (pos, left, right)
-  | SetField (_, obj, field, value) -> SetField (pos, obj, field, value)
   | DeleteField (_, obj, field) -> DeleteField (pos, obj, field)
   | GetInternal (_, oattr, obj) -> GetInternal (pos, oattr, obj)
   | SetInternal (_, oattr, obj, v) -> SetInternal (pos, oattr, obj, v)
   | OwnFieldNames (_, obj) -> OwnFieldNames(pos, obj)
-  | SetBang (_, id, exp) -> SetBang (pos, id, exp)
   | Op1 (_, op, exp) -> Op1 (pos, op, exp)
   | Op2 (_, op, left, right) -> Op2 (pos, op, left, right)
   | If (_, test, trueBlock, falseBlock) -> If (pos, test, trueBlock, falseBlock)
@@ -39,6 +37,7 @@ let with_pos exp pos = match exp with
   | Eval (_, exp, obj) -> Eval (pos, exp, obj)
   | Hint (_, label, exp) -> Hint (pos, label, exp)
   | Fail (_, str) -> Fail (pos, str)
+  | Dump -> Dump
 
 %}
 
@@ -105,7 +104,6 @@ oattrsv :
  | ID COLON exp more_oattrs { (fst $4, ($1, $3) :: snd $4) }
 
 oattr_name :
- | PRIMVAL { Primval }
  | PROTO { Proto }
  | CODE { Code }
  | CLASS { Klass }
@@ -150,7 +148,7 @@ ids :
  | ID COMMA ids { $1 :: $3 }
 
 func :
- | FUNC LPAREN ids RPAREN braced_seq_exp
+ | FUNC LPAREN ids RPAREN atom
    { Lambda (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 5), $3, $5) }
 
 atom :
@@ -187,8 +185,6 @@ exp :
    { Op2 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 8), $3, $5, $7) }
  | PRIM LPAREN STRING COMMA unbraced_seq_exp RPAREN
    { Op1 (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 6), $3, $5) }
- | ID COLONEQ exp
-   { SetBang (Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 3), $1, $3) }
  | BANG exp
    { Op1(Pos.real (Parsing.rhs_start_pos 1, Parsing.rhs_end_pos 2), "!", $2) }
  | exp PLUS exp

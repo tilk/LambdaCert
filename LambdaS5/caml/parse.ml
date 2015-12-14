@@ -22,8 +22,6 @@ let rec check_var_scope vs e =
   | SetAttr (_, _, e1, e2, e3) -> check_var_scope vs e1; check_var_scope vs e2; check_var_scope vs e3
   | GetObjAttr (_, _, e1) -> check_var_scope vs e1
   | SetObjAttr (_, _, e1, e2) -> check_var_scope vs e1; check_var_scope vs e2
-  | GetField (_, e1, e2) -> check_var_scope vs e1; check_var_scope vs e2
-  | SetField (_, e1, e2, e3) -> check_var_scope vs e1; check_var_scope vs e2; check_var_scope vs e3
   | DeleteField (_, e1, e2) -> check_var_scope vs e1; check_var_scope vs e2
   | GetInternal (_, _, e1) -> check_var_scope vs e1
   | SetInternal (_, _, e1, e2) -> check_var_scope vs e1; check_var_scope vs e2
