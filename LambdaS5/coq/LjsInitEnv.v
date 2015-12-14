@@ -4828,7 +4828,7 @@ expr_let "isCallable"
 Definition ex_privarrayToStringCall := 
 expr_let "array" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "thefunc"
- (expr_get_attr pattr_value (expr_id "array") (expr_string "join"))
+ (expr_app (expr_id "%Get1") [expr_id "array"; expr_string "join"])
  (expr_let "ffunc"
   (expr_if
    (expr_op1 unary_op_not (expr_op1 unary_op_is_object (expr_id "thefunc")))
@@ -9640,8 +9640,8 @@ value_closure
 (closure_intro
  [("%Delete", privDelete);
   ("%EnvGetId", privEnvGetId);
-  ("%SyntaxError", privSyntaxError)] (Some "%EnvDelete")
- ["context"; "id"; "strict"] ex_privEnvDelete)
+  ("%SyntaxError", privSyntaxError)] None ["context"; "id"; "strict"]
+ ex_privEnvDelete)
 .
 Definition name_privEnvDelete : id :=  "%EnvDelete" .
 Definition privEnvGet := 
@@ -9675,8 +9675,7 @@ value_closure
 (closure_intro
  [("%EnvGetBindingValue", privEnvGetBindingValue);
   ("%EnvGetId", privEnvGetId);
-  ("%Typeof", privTypeof)] (Some "%EnvTypeof") ["context"; "id"; "strict"]
- ex_privEnvTypeof)
+  ("%Typeof", privTypeof)] None ["context"; "id"; "strict"] ex_privEnvTypeof)
 .
 Definition name_privEnvTypeof : id :=  "%EnvTypeof" .
 Definition privEqEq := 
@@ -10254,7 +10253,8 @@ Definition name_privobjectToStringCall : id :=  "%objectToStringCall" .
 Definition privarrayToStringCall := 
 value_closure
 (closure_intro
- [("%ToObject", privToObject);
+ [("%Get1", privGet1);
+  ("%ToObject", privToObject);
   ("%objectToStringCall", privobjectToStringCall)] None
  ["obj"; "this"; "args"] ex_privarrayToStringCall)
 .
