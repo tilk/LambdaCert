@@ -54,9 +54,6 @@ let escape_sequence
 let double_quoted_string_char = 
   [^ '\r' '\n' '"' '\\'] | ('\\' escape_sequence)
 
-let single_quoted_string_char =
-  [^ '\r' '\n' '\'' '\\'] | ('\\' escape_sequence)
-
 rule token = parse
    | blank + { token lexbuf }
    | '\n' { new_line lexbuf; token lexbuf }
@@ -67,7 +64,6 @@ rule token = parse
              hint lexbuf }
 
    | '"' (double_quoted_string_char* as x) '"' { STRING x }
-   | ''' (single_quoted_string_char* as x) ''' { STRING x }
   
    | num_lit as x { parse_num_lit x }
    | "NaN" { NUM nan }
