@@ -1,5 +1,5 @@
 load('esprima.js');
-var text = read(arguments[1],{loc:true});
+var text = read(scriptArgs[1]);
 try {
     var ast = esprima.parse(text)
 } catch(e) {

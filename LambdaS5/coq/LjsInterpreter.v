@@ -528,7 +528,7 @@ Definition eval_eval runs c st estr bindings :=
         assert_get_object st v_bindings (fun obj => 
           match EjsFromJs.desugar_expr true s, ctx_of_obj obj with
           | Some e, Some c' => runs_type_eval runs c' st e          
-          | None, _ => result_fail "Parse error"
+          | None, _ => result_exception st (value_string "parse-error")
           | _, None => result_fail "Invalid eval environment"
           end 
   ))))

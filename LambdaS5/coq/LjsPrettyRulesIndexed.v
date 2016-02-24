@@ -386,6 +386,10 @@ Inductive red_exprh : nat -> ctx -> store -> ext_expr -> out -> Prop :=
     EjsFromJs.desugar_expr true s = Some e ->
     red_exprh k c1 st e o ->
     red_exprh k c st (expr_eval_1 [value_string s; value_object ptr]) o
+| red_exprh_eval_1_parse_error : forall k c st s ptr obj,
+    binds st ptr obj ->
+    EjsFromJs.desugar_expr true s = None ->
+    red_exprh k c st (expr_eval_1 [value_string s; value_object ptr]) (out_ter st (res_exception (value_string "parse-error")))
 
 (* hint *)
 | red_exprh_hint : forall k c st s e o,

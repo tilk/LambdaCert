@@ -572,9 +572,16 @@ Proof.
     (* eval *)
     unfolds.
     repeat ljs_eval_push.
-    repeat cases_match_option.
-    repeat injects.
-    repeat ljs_eval_push.
+    ljs_inv_red_internal. {
+        repeat ljs_eval_push.
+        repeat cases_match_option.
+        repeat injects.
+        repeat ljs_eval_push.
+    } {
+        repeat ljs_eval_push.
+        repeat cases_match_option.
+        repeat ljs_eval_push.
+    }
     (* hint *)
     repeat ljs_eval_push.
 Qed.

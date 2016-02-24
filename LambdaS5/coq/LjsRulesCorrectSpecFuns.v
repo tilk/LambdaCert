@@ -3421,6 +3421,7 @@ Definition ljs_function_object body len codetxt strict proto : L.object := {|
         \("codetxt" := L.value_string codetxt)
         \("strict" := L.value_bool strict)
         \("get" := LjsInitEnv.privGetFunction)
+        \("hasinstance" := LjsInitEnv.privHasInstanceDefault)
 |}.
 
 Definition ljs_function_proto fobj : L.object := {|

@@ -20,11 +20,11 @@ Definition ptr_privDateGlobalFuncObj : object_ptr :=  96 .
 Definition ptr_privglobal : object_ptr :=  2 .
 Definition ptr_privObjectProto : object_ptr :=  1 .
 Definition ptr_privReferenceErrorProto : object_ptr :=  5 .
+Definition ptr_privSyntaxErrorProto : object_ptr :=  6 .
 Definition ptr_privmakeGlobalEnv : object_ptr :=  0 .
 Definition ptr_priveval : object_ptr :=  171 .
 Definition ptr_privThrowTypeError : object_ptr :=  14 .
 Definition ptr_privglobalContext : object_ptr :=  168 .
-Definition ptr_privSyntaxErrorProto : object_ptr :=  6 .
 Definition ptr_privErrorProto : object_ptr :=  3 .
 Definition ptr_privErrorGlobalFuncObj : object_ptr :=  35 .
 Definition ptr_privEvalErrorProto : object_ptr :=  7 .
@@ -1749,7 +1749,10 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
         (expr_app (expr_id "init")
          [expr_op2 binary_op_sub (expr_id "n")
           (expr_number (JsNumber.of_int (1)))]) expr_undefined)))
-     (expr_seq (expr_app (expr_id "init") [expr_id "argCount"])
+     (expr_seq
+      (expr_app (expr_id "init")
+       [expr_op2 binary_op_sub (expr_id "argCount")
+        (expr_number (JsNumber.of_int (1)))])
       (expr_seq
        (expr_set_attr pattr_value (expr_id "rtnobj") (expr_string "length")
         (expr_id "argCount")) (expr_break "ret" (expr_id "rtnobj"))))))
@@ -1988,6 +1991,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
        (expr_string "}; })());")))
      (expr_app (expr_id "%evalCall")
       [expr_undefined;
+       expr_undefined;
        expr_object
        (objattrs_intro (expr_string "Object") expr_true expr_null
         expr_undefined) []
@@ -2261,7 +2265,10 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
         (expr_app (expr_id "init")
          [expr_op2 binary_op_sub (expr_id "n")
           (expr_number (JsNumber.of_int (1)))]) expr_undefined)))
-     (expr_seq (expr_app (expr_id "init") [expr_id "argCount"])
+     (expr_seq
+      (expr_app (expr_id "init")
+       [expr_op2 binary_op_sub (expr_id "argCount")
+        (expr_number (JsNumber.of_int (1)))])
       (expr_seq
        (expr_set_attr pattr_value (expr_id "rtnobj") (expr_string "length")
         (expr_id "argCount")) (expr_break "ret" (expr_id "rtnobj"))))))
@@ -3298,6 +3305,7 @@ expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
        (expr_string "}; })());")))
      (expr_app (expr_id "%evalCall")
       [expr_undefined;
+       expr_undefined;
        expr_object
        (objattrs_intro (expr_string "Object") expr_true expr_null
         expr_undefined) []
@@ -4406,7 +4414,7 @@ expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
           expr_true
           (expr_op2 binary_op_stx_eq (expr_id "get") expr_undefined))
          (expr_app (expr_id "%AddDataField")
-          [expr_id "propobj";
+          [expr_id "attrobj";
            expr_string "get";
            expr_id "get";
            expr_false;
@@ -4425,7 +4433,7 @@ expr_seq (expr_app (expr_id "%ObjectTypeCheck") [expr_id "propobj"])
            expr_true
            (expr_op2 binary_op_stx_eq (expr_id "set") expr_undefined))
           (expr_app (expr_id "%AddDataField")
-           [expr_id "propobj";
+           [expr_id "attrobj";
             expr_string "set";
             expr_id "set";
             expr_false;
@@ -5043,56 +5051,63 @@ expr_let "evalStr"
       (expr_if
        (expr_op2 binary_op_stx_eq
         (expr_op1 unary_op_typeof (expr_id "evalStr")) (expr_string "string"))
-       (expr_let "ret" (expr_eval (expr_id "evalStr") (expr_id "globalEnv"))
-        (expr_if (expr_op2 binary_op_stx_eq (expr_id "ret") expr_empty)
-         expr_undefined (expr_id "ret"))) (expr_id "evalStr"))))))))
+       (expr_try_catch
+        (expr_let "ret" (expr_eval (expr_id "evalStr") (expr_id "globalEnv"))
+         (expr_if (expr_op2 binary_op_stx_eq (expr_id "ret") expr_empty)
+          expr_undefined (expr_id "ret")))
+        (expr_lambda ["x"]
+         (expr_if
+          (expr_op2 binary_op_stx_eq (expr_id "x")
+           (expr_string "parse-error"))
+          (expr_app (expr_id "%SyntaxError") [expr_string "eval parse error"])
+          (expr_throw (expr_id "x"))))) (expr_id "evalStr"))))))))
 .
 Definition ex_privcosCall :=  expr_string "cos NYI" .
 Definition ex_privcreateCall := 
 expr_let "O"
 (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
-(expr_let "t" (expr_op1 unary_op_typeof (expr_id "O"))
- (expr_if
+(expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+ (expr_let "t" (expr_op1 unary_op_typeof (expr_id "O"))
   (expr_if
-   (expr_op1 unary_op_not
-    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object")))
-   (expr_op1 unary_op_not
-    (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "null")))
-   expr_false)
-  (expr_app (expr_id "%TypeError") [expr_string "Object.create failed"])
-  (expr_let "obj"
-   (expr_object
-    (objattrs_intro (expr_string "Object") expr_true (expr_id "O")
-     expr_undefined) [] [])
    (expr_if
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "object")))
+    (expr_op1 unary_op_not
+     (expr_op2 binary_op_stx_eq (expr_id "t") (expr_string "null")))
+    expr_false)
+   (expr_app (expr_id "%TypeError") [expr_string "Object.create failed"])
+   (expr_let "obj"
+    (expr_object
+     (objattrs_intro (expr_string "Object") expr_true (expr_id "O")
+      expr_undefined) [] [])
     (expr_if
-     (expr_op2 binary_op_ge
-      (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
-      (expr_number (JsNumber.of_int (2))))
-     (expr_op1 unary_op_not
-      (expr_op2 binary_op_stx_eq
-       (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
-       expr_undefined)) expr_false)
-    (expr_let "Properties"
-     (expr_app (expr_id "%ToObject")
-      [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]])
-     (expr_let "argsObj"
-      (expr_object
-       (objattrs_intro (expr_string "Object") expr_true expr_null
-        expr_undefined) [] [])
-      (expr_seq
-       (expr_set_attr pattr_value (expr_id "argsObj") (expr_string "0")
-        (expr_id "obj"))
+     (expr_if
+      (expr_op2 binary_op_ge (expr_id "argCount")
+       (expr_number (JsNumber.of_int (2))))
+      (expr_op1 unary_op_not
+       (expr_op2 binary_op_stx_eq
+        (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
+        expr_undefined)) expr_false)
+     (expr_let "Properties"
+      (expr_app (expr_id "%ToObject")
+       [expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"]])
+      (expr_let "argsObj"
+       (expr_object
+        (objattrs_intro (expr_string "Object") expr_true expr_null
+         expr_undefined) [] [])
        (expr_seq
-        (expr_set_attr pattr_value (expr_id "argsObj") (expr_string "1")
-         (expr_id "Properties"))
+        (expr_set_attr pattr_value (expr_id "argsObj") (expr_string "0")
+         (expr_id "obj"))
         (expr_seq
-         (expr_set_attr pattr_value (expr_id "argsObj")
-          (expr_string "length") (expr_number (JsNumber.of_int (2))))
+         (expr_set_attr pattr_value (expr_id "argsObj") (expr_string "1")
+          (expr_id "Properties"))
          (expr_seq
-          (expr_app (expr_id "%defineProperties")
-           [expr_null; expr_id "argsObj"]) (expr_id "obj")))))))
-    (expr_id "obj")))))
+          (expr_set_attr pattr_value (expr_id "argsObj")
+           (expr_string "length") (expr_number (JsNumber.of_int (2))))
+          (expr_seq
+           (expr_app (expr_id "%defineProperties")
+            [expr_null; expr_id "argsObj"]) (expr_id "obj")))))))
+     (expr_id "obj"))))))
 .
 Definition ex_privdataDescriptorWrite := 
 expr_seq
@@ -5808,28 +5823,27 @@ expr_let "O"
       (expr_id "O")))))))
 .
 Definition ex_privfromccCall := 
-expr_if
-(expr_op2 binary_op_stx_eq
- (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
- (expr_number (JsNumber.of_int (0)))) (expr_string "")
-(expr_let "end"
- (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
- (expr_recc "loop"
-  (expr_lambda ["i"; "soFar"]
-   (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "end"))
-    (expr_let "char"
-     (expr_op1 unary_op_ascii_ntoc
-      (expr_app (expr_id "%ToUint16")
-       [expr_get_attr pattr_value (expr_id "args")
-        (expr_op1 unary_op_prim_to_str (expr_id "i"))]))
-     (expr_let "next"
-      (expr_op2 binary_op_string_plus (expr_id "soFar") (expr_id "char"))
-      (expr_app (expr_id "loop")
-       [expr_op2 binary_op_add (expr_id "i")
-        (expr_number (JsNumber.of_int (1)));
-        expr_id "next"]))) (expr_id "soFar")))
-  (expr_app (expr_id "loop")
-   [expr_number (JsNumber.of_int (0)); expr_string ""])))
+expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+(expr_if
+ (expr_op2 binary_op_stx_eq (expr_id "argCount")
+  (expr_number (JsNumber.of_int (0)))) (expr_string "")
+ (expr_let "end" (expr_id "argCount")
+  (expr_recc "loop"
+   (expr_lambda ["i"; "soFar"]
+    (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "end"))
+     (expr_let "char"
+      (expr_op1 unary_op_ascii_ntoc
+       (expr_app (expr_id "%ToUint16")
+        [expr_get_attr pattr_value (expr_id "args")
+         (expr_op1 unary_op_prim_to_str (expr_id "i"))]))
+      (expr_let "next"
+       (expr_op2 binary_op_string_plus (expr_id "soFar") (expr_id "char"))
+       (expr_app (expr_id "loop")
+        [expr_op2 binary_op_add (expr_id "i")
+         (expr_number (JsNumber.of_int (1)));
+         expr_id "next"]))) (expr_id "soFar")))
+   (expr_app (expr_id "loop")
+    [expr_number (JsNumber.of_int (0)); expr_string ""]))))
 .
 Definition ex_privfunctionToStringCall := 
 expr_let "t" (expr_op1 unary_op_typeof (expr_id "this"))
@@ -6734,33 +6748,33 @@ expr_if (expr_op2 binary_op_le (expr_id "a") (expr_id "b")) (expr_id "a")
 (expr_id "b")
 .
 Definition ex_privminMaxCall := 
-expr_let "end"
-(expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
-(expr_label "ret"
- (expr_seq
-  (expr_if
-   (expr_op2 binary_op_stx_eq (expr_id "end")
-    (expr_number (JsNumber.of_int (0)))) (expr_break "ret" (expr_id "init"))
-   expr_null)
-  (expr_recc "loop"
-   (expr_lambda ["best"; "i"]
-    (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "end"))
-     (expr_let "curr"
-      (expr_app (expr_id "%ToNumber")
-       [expr_get_attr pattr_value (expr_id "args")
-        (expr_op1 unary_op_prim_to_str (expr_id "i"))])
-      (expr_seq
-       (expr_if
-        (expr_op1 unary_op_not
-         (expr_op2 binary_op_stx_eq (expr_id "curr") (expr_id "curr")))
-        (expr_break "ret" (expr_number JsNumber.nan)) expr_null)
-       (expr_app (expr_id "loop")
-        [expr_app (expr_id "op") [expr_id "best"; expr_id "curr"];
-         expr_op2 binary_op_add (expr_id "i")
-         (expr_number (JsNumber.of_int (1)))]))) (expr_id "best")))
-   (expr_break "ret"
-    (expr_app (expr_id "loop")
-     [expr_id "init"; expr_number (JsNumber.of_int (0))])))))
+expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+(expr_let "end" (expr_id "argCount")
+ (expr_label "ret"
+  (expr_seq
+   (expr_if
+    (expr_op2 binary_op_stx_eq (expr_id "end")
+     (expr_number (JsNumber.of_int (0)))) (expr_break "ret" (expr_id "init"))
+    expr_null)
+   (expr_recc "loop"
+    (expr_lambda ["best"; "i"]
+     (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "end"))
+      (expr_let "curr"
+       (expr_app (expr_id "%ToNumber")
+        [expr_get_attr pattr_value (expr_id "args")
+         (expr_op1 unary_op_prim_to_str (expr_id "i"))])
+       (expr_seq
+        (expr_if
+         (expr_op1 unary_op_not
+          (expr_op2 binary_op_stx_eq (expr_id "curr") (expr_id "curr")))
+         (expr_break "ret" (expr_number JsNumber.nan)) expr_null)
+        (expr_app (expr_id "loop")
+         [expr_app (expr_id "op") [expr_id "best"; expr_id "curr"];
+          expr_op2 binary_op_add (expr_id "i")
+          (expr_number (JsNumber.of_int (1)))]))) (expr_id "best")))
+    (expr_break "ret"
+     (expr_app (expr_id "loop")
+      [expr_id "init"; expr_number (JsNumber.of_int (0))]))))))
 .
 Definition ex_privmkArgsObj := 
 expr_let "argsObj"
@@ -7074,24 +7088,24 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
 (expr_let "lenVal"
  (expr_app (expr_id "%Get1") [expr_id "O"; expr_string "length"])
  (expr_let "len" (expr_app (expr_id "%ToUint32f") [expr_id "lenVal"])
-  (expr_recc "loop"
-   (expr_lambda ["i"; "n"]
-    (expr_if
-     (expr_op2 binary_op_lt (expr_id "i")
-      (expr_get_attr pattr_value (expr_id "args") (expr_string "length")))
-     (expr_seq
-      (expr_let "ii" (expr_op1 unary_op_prim_to_str (expr_id "i"))
-       (expr_app (expr_id "%SetField")
-        [expr_id "O";
-         expr_app (expr_id "%ToString") [expr_id "n"];
-         expr_get_attr pattr_value (expr_id "args") (expr_id "ii")]))
-      (expr_app (expr_id "loop")
-       [expr_op2 binary_op_add (expr_id "i")
-        (expr_number (JsNumber.of_int (1)));
-        expr_op2 binary_op_add (expr_id "n")
-        (expr_number (JsNumber.of_int (1)))])) (expr_id "n")))
-   (expr_app (expr_id "loop")
-    [expr_number (JsNumber.of_int (0)); expr_id "len"]))))
+  (expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+   (expr_recc "loop"
+    (expr_lambda ["i"; "n"]
+     (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "argCount"))
+      (expr_seq
+       (expr_let "ii" (expr_op1 unary_op_prim_to_str (expr_id "i"))
+        (expr_app (expr_id "%SetField")
+         [expr_id "O";
+          expr_app (expr_id "%ToString") [expr_id "n"];
+          expr_get_attr pattr_value (expr_id "args") (expr_id "ii");
+          expr_false]))
+       (expr_app (expr_id "loop")
+        [expr_op2 binary_op_add (expr_id "i")
+         (expr_number (JsNumber.of_int (1)));
+         expr_op2 binary_op_add (expr_id "n")
+         (expr_number (JsNumber.of_int (1)))])) (expr_id "n")))
+    (expr_app (expr_id "loop")
+     [expr_number (JsNumber.of_int (0)); expr_id "len"])))))
 .
 Definition ex_privrandomCall :=  expr_number (JsNumber.of_int (4)) .
 Definition ex_privreduceCall := 
@@ -7101,91 +7115,93 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_let "len" (expr_app (expr_id "%ToUint32f") [expr_id "lenValue"])
   (expr_let "callbackfn"
    (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
-   (expr_let "has_initial"
-    (expr_op2 binary_op_ge
-     (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
-     (expr_number (JsNumber.of_int (2))))
-    (expr_label "ret"
-     (expr_seq
-      (expr_if
-       (expr_op1 unary_op_not
-        (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
-       (expr_app (expr_id "%TypeError")
-        [expr_string "Callback not a function in reduce"]) expr_null)
+   (expr_let "argCount"
+    (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+    (expr_let "has_initial"
+     (expr_op2 binary_op_ge (expr_id "argCount")
+      (expr_number (JsNumber.of_int (2))))
+     (expr_label "ret"
       (expr_seq
        (expr_if
-        (expr_if
-         (expr_op2 binary_op_stx_eq (expr_id "len")
-          (expr_number (JsNumber.of_int (0))))
-         (expr_op1 unary_op_not (expr_id "has_initial")) expr_false)
+        (expr_op1 unary_op_not
+         (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
         (expr_app (expr_id "%TypeError")
-         [expr_string "Reducing an empty list with not enough arguments."])
-        expr_null)
-       (expr_let "origK"
-        (expr_if (expr_id "has_initial")
-         (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (1))))
-         (expr_recc "accumLoop"
-          (expr_lambda ["k"]
-           (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
-            (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
-             (expr_let "kPresent"
-              (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
-              (expr_if (expr_id "kPresent") (expr_id "k")
-               (expr_app (expr_id "accumLoop")
-                [expr_op2 binary_op_add (expr_id "k")
-                 (expr_number (JsNumber.of_int (1)))]))))
-            (expr_app (expr_id "%TypeError") [expr_string "In Array reduce"])))
-          (expr_app (expr_id "accumLoop") [expr_number (JsNumber.of_int (0))])))
-        (expr_let "accumulator"
+         [expr_string "Callback not a function in reduce"]) expr_null)
+       (expr_seq
+        (expr_if
+         (expr_if
+          (expr_op2 binary_op_stx_eq (expr_id "len")
+           (expr_number (JsNumber.of_int (0))))
+          (expr_op1 unary_op_not (expr_id "has_initial")) expr_false)
+         (expr_app (expr_id "%TypeError")
+          [expr_string "Reducing an empty list with not enough arguments."])
+         expr_null)
+        (expr_let "origK"
          (expr_if (expr_id "has_initial")
-          (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
-          (expr_app (expr_id "%Get1")
-           [expr_id "O"; expr_app (expr_id "%ToString") [expr_id "origK"]]))
-         (expr_recc "outerLoop"
-          (expr_lambda ["k"; "accumulator"]
-           (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
-            (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
-             (expr_let "kPresent"
-              (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
-              (expr_if (expr_id "kPresent")
-               (expr_let "kValue"
-                (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
-                (expr_let "argsObj"
-                 (expr_object
-                  (objattrs_intro (expr_string "Object") expr_true expr_null
-                   expr_undefined) [] [])
-                 (expr_seq
-                  (expr_set_attr pattr_value (expr_id "argsObj")
-                   (expr_string "0") (expr_id "accumulator"))
+          (expr_op1 unary_op_neg (expr_number (JsNumber.of_int (1))))
+          (expr_recc "accumLoop"
+           (expr_lambda ["k"]
+            (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
+             (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
+              (expr_let "kPresent"
+               (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
+               (expr_if (expr_id "kPresent") (expr_id "k")
+                (expr_app (expr_id "accumLoop")
+                 [expr_op2 binary_op_add (expr_id "k")
+                  (expr_number (JsNumber.of_int (1)))]))))
+             (expr_app (expr_id "%TypeError") [expr_string "In Array reduce"])))
+           (expr_app (expr_id "accumLoop")
+            [expr_number (JsNumber.of_int (0))])))
+         (expr_let "accumulator"
+          (expr_if (expr_id "has_initial")
+           (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
+           (expr_app (expr_id "%Get1")
+            [expr_id "O"; expr_app (expr_id "%ToString") [expr_id "origK"]]))
+          (expr_recc "outerLoop"
+           (expr_lambda ["k"; "accumulator"]
+            (expr_if (expr_op2 binary_op_lt (expr_id "k") (expr_id "len"))
+             (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
+              (expr_let "kPresent"
+               (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
+               (expr_if (expr_id "kPresent")
+                (expr_let "kValue"
+                 (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
+                 (expr_let "argsObj"
+                  (expr_object
+                   (objattrs_intro (expr_string "Object") expr_true expr_null
+                    expr_undefined) [] [])
                   (expr_seq
                    (expr_set_attr pattr_value (expr_id "argsObj")
-                    (expr_string "1") (expr_id "kValue"))
+                    (expr_string "0") (expr_id "accumulator"))
                    (expr_seq
                     (expr_set_attr pattr_value (expr_id "argsObj")
-                     (expr_string "2") (expr_id "k"))
+                     (expr_string "1") (expr_id "kValue"))
                     (expr_seq
                      (expr_set_attr pattr_value (expr_id "argsObj")
-                      (expr_string "3") (expr_id "O"))
+                      (expr_string "2") (expr_id "k"))
                      (expr_seq
                       (expr_set_attr pattr_value (expr_id "argsObj")
-                       (expr_string "length")
-                       (expr_number (JsNumber.of_int (4))))
-                      (expr_let "next"
-                       (expr_app (expr_id "callbackfn")
-                        [expr_undefined; expr_id "argsObj"])
-                       (expr_app (expr_id "outerLoop")
-                        [expr_op2 binary_op_add (expr_id "k")
-                         (expr_number (JsNumber.of_int (1)));
-                         expr_id "next"])))))))))
-               (expr_app (expr_id "outerLoop")
-                [expr_op2 binary_op_add (expr_id "k")
-                 (expr_number (JsNumber.of_int (1)));
-                 expr_id "accumulator"])))) (expr_id "accumulator")))
-          (expr_break "ret"
-           (expr_app (expr_id "outerLoop")
-            [expr_op2 binary_op_add (expr_id "origK")
-             (expr_number (JsNumber.of_int (1)));
-             expr_id "accumulator"]))))))))))))
+                       (expr_string "3") (expr_id "O"))
+                      (expr_seq
+                       (expr_set_attr pattr_value (expr_id "argsObj")
+                        (expr_string "length")
+                        (expr_number (JsNumber.of_int (4))))
+                       (expr_let "next"
+                        (expr_app (expr_id "callbackfn")
+                         [expr_undefined; expr_id "argsObj"])
+                        (expr_app (expr_id "outerLoop")
+                         [expr_op2 binary_op_add (expr_id "k")
+                          (expr_number (JsNumber.of_int (1)));
+                          expr_id "next"])))))))))
+                (expr_app (expr_id "outerLoop")
+                 [expr_op2 binary_op_add (expr_id "k")
+                  (expr_number (JsNumber.of_int (1)));
+                  expr_id "accumulator"])))) (expr_id "accumulator")))
+           (expr_break "ret"
+            (expr_app (expr_id "outerLoop")
+             [expr_op2 binary_op_add (expr_id "origK")
+              (expr_number (JsNumber.of_int (1)));
+              expr_id "accumulator"])))))))))))))
 .
 Definition ex_privreduceRightCall := 
 expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
@@ -7194,95 +7210,96 @@ expr_let "O" (expr_app (expr_id "%ToObject") [expr_id "this"])
  (expr_let "len" (expr_app (expr_id "%ToUint32f") [expr_id "lenValue"])
   (expr_let "callbackfn"
    (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "0"])
-   (expr_let "has_initial"
-    (expr_op2 binary_op_ge
-     (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
-     (expr_number (JsNumber.of_int (2))))
-    (expr_label "ret"
-     (expr_seq
-      (expr_if
-       (expr_op1 unary_op_not
-        (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
-       (expr_app (expr_id "%TypeError")
-        [expr_string "Callback not function in reduceRight"]) expr_null)
+   (expr_let "argCount"
+    (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+    (expr_let "has_initial"
+     (expr_op2 binary_op_ge (expr_id "argCount")
+      (expr_number (JsNumber.of_int (2))))
+     (expr_label "ret"
       (expr_seq
        (expr_if
-        (expr_if
-         (expr_op2 binary_op_stx_eq (expr_id "len")
-          (expr_number (JsNumber.of_int (0))))
-         (expr_op1 unary_op_not (expr_id "has_initial")) expr_false)
+        (expr_op1 unary_op_not
+         (expr_app (expr_id "%IsCallable") [expr_id "callbackfn"]))
         (expr_app (expr_id "%TypeError")
-         [expr_string "Zero-length array in reduceRight"]) expr_null)
-       (expr_let "origK"
-        (expr_if (expr_id "has_initial") (expr_id "len")
-         (expr_recc "accumLoop"
-          (expr_lambda ["k"]
-           (expr_if
-            (expr_op2 binary_op_ge (expr_id "k")
-             (expr_number (JsNumber.of_int (0))))
-            (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
-             (expr_let "kPresent"
-              (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
-              (expr_if (expr_id "kPresent") (expr_id "k")
-               (expr_app (expr_id "accumLoop")
-                [expr_op2 binary_op_sub (expr_id "k")
-                 (expr_number (JsNumber.of_int (1)))]))))
-            (expr_app (expr_id "%TypeError") [expr_string "reduceRight"])))
-          (expr_app (expr_id "accumLoop")
-           [expr_op2 binary_op_sub (expr_id "len")
-            (expr_number (JsNumber.of_int (1)))])))
-        (expr_let "accumulator"
-         (expr_if (expr_id "has_initial")
-          (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
-          (expr_app (expr_id "%Get1")
-           [expr_id "O"; expr_app (expr_id "%ToString") [expr_id "origK"]]))
-         (expr_recc "outerLoop"
-          (expr_lambda ["k"; "accumulator"]
-           (expr_if
-            (expr_op2 binary_op_ge (expr_id "k")
-             (expr_number (JsNumber.of_int (0))))
-            (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
-             (expr_let "kPresent"
-              (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
-              (expr_if (expr_id "kPresent")
-               (expr_let "kValue"
-                (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
-                (expr_let "argsObj"
-                 (expr_object
-                  (objattrs_intro (expr_string "Object") expr_true expr_null
-                   expr_undefined) [] [])
-                 (expr_seq
-                  (expr_set_attr pattr_value (expr_id "argsObj")
-                   (expr_string "0") (expr_id "accumulator"))
+         [expr_string "Callback not function in reduceRight"]) expr_null)
+       (expr_seq
+        (expr_if
+         (expr_if
+          (expr_op2 binary_op_stx_eq (expr_id "len")
+           (expr_number (JsNumber.of_int (0))))
+          (expr_op1 unary_op_not (expr_id "has_initial")) expr_false)
+         (expr_app (expr_id "%TypeError")
+          [expr_string "Zero-length array in reduceRight"]) expr_null)
+        (expr_let "origK"
+         (expr_if (expr_id "has_initial") (expr_id "len")
+          (expr_recc "accumLoop"
+           (expr_lambda ["k"]
+            (expr_if
+             (expr_op2 binary_op_ge (expr_id "k")
+              (expr_number (JsNumber.of_int (0))))
+             (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
+              (expr_let "kPresent"
+               (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
+               (expr_if (expr_id "kPresent") (expr_id "k")
+                (expr_app (expr_id "accumLoop")
+                 [expr_op2 binary_op_sub (expr_id "k")
+                  (expr_number (JsNumber.of_int (1)))]))))
+             (expr_app (expr_id "%TypeError") [expr_string "reduceRight"])))
+           (expr_app (expr_id "accumLoop")
+            [expr_op2 binary_op_sub (expr_id "len")
+             (expr_number (JsNumber.of_int (1)))])))
+         (expr_let "accumulator"
+          (expr_if (expr_id "has_initial")
+           (expr_app (expr_id "%ArrayIdx") [expr_id "args"; expr_string "1"])
+           (expr_app (expr_id "%Get1")
+            [expr_id "O"; expr_app (expr_id "%ToString") [expr_id "origK"]]))
+          (expr_recc "outerLoop"
+           (expr_lambda ["k"; "accumulator"]
+            (expr_if
+             (expr_op2 binary_op_ge (expr_id "k")
+              (expr_number (JsNumber.of_int (0))))
+             (expr_let "Pk" (expr_app (expr_id "%ToString") [expr_id "k"])
+              (expr_let "kPresent"
+               (expr_app (expr_id "%HasProperty") [expr_id "O"; expr_id "Pk"])
+               (expr_if (expr_id "kPresent")
+                (expr_let "kValue"
+                 (expr_app (expr_id "%Get1") [expr_id "O"; expr_id "Pk"])
+                 (expr_let "argsObj"
+                  (expr_object
+                   (objattrs_intro (expr_string "Object") expr_true expr_null
+                    expr_undefined) [] [])
                   (expr_seq
                    (expr_set_attr pattr_value (expr_id "argsObj")
-                    (expr_string "1") (expr_id "kValue"))
+                    (expr_string "0") (expr_id "accumulator"))
                    (expr_seq
                     (expr_set_attr pattr_value (expr_id "argsObj")
-                     (expr_string "2") (expr_id "k"))
+                     (expr_string "1") (expr_id "kValue"))
                     (expr_seq
                      (expr_set_attr pattr_value (expr_id "argsObj")
-                      (expr_string "3") (expr_id "O"))
+                      (expr_string "2") (expr_id "k"))
                      (expr_seq
                       (expr_set_attr pattr_value (expr_id "argsObj")
-                       (expr_string "length")
-                       (expr_number (JsNumber.of_int (4))))
-                      (expr_let "next"
-                       (expr_app (expr_id "callbackfn")
-                        [expr_undefined; expr_id "argsObj"])
-                       (expr_app (expr_id "outerLoop")
-                        [expr_op2 binary_op_sub (expr_id "k")
-                         (expr_number (JsNumber.of_int (1)));
-                         expr_id "next"])))))))))
-               (expr_app (expr_id "outerLoop")
-                [expr_op2 binary_op_sub (expr_id "k")
-                 (expr_number (JsNumber.of_int (1)));
-                 expr_id "accumulator"])))) (expr_id "accumulator")))
-          (expr_break "ret"
-           (expr_app (expr_id "outerLoop")
-            [expr_op2 binary_op_sub (expr_id "origK")
-             (expr_number (JsNumber.of_int (1)));
-             expr_id "accumulator"]))))))))))))
+                       (expr_string "3") (expr_id "O"))
+                      (expr_seq
+                       (expr_set_attr pattr_value (expr_id "argsObj")
+                        (expr_string "length")
+                        (expr_number (JsNumber.of_int (4))))
+                       (expr_let "next"
+                        (expr_app (expr_id "callbackfn")
+                         [expr_undefined; expr_id "argsObj"])
+                        (expr_app (expr_id "outerLoop")
+                         [expr_op2 binary_op_sub (expr_id "k")
+                          (expr_number (JsNumber.of_int (1)));
+                          expr_id "next"])))))))))
+                (expr_app (expr_id "outerLoop")
+                 [expr_op2 binary_op_sub (expr_id "k")
+                  (expr_number (JsNumber.of_int (1)));
+                  expr_id "accumulator"])))) (expr_id "accumulator")))
+           (expr_break "ret"
+            (expr_app (expr_id "outerLoop")
+             [expr_op2 binary_op_sub (expr_id "origK")
+              (expr_number (JsNumber.of_int (1)));
+              expr_id "accumulator"])))))))))))))
 .
 Definition ex_privreplaceCall := 
 expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
@@ -8106,22 +8123,22 @@ Definition ex_privsqrtCall :=  expr_string "sqrt NYI" .
 Definition ex_privstringConcatCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
 (expr_let "S" (expr_app (expr_id "%ToString") [expr_id "this"])
- (expr_let "end"
-  (expr_get_attr pattr_value (expr_id "args") (expr_string "length"))
-  (expr_recc "loop"
-   (expr_lambda ["i"; "soFar"]
-    (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "end"))
-     (expr_let "next"
-      (expr_app (expr_id "%ToString")
-       [expr_get_attr pattr_value (expr_id "args")
-        (expr_op1 unary_op_prim_to_str (expr_id "i"))])
-      (expr_app (expr_id "loop")
-       [expr_op2 binary_op_add (expr_id "i")
-        (expr_number (JsNumber.of_int (1)));
-        expr_op2 binary_op_string_plus (expr_id "soFar") (expr_id "next")]))
-     (expr_id "soFar")))
-   (expr_app (expr_id "loop")
-    [expr_number (JsNumber.of_int (0)); expr_id "S"]))))
+ (expr_let "argCount" (expr_app (expr_id "%ComputeLength") [expr_id "args"])
+  (expr_let "end" (expr_id "argCount")
+   (expr_recc "loop"
+    (expr_lambda ["i"; "soFar"]
+     (expr_if (expr_op2 binary_op_lt (expr_id "i") (expr_id "end"))
+      (expr_let "next"
+       (expr_app (expr_id "%ToString")
+        [expr_get_attr pattr_value (expr_id "args")
+         (expr_op1 unary_op_prim_to_str (expr_id "i"))])
+       (expr_app (expr_id "loop")
+        [expr_op2 binary_op_add (expr_id "i")
+         (expr_number (JsNumber.of_int (1)));
+         expr_op2 binary_op_string_plus (expr_id "soFar") (expr_id "next")]))
+      (expr_id "soFar")))
+    (expr_app (expr_id "loop")
+     [expr_number (JsNumber.of_int (0)); expr_id "S"])))))
 .
 Definition ex_privstringIndexOfCall := 
 expr_seq (expr_app (expr_id "%CheckObjectCoercible") [expr_id "this"])
@@ -9447,14 +9464,25 @@ Definition privEnvImplicitThis :=
 value_closure (closure_intro [] None ["context"] ex_privEnvImplicitThis)
 .
 Definition name_privEnvImplicitThis : id :=  "%EnvImplicitThis" .
+Definition privSyntaxErrorProto :=  value_object 6 .
+Definition name_privSyntaxErrorProto : id :=  "%SyntaxErrorProto" .
+Definition privSyntaxError := 
+value_closure
+(closure_intro
+ [("%NativeError", privNativeError);
+  ("%SyntaxErrorProto", privSyntaxErrorProto)] None ["msg"]
+ ex_privSyntaxError)
+.
+Definition name_privSyntaxError : id :=  "%SyntaxError" .
 Definition privmakeGlobalEnv :=  value_object 0 .
 Definition name_privmakeGlobalEnv : id :=  "%makeGlobalEnv" .
 Definition privconfigurableEval := 
 value_closure
 (closure_intro
- [("%ArrayIdx", privArrayIdx); ("%makeGlobalEnv", privmakeGlobalEnv)] 
- None ["this"; "context"; "vcontext"; "useStrict"; "args"]
- ex_privconfigurableEval)
+ [("%ArrayIdx", privArrayIdx);
+  ("%SyntaxError", privSyntaxError);
+  ("%makeGlobalEnv", privmakeGlobalEnv)] None
+ ["this"; "context"; "vcontext"; "useStrict"; "args"] ex_privconfigurableEval)
 .
 Definition name_privconfigurableEval : id :=  "%configurableEval" .
 Definition priveval :=  value_object 171 .
@@ -9625,16 +9653,6 @@ value_closure
  ["context"; "id"; "configurableBindings"; "strict"] ex_privEnvDefineVar)
 .
 Definition name_privEnvDefineVar : id :=  "%EnvDefineVar" .
-Definition privSyntaxErrorProto :=  value_object 6 .
-Definition name_privSyntaxErrorProto : id :=  "%SyntaxErrorProto" .
-Definition privSyntaxError := 
-value_closure
-(closure_intro
- [("%NativeError", privNativeError);
-  ("%SyntaxErrorProto", privSyntaxErrorProto)] None ["msg"]
- ex_privSyntaxError)
-.
-Definition name_privSyntaxError : id :=  "%SyntaxError" .
 Definition privEnvDelete := 
 value_closure
 (closure_intro
@@ -10021,8 +10039,8 @@ Definition privRegExpProto :=  value_object 135 .
 Definition name_privRegExpProto : id :=  "%RegExpProto" .
 Definition privRegExpConstructor := 
 value_closure
-(closure_intro [("%RegExpProto", privRegExpProto)] None
- ["obj"; "this"; "args"] ex_privRegExpConstructor)
+(closure_intro [("%RegExpProto", privRegExpProto)] None ["constr"; "args"]
+ ex_privRegExpConstructor)
 .
 Definition name_privRegExpConstructor : id :=  "%RegExpConstructor" .
 Definition privRegExpCode := 
@@ -10191,7 +10209,7 @@ Definition privapplyCall :=
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx); ("%ObjectTypeCheck", privObjectTypeCheck)]
- None ["this"; "args"] ex_privapplyCall)
+ None ["obj"; "this"; "args"] ex_privapplyCall)
 .
 Definition name_privapplyCall : id :=  "%applyCall" .
 Definition privarrayIndexOf :=  value_object 71 .
@@ -10336,7 +10354,7 @@ value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
   ("%len", privlen);
-  ("%slice_internal", privslice_internal)] None ["this"; "args"]
+  ("%slice_internal", privslice_internal)] None ["obj"; "this"; "args"]
  ex_privcallCall)
 .
 Definition name_privcallCall : id :=  "%callCall" .
@@ -10388,6 +10406,7 @@ Definition privcreateCall :=
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
+  ("%ComputeLength", privComputeLength);
   ("%ToObject", privToObject);
   ("%TypeError", privTypeError);
   ("%defineProperties", privdefineProperties)] None ["obj"; "this"; "args"]
@@ -10586,8 +10605,9 @@ Definition privfromCharCode :=  value_object 54 .
 Definition name_privfromCharCode : id :=  "%fromCharCode" .
 Definition privfromccCall := 
 value_closure
-(closure_intro [("%ToUint16", privToUint16)] None ["obj"; "this"; "args"]
- ex_privfromccCall)
+(closure_intro
+ [("%ComputeLength", privComputeLength); ("%ToUint16", privToUint16)] 
+ None ["obj"; "this"; "args"] ex_privfromccCall)
 .
 Definition name_privfromccCall : id :=  "%fromccCall" .
 Definition privfunctionToString :=  value_object 13 .
@@ -10823,8 +10843,9 @@ Definition privmathMax :=  value_object 145 .
 Definition name_privmathMax : id :=  "%mathMax" .
 Definition privminMaxCall := 
 value_closure
-(closure_intro [("%ToNumber", privToNumber)] None
- ["this"; "args"; "op"; "init"] ex_privminMaxCall)
+(closure_intro
+ [("%ComputeLength", privComputeLength); ("%ToNumber", privToNumber)] 
+ None ["this"; "args"; "op"; "init"] ex_privminMaxCall)
 .
 Definition name_privminMaxCall : id :=  "%minMaxCall" .
 Definition privmathMaxCall := 
@@ -11001,7 +11022,8 @@ Definition name_privpush : id :=  "%push" .
 Definition privpushCall := 
 value_closure
 (closure_intro
- [("%Get1", privGet1);
+ [("%ComputeLength", privComputeLength);
+  ("%Get1", privGet1);
   ("%SetField", privSetField);
   ("%ToObject", privToObject);
   ("%ToString", privToString);
@@ -11021,6 +11043,7 @@ Definition privreduceCall :=
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
+  ("%ComputeLength", privComputeLength);
   ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
@@ -11037,6 +11060,7 @@ Definition privreduceRightCall :=
 value_closure
 (closure_intro
  [("%ArrayIdx", privArrayIdx);
+  ("%ComputeLength", privComputeLength);
   ("%Get1", privGet1);
   ("%HasProperty", privHasProperty);
   ("%IsCallable", privIsCallable);
@@ -11211,6 +11235,7 @@ Definition privstringConcatCall :=
 value_closure
 (closure_intro
  [("%CheckObjectCoercible", privCheckObjectCoercible);
+  ("%ComputeLength", privComputeLength);
   ("%ToString", privToString)] None ["obj"; "this"; "args"]
  ex_privstringConcatCall)
 .
@@ -16471,7 +16496,7 @@ Definition store_items := [
         from_list [("construct", 
                     value_closure
                     (closure_intro [("%RegExpProto", privRegExpProto)] 
-                     None ["obj"; "this"; "args"] ex_internal27));
+                     None ["constr"; "args"] ex_internal27));
                    ("hasinstance", 
                     value_closure
                     (closure_intro

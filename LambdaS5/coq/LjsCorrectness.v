@@ -697,6 +697,12 @@ Lemma eval_eval_correct : forall runs c st e1 e2 o,
     eval_eval runs c st e1 e2 = result_some o ->
     is_some_value o (runs_type_eval runs c st e1) (fun st' v' =>
         is_some_value o (runs_type_eval runs c st' e2) (fun st'' v'' =>
+            (exists s ptr obj,
+                v' = value_string s /\
+                v'' = value_object ptr /\ 
+                st'' \(ptr?) = Some obj /\ 
+                EjsFromJs.desugar_expr true s = None /\
+                o = out_ter st'' (res_exception (value_string "parse-error"))) \/
             exists s ptr obj c1 e, 
                 v' = value_string s /\
                 v'' = value_object ptr /\ 
@@ -709,7 +715,8 @@ Proof.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
     cases_match_option.
     cases_match_option.
-    jauto.
+    + right. jauto.
+    + injects. left. jauto.
 Qed.
 
 Local Hint Constructors eval_unary_op int_unary_op num_unary_op.
@@ -1268,8 +1275,14 @@ Proof.
     lets H: eval_eval_correct IH R.
     eapply red_expr_eval.
     ljs_advance_eval_many.
+    inverts H. {
+        jauto_set.
+        rewrite read_option_binds_eq in H5. 
+        substs.
+        eapply red_expr_eval_1_parse_error; eauto.
+    }
     jauto_set.
-    rewrite read_option_binds_eq in H1. 
+    rewrite read_option_binds_eq in H5. 
     substs.
     eapply red_expr_eval_1; eauto.
     ljs_run_inv.
