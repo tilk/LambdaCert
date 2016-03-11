@@ -70,27 +70,6 @@ Definition make_do_while (bdy tst : L.expr) :=
                      L.expr_empty)))
         (L.expr_app (L.expr_id "%do_while_loop") []).
     
-Definition make_for_in (s:string) (robj bdy:L.expr) := L.expr_undefined.
-(* TODO
-    let sv := L.expr_string s in
-    let tst := L.expr_op1 L.unary_op_not (undef_test (L.expr_get_field context sv)) in
-    let after := make_set_field context sv (L.expr_app (L.expr_id "%prop_itr") []) in
-    L.expr_let "%do_loop"
-        (L.expr_lambda nil
-            (L.expr_recc "%get_itr" (make_builtin "%PropItr")
-            (L.expr_let "%pnameobj" (make_app_builtin "%propertyNames" [robj; L.expr_false])
-            (L.expr_let "%prop_itr"
-                (L.expr_app (L.expr_id "%get_itr") [L.expr_id "%pnameobj"])
-                (L.expr_seq
-                    (make_app_builtin "%set-property" [context; sv; L.expr_app (L.expr_id "%prop_itr") []])
-                    (make_while tst bdy after))))))
-        (L.expr_if (undef_test robj) 
-            L.expr_undefined
-            (L.expr_if (null_test robj)
-                L.expr_undefined
-                (L.expr_app (L.expr_id "%do_loop") []))).
-*)
-
 Definition make_if e e1 e2 := L.expr_if (to_bool e) e1 e2.
 
 Definition make_throw e :=
@@ -393,6 +372,21 @@ Definition make_general_assign f (e1 : E.expr) oop e2 :=
     | Some op => make_op_assign f e1 op e2
     end.
 
+Definition make_for_in f lhs (robj bdy : L.expr) := 
+    L.expr_let "%obj" robj (
+    L.expr_if (undef_test (L.expr_id "%obj")) L.expr_empty (
+    L.expr_if (null_test (L.expr_id "%obj")) L.expr_empty (
+    L.expr_let "%iter" (make_app_builtin "%Enumerate" [to_object (L.expr_id "%obj")]) (
+    L.expr_recc "%for_in_loop"
+        (L.expr_lambda [] 
+            (L.expr_let "%k" (L.expr_app (L.expr_id "%iter") []) 
+                (L.expr_if (undef_test (L.expr_id "%k"))
+                    L.expr_empty
+                    (L.expr_seq (make_assign f lhs (L.expr_id "%k")) 
+                        (L.expr_jseq bdy 
+                            (L.expr_app (L.expr_id "%for_in_loop") []))))))
+        (L.expr_app (L.expr_id "%for_in_loop") []))))).
+
 (* Note: using List instead of LibList for fixpoint to be accepted *)
 Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     match e with
@@ -420,7 +414,7 @@ Fixpoint ejs_to_ljs (e : E.expr) : L.expr :=
     | E.expr_op2 op e1 e2 => make_op2 op (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_assign e1 oop e2 => make_general_assign ejs_to_ljs e1 oop (ejs_to_ljs e2)
     | E.expr_get_field e1 e2 => make_get_field (ejs_to_ljs e1) (ejs_to_ljs e2)
-    | E.expr_for_in s e1 e2 => make_for_in s (ejs_to_ljs e1) (ejs_to_ljs e2) 
+    | E.expr_for_in e e1 e2 => make_for_in ejs_to_ljs e (ejs_to_ljs e1) (ejs_to_ljs e2) 
     | E.expr_while e1 e2 e3 => make_while (ejs_to_ljs e1) (ejs_to_ljs e2) (ejs_to_ljs e3) 
     | E.expr_do_while e1 e2 => make_do_while (ejs_to_ljs e1) (ejs_to_ljs e2)
     | E.expr_label s e => L.expr_label s (ejs_to_ljs e)

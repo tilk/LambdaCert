@@ -288,6 +288,9 @@ expr_object
  ("%DeleteOp", property_data
                (data_intro (expr_id "%DeleteOp") expr_true expr_false
                 expr_false));
+ ("%Enumerate", property_data
+                (data_intro (expr_id "%Enumerate") expr_true expr_false
+                 expr_false));
  ("%EnvAppExpr", property_data
                  (data_intro (expr_id "%EnvAppExpr") expr_true expr_false
                   expr_false));
@@ -1359,9 +1362,6 @@ expr_object
  ("%preventExtensionsCall", property_data
                             (data_intro (expr_id "%preventExtensionsCall")
                              expr_true expr_false expr_false));
- ("%primEach", property_data
-               (data_intro (expr_id "%primEach") expr_true expr_false
-                expr_false));
  ("%print", property_data
             (data_intro (expr_id "%print") expr_true expr_false expr_false));
  ("%printCall", property_data
@@ -2783,6 +2783,70 @@ expr_app (expr_id "%Delete")
 [expr_app (expr_id "%ToObject") [expr_id "obj"];
  expr_id "fld";
  expr_id "strict"]
+.
+Definition ex_privEnumerate := 
+expr_let "S"
+(expr_object
+ (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
+ [] [])
+(expr_let "st"
+ (expr_object
+  (objattrs_intro (expr_string "Object") expr_true expr_null expr_undefined)
+  []
+  [("i", property_data
+         (data_intro (expr_number (JsNumber.of_int (0))) expr_true expr_false
+          expr_false));
+   ("f", property_data
+         (data_intro (expr_own_field_names (expr_id "obj")) expr_true
+          expr_false expr_false));
+   ("o", property_data
+         (data_intro (expr_id "obj") expr_true expr_false expr_false))])
+ (expr_recc "iter"
+  (expr_lambda []
+   (expr_let "i" (expr_get_attr pattr_value (expr_id "st") (expr_string "i"))
+    (expr_let "is" (expr_op1 unary_op_prim_to_str (expr_id "i"))
+     (expr_let "f"
+      (expr_get_attr pattr_value (expr_id "st") (expr_string "f"))
+      (expr_let "o"
+       (expr_get_attr pattr_value (expr_id "st") (expr_string "o"))
+       (expr_if
+        (expr_op2 binary_op_has_own_property (expr_id "f") (expr_id "is"))
+        (expr_seq
+         (expr_set_attr pattr_value (expr_id "st") (expr_string "i")
+          (expr_op2 binary_op_add
+           (expr_get_attr pattr_value (expr_id "st") (expr_string "i"))
+           (expr_number (JsNumber.of_int (1)))))
+         (expr_let "pn"
+          (expr_get_attr pattr_value (expr_id "f") (expr_id "is"))
+          (expr_let "pd"
+           (expr_app (expr_id "%GetOwnPropertyDescriptor")
+            [expr_id "o"; expr_id "pn"])
+           (expr_if
+            (expr_if
+             (expr_if
+              (expr_op2 binary_op_stx_eq (expr_id "pd") expr_undefined)
+              expr_true
+              (expr_op1 unary_op_not
+               (expr_get_attr pattr_value (expr_id "pd")
+                (expr_string "enumerable")))) expr_true
+             (expr_op2 binary_op_has_own_property (expr_id "S")
+              (expr_id "pn"))) (expr_app (expr_id "iter") [])
+            (expr_seq
+             (expr_set_attr pattr_value (expr_id "S") (expr_id "pn")
+              expr_true) (expr_id "pn"))))))
+        (expr_let "p" (expr_get_obj_attr oattr_proto (expr_id "o"))
+         (expr_if (expr_op2 binary_op_stx_eq (expr_id "p") expr_null)
+          expr_undefined
+          (expr_seq
+           (expr_set_attr pattr_value (expr_id "st") (expr_string "i")
+            (expr_number (JsNumber.of_int (0))))
+           (expr_seq
+            (expr_set_attr pattr_value (expr_id "st") (expr_string "f")
+             (expr_own_field_names (expr_id "p")))
+            (expr_seq
+             (expr_set_attr pattr_value (expr_id "st") (expr_string "o")
+              (expr_id "p")) (expr_app (expr_id "iter") []))))))))))))
+  (expr_id "iter")))
 .
 Definition ex_privEnvAppExpr := 
 expr_let "f"
@@ -7002,20 +7066,6 @@ expr_let "O"
  (expr_seq (expr_set_obj_attr oattr_extensible (expr_id "O") expr_false)
   (expr_id "O")))
 .
-Definition ex_privprimEach := 
-expr_recc "loop"
-(expr_lambda ["i"]
- (expr_let "istr" (expr_app (expr_id "%ToString") [expr_id "i"])
-  (expr_if
-   (expr_op2 binary_op_has_own_property (expr_id "arr") (expr_id "istr"))
-   (expr_seq
-    (expr_app (expr_id "fn")
-     [expr_app (expr_id "%Get1") [expr_id "arr"; expr_id "istr"]])
-    (expr_app (expr_id "loop")
-     [expr_op2 binary_op_add (expr_id "i")
-      (expr_number (JsNumber.of_int (1)))])) expr_undefined)))
-(expr_app (expr_id "loop") [expr_number (JsNumber.of_int (0))])
-.
 Definition ex_privprintCall := 
 expr_op1 unary_op_print
 (expr_app (expr_id "%ToString")
@@ -9415,6 +9465,12 @@ value_closure
  None ["obj"; "fld"; "strict"] ex_privDeleteOp)
 .
 Definition name_privDeleteOp : id :=  "%DeleteOp" .
+Definition privEnumerate := 
+value_closure
+(closure_intro [("%GetOwnPropertyDescriptor", privGetOwnPropertyDescriptor)]
+ None ["obj"] ex_privEnumerate)
+.
+Definition name_privEnumerate : id :=  "%Enumerate" .
 Definition privHasProperty := 
 value_closure
 (closure_intro [("%GetProperty", privGetProperty)] None ["obj"; "id"]
@@ -10980,12 +11036,6 @@ value_closure
  None ["obj"; "this"; "args"] ex_privpreventExtensionsCall)
 .
 Definition name_privpreventExtensionsCall : id :=  "%preventExtensionsCall" .
-Definition privprimEach := 
-value_closure
-(closure_intro [("%Get1", privGet1); ("%ToString", privToString)] None
- ["arr"; "fn"] ex_privprimEach)
-.
-Definition name_privprimEach : id :=  "%primEach" .
 Definition privprint :=  value_object 15 .
 Definition name_privprint : id :=  "%print" .
 Definition privprintCall := 
@@ -11717,6 +11767,7 @@ Definition ctx_items :=
  (name_privDelete, privDelete);
  (name_privDeleteDefault, privDeleteDefault);
  (name_privDeleteOp, privDeleteOp);
+ (name_privEnumerate, privEnumerate);
  (name_privEnvAppExpr, privEnvAppExpr);
  (name_privEnvAssign, privEnvAssign);
  (name_privEnvCreateImmutableBinding, privEnvCreateImmutableBinding);
@@ -12085,7 +12136,6 @@ Definition ctx_items :=
  (name_privpopCall, privpopCall);
  (name_privpreventExtensions, privpreventExtensions);
  (name_privpreventExtensionsCall, privpreventExtensionsCall);
- (name_privprimEach, privprimEach);
  (name_privprint, privprint);
  (name_privprintCall, privprintCall);
  (name_privpropEnum, privpropEnum);
@@ -12217,6 +12267,7 @@ privDefaultValueDefaultSub
 privDelete
 privDeleteDefault
 privDeleteOp
+privEnumerate
 privEnvAppExpr
 privEnvAssign
 privEnvCreateImmutableBinding
@@ -12585,7 +12636,6 @@ privpop
 privpopCall
 privpreventExtensions
 privpreventExtensionsCall
-privprimEach
 privprint
 privprintCall
 privpropEnum
@@ -12717,6 +12767,7 @@ privDefaultValueDefaultSub
 privDelete
 privDeleteDefault
 privDeleteOp
+privEnumerate
 privEnvAppExpr
 privEnvAssign
 privEnvCreateImmutableBinding
@@ -13085,7 +13136,6 @@ privpop
 privpopCall
 privpreventExtensions
 privpreventExtensionsCall
-privprimEach
 privprint
 privprintCall
 privpropEnum
@@ -13227,6 +13277,7 @@ Definition store_items := [
                                          ("%Delete", privDelete);
                                          ("%DeleteDefault", privDeleteDefault);
                                          ("%DeleteOp", privDeleteOp);
+                                         ("%Enumerate", privEnumerate);
                                          ("%EnvAppExpr", privEnvAppExpr);
                                          ("%EnvAssign", privEnvAssign);
                                          ("%EnvCreateImmutableBinding", privEnvCreateImmutableBinding);
@@ -13595,7 +13646,6 @@ Definition store_items := [
                                          ("%popCall", privpopCall);
                                          ("%preventExtensions", privpreventExtensions);
                                          ("%preventExtensionsCall", privpreventExtensionsCall);
-                                         ("%primEach", privprimEach);
                                          ("%print", privprint);
                                          ("%printCall", privprintCall);
                                          ("%propEnum", privpropEnum);

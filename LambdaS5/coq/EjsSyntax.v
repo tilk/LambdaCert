@@ -41,7 +41,7 @@ Inductive expr : Type :=
 | expr_while : expr -> expr -> expr -> expr (* test, body, after *) 
 | expr_label : id -> expr -> expr
 | expr_break : id -> expr -> expr
-| expr_for_in : id -> expr -> expr -> expr
+| expr_for_in : expr -> expr -> expr -> expr
 | expr_try_catch : expr -> id -> expr -> expr
 | expr_try_finally : expr -> expr -> expr
 | expr_throw : expr -> expr

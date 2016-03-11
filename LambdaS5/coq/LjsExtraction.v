@@ -232,8 +232,8 @@ Extract Constant LjsCommon._int_of_ascii => "(fun c -> float_of_int (int_of_char
 
 Extract Constant LjsCommon.string_lt => "(<)".
 
-Extract Constant LjsOperators._print_string => "fun x -> print_string (Batteries.String.of_list x); print_char '\n'".
-Extract Constant LjsOperators._pretty => "fun store value -> print_string (PrettyPrint.string_of_value 100 store value); print_char '\n'".
+Extract Constant LjsOperators._print_string => "fun x -> print_string (Batteries.String.of_list x); print_newline ()".
+Extract Constant LjsOperators._pretty => "fun store value -> print_string (PrettyPrint.string_of_value 100 store value); print_newline ()".
 
 (* put a practical limit on recursive search *)
 Extract Constant LjsCommon.get_property => "fun s v n -> get_property_aux 100000 s v n".

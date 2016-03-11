@@ -138,10 +138,13 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
         E.expr_seq (E.expr_fseqs_r (List.map (js_vardecl_to_ejs js_expr_to_ejs) le1)) 
             (js_label_set_to_labels "%break" ls 
                 (E.expr_while e2 (js_label_set_to_labels "%continue" ls (js_stat_to_ejs st)) e3))
-(* TODO for-in
-    | J.stat_for_in nil lval e st => 
-        E.expr_label "%break" (E.expr_for_in s (js_expr_to_ejs e) (js_stat_to_ejs st))
-*)
+    | J.stat_for_in ls lval e st => 
+        js_label_set_to_labels "%break" ls 
+            (E.expr_for_in (js_expr_to_ejs lval) (js_expr_to_ejs e) (js_stat_to_ejs st))
+    | J.stat_for_in_var ls s lval e st => 
+        E.expr_seq (js_vardecl_to_ejs js_expr_to_ejs (s, lval)) 
+        (js_label_set_to_labels "%break" ls 
+            (E.expr_for_in (E.expr_var_id s) (js_expr_to_ejs e) (js_stat_to_ejs st)))
     | J.stat_switch ls e (J.switchbody_nodefault cl) => 
         js_label_set_to_labels "%break" ls (
         E.expr_switch (js_expr_to_ejs e) (E.switchbody_nodefault (List.map js_switchclause_to_ejs cl)))
@@ -152,7 +155,6 @@ with js_stat_to_ejs (e : J.stat) : E.expr :=
             (E.expr_seqs (List.map js_stat_to_ejs sts))
             (List.map js_switchclause_to_ejs cl2)))
     | J.stat_debugger => E.expr_empty
-    | _ => E.expr_syntaxerror
     end
 with js_switchclause_to_ejs c := 
     match c with
