@@ -3,7 +3,6 @@
 \usepackage{amsmath}
 \PassOptionsToPackage{hyphens}{url}
 \usepackage{hyperref}
-\usepackage{listings,lstlangcoq}
 
 \usepackage{natbib}
 
@@ -14,6 +13,8 @@
 \newcommand{\asi}[1]{\todo[color=green,inline]{#1}}
 
 \usepackage{xspace}
+
+\usepackage{minted}
 
 \begin{document}
 
@@ -130,13 +131,13 @@ The development is publicly available and can be downloaded from GitHub:
 
 \section{Formalization of \lambdajs}
 
-For the purpose of relating the two semantics, we first
-developed a formalization of the \lambdajs core language.
-This was necessary because no such formalization existed previously;
-a formalization of the original, ES3-based \lambdajs
-was available,\footnote{\url{https://github.com/brownplt/LambdaJS}}
-but the two versions of \lambdajs differ too much for this
-to be useful.
+For the purpose of relating the two semantics, we first developed a
+formalization of the \lambdajs core language. This was necessary because no such
+formalization existed previously; a formalization of the original, ES3-based
+\lambdajs was available,\as{I propose we use biblatex and add bib references for
+  urls instead of
+  footnotes.}\footnote{\url{https://github.com/brownplt/LambdaJS}} but the two
+versions of \lambdajs differ too much for this to be useful.
 
 We decided to formalize the \lambdajs core using a
 pretty-big-step semantics, as in JSCert, to make the job of
@@ -145,6 +146,65 @@ an interpreter for \lambdajs, which we proved sound and
 complete with respect to the pretty-big-step semantics.
 The proof script was developed using domain-specific tactics,
 which made it simple and robust.
+
+\begin{minted}{coq}
+Inductive resultof (T : Type) : Type :=
+| result_some : T -> resultof T
+| result_fail : string -> resultof T        (* program error *)
+| result_impossible : string -> resultof T  (* inconsistency *)
+| result_bottom : resultof T                (* out of fuel *)
+| result_dump : ctx -> store -> resultof T  (* dump state *)
+
+Definition eval runs c st (e : expr) : result :=
+  let return_value := result_value st in
+  match e with
+  | expr_empty => return_value value_empty
+  | expr_undefined => return_value value_undefined
+...
+
+Record runs_type : Type := runs_type_intro {
+    runs_type_eval : ctx -> store -> expr -> result
+}.
+
+Definition runs_0 := {|
+    runs_type_eval := fun c st _ => result_bottom
+  |}
+.
+
+Definition runs_S runs := 
+  let wrap {A : Type} (f : runs_type -> ctx -> store -> A) c st : A :=
+    f runs c st
+  in {|
+    runs_type_eval := wrap eval
+  |}
+.
+
+Fixpoint runs max_step : runs_type :=
+  match max_step with
+  | 0 => runs_0
+  | S max_step' => runs_S (runs max_step')
+  end
+.
+
+Lemma eval_complete : forall c st e o,
+  red_expr c st e o -> 
+  exists k, runs_type_eval (runs k) c st e = result_some o.
+
+Record runs_type_correct runs :=
+    make_runs_type_correct {
+        runs_type_correct_eval : forall c st e o,
+            runs_type_eval runs c st e = result_some o -> red_expr c st e o
+}.
+
+Lemma eval_correct : forall runs c st e o,
+  runs_type_correct runs -> 
+  eval runs c st e = result_some o ->
+  red_expr c st e o.
+
+Lemma runs_correct : forall k, runs_type_correct (runs k). 
+\end{minted}
+
+\asi{Add the theorem.}
 
 At this stage we stumbled upon an interesting performance issue 
 involving the Coq proof assistant. The proof of completeness required
@@ -156,6 +216,9 @@ precomputing the required inversion principles using
 \texttt{Derive Inversion}, and using the precomputed inversion
 principles to create a specialized inversion tactic.
 
+\asi{Put a forward pointer to a section where we described the issue in more
+  details.}
+
 We have also implemented in Coq the other two crucial components
 of the \lambdajs semantics: the desugaring function and the 
 environment. The desugaring was implemented as Coq functions,
@@ -166,6 +229,9 @@ in \lambdajs code, was translated from \lambdajs syntax
 to Coq definitions with the help of an OCaml parser and
 our interpreter. The resulting Coq file is over 15000 lines long
 and takes almost a megabyte of disk space!
+
+\asi{we should put a code snippet of the environment here. Also, do we want to
+  talk more about the OCaml tool used to generate it?}
 
 \section{Correctness proof for \lambdajs desugaring}
 
@@ -180,15 +246,14 @@ JavaScript lexical environment. To manage this, we use a bisimulation
 relation, which relates JavaScript objects and environment records
 to \lambdajs objects.
 
-For the proof, we also need to keep track of certain invariants,
-which state that, e.g., the JavaScript objects and their
-\lambdajs representations are correctly formed. 
-The invariants are split into two relations, where one
-involves the evaluation contexts, and the other -- the heaps.
-Both of these involve the bisimulation relation, but the
-context invariant uses it only positively. As the bisimulation
-relation only grows during the evaluation (as new objects
-are created), this makes it possible to keep the proofs simple.
+For the proof, we also need to keep track of certain invariants, which state
+that, e.g., the JavaScript objects and their \lambdajs representations are
+correctly formed. The invariants are split into two relations, where one
+involves the evaluation contexts, and the other the heaps. Both of these involve
+the bisimulation relation, but the context invariant uses it only positively. As
+the bisimulation relation only grows during the evaluation (as new objects are
+created but objects are never collected), this makes it possible to keep the
+proofs simple.
 
 The correctness proof is structured using well-founded 
 induction on the depth of the \lambdajs pretty-big-step
@@ -214,14 +279,14 @@ automated using domain-specific tactics; the JSCert derivation
 is constructed using the \texttt{eauto} tactic with a specialized
 hint database (\texttt{nocore} is used to avoid using the standard
 hints coming from Coq and Chargu\'eraud's TLC
-library\footnote{\url{http://www.chargueraud.org/softs/tlc/}}, which is
+library,\footnote{\url{http://www.chargueraud.org/softs/tlc/}} which is
 used both by JSCert and our development).
 
 \section{Conclusion}
 
 In the course of our work, we found numerous cases where
 \lambdajs did not faithfully follow the ES5 
-specification\footnote{\url{https://github.com/tilk/LambdaCert/wiki/Issues-with-LambdaS5}}.
+specification.\footnote{\url{https://github.com/tilk/LambdaCert/wiki/Issues-with-LambdaS5}}
 Some of these issues were serious enough that
 far-reaching changes in the \lambdajs environment were needed
 to solve them. Interestingly, no serious issues in JSCert were
@@ -234,7 +299,8 @@ of the two most popular JavaScript implementations, Google's V5 and
 Mozilla's SpiderMonkey. The discovery of the inconsistency,
 which involves exceptions and statement result values,
 resulted in a correction being made in the official ES6
-specification\footnote{\url{https://esdiscuss.org/topic/loop-unrolling-and-completion-values-in-es6}}.
+specification.\footnote{\url{https://esdiscuss.org/topic/loop-unrolling-and-completion-values-in-es6}}
+\asi{We should detail the bug.}
 
 The proof scripts we developed are very taxing for the Coq
 proof assistant -- the compilation of the whole development
@@ -252,3 +318,8 @@ feedback from the community.
 \bibliography{mybib}
 
 \end{document}
+
+%%% Local Variables:
+%%% coding: utf-8
+%%% TeX-engine: xetex_sh
+%%% End:
