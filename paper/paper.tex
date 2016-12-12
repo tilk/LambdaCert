@@ -1,75 +1,31 @@
-%-----------------------------------------------------------------------------
-%
-%               Template for sigplanconf LaTeX Class
-%
-% Name:         sigplanconf-template.tex
-%
-% Purpose:      A template for sigplanconf.cls, which is a LaTeX 2e class
-%               file for SIGPLAN conference proceedings.
-%
-% Guide:        Refer to "Author's Guide to the ACM SIGPLAN Class,"
-%               sigplanconf-guide.pdf
-%
-% Author:       Paul C. Anagnostopoulos
-%               Windfall Software
-%               978 371-2316
-%               paul@windfall.com
-%
-% Created:      15 February 2005
-%
-%-----------------------------------------------------------------------------
-
-
-\documentclass{sigplanconf}
-
-% The following \documentclass options may be useful:
-
-% preprint      Remove this option only once the paper is in final form.
-% 10pt          To set in 10-point type instead of 9-point.
-% 11pt          To set in 11-point type instead of 9-point.
-% authoryear    To obtain author/year citation style instead of numeric.
+\documentclass{llncs}
 
 \usepackage{amsmath}
 \PassOptionsToPackage{hyphens}{url}
 \usepackage{hyperref}
 \usepackage{listings,lstlangcoq}
 
+\usepackage{natbib}
+
 \urlstyle{sf}
+
+\usepackage{todonotes}
+\newcommand{\as}[1]{\todo[color=green]{#1}}
+\newcommand{\asi}[1]{\todo[color=green,inline]{#1}}
+
+\usepackage{xspace}
 
 \begin{document}
 
-\special{papersize=8.5in,11in}
-\setlength{\pdfpageheight}{\paperheight}
-\setlength{\pdfpagewidth}{\paperwidth}
-
-\conferenceinfo{COQPL '16}{January 23, 2015, St. Petersburg, Florida, United States} 
-\copyrightyear{2016} 
-\copyrightdata{978-1-nnnn-nnnn-n/yy/mm} 
-\doi{nnnnnnn.nnnnnnn}
-
-% Uncomment one of the following two, if you are not going for the 
-% traditional copyright transfer agreement.
-
-%\exclusivelicense                % ACM gets exclusive license to publish, 
-                                  % you retain copyright
-
-\permissiontopublish             % ACM gets nonexclusive license to publish
-                                  % (paid open-access papers, 
-                                  % short abstracts)
-
-\titlebanner{banner above paper title}        % These are ignored unless
-\preprintfooter{short description of paper}   % 'preprint' option specified.
-
 \title{Certified Desugaring of Javascript Programs using Coq}
-\subtitle{Experience Report}
 
-\authorinfo{Marek Materzok}
-           {INRIA, University of Wroc\l{}aw}
-           {marek.materzok@inria.fr}
+\author{Marek Materzok\inst{1} \and Alan Schmitt\inst{2}}
+\institute{University of Wroc\l{}aw, Poland\\\email{marek.materzok@ii.uni.wroc.pl}
+\and Inria, France\\\email{alan.schmitt@inria.fr}}
 
 \maketitle
 
-\newcommand{\lambdajs}{$\lambda_\textrm{JS}$}
+\newcommand{\lambdajs}{$\lambda_\textrm{JS}$\xspace}
 
 \begin{abstract}
 JavaScript is a programming language originally developed for client-side
@@ -78,38 +34,54 @@ complex Web applications. It has also found use in mobile applications,
 server-side network programming, and databases.
 
 A number of semantics were developed for the JavaScript language.
-We are specifically interested in two of them: JSCert and \lambdajs{}.
+We are specifically interested in two of them: JSCert and \lambdajs.
 In order to increase our confidence that the two semantics correctly
 model JavaScript, we try to relate them formally using Coq. The size and complexity
 of the two semantics makes this a complex problem with many obstacles
 to be overcome.
 \end{abstract}
 
-\category{D.3.1}{Programming Languages}{Formal Definitions and Theory}
+\section{Notes}
 
-% general terms are not compulsory anymore, 
-% you may leave them out
-%\terms
-%term1, term2
-
-\keywords
-Coq, JavaScript, ECMAScript, mechanized semantics
+\begin{itemize}
+\item give figures on test coverage
+\item say we created tests for bugs
+\end{itemize}
 
 \section{Introduction}
 
 The JavaScript language is standardized by ECMA under the name
 ECMAScript. Several versions of the standard now exist, the latest
-two being ECMAScript 5.1 (ES5, released in 2011) and ECMAScript 6
-(ES6, released in 2015). Its role is to make portability between different
+ones being ECMAScript 5.1 (ES5, released in 2011), ECMAScript 2015, and
+ECMAScript 2016.\footnote{The ECMAScript standard is now published yearly.} Its role is to make portability between different
 JavaScript implementations possible by specifying the intended behavior
 of the various language constructs and built-in functions of JavaScript.
 The specification also makes it possible to develop formal semantics
 for the language, which can then be used for, e.g., developing
 static analysis tools.
 
-One such semantics is JSCert~\cite{Bodin-al:POPL14}, which has the
-goal of formalizing the ECMAScript (version 5.1) specification in the form of
-a pretty-big-step semantics~\cite{Chargueraud:ESOP13} expressed in 
+One such semantics is \lambdajs. It aims to capture
+the semantics of JavaScript by defining a simple core language
+(based on the untyped call-by-value lambda calculus), and then
+transforming (or ``desugaring'') the full JavaScript language into this
+simple core. The \lambdajs semantics was originally developed to model the 
+ECMAScript 3 specification~\citep{Guha-al:ECOOP10}, and it was later
+revised~\citep{Politz-al:DLS12} to handle ECMAScript 5.1
+features.\footnote{The authors named the revised language S5; however,
+we continue to name it \lambdajs for simplicity.}
+The interpreter for the core language and the JavaScript-to-core
+transformation were developed using 
+OCaml;\footnote{\url{https://github.com/brownplt/LambdaS5}}
+the interpreter was tested using the official test262 test suite.
+The \lambdajs semantics is useful for tool developers, as it
+allows the tools to analyze JavaScript programs by working
+on the simple core language of \lambdajs, having all the complexities
+of JavaScript handled in the desugared code. It was already
+successfully used to verify AdSafe. \as{add citation}
+
+More recently, JSCert~\citep{Bodin-al:POPL14},
+formalized the ECMAScript 5.1 specification in the form of
+a pretty-big-step semantics~\citep{Chargueraud:ESOP13} expressed in 
 the form of a Coq inductive predicate. It aims to be as close to the
 (informal English) specification as possible by maintaining close correspondence
 between the evaluation rules and steps in the ES5 pseudocode. The project
@@ -119,48 +91,31 @@ using the official ECMA test suite, test262. Thanks to the correctness proof,
 testing of JSRef increases the confidence we can have that JSCert
 correctly models ES5.
 
-Another semantics we are interested in is \lambdajs. It aims to capture
-the semantics of JavaScript by defining a simple core language
-(based on the untyped call-by-value lambda calculus), and then
-transforming (or ``desugaring'') the full JavaScript language into this
-simple core. The \lambdajs{} semantics was originally developed to model the 
-ECMAScript 3 specification~\cite{Guha-al:ECOOP10}, and it was later
-revised~\cite{Politz-al:DLS12} to handle ECMAScript 5.1
-features\footnote{The authors named the revised language S5; however,
-we continue to name it \lambdajs{} for simplicity.}.
-The interpreter for the core language and the JavaScript-to-core
-transformation were developed using 
-OCaml\footnote{\url{https://github.com/brownplt/LambdaS5}};
-the interpreter was tested using the official test262 test suite.
-The \lambdajs{} semantics could be useful for tool developers, as it
-allows the tools to analyze JavaScript programs by working
-on the simple core language of \lambdajs, having all the complexities
-of JavaScript handled in the desugared code. It was already
-successfully used to verify AdSafe. %TODO citation
-
 We believe is worthwhile to formally relate the two semantics. One reason is,
 because the two semantics use a different approach, relating
 them will increase the confidence we can place in both of them,
 and is likely to find inconsistencies or other problems. Another reason is
-that having \lambdajs{} formalized and certified (by proving correctness
+that having \lambdajs formalized and certified (by proving correctness
 with respects to JSCert) enables development of certified analysis tools
-using \lambdajs{} as the core.
+using \lambdajs as the core.
 
 This is easier said than done. The task is very complex, mostly due
 to the complexities of the JavaScript language. The ES5 specification,
-upon which JSCert and \lambdajs{} are based, is 258 pages long and 
+upon which JSCert and \lambdajs are based, is 258 pages long and 
 has 16 chapters. The JSCert pretty-big-step semantics, which models
 the specification, has over 900 rules; the entire Coq source code
-for the semantics has over 10000 lines. The \lambdajs{} environment
+for the semantics has over 10000 lines. The \lambdajs environment
 file, which contains the ECMAScript algorithms expressed in core
-\lambdajs{} code, is almost 5000 lines long.
+\lambdajs code, is almost 5000 lines long.
 
 To reduce the complexity of the task, we are currently working
-only on proving \lambdajs{} correct with respect to JSCert,
-i.e., that if the \lambdajs{} program successfully terminates,
+only on proving \lambdajs correct with respect to JSCert,
+i.e., that if the \lambdajs program successfully terminates,
 then its result matches the result given by JSCert. We are also
 restricting our attention to ECMAScript strict mode, proving the
 correctness of non-strict features only when it is convenient.
+\asi{How difficult would it be to prove the other direction (if we have a
+  derivation in JSCert, then we have one in \lambdajs?)}
 
 We were able to prove correctness of a large part of the
 JavaScript semantics, including function calls, lexical environment
@@ -173,20 +128,20 @@ The development is publicly available and can be downloaded from GitHub:
 
 \url{https://github.com/tilk/LambdaCert}
 
-\section{Formalization of \lambdajs{}}
+\section{Formalization of \lambdajs}
 
 For the purpose of relating the two semantics, we first
-developed a formalization of the \lambdajs{} core language.
+developed a formalization of the \lambdajs core language.
 This was necessary because no such formalization existed previously;
-a formalization of the original, ES3-based \lambdajs{}
-was available\footnote{\url{https://github.com/brownplt/LambdaJS}},
-but the two versions of \lambdajs{} differ too much for this
+a formalization of the original, ES3-based \lambdajs
+was available,\footnote{\url{https://github.com/brownplt/LambdaJS}}
+but the two versions of \lambdajs differ too much for this
 to be useful.
 
-We decided to formalize the \lambdajs{} core using a
+We decided to formalize the \lambdajs core using a
 pretty-big-step semantics, as in JSCert, to make the job of
 relating the two semantics easier. We have also developed
-an interpreter for \lambdajs{}, which we proved sound and
+an interpreter for \lambdajs, which we proved sound and
 complete with respect to the pretty-big-step semantics.
 The proof script was developed using domain-specific tactics,
 which made it simple and robust.
@@ -195,39 +150,39 @@ At this stage we stumbled upon an interesting performance issue
 involving the Coq proof assistant. The proof of completeness required
 inverting the pretty-big-step semantics judgment; this turned out
 to be very slow, and also generated large proof terms, which increased
-the memory footprint. The problem is well-known~\cite{Monin:Coq2}; 
+the memory footprint. The problem is well-known~\citep{Monin:Coq2}; 
 our solution involved
 precomputing the required inversion principles using
 \texttt{Derive Inversion}, and using the precomputed inversion
 principles to create a specialized inversion tactic.
 
 We have also implemented in Coq the other two crucial components
-of the \lambdajs{} semantics: the desugaring function and the 
+of the \lambdajs semantics: the desugaring function and the 
 environment. The desugaring was implemented as Coq functions,
 taking JavaScript statements and expressions (as defined in
-JSCert) to \lambdajs{} expressions. The environment, which
+JSCert) to \lambdajs expressions. The environment, which
 implements the complexities of the JavaScript semantics
-in \lambdajs{} code, was translated from \lambdajs{} syntax
+in \lambdajs code, was translated from \lambdajs syntax
 to Coq definitions with the help of an OCaml parser and
 our interpreter. The resulting Coq file is over 15000 lines long
 and takes almost a megabyte of disk space!
 
-\section{Correctness proof for \lambdajs{} desugaring}
+\section{Correctness proof for \lambdajs desugaring}
 
 In order to establish correctness, it was first needed to create
 a set of predicates specifying the relationship between 
-JavaScript and \lambdajs{} language features. As \lambdajs{} was
+JavaScript and \lambdajs language features. As \lambdajs was
 designed to implement JavaScript, the relationship is fairly
 simple and natural. One place where the two languages differ
-is the object heap, which is used in \lambdajs{} to implement
+is the object heap, which is used in \lambdajs to implement
 several JavaScript language features, including the
 JavaScript lexical environment. To manage this, we use a bisimulation
 relation, which relates JavaScript objects and environment records
-to \lambdajs{} objects.
+to \lambdajs objects.
 
 For the proof, we also need to keep track of certain invariants,
 which state that, e.g., the JavaScript objects and their
-\lambdajs{} representations are correctly formed. 
+\lambdajs representations are correctly formed. 
 The invariants are split into two relations, where one
 involves the evaluation contexts, and the other -- the heaps.
 Both of these involve the bisimulation relation, but the
@@ -236,10 +191,10 @@ relation only grows during the evaluation (as new objects
 are created), this makes it possible to keep the proofs simple.
 
 The correctness proof is structured using well-founded 
-induction on the depth of the \lambdajs{} pretty-big-step
+induction on the depth of the \lambdajs pretty-big-step
 semantics derivation. This grants a lot of freedom in structuring
 the proof, which is important because of certain structural
-differences between JSCert and \lambdajs{}, which involve,
+differences between JSCert and \lambdajs, which involve,
 e.g., handling of ES5 references. We use three kinds of induction
 hypotheses: for JavaScript statements, expressions and
 function calls. The separate induction hypothesis for function
@@ -265,10 +220,10 @@ used both by JSCert and our development).
 \section{Conclusion}
 
 In the course of our work, we found numerous cases where
-\lambdajs{} did not faithfully follow the ES5 
+\lambdajs did not faithfully follow the ES5 
 specification\footnote{\url{https://github.com/tilk/LambdaCert/wiki/Issues-with-LambdaS5}}.
 Some of these issues were serious enough that
-far-reaching changes in the \lambdajs{} environment were needed
+far-reaching changes in the \lambdajs environment were needed
 to solve them. Interestingly, no serious issues in JSCert were
 found, which strengthens our confidence that it accurately models
 the ES5 specification.
@@ -292,38 +247,8 @@ includes most of the important core features of the
 JavaScript language. We are looking forward to receiving
 feedback from the community.
 
-%\appendix
-%\section{Appendix Title}
-
-%This is the text of the appendix, if you need one.
-
-%\acks
-
-%Acknowledgments, if needed.
-
-% We recommend abbrvnat bibliography style.
-
-\bibliographystyle{abbrvnat}
+\bibliographystyle{plain}
 
 \bibliography{mybib}
 
-% The bibliography should be embedded for final submission.
-
-%\begin{thebibliography}{}
-%\softraggedright
-
-%\bibitem[Smith et~al.(2009)Smith, Jones]{smith02}
-%P. Q. Smith, and X. Y. Jones. ...reference text...
-
-%\end{thebibliography}
-
-
 \end{document}
-
-%                       Revision History
-%                       -------- -------
-%  Date         Person  Ver.    Change
-%  ----         ------  ----    ------
-
-%  2013.06.29   TU      0.1--4  comments on permission/copyright notices
-
