@@ -4,3 +4,6 @@
 *.log
 *.out
 *.pdf
+auto
+_region_.tex
+*.synctex.gz
