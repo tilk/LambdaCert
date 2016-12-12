@@ -229,8 +229,9 @@ Lemma pure_expr_lemma : forall c st st' e r,
     st = st' /\ pure_expr_pre c st e /\
     r = res_value (pure_expr_val c st e).
 Proof.
-    introv Hpe Hred.
+    introv Hpe.
     inductions Hpe gen c st st' r;
+    introv Hred;
     inverts Hred as Hr1 Hr2; simpl; jauto.
     (* id *)
     determine_epsilon.
@@ -302,8 +303,8 @@ Local Hint Constructors red_expr.
 Lemma pure_expr_lemma_inv : forall c st e,
     pure_expr e -> pure_expr_pre c st e -> red_expr c st e (out_ter st (res_value (pure_expr_val c st e))).
 Proof.
-    introv Hpe Hpre.
-    inductions Hpe gen c st; simpls; jauto.
+    introv Hpe.
+    inductions Hpe gen c st; introv Hpre; simpls; jauto.
     (* id *)
     destruct_hyp Hpre.
     determine_epsilon. eauto.
@@ -341,8 +342,8 @@ Lemma bool_red_expr_lemma : forall c st st' e r,
     red_expr c st e (out_ter st' r) -> 
     st = st' /\ bool_expr_pre c st e /\ r = res_value (value_bool (isTrue (bool_expr_pred c st e))).
 Proof.
-    introv Hpe Hred.
-    inductions Hpe gen c st st' r;
+    introv Hpe.
+    inductions Hpe gen c st st' r; introv Hred;
     inverts Hred as Hr1 Hr2; simpl; jauto.
     (* bool *)
     cases_if; rew_refl; jauto.
@@ -418,8 +419,8 @@ Lemma bool_red_expr_lemma_inv : forall c st e,
     bool_expr e -> bool_expr_pre c st e -> 
     red_expr c st e (out_ter st (res_value (value_bool (isTrue (bool_expr_pred c st e))))).
 Proof.
-    introv Hpe Hpre.
-    inductions Hpe gen c st; simpls; jauto.
+    introv Hpe.
+    inductions Hpe gen c st; introv Hpre; simpls; jauto.
     (* bool *)
     destruct b; rew_refl; eauto.
     (* if *)

@@ -43,6 +43,7 @@ Module J.
 Include JsSyntax.
 Include JsSyntaxAux.
 Include JsPreliminary.
+Include JsCommon.
 Include JsPrettyInterm.
 Include JsPrettyRules.
 Include JsInit.

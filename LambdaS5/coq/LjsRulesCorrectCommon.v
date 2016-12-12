@@ -145,6 +145,7 @@ Hint Extern 4 (option_usercode_related _ _ _ _ _) => unfold option_usercode_rela
 Hint Extern 4 (res_related _ _ _ (J.res_throw _) _) => unfold J.res_throw : js_ljs.
 Hint Extern 4 (J.regular_binary_op _) => unfold J.regular_binary_op : js_ljs.
 Hint Extern 4 (J.ref_is_unresolvable _) => unfold J.ref_is_unresolvable : js_ljs.
+Hint Extern 4 (J.abrupt_res _) => unfold J.abrupt_res : js_ljs.
 
 (** Automatic deconstructing of ifs in goals *)
 
@@ -2732,7 +2733,7 @@ Lemma res_related_abort : forall BR jst jst' st jr r,
 Proof.
     introv Hrel Hab.
     inverts Hrel.
-    inverts Hab. unfold J.res_is_normal in *. simpls. false.
+    inverts Hab. unfold J.abrupt_res in *. simpls. false.
     eapply L.res_is_control_exception.
     eapply L.res_is_control_break.
     eapply L.res_is_control_break.

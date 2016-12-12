@@ -1,6 +1,7 @@
 Require Import Utils.
 Require Import JsSyntax.
 Require Import JsPreliminary.
+Require Import JsCommon.
 Import LibStream.
 Require Import LibBagExt.
 Import LibBag.
@@ -260,7 +261,7 @@ Admitted. (* TODO *)
 
 Lemma js_object_alloc_lemma : forall jst jobj,
     (fresh jst, state_next_fresh (jst \(fresh jst := jobj))) =
-    JsPreliminary.object_alloc jst jobj.
+    JsCommon.object_alloc jst jobj.
 Proof.
     introv.
     destruct jst. destruct state_fresh_locations.
@@ -269,7 +270,7 @@ Qed.
 
 Lemma js_lexical_env_alloc_object_lemma : forall jst jlenv jptr b,
     (fresh jst :: jlenv, state_next_fresh (jst \(fresh jst := env_record_object jptr b))) = 
-    JsPreliminary.lexical_env_alloc_object jst jlenv jptr b.
+    JsCommon.lexical_env_alloc_object jst jlenv jptr b.
 Proof.
     introv.
     destruct jst. destruct state_fresh_locations.
@@ -278,7 +279,7 @@ Qed.
 
 Lemma js_lexical_env_alloc_decl_lemma : forall jst jlenv,
     (fresh jst :: jlenv, state_next_fresh (jst \(fresh jst := env_record_decl decl_env_record_empty))) = 
-    JsPreliminary.lexical_env_alloc_decl jst jlenv.
+    JsCommon.lexical_env_alloc_decl jst jlenv.
 Proof.
     introv.
     destruct jst. destruct state_fresh_locations.
@@ -287,7 +288,7 @@ Qed.
 
 Lemma js_object_set_property_lemma : forall jst jptr jobj s jattrs,
     binds jst jptr jobj ->
-    JsPreliminary.object_set_property jst jptr s jattrs 
+    JsCommon.object_set_property jst jptr s jattrs 
         (jst \(jptr := object_map_properties jobj (fun jprops => jprops \(s := jattrs)))).
 Proof.
     introv Hbinds. unfolds. unfolds. jauto.
