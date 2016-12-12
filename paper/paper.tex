@@ -1,71 +1,21 @@
-%-----------------------------------------------------------------------------
-%
-%               Template for sigplanconf LaTeX Class
-%
-% Name:         sigplanconf-template.tex
-%
-% Purpose:      A template for sigplanconf.cls, which is a LaTeX 2e class
-%               file for SIGPLAN conference proceedings.
-%
-% Guide:        Refer to "Author's Guide to the ACM SIGPLAN Class,"
-%               sigplanconf-guide.pdf
-%
-% Author:       Paul C. Anagnostopoulos
-%               Windfall Software
-%               978 371-2316
-%               paul@windfall.com
-%
-% Created:      15 February 2005
-%
-%-----------------------------------------------------------------------------
-
-
-\documentclass{sigplanconf}
-
-% The following \documentclass options may be useful:
-
-% preprint      Remove this option only once the paper is in final form.
-% 10pt          To set in 10-point type instead of 9-point.
-% 11pt          To set in 11-point type instead of 9-point.
-% authoryear    To obtain author/year citation style instead of numeric.
+\documentclass{llncs}
 
 \usepackage{amsmath}
 \PassOptionsToPackage{hyphens}{url}
 \usepackage{hyperref}
 \usepackage{listings,lstlangcoq}
 
+\usepackage{natbib}
+
 \urlstyle{sf}
 
 \begin{document}
 
-\special{papersize=8.5in,11in}
-\setlength{\pdfpageheight}{\paperheight}
-\setlength{\pdfpagewidth}{\paperwidth}
-
-\conferenceinfo{COQPL '16}{January 23, 2015, St. Petersburg, Florida, United States} 
-\copyrightyear{2016} 
-\copyrightdata{978-1-nnnn-nnnn-n/yy/mm} 
-\doi{nnnnnnn.nnnnnnn}
-
-% Uncomment one of the following two, if you are not going for the 
-% traditional copyright transfer agreement.
-
-%\exclusivelicense                % ACM gets exclusive license to publish, 
-                                  % you retain copyright
-
-\permissiontopublish             % ACM gets nonexclusive license to publish
-                                  % (paid open-access papers, 
-                                  % short abstracts)
-
-\titlebanner{banner above paper title}        % These are ignored unless
-\preprintfooter{short description of paper}   % 'preprint' option specified.
-
 \title{Certified Desugaring of Javascript Programs using Coq}
-\subtitle{Experience Report}
 
-\authorinfo{Marek Materzok}
-           {INRIA, University of Wroc\l{}aw}
-           {marek.materzok@inria.fr}
+\author{Marek Materzok\inst{1} \and Alan Schmitt\inst{2}}
+\institute{University of Wroc\l{}aw, Poland\\\email{marek.materzok@ii.uni.wroc.pl}
+\and Inria, France\\\email{alan.schmitt@inria.fr}}
 
 \maketitle
 
@@ -84,16 +34,6 @@ model JavaScript, we try to relate them formally using Coq. The size and complex
 of the two semantics makes this a complex problem with many obstacles
 to be overcome.
 \end{abstract}
-
-\category{D.3.1}{Programming Languages}{Formal Definitions and Theory}
-
-% general terms are not compulsory anymore, 
-% you may leave them out
-%\terms
-%term1, term2
-
-\keywords
-Coq, JavaScript, ECMAScript, mechanized semantics
 
 \section{Notes}
 
@@ -298,38 +238,8 @@ includes most of the important core features of the
 JavaScript language. We are looking forward to receiving
 feedback from the community.
 
-%\appendix
-%\section{Appendix Title}
-
-%This is the text of the appendix, if you need one.
-
-%\acks
-
-%Acknowledgments, if needed.
-
-% We recommend abbrvnat bibliography style.
-
 \bibliographystyle{abbrvnat}
 
 \bibliography{mybib}
 
-% The bibliography should be embedded for final submission.
-
-%\begin{thebibliography}{}
-%\softraggedright
-
-%\bibitem[Smith et~al.(2009)Smith, Jones]{smith02}
-%P. Q. Smith, and X. Y. Jones. ...reference text...
-
-%\end{thebibliography}
-
-
 \end{document}
-
-%                       Revision History
-%                       -------- -------
-%  Date         Person  Ver.    Change
-%  ----         ------  ----    ------
-
-%  2013.06.29   TU      0.1--4  comments on permission/copyright notices
-
