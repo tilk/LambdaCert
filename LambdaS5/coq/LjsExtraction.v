@@ -243,9 +243,10 @@ Extract Constant LjsCommon.get_closure => "fun s v -> get_closure_aux 100000 s v
 Extract Inductive String.string => "string" [ """""" "(^)" ]. *)
 
 (* Parsing *)
-Extract Constant EjsFromJs.parse_js_expr => "JsPreliminary.parse_pickable".
+(* TODO use JSCert parsing *)
+Extract Constant EjsFromJs.parse_js_expr => "fun s -> JsCommon.parse_pickable s false".
 
-Extract Constant JsPreliminary.parse_pickable => "(fun s ->
+Extract Constant JsCommon.parse_pickable => "(fun s strict ->
     let str = Batteries.String.of_list s in
     JsParser.parse str
   )".

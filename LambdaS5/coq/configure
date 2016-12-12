@@ -1,7 +1,7 @@
 BASE_PATH=`dirname $0`/..
 
-TLC="-I $BASE_PATH/../jscert/tlc/"
-FLOCQ="-R $BASE_PATH/../jscert/flocq/src/ Flocq"
+TLC="-I $BASE_PATH/../jscert/lib/tlc/src/"
+FLOCQ="-R $BASE_PATH/../jscert/lib/flocq/src/ Flocq"
 JSCERT="-I $BASE_PATH/../jscert/coq/"
 
 echo $TLC $FLOCQ $JSCERT > _CoqProject

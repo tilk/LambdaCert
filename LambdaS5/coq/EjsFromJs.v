@@ -16,6 +16,7 @@ Local Coercion JsNumber.of_int : Z >-> JsNumber.number.
 Module Import EjsFromJsHelper.
 Module E := EjsSyntax.
 Module J := JsSyntax.
+Module JC := JsCommon.
 Module JI := JsPreliminary.
 End EjsFromJsHelper.
 
@@ -174,7 +175,7 @@ with js_prog_to_ejs p : E.prog :=
     match p with
     | J.prog_intro b sts => 
         E.prog_intro b (concat (List.map js_element_to_func sts))
-            (JI.prog_vardecl p) (E.expr_seqs (List.map js_element_to_ejs sts))
+            (JC.prog_vardecl p) (E.expr_seqs (List.map js_element_to_ejs sts))
     end.
 
 Definition js_funcdecl_to_func (fd : J.funcdecl) : E.id * E.func :=
@@ -184,17 +185,17 @@ Definition js_funcdecl_to_func (fd : J.funcdecl) : E.id * E.func :=
     end.
 
 Lemma js_element_to_func_lemma : forall el,
-    js_element_to_func el = map js_funcdecl_to_func (JI.element_funcdecl el).
+    js_element_to_func el = map js_funcdecl_to_func (JC.element_funcdecl el).
 Proof.
     introv.
     destruct el as [?|? ? [? ?]]; simpl; rew_map; reflexivity.
 Qed.
 
 Lemma js_funcdecl_to_func_lemma : forall p,
-    E.prog_funcs (js_prog_to_ejs p) = map js_funcdecl_to_func (JI.prog_funcdecl p).
+    E.prog_funcs (js_prog_to_ejs p) = map js_funcdecl_to_func (JC.prog_funcdecl p).
 Proof.
     introv. 
-    destruct p. unfolds JI.prog_funcdecl. induction l; simpls; repeat (rew_map || rew_concat). 
+    destruct p. unfolds JC.prog_funcdecl. induction l; simpls; repeat (rew_map || rew_concat). 
     + reflexivity.
     + rewrite js_element_to_func_lemma. rewrite IHl. reflexivity.
 Qed.

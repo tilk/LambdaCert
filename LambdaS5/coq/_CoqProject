@@ -1,4 +1,4 @@
--I ./../../jscert/tlc/ -R ./../../jscert/flocq/src/ Flocq -I ./../../jscert/coq/
+-I ./../../jscert/lib/tlc/src/ -R ./../../jscert/lib/flocq/src/ Flocq -I ./../../jscert/coq/
 EjsFromJs.v
 EjsSyntax.v
 EjsToLjs.v
