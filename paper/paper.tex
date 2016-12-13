@@ -4,13 +4,17 @@
 \PassOptionsToPackage{hyphens}{url}
 \usepackage{hyperref}
 
-\usepackage{natbib}
+\usepackage[backend=biber,bibencoding=utf8]{biblatex}
+
+\addbibresource{mybib.bib}
 
 \urlstyle{sf}
 
 \usepackage{todonotes}
 \newcommand{\as}[1]{\todo[color=green]{#1}}
 \newcommand{\asi}[1]{\todo[color=green,inline]{#1}}
+\newcommand{\mm}[1]{\todo[color=blue]{#1}}
+\newcommand{\mmi}[1]{\todo[color=blue,inline]{#1}}
 
 \usepackage{xspace}
 
@@ -68,8 +72,8 @@ the semantics of JavaScript by defining a simple core language
 (based on the untyped call-by-value lambda calculus), and then
 transforming (or ``desugaring'') the full JavaScript language into this
 simple core. The \lambdajs semantics was originally developed to model the 
-ECMAScript 3 specification~\citep{Guha-al:ECOOP10}, and it was later
-revised~\citep{Politz-al:DLS12} to handle ECMAScript 5.1
+ECMAScript 3 specification~\cite{Guha-al:ECOOP10}, and it was later
+revised~\cite{Politz-al:DLS12} to handle ECMAScript 5.1
 features.\footnote{The authors named the revised language S5; however,
 we continue to name it \lambdajs for simplicity.}
 The interpreter for the core language and the JavaScript-to-core
@@ -80,11 +84,11 @@ The \lambdajs semantics is useful for tool developers, as it
 allows the tools to analyze JavaScript programs by working
 on the simple core language of \lambdajs, having all the complexities
 of JavaScript handled in the desugared code. It was already
-successfully used to verify ADsafe~\citep{Politz-al:SEC11}.
+successfully used to verify ADsafe~\cite{Politz-al:SEC11}.
 
-More recently, JSCert~\citep{Bodin-al:POPL14},
+More recently, JSCert~\cite{Bodin-al:POPL14},
 formalized the ECMAScript 5.1 specification in the form of
-a pretty-big-step semantics~\citep{Chargueraud:ESOP13} expressed in 
+a pretty-big-step semantics~\cite{Chargueraud:ESOP13} expressed in 
 the form of a Coq inductive predicate. It aims to be as close to the
 (informal English) specification as possible by maintaining close correspondence
 between the evaluation rules and steps in the ES5 pseudocode. The project
@@ -119,6 +123,8 @@ restricting our attention to ECMAScript strict mode, proving the
 correctness of non-strict features only when it is convenient.
 \asi{How difficult would it be to prove the other direction (if we have a
   derivation in JSCert, then we have one in \lambdajs?)}
+\mmi{It would require inverting the JSCert semantic judgments.
+  Is this working now? I remember Petar trying to do this.}
 
 We were able to prove correctness of a large part of the
 JavaScript semantics, including function calls, lexical environment
@@ -212,7 +218,7 @@ At this stage we stumbled upon an interesting performance issue
 involving the Coq proof assistant. The proof of completeness required
 inverting the pretty-big-step semantics judgment; this turned out
 to be very slow, and also generated large proof terms, which increased
-the memory footprint. The problem is well-known~\citep{Monin:Coq2}; 
+the memory footprint. The problem is well-known~\cite{Monin:Coq2}; 
 our solution involved
 precomputing the required inversion principles using
 \texttt{Derive Inversion}, and using the precomputed inversion
@@ -315,9 +321,7 @@ includes most of the important core features of the
 JavaScript language. We are looking forward to receiving
 feedback from the community.
 
-\bibliographystyle{plain}
-
-\bibliography{mybib}
+\printbibliography
 
 \end{document}
 
