@@ -1508,7 +1508,7 @@ Qed.
 (* TODO move to LibBagExt *)
 Lemma js_object_rem_property_lemma : forall jst jptr jobj s,
     binds jst jptr jobj ->
-    JsPreliminary.object_rem_property jst jptr s
+    JsCommon.object_rem_property jst jptr s
         (jst \(jptr := J.object_map_properties jobj (fun jprops => J.Heap.rem jprops s))).
 Proof.
     introv Hbinds. unfolds. unfolds. jauto.
@@ -1981,6 +1981,17 @@ Hint Rewrite js_mutability_of_bool_is_mutable_if_rewrite : js_ljs.
 
 Hint Extern 80 => progress rew_heap_to_libbag : js_ljs.
 
+Lemma env_record_write_decl_env_to_libbag : forall jst jeptr jder s m jv,
+    J.env_record_write_decl_env jst jeptr jder s m jv = jst\(jeptr:=J.env_record_decl (jder\(s:=(m, jv)))).
+Proof.
+    introv.
+    unfolds J.env_record_write_decl_env.
+    rew_heap_to_libbag.
+    reflexivity.
+Qed.
+
+Hint Rewrite env_record_write_decl_env_to_libbag : js_ljs.
+
 Lemma create_set_mutable_binding_some_lemma : forall jst jc jeptr s b2 jder jv b,
     binds jst jeptr (J.env_record_decl jder) ->
     ~index jder s ->
@@ -1991,14 +2002,14 @@ Proof.
     eapply J.red_spec_env_record_create_set_mutable_binding.
     eauto_js.
     unfolds J.env_record_write_decl_env.
+    rew_heap_to_libbag.
     eapply J.red_spec_env_record_create_set_mutable_binding_1.
     eapply J.red_spec_env_record_set_mutable_binding. eauto_js.
-    eapply J.red_spec_env_record_set_mutable_binding_1_decl. eauto_js. eauto_js.
-    autorewrite with js_ljs. sets_eq_let x.
-    unfolds J.env_record_write_decl_env.
-    rew_heap_to_libbag in EQx.
-    rew_bag_simpl in EQx.
-    substs. eauto_js.
+    eapply J.red_spec_env_record_set_mutable_binding_1_decl_mutable. eauto_js. eauto_js.
+    progress autorewrite with js_ljs.
+    rew_heap_to_libbag.
+    rew_bag_simpl.
+    eauto_js.
 Qed. 
 
 Hint Resolve create_set_mutable_binding_some_lemma : js_ljs.
@@ -2016,13 +2027,12 @@ Proof.
     eapply J.red_spec_env_record_create_set_mutable_binding_1.
     eapply J.red_spec_env_record_set_mutable_binding.
     rew_heap_to_libbag. eauto_js.
-    eapply J.red_spec_env_record_set_mutable_binding_1_decl.
+    eapply J.red_spec_env_record_set_mutable_binding_1_decl_mutable.
     rew_heap_to_libbag. eauto_js. eauto_js.
-    autorewrite with js_ljs. sets_eq_let x.
-    unfolds J.env_record_write_decl_env.
-    repeat rew_heap_to_libbag in EQx.
-    rew_bag_simpl in EQx.
-    substs. eauto_js.
+    autorewrite with js_ljs. 
+    rew_heap_to_libbag.
+    rew_bag_simpl.
+    eauto_js.
 Qed.
 
 Hint Resolve create_set_mutable_binding_none_lemma : js_ljs.
@@ -2775,7 +2785,7 @@ Hint Extern 3 (env_record_related _ ?jer _) => not (is_evar jer); eapply env_rec
 *)
 
 Lemma mutability_is_mutable_uninitialized_immutable :
-    ~JsPreliminary.mutability_is_mutable J.mutability_uninitialized_immutable.
+    ~JsCommon.mutability_is_mutable J.mutability_uninitialized_immutable.
 Proof.
     intro H. unfolds in H. destruct_hyp H. tryfalse.
 Qed.
@@ -2783,7 +2793,7 @@ Qed.
 Hint Resolve mutability_is_mutable_uninitialized_immutable : js_ljs.
 
 Lemma mutability_is_mutable_immutable :
-    ~JsPreliminary.mutability_is_mutable J.mutability_immutable.
+    ~JsCommon.mutability_is_mutable J.mutability_immutable.
 Proof.
     intro H. unfolds in H. destruct_hyp H. tryfalse.
 Qed.
@@ -3542,11 +3552,11 @@ Proof.
 Qed.
 
 Definition js_attributes_of_descriptor jdesc :=
-    If JsPreliminary.descriptor_is_generic jdesc \/ JsPreliminary.descriptor_is_data jdesc
+    If JsCommon.descriptor_is_generic jdesc \/ JsCommon.descriptor_is_data jdesc
     then JsSyntax.attributes_data_of
-        (JsPreliminary.attributes_data_of_descriptor jdesc)
+        (JsCommon.attributes_data_of_descriptor jdesc)
     else JsSyntax.attributes_accessor_of
-        (JsPreliminary.attributes_accessor_of_descriptor jdesc).
+        (JsCommon.attributes_accessor_of_descriptor jdesc).
 
 Hint Extern 10 (J.object_extensible _ _ _) => unfolds : js_ljs.
 Hint Extern 10 (J.object_method _ _ _ _) => unfolds : js_ljs.
