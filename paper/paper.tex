@@ -78,7 +78,7 @@ features.\footnote{The authors named the revised language S5; however,
 we continue to name it \lambdajs for simplicity.}
 The interpreter for the core language and the JavaScript-to-core
 transformation were developed using 
-OCaml;\footnote{\url{https://github.com/brownplt/LambdaS5}}
+OCaml\cite{github:brownplt/LambdaS5};
 the interpreter was tested using the official test262 test suite.
 The \lambdajs semantics is useful for tool developers, as it
 allows the tools to analyze JavaScript programs by working
@@ -142,9 +142,7 @@ The development is publicly available and can be downloaded from GitHub:
 For the purpose of relating the two semantics, we first developed a
 formalization of the \lambdajs core language. This was necessary because no such
 formalization existed previously; a formalization of the original, ES3-based
-\lambdajs was available,\as{I propose we use biblatex and add bib references for
-  urls instead of
-  footnotes.}\footnote{\url{https://github.com/brownplt/LambdaJS}} but the two
+\lambdajs was available\cite{github:brownplt/LambdaJS}, but the two
 versions of \lambdajs differ too much for this to be useful.
 
 We decided to formalize the \lambdajs core using a
@@ -287,7 +285,7 @@ automated using domain-specific tactics; the JSCert derivation
 is constructed using the \texttt{eauto} tactic with a specialized
 hint database (\texttt{nocore} is used to avoid using the standard
 hints coming from Coq and Chargu\'eraud's TLC
-library,\footnote{\url{http://www.chargueraud.org/softs/tlc/}} which is
+library~\cite{TLC}, which is
 used both by JSCert and our development).
 
 \section{Conclusion}
@@ -307,7 +305,7 @@ of the two most popular JavaScript implementations, Google's V5 and
 Mozilla's SpiderMonkey. The discovery of the inconsistency,
 which involves exceptions and statement result values,
 resulted in a correction being made in the official ES6
-specification.\footnote{\url{https://esdiscuss.org/topic/loop-unrolling-and-completion-values-in-es6}}
+specification\cite{esdiscuss:loop-unrolling}.
 \asi{We should detail the bug.}
 
 The proof scripts we developed are very taxing for the Coq
