@@ -16,6 +16,8 @@
 \newcommand{\mm}[1]{\todo[color=blue]{#1}}
 \newcommand{\mmi}[1]{\todo[color=blue,inline]{#1}}
 
+\newcommand{\jsinline}[1]{\texttt{#1}}
+
 \usepackage{xspace}
 
 \usepackage{minted}
@@ -288,7 +290,9 @@ hints coming from Coq and Chargu\'eraud's TLC
 library~\cite{TLC}, which is
 used both by JSCert and our development).
 
-\section{Conclusion}
+\section{Issues found}
+
+\subsection{Issues in the \lambdajs definition}
 
 In the course of our work, we found numerous cases where
 \lambdajs did not faithfully follow the ES5 
@@ -299,14 +303,47 @@ to solve them. Interestingly, no serious issues in JSCert were
 found, which strengthens our confidence that it accurately models
 the ES5 specification.
 
+\subsection{An issue in the ES5 specification}
+
 While proving the correctness of while loops, we found an interesting
 inconsistency between the ES5 specification and the behavior
-of the two most popular JavaScript implementations, Google's V5 and
-Mozilla's SpiderMonkey. The discovery of the inconsistency,
-which involves exceptions and statement result values,
+of the two most popular JavaScript implementations, Google's V8 and
+Mozilla's SpiderMonkey. The issue involves a subtle interaction
+between the \jsinline{break} statements, looping constructs
+and statement completion values (which can be observed only by \jsinline{eval}).
+ES5 specifies that if the loop body breaks to a~label outside the loop,
+the completion values returned by the loop body in the previous iterations
+are forgotten. For instance, ES5 specifies the following code to return~1 when run by \jsinline{eval}:
+\begin{minted}{javascript}
+var x; 
+l: { 
+    x = 1; 
+    while(true) if (x) x = x - 1; else break l 
+}
+\end{minted}
+This kind of semantics is problematic because it breaks the loop unrolling
+transformation. If we unroll the \jsinline{while} loop once, we get the
+following code, which ES5 specifies to return~0:
+\begin{minted}{javascript}
+var x; 
+l: { 
+    x = 1; 
+    if (true) { 
+        if (x) x = x - 1; else break l; 
+        while(true) if (x) x = x - 1; else break l 
+    }
+}
+\end{minted}
+The two pieces of code, when run by the major JavaScript engines, both return~0.
+The discovery of the inconsistency
 resulted in a correction being made in the official ES6
 specification\cite{esdiscuss:loop-unrolling}.
-\asi{We should detail the bug.}
+
+\subsection{Issues in JSCert}
+
+\mmi{TODO}
+
+\section{Conclusion}
 
 The proof scripts we developed are very taxing for the Coq
 proof assistant -- the compilation of the whole development
