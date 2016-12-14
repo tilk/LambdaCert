@@ -4,7 +4,7 @@
 \PassOptionsToPackage{hyphens}{url}
 \usepackage{hyperref}
 
-\usepackage[backend=biber,bibencoding=utf8]{biblatex}
+\usepackage[backend=biber,bibencoding=utf8,urldate=iso8601,date=iso8601]{biblatex}
 
 \addbibresource{mybib.bib}
 
@@ -137,30 +137,13 @@ JavaScript. Our contributions are as follows.
 
 Note that we do not prove the converse, i.e., that if a JavaScript program has a
 semantic in JSCert, then its \lambdajs translation successfully terminates and
-the results match. The reason is technical and is described in
-Section~\ref{sec:coq-techniques} alongside the techniques we implemented in Coq
-for this development. 
+the results match. For such a result, we would need to apply \textsf{inversion}
+on the full JSCert semantics, which does not currently work. This issue is
+described in Section~\ref{sec:coq-techniques} alongside the techniques we
+implemented in Coq for this development.
 
-To reduce the complexity of the task, we are currently working
-only on proving \lambdajs correct with respect to JSCert,
-i.e., that if the \lambdajs program successfully terminates,
-then its result matches the result given by JSCert. We are also
-restricting our attention to ECMAScript strict mode, proving the
-correctness of non-strict features only when it is convenient.
-\asi{We should have a sentence like ``Proving the other direction requires doing
-  an inversion of the full JSCert semantics. Unfortunately, the techniques we
-  have used (see Section $\ldots$) do not scale to semantics of that size.'' }
-
-We were able to prove correctness of a large part of the
-JavaScript semantics, including function calls, lexical environment
-handling, and most operations involving objects. The work is still
-in progress to prove the remaining parts, which include integer
-operations, the
-defineOwnProperty method, and elements of the standard library.
-
-The development is publicly available and can be downloaded from GitHub:
-
-\url{https://github.com/tilk/LambdaCert}
+The development is publicly available and can be downloaded from
+GitHub~\cite{github:lambdacert}.
 
 \section{Formalization of \lambdajs}
 \label{sec:form-lambdajs}
@@ -272,6 +255,17 @@ and takes almost a megabyte of disk space!
 
 \section{Correctness proof for \lambdajs desugaring}
 \label{sec:corr-proof-lambdajs}
+
+\asi{This was in the introduction, we need to integrate it again.
+
+We were able to prove correctness of a large part of the
+JavaScript semantics, including function calls, lexical environment
+handling, and most operations involving objects. The work is still
+in progress to prove the remaining parts, which include integer
+operations, the
+defineOwnProperty method, and elements of the standard library.
+}
+
 
 In order to establish correctness, it was first needed to create
 a set of predicates specifying the relationship between 
