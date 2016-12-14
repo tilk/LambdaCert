@@ -11,10 +11,13 @@
 \urlstyle{sf}
 
 \usepackage{todonotes}
+
+\definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
+
 \newcommand{\as}[1]{\todo[color=green]{#1}}
 \newcommand{\asi}[1]{\todo[color=green,inline]{#1}}
-\newcommand{\mm}[1]{\todo[color=blue]{#1}}
-\newcommand{\mmi}[1]{\todo[color=blue,inline]{#1}}
+\newcommand{\mm}[1]{\todo[color=aliceblue]{#1}}
+\newcommand{\mmi}[1]{\todo[color=aliceblue,inline]{#1}}
 
 \newcommand{\jsinline}[1]{\texttt{#1}}
 
@@ -123,10 +126,9 @@ i.e., that if the \lambdajs program successfully terminates,
 then its result matches the result given by JSCert. We are also
 restricting our attention to ECMAScript strict mode, proving the
 correctness of non-strict features only when it is convenient.
-\asi{How difficult would it be to prove the other direction (if we have a
-  derivation in JSCert, then we have one in \lambdajs?)}
-\mmi{It would require inverting the JSCert semantic judgments.
-  Is this working now? I remember Petar trying to do this.}
+\asi{We should have a sentence like ``Proving the other direction requires doing
+  an inversion of the full JSCert semantics. Unfortunately, the techniques we
+  have used (see Section $\ldots$) do not scale to semantics of that size.'' }
 
 We were able to prove correctness of a large part of the
 JavaScript semantics, including function calls, lexical environment
