@@ -1,7 +1,10 @@
 
 open Batteries
 
-open LjsSyntax
+open LjsSyntax;;
+
+Parser_main.init();;
+Parser_main.use_json := true (* use Esprima *)
 
 let usage_msg = "Usage: "
 
@@ -26,8 +29,7 @@ let handle_parameter filename =
     had_files := true;
     let ast = 
         if !fformat then
-            let Some jp = Desugar.get_js_parser () in
-            EjsToLjs.add_init (jp filename)
+            EjsToLjs.add_init (Desugar.desugar_file filename)
         else
             let ch = get_channel filename in
             let ret = Parse.parse_es5 ch filename in
@@ -74,9 +76,7 @@ let coq_save_store filename =
             Printexc.print_backtrace stderr;
             raise e)
 
-let desugar_s5 filename = Desugar.set_js_parser_s5 filename 
-
-let desugar_builtin filename = Desugar.set_js_parser_builtin filename
+let desugar_builtin filename = Parser_main.json_parser_path := filename
 
 let format_js () = fformat := true
 
@@ -103,9 +103,6 @@ let _ =
          "-desugarBuiltin",
          Arg.String desugar_builtin,
          "path to the external Javascript-to-JSON parser";
-         "-desugarS5",
-         Arg.String desugar_s5,
-         "path to LambdaS5 (for desugaring js)";
          "-js",
          Arg.Unit format_js,
          "parse inputs as Javascript";

@@ -7,8 +7,8 @@ let parsecmd = ref ""
 let set_parsecmd s = parsecmd := s
 
 let parse_file filename = 
-    let ch = Unix.open_process_in (!parsecmd ^ " " ^ Filename.quote filename) in
-    SpiderMonkey.parse_spidermonkey (IO.to_input_channel ch)
+    try Some (Translate_syntax.coq_syntax_from_file filename)
+    with e -> None
 
 let parse s = 
     let filename = File.with_temporary_out (fun o fn -> String.print o s; fn) in
