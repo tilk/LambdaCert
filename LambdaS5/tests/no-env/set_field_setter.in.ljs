@@ -1,1 +1,1 @@
-let (foo = {[] 'bar': {#getter undefined, #setter (func (arg) { arg })}}) {foo['bar'<#setter>]('two')}
+let (foo = {[] "bar": {#getter undefined, #setter (func (arg) { arg })}}) {foo["bar"<#setter>]("two")}

@@ -1,1 +1,1 @@
-{[] 'foo': {#getter (func () { 'bar' }), #setter undefined}}['foo'<#getter>]()
+{[] "foo": {#getter (func () { "bar" }), #setter undefined}}["foo"<#getter>]()

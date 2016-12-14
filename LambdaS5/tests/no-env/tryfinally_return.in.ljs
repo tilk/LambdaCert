@@ -1,1 +1,1 @@
-try { prim('print', 'try'); 'foo' } finally { prim('print', 'finally'); 'bar' }
+try { prim("print", "try"); "foo" } finally { prim("print", "finally"); "bar" }

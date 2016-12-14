@@ -1,1 +1,1 @@
-{[] 'foo': {#value 'bar', #writable true}}['foo'<#value>]
+{[] "foo": {#value "bar", #writable true}}["foo"<#value>]

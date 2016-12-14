@@ -52,7 +52,7 @@ let parse_es5 cin name =
       check_var_scope Set.empty v; v
     with
       |  Failure "lexing: empty token" ->
-           failwith "lexical error"
+           failwith (Printf.sprintf "lexical error at %s, %s" (sprintf_pos(Lexing.lexeme_start_p lexbuf)) (sprintf_pos(Lexing.lexeme_end_p lexbuf)))
       | Failure "utf8_of_point not implemented" ->
         failwith "Parser doesn't do some UTF8 encoding crap"
       | Parsing.Parse_error -> failwith (Printf.sprintf "parse error; unexpected token %s at %s"

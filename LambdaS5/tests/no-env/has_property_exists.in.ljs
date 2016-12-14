@@ -1,2 +1,2 @@
-let (foo = {[] 'foo_field': {#value 'bar', #writable true}})
+let (foo = {[] "foo_field": {#value "bar", #writable true}})
 prim("hasOwnProperty", foo, "foo_field")

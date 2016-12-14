@@ -1,5 +1,5 @@
-let (b = {[] 'foo': {#value 'FOO', #writable true}}) {
-let (f = func(a) { b['foo'<#value> = 'bar'] })
+let (b = {[] "foo": {#value "FOO", #writable true}}) {
+let (f = func(a) { b["foo"<#value> = "bar"] })
 f(5);
-b['foo'<#value>]
+b["foo"<#value>]
 }

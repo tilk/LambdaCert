@@ -1,2 +1,2 @@
-let (foo = {[]}) {foo['bar'<#value> = "two"]; foo['bar'<#value>]}
+let (foo = {[]}) {foo["bar"<#value> = "two"]; foo["bar"<#value>]}
 
