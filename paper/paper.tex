@@ -223,18 +223,19 @@ Lemma runs_correct : forall k, runs_type_correct (runs k).
 
 \asi{Add the theorem.}
 
-At this stage we stumbled upon an interesting performance issue 
-involving the Coq proof assistant. The proof of completeness required
-inverting the pretty-big-step semantics judgment; this turned out
-to be very slow, and also generated large proof terms, which increased
-the memory footprint. The problem is well-known~\cite{Monin:Coq2}; 
-our solution involved
-precomputing the required inversion principles using
-\texttt{Derive Inversion}, and using the precomputed inversion
-principles to create a specialized inversion tactic.
+% This was moved.
+%At this stage we stumbled upon an interesting performance issue 
+%involving the Coq proof assistant. The proof of completeness required
+%inverting the pretty-big-step semantics judgment; this turned out
+%to be very slow, and also generated large proof terms, which increased
+%the memory footprint. The problem is well-known~\cite{Monin:Coq2}; 
+5our solution involved
+%precomputing the required inversion principles using
+%\texttt{Derive Inversion}, and using the precomputed inversion
+%principles to create a specialized inversion tactic.
 
-\asi{Put a forward pointer to a section where we described the issue in more
-  details.}
+%\asi{Put a forward pointer to a section where we described the issue in more
+%  details.}
 
 \section{Desugaring}
 \label{sec:desugaring}
@@ -320,6 +321,30 @@ used both by JSCert and our development).
 Proving the other direction requires doing an inversion of the full JSCert
 semantics. Unfortunately, the techniques we have used do not scale to semantics
 of that size.
+
+\subsection{Precomputed inversion}
+
+Developing the correctness proof for the JavaScript desugaring required
+inverting the \lambdajs pretty-big-step semantics judgment; this
+turned out to be very slow, and also generated large proof terms, which 
+increased the memory footprint. The problem is well-known~\cite{Monin:Coq2}.
+To solve it, we precomputed the required inversion principles
+using \texttt{Derive Inversion}, e.g.:
+\begin{minted}{coq}
+Derive Inversion inv_red_exprh_if with (forall k c st e e1 e2 oo,
+    red_exprh k c st (expr_if e e1 e2) oo) Sort Prop.
+\end{minted}
+Using these, we created a specialized inversion tactic
+which selects and applies the required induction principle.
+The \texttt{Derive Inversion} calls and the tactic definitions
+are generated automatically from the Coq definition of the semantics.
+
+Unfortunately, this technique was still not efficient enough to be
+applied to JSCert: the definition of the JavaScript semantics in
+JSCert has around 10 times more semantic rules than the definition
+in \lambdajs.
+
+\subsection{Proof automation}
 
 \section{Issues found}
 
