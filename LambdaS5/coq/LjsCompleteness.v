@@ -21,7 +21,7 @@ Import ListNotations.
 Open Scope list_scope.
 
 Implicit Type A B : Type.
-Implicit Type runs : runs_type.
+Implicit Type eval : eval_fun.
 Implicit Type st : store.
 Implicit Type e : expr.
 Implicit Type v : value.
@@ -43,30 +43,30 @@ Proof.
     unfold ctx. rewrite H. reflexivity.
 Qed.
 
-Lemma eval_cont_lemma : forall {A runs c st e re} cont,
-    runs_type_eval runs c st e = re ->
-    @eval_cont A runs c st e cont = cont re.
+Lemma eval_cont_lemma : forall {A eval c st e re} cont,
+    eval c st e = re ->
+    @eval_cont A eval c st e cont = cont re.
 Proof.
     introv H. unfolds. rewrite H. reflexivity.
 Qed.
 
-Lemma if_eval_return_lemma : forall {runs c st st' e v} cont, 
-    runs_type_eval runs c st e = result_some (out_ter st' (res_value v)) ->
-    if_eval_return runs c st e cont = cont st' v.
+Lemma if_eval_return_lemma : forall {eval c st st' e v} cont, 
+    eval c st e = result_some (out_ter st' (res_value v)) ->
+    if_eval_return eval c st e cont = cont st' v.
 Proof.
     introv H. unfolds. lets L : @eval_cont_lemma H. rewrite L. reflexivity.
 Qed.
 
-Lemma if_eval_ter_div_lemma : forall {runs c st e} cont, 
-    runs_type_eval runs c st e = result_some out_div ->
-    if_eval_ter runs c st e cont = result_some out_div.
+Lemma if_eval_ter_div_lemma : forall {eval c st e} cont, 
+    eval c st e = result_some out_div ->
+    if_eval_ter eval c st e cont = result_some out_div.
 Proof.
     introv H. unfolds. lets L : @eval_cont_lemma H. rewrite L. reflexivity.
 Qed.
 
-Lemma if_eval_ter_lemma : forall {runs c st st' e r} cont, 
-    runs_type_eval runs c st e = result_some (out_ter st' r) ->
-    if_eval_ter runs c st e cont = cont st' r.
+Lemma if_eval_ter_lemma : forall {eval c st st' e r} cont, 
+    eval c st e = result_some (out_ter st' r) ->
+    if_eval_ter eval c st e cont = cont st' r.
 Proof.
     introv H. unfolds. lets L : @eval_cont_lemma H. rewrite L. reflexivity.
 Qed.
@@ -156,10 +156,10 @@ Proof.
     inversion HC; reflexivity. 
 Qed.
 
-Lemma if_eval_return_abort_lemma : forall {runs c st e o} cont,
+Lemma if_eval_return_abort_lemma : forall {eval c st e o} cont,
     abort o ->
-    runs_type_eval runs c st e = result_some o ->
-    if_eval_return runs c st e cont = result_some o.
+    eval c st e = result_some o ->
+    if_eval_return eval c st e cont = result_some o.
 Proof.
     introv HA H. unfolds. lets L : @eval_cont_lemma H. rewrite L.
     applys @if_value_abort_lemma HA.
@@ -192,11 +192,11 @@ Ltac ljs_eval :=
     | H : object_property_is _ _ _ _ |- _ => apply get_property_from_object_property_is in H
     | H : closure_ctx _ _ _ |- _ => apply get_closure_ctx_from_closure_ctx in H
     | H : binds ?c ?i _ |- assert_deref ?c ?i _ = _ => rewrite (assert_deref_lemma _ H)
-    | H : runs_type_eval ?runs ?c ?st ?e = _ |- eval_cont ?runs ?c ?st ?e _ = _ => rewrite (eval_cont_lemma _ H)
-    | H : runs_type_eval ?runs ?c ?st ?e = result_some (out_ter _ (res_value _)) 
-        |- if_eval_return ?runs ?c ?st ?e _ = _ => rewrite (if_eval_return_lemma _ H)
-    | H : runs_type_eval ?runs ?c ?st ?e = result_some (out_ter _ _) 
-        |- if_eval_ter ?runs ?c ?st ?e _ = _ => rewrite (if_eval_ter_lemma _ H)
+    | H : ?eval ?c ?st ?e = _ |- eval_cont ?eval ?c ?st ?e _ = _ => rewrite (eval_cont_lemma _ H)
+    | H : ?eval ?c ?st ?e = result_some (out_ter _ (res_value _)) 
+        |- if_eval_return ?eval ?c ?st ?e _ = _ => rewrite (if_eval_return_lemma _ H)
+    | H : ?eval ?c ?st ?e = result_some (out_ter _ _) 
+        |- if_eval_ter ?eval ?c ?st ?e _ = _ => rewrite (if_eval_ter_lemma _ H)
     | H : binds ?st ?ptr _ |- assert_get_object_from_ptr ?st ?ptr _ = _ => 
         rewrite (assert_get_object_from_ptr_lemma _ H)
     | H : binds ?st ?ptr _ |- assert_get_object ?st (value_object ?ptr) _ = _ => 
@@ -222,16 +222,16 @@ Ltac ljs_eval :=
 Ltac ljs_abort :=
     match goal with
     | H : abort ?o |- if_value (result_some ?o) _ = result_some ?o => apply (if_value_abort_lemma _ H)
-    | H : abort ?o, H1 : runs_type_eval ?runs ?c ?st ?e = result_some ?o 
-        |- if_eval_return ?runs ?c ?st ?e ?cont = result_some ?o => apply (if_eval_return_abort_lemma _ H H1)
-    | H : runs_type_eval ?runs ?c ?st ?e = result_some out_div 
-        |- if_eval_return ?runs ?c ?st ?e ?cont = result_some ?o => apply (if_eval_ter_div_lemma _ H)
+    | H : abort ?o, H1 : ?eval ?c ?st ?e = result_some ?o 
+        |- if_eval_return ?eval ?c ?st ?e ?cont = result_some ?o => apply (if_eval_return_abort_lemma _ H H1)
+    | H : ?eval ?c ?st ?e = result_some out_div 
+        |- if_eval_return ?eval ?c ?st ?e ?cont = result_some ?o => apply (if_eval_ter_div_lemma _ H)
     end. 
 
-Lemma lazyruns_lemma : forall runs, suspend_runs (fun _ => runs) = runs.
+Lemma lazyeval_lemma : forall eval, suspend_eval (fun _ => eval) = eval.
 Proof.
     intros.
-    destruct runs. unfolds.
+    unfolds.
     autorewrite with rew_eta. 
     reflexivity.
 Qed.
@@ -299,11 +299,11 @@ Ltac ljs_eval_push := solve [auto] || ljs_specialize_ih || ljs_inv_red_abort || 
 (* Lemmas about complex constructions of ljs (object literals and function application) *)
 
 Lemma object_properties_lemma : forall k,
-    (forall c st e o, red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o) -> 
+    (forall c st e o, red_exprh k c st e o -> (eval k) c st e = result_some o) -> 
     forall l1 l2 c st obj o,
     red_exprh k c st (expr_object_2 l1 l2 obj) o ->
-    eval_object_internal (runs k) c st l1 obj (fun st obj =>
-    eval_object_properties (runs k) c st l2 obj (fun st obj =>
+    eval_object_internal (eval k) c st l1 obj (fun st obj =>
+    eval_object_properties (eval k) c st l2 obj (fun st obj =>
                   let (st, loc) := add_object st obj
                   in result_value st loc
           )) = result_some o.
@@ -326,10 +326,10 @@ Proof.
 Qed.
 
 Lemma apply_lemma : forall k,
-    (forall c st e o, red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o) -> 
+    (forall c st e o, red_exprh k c st e o -> (eval k) c st e = result_some o) -> 
     forall c st v vs o,
     red_exprh k c st (expr_app_2 v vs) o ->
-    apply (runs k) c st v vs = result_some o.
+    apply (eval k) c st v vs = result_some o.
 Proof.
     introv IH H.
     substs.
@@ -347,10 +347,10 @@ Proof.
 Qed.
 
 Lemma eval_arg_list_lemma : forall k, 
-    (forall c st e o, red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o) -> 
+    (forall c st e o, red_exprh k c st e o -> (eval k) c st e = result_some o) -> 
     forall es c st v vs o,
     red_exprh k c st (expr_eval_many_1 es vs (expr_app_2 v)) o ->
-    fold_right (eval_arg_list_aux (runs k) c) (fun st vs => apply (runs k) c st v (rev vs)) es st vs = result_some o.
+    fold_right (eval_arg_list_aux (eval k) c) (fun st vs => apply (eval k) c st v (rev vs)) es st vs = result_some o.
 Proof.
     introv IH.
     induction es; introv H. 
@@ -399,7 +399,7 @@ Qed.
 Opaque read_option. 
 
 Lemma eval_complete_lemma : forall k c st e o,
-    red_exprh k c st e o -> runs_type_eval (runs k) c st e = result_some o.
+    red_exprh k c st e o -> (eval k) c st e = result_some o.
 Proof.
     induction k; 
     introv R;
@@ -588,8 +588,8 @@ Qed.
 
 (* Completeness *)
 
-Lemma eval_complete : forall c st e o,
-    red_expr c st e o -> exists k, runs_type_eval (runs k) c st e = result_some o.
+Lemma eval_k_complete : forall c st e o,
+    red_expr c st e o -> exists k, (eval k) c st e = result_some o.
 Proof.
     introv H.
     lets (k&H1) : red_expr_add_h H.

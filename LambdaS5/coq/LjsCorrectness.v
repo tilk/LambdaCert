@@ -19,7 +19,7 @@ Open Scope list_scope.
 Open Scope container_scope.
 
 Implicit Type A B : Type.
-Implicit Type runs : runs_type.
+Implicit Type eval : eval_fun.
 Implicit Type st : store.
 Implicit Type e : expr.
 Implicit Type v : value.
@@ -33,11 +33,8 @@ Implicit Type obj : object.
 Implicit Type re : result.
 Implicit Type r : res.
 
-Record runs_type_correct runs :=
-    make_runs_type_correct {
-        runs_type_correct_eval : forall c st e o,
-            runs_type_eval runs c st e = result_some o -> red_expr c st e o
-}.
+Definition eval_fun_correct eval := forall c st e o,
+  eval c st e = result_some o -> red_expr c st e o.
 
 (* Useful lemmas *)
 
@@ -169,16 +166,16 @@ Proof.
     cases_match_option. jauto.
 Qed.
 
-Lemma if_eval_ter_out : forall runs c st e cont o,
-    if_eval_ter runs c st e cont = result_some o ->
-    is_some (runs_type_eval runs c st e) (if_out_ter_post cont o).
+Lemma if_eval_ter_out : forall eval c st e cont o,
+    if_eval_ter eval c st e cont = result_some o ->
+    is_some (eval c st e) (if_out_ter_post cont o).
 Proof. 
     auto using if_out_ter_out.
 Qed.
 
-Lemma if_eval_return_out : forall runs c st e cont o,
-    if_eval_return runs c st e cont = result_some o ->
-    is_some (runs_type_eval runs c st e) (if_value_post cont o).
+Lemma if_eval_return_out : forall eval c st e cont o,
+    if_eval_return eval c st e cont = result_some o ->
+    is_some (eval c st e) (if_value_post cont o).
 Proof. 
     auto using if_value_out.
 Qed.
@@ -315,7 +312,7 @@ Ltac ljs_run_inv :=
     end
 . 
 
-Ltac ljs_eval_ih := eapply runs_type_correct_eval; eassumption.
+Ltac ljs_eval_ih := eassumption.
 
 Ltac destruct_exists H :=
     match type of H with
@@ -357,20 +354,20 @@ Ltac ljs_is_some_value_munch := eapply is_some_value_munch; [eassumption | (righ
 
 (* Prerequisites for proving correctness for application *)
 
-Fixpoint is_some_values_eval runs c st o (es : list expr) (lv : list value) (Pred : store -> list value -> Prop) : Prop := 
+Fixpoint is_some_values_eval eval c st o (es : list expr) (lv : list value) (Pred : store -> list value -> Prop) : Prop := 
     match es with
     | nil => Pred st (rev lv)
-    | e :: es' => is_some_value o (runs_type_eval runs c st e) (fun st' v => 
-        is_some_values_eval runs c st' o es' (v :: lv) Pred)
+    | e :: es' => is_some_value o (eval c st e) (fun st' v => 
+        is_some_values_eval eval c st' o es' (v :: lv) Pred)
     end.
 
-Lemma is_some_values_eval_lemma : forall runs c o es cont (Pred : _ -> _ -> Prop),
-    runs_type_correct runs -> 
+Lemma is_some_values_eval_lemma : forall eval c o es cont (Pred : _ -> _ -> Prop),
+    eval_fun_correct eval -> 
     (forall vs st, cont st vs = result_some o -> Pred st vs) ->
     forall vs st,
-    fold_right (eval_arg_list_aux runs c)
+    fold_right (eval_arg_list_aux eval c)
         (fun st args => cont st (rev args)) es st vs = result_some o -> 
-    is_some_values_eval runs c st o es vs Pred.
+    is_some_values_eval eval c st o es vs Pred.
 Proof. 
     introv IH CH.
     induction es.
@@ -383,16 +380,16 @@ Proof.
     eapply IHes; assumption.
 Qed.
 
-Definition apply_post runs c st v vs o := exists clo c', 
+Definition apply_post eval c st v vs o := exists clo c', 
     (v = value_closure clo /\ get_closure_ctx clo vs = result_some c' \/
      exists ptr obj, v = value_object ptr /\ binds st ptr obj /\ 
          object_code obj = value_closure clo /\ get_closure_ctx clo (v::vs) = result_some c') /\
-    runs_type_eval runs c' st (closure_body clo) = result_some o.
+    eval c' st (closure_body clo) = result_some o.
 
-Lemma apply_correct : forall runs c st v vs o,
-    runs_type_correct runs ->
-    apply runs c st v vs = result_some o ->
-    apply_post runs c st v vs o.
+Lemma apply_correct : forall eval c st v vs o,
+    eval_fun_correct eval ->
+    apply eval c st v vs = result_some o ->
+    apply_post eval c st v vs o.
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto.
@@ -412,22 +409,22 @@ Qed.
 
 (* Lemmas for proving the main lemma *)
 
-Lemma eval_app_correct : forall runs c st e es o,
-    runs_type_correct runs ->
-    eval_app runs c st e es = result_some o ->
-    is_some_value o (runs_type_eval runs c st e) (fun st' v => 
-        is_some_values_eval runs c st' o es nil (fun st'' vs => 
-            apply_post runs c st'' v vs o)).
+Lemma eval_app_correct : forall eval c st e es o,
+    eval_fun_correct eval ->
+    eval_app eval c st e es = result_some o ->
+    is_some_value o (eval c st e) (fun st' v => 
+        is_some_values_eval eval c st' o es nil (fun st'' vs => 
+            apply_post eval c st'' v vs o)).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; ljs_is_some_value_munch.
-    apply is_some_values_eval_lemma with (cont := fun st args => apply runs c st v args); try assumption.
+    apply is_some_values_eval_lemma with (cont := fun st args => apply eval c st v args); try assumption.
     eauto using apply_correct.
 Qed.
 
-Lemma eval_id_correct : forall runs c st s o,
-    runs_type_correct runs -> 
-    eval_id runs c st s = result_some o -> 
+Lemma eval_id_correct : forall eval c st s o,
+    eval_fun_correct eval -> 
+    eval_id eval c st s = result_some o -> 
     exists v, c \(s?) = Some v /\ 
         o = out_ter st (res_value v).
 Proof.
@@ -436,109 +433,109 @@ Proof.
     ljs_run_inv. eauto.
 Qed.
 
-Lemma eval_if_correct : forall runs c st e e1 e2 o,
-    runs_type_correct runs ->
-    eval_if runs c st e e1 e2 = result_some o ->
-    is_some_value o (runs_type_eval runs c st e) (fun st' v =>
+Lemma eval_if_correct : forall eval c st e e1 e2 o,
+    eval_fun_correct eval ->
+    eval_if eval c st e e1 e2 = result_some o ->
+    is_some_value o (eval c st e) (fun st' v =>
         (v = value_true /\ 
-            runs_type_eval runs c st' e1 = result_some o) \/
+            eval c st' e1 = result_some o) \/
         (v = value_false /\
-            runs_type_eval runs c st' e2 = result_some o)).
+            eval c st' e2 = result_some o)).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; ljs_is_some_value_munch. cases_if; eauto.
 Qed.
 
-Lemma eval_seq_correct : forall runs c st e1 e2 o,
-    runs_type_correct runs ->
-    eval_seq runs c st e1 e2 = result_some o -> 
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v =>
-        runs_type_eval runs c st' e2 = result_some o).
+Lemma eval_seq_correct : forall eval c st e1 e2 o,
+    eval_fun_correct eval ->
+    eval_seq eval c st e1 e2 = result_some o -> 
+    is_some_value o (eval c st e1) (fun st' v =>
+        eval c st' e2 = result_some o).
 Proof. 
     introv IH R. unfolds in R.  
     ljs_run_push_auto; jauto.
 Qed.
 
-Lemma eval_let_correct : forall runs c st s e1 e2 o,
-    runs_type_correct runs ->
-    eval_let runs c st s e1 e2 = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v =>
+Lemma eval_let_correct : forall eval c st s e1 e2 o,
+    eval_fun_correct eval ->
+    eval_let eval c st s e1 e2 = result_some o ->
+    is_some_value o (eval c st e1) (fun st' v =>
         exists c', c' = c \(s := v) /\ 
-            runs_type_eval runs c' st' e2 = result_some o).
+            eval c' st' e2 = result_some o).
 Proof. 
     introv IH R. unfolds in R.
     unfold eval_cont in R.
     ljs_run_push_post_auto; ljs_is_some_value_munch; ljs_run_inv; jauto.
 Qed. 
 
-Lemma eval_rec_correct : forall runs c st s e1 e2 o,
-    runs_type_correct runs ->
-    eval_rec runs c st s e1 e2 = result_some o ->
+Lemma eval_rec_correct : forall eval c st s e1 e2 o,
+    eval_fun_correct eval ->
+    eval_rec eval c st s e1 e2 = result_some o ->
     exists args body c' v, e1 = expr_lambda args body /\
             v = add_closure c (Some s) args body /\
             c' = c \(s := v) /\
-            runs_type_eval runs c' st e2 = result_some o.
+            eval c' st e2 = result_some o.
 Proof.
     introv IH R. unfolds in R.
     destruct e1; tryfalse.
     jauto.
 Qed.
 
-Definition is_some_eval_objattrs o runs c st attrs Pred : Prop :=
+Definition is_some_eval_objattrs o eval c st attrs Pred : Prop :=
     let 'objattrs_intro e1 e2 e3 e4 := attrs in
-    is_some_value o (runs_type_eval runs c st e1) (fun st1 v1 =>
-    is_some_value o (runs_type_eval runs c st1 e2) (fun st2 v2 =>
-    is_some_value o (runs_type_eval runs c st2 e3) (fun st3 v3 =>
-    is_some_value o (runs_type_eval runs c st3 e4) (fun st4 v4 =>
+    is_some_value o (eval c st e1) (fun st1 v1 =>
+    is_some_value o (eval c st1 e2) (fun st2 v2 =>
+    is_some_value o (eval c st2 e3) (fun st3 v3 =>
+    is_some_value o (eval c st3 e4) (fun st4 v4 =>
         exists b s, v1 = value_string s /\ value_to_bool v2 = Some b /\
             object_oattr_valid oattr_code v4 /\ object_oattr_valid oattr_proto v3 /\
             Pred st4 s b v3 v4)))). 
 
-Definition is_some_eval_objprop o runs c st s prop Pred : Prop :=
+Definition is_some_eval_objprop o eval c st s prop Pred : Prop :=
     match prop with
     | property_data (data_intro e3 e4 e2 e1) =>
-        is_some_value o (runs_type_eval runs c st e1) (fun st1 v1 =>
-        is_some_value o (runs_type_eval runs c st1 e2) (fun st2 v2 =>
-        is_some_value o (runs_type_eval runs c st2 e3) (fun st3 v3 =>
-        is_some_value o (runs_type_eval runs c st3 e4) (fun st4 v4 =>
+        is_some_value o (eval c st e1) (fun st1 v1 =>
+        is_some_value o (eval c st1 e2) (fun st2 v2 =>
+        is_some_value o (eval c st2 e3) (fun st3 v3 =>
+        is_some_value o (eval c st3 e4) (fun st4 v4 =>
             exists b1 b2 b4, 
                 value_to_bool v1 = Some b1 /\
                 value_to_bool v2 = Some b2 /\
                 value_to_bool v4 = Some b4 /\
                 Pred st4 (attributes_data_of (attributes_data_intro v3 b4 b2 b1))))))
     | property_accessor (accessor_intro e3 e4 e2 e1) =>
-        is_some_value o (runs_type_eval runs c st e1) (fun st1 v1 =>
-        is_some_value o (runs_type_eval runs c st1 e2) (fun st2 v2 =>
-        is_some_value o (runs_type_eval runs c st2 e3) (fun st3 v3 =>
-        is_some_value o (runs_type_eval runs c st3 e4) (fun st4 v4 =>
+        is_some_value o (eval c st e1) (fun st1 v1 =>
+        is_some_value o (eval c st1 e2) (fun st2 v2 =>
+        is_some_value o (eval c st2 e3) (fun st3 v3 =>
+        is_some_value o (eval c st3 e4) (fun st4 v4 =>
              exists b1 b2, 
                 value_to_bool v1 = Some b1 /\
                 value_to_bool v2 = Some b2 /\
                 Pred st4 (attributes_accessor_of (attributes_accessor_intro v3 v4 b2 b1))))))
     end.
 
-Fixpoint is_some_eval_objprops o runs c st props obj Pred : Prop :=
+Fixpoint is_some_eval_objprops o eval c st props obj Pred : Prop :=
     match props with
     | nil => Pred st obj
     | (s, prop) :: props' => 
-        is_some_eval_objprop o runs c st s prop (fun st' attr =>
-            is_some_eval_objprops o runs c st' props' (set_object_property obj s attr) Pred)
+        is_some_eval_objprop o eval c st s prop (fun st' attr =>
+            is_some_eval_objprops o eval c st' props' (set_object_property obj s attr) Pred)
     end.
 
-Fixpoint is_some_eval_internal o runs c st iprops obj Pred : Prop :=
+Fixpoint is_some_eval_internal o eval c st iprops obj Pred : Prop :=
     match iprops with
     | nil => Pred st obj
     | (s, e) :: iprops' =>
-        is_some_value o (runs_type_eval runs c st e) (fun st' v =>
-            is_some_eval_internal o runs c st' iprops' (set_object_internal obj s v) Pred)
+        is_some_value o (eval c st e) (fun st' v =>
+            is_some_eval_internal o eval c st' iprops' (set_object_internal obj s v) Pred)
     end.
 
-Lemma is_some_eval_objprops_lemma : forall runs c o props cont (Pred : _ -> _ -> Prop),
-    runs_type_correct runs ->
+Lemma is_some_eval_objprops_lemma : forall eval c o props cont (Pred : _ -> _ -> Prop),
+    eval_fun_correct eval ->
     (forall st obj, cont st obj = result_some o -> Pred st obj) ->
     forall st obj,
-        eval_object_properties runs c st props obj cont = result_some o ->
-        is_some_eval_objprops o runs c st props obj Pred.
+        eval_object_properties eval c st props obj cont = result_some o ->
+        is_some_eval_objprops o eval c st props obj Pred.
 Proof.
     introv IH CH.
     induction props.
@@ -549,12 +546,12 @@ Proof.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch; substs; repeat eexists; eauto.
 Qed.
 
-Lemma is_some_eval_internal_lemma : forall runs c o iprops cont (Pred : _ -> _ -> Prop),
-    runs_type_correct runs ->
+Lemma is_some_eval_internal_lemma : forall eval c o iprops cont (Pred : _ -> _ -> Prop),
+    eval_fun_correct eval ->
     (forall st obj, cont st obj = result_some o -> Pred st obj) ->
     forall st obj,
-        eval_object_internal runs c st iprops obj cont = result_some o ->
-        is_some_eval_internal o runs c st iprops obj Pred.
+        eval_object_internal eval c st iprops obj cont = result_some o ->
+        is_some_eval_internal o eval c st iprops obj Pred.
 Proof.
     introv IH CH.
     induction iprops.
@@ -564,13 +561,13 @@ Proof.
     simpls; ljs_run_push_post_auto; repeat ljs_is_some_value_munch; substs; eauto.
 Qed.
 
-Lemma eval_object_correct : forall runs c st attrs l1 l2 o,
-    runs_type_correct runs ->
-    eval_object_decl runs c st attrs l1 l2 = result_some o ->
-    is_some_eval_objattrs o runs c st attrs (fun st' class ext proto code => 
+Lemma eval_object_correct : forall eval c st attrs l1 l2 o,
+    eval_fun_correct eval ->
+    eval_object_decl eval c st attrs l1 l2 = result_some o ->
+    is_some_eval_objattrs o eval c st attrs (fun st' class ext proto code => 
         let obj := object_intro (oattrs_intro proto class ext code) \{} \{} in
-        is_some_eval_internal o runs c st' l1 obj (fun st' obj =>
-        is_some_eval_objprops o runs c st' l2 obj (fun st'' obj =>
+        is_some_eval_internal o eval c st' l1 obj (fun st' obj =>
+        is_some_eval_objprops o eval c st' l2 obj (fun st'' obj =>
             exists st''' v,
                 (st''', v) = add_object st'' obj /\
                 o = out_ter st''' (res_value v)))).
@@ -588,32 +585,32 @@ Proof.
     intros. cbv beta in H6. cases_let. ljs_run_inv. eauto.
 Qed.
 
-Lemma eval_break_correct : forall runs c st s e o,
-    runs_type_correct runs ->
-    eval_break runs c st s e = result_some o ->
-    is_some_value o (runs_type_eval runs c st e) (fun st' v =>
+Lemma eval_break_correct : forall eval c st s e o,
+    eval_fun_correct eval ->
+    eval_break eval c st s e = result_some o ->
+    is_some_value o (eval c st e) (fun st' v =>
         o = out_ter st' (res_break s v)).
 Proof.
     introv IH R. unfolds. unfolds. unfolds in R.
     ljs_run_push_post_auto; ljs_run_inv; jauto.
 Qed.
 
-Lemma eval_throw_correct : forall runs c st e o,
-    runs_type_correct runs ->
-    eval_throw runs c st e = result_some o ->
-    is_some_value o (runs_type_eval runs c st e) (fun st' v =>
+Lemma eval_throw_correct : forall eval c st e o,
+    eval_fun_correct eval ->
+    eval_throw eval c st e = result_some o ->
+    is_some_value o (eval c st e) (fun st' v =>
         o = out_ter st' (res_exception v)).
 Proof.
     introv IH R. unfolds. unfolds. unfolds in R.
     ljs_run_push_post_auto; ljs_run_inv; jauto.
 Qed.
 
-Lemma eval_tryfinally_correct : forall runs c st e1 e2 o,
-    runs_type_correct runs ->
-    eval_tryfinally runs c st e1 e2 = result_some o ->
-    is_some (runs_type_eval runs c st e1) (fun o' =>
+Lemma eval_tryfinally_correct : forall eval c st e1 e2 o,
+    eval_fun_correct eval ->
+    eval_tryfinally eval c st e1 e2 = result_some o ->
+    is_some (eval c st e1) (fun o' =>
         (exists st' r, o' = out_ter st' r /\
-            is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 => 
+            is_some_value o (eval c st' e2) (fun st'' v2 => 
                 o = out_ter st'' r)) \/
         (o = o' /\ o' = out_div)). 
 Proof.
@@ -623,13 +620,13 @@ Proof.
     ljs_is_some_value_munch; ljs_run_inv; jauto.
 Qed.
 
-Lemma eval_trycatch_correct : forall runs c st e1 e2 o,
-    runs_type_correct runs ->
-    eval_trycatch runs c st e1 e2 = result_some o ->
-    is_some (runs_type_eval runs c st e1) (fun o' =>
+Lemma eval_trycatch_correct : forall eval c st e1 e2 o,
+    eval_fun_correct eval ->
+    eval_trycatch eval c st e1 e2 = result_some o ->
+    is_some (eval c st e1) (fun o' =>
         (exists st' v, o' = out_ter st' (res_exception v) /\
-            is_some_value o (runs_type_eval runs c st' e2) (fun st'' vv => 
-                apply_post runs c st'' vv [v] o)) \/
+            is_some_value o (eval c st' e2) (fun st'' vv => 
+                apply_post eval c st'' vv [v] o)) \/
         (o = o' /\ forall st' v, o' <> out_ter st' (res_exception v))).
 Proof. 
     introv IH R. unfolds. unfolds in R.
@@ -643,10 +640,10 @@ Proof.
     eauto using apply_correct.
 Qed.
 
-Lemma eval_label_correct : forall runs c st s e o,
-    runs_type_correct runs ->
-    eval_label runs c st s e = result_some o ->
-    is_some (runs_type_eval runs c st e) (fun o' =>
+Lemma eval_label_correct : forall eval c st s e o,
+    eval_fun_correct eval ->
+    eval_label eval c st s e = result_some o ->
+    is_some (eval c st e) (fun o' =>
         (exists st' v, o' = out_ter st' (res_break s v) /\ 
             o = out_ter st' (res_value v)) \/
         (o = o' /\ forall st' v, o' <> out_ter st' (res_break s v))).
@@ -658,11 +655,11 @@ Proof.
     ljs_run_inv. intuition (eauto || tryfalse).
 Qed.
 
-Lemma eval_jseq_correct : forall runs c st e1 e2 o,
-    runs_type_correct runs ->
-    eval_jseq runs c st e1 e2 = result_some o -> 
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v =>
-        is_some (runs_type_eval runs c st' e2) (fun o' =>
+Lemma eval_jseq_correct : forall eval c st e1 e2 o,
+    eval_fun_correct eval ->
+    eval_jseq eval c st e1 e2 = result_some o -> 
+    is_some_value o (eval c st e1) (fun st' v =>
+        is_some (eval c st' e2) (fun o' =>
             (exists st' v', o' = out_ter st' (res_value v') /\
                 o = out_ter st' (res_value (overwrite_value_if_empty v v'))) \/
             (exists s st' v', o' = out_ter st' (res_break s v') /\
@@ -683,20 +680,20 @@ Proof.
     ljs_run_inv. eauto.
 Qed.
 
-Lemma eval_lambda_correct : forall runs c st vs e o,
-    runs_type_correct runs ->
-    eval_lambda runs c st vs e = result_some o ->
+Lemma eval_lambda_correct : forall eval c st vs e o,
+    eval_fun_correct eval ->
+    eval_lambda eval c st vs e = result_some o ->
     exists v, v = add_closure c None vs e /\ o = out_ter st (res_value v).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_inv. eauto.
 Qed.
 
-Lemma eval_eval_correct : forall runs c st e1 e2 o,
-    runs_type_correct runs ->
-    eval_eval runs c st e1 e2 = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v' =>
-        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v'' =>
+Lemma eval_eval_correct : forall eval c st e1 e2 o,
+    eval_fun_correct eval ->
+    eval_eval eval c st e1 e2 = result_some o ->
+    is_some_value o (eval c st e1) (fun st' v' =>
+        is_some_value o (eval c st' e2) (fun st'' v'' =>
             (exists s ptr obj,
                 v' = value_string s /\
                 v'' = value_object ptr /\ 
@@ -709,7 +706,7 @@ Lemma eval_eval_correct : forall runs c st e1 e2 o,
                 st'' \(ptr?) = Some obj /\ 
                 ctx_of_obj obj = Some c1 /\
                 EjsFromJs.desugar_expr true s = Some e /\ 
-                runs_type_eval runs c1 st'' e = result_some o)).
+                eval c1 st'' e = result_some o)).
 Proof.
     introv IH R. unfolds in R.
     ljs_run_push_post_auto; repeat ljs_is_some_value_munch.
@@ -721,10 +718,10 @@ Qed.
 
 Local Hint Constructors eval_unary_op int_unary_op num_unary_op.
 
-Lemma eval_op1_correct : forall runs c st op e1 o,
-    runs_type_correct runs ->
-    eval_op1 runs c st op e1 = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
+Lemma eval_op1_correct : forall eval c st op e1 o,
+    eval_fun_correct eval ->
+    eval_op1 eval c st op e1 = result_some o ->
+    is_some_value o (eval c st e1) (fun st' v1 =>
         exists v, eval_unary_op op st' v1 v /\ o = out_ter st' (res_value v)).
 Proof.
     introv IH R. unfolds in R.
@@ -736,11 +733,11 @@ Qed.
 
 Local Hint Constructors eval_binary_op int_binary_op num_binary_op num_cmp_binary_op.
 
-Lemma eval_op2_correct : forall runs c st op e1 e2 o,
-    runs_type_correct runs ->
-    eval_op2 runs c st op e1 e2 = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
-        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
+Lemma eval_op2_correct : forall eval c st op e1 e2 o,
+    eval_fun_correct eval ->
+    eval_op2 eval c st op e1 e2 = result_some o ->
+    is_some_value o (eval c st e1) (fun st' v1 =>
+        is_some_value o (eval c st' e2) (fun st'' v2 =>
             exists v, eval_binary_op op st'' v1 v2 v /\ o = out_ter st'' (res_value v))).
 Proof.
     introv IH R. unfolds in R.
@@ -770,10 +767,10 @@ Proof.
     eexists. split. prove_bag. eauto. 
 Qed.
 
-Lemma eval_get_internal_correct : forall runs c st s e1 o,
-    runs_type_correct runs ->
-    eval_get_internal runs c st e1 s = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
+Lemma eval_get_internal_correct : forall eval c st s e1 o,
+    eval_fun_correct eval ->
+    eval_get_internal eval c st e1 s = result_some o ->
+    is_some_value o (eval c st e1) (fun st' v1 =>
         exists ptr obj v, v1 = value_object ptr /\ 
             binds st' ptr obj /\ 
             binds (object_internal obj) s v /\
@@ -786,11 +783,11 @@ Proof.
     jauto_set; prove_bag.
 Qed.
 
-Lemma eval_set_internal_correct : forall runs c st s e1 e2 o,
-    runs_type_correct runs ->
-    eval_set_internal runs c st e1 s e2 = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
-        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
+Lemma eval_set_internal_correct : forall eval c st s e1 e2 o,
+    eval_fun_correct eval ->
+    eval_set_internal eval c st e1 s e2 = result_some o ->
+    is_some_value o (eval c st e1) (fun st' v1 =>
+        is_some_value o (eval c st' e2) (fun st'' v2 =>
             exists ptr obj, v1 = value_object ptr /\
                 binds st'' ptr obj /\
                 index (object_internal obj) s /\
@@ -805,10 +802,10 @@ Proof.
     jauto_set; prove_bag.
 Qed.
 
-Lemma eval_get_obj_attr_correct : forall runs c st oa e1 o,
-    runs_type_correct runs ->
-    eval_get_obj_attr runs c st e1 oa = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
+Lemma eval_get_obj_attr_correct : forall eval c st oa e1 o,
+    eval_fun_correct eval ->
+    eval_get_obj_attr eval c st e1 oa = result_some o ->
+    is_some_value o (eval c st e1) (fun st' v1 =>
         exists ptr obj, v1 = value_object ptr /\ 
             binds st' ptr obj /\ 
             o = out_ter st' (res_value (get_object_oattr obj oa))).
@@ -822,11 +819,11 @@ Qed.
 
 Local Hint Constructors object_oattr_valid oattrs_oattr_modifiable.
 
-Lemma eval_set_obj_attr_correct : forall runs c st oa e1 e2 o,
-    runs_type_correct runs ->
-    eval_set_obj_attr runs c st e1 oa e2 = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
-        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
+Lemma eval_set_obj_attr_correct : forall eval c st oa e1 e2 o,
+    eval_fun_correct eval ->
+    eval_set_obj_attr eval c st e1 oa e2 = result_some o ->
+    is_some_value o (eval c st e1) (fun st' v1 =>
+        is_some_value o (eval c st' e2) (fun st'' v2 =>
             exists ptr obj, v1 = value_object ptr /\
                 binds st'' ptr obj /\
                 object_oattr_valid oa v2 /\
@@ -848,11 +845,11 @@ Qed.
 
 Local Hint Constructors attributes_pattr_readable.
 
-Lemma eval_get_attr_correct : forall runs c st pa e1 e2 o,
-    runs_type_correct runs ->
-    eval_get_attr runs c st e1 e2 pa = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
-        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
+Lemma eval_get_attr_correct : forall eval c st pa e1 e2 o,
+    eval_fun_correct eval ->
+    eval_get_attr eval c st e1 e2 pa = result_some o ->
+    is_some_value o (eval c st e1) (fun st' v1 =>
+        is_some_value o (eval c st' e2) (fun st'' v2 =>
             exists ptr obj s attrs, v1 = value_object ptr /\
                 v2 = value_string s /\
                 st'' \(ptr?) = Some obj /\
@@ -871,12 +868,12 @@ Qed.
 
 Local Hint Constructors attributes_pattr_valid attributes_pattr_writable.
 
-Lemma eval_set_attr_correct : forall runs c st pa e1 e2 e3 o,
-    runs_type_correct runs ->
-    eval_set_attr runs c st e1 e2 pa e3 = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
-        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
-            is_some_value o (runs_type_eval runs c st'' e3) (fun st''' v3 =>
+Lemma eval_set_attr_correct : forall eval c st pa e1 e2 e3 o,
+    eval_fun_correct eval ->
+    eval_set_attr eval c st e1 e2 pa e3 = result_some o ->
+    is_some_value o (eval c st e1) (fun st' v1 =>
+        is_some_value o (eval c st' e2) (fun st'' v2 =>
+            is_some_value o (eval c st'' e3) (fun st''' v3 =>
                 exists ptr obj s, v1 = value_object ptr /\
                     v2 = value_string s /\
                     st''' \(ptr?) = Some obj /\
@@ -916,11 +913,11 @@ Proof.
     injects; injects; jauto.
 Qed.
 
-Lemma eval_delete_field_correct : forall runs c st e1 e2 o,
-    runs_type_correct runs ->
-    eval_delete_field runs c st e1 e2 = result_some o ->
-    is_some_value o (runs_type_eval runs c st e1) (fun st' v1 =>
-        is_some_value o (runs_type_eval runs c st' e2) (fun st'' v2 =>
+Lemma eval_delete_field_correct : forall eval c st e1 e2 o,
+    eval_fun_correct eval ->
+    eval_delete_field eval c st e1 e2 = result_some o ->
+    is_some_value o (eval c st e1) (fun st' v1 =>
+        is_some_value o (eval c st' e2) (fun st'' v2 =>
             exists ptr obj s attrs, v1 = value_object ptr /\
                 st'' \(ptr?) = Some obj /\
                 v2 = value_string s /\
@@ -938,10 +935,10 @@ Proof.
     ljs_run_inv. substs. intuition eauto. 
 Qed. 
 
-Lemma eval_own_field_names_correct : forall runs c st e o,
-    runs_type_correct runs ->
-    eval_own_field_names runs c st e = result_some o ->
-    is_some_value o (runs_type_eval runs c st e) (fun st' v =>
+Lemma eval_own_field_names_correct : forall eval c st e o,
+    eval_fun_correct eval ->
+    eval_own_field_names eval c st e = result_some o ->
+    is_some_value o (eval c st e) (fun st' v =>
         exists ptr obj st'' v', v = value_object ptr /\
             st' \(ptr?) = Some obj /\
             (st'', v') = add_object st' (make_prop_list obj) /\
@@ -977,12 +974,12 @@ Ltac ljs_is_some_push :=
 
 Ltac ljs_pretty_advance rule rulea :=
     ljs_is_some_push;
-    (eapply rule; [solve [ljs_eval_ih] | ]);
+    (eapply rule; [solve [eauto] | ]);
     [ | eapply rulea; assumption]. 
 
-Lemma red_expr_app_2_lemma : forall runs c st v vl o,
-    runs_type_correct runs ->
-    apply_post runs c st v vl o ->
+Lemma red_expr_app_2_lemma : forall eval c st v vl o,
+    eval_fun_correct eval ->
+    apply_post eval c st v vl o ->
     red_expr c st (expr_app_2 v vl) o.
 Proof.
     introv IH R.
@@ -990,31 +987,29 @@ Proof.
     repeat destruct_exists R.
     destruct R as ([(R1&R2)|(?&?&R1&R1b&R1c&R2)]&R3).
     (* closure *)
-    substs.
-    eapply red_expr_app_2; eauto.
-    ljs_eval_ih.
+    * substs.
+      eapply red_expr_app_2; eauto.
     (* object *)
-    substs.
-    eapply red_expr_app_2_object; eauto.
-    eapply red_expr_app_2; eauto.
-    ljs_eval_ih.
+    * substs.
+      eapply red_expr_app_2_object; eauto.
+      eapply red_expr_app_2; eauto.
 Qed.
 
-Lemma red_expr_eval_many_lemma : forall runs c o C (Pred : _ -> _ -> Prop),
-    runs_type_correct runs -> 
+Lemma red_expr_eval_many_lemma : forall eval c o C (Pred : _ -> _ -> Prop),
+    eval_fun_correct eval -> 
     (forall st vs, Pred st (rev vs) -> red_expr c st (C (rev vs)) o) ->
     forall es st vs,
-    is_some_values_eval runs c st o es vs Pred ->
+    is_some_values_eval eval c st o es vs Pred ->
     red_expr c st (expr_eval_many_1 es vs C) o.
 Proof.
     introv IH PH.
     induction es; introv R.
-    eapply red_expr_eval_many_1.
-    eauto.
-    unfold is_some_values_eval in R at 1.
-    ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort.
-    eapply red_expr_eval_many_2.
-    eauto.
+    * eapply red_expr_eval_many_1.
+      eauto.
+    * unfold is_some_values_eval in R at 1.
+      ljs_pretty_advance red_expr_eval_many_1_next red_expr_eval_many_2_abort.
+      eapply red_expr_eval_many_2.
+      eauto.
 Qed.
 
 Ltac value_to_bool := 
@@ -1025,11 +1020,11 @@ Ltac ljs_advance_eval_many :=
             eapply red_expr_eval_many_2);
     eapply red_expr_eval_many_1.
 
-Lemma red_expr_object_2_lemma1 : forall runs c o (Pred : _ -> _ -> Prop),
-    runs_type_correct runs ->
+Lemma red_expr_object_2_lemma1 : forall eval c o (Pred : _ -> _ -> Prop),
+    eval_fun_correct eval ->
     (forall st obj, Pred st obj -> red_expr c st (expr_object_2 nil nil obj) o) ->
     forall props st obj,
-    is_some_eval_objprops o runs c st props obj Pred ->
+    is_some_eval_objprops o eval c st props obj Pred ->
     red_expr c st (expr_object_2 nil props obj) o.
 Proof.
     introv IH PH.
@@ -1053,11 +1048,11 @@ Proof.
     eapply red_expr_object_accessor_1; eauto.
 Qed.
 
-Lemma red_expr_object_2_lemma2 : forall runs c o props (Pred : _ -> _ -> Prop),
-    runs_type_correct runs ->
+Lemma red_expr_object_2_lemma2 : forall eval c o props (Pred : _ -> _ -> Prop),
+    eval_fun_correct eval ->
     (forall st obj, Pred st obj -> red_expr c st (expr_object_2 nil props obj) o) ->
     forall iprops st obj,
-    is_some_eval_internal o runs c st iprops obj Pred ->
+    is_some_eval_internal o eval c st iprops obj Pred ->
     red_expr c st (expr_object_2 iprops props obj) o.
 Proof.
     introv IH PH.
@@ -1072,8 +1067,8 @@ Qed.
 
 (* Main lemma *)
 
-Lemma eval_correct : forall runs c st e o,
-    runs_type_correct runs -> eval runs c st e = result_some o -> red_expr c st e o.
+Lemma eval_S_correct : forall eval,
+    eval_fun_correct eval -> eval_fun_correct (eval_S eval).
 Proof.
     introv IH R. unfolds in R.
     destruct e.
@@ -1189,8 +1184,8 @@ Proof.
     lets H: eval_if_correct IH R.
     ljs_pretty_advance red_expr_if red_expr_if_1_abort.
     destruct H as [(Hv&H)|(Hv&H)]; inverts Hv.
-    eapply red_expr_if_1_true; ljs_eval_ih.
-    eapply red_expr_if_1_false; ljs_eval_ih.
+    eapply red_expr_if_1_true; eauto.
+    eapply red_expr_if_1_false; eauto.
     (* app *)
     lets H: eval_app_correct IH R.
     ljs_pretty_advance red_expr_app red_expr_app_1_abort.
@@ -1204,13 +1199,13 @@ Proof.
     lets H: eval_seq_correct IH R.
     ljs_pretty_advance red_expr_seq red_expr_seq_1_abort.
     eapply red_expr_seq_1.
-    ljs_eval_ih.
+    eauto.
     (* jseq *)
     lets H: eval_jseq_correct IH R.
     ljs_pretty_advance red_expr_jseq red_expr_jseq_1_abort.
     destruct H as (o'&Ho'&He).
     eapply red_expr_jseq_1.
-    ljs_eval_ih.
+    eauto.
     destruct_hyp He.
     eapply red_expr_jseq_2.
     eapply red_expr_jseq_2_break.
@@ -1220,17 +1215,17 @@ Proof.
     lets H: eval_let_correct IH R.
     ljs_pretty_advance red_expr_let red_expr_let_1_abort.
     destruct H as (c'&H&Ho2).
-    eapply red_expr_let_1. eassumption. ljs_eval_ih.
+    eapply red_expr_let_1. eassumption. eauto.
     (* recc *)
     lets H: eval_rec_correct IH R.
     jauto_set.
     substs.
     eapply red_expr_rec; eauto.
-    ljs_eval_ih.
+    eauto.
     (* label *)
     lets (o'&Ho&H): eval_label_correct IH R.
     eapply red_expr_label.
-    ljs_eval_ih.
+    eauto.
     destruct H as [(st'&v&Ho1&Ho2)|(He&H)].
     inverts Ho1.
     inverts Ho2.
@@ -1245,7 +1240,7 @@ Proof.
     (* try_catch *)
     lets (o'&Ho&H): eval_trycatch_correct IH R. 
     eapply red_expr_try_catch.
-    ljs_eval_ih.
+    eauto.
     destruct H as [(st'&v&Ho1&Ho2)|(He&H)].
     inverts Ho1.
     ljs_pretty_advance red_expr_try_catch_1_exc red_expr_try_catch_2_abort.
@@ -1255,7 +1250,7 @@ Proof.
     eapply red_expr_try_catch_1; eauto.
     (* try_finally *)
     lets (o'&Ho&H): eval_tryfinally_correct IH R. 
-    eapply red_expr_try_finally. ljs_eval_ih.
+    eapply red_expr_try_finally. eauto.
     destruct H as [(st'&r&Ho'&H)|(Ho'&H)].
     subst o'.
     ljs_pretty_advance red_expr_try_finally_1 red_expr_try_finally_2_abort.
@@ -1286,45 +1281,37 @@ Proof.
     substs.
     eapply red_expr_eval_1; eauto.
     ljs_run_inv.
-    ljs_eval_ih.
+    eauto.
     (* hint *)
     eapply red_expr_hint.
-    ljs_eval_ih.
+    eauto.
     (* fail *)
     tryfalse.
     (* dump *)
     tryfalse.
 Qed.
 
-Lemma runs_0_correct : runs_type_correct runs_0.
+Lemma eval_0_correct : eval_fun_correct eval_0.
 Proof.
-    apply make_runs_type_correct.
     introv H.
     tryfalse.
 Qed.
 
-Lemma runs_S_correct : forall runs, runs_type_correct runs -> runs_type_correct (runs_S runs).
+Lemma eval_lazy_correct : forall eval, eval_fun_correct eval -> eval_fun_correct (suspend_eval (fun _ => eval)).
 Proof.
     introv IH.
-    apply make_runs_type_correct.
-    eauto using eval_correct.
+    unfolds.
+    eauto. 
 Qed.
 
-Lemma runs_lazy_correct : forall runs, runs_type_correct runs -> runs_type_correct (suspend_runs (fun _ => runs)).
+Lemma lazy_eval_k_correct : forall k, eval_fun_correct (lazy_eval k). 
 Proof.
-    introv IH.
-    eapply make_runs_type_correct.
-    eauto using runs_type_correct_eval. 
+    induction k; eauto using eval_0_correct, eval_S_correct, eval_lazy_correct. 
 Qed.
 
-Lemma lazy_runs_correct : forall k, runs_type_correct (lazy_runs k). 
+Lemma eval_k_correct : forall k, eval_fun_correct (eval k). 
 Proof.
-    induction k; eauto using runs_0_correct, runs_S_correct, runs_lazy_correct. 
-Qed.
-
-Lemma runs_correct : forall k, runs_type_correct (runs k). 
-Proof.
-    induction k; eauto using runs_0_correct, runs_S_correct. 
+    induction k; eauto using eval_0_correct, eval_S_correct. 
 Qed.
 
    

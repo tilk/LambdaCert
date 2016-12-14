@@ -19,19 +19,18 @@ Open Scope container_scope.
 * * The evaluators, which actually define the semantics of LambdaJS.
 *   There is one evaluator per node constructor,
 *   with eventually helper functions.
-* * The “looping” functions, which call the evaluators. The “runs”
+* * The “looping” functions, which call the evaluators. The “eval”
 *   function calls eval at every iteration, with a reference to itself
 *   applied to a strictly decreasing integer, to make Coq accept the
 *   code.
 *)
 
-Record runs_type : Type := runs_type_intro {
-    runs_type_eval : ctx -> store -> expr -> result
-}.
+Definition eval_fun := ctx -> store -> expr -> result.
 
-Implicit Type runs : runs_type.
+Implicit Type eval : eval_fun.
 Implicit Type st : store.
 Implicit Type c : ctx.
+Implicit Type e : expr.
 
 (***** Utilities ******)
 
@@ -78,46 +77,46 @@ Definition change_object_property st (ptr : object_ptr) (name : prop_name)
 
 (* Evaluate an expression, and calls the continuation with
 * the new store and the result of the evaluation. *)
-Definition eval_cont {A : Type} runs c st e (cont : result -> resultof A) : resultof A :=
-  cont (runs_type_eval runs c st e).
+Definition eval_cont {A : Type} eval c st e (cont : result -> resultof A) : resultof A :=
+  cont (eval c st e).
 
 (* Evaluates an expression, and calls the continuation if
 * the evaluation finished successfully.
 * Returns the store and the variable verbatim otherwise. *)
-Definition if_eval_ter runs c st e (cont : store -> res -> result) : result :=
-  eval_cont runs c st e (fun res => if_out_ter res cont)
+Definition if_eval_ter eval c st e (cont : store -> res -> result) : result :=
+  eval_cont eval c st e (fun res => if_out_ter res cont)
 .
 
 (* Evaluates an expression, and calls the continuation if
 * the evaluation returned a value.
 * Returns the store and the variable verbatim otherwise. *)
-Definition if_eval_return runs c st e (cont : store -> value -> result) : result :=
-  eval_cont runs c st e (fun res => if_value res cont)
+Definition if_eval_return eval c st e (cont : store -> value -> result) : result :=
+  eval_cont eval c st e (fun res => if_value res cont)
 .
 
 (****** Closures handling ******)
 
 (* Evaluates all arguments, passing the store from one to the next. *)
-Definition eval_arg_list_aux runs c (arg_expr : expr) 
+Definition eval_arg_list_aux eval c (arg_expr : expr) 
     (cont : store -> list value -> result) st (l : list value) : result :=
-  if_eval_return runs c st arg_expr (fun st arg => cont st (arg::l)) 
+  if_eval_return eval c st arg_expr (fun st arg => cont st (arg::l)) 
 .
 
-Definition eval_arg_list runs c st (args_expr : list expr) (cont : store -> list value -> result) : result :=
-  fold_right (eval_arg_list_aux runs c) (fun st args => cont st (rev args)) args_expr st nil
+Definition eval_arg_list eval c st (args_expr : list expr) (cont : store -> list value -> result) : result :=
+  fold_right (eval_arg_list_aux eval c) (fun st args => cont st (rev args)) args_expr st nil
 .
 
-Definition apply runs c st v (args : list value) : result :=
+Definition apply eval c st v (args : list value) : result :=
   match v with
   | value_closure clo =>
     if_result_some (get_closure_ctx clo args) (fun vh =>
-      runs_type_eval runs vh st (closure_body clo))
+      eval vh st (closure_body clo))
   | value_object ptr =>
     assert_get_object_from_ptr st ptr (fun obj =>
       match object_code obj with
       | value_closure clo =>
         if_result_some (get_closure_ctx clo (value_object ptr :: args)) (fun vh =>
-          runs_type_eval runs vh st (closure_body clo))
+          eval vh st (closure_body clo))
       | value_undefined => result_fail "applying an object without #code"
       | _ => result_impossible "invalid code attribute when applying an object"
       end)
@@ -129,7 +128,7 @@ Definition apply runs c st v (args : list value) : result :=
 
 (* a lonely identifier.
 * Fetch the associated value location and return it. *)
-Definition eval_id runs c st (name : string) : result :=
+Definition eval_id eval c st (name : string) : result :=
   assert_deref c name (fun v => result_value st v)
 .
 
@@ -137,24 +136,24 @@ Definition eval_id runs c st (name : string) : result :=
 (* if e_cond e_true else e_false.
 * Evaluate the condition and get the associated value, then evaluate
 * e_true or e_false depending on the value. *)
-Definition eval_if runs c st (e_cond e_true e_false : expr) : result :=
-  if_eval_return runs c st e_cond (fun st v =>
+Definition eval_if eval c st (e_cond e_true e_false : expr) : result :=
+  if_eval_return eval c st e_cond (fun st v =>
     assert_get_bool v (fun b =>
       if b
-      then runs_type_eval runs c st e_true
-      else runs_type_eval runs c st e_false
+      then eval c st e_true
+      else eval c st e_false
   ))
 .
 
 (* e1 ; e2.
 * Evaluate e1, then e2, and return the value location returned by e2. *)
-Definition eval_seq runs c st e1 e2 : result :=
-  if_eval_return runs c st e1 (fun st v => runs_type_eval runs c st e2 )
+Definition eval_seq eval c st e1 e2 : result :=
+  if_eval_return eval c st e1 (fun st v => eval c st e2 )
 .
 
-Definition eval_jseq runs c st e1 e2 :=
-  if_eval_return runs c st e1 (fun st v1 =>
-    if_eval_ter runs c st e2 (fun st r =>
+Definition eval_jseq eval c st e1 e2 :=
+  if_eval_return eval c st e1 (fun st v1 =>
+    if_eval_ter eval c st e2 (fun st r =>
       match r with
       | res_exception v2 => result_exception st v2
       | res_value v2 => result_value st (overwrite_value_if_empty v1 v2)
@@ -162,19 +161,19 @@ Definition eval_jseq runs c st e1 e2 :=
       end)).
 
 (* Evaluates properties of object literals. *)
-Fixpoint eval_object_properties runs c st (l : list (string * property)) (acc : object) 
+Fixpoint eval_object_properties eval c st (l : list (string * property)) (acc : object) 
     (cont : store -> object -> result) {struct l} : result :=
   match l with
   | nil => cont st acc
   | (name, property_data (data_intro value_expr writable_expr enumerable_expr configurable_expr)) :: tail =>
-    if_eval_return runs c st configurable_expr (fun st configurable_v =>
-      if_eval_return runs c st enumerable_expr (fun st enumerable_v =>
-        if_eval_return runs c st value_expr (fun st value_v =>
-          if_eval_return runs c st writable_expr (fun st writable_v =>
+    if_eval_return eval c st configurable_expr (fun st configurable_v =>
+      if_eval_return eval c st enumerable_expr (fun st enumerable_v =>
+        if_eval_return eval c st value_expr (fun st value_v =>
+          if_eval_return eval c st writable_expr (fun st writable_v =>
             assert_get_bool configurable_v (fun configurable =>
               assert_get_bool enumerable_v (fun enumerable => 
                 assert_get_bool writable_v (fun writable => 
-                  eval_object_properties runs c st tail (set_object_property acc name (
+                  eval_object_properties eval c st tail (set_object_property acc name (
                     attributes_data_of {|
                       attributes_data_value := value_v;
                       attributes_data_writable := writable;
@@ -182,13 +181,13 @@ Fixpoint eval_object_properties runs c st (l : list (string * property)) (acc : 
                       attributes_data_configurable := configurable |}
                     )) cont))))))) 
   | (name, property_accessor (accessor_intro getter_expr setter_expr enumerable_expr configurable_expr)) :: tail =>
-    if_eval_return runs c st configurable_expr (fun st configurable_v =>
-      if_eval_return runs c st enumerable_expr (fun st enumerable_v =>
-        if_eval_return runs c st getter_expr (fun st getter_v =>
-          if_eval_return runs c st setter_expr (fun st setter_v =>
+    if_eval_return eval c st configurable_expr (fun st configurable_v =>
+      if_eval_return eval c st enumerable_expr (fun st enumerable_v =>
+        if_eval_return eval c st getter_expr (fun st getter_v =>
+          if_eval_return eval c st setter_expr (fun st setter_v =>
             assert_get_bool configurable_v (fun configurable =>
               assert_get_bool enumerable_v (fun enumerable => 
-                eval_object_properties runs c st tail (set_object_property acc name (
+                eval_object_properties eval c st tail (set_object_property acc name (
                   attributes_accessor_of {|
                     attributes_accessor_get := getter_v;
                     attributes_accessor_set := setter_v;
@@ -198,13 +197,13 @@ Fixpoint eval_object_properties runs c st (l : list (string * property)) (acc : 
   end
 .
 
-Fixpoint eval_object_internal runs c st (l : list (string * expr)) (acc : object)
+Fixpoint eval_object_internal eval c st (l : list (string * expr)) (acc : object)
     (cont : store -> object -> result) {struct l} : result :=
   match l with
   | nil => cont st acc
   | (s, e) :: t =>
-    if_eval_return runs c st e (fun st v =>
-      eval_object_internal runs c st t (set_object_internal acc s v) cont)
+    if_eval_return eval c st e (fun st v =>
+      eval_object_internal eval c st t (set_object_internal acc s v) cont)
   end
 .
 
@@ -212,14 +211,14 @@ Fixpoint eval_object_internal runs c st (l : list (string * expr)) (acc : object
 * Evaluate the primval attribute (if any), then the proto attribute (defaults
 * to Undefined), then properties. Finally, allocate a new object with the
 * computed values. *)
-Definition eval_object_decl runs c st (attrs : objattrs) (iattrs : list (string * expr)) 
+Definition eval_object_decl eval c st (attrs : objattrs) (iattrs : list (string * expr)) 
     (l : list (string * property)) : result :=
   let 'objattrs_intro class_expr extensible_expr prototype_expr code_expr := attrs in
     (* Order of evaluation as in the paper: *)
-    if_eval_return runs c st class_expr (fun st class_v =>
-      if_eval_return runs c st extensible_expr (fun st extensible_v =>
-        if_eval_return runs c st prototype_expr (fun st prototype_v =>
-          if_eval_return runs c st code_expr (fun st code_v =>
+    if_eval_return eval c st class_expr (fun st class_v =>
+      if_eval_return eval c st extensible_expr (fun st extensible_v =>
+        if_eval_return eval c st prototype_expr (fun st prototype_v =>
+          if_eval_return eval c st code_expr (fun st code_v =>
               assert_get_string class_v (fun class => 
               assert_get_bool extensible_v (fun extensible =>
                 ifb ~(object_oattr_valid oattr_code code_v /\ object_oattr_valid oattr_proto prototype_v)
@@ -234,16 +233,16 @@ Definition eval_object_decl runs c st (attrs : objattrs) (iattrs : list (string 
                     object_properties := \{};
                     object_internal := \{}
                 |} in
-                eval_object_internal runs c st iattrs obj (fun st obj =>
-                  eval_object_properties runs c st l obj (fun st obj =>
+                eval_object_internal eval c st iattrs obj (fun st obj =>
+                  eval_object_properties eval c st l obj (fun st obj =>
                     let (st, loc) := add_object st obj
                     in result_value st loc
           ))))))))
 .
 
-Definition eval_delete_field runs c st (left_expr right_expr : expr) : result :=
-  if_eval_return runs c st left_expr (fun st left_loc =>
-    if_eval_return runs c st right_expr (fun st right_loc =>
+Definition eval_delete_field eval c st (left_expr right_expr : expr) : result :=
+  if_eval_return eval c st left_expr (fun st left_loc =>
+    if_eval_return eval c st right_expr (fun st right_loc =>
       assert_get_object_ptr left_loc (fun left_ptr =>
         assert_get_string right_loc (fun name =>
           assert_get_object_from_ptr st left_ptr (fun obj =>
@@ -261,9 +260,9 @@ Definition eval_delete_field runs c st (left_expr right_expr : expr) : result :=
 * Evaluate expr, set it to a fresh location in the store, and bind this
 * location to the name `id` in the store.
 * Evaluate the body in the new store. *)
-Definition eval_let runs c st (id : string) (value_expr body_expr : expr) : result :=
-  if_eval_return runs c st value_expr (fun st val =>
-    runs_type_eval runs (c \(id := val)) st body_expr
+Definition eval_let eval c st (id : string) (value_expr body_expr : expr) : result :=
+  if_eval_return eval c st value_expr (fun st val =>
+    eval (c \(id := val)) st body_expr
   )
 .
 
@@ -271,18 +270,18 @@ Definition eval_let runs c st (id : string) (value_expr body_expr : expr) : resu
 * Evaluate expr with a reference to itself, set it to a fresh location in the store,
 * and bind this location to the name `id` in the store.
 * Evaluate the body in the new store. *)
-Definition eval_rec runs c st (id : string) (value_expr body_expr : expr) : result :=
+Definition eval_rec eval c st (id : string) (value_expr body_expr : expr) : result :=
   match value_expr with
   | expr_lambda args body =>
     let v := add_closure c  (Some id) args body in
-    runs_type_eval runs (c \(id := v)) st body_expr
+    eval (c \(id := v)) st body_expr
   | _ => result_fail "rec with no lambda"
   end
 .
 
 (* func (args) { body }
 * Capture the environment's name-to-location heap and return a closure. *)
-Definition eval_lambda runs c st (args : list id) (body : expr) : result :=
+Definition eval_lambda eval c st (args : list id) (body : expr) : result :=
   result_value st (add_closure c None args body)
 .
 
@@ -297,10 +296,10 @@ Definition eval_lambda runs c st (args : list id) (body : expr) : result :=
 * * else, `var` is left unchanged (ie. if it was mapped to a location,
 *   it still maps to this location; and if it did not map to anything,
 *   it still does not map to anything). *)
-Definition eval_app runs c st (f : expr) (args_expr : list expr) : result :=
-  if_eval_return runs c st f (fun st f_loc =>
-    eval_arg_list runs c st args_expr (fun st args =>
-      apply runs c st f_loc args
+Definition eval_app eval c st (f : expr) (args_expr : list expr) : result :=
+  if_eval_return eval c st f (fun st f_loc =>
+    eval_arg_list eval c st args_expr (fun st args =>
+      apply eval c st f_loc args
   ))
 .
 
@@ -337,9 +336,9 @@ Definition get_object_pattr obj s (pa : pattr) : resultof value :=
 .
 
 (* left[right<attr>] *)
-Definition eval_get_attr runs c st left_expr right_expr attr :=
-  if_eval_return runs c st left_expr (fun st left_ =>
-    if_eval_return runs c st right_expr (fun st right_ =>
+Definition eval_get_attr eval c st left_expr right_expr attr :=
+  if_eval_return eval c st left_expr (fun st left_ =>
+    if_eval_return eval c st right_expr (fun st right_ =>
       assert_get_object st left_ (fun obj =>
         assert_get_string right_ (fun fieldname =>
           if_result_some (get_object_pattr obj fieldname attr) (fun v =>
@@ -402,17 +401,17 @@ Definition set_object_pattr obj s (pa : pattr) v : resultof object :=
   end
 .
 
-Definition eval_get_internal runs c st e1 s :=
-  if_eval_return runs c st e1 (fun st v1 =>
+Definition eval_get_internal eval c st e1 s :=
+  if_eval_return eval c st e1 (fun st v1 =>
     assert_get_object st v1 (fun obj =>
       match object_internal obj \(s?) with
       | Some v => result_value st v
       | None => result_fail ("Internal property does not exist: " ++ s)
       end)).
 
-Definition eval_set_internal runs c st e1 s e2 :=
-  if_eval_return runs c st e1 (fun st v1 =>
-    if_eval_return runs c st e2 (fun st v2 =>
+Definition eval_set_internal eval c st e1 s e2 :=
+  if_eval_return eval c st e1 (fun st v1 =>
+    if_eval_return eval c st e2 (fun st v2 =>
       assert_get_object_ptr v1 (fun ptr =>
         change_object_cont st ptr (fun obj cont =>
           ifb index (object_internal obj) s 
@@ -420,10 +419,10 @@ Definition eval_set_internal runs c st e1 s e2 :=
           else result_fail "")))).
 
 (* left[right<attr> = new_val] *)
-Definition eval_set_attr runs c st left_expr right_expr attr new_val_expr :=
-  if_eval_return runs c st left_expr (fun st left_ =>
-    if_eval_return runs c st right_expr (fun st right_ =>
-      if_eval_return runs c st new_val_expr (fun st new_val =>
+Definition eval_set_attr eval c st left_expr right_expr attr new_val_expr :=
+  if_eval_return eval c st left_expr (fun st left_ =>
+    if_eval_return eval c st right_expr (fun st right_ =>
+      if_eval_return eval c st new_val_expr (fun st new_val =>
         assert_get_object_ptr left_ (fun obj_ptr =>
           assert_get_string right_ (fun fieldname =>
             change_object_cont st obj_ptr (fun obj cont =>
@@ -432,8 +431,8 @@ Definition eval_set_attr runs c st left_expr right_expr attr new_val_expr :=
   )))))))
 .
 
-Definition eval_get_obj_attr runs c st obj_expr oattr :=
-  if_eval_return runs c st obj_expr (fun st obj_loc =>
+Definition eval_get_obj_attr eval c st obj_expr oattr :=
+  if_eval_return eval c st obj_expr (fun st obj_loc =>
     assert_get_object st obj_loc (fun obj =>
       result_value st (get_object_oattr obj oattr)))
 .
@@ -461,24 +460,24 @@ Definition set_object_oattr_check obj oa v : resultof object :=
   end
 .
 
-Definition eval_set_obj_attr runs c st obj_expr oattr attr :=
-  if_eval_return runs c st obj_expr (fun st obj_loc =>
-    if_eval_return runs c st attr (fun st v =>
+Definition eval_set_obj_attr eval c st obj_expr oattr attr :=
+  if_eval_return eval c st obj_expr (fun st obj_loc =>
+    if_eval_return eval c st attr (fun st v =>
       assert_get_object_ptr obj_loc (fun obj_ptr =>
         change_object_cont st obj_ptr (fun obj cont =>
           if_result_some (set_object_oattr_check obj oattr v) (fun obj' =>
             cont st obj' v))))).
 
-Definition eval_own_field_names runs c st obj_expr : result :=
-  if_eval_return runs c st obj_expr (fun st obj_loc =>
+Definition eval_own_field_names eval c st obj_expr : result :=
+  if_eval_return eval c st obj_expr (fun st obj_loc =>
     assert_get_object st obj_loc (fun obj =>
       let (st, loc) := add_object st (make_prop_list obj)
       in result_value st loc
   ))
 .
 
-Definition eval_label runs c st (label : string) body : result :=
-  if_eval_ter runs c st body (fun st res =>
+Definition eval_label eval c st (label : string) body : result :=
+  if_eval_ter eval c st body (fun st res =>
     match res with
     | res_value ret => result_value st ret
     | res_exception exc => result_exception st exc
@@ -490,59 +489,59 @@ Definition eval_label runs c st (label : string) body : result :=
     end
   )
 .
-Definition eval_break runs c st (label : string) body : result :=
-  if_eval_return runs c st body (fun st ret =>
+Definition eval_break eval c st (label : string) body : result :=
+  if_eval_return eval c st body (fun st ret =>
     result_break st label ret
   )
 .
         
-Definition eval_throw runs c st expr : result :=
-  if_eval_return runs c st expr (fun st loc =>
+Definition eval_throw eval c st expr : result :=
+  if_eval_return eval c st expr (fun st loc =>
     result_exception st loc
   )
 .
 
-Definition eval_trycatch runs c st body catch : result :=
-  if_eval_ter runs c st body (fun st res =>
+Definition eval_trycatch eval c st body catch : result :=
+  if_eval_ter eval c st body (fun st res =>
     match res with
     | res_exception exc =>
-      if_eval_return runs c st catch (fun st catch =>
-        apply runs c st catch (exc :: nil)
+      if_eval_return eval c st catch (fun st catch =>
+        apply eval c st catch (exc :: nil)
       )
     | r => result_res st r
     end
   )
 .
 
-Definition eval_tryfinally runs c st body fin : result :=
-  if_eval_ter runs c st body (fun st res =>
-    if_eval_return runs c st fin (fun st catch =>
+Definition eval_tryfinally eval c st body fin : result :=
+  if_eval_ter eval c st body (fun st res =>
+    if_eval_return eval c st fin (fun st catch =>
       result_res st res
     ))
 .
 
-Definition eval_eval runs c st estr bindings :=
-  if_eval_return runs c st estr (fun st v_estr =>
-    if_eval_return runs c st bindings (fun st v_bindings =>
+Definition eval_eval eval c st estr bindings :=
+  if_eval_return eval c st estr (fun st v_estr =>
+    if_eval_return eval c st bindings (fun st v_bindings =>
       assert_get_string v_estr (fun s =>
         assert_get_object st v_bindings (fun obj => 
           match EjsFromJs.desugar_expr true s, ctx_of_obj obj with
-          | Some e, Some c' => runs_type_eval runs c' st e          
+          | Some e, Some c' => eval c' st e          
           | None, _ => result_exception st (value_string "parse-error")
           | _, None => result_fail "Invalid eval environment"
           end 
   ))))
 .
 
-Definition eval_op1 runs c st op e :=
-    if_eval_return runs c st e (fun st v_loc =>
+Definition eval_op1 eval c st op e :=
+    if_eval_return eval c st e (fun st v_loc =>
       if_result_some (unary_operator op st v_loc) (fun v_res => result_value st v_res)
     )
 .
 
-Definition eval_op2 runs c st op e1 e2 :=
-    if_eval_return runs c st e1 (fun st v1_loc =>
-      if_eval_return runs c st e2 (fun st v2_loc =>
+Definition eval_op2 eval c st op e1 e2 :=
+    if_eval_return eval c st e1 (fun st v1_loc =>
+      if_eval_return eval c st e2 (fun st v2_loc =>
         if_result_some (binary_operator op st v1_loc v2_loc) (fun v_res => result_value st v_res)
     ))
 . 
@@ -550,7 +549,7 @@ Definition eval_op2 runs c st op e1 e2 :=
 (******** Closing the loop *******)
 
 (* Main evaluator *)
-Definition eval runs c st (e : expr) : result :=
+Definition eval_S eval c st (e : expr) : result :=
   let return_value := result_value st in
   match e with
   | expr_empty => return_value value_empty
@@ -560,67 +559,53 @@ Definition eval runs c st (e : expr) : result :=
   | expr_number n => return_value (value_number n)
   | expr_int k => return_value (value_int k)
   | expr_bool b => return_value (value_bool b)
-  | expr_id s => eval_id runs c st s
-  | expr_if e_cond e_true e_false => eval_if runs c st e_cond e_true e_false
-  | expr_seq e1 e2 => eval_seq runs c st e1 e2
-  | expr_jseq e1 e2 => eval_jseq runs c st e1 e2
-  | expr_object attrs iattrs l => eval_object_decl runs c st attrs iattrs l
-  | expr_delete_field left_ right_ => eval_delete_field runs c st left_ right_
-  | expr_let id value body => eval_let runs c st id value body
-  | expr_recc id value body => eval_rec runs c st id value body
-  | expr_lambda args body => eval_lambda runs c st args body
-  | expr_app f args => eval_app runs c st f args
-  | expr_get_attr attr left_ right_ => eval_get_attr runs c st left_ right_ attr
-  | expr_set_attr attr left_ right_ newval => eval_set_attr runs c st left_ right_ attr newval
-  | expr_get_obj_attr oattr obj => eval_get_obj_attr runs c st obj oattr
-  | expr_set_obj_attr oattr obj attr => eval_set_obj_attr runs c st obj oattr attr
-  | expr_get_internal s e_obj => eval_get_internal runs c st e_obj s
-  | expr_set_internal s e_obj e_val => eval_set_internal runs c st e_obj s e_val
-  | expr_own_field_names e => eval_own_field_names runs c st e
-  | expr_op1 op e => eval_op1 runs c st op e
-  | expr_op2 op e1 e2 => eval_op2 runs c st op e1 e2
-  | expr_label l e => eval_label runs c st l e
-  | expr_break l e => eval_break runs c st l e
-  | expr_try_catch body catch => eval_trycatch runs c st body catch
-  | expr_try_finally body fin => eval_tryfinally runs c st body fin
-  | expr_throw e => eval_throw runs c st e
-  | expr_eval e bindings => eval_eval runs c st e bindings
-  | expr_hint _ e => runs_type_eval runs c st e
+  | expr_id s => eval_id eval c st s
+  | expr_if e_cond e_true e_false => eval_if eval c st e_cond e_true e_false
+  | expr_seq e1 e2 => eval_seq eval c st e1 e2
+  | expr_jseq e1 e2 => eval_jseq eval c st e1 e2
+  | expr_object attrs iattrs l => eval_object_decl eval c st attrs iattrs l
+  | expr_delete_field left_ right_ => eval_delete_field eval c st left_ right_
+  | expr_let id value body => eval_let eval c st id value body
+  | expr_recc id value body => eval_rec eval c st id value body
+  | expr_lambda args body => eval_lambda eval c st args body
+  | expr_app f args => eval_app eval c st f args
+  | expr_get_attr attr left_ right_ => eval_get_attr eval c st left_ right_ attr
+  | expr_set_attr attr left_ right_ newval => eval_set_attr eval c st left_ right_ attr newval
+  | expr_get_obj_attr oattr obj => eval_get_obj_attr eval c st obj oattr
+  | expr_set_obj_attr oattr obj attr => eval_set_obj_attr eval c st obj oattr attr
+  | expr_get_internal s e_obj => eval_get_internal eval c st e_obj s
+  | expr_set_internal s e_obj e_val => eval_set_internal eval c st e_obj s e_val
+  | expr_own_field_names e => eval_own_field_names eval c st e
+  | expr_op1 op e => eval_op1 eval c st op e
+  | expr_op2 op e1 e2 => eval_op2 eval c st op e1 e2
+  | expr_label l e => eval_label eval c st l e
+  | expr_break l e => eval_break eval c st l e
+  | expr_try_catch body catch => eval_trycatch eval c st body catch
+  | expr_try_finally body fin => eval_tryfinally eval c st body fin
+  | expr_throw e => eval_throw eval c st e
+  | expr_eval e bindings => eval_eval eval c st e bindings
+  | expr_hint _ e => eval c st e
   | expr_fail s => result_fail s
   | expr_dump => result_dump c st
   end
 .
 
-Definition runs_0 := {|
-    runs_type_eval := fun c st _ => result_bottom
-  |}
-.
+Definition eval_0 : eval_fun := fun c st e => result_bottom.
 
-Definition runs_S runs := 
-  let wrap {A : Type} (f : runs_type -> ctx -> store -> A) c st : A :=
-    f runs c st
-  in {|
-    runs_type_eval := wrap eval
-  |}
-.
+Definition suspend_eval (feval : unit -> eval_fun) := 
+  fun c st e => (feval tt) c st e.
 
-Definition suspend_runs fruns :=  {|
-    runs_type_eval := fun c st e => runs_type_eval (fruns tt) c st e  
-  |}  
-.
-
-Fixpoint runs max_step : runs_type :=
+Fixpoint eval max_step : eval_fun :=
   match max_step with
-  | 0 => runs_0
-  | S max_step' => runs_S (runs max_step')
+  | 0 => eval_0
+  | S max_step' => eval_S (eval max_step')
   end
 .
 
-Fixpoint lazy_runs max_step : runs_type :=
+Fixpoint lazy_eval max_step : eval_fun :=
   match max_step with
-  | 0 => runs_0
-  | S max_step' => runs_S (suspend_runs (fun _ => lazy_runs max_step'))
+  | 0 => eval_0
+  | S max_step' => eval_S (suspend_eval (fun _ => lazy_eval max_step'))
   end
 .
 
-Definition runs_eval n := runs_type_eval (lazy_runs n).
