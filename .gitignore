@@ -4,6 +4,7 @@
 *.glob
 *.crashcoqide
 /LambdaS5/coq/Makefile
+/LambdaS5/coq/_CoqProject
 
 # Extraction
 /LambdaS5/coq/*.ml
