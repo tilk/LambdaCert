@@ -1309,7 +1309,7 @@ Proof.
     induction k; eauto using eval_0_correct, eval_S_correct, eval_lazy_correct. 
 Qed.
 
-Lemma eval_k_correct : forall k, eval_fun_correct (eval k). 
+Lemma eval_k_correct : forall k, eval_fun_correct (eval_k k). 
 Proof.
     induction k; eauto using eval_0_correct, eval_S_correct. 
 Qed.

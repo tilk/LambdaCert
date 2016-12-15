@@ -299,11 +299,11 @@ Ltac ljs_eval_push := solve [auto] || ljs_specialize_ih || ljs_inv_red_abort || 
 (* Lemmas about complex constructions of ljs (object literals and function application) *)
 
 Lemma object_properties_lemma : forall k,
-    (forall c st e o, red_exprh k c st e o -> (eval k) c st e = result_some o) -> 
+    (forall c st e o, red_exprh k c st e o -> eval_k k c st e = result_some o) -> 
     forall l1 l2 c st obj o,
     red_exprh k c st (expr_object_2 l1 l2 obj) o ->
-    eval_object_internal (eval k) c st l1 obj (fun st obj =>
-    eval_object_properties (eval k) c st l2 obj (fun st obj =>
+    eval_object_internal (eval_k k) c st l1 obj (fun st obj =>
+    eval_object_properties (eval_k k) c st l2 obj (fun st obj =>
                   let (st, loc) := add_object st obj
                   in result_value st loc
           )) = result_some o.
@@ -326,10 +326,10 @@ Proof.
 Qed.
 
 Lemma apply_lemma : forall k,
-    (forall c st e o, red_exprh k c st e o -> (eval k) c st e = result_some o) -> 
+    (forall c st e o, red_exprh k c st e o -> eval_k k c st e = result_some o) -> 
     forall c st v vs o,
     red_exprh k c st (expr_app_2 v vs) o ->
-    apply (eval k) c st v vs = result_some o.
+    apply (eval_k k) c st v vs = result_some o.
 Proof.
     introv IH H.
     substs.
@@ -347,10 +347,10 @@ Proof.
 Qed.
 
 Lemma eval_arg_list_lemma : forall k, 
-    (forall c st e o, red_exprh k c st e o -> (eval k) c st e = result_some o) -> 
+    (forall c st e o, red_exprh k c st e o -> eval_k k c st e = result_some o) -> 
     forall es c st v vs o,
     red_exprh k c st (expr_eval_many_1 es vs (expr_app_2 v)) o ->
-    fold_right (eval_arg_list_aux (eval k) c) (fun st vs => apply (eval k) c st v (rev vs)) es st vs = result_some o.
+    fold_right (eval_arg_list_aux (eval_k k) c) (fun st vs => apply (eval_k k) c st v (rev vs)) es st vs = result_some o.
 Proof.
     introv IH.
     induction es; introv H. 
@@ -399,7 +399,7 @@ Qed.
 Opaque read_option. 
 
 Lemma eval_complete_lemma : forall k c st e o,
-    red_exprh k c st e o -> (eval k) c st e = result_some o.
+    red_exprh k c st e o -> eval_k k c st e = result_some o.
 Proof.
     induction k; 
     introv R;
@@ -589,7 +589,7 @@ Qed.
 (* Completeness *)
 
 Lemma eval_k_complete : forall c st e o,
-    red_expr c st e o -> exists k, (eval k) c st e = result_some o.
+    red_expr c st e o -> exists k, eval_k k c st e = result_some o.
 Proof.
     introv H.
     lets (k&H1) : red_expr_add_h H.

@@ -4,7 +4,7 @@ open LjsSyntax
 open LjsCommon
 
 let eval_ast (c, st) ast =
-  LjsInterpreter.lazy_eval max_int c st ast
+  LjsInterpreter.eval c st ast
 
 let rec js_value_to_string ptrs st v =
   match v with

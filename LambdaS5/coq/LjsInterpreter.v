@@ -595,10 +595,10 @@ Definition eval_0 : eval_fun := fun c st e => result_bottom.
 Definition suspend_eval (feval : unit -> eval_fun) := 
   fun c st e => (feval tt) c st e.
 
-Fixpoint eval max_step : eval_fun :=
+Fixpoint eval_k max_step : eval_fun :=
   match max_step with
   | 0 => eval_0
-  | S max_step' => eval_S (eval max_step')
+  | S max_step' => eval_S (eval_k max_step')
   end
 .
 
@@ -609,3 +609,28 @@ Fixpoint lazy_eval max_step : eval_fun :=
   end
 .
 
+Definition result_sub : binary result := fun r1 r2 => match r1, r2 with
+  | result_bottom, _ => r2 <> result_bottom
+  | _, _ => False
+  end
+.
+
+Lemma result_bottom_acc : Acc result_sub result_bottom.
+Proof.
+constructor. intros r le. destruct r; tryfalse.
+Qed.
+
+Lemma result_sub_wf : wf result_sub.
+Proof.
+intros r. constructor. intros r' le. destruct r'; tryfalse.
+apply result_bottom_acc. 
+Qed.
+
+Hint Resolve result_sub_wf : wf.
+
+Require Import LibFix.
+
+Instance inhab_result : Inhab result.
+Proof. constructor. eexists result_bottom. trivial. Qed.
+
+Definition eval := FixFun3 eval_S. (* TODO better solution *)

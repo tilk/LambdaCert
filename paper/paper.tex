@@ -170,55 +170,32 @@ Inductive resultof (T : Type) : Type :=
 | result_fail : string -> resultof T        (* program error *)
 | result_impossible : string -> resultof T  (* inconsistency *)
 | result_bottom : resultof T                (* out of fuel *)
-| result_dump : ctx -> store -> resultof T  (* dump state *)
+| result_dump : ctx -> store -> resultof T. (* dump state *)
 
-Definition eval runs c st (e : expr) : result :=
+Definition eval_S eval c st (e : expr) : result :=
   let return_value := result_value st in
   match e with
   | expr_empty => return_value value_empty
   | expr_undefined => return_value value_undefined
 ...
 
-Record runs_type : Type := runs_type_intro {
-    runs_type_eval : ctx -> store -> expr -> result
-}.
+Definition eval_0 : eval_fun := fun c st _ => result_bottom.
 
-Definition runs_0 := {|
-    runs_type_eval := fun c st _ => result_bottom
-  |}
-.
-
-Definition runs_S runs := 
-  let wrap {A : Type} (f : runs_type -> ctx -> store -> A) c st : A :=
-    f runs c st
-  in {|
-    runs_type_eval := wrap eval
-  |}
-.
-
-Fixpoint runs max_step : runs_type :=
+Fixpoint eval_k max_step : eval_fun :=
   match max_step with
-  | 0 => runs_0
-  | S max_step' => runs_S (runs max_step')
+  | 0 => eval_0
+  | S max_step' => eval_S (eval_k max_step')
   end
 .
 
-Lemma eval_complete : forall c st e o,
+Lemma eval_k_complete : forall c st e o,
   red_expr c st e o -> 
-  exists k, runs_type_eval (runs k) c st e = result_some o.
+  exists k, eval_k k c st e = result_some o.
 
-Record runs_type_correct runs :=
-    make_runs_type_correct {
-        runs_type_correct_eval : forall c st e o,
-            runs_type_eval runs c st e = result_some o -> red_expr c st e o
-}.
+Record eval_fun_correct eval := forall c st e o,
+  eval c st e = result_some o -> red_expr c st e o.
 
-Lemma eval_correct : forall runs c st e o,
-  runs_type_correct runs -> 
-  eval runs c st e = result_some o ->
-  red_expr c st e o.
-
-Lemma runs_correct : forall k, runs_type_correct (runs k). 
+Lemma eval_k_correct : forall k, runs_type_correct (eval k). 
 \end{minted}
 
 \asi{Add the theorem.}
