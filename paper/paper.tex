@@ -148,9 +148,27 @@ GitHub~\cite{github:lambdacert}.
 \section{Formalization of \lambdajs}
 \label{sec:form-lambdajs}
 
-\asi{describe the changes to the language.}
+Because of the various issues we found in \lambdajs as defined
+in~\cite{Politz-al:DLS12} and which we detail in Section~\ref{sec:issues},
+we decided to revise the language. The full list of changes is
+detailed in~TODO\mm{Can we just link the wiki page? Or should we use an appendix?}, we present some of them below.
+\begin{itemize}
+\item The attribute access and modification operators, which tried to directly
+    model the operators from JavaScript, were removed. We found that the complexities
+    of attribute access is much better handled in the desugaring.
+\item We removed the imperative features of the language which do not involve the
+    object heap. This change simplified the definition of the semantics, which made
+    the proofs easier.
+\item We added a new primitive value named \texttt{empty}, which models the empty
+    completion value of JavaScript, and a second kind of the semicolon operator,
+    which returns the last non-empty value of its subexpressions. This allowed to
+    correctly implement statement completion values in a natural way.
+\item An integer datatype was added. Even though ES5 itself has no integers,
+    they are used in the definition of the binary operators (bitwise logical operators,
+    bit shifting).
+\end{itemize}
 
-For the purpose of relating the two semantics, we first developed a
+For the purpose of relating the semantics of \lambdajs and ES5, we developed a
 formalization of the \lambdajs core language. This was necessary because no such
 formalization existed previously; a formalization of the original, ES3-based
 \lambdajs was available\cite{github:brownplt/LambdaJS}, but the two
@@ -160,7 +178,9 @@ We decided to formalize the \lambdajs core using a
 pretty-big-step semantics, as in JSCert, to make the job of
 relating the two semantics easier. We have also developed
 an interpreter for \lambdajs, which we proved sound and
-complete with respect to the pretty-big-step semantics.
+complete with respect to the pretty-big-step 
+semantics.\footnote{The initial version of the interpreter was
+written by Martin Lorentz.}
 The proof script was developed using domain-specific tactics,
 which made it simple and robust.
 
@@ -206,7 +226,7 @@ Lemma eval_k_correct : forall k, runs_type_correct (eval k).
 %inverting the pretty-big-step semantics judgment; this turned out
 %to be very slow, and also generated large proof terms, which increased
 %the memory footprint. The problem is well-known~\cite{Monin:Coq2}; 
-5our solution involved
+%our solution involved
 %precomputing the required inversion principles using
 %\texttt{Derive Inversion}, and using the precomputed inversion
 %principles to create a specialized inversion tactic.
@@ -324,6 +344,7 @@ in \lambdajs.
 \subsection{Proof automation}
 
 \section{Issues found}
+\label{sec:issues}
 
 \subsection{Issues in the \lambdajs definition}
 
