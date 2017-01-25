@@ -14,8 +14,8 @@
 
 \definecolor{aliceblue}{rgb}{0.94, 0.97, 1.0}
 
-\newcommand{\as}[1]{\todo[color=green]{#1}}
-\newcommand{\asi}[1]{\todo[color=green,inline]{#1}}
+\newcommand{\as}[1]{\todo[color=green!20]{#1}}
+\newcommand{\asi}[1]{\todo[color=green!20,inline]{#1}}
 \newcommand{\mm}[1]{\todo[color=aliceblue]{#1}}
 \newcommand{\mmi}[1]{\todo[color=aliceblue,inline]{#1}}
 
@@ -46,7 +46,7 @@ server-side network programming, and databases.
 A number of semantics were developed for the JavaScript language.
 We are specifically interested in two of them: JSCert and \lambdajs.
 In order to increase our confidence that the two semantics correctly
-model JavaScript, we try to relate them formally using Coq. The size and complexity
+model JavaScript, we relate them formally using Coq. The size and complexity
 of the two semantics makes this a complex problem with many obstacles
 to be overcome.
 \end{abstract}
@@ -151,7 +151,8 @@ GitHub~\cite{github:lambdacert}.
 Because of the various issues we found in \lambdajs as defined
 in~\cite{Politz-al:DLS12} and which we detail in Section~\ref{sec:issues},
 we decided to revise the language. The full list of changes is
-detailed in~TODO\mm{Can we just link the wiki page? Or should we use an appendix?}, we present some of them below.
+detailed in~TODO\mm{Can we just link the wiki page? Or should we use an
+  appendix?}\as{Let's do both: put them in the appendix, and link to the wiki.}, we present some of them below.
 \begin{itemize}
 \item The attribute access and modification operators, which tried to directly
     model the operators from JavaScript, were removed. We found that the complexities
@@ -182,7 +183,14 @@ complete with respect to the pretty-big-step
 semantics.\footnote{The initial version of the interpreter was
 written by Martin Lorentz.}
 The proof script was developed using domain-specific tactics,
-which made it simple and robust.
+which made it simple and robust. They are detailed in
+Section~\ref{subsec:ljstactics}.
+
+\subsection{Coq Formalization}
+\label{subsec:ljscoq}
+
+\asi{starting from the main lemmas, describe the Coq formalization, describing
+  necessary details as they occur.}
 
 \begin{minted}{coq}
 Inductive resultof (T : Type) : Type :=
@@ -220,19 +228,10 @@ Lemma eval_k_correct : forall k, runs_type_correct (eval k).
 
 \asi{Add the theorem.}
 
-% This was moved.
-%At this stage we stumbled upon an interesting performance issue 
-%involving the Coq proof assistant. The proof of completeness required
-%inverting the pretty-big-step semantics judgment; this turned out
-%to be very slow, and also generated large proof terms, which increased
-%the memory footprint. The problem is well-known~\cite{Monin:Coq2}; 
-%our solution involved
-%precomputing the required inversion principles using
-%\texttt{Derive Inversion}, and using the precomputed inversion
-%principles to create a specialized inversion tactic.
+\subsection{Tactics}
+\label{subsec:ljstactics}
 
-%\asi{Put a forward pointer to a section where we described the issue in more
-%  details.}
+\asi{Describe the tactics used in the \lambdajs proofs.}
 
 \section{Desugaring}
 \label{sec:desugaring}
