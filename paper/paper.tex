@@ -233,6 +233,11 @@ Lemma eval_k_correct : forall k, runs_type_correct (eval k).
 
 \asi{Describe the tactics used in the \lambdajs proofs.}
 
+\subsection{Tests}
+\label{subsec:ljstests}
+
+\asi{Describe our coverage of the tests, and new tests we added}
+
 \section{Desugaring}
 \label{sec:desugaring}
 
@@ -310,6 +315,8 @@ hint database (\texttt{nocore} is used to avoid using the standard
 hints coming from Coq and Chargu\'eraud's TLC
 library~\cite{TLC}, which is
 used both by JSCert and our development).
+
+\asi{If there are things that are not proven, say which ones.}
 
 \section{Coq techniques}
 \label{sec:coq-techniques}
